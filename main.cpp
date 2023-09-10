@@ -32,12 +32,16 @@ public:
 class GlobalPosTestWidget : public BaseWidget {
 public:
    GlobalPosTestWidget(string name, shared_ptr<BaseWidget> parent = nullptr)
-   : BaseWidget(move(name), move(parent)){}
+   : BaseWidget(std::move(name), std::move(parent)){}
 
    void render() const override {
       Vec2<int> pos = getPos();
       string text = "{" + to_string(pos.x) + "," + to_string(pos.y) + "}";
-      _drawText(text, getPos(), 20, RED);
+      _drawText(text, {0,0}, 20, RED);
+   }
+
+   void _process(float dt) override{
+      setPos(Window::getMousePos());
    }
 };
 
@@ -50,6 +54,7 @@ int main()
    auto root = std::make_shared<GlobalPosTestWidget>("GlobalPos");
    root->setPos({100, 100});
    auto mainWindow = Application::instance().createWindow("MainWindow", screenWidth, screenHeight, root, {Window::RESIZE});
+   root->setProcess(true);
    mainWindow->exec();
    return 0;
 }

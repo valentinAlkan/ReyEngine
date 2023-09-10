@@ -21,3 +21,13 @@ void drawTextRelative(const std::string& text, const Vec2<int>& relPos, int font
    auto newY = screenSize.y * relPos.y / 100.0;
    DrawText(text.c_str(), (int)newX, (int)newY, fontSize, color);
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Vec2<int> getMousePos(){
+   return GetMousePosition();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+float getFrameDelta(){
+   return GetFrameTime();
+}

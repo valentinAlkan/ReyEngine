@@ -1,8 +1,10 @@
 #include "Window.h"
 #include <iostream>
 #include <utility>
+#include "DrawInterface.h"
 
 using namespace std;
+using namespace GFCSDraw;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -28,6 +30,12 @@ Window::Window(const std::string &title, int width, int height, std::shared_ptr<
 /////////////////////////////////////////////////////////////////////////////////////////
 void Window::exec(){
    while (!WindowShouldClose()){
+      float dt = getFrameDelta();
+      //process widget logic
+      for (auto& widget : _processList.getList()){
+         widget->_process(dt);
+      }
+
       //draw children on top of their parents
       BeginDrawing();
       ClearBackground(RAYWHITE);
@@ -42,22 +50,36 @@ Window::~Window(){
    CloseWindow();
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-//WindowCallback::WindowCallback(std::function<void(float)> callback, const std::string &title, int width, int height, std::shared_ptr<BaseWidget> root, const std::vector<Flags> &flags, int targetFPS)
-//: Window(title, width, height, std::move(root), flags, targetFPS)
-//, _callback(std::move(callback)){}
-//
 ///////////////////////////////////////////////////////////////////////////////////////////
-//WindowCallback::~WindowCallback() noexcept {
-////   CloseWindow(); //double free if you call this? window allocated on stack somewhere in raylib prolly
-//   cout << "Goodbye!" << endl;
-//}
-//
+bool Window::setProcess(bool process, std::shared_ptr<BaseWidget> widget) {
+   //return if the operation was successful
+   _processList.add(widget);
+   return process ? _processList.add(widget) != nullopt : _processList.remove(widget) != nullopt;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////
-//void WindowCallback::exec() {
-//   while (!WindowShouldClose()){
-//      _callback(GetFrameTime());
-//   }
-//}
+std::optional<shared_ptr<BaseWidget>> Window::ProcessList::add(std::shared_ptr<BaseWidget> widget) {
+   const lock_guard<mutex> lock(_mtx);
+   auto retval = _list.insert(widget);
+   if (retval.second){
+      return widget;
+   }
+   return nullopt;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+std::optional<std::shared_ptr<BaseWidget>> Window::ProcessList::remove(std::shared_ptr<BaseWidget> widget) {
+   const lock_guard<mutex> lock(_mtx);
+   auto it = _list.find(widget);
+   if (it != _list.end()){
+      //only remove if found;
+      _list.erase(it);
+      return widget;
+   }
+   return nullopt;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+Vec2<int> Window::getMousePos(){
+   return GetMousePosition();
+}
