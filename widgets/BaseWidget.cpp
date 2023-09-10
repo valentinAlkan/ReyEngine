@@ -1,9 +1,17 @@
 #include <algorithm>
 #include "BaseWidget.h"
 #include "Application.h"
+#include <iostream>
 
 using namespace std;
 using namespace GFCSDraw;
+
+/////////////////////////////////////////////////////////////////////////////////////////
+BaseWidget::BaseWidget(std::string name, WidgetPtr parent)
+:_name(std::move(name))
+, _parent(parent ? parent : std::optional<WidgetPtr>(std::nullopt))
+, _rid(Application::instance().getNewRid())
+{}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 std::optional<std::shared_ptr<BaseWidget>> BaseWidget::getChild(const std::string &childName) {
@@ -57,10 +65,8 @@ void BaseWidget::renderChildren() {
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::setProcess() {
-   if (isRoot()){
-
-   }
+void BaseWidget::setProcess(bool process) {
+   Application::instance().getWindow()->setProcess(process, shared_from_this());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -72,4 +78,9 @@ bool BaseWidget::isRoot() {
 void BaseWidget::_drawText(const std::string &text, const GFCSDraw::Vec2<int> &pos, int fontSize, Color color) const{
    auto globalPos = getGlobalPos();
    DrawText(text.c_str(), (int)(pos.x + globalPos.x), (int)(pos.y + globalPos.y), fontSize, color);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+bool BaseWidget::operator==(const shared_ptr<BaseWidget> &other) const {
+   return _rid == other->_rid;
 }

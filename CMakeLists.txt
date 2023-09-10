@@ -38,7 +38,10 @@ target_include_directories(widgets PUBLIC
         widgets
 )
 
-target_link_libraries(widgets raylib stdc++fs)
+target_link_libraries(widgets raylib)
+if (UNIX)
+    target_link_libraries(widgets stdc++fs)
+endif (UNIX)
 
 # Our Project
 add_executable(${PROJECT_NAME}
