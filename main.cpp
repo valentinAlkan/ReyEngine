@@ -53,8 +53,13 @@ int main()
    //create a root widget
    auto root = std::make_shared<GlobalPosTestWidget>("GlobalPos");
    root->setPos({100, 100});
-   auto mainWindow = Application::instance().createWindow("MainWindow", screenWidth, screenHeight, root, {Window::RESIZE});
-   root->setProcess(true);
-   mainWindow->exec();
-   return 0;
+   auto optWindow = Application::instance().createWindow("MainWindow", screenWidth, screenHeight, root, {Window::RESIZE});
+   if (optWindow){
+      auto mainWindow = optWindow.value();
+      root->setProcess(true);
+      mainWindow->exec();
+      return 0;
+   }
+
+   return 1;
 }
