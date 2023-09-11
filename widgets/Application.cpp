@@ -4,7 +4,7 @@
 
 using namespace std;
 /////////////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<Window> Application::createWindow(const std::string &title, int width, int height, std::shared_ptr<BaseWidget> root, const std::vector<Window::Flags> &flags, int targetFPS){
+std::optional<std::shared_ptr<Window>> Application::createWindow(const std::string &title, int width, int height, std::shared_ptr<BaseWidget> root, const std::vector<Window::Flags> &flags, int targetFPS){
    if (_window){
       return nullptr;
    }
