@@ -15,29 +15,18 @@ void updateFrame(float);
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
-class TestWidget : public BaseWidget {
+class PosTestWidget : public BaseWidget {
 public:
-   TestWidget(std::string name, std::shared_ptr<BaseWidget> parent = nullptr)
-         : BaseWidget(std::move(name), std::move(parent)) {}
-
-   void render() const override {
-      auto center = getScreenCenter();
-      std::string msg = "Screen cetner is {" + std::to_string(center.x) + "," + std::to_string(center.y) + "}";
-      drawTextRelative(msg, Vec2<int>(0, 0), 20, LIGHTGRAY);
-      drawTextCentered("Congrats! You created your first window!", center, 20, BLACK);
-      drawTextRelative("Some text", Vec2<int>(10, 10), 20, LIGHTGRAY);
-   }
-};
-
-class GlobalPosTestWidget : public BaseWidget {
-public:
-   GlobalPosTestWidget(string name, shared_ptr<BaseWidget> parent = nullptr)
+   PosTestWidget(string name, shared_ptr<BaseWidget> parent = nullptr)
    : BaseWidget(std::move(name), std::move(parent)){}
 
    void render() const override {
-      Vec2<int> pos = getPos();
-      string text = "{" + to_string(pos.x) + "," + to_string(pos.y) + "}";
-      _drawText(text, {0,0}, 20, RED);
+      Vec2<int> pos = getGlobalPos();
+      stringstream text;
+      text << getName() << "\n";
+      text << getPos() << "\n";
+      text << "{" + to_string(pos.x) + "," + to_string(pos.y) + "}";
+      _drawText(text.str(), {0,0}, 20, RED);
    }
 
    void _process(float dt) override{
@@ -51,9 +40,12 @@ public:
 int main()
 {
    //create a root widget
-   auto root = std::make_shared<GlobalPosTestWidget>("GlobalPos");
-   root->setPos({100, 100});
+   auto root = std::make_shared<PosTestWidget>("Root");
+   auto child = std::make_shared<PosTestWidget>("Child");
+   child->setPos(100,100);
+   root->addChild(child);
    auto optWindow = Application::instance().createWindow("MainWindow", screenWidth, screenHeight, root, {Window::RESIZE});
+//   auto s = StringProperty().toString();
    if (optWindow){
       auto mainWindow = optWindow.value();
       root->setProcess(true);

@@ -53,8 +53,12 @@ Window::~Window(){
 ///////////////////////////////////////////////////////////////////////////////////////////
 bool Window::setProcess(bool process, std::shared_ptr<BaseWidget> widget) {
    //return if the operation was successful
-   _processList.add(widget);
-   return process ? _processList.add(widget) != nullopt : _processList.remove(widget) != nullopt;
+   return process ? _processList.add(std::move(widget)) != nullopt : _processList.remove(std::move(widget)) != nullopt;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+bool Window::isProcessed(const std::shared_ptr<BaseWidget>& widget) const {
+   return _processList.find(widget).has_value();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -81,5 +85,14 @@ std::optional<std::shared_ptr<BaseWidget>> Window::ProcessList::remove(std::shar
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 Vec2<int> Window::getMousePos(){
-   return GetMousePosition();
+   return GFCSDraw::getMousePos();
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+std::optional<std::shared_ptr<BaseWidget>> Window::ProcessList::find(const std::shared_ptr<BaseWidget> &widget) const {
+   auto it = std::find(_list.begin(), _list.end(), widget);
+   if (it != _list.end()){
+      return *it;
+   }
+   return nullopt;
 }

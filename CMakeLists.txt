@@ -27,15 +27,20 @@ if (NOT raylib_FOUND) # If there's none, fetch and build raylib
 endif()
 
 add_library(widgets STATIC
-        widgets/Application.cpp
-        widgets/BaseWidget.cpp
-        widgets/Window.cpp
+        widgets/meta/DrawInterface.cpp
+        widgets/meta/Application.cpp
+        widgets/meta/Window.cpp
+        widgets/meta/Scene.cpp
+        widgets/meta/Property.cpp
+        widgets/meta/Logger.cpp
+        widgets/meta/Time.cpp
         widgets/Button.cpp
-        widgets/DrawInterface.cpp
+        widgets/BaseWidget.cpp
 )
 
 target_include_directories(widgets PUBLIC
         widgets
+        widgets/meta
 )
 
 target_link_libraries(widgets raylib)
@@ -46,11 +51,6 @@ endif (UNIX)
 # Our Project
 add_executable(${PROJECT_NAME}
         main.cpp
-        )
-
-target_include_directories(${PROJECT_NAME} PUBLIC
-        widgets
-        drawInterface
         )
 
 target_link_libraries(${PROJECT_NAME} widgets)
