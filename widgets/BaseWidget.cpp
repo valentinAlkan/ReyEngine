@@ -14,33 +14,76 @@ BaseWidget::BaseWidget(std::string name, WidgetPtr parent)
 {}
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::optional<std::shared_ptr<BaseWidget>> BaseWidget::getChild(const std::string &childName) {
-   for (const auto& child : _children){
-      if (child->getName() == childName){
-         return child;
+bool BaseWidget::setName(const std::string& newName, bool append_index) {
+   auto lock = childSafetyLock();
+   //if the child has a sibling by the same name, it cannot be renamed
+   if (_parent) {
+      //has a parent
+      auto self = shared_from_this();
+      string _newName;
+      auto parent = _parent.value();
+      if (parent->getChild(newName)) {
+         //parent has existing child with that name
+         //if we are allowed to, just append an index to the name (start at 2)
+         if (append_index) {
+            int index = 2;
+            while (parent->getChild(newName + to_string(index))) {
+               index++;
+            }
+            _newName = newName + to_string(index);
+            //remove the child
+            parent->removeChild(self);
+         } else {
+            return false;
+         }
       }
+      //parent does not have a child with the name
+      self->_name = newName;
+      //add the child back to the parent
+      parent->addChild(self);
    }
-   return nullopt;
+   //root widget, no need to deal with parent
+   _name = newName;
+   return true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::optional<bool> BaseWidget::setName(const std::string& newName, bool append_index) {
-   //if the child has a sibling by the same name, it cannot be renamed
-   if (_parent && _parent.value()->getChild(newName)){
-      //if we are allowed to, just append an index to the name (start at 2)
-      if (append_index) {
-         int index = 2;
-         while (_parent.value()->getChild(newName + to_string(index))){
-            index++;
-         }
-         _name = newName + to_string(index);
-         return true;
-      } else {
-         return false;
-      }
+std::optional<BaseWidget::WidgetPtr> BaseWidget::getChild(const std::string &childName) {
+   auto lock = childSafetyLock();
+   auto found = _children.find(childName);
+   if (found == _children.end()) {
+      return nullopt;
    }
-   _name = newName;
-   return true;
+   return std::optional<WidgetPtr>(found->second);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<BaseWidget::WidgetPtr> BaseWidget::addChild(WidgetPtr widget){
+   auto lock = childSafetyLock();
+   auto found = getChild(widget->getName());
+   if (found){
+      stringstream ss;
+      ss << "Widget " << getName() << " already has a child with name <" << widget->getName() << ">";
+      Application::printError() << ss.str() << endl;
+      return nullopt;
+   }
+   _children[widget->getName()] = widget;
+   widget->_parent = shared_from_this();
+   return widget;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<BaseWidget::WidgetPtr> BaseWidget::removeChild(WidgetPtr widget) {
+   auto lock = childSafetyLock();
+   auto found = _children.find(widget->getName());
+   if (found == _children.end()){
+      stringstream ss;
+      ss << "Widget " << getName() << " does not have a child with name <" << widget->getName() << ">";
+      Application::printError() << ss.str() << endl;
+      return nullopt;
+   }
+   _children.erase(found);
+   return found->second;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -51,13 +94,14 @@ Vec2<double> BaseWidget::getGlobalPos() const {
    while (parent && parent.value()) {
       offset.x += parent.value()->getPos().x;
       offset.y += parent.value()->getPos().y;
+      parent = parent.value()->_parent;
    }
    return offset;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::renderChildren() {
-   for (const auto& child : _children){
+   for (const auto& [name, child] : _children){
       child->renderChildren();
       child->render();
    }
@@ -76,9 +120,10 @@ bool BaseWidget::isRoot() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::_drawText(const std::string &text, const GFCSDraw::Vec2<int> &pos, int fontSize, Color color) const{
-   auto globalPos = getGlobalPos();
-   DrawText(text.c_str(), (int)(pos.x + globalPos.x), (int)(pos.y + globalPos.y), fontSize, color);
+   GFCSDraw::drawText(text, getGlobalPos(), fontSize, color);
 }
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////
 bool BaseWidget::operator==(const shared_ptr<BaseWidget> &other) const {

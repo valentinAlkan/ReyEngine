@@ -15,6 +15,10 @@ namespace GFCSDraw {
          inline Vec2& operator-=(const Vec2& rhs){x -= rhs.x; y -= rhs.y; return *this;}
          inline Vec2& operator*=(const Vec2& rhs){x *= rhs.x; y *= rhs.y; return *this;}
          inline Vec2& operator/=(const Vec2& rhs){x /= rhs.x; y /= rhs.y; return *this;}
+         friend std::ostream& operator<<(std::ostream& os, const Vec2<T>& v){
+            os << "{" + std::to_string(v.x) + ", " + std::to_string(v.y) + "}";
+            return os;
+         }
          T x;
          T y;
       };
@@ -27,15 +31,20 @@ namespace GFCSDraw {
          inline Rect(const Vec2<int>& v): x((T)x), y((T)y){}
          inline Rect(const Vec2<float>& v): x((T)x), y((T)y){}
          inline Rect(const Vec2<double>& v): x((T)x), y((T)y){}
+         friend std::ostream& operator<<(std::ostream& os, const Rect<T>& r){
+            os << "{" + std::to_string(v.x) + ", " + std::to_string(v.y) + "}";
+            return os;
+         }
          T x;
          T y;
          T width;
          T height;
       };
-}
 
-GFCSDraw::Vec2<double> getScreenCenter();
-void drawTextCentered(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color);
-void drawTextRelative(const std::string& text, const GFCSDraw::Vec2<int>& relPos, int fontSize, Color color);
-GFCSDraw::Vec2<int> getMousePos();
-float getFrameDelta();
+      GFCSDraw::Vec2<double> getScreenCenter();
+      void drawText(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color);
+      void drawTextCentered(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color);
+      void drawTextRelative(const std::string& text, const GFCSDraw::Vec2<int>& relPos, int fontSize, Color color);
+      GFCSDraw::Vec2<int> getMousePos();
+      float getFrameDelta();
+}
