@@ -27,13 +27,14 @@ if (NOT raylib_FOUND) # If there's none, fetch and build raylib
 endif()
 
 add_library(widgets STATIC
+        widgets/meta/ArgParse.cpp
         widgets/meta/DrawInterface.cpp
         widgets/meta/Application.cpp
         widgets/meta/Window.cpp
         widgets/meta/Scene.cpp
         widgets/meta/Property.cpp
         widgets/meta/Logger.cpp
-        widgets/meta/Time.cpp
+        widgets/meta/SystemTime.cpp
         widgets/Button.cpp
         widgets/BaseWidget.cpp
 )

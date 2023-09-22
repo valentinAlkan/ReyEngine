@@ -2,6 +2,8 @@
 #include "DrawInterface.h"
 #include "Application.h"
 #include <iostream>
+#include "Logger.h"
+#include "ArgParse.h"
 
 using namespace std;
 using namespace GFCSDraw;
@@ -37,8 +39,12 @@ public:
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
-int main()
+int main(int argc, char** argv)
 {
+   ArgParse args;
+   args.defineArg(RuntimeArg("--testSceneFile"));
+   args.parseArgs(argc, argv);
+
    //create a root widget
    auto root = std::make_shared<PosTestWidget>("Root");
    auto child = std::make_shared<PosTestWidget>("Child");

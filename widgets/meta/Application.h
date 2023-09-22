@@ -16,7 +16,6 @@ private:
    , _info_logger(std::cout, "info")
    , _warn_logger(std::cout, "WARNING")
    , _error_logger(std::cout, "ERROR")
-   , _fatal_logger(std::cout, "FATAL!!!!!!!")
    {
       //initialize time and log current time
       _info_logger << "Application start!" << std::endl;
@@ -32,7 +31,6 @@ public:
    static Logger& printInfo(){return Application::instance()._info_logger;}
    static Logger& printWarn(){return Application::instance()._warn_logger;}
    static Logger& printError(){return Application::instance()._error_logger;}
-   static Logger& printFatalAndThrowRuntimeError(){return Application::instance()._fatal_logger; throw std::runtime_error("Fatal error!");}
 
 protected:
    uint64_t getNewRid(){return ++newRid;}
@@ -44,6 +42,5 @@ private:
    Logger _info_logger;
    Logger _warn_logger;
    Logger _error_logger;
-   Logger _fatal_logger;
    friend class BaseWidget;
 };

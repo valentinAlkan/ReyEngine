@@ -9,6 +9,7 @@
 #include <map>
 #include <optional>
 #include <unordered_set>
+#include <unordered_map>
 
 class BaseWidget : public std::enable_shared_from_this<BaseWidget> {
    using WidgetPtr = std::shared_ptr<BaseWidget>;
@@ -16,6 +17,7 @@ class BaseWidget : public std::enable_shared_from_this<BaseWidget> {
    using fVec = GFCSDraw::Vec2<float>;
    using iVec = GFCSDraw::Vec2<int>;
    using dVec = GFCSDraw::Vec2<double>;
+   using PropertyMap = std::unordered_map<std::string, std::unique_ptr<BaseProperty>>;
 public:
    BaseWidget(std::string name, WidgetPtr parent = nullptr);
    const uint64_t getRid() const {return _rid;}
@@ -54,10 +56,15 @@ private:
    uint64_t _rid; //unique identifier
    std::string _name;
    GFCSDraw::Rect<double> _rect;
-   ChildMap _children;
    std::optional<WidgetPtr> _parent;
+   ///If this widget is the root of a scene, then the rest of the scene data is here.
+   std::optional<std::unique_ptr<Scene>> _scene;
    bool _request_delete = false; //true when we want to remove this object from the tree
    std::recursive_mutex _childLock;
    const std::lock_guard<std::recursive_mutex> childSafetyLock(){return std::lock_guard<std::recursive_mutex>(_childLock);}
+   bool _scheduled_for_deletion = false; // true when the widget has been scheduled for deletion but is not yet deleted.
+
+   ChildMap _children;
+   PropertyMap _properties;
    friend class Window;
 };
