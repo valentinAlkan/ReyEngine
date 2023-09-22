@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <sstream>
-#include "Time.h"
+#include "SystemTime.h"
 
 class Logger: public std::ostream
 {
@@ -24,7 +24,7 @@ class Logger: public std::ostream
          return 0;
       }
       void putOutput() {
-         _output << "[" << Time::nowSystemString() << "] [" << _prefix << "] : " << str();
+         _output << "[" << SystemTime::nowSystemString() << "] [" << _prefix << "] : " << str();
          str("");
          _output.flush();
       }

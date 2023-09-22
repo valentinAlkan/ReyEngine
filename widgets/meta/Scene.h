@@ -10,6 +10,7 @@ public:
    static std::shared_ptr<Scene> fromString();
 private:
    std::shared_ptr<BaseWidget> _root;
+   std::string sceneName;
    friend class Window;
 };
 
@@ -32,13 +33,13 @@ private:
  *
  * [Desc]
  * Root - BaseWidget:
- *    Property0: Value
- *    Property1: Value
- *    Property2: Value
+ *    Property0|type: Value
+ *    Property1|type: Value
+ *    Property2|type: Value
  * Child1 - BaseWidget:
- *    Property0: Value
- *    Property1: Value
- *    Property2: Value
+ *    Property0|type: Value
+ *    Property1|type: Value
+ *    Property2|type: Value
  * Child2 - BaseWidget:
  * Child3 - BaseWidget:
  * GrandChild1 - BaseWidget:

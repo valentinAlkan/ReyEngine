@@ -1,0 +1,23 @@
+[Tree]
+Root
+   Child1
+   Child2
+      GrandChild1
+      GrandChild2
+   Child3
+      GrandChild3
+[Desc]
+Root - BaseWidget:
+   Property0: Value
+   Property1: Value
+   Property2: Value
+Child1 - BaseWidget:
+   Property0: Value
+   Property1: Value
+   Property2: Value
+Child2 - BaseWidget:
+Child3 - BaseWidget:
+GrandChild1 - BaseWidget:
+GrandChild2 - BaseWidget:
+GrandChild3 - BaseWidget:
+ 
