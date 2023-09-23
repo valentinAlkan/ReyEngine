@@ -25,26 +25,34 @@ struct RuntimeArg{
    RuntimeArg(
          const std::string& name,
          std::string docString="",
+         int paramCount=1,
          ArgType argType=ArgType::DEDUCE,
          ValueType valueType = ValueType::STRING,
          ConsumeType consumeType=ConsumeType::CONSUME_COUNT,
-         int varCount=1,
          std::string dest="",
          std::string metavar=""
          );
    static std::optional<std::string> flagParse(std::string rawArg);
+   std::string name() const {return _sanitizedName;}
+   const std::vector<std::string>& getParams() const {return _params;}
+   RuntimeArg(const RuntimeArg&);
+protected:
+   static std::string sanitizeName(const std::string& arg);
+   void setValue(const std::string& value);
 private:
-   std::string sanitizeName(const std::string& arg);
-   std::string _rawValue; //raw
+   std::string _sanitizedName;
+   std::string _rawValue; //the value as it exists on the commandline, including dashes and everything
    std::string _docString;
    ArgType     _argType;
    ValueType   _valueType;
    ConsumeType _consume;
-   int         _varCount;
+   int         _paramCount;
    std::string _dest;
    std::string _metavar;
    std::string _value;
+   std::optional<bool> _flagValue;
    std::vector<std::string> _params; //any additional parameters the arg consumed
+   friend class ArgParse;
 };
 
 
@@ -53,7 +61,7 @@ public:
    ArgParse(){};
    void parseArgs(int argc, char** argv);
    std::optional<RuntimeArg> getArg(const std::string& name);
-   void defineArg(RuntimeArg arg);
+   void defineArg(const RuntimeArg& arg);
 private:
    std::string _arg0;
    size_t _argc;

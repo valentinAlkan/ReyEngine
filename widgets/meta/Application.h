@@ -21,6 +21,10 @@ private:
       _info_logger << "Application start!" << std::endl;
    }
 public:
+   enum class ExitReason{
+      INVALID_ARGS = 1
+   };
+
    Application(Application const&)         = delete;
    void operator=(Application const&) = delete;
 
@@ -31,6 +35,9 @@ public:
    static Logger& printInfo(){return Application::instance()._info_logger;}
    static Logger& printWarn(){return Application::instance()._warn_logger;}
    static Logger& printError(){return Application::instance()._error_logger;}
+
+   static void exitError(std::string msg, ExitReason rsn){printError() << msg << std::endl; ::exit((int)rsn);}
+   static void exit(ExitReason rsn){::exit((int)rsn);}
 
 protected:
    uint64_t getNewRid(){return ++newRid;}

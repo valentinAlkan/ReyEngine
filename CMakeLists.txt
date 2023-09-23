@@ -28,6 +28,7 @@ endif()
 
 add_library(widgets STATIC
         widgets/meta/ArgParse.cpp
+        widgets/meta/StringTools.cpp
         widgets/meta/DrawInterface.cpp
         widgets/meta/Application.cpp
         widgets/meta/Window.cpp

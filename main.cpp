@@ -42,6 +42,7 @@ public:
 int main(int argc, char** argv)
 {
    ArgParse args;
+   args.defineArg(RuntimeArg("positionalArg", "help"));
    args.defineArg(RuntimeArg("--testSceneFile"));
    args.parseArgs(argc, argv);
 
