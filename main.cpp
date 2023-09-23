@@ -46,6 +46,14 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--testSceneFile"));
    args.parseArgs(argc, argv);
 
+   if (args.getArg("testSceneFile")){
+      //open and test a scene file
+      auto loadedScene = Scene::fromFile("./test/test.scn");
+      if (loadedScene){
+         Application::printDebug() << "Got loaded file!" << endl;
+      }
+   }
+
    //create a root widget
    auto root = std::make_shared<PosTestWidget>("Root");
    auto child = std::make_shared<PosTestWidget>("Child");

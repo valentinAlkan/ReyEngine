@@ -171,7 +171,7 @@ std::optional<std::string> RuntimeArg::flagParse(std::string rawArg) {
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 optional<RuntimeArg> ArgParse::getArg(const std::string& name) {
-   auto it = _definedArgs.find(name);
+   auto it = _definedArgs.find(RuntimeArg::sanitizeName(name));
    if (it == _definedArgs.end())
    {
       return nullopt;

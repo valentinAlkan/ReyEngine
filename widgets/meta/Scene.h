@@ -2,13 +2,30 @@
 #include "BaseWidget.h"
 
 // A pre-made tree of widgets
+namespace SceneFileParser{
+   class Parser{
+   public:
+      Parser(const std::vector<std::byte>&);
+      std::optional<std::shared_ptr<Scene>> parse();
+   private:
+      std::vector<std::string> _tree;
+      std::vector<std::string> _desc;
+      const std::vector<std::byte>& _rawData;
+   };
+};
+
+
+
 class Scene{
 public:
    Scene(std::shared_ptr<BaseWidget> root);
-   static std::shared_ptr<Scene> parseSceneFile();
    std::string toString();
-   static std::shared_ptr<Scene> fromString();
+   static std::optional<std::shared_ptr<Scene>> fromString();
+   static std::optional<std::shared_ptr<Scene>> fromFile(const std::string& filePath);
 private:
+
+
+
    std::shared_ptr<BaseWidget> _root;
    std::string sceneName;
    friend class Window;
