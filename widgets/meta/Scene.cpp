@@ -1,5 +1,10 @@
 #include "Scene.h"
+#include "FileSystem.h"
+#include <iostream>
+#include <sstream>
 
+using namespace std;
+using namespace FileSystem;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Scene::Scene(std::shared_ptr<BaseWidget> root)
@@ -8,16 +13,46 @@ Scene::Scene(std::shared_ptr<BaseWidget> root)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<Scene> Scene::parseSceneFile() {
-   return nullptr;
+optional<shared_ptr<Scene>> Scene::fromFile(const std::string& filePath) {
+   auto bytes = FileSystem::loadFile(filePath);
+   stringstream ss;
+   for (const auto& c : bytes){
+      //throw away carriage return
+      if ((char)c == '\r'){
+         continue;
+      }
+      ss << (char)c;
+   }
+   cout << ss.str() << endl;
+
+   if (bytes.empty()){
+      return nullptr;
+   }
+
+   auto parser = SceneFileParser::Parser(bytes);
+   return parser.parse();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<Scene> Scene::fromString() {
+optional<shared_ptr<Scene>> Scene::fromString() {
    return nullptr;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 std::string Scene::toString() {
    return "";
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+SceneFileParser::Parser::Parser(const std::vector<std::byte>& data)
+: _rawData(data)
+{
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<std::shared_ptr<Scene>> SceneFileParser::Parser::parse() {
+   return nullopt;
 }

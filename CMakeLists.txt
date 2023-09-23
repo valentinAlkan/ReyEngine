@@ -7,6 +7,15 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # enable -std=c++17
 set (CMAKE_CXX_STANDARD 17)
 
+function(install_file SOURCE DEST)
+    add_custom_command(
+            TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+            ${CMAKE_SOURCE_DIR}/${SOURCE}
+            ${CMAKE_CURRENT_BINARY_DIR}/${DEST})
+endfunction()
+
+
 # Dependencies
 set(RAYLIB_VERSION 4.5.0)
 find_package(raylib ${RAYLIB_VERSION} QUIET) # QUIET or REQUIRED
@@ -28,6 +37,7 @@ endif()
 
 add_library(widgets STATIC
         widgets/meta/ArgParse.cpp
+        widgets/meta/FileSystem.cpp
         widgets/meta/StringTools.cpp
         widgets/meta/DrawInterface.cpp
         widgets/meta/Application.cpp
@@ -56,3 +66,5 @@ add_executable(${PROJECT_NAME}
         )
 
 target_link_libraries(${PROJECT_NAME} widgets)
+
+install_file(./widgets/test/test.scn ./test/test.scn)
