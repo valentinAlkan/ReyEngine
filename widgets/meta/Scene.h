@@ -1,17 +1,63 @@
 #pragma once
 #include "BaseWidget.h"
+#include "Property.h"
+#include <map>
 
 // A pre-made tree of widgets
 namespace SceneFileParser{
+   //a potential widget
+   struct TreeObject{
+      std::vector<std::string> data;
+      std::optional<std::unique_ptr<TreeObject>> parent;
+      std::vector<std::unique_ptr<TreeObject>> children;
+   };
+
+   struct DescObject {
+      std::map<std::string, BaseProperty> properties;
+   };
+
+   //represents what the parser is doing with the text
+   struct ParseStruct {
+      enum class ParseState{NOT_FOUND, OPEN, CLOSED, ERROR};
+      enum class StructType {TREE, DESC};
+      enum class ParseError{INVALID_INDENT_TYPE, INVALID_INDENT_LEVEL};
+      ParseError error;
+
+      ParseStruct(StructType type): type(type){}
+      virtual std::optional<ParseError> parse() = 0;
+      void addLine(const std::string& line){
+         _lines.push_back(line);
+      };
+
+      const StructType type;
+      ParseState currentState = ParseState::NOT_FOUND;
+      std::vector<std::string> _lines;
+   };
+
+   struct TreeStruct : public ParseStruct{
+      TreeStruct():
+      std::optional<ParseError> parse() override;
+   };
+   struct DescStruct : public ParseStruct{
+      std::optional<ParseError> parse() override;
+   };
+
    class Parser{
    public:
-      Parser(const std::vector<std::byte>&);
+      Parser(const std::vector<char>&);
       std::optional<std::shared_ptr<Scene>> parse();
    private:
       std::vector<std::string> _tree;
       std::vector<std::string> _desc;
-      const std::vector<std::byte>& _rawData;
+      const std::vector<char>& _rawData;
+      
+      
    };
+
+   static constexpr char TOKEN_TREE_START[] = "[Tree]";
+   static constexpr char TOKEN_DESC_START[] = "[Desc]";
+   static constexpr char TOKEN_NEWLINE = '\n';
+   static constexpr char TOKEN_LINE_CONTINUATION = '\\';
 };
 
 

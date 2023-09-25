@@ -11,4 +11,10 @@ namespace string_tools{
    std::string rstrip(const std::string& s, char c);
    std::string rstrip(const std::string& s);
    std::string strip(const std::string& s, const std::function<bool(char c)>& charMatch, bool rtol = false);
+   int count(const std::string& s, char c);
+   int lcount(const std::string& s, char c);
+   int rcount(const std::string& s, char c);
+   int countwhitel(const std::string& s);
+   int countwhiter(const std::string& s);
+   int countwhite(const std::string& s);
 }
