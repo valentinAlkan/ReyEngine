@@ -49,3 +49,33 @@ struct FloatProperty : public Property<double>{
    std::string dump() override {return std::to_string(_value);}
    void load(std::string) override {assert(0);}
 };
+
+
+
+
+
+
+//Creates properties when loading
+class PropertyFactory {
+public:
+//   static PropertyFactory & getInstance(){static PropertyFactory instance; return instance;}
+
+private:
+   PropertyFactory () {}
+public:
+//   PropertyFactory (PropertyFactory  const&) = delete;
+//   void operator=(PropertyFactory const&) = delete;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+

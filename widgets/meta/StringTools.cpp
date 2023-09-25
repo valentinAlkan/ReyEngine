@@ -52,6 +52,7 @@ std::string string_tools::rstrip(const std::string &s) {
    return strip(s, charMatch);
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
 std::string string_tools::strip(const std::string &s, const std::function<bool(char)>& charMatch, bool rtol) {
    //this is probably dumb and slow but, like me, it works
    string retval;
@@ -65,4 +66,74 @@ std::string string_tools::strip(const std::string &s, const std::function<bool(c
    }
    std::reverse(t.begin(), t.end());
    return t;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+int string_tools::count(const std::string &s, char c) {
+   int count = 0;
+   for (const auto& _c : s){
+      if (_c == c){
+         count++;
+      }
+   }
+   return count;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+int string_tools::lcount(const std::string &s, char c) {
+   int count = 0;
+   for (const auto& _c : s){
+      if (_c != c){
+         break;
+      }
+      count++;
+   }
+   return count;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+int string_tools::rcount(const std::string &s, char c) {
+   int count = 0;
+   for (auto rit=s.rbegin(); rit!=s.rend(); ++rit) {
+      const auto &_c = *rit;
+      if (_c != c){
+         break;
+      }
+      count++;
+   }
+   return count;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+int string_tools::countwhite(const std::string &s) {
+   int count = 0;
+   for (const auto& _c : s){
+      if (::isspace(_c)){
+         count++;
+      }
+   }
+   return count;
+}
+/////////////////////////////////////////////////////////////////////////////////////////
+int string_tools::countwhitel(const std::string &s) {
+   int count = 0;
+   for (const auto& _c : s){
+      if (!::isspace(_c)){
+         break;
+      }
+      count++;
+   }
+   return count;
+}
+/////////////////////////////////////////////////////////////////////////////////////////
+int string_tools::countwhiter(const std::string &s) {
+   int count = 0;
+   for (auto rit=s.rbegin(); rit!=s.rend(); ++rit) {
+      const auto &_c = *rit;
+      if (!::isspace(_c)){
+         break;
+      }
+      count++;
+   }
+   return count;
 }

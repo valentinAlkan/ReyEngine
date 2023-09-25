@@ -22,7 +22,8 @@ private:
    }
 public:
    enum class ExitReason{
-      INVALID_ARGS = 1
+      INVALID_ARGS = 1,
+      INVALID_SCENE_FILE_FORMAT,
    };
 
    Application(Application const&)         = delete;

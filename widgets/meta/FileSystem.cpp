@@ -3,7 +3,7 @@
 #include <fstream>
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::vector<std::byte> FileSystem::loadFile(const std::string &filePath) {
+std::vector<char> FileSystem::loadFile(const std::string &filePath) {
    std::ifstream ifs(filePath, std::ios::binary | std::ios::ate);
    if (!ifs)
       throw std::runtime_error(filePath + ": " + std::strerror(errno));
@@ -15,7 +15,7 @@ std::vector<std::byte> FileSystem::loadFile(const std::string &filePath) {
 
    if (size == 0) return {};
 
-   std::vector<std::byte> buffer(size);
+   std::vector<char> buffer(size);
 
    if (!ifs.read((char *) buffer.data(), buffer.size()))
       throw std::runtime_error(filePath + ": " + std::strerror(errno));
