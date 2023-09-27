@@ -32,7 +32,7 @@ namespace GFCSDraw {
          inline Rect(const Vec2<float>& v): x((T)x), y((T)y){}
          inline Rect(const Vec2<double>& v): x((T)x), y((T)y){}
          friend std::ostream& operator<<(std::ostream& os, const Rect<T>& r){
-            os << "{" + std::to_string(v.x) + ", " + std::to_string(v.y) + "}";
+            os << "{" + std::to_string(r.x) + ", " + std::to_string(r.y) + "}";
             return os;
          }
          T x;
