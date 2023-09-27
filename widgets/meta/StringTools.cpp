@@ -49,7 +49,7 @@ std::string string_tools::rstrip(const std::string &s) {
    auto charMatch = [](char _c){
       return ::isspace(_c);
    };
-   return strip(s, charMatch);
+   return strip(s, charMatch, true);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -58,13 +58,14 @@ std::string string_tools::strip(const std::string &s, const std::function<bool(c
    string retval;
    string t = s;
    if (!rtol) {
-      //we want the string reversed normally so we can pop back
       std::reverse(t.begin(), t.end());
    }
    while (charMatch(t.back())){
       t.pop_back();
    }
-   std::reverse(t.begin(), t.end());
+   if (!rtol) {
+      std::reverse(t.begin(), t.end());
+   }
    return t;
 }
 

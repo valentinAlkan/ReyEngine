@@ -4,16 +4,29 @@
 #include <map>
 
 // A pre-made tree of widgets
+class Scene;
 namespace SceneFileParser{
    //a potential widget
-   struct TreeObject{
-      std::vector<std::string> data;
-      std::optional<std::unique_ptr<TreeObject>> parent;
-      std::vector<std::unique_ptr<TreeObject>> children;
+   struct TreeObject {
+      TreeObject(std::string name, std::shared_ptr<TreeObject>): name(name), parent(parent){
+         if (parent){
+            parent.value()->children.push_back(this);
+         }
+      }
+      const std::string name;
+      std::optional<std::shared_ptr<TreeObject>> parent;
+      std::vector<std::shared_ptr<TreeObject>> children;
    };
 
    struct DescObject {
+      DescObject(std::string name, std::string typeName)
+      : name(name)
+      , typeName(typeName)
+      {}
+      const std::string name;
+      const std::string typeName;
       std::map<std::string, BaseProperty> properties;
+      void parse();
    };
 
    //represents what the parser is doing with the text
@@ -28,6 +41,11 @@ namespace SceneFileParser{
       void addLine(const std::string& line){
          _lines.push_back(line);
       };
+      ParseError setError(ParseError e){
+         error = e;
+         currentState = ParseStruct::ParseState::ERROR;
+         return e;
+      };
 
       const StructType type;
       ParseState currentState = ParseState::NOT_FOUND;
@@ -35,10 +53,11 @@ namespace SceneFileParser{
    };
 
    struct TreeStruct : public ParseStruct{
-      TreeStruct():
+      TreeStruct(): ParseStruct(ParseStruct::StructType::TREE){};
       std::optional<ParseError> parse() override;
    };
    struct DescStruct : public ParseStruct{
+      DescStruct(): ParseStruct(ParseStruct::StructType::DESC){};
       std::optional<ParseError> parse() override;
    };
 

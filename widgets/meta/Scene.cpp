@@ -59,16 +59,17 @@ SceneFileParser::Parser::Parser(const std::vector<char>& data)
 /////////////////////////////////////////////////////////////////////////////////////////
 std::optional<std::shared_ptr<Scene>> SceneFileParser::Parser::parse() {
    //parse the tree
-   SceneFileParser::TreeStruct tree(ParseStruct::StructType::TREE);
-   SceneFileParser::DescStruct desc(ParseStruct::StructType::DESC);
-   SceneFileParser::ParseStruct* openStruct = tree;
+   SceneFileParser::TreeStruct tree;
+   SceneFileParser::DescStruct desc;
+   SceneFileParser::ParseStruct* openStruct = nullptr;
    std::string currentLine;
    bool lineContinuation = false;
    for (const auto& c : _rawData){
       currentLine.push_back(c);
       auto doOpen = [&](SceneFileParser::ParseStruct& strct){
-         openStruct->currentState = ParseStruct::ParseState::OPEN;
+         if (openStruct) openStruct->currentState = ParseStruct::ParseState::CLOSED;
          openStruct = &strct;
+         openStruct->currentState = ParseStruct::ParseState::OPEN;
       };
 
       //open a new struct (and potentially close an open struct)
@@ -81,12 +82,14 @@ std::optional<std::shared_ptr<Scene>> SceneFileParser::Parser::parse() {
       if (c == TOKEN_LINE_CONTINUATION) lineContinuation = true;
       if (c == '\n' && !lineContinuation){
          lineContinuation = false;
-         openStruct->addLine(currentLine);
+         openStruct->addLine(string_tools::rstrip(currentLine));
+         currentLine.clear();
       }
 
    }
-   bool treeFound = tree.currentState == ParseStruct::ParseState::NOT_FOUND;
-   bool descFound = desc.currentState == ParseStruct::ParseState::NOT_FOUND;
+   openStruct->currentState = ParseStruct::ParseState::OPEN;
+   bool treeFound = tree.currentState != ParseStruct::ParseState::NOT_FOUND;
+   bool descFound = desc.currentState != ParseStruct::ParseState::NOT_FOUND;
    if (!treeFound || !descFound){
       stringstream ss;
       ss << "Scene file parsing failed - " << (treeFound ? TOKEN_TREE_START : TOKEN_DESC_START) << " not found!";
@@ -94,7 +97,9 @@ std::optional<std::shared_ptr<Scene>> SceneFileParser::Parser::parse() {
    }
 
    //once we've added all the lines to the correct parser, we can process the structs
-//   desc.parse
+   // parse desc first
+   desc.parse();
+   tree.parse();
    
    return nullopt;
 }
@@ -102,7 +107,7 @@ std::optional<std::shared_ptr<Scene>> SceneFileParser::Parser::parse() {
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
-std::optional<SceneFileParser::ParseStruct::ParseError> SceneFileParser::TreeStruct::parse(){
+optional<SceneFileParser::ParseStruct::ParseError> SceneFileParser::TreeStruct::parse(){
    auto setError = [this](ParseError e){
       error = e;
       currentState = ParseStruct::ParseState::ERROR;
@@ -117,6 +122,7 @@ std::optional<SceneFileParser::ParseStruct::ParseError> SceneFileParser::TreeStr
    for (const auto& line : _lines) {
       auto whiteCount = string_tools::lcount(line, ' ');
 
+      TreeObject obj;
       if (indentFactor) {
          //check indent char type
          if (whiteCount % indentFactor != 0) {
@@ -124,6 +130,8 @@ std::optional<SceneFileParser::ParseStruct::ParseError> SceneFileParser::TreeStr
          }
          //check indent level
          auto newIndentFactor = whiteCount;
+      } else {
+         obj.addLine(line);
       }
    }
 }
@@ -131,4 +139,5 @@ std::optional<SceneFileParser::ParseStruct::ParseError> SceneFileParser::TreeStr
 /////////////////////////////////////////////////////////////////////////////////////////
 std::optional<SceneFileParser::ParseStruct::ParseError> SceneFileParser::DescStruct::parse(){
    //convert lines to struct type
+
 }

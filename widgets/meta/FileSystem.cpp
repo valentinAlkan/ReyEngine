@@ -1,6 +1,7 @@
 #include "FileSystem.h"
 #include <iostream>
 #include <fstream>
+#include <cstring>
 
 /////////////////////////////////////////////////////////////////////////////////////////
 std::vector<char> FileSystem::loadFile(const std::string &filePath) {
