@@ -142,7 +142,7 @@ void ArgParse::parseArgs(int argc, char **argv) {
       if (it == _definedArgs.end()) {
          //raise error
          stringstream msg;
-         msg << "Unrecognized " << (argType == RuntimeArg::ArgType::FLAG ? "flag" : "positional argument") << " \""
+         msg << "Unrecognized " << (argType == RuntimeArg::ArgType::FLAG ? "flag" : "argument") << " \""
              << rawArg << "\" using name \"" << saniName << "\"";
          Application::printError() << msg.str() << endl;
          exit(1);
@@ -170,11 +170,11 @@ std::optional<std::string> RuntimeArg::flagParse(std::string rawArg) {
    return nullopt;
 }
 /////////////////////////////////////////////////////////////////////////////////////////
-optional<RuntimeArg> ArgParse::getArg(const std::string& name) {
+optional<RuntimeArg*> ArgParse::getArg(const std::string& name) {
    auto it = _definedArgs.find(RuntimeArg::sanitizeName(name));
    if (it == _definedArgs.end())
    {
       return nullopt;
    }
-   return it->second;
+   return &it->second;
 }
