@@ -49,13 +49,14 @@ public:
 int main(int argc, char** argv)
 {
    ArgParse args;
-   args.defineArg(RuntimeArg("positionalArg", "help"));
-   args.defineArg(RuntimeArg("--testSceneFile"));
+   args.defineArg(RuntimeArg("--loadScene", "help", 1, RuntimeArg::ArgType::OPTIONAL));
    args.parseArgs(argc, argv);
 
-   if (args.getArg("testSceneFile")){
+   auto optArg = args.getArg("loadScene");
+   if (optArg){
+      auto loadSceneArg = optArg.value();
       //open and test a scene file
-      auto loadedScene = Scene::fromFile("./test/test.scn");
+      auto loadedScene = Scene::fromFile("./test/" + loadSceneArg->getParams()[0]);
       if (loadedScene){
          Application::printDebug() << "Got loaded file!" << endl;
       }

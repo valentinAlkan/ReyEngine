@@ -69,3 +69,4 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} widgets)
 
 install_file(./widgets/test/test.scn ./test/test.scn)
+install_file(./widgets/test/posTest.scn ./test/posTest.scn)

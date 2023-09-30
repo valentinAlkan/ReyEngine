@@ -60,7 +60,7 @@ class ArgParse {
 public:
    ArgParse(){};
    void parseArgs(int argc, char** argv);
-   std::optional<RuntimeArg> getArg(const std::string& name);
+   std::optional<RuntimeArg*> getArg(const std::string& name);
    void defineArg(const RuntimeArg& arg);
 private:
    std::string _arg0;
