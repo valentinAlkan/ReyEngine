@@ -19,8 +19,11 @@ void updateFrame(float);
 /////////////////////////////////////////////////////////////////////////////////////////
 class PosTestWidget : public BaseWidget {
 public:
-   PosTestWidget(string name, shared_ptr<BaseWidget> parent = nullptr)
-   : BaseWidget(std::move(name), std::move(parent)){}
+   PosTestWidget(string name)
+   : BaseWidget(std::move(name), "PosTestWidget")
+   , someString("someString")
+   {}
+   StringProperty someString;
 
    void render() const override {
       Vec2<int> pos = getGlobalPos();
@@ -33,6 +36,10 @@ public:
 
    void _process(float dt) override{
       setPos(Window::getMousePos());
+   }
+
+   void registerProperties() override {
+      registerProperty(someString);
    }
 };
 

@@ -8,6 +8,7 @@ std::optional<std::shared_ptr<Window>> Application::createWindow(const std::stri
    if (_window){
       return nullptr;
    }
+   TypeManager::instance()._registerTypes(); //register internal types
    _window = std::shared_ptr<Window>(new Window("MainWindow", width, height, std::move(root), flags, targetFPS));
    return _window;
 }

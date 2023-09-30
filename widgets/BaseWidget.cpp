@@ -7,9 +7,9 @@ using namespace std;
 using namespace GFCSDraw;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-BaseWidget::BaseWidget(std::string name, WidgetPtr parent)
+BaseWidget::BaseWidget(std::string name, std::string typeName)
 :_name(std::move(name))
-, _parent(parent ? parent : std::optional<WidgetPtr>(std::nullopt))
+, _typeName(typeName)
 , _rid(Application::instance().getNewRid())
 {}
 
@@ -128,4 +128,38 @@ void BaseWidget::_drawText(const std::string &text, const GFCSDraw::Vec2<int> &p
 /////////////////////////////////////////////////////////////////////////////////////////
 bool BaseWidget::operator==(const shared_ptr<BaseWidget> &other) const {
    return _rid == other->_rid;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::string BaseWidget::serialize() {
+   stringstream data;
+   data << _name << " - " << _typeName << ":\n";
+   for (const auto& [anme, property] : _properties){
+      auto value = property->dump();
+      data << PropertyMeta::INDENT << property->instanceName();
+      data << PropertyMeta::SEP << property->typeName();
+      data << PropertyMeta::SEP << value.size();
+      data << PropertyMeta ::SEP << value;
+      data << ";";
+   }
+   return data.str();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::deserialize(std::map<std::string, std::string> propertyData){
+   //register all properties so we know what's what
+   registerProperties();
+   //move the properties to their new home
+   for (auto& [name, data] : propertyData){
+      _properties[name]->load(data);
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::registerProperty(BaseProperty& property) {
+   auto found = _properties.find(property.instanceName());
+   if (found != _properties.end()){
+      throw std::runtime_error("Property name " + property.instanceName() + " already exists!");
+   }
+   _properties[property.instanceName()] = &property;
 }

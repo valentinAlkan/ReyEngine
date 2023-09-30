@@ -7,16 +7,18 @@ using namespace std;
 vector<string> string_tools::split(const std::string &s, const std::string &delimString) {
    vector<string> retval;
    size_t start = 0;
-   for (size_t pos=0; pos<s.size(); pos++){
-      auto substr = string(s, start, pos);
-      if (substr.find(delimString) == 0){
-         retval.emplace_back(s, start, pos);
-         pos += delimString.size();
+   string substr = s;
+   size_t found;
+   auto find = [&](){found = substr.find(delimString); return found;};
+   while(find() != string::npos){
+      retval.emplace_back(s, start, found);
+      start += found + delimString.size();
+      if (start >= s.size()){
+         break;
       }
+      substr = string(s, start, s.size() - start);
    }
-   if (retval.empty()){
-      retval.push_back(s);
-   }
+   retval.push_back(substr);
    return retval;
 }
 
@@ -55,6 +57,7 @@ std::string string_tools::rstrip(const std::string &s) {
 /////////////////////////////////////////////////////////////////////////////////////////
 std::string string_tools::strip(const std::string &s, const std::function<bool(char)>& charMatch, bool rtol) {
    //this is probably dumb and slow but, like me, it works
+   if (s.empty()) return s;
    string retval;
    string t = s;
    if (!rtol) {
@@ -67,6 +70,11 @@ std::string string_tools::strip(const std::string &s, const std::function<bool(c
       std::reverse(t.begin(), t.end());
    }
    return t;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::string string_tools::lrstrip(const std::string &s) {
+   return string_tools::rstrip(string_tools::lstrip(s));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
