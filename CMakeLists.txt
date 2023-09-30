@@ -41,6 +41,7 @@ add_library(widgets STATIC
         widgets/meta/StringTools.cpp
         widgets/meta/DrawInterface.cpp
         widgets/meta/Application.cpp
+        widgets/meta/TypeManager.cpp
         widgets/meta/Window.cpp
         widgets/meta/Scene.cpp
         widgets/meta/Property.cpp

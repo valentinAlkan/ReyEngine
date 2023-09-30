@@ -2,49 +2,62 @@
 #include "BaseWidget.h"
 #include "Property.h"
 #include <map>
+#include "StringTools.h"
+#include "TypeManager.h"
 
 // A pre-made tree of widgets
 class Scene;
 namespace SceneFileParser{
+   static bool allWhite(const std::string& s){return string_tools::countwhite(s) == s.size();};
    //a potential widget
-   struct TreeObject {
-      TreeObject(std::string name, std::shared_ptr<TreeObject>): name(name), parent(parent){
-         if (parent){
-            parent.value()->children.push_back(this);
+   struct TreeObject : std::enable_shared_from_this<TreeObject>{
+   private:
+      TreeObject(const std::string& name): instanceName(name){}
+   public:
+      static std::shared_ptr<TreeObject> make_shared(std::string name){
+         return std::shared_ptr<TreeObject>(new TreeObject(name));
+      }
+      void addChild(std::shared_ptr<TreeObject> child){
+         if (child){
+            children.push_back(child);
+            child->parent = shared_from_this();
+         } else {
+            throw std::runtime_error("Child is null!");
          }
       }
-      const std::string name;
-      std::optional<std::shared_ptr<TreeObject>> parent;
+      const std::string instanceName;
+      std::weak_ptr<TreeObject> parent;
       std::vector<std::shared_ptr<TreeObject>> children;
+      std::shared_ptr<BaseWidget> widget;
+
    };
 
    struct DescObject {
-      DescObject(std::string name, std::string typeName)
-      : name(name)
+      DescObject(std::string instanceName, std::string typeName)
+      : instanceName(instanceName)
       , typeName(typeName)
       {}
-      const std::string name;
+      const std::string instanceName;
       const std::string typeName;
-      std::map<std::string, BaseProperty> properties;
-      void parse();
+      PropertyPrototypeMap properties;
    };
 
    //represents what the parser is doing with the text
    struct ParseStruct {
       enum class ParseState{NOT_FOUND, OPEN, CLOSED, ERROR};
       enum class StructType {TREE, DESC};
-      enum class ParseError{INVALID_INDENT_TYPE, INVALID_INDENT_LEVEL};
+      enum class ParseError{NO_DATA, BLANK_LINE, ROOT_LEADING_WHITESPACE, INVALID_CONTENTS, INVALID_INDENT_TYPE, INVALID_INDENT_LEVEL};
       ParseError error;
 
       ParseStruct(StructType type): type(type){}
-      virtual std::optional<ParseError> parse() = 0;
       void addLine(const std::string& line){
          _lines.push_back(line);
       };
-      ParseError setError(ParseError e){
+      void setError(ParseError e, const std::string& msg){
          error = e;
          currentState = ParseStruct::ParseState::ERROR;
-         return e;
+         //for now, throw exception
+         throw std::runtime_error("Parse error: " + msg);
       };
 
       const StructType type;
@@ -54,17 +67,18 @@ namespace SceneFileParser{
 
    struct TreeStruct : public ParseStruct{
       TreeStruct(): ParseStruct(ParseStruct::StructType::TREE){};
-      std::optional<ParseError> parse() override;
+      std::shared_ptr<TreeObject> parse();
    };
+
    struct DescStruct : public ParseStruct{
       DescStruct(): ParseStruct(ParseStruct::StructType::DESC){};
-      std::optional<ParseError> parse() override;
+      std::shared_ptr<Scene> parse(std::shared_ptr<TreeObject> root);
    };
 
    class Parser{
    public:
       Parser(const std::vector<char>&);
-      std::optional<std::shared_ptr<Scene>> parse();
+      std::shared_ptr<Scene> parse();
    private:
       std::vector<std::string> _tree;
       std::vector<std::string> _desc;
@@ -77,6 +91,10 @@ namespace SceneFileParser{
    static constexpr char TOKEN_DESC_START[] = "[Desc]";
    static constexpr char TOKEN_NEWLINE = '\n';
    static constexpr char TOKEN_LINE_CONTINUATION = '\\';
+   static constexpr char TOKEN_OBJECT_DECLARATION[] = " - ";
+   static constexpr char TOKEN_OBJECT_TERMINATOR = ';';
+   static constexpr char TOKEN_PROPERTY_LIST = ':';
+   static constexpr char TOKEN_PROPERTY_SEP = ':';
 };
 
 
@@ -95,37 +113,3 @@ private:
    std::string sceneName;
    friend class Window;
 };
-
-
-//comments not supported at this time
-// Blank or missing widget property fields indicate defaults
-
-/*
- * Scene Format:
- * -----------------
- * [Tree]
- * Root
- *    Child1
- *    Child2
- *       GrandChild1
- *       GrandChild2
- *    Child3
- *       GrandChild3
- *
- *
- * [Desc]
- * Root - BaseWidget:
- *    Property0|type: Value
- *    Property1|type: Value
- *    Property2|type: Value
- * Child1 - BaseWidget:
- *    Property0|type: Value
- *    Property1|type: Value
- *    Property2|type: Value
- * Child2 - BaseWidget:
- * Child3 - BaseWidget:
- * GrandChild1 - BaseWidget:
- * GrandChild2 - BaseWidget:
- * GrandChild3 - BaseWidget:
- * -----------------
- */
