@@ -8,11 +8,15 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set (CMAKE_CXX_STANDARD 17)
 
 function(install_file SOURCE DEST)
-    add_custom_command(
-            TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy
-            ${CMAKE_SOURCE_DIR}/${SOURCE}
-            ${CMAKE_CURRENT_BINARY_DIR}/${DEST})
+#    add_custom_command(
+#            TARGET ${PROJECT_NAME} POST_BUILD
+#            COMMAND ${CMAKE_COMMAND} -E copy
+#            ${CMAKE_SOURCE_DIR}/${SOURCE}
+#            ${CMAKE_CURRENT_BINARY_DIR}/${DEST}
+##            DEPENDS ${CMAKE_SOURCE_DIR}/${SOURCE}
+#            MAIN_DEPENDENCY ${CMAKE_SOURCE_DIR}/${SOURCE}
+#    )
+    configure_file(${CMAKE_SOURCE_DIR}/${SOURCE} ${CMAKE_CURRENT_BINARY_DIR}/${DEST} COPYONLY)
 endfunction()
 
 
@@ -35,28 +39,38 @@ if (NOT raylib_FOUND) # If there's none, fetch and build raylib
     endif()
 endif()
 
-add_library(widgets STATIC
-        widgets/meta/ArgParse.cpp
-        widgets/meta/FileSystem.cpp
-        widgets/meta/StringTools.cpp
-        widgets/meta/DrawInterface.cpp
-        widgets/meta/Application.cpp
-        widgets/meta/TypeManager.cpp
-        widgets/meta/Window.cpp
-        widgets/meta/Scene.cpp
-        widgets/meta/Property.cpp
-        widgets/meta/Logger.cpp
-        widgets/meta/SystemTime.cpp
-        widgets/Button.cpp
-        widgets/BaseWidget.cpp
+
+set(CUSTOM_SOURCES
+    widgets/test/TestWidgets.cpp
 )
 
+add_library(widgets STATIC
+    widgets/meta/ArgParse.cpp
+    widgets/meta/FileSystem.cpp
+    widgets/meta/StringTools.cpp
+    widgets/meta/DrawInterface.cpp
+    widgets/meta/Application.cpp
+    widgets/meta/TypeManager.cpp
+    widgets/meta/Window.cpp
+    widgets/meta/Scene.cpp
+    widgets/meta/Property.cpp
+    widgets/meta/Logger.cpp
+    widgets/meta/SystemTime.cpp
+    widgets/Button.cpp
+    widgets/BaseWidget.cpp
+    ${CUSTOM_SOURCES}
+)
+
+
+
 target_include_directories(widgets PUBLIC
-        widgets
-        widgets/meta
+    widgets
+    widgets/meta
+    widgets/test
 )
 
 target_link_libraries(widgets raylib)
+
 if (UNIX)
     target_link_libraries(widgets stdc++fs)
 endif (UNIX)
@@ -64,7 +78,7 @@ endif (UNIX)
 # Our Project
 add_executable(${PROJECT_NAME}
         main.cpp
-        )
+)
 
 target_link_libraries(${PROJECT_NAME} widgets)
 

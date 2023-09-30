@@ -1,5 +1,6 @@
 #pragma once
 #include "raylib.h"
+#include "StringTools.h"
 #include <string>
 
 namespace GFCSDraw {
@@ -15,10 +16,23 @@ namespace GFCSDraw {
          inline Vec2& operator-=(const Vec2& rhs){x -= rhs.x; y -= rhs.y; return *this;}
          inline Vec2& operator*=(const Vec2& rhs){x *= rhs.x; y *= rhs.y; return *this;}
          inline Vec2& operator/=(const Vec2& rhs){x /= rhs.x; y /= rhs.y; return *this;}
-         friend std::ostream& operator<<(std::ostream& os, const Vec2<T>& v){
-            os << "{" + std::to_string(v.x) + ", " + std::to_string(v.y) + "}";
-            return os;
+         inline std::string toString() const {return "{" + std::to_string(x) + ", " + std::to_string(y) + "}";}
+         inline void fromString(const std::string& s){
+            std::string sanitized;
+            for (const auto& c : s){
+               if (::isdigit(c) || c == '-' || c==',' || c=='.'){
+                  sanitized += c;
+               }
+            }
+            auto split = string_tools::split(sanitized, ",");
+            if (split.size() != 2){
+               return;
+            }
+
+            x = std::stoi(split[0]);
+            y = std::stoi(split[1]);
          }
+         friend std::ostream& operator<<(std::ostream& os, const Vec2<T>& v){os << v.toString();return os;}
          T x;
          T y;
       };
@@ -31,8 +45,29 @@ namespace GFCSDraw {
          inline Rect(const Vec2<int>& v): x((T)x), y((T)y){}
          inline Rect(const Vec2<float>& v): x((T)x), y((T)y){}
          inline Rect(const Vec2<double>& v): x((T)x), y((T)y){}
+         inline std::string toString() const {
+            return "{" + std::to_string(x) + ", " + std::to_string(y) + ", " +
+            std::to_string(width) + ", " + std::to_string(height) + "}";
+         }
+         inline void fromString(const std::string& s){
+            std::string sanitized;
+            for (const auto& c : s){
+               if (::isdigit(c) || c == '-' || c==',' || c=='.'){
+                  sanitized += c;
+               }
+            }
+            auto split = string_tools::split(sanitized, ",");
+            if (split.size() != 4){
+               return;
+            }
+
+            x = std::stoi(split[0]);
+            y = std::stoi(split[1]);
+            width = std::stoi(split[2]);
+            height = std::stoi(split[3]);
+         }
          friend std::ostream& operator<<(std::ostream& os, const Rect<T>& r){
-            os << "{" + std::to_string(r.x) + ", " + std::to_string(r.y) + "}";
+            os << r.toString();
             return os;
          }
          T x;

@@ -61,6 +61,7 @@ SceneFileParser::Parser::Parser(const std::vector<char>& data)
 /////////////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<Scene> SceneFileParser::Parser::parse() {
    //parse the tree
+   SceneFileParser::MetaStruct meta;
    SceneFileParser::TreeStruct tree;
    SceneFileParser::DescStruct desc;
    SceneFileParser::ParseStruct* openStruct = nullptr;
@@ -74,9 +75,12 @@ std::shared_ptr<Scene> SceneFileParser::Parser::parse() {
          openStruct->currentState = ParseStruct::ParseState::OPEN;
       };
 
+      //todo: newlines in arbitrary property data? how to handle
       //open a new struct (and potentially close an open struct)
-      if(currentLine == TOKEN_TREE_START){
+      if(currentLine == TOKEN_TREE_START) {
          doOpen(tree);
+      } else if (currentLine == TOKEN_META_START){
+         doOpen(meta);
       } else if (currentLine == TOKEN_DESC_START){
          doOpen(desc);
       } else if (c == TOKEN_LINE_CONTINUATION) {
@@ -91,14 +95,15 @@ std::shared_ptr<Scene> SceneFileParser::Parser::parse() {
    openStruct->currentState = ParseStruct::ParseState::CLOSED;
    bool treeFound = tree.currentState != ParseStruct::ParseState::NOT_FOUND;
    bool descFound = desc.currentState != ParseStruct::ParseState::NOT_FOUND;
-   if (!treeFound || !descFound){
+   bool metaFound = meta.currentState != ParseStruct::ParseState::NOT_FOUND;
+   if (!treeFound || !descFound || !metaFound){
       stringstream ss;
-      ss << "Scene file parsing failed - " << (treeFound ? TOKEN_TREE_START : TOKEN_DESC_START) << " not found!";
+      ss << "Scene file parsing failed - " << (treeFound ? (descFound ? TOKEN_META_START : TOKEN_DESC_START) : TOKEN_TREE_START) << " not found!";
       Application::exitError(ss.str(), Application::ExitReason::INVALID_SCENE_FILE_FORMAT);
    }
 
    //once we've added all the lines to the correct parser, we can process the structs
-   return desc.parse(tree.parse());
+   return meta.parse(desc.parse(tree.parse()));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -241,9 +246,8 @@ std::shared_ptr<Scene> SceneFileParser::DescStruct::parse(std::shared_ptr<TreeOb
                   // so we need to advance the line pointer and consume as many chars as we need
                   size_t count = stoi(soFar); //should throw an error if invalid
                   //pull in that many bytes, and go to the next line if we have to
-                  soFar.clear();
-                  j++; //advance char since next char will be a separator
                   while (count > 0){
+                     j++;
                      if (j >= line.size()){
                         //go to next line
                         i++;
@@ -257,6 +261,7 @@ std::shared_ptr<Scene> SceneFileParser::DescStruct::parse(std::shared_ptr<TreeOb
                soFar.clear();
             }
          }
+         currentObjectName.clear();
       }
    }
 
@@ -274,17 +279,35 @@ std::shared_ptr<Scene> SceneFileParser::DescStruct::parse(std::shared_ptr<TreeOb
       auto desc = findDesc(obj->instanceName);
       if (!desc) {
          throw std::runtime_error("Object type " + desc->instanceName + " has no matching Description!");
-      }//Deserialize the type
+      }
+      //Deserialize the type
       obj->widget = TypeManager::deserialize(desc->typeName, desc->instanceName, desc->properties);
+      //deserialize children
       for (auto& child : obj->children){
          deserialize(child);
          obj->widget->addChild(child->widget);
       }
    };
 
-   deserialize(std::move(root));
+   deserialize(root);
    //declare the scene
    auto scene = make_shared<Scene>(root->widget);
    return scene;
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<Scene> SceneFileParser::MetaStruct::parse(std::shared_ptr<Scene> scene) {
+   for (const auto& line : _lines){
+      if(line == TOKEN_META_START) continue;
+      auto split = string_tools::split(line, ":");
+      if (split.size() != 2){
+         throw std::runtime_error("Key value pair requires two values to unpack!");
+      }
+      auto key = string_tools::lrstrip(split[0]);
+      auto value = string_tools::lrstrip(split[1]);
+      if (key==KEY_SCENE_NAME){
+         scene->name = value;
+      }
+   }
+   return scene;
+}
