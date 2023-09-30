@@ -45,7 +45,7 @@ namespace SceneFileParser{
    //represents what the parser is doing with the text
    struct ParseStruct {
       enum class ParseState{NOT_FOUND, OPEN, CLOSED, ERROR};
-      enum class StructType {TREE, DESC};
+      enum class StructType {TREE, DESC, META};
       enum class ParseError{NO_DATA, BLANK_LINE, ROOT_LEADING_WHITESPACE, INVALID_CONTENTS, INVALID_INDENT_TYPE, INVALID_INDENT_LEVEL};
       ParseError error;
 
@@ -75,6 +75,11 @@ namespace SceneFileParser{
       std::shared_ptr<Scene> parse(std::shared_ptr<TreeObject> root);
    };
 
+   struct MetaStruct : public ParseStruct{
+      MetaStruct(): ParseStruct(ParseStruct::StructType::META){}
+      std::shared_ptr<Scene> parse(std::shared_ptr<Scene> scene);
+   };
+
    class Parser{
    public:
       Parser(const std::vector<char>&);
@@ -87,6 +92,7 @@ namespace SceneFileParser{
       
    };
 
+   static constexpr char TOKEN_META_START[] = "[Meta]";
    static constexpr char TOKEN_TREE_START[] = "[Tree]";
    static constexpr char TOKEN_DESC_START[] = "[Desc]";
    static constexpr char TOKEN_NEWLINE = '\n';
@@ -95,6 +101,8 @@ namespace SceneFileParser{
    static constexpr char TOKEN_OBJECT_TERMINATOR = ';';
    static constexpr char TOKEN_PROPERTY_LIST = ':';
    static constexpr char TOKEN_PROPERTY_SEP = ':';
+
+   static constexpr char KEY_SCENE_NAME[] = "SceneName";
 };
 
 
@@ -105,11 +113,12 @@ public:
    std::string toString();
    static std::optional<std::shared_ptr<Scene>> fromString();
    static std::optional<std::shared_ptr<Scene>> fromFile(const std::string& filePath);
+   std::shared_ptr<BaseWidget> getRoot(){return _root;}
+protected:
+   std::string name;
 private:
-
-
-
    std::shared_ptr<BaseWidget> _root;
    std::string sceneName;
+   friend struct SceneFileParser::MetaStruct;
    friend class Window;
 };

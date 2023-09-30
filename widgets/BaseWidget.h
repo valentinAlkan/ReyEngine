@@ -2,6 +2,7 @@
 #include "raylib.h"
 #include "DrawInterface.h"
 #include "Property.h"
+#include "TypeManager.h"
 #include <utility>
 #include <vector>
 #include <memory>
@@ -11,9 +12,7 @@
 #include <unordered_set>
 #include <unordered_map>
 
-
-
-class BaseWidget : public std::enable_shared_from_this<BaseWidget> {
+class  BaseWidget : public std::enable_shared_from_this<BaseWidget> {
    using WidgetPtr = std::shared_ptr<BaseWidget>;
    using ChildMap = std::map<std::string, WidgetPtr>;
    using fVec = GFCSDraw::Vec2<float>;
@@ -23,12 +22,12 @@ public:
    BaseWidget(std::string name, std::string typeName);
    uint64_t getRid() const {return _rid;}
    std::string getName() const {return _name;}
-   GFCSDraw::Rect<double> getRect() const {return _rect;}
-   dVec getPos() const {return GFCSDraw::Vec2<double>(_rect.x, _rect.y);}
+   GFCSDraw::Rect<double> getRect() const {return _rect.value;}
+   dVec getPos() const {return GFCSDraw::Vec2<double>(_rect.value.x, _rect.value.y);}
    dVec getGlobalPos() const;
-   void setRect(const GFCSDraw::Rect<double>& r){_rect = r;}
-   void setPos(double x, double y){_rect.x = x; _rect.y = y;}
-   void setPos(const dVec& pos){_rect.x = pos.x; _rect.y = pos.y;}
+   void setRect(const GFCSDraw::Rect<double>& r){_rect.value = r;}
+   void setPos(double x, double y){_rect.value.x = x; _rect.value.y = y;}
+   void setPos(const dVec& pos){_rect.value.x = pos.x; _rect.value.y = pos.y;}
    bool setName(const std::string& name, bool append_index=false);
    std::string getTypeName(){return _typeName;}
 
@@ -48,6 +47,10 @@ public:
    std::optional<WidgetPtr> removeChild(WidgetPtr);
 
    bool operator==(const WidgetPtr&) const;
+
+   template<class T>
+   static void registerType(std::string typeName, Deserializer fx){TypeManager::registerType(typeName, fx);}
+   std::string serialize();
 protected:
    //override and setProcess(true) to allow processing
    virtual void _process(float dt){};
@@ -55,13 +58,16 @@ protected:
    void renderChildren(); //draw the widget's children
    void _drawText(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color) const;
 
-   virtual void registerProperties() = 0;
+   virtual void registerProperties(){};
    void registerProperty(BaseProperty& property);
+   void _deserialize(PropertyPrototypeMap&);
+
 private:
+   void _registerProperties(); //register types internal to base widget
    uint64_t _rid; //unique identifier
    const std::string _typeName;
    std::string _name;
-   GFCSDraw::Rect<double> _rect;
+   RectProperty<double> _rect;
    std::optional<WidgetPtr> _parent; //todo: should be weak ptr
    ///If this widget is the root of a scene, then the rest of the scene data is here.
    std::optional<std::unique_ptr<Scene>> _scene;
@@ -69,9 +75,6 @@ private:
    std::recursive_mutex _childLock;
    const std::lock_guard<std::recursive_mutex> childSafetyLock(){return std::lock_guard<std::recursive_mutex>(_childLock);}
    bool _scheduled_for_deletion = false; // true when the widget has been scheduled for deletion but is not yet deleted.
-
-   std::string serialize();
-   void deserialize(std::map<std::string, std::string>);
 
    ChildMap _children;
    PropertyMap _properties;

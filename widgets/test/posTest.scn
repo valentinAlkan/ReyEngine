@@ -1,26 +1,10 @@
+[Meta]
+SceneName: someScene
 [Tree]
 Root
-   Child1
-   Child2
-      GrandChild1
-         GreatGrandChild1
-            GreatGreatGrandChild1
-         GreatGrandChild2
-            GreatGreatGrandChild2
-      GrandChild2
-   Child3
-      GrandChild3
+   Child
 [Desc]
 Root - PosTestWidget:
-   Property0|Int|1|0;
-   Property1|Int|2|10;
-   Property2|String|10|HelloDolly;
-Child1 - PosTestWidget:
-   Property0|Int|1|0;
-   Property1|Int|1|0;
-   Property2|Int|1|0;
-Child2 - PosTestWidget;
-Child3 - PosTestWidget;
-GrandChild1 - PosTestWidget;
-GrandChild2 - PosTestWidget;
-GrandChild3 - PosTestWidget;
+   _rect|Rect|13|{10,10,10,10}
+Child - PosTestWidget:
+   _rect|Rect|13|{1000,200,10,10}

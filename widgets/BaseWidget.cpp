@@ -10,6 +10,7 @@ using namespace GFCSDraw;
 BaseWidget::BaseWidget(std::string name, std::string typeName)
 :_name(std::move(name))
 , _typeName(typeName)
+, _rect("_rect")
 , _rid(Application::instance().getNewRid())
 {}
 
@@ -146,13 +147,23 @@ std::string BaseWidget::serialize() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::deserialize(std::map<std::string, std::string> propertyData){
+void BaseWidget::_deserialize(PropertyPrototypeMap& propertyData){
    //register all properties so we know what's what
+   _registerProperties();
    registerProperties();
-   //move the properties to their new home
+   //   move the properties to their new home
    for (auto& [name, data] : propertyData){
+      auto found = _properties.find(name);
+      if (found == _properties.end()){
+         throw std::runtime_error("Property " + name + " of type " + data.typeName + " not registered to type " + _typeName);
+      }
       _properties[name]->load(data);
    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::_registerProperties() {
+   registerProperty(_rect);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
