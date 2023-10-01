@@ -49,8 +49,9 @@ public:
    bool operator==(const WidgetPtr&) const;
 
    template<class T>
-   static void registerType(std::string typeName, Deserializer fx){TypeManager::registerType(typeName, fx);}
+   static void registerType(std::string typeName, std::string parentType, bool isVirtual, Deserializer fx){TypeManager::registerType(typeName, parentType, isVirtual, fx);}
    std::string serialize();
+   const PropertyMap& getProperties(){return _properties;}
 protected:
    //override and setProcess(true) to allow processing
    virtual void _process(float dt){};

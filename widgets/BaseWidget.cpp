@@ -138,7 +138,7 @@ std::string BaseWidget::serialize() {
    for (const auto& [anme, property] : _properties){
       auto value = property->dump();
       data << PropertyMeta::INDENT << property->instanceName();
-      data << PropertyMeta::SEP << property->typeName();
+      data << PropertyMeta::SEP << property->typeName(); //todo: ? pretty sure this isn't actually necesary
       data << PropertyMeta::SEP << value.size();
       data << PropertyMeta ::SEP << value;
       data << ";";

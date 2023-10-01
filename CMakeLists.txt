@@ -8,14 +8,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set (CMAKE_CXX_STANDARD 17)
 
 function(install_file SOURCE DEST)
-#    add_custom_command(
-#            TARGET ${PROJECT_NAME} POST_BUILD
-#            COMMAND ${CMAKE_COMMAND} -E copy
-#            ${CMAKE_SOURCE_DIR}/${SOURCE}
-#            ${CMAKE_CURRENT_BINARY_DIR}/${DEST}
-##            DEPENDS ${CMAKE_SOURCE_DIR}/${SOURCE}
-#            MAIN_DEPENDENCY ${CMAKE_SOURCE_DIR}/${SOURCE}
-#    )
     configure_file(${CMAKE_SOURCE_DIR}/${SOURCE} ${CMAKE_CURRENT_BINARY_DIR}/${DEST} COPYONLY)
 endfunction()
 
@@ -84,3 +76,4 @@ target_link_libraries(${PROJECT_NAME} widgets)
 
 install_file(./widgets/test/test.scn ./test/test.scn)
 install_file(./widgets/test/posTest.scn ./test/posTest.scn)
+install_file(./widgets/test/posTest.scn ./test/serializeTest.scn)

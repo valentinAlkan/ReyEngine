@@ -63,21 +63,25 @@ namespace SceneFileParser{
       const StructType type;
       ParseState currentState = ParseState::NOT_FOUND;
       std::vector<std::string> _lines;
+      virtual std::string toString(std::shared_ptr<BaseWidget> root) = 0;
    };
 
    struct TreeStruct : public ParseStruct{
       TreeStruct(): ParseStruct(ParseStruct::StructType::TREE){};
       std::shared_ptr<TreeObject> parse();
+      std::string toString(std::shared_ptr<BaseWidget> root) override;
    };
 
    struct DescStruct : public ParseStruct{
       DescStruct(): ParseStruct(ParseStruct::StructType::DESC){};
       std::shared_ptr<Scene> parse(std::shared_ptr<TreeObject> root);
+      std::string toString(std::shared_ptr<BaseWidget> root) override;
    };
 
    struct MetaStruct : public ParseStruct{
       MetaStruct(): ParseStruct(ParseStruct::StructType::META){}
       std::shared_ptr<Scene> parse(std::shared_ptr<Scene> scene);
+      std::string toString(std::shared_ptr<BaseWidget> root) override;
    };
 
    class Parser{
