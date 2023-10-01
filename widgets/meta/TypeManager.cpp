@@ -17,14 +17,14 @@ void TypeManager::registerType(std::string typeName, string parentType, bool isV
    if (instance().getTypeCanBeNull(typeName)){
       throw std::runtime_error(msg + "has already been registered!");
    }
-   if (fx == nullptr){
+   if (!isVirtual && fx == nullptr){
       throw std::runtime_error(msg + "requires a valid deserializer function!");
    }
    if (!instance().getTypeCanBeNull(parentType)){
       throw std::runtime_error(msg + "parent type " + parentType + " has not been registered!");
    }
    if (isVirtual && fx){
-      throw std::runtime_error(msg + "parent type " + parentType + " has not been registered!");
+      throw std::runtime_error(msg + " virtual types cannot have deserializers!");
    }
    instance()._types[typeName] = make_shared<TypeMeta>(typeName, parentType, isVirtual, std::move(fx));
 }

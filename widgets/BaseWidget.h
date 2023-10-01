@@ -12,6 +12,8 @@
 #include <unordered_set>
 #include <unordered_map>
 
+class Scene;
+
 class  BaseWidget : public std::enable_shared_from_this<BaseWidget> {
    using WidgetPtr = std::shared_ptr<BaseWidget>;
    using ChildMap = std::map<std::string, WidgetPtr>;
@@ -71,7 +73,7 @@ private:
    RectProperty<double> _rect;
    std::optional<WidgetPtr> _parent; //todo: should be weak ptr
    ///If this widget is the root of a scene, then the rest of the scene data is here.
-   std::optional<std::unique_ptr<Scene>> _scene;
+   std::optional<std::shared_ptr<Scene>> _scene;
    bool _request_delete = false; //true when we want to remove this object from the tree
    std::recursive_mutex _childLock;
    const std::lock_guard<std::recursive_mutex> childSafetyLock(){return std::lock_guard<std::recursive_mutex>(_childLock);}

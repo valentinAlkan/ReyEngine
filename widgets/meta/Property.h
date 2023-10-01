@@ -47,7 +47,6 @@ struct Property : public BaseProperty {
    : BaseProperty(instanceName, typeName)
    , value(std::move(defaultvalue)){}
    T value;
-   friend class Scene;
 };
 
 struct StringProperty : public Property<std::string>{

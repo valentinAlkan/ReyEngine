@@ -48,7 +48,7 @@ add_library(widgets STATIC
     widgets/meta/Property.cpp
     widgets/meta/Logger.cpp
     widgets/meta/SystemTime.cpp
-    widgets/Button.cpp
+    widgets/BaseButton.cpp
     widgets/BaseWidget.cpp
     ${CUSTOM_SOURCES}
 )
