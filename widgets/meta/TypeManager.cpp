@@ -2,17 +2,37 @@
 #include "TypeManager.h"
 #include "CustomTypes.h"
 #include "BaseWidget.h"
+
+using namespace std;
 /////////////////////////////////////////////////////////////////////////////////////////
-void TypeManager::registerType(std::string typeName, Deserializer fx) {
-   auto found = instance()._deserializers.find(typeName);
-   if (found != instance()._deserializers.end()){
-      throw std::runtime_error("Typename " + typeName + " already has a registered deserializer!");
+void TypeManager::registerType(std::string typeName, string parentType, bool isVirtual, Deserializer fx) {
+   if (typeName.empty()){
+      throw std::runtime_error("Typename cannot be empty!");
    }
-   instance()._deserializers[typeName] = std::move(fx);
+   string msg = "Typename " + typeName +" ";
+   if (parentType.empty()){
+      throw std::runtime_error(msg + "parentType cannot be empty!");
+   }
+   if (instance().getTypeCanBeNull(typeName)){
+      throw std::runtime_error(msg + "has already been registered!");
+   }
+   if (fx == nullptr){
+      throw std::runtime_error(msg + "requires a valid deserializer function!");
+   }
+   if (!instance().getTypeCanBeNull(parentType)){
+      throw std::runtime_error(msg + "parent type " + parentType + " has not been registered!");
+   }
+   if (isVirtual && fx){
+      throw std::runtime_error(msg + "parent type " + parentType + " has not been registered!");
+   }
+   instance()._types[typeName] = make_shared<TypeMeta>(typeName, parentType, isVirtual, std::move(fx));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void TypeManager::_registerTypes() {
+   //Manuall register BaseWidget
+   static constexpr char basewidget[] = "BaseWidget";
+   instance()._types[basewidget] = make_shared<TypeMeta>(basewidget, "", true, nullptr);
    //register all internal widget types here
 
    //register custom types
@@ -22,10 +42,32 @@ void TypeManager::_registerTypes() {
 /////////////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<BaseWidget> TypeManager::deserialize(const std::string &typeName, const std::string &instanceName, PropertyPrototypeMap& protoperties) {
    auto& instance = TypeManager::instance();
-   auto found = instance._deserializers.find(typeName);
-   if (found == instance._deserializers.end()){
+   auto found = instance.getType(typeName);
+   if (!found->deserializer){
       throw std::runtime_error("No deserializer for type " + typeName);
+   };
+   if (found->isVirtual){
+      throw std::runtime_error("Type " + typeName + " is virtual and cannot be instantiated or deserialized!");
    }
-   auto fx = found->second;
-   return fx(instanceName, protoperties);
+   return found->deserializer(instanceName, protoperties);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<TypeMeta> TypeManager::getType(string typeName) {
+   auto& instance = TypeManager::instance();
+   auto found = instance._types.find(typeName);
+   if (found == instance._types.end()){
+      throw std::runtime_error("No TypeMeta for type " + typeName);
+   }
+   return found->second;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<TypeMeta> TypeManager::getTypeCanBeNull(std::string typeName) {
+   auto& instance = TypeManager::instance();
+   auto found = instance._types.find(typeName);
+   if (found == instance._types.end()){
+      return nullptr;
+   }
+   return found->second;
 }
