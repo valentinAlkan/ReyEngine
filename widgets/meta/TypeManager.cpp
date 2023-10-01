@@ -2,6 +2,7 @@
 #include "TypeManager.h"
 #include "CustomTypes.h"
 #include "BaseWidget.h"
+#include "Button.h"
 
 using namespace std;
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -30,10 +31,11 @@ void TypeManager::registerType(std::string typeName, string parentType, bool isV
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void TypeManager::_registerTypes() {
-   //Manuall register BaseWidget
+   //Manually register BaseWidget
    static constexpr char basewidget[] = "BaseWidget";
    instance()._types[basewidget] = make_shared<TypeMeta>(basewidget, "", true, nullptr);
-   //register all internal widget types here
+   //register all other internal widget types here
+   BaseButton::registerType<BaseButton>("BaseButton", "BaseWidget", true, nullptr);
 
    //register custom types
    CustomTypes::registerTypes();
