@@ -22,6 +22,7 @@ class  BaseWidget : public std::enable_shared_from_this<BaseWidget> {
    using dVec = GFCSDraw::Vec2<double>;
 public:
    BaseWidget(std::string name, std::string typeName);
+   ~BaseWidget();
    uint64_t getRid() const {return _rid;}
    std::string getName() const {return _name;}
    GFCSDraw::Rect<double> getRect() const {return _rect.value;}
