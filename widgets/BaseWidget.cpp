@@ -1,6 +1,7 @@
 #include <algorithm>
 #include "BaseWidget.h"
 #include "Application.h"
+#include "EventManager.h"
 #include <iostream>
 
 using namespace std;
@@ -13,6 +14,11 @@ BaseWidget::BaseWidget(std::string name, std::string typeName)
 , _rect("_rect")
 , _rid(Application::instance().getNewRid())
 {}
+
+BaseWidget::~BaseWidget() {
+   auto thiz = shared_from_this();
+   EventManager::unsubscribe(thiz);
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////
 bool BaseWidget::setName(const std::string& newName, bool append_index) {
