@@ -7,3 +7,7 @@ public:
    void registerProperties() override;
 
 };
+
+class PushButton : public BaseWidget{
+
+};
