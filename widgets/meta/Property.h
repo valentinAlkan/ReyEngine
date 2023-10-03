@@ -36,6 +36,7 @@ struct BaseProperty{
    virtual std::string dump() = 0;
    std::string instanceName(){return _instanceName;}
    std::string typeName(){return _typeName;}
+   std::vector<BaseProperty> subProperties;
 private:
    const std::string _instanceName;
    const std::string _typeName;
