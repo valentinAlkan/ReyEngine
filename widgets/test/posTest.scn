@@ -6,8 +6,8 @@ Root
 [Desc]
 Root - PosTestWidget:
    _rect|Rect|13|{10,10,10,10}
-      _subrect|Rect|13|{13,13,13,13}
-   _BUTT|Rect|13|{11,11,11,11}
+   someString|String|12|blahblahblah
+      someString|String|12|blahblahblah
 Child - PosTestWidget:
    _rect|Rect|13|{1000,200,10,10}
       _subrect|Rect|13|{12,12,12,12}
