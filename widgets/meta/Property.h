@@ -26,6 +26,7 @@ struct PropertyPrototype{
    std::string instanceName;
    std::string typeName;
    std::string data;
+   std::vector<PropertyPrototype> subproperties;
 };
 
 struct BaseProperty{

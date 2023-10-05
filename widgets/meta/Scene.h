@@ -105,6 +105,7 @@ namespace SceneFileParser{
    static constexpr char TOKEN_OBJECT_TERMINATOR = ';';
    static constexpr char TOKEN_PROPERTY_LIST = ':';
    static constexpr char TOKEN_PROPERTY_SEP = ':';
+   static std::string_view TOKEN_PROPERTY_INDENT = "   ";
 
    static constexpr char KEY_SCENE_NAME[] = "SceneName";
 };
