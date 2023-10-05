@@ -94,7 +94,11 @@ std::shared_ptr<Scene> SceneFileParser::Parser::parse() {
          openStruct->addLine(string_tools::rstrip(currentLine));
          currentLine.clear();
       }
-
+   }
+   //if we dont have an eof newline then we need to add the last line
+   auto rem = string_tools::rstrip(currentLine);
+   if (!rem.empty() && string_tools::countwhite(rem) != rem.size()){
+      openStruct->addLine(rem);
    }
    openStruct->currentState = ParseStruct::ParseState::CLOSED;
    bool treeFound = tree.currentState != ParseStruct::ParseState::NOT_FOUND;
@@ -214,12 +218,20 @@ std::shared_ptr<Scene> SceneFileParser::DescStruct::parse(std::shared_ptr<TreeOb
    }
    map<string, DescObject> objects;
    std::string currentObjectName;
+   std::stack<PropertyPrototype*> currentProperty;
 
    for (size_t i=1; i<_lines.size(); i++){
       auto line = _lines[i];
       //see if its a declaration line
+      if (string_tools::countwhitel(line)){
+         //line has leading whitespace, and so is a property
+      } else {
+         //line has no leading whitespace, and so is a declaration
+         currentObjectName.clear();
+         currentProperty = {};
+      }
       if (currentObjectName.empty()){
-         //is delcaration line
+         //is declaration line
          auto split = string_tools::split(line, TOKEN_OBJECT_DECLARATION);
          //todo: enforce whitespace requirements and check data validity
          currentObjectName = split[0];
@@ -227,12 +239,22 @@ std::shared_ptr<Scene> SceneFileParser::DescStruct::parse(std::shared_ptr<TreeOb
          auto pair = std::pair<string, DescObject>(currentObjectName, DescObject(currentObjectName, typeName));
          objects.emplace(pair);
       } else {
-         //otherwise we are declaring properties to the most recent object
-         //iterate over the line from the start, since the data section could be arbitrarily long
+         //otherwise we are declaring properties to the most recent object/property/subproperty
+         // iterate over the line from the start, since the data section could be arbitrarily long
+         //Check indent level to match with correct property
+         auto indentCount = string_tools::countwhitel(line);
+         if (indentCount % TOKEN_PROPERTY_INDENT.size() != 0){
+            throw std::runtime_error("Scene file parsing: Indent level mismatch in line " + to_string(i) + ": " + line);
+         }
+         //pop off elements for indent count
+         auto indentLevel = indentCount / TOKEN_PROPERTY_INDENT.size();
+         auto popCount = currentProperty.size() - (indentLevel - 1);
+         for(size_t p=1; p<popCount; p++){
+            currentProperty.pop();
+         }
          string soFar;
          string instanceName;
          string typeName;
-         PropertyPrototype* protoperty = nullptr; //pronounced pro-top-urty
          //todo: this could be a lot faster if we didn't allocate new strings and do copies.
          for (size_t j=0; j<line.size(); j++){
             auto c = line[j];
@@ -241,16 +263,26 @@ std::shared_ptr<Scene> SceneFileParser::DescStruct::parse(std::shared_ptr<TreeOb
                soFar+=c;
             } else {
                if (instanceName.empty()){
+                  //parse property name
                   instanceName = string_tools::lrstrip(soFar);
                   auto it = objects.find(currentObjectName);
                   auto& descobj = it->second;
-                  descobj.properties[instanceName] = PropertyPrototype();
-                  protoperty = &descobj.properties[instanceName];
-                  protoperty->instanceName = instanceName;
+                  if (currentProperty.empty()){
+                     //object property
+                     descobj.properties[instanceName] = PropertyPrototype();
+                     currentProperty.push(&descobj.properties[instanceName]);
+                  } else {
+                     //subproperty
+                     currentProperty.top()->subproperties.emplace_back();
+                     currentProperty.push(&currentProperty.top()->subproperties.back());
+                  }
+                  currentProperty.top()->instanceName = instanceName;
                } else if (typeName.empty()) {
+                  //parse property type
                   typeName = soFar;
-                  protoperty->typeName = typeName;
-               } else if (protoperty->data.empty()){
+                  currentProperty.top()->typeName = typeName;
+               } else if (currentProperty.top()->data.empty()){
+                  //parse property data
                   //this is where things get tricky - property data can be arbitrarily long and include arbitrary symbols
                   // so we need to advance the line pointer and consume as many chars as we need
                   size_t count = stoi(soFar); //should throw an error if invalid
@@ -262,7 +294,7 @@ std::shared_ptr<Scene> SceneFileParser::DescStruct::parse(std::shared_ptr<TreeOb
                         i++;
                         line = _lines[i];
                      }
-                     protoperty->data += line[j];
+                     currentProperty.top()->data += line[j];
                      count--;
                   }
                   break;
@@ -270,7 +302,6 @@ std::shared_ptr<Scene> SceneFileParser::DescStruct::parse(std::shared_ptr<TreeOb
                soFar.clear();
             }
          }
-         currentObjectName.clear();
       }
    }
 
