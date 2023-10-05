@@ -155,28 +155,18 @@ std::string BaseWidget::serialize() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::_deserialize(PropertyPrototypeMap& propertyData){
    //register all properties so we know what's what
-   _registerProperties();
    registerProperties();
    //   move the properties to their new home
    for (auto& [name, data] : propertyData){
       auto found = _properties.find(name);
       if (found == _properties.end()){
-         throw std::runtime_error("Property " + name + " of type " + data.typeName + " not registered to type " + _typeName);
+         throw std::runtime_error("Property " + name + " of type " + data.typeName + " not registered to type " + _typeName + ". Did you remember to call ParentType::registerProperties() for each parent type?");
       }
       _properties[name]->load(data);
    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::_registerProperties() {
+void BaseWidget::registerProperties() {
    registerProperty(_rect);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::registerProperty(BaseProperty& property) {
-   auto found = _properties.find(property.instanceName());
-   if (found != _properties.end()){
-      throw std::runtime_error("Property name " + property.instanceName() + " already exists!");
-   }
-   _properties[property.instanceName()] = &property;
 }

@@ -14,7 +14,10 @@
 
 class Scene;
 
-class  BaseWidget : public std::enable_shared_from_this<BaseWidget> {
+class  BaseWidget
+: public std::enable_shared_from_this<BaseWidget>
+, public PropertyContainer
+{
    using WidgetPtr = std::shared_ptr<BaseWidget>;
    using ChildMap = std::map<std::string, WidgetPtr>;
    using fVec = GFCSDraw::Vec2<float>;
@@ -62,12 +65,10 @@ protected:
    void renderChildren(); //draw the widget's children
    void _drawText(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color) const;
 
-   virtual void registerProperties(){};
-   void registerProperty(BaseProperty& property);
+   void registerProperties() override;
    void _deserialize(PropertyPrototypeMap&);
 
 private:
-   void _registerProperties(); //register types internal to base widget
    uint64_t _rid; //unique identifier
    const std::string _typeName;
    std::string _name;
@@ -81,6 +82,5 @@ private:
    bool _scheduled_for_deletion = false; // true when the widget has been scheduled for deletion but is not yet deleted.
 
    ChildMap _children;
-   PropertyMap _properties;
    friend class Window;
 };
