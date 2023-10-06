@@ -39,7 +39,10 @@ struct PropertyContainer{
    ///make sure ALL register property functions are called
    virtual void registerProperties() = 0;
    void registerProperty(BaseProperty& property);
+   PropertyMap& getProperties(){return _properties;}
 protected:
+   void _initProperties(){
+   };
    PropertyMap _properties;
 };
 
@@ -52,6 +55,7 @@ struct BaseProperty : PropertyContainer {
    virtual std::string dump() = 0;
    std::string instanceName() const {return _instanceName;}
    std::string typeName() const {return _typeName;}
+   virtual void registerProperties() = 0;
 private:
    const std::string _instanceName;
    const std::string _typeName;
@@ -62,6 +66,14 @@ struct Property : public BaseProperty {
    Property(const std::string instanceName, const std::string& typeName, T defaultvalue)
    : BaseProperty(instanceName, typeName)
    , value(std::move(defaultvalue)){}
+   void registerProperties() override {}
+   Property& operator=(const T& newValue){
+      value = newValue;
+   }
+   T get(){return value;}
+   void set(const T& newValue){
+      value = newValue;
+   }
    T value;
 };
 
@@ -71,7 +83,6 @@ struct StringProperty : public Property<std::string>{
    {}
    std::string dump() override {return value;}
    void load(const PropertyPrototype& data) override { value = data.data;}
-   void registerProperties() override {}
 };
 
 struct BoolProperty : public Property<bool>{
@@ -80,7 +91,6 @@ struct BoolProperty : public Property<bool>{
    {}
    std::string dump() override {return std::to_string(value);}
    void load(const PropertyPrototype& data) override { value = std::stoi(data.data);}
-   void registerProperties() override {}
 };
 
 struct IntProperty : public Property<int>{
@@ -89,7 +99,6 @@ struct IntProperty : public Property<int>{
    {}
    std::string dump() override {return std::to_string(value);}
    void load(const PropertyPrototype& data) override { value = std::stoi(data.data);}
-   void registerProperties() override {}
 };
 
 struct FloatProperty : public Property<double>{
@@ -98,7 +107,6 @@ struct FloatProperty : public Property<double>{
    {}
    std::string dump() override {return std::to_string(value);}
    void load(const PropertyPrototype& data) override { value = std::stod(data.data);}
-   void registerProperties() override {}
 };
 
 template <typename T>
@@ -108,7 +116,6 @@ struct Vec2Property : public Property<GFCSDraw::Vec2<T>>{
    {}
    std::string dump() override {return value.toString();}
    void load(const PropertyPrototype& data) override {value.fromString(data.data);}
-   void registerProperties() override {}
 };
 
 template <typename T>
@@ -118,5 +125,4 @@ struct RectProperty : public Property<GFCSDraw::Rect<T>>{
    {}
    std::string dump() override {return value.toString();}
    void load(const PropertyPrototype& data) override {value.fromString(data.data);}
-   void registerProperties() override {}
 };

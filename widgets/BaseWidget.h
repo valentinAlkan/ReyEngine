@@ -12,6 +12,12 @@
 #include <unordered_set>
 #include <unordered_map>
 
+#define GFCSDRAW_OBJECT(class, parent) \
+   static std::shared_ptr<BaseWidget> class::deserialize(const std::string& instanceName, PropertyPrototypeMap& properties) { \
+   auto retval = std::make_shared<class>(instanceName); \
+   retval->BaseWidget::_deserialize(properties);        \
+   return retval;}
+
 class Scene;
 
 class  BaseWidget
@@ -54,10 +60,8 @@ public:
 
    bool operator==(const WidgetPtr&) const;
 
-   template<class T>
    static void registerType(std::string typeName, std::string parentType, bool isVirtual, Deserializer fx){TypeManager::registerType(typeName, parentType, isVirtual, fx);}
    std::string serialize();
-   const PropertyMap& getProperties(){return _properties;}
 protected:
    //override and setProcess(true) to allow processing
    virtual void _process(float dt){};

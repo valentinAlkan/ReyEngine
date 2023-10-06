@@ -22,10 +22,3 @@ void Label::_process(float dt) {}
 void Label::registerProperties() {
    registerProperty(text);
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<Label> Label::deserialize(std::string instanceName, PropertyPrototypeMap properties) {
-   auto retval = make_shared<Label>(instanceName);
-   retval->_deserialize(properties);
-   return retval;
-}

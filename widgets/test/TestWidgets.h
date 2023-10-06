@@ -3,17 +3,23 @@
 #include <string>
 
 struct TestProperty : StringProperty{
-   TestProperty(const std::string& instanceName): StringProperty(instanceName){}
+   TestProperty(const std::string& instanceName): StringProperty(instanceName)
+   , subProp("subProp")
+   {
+      subProp.set("default");
+   }
+   void registerProperties() override {
+      registerProperty(subProp);
+   }
+   StringProperty subProp;
 };
 
 class PosTestWidget : public BaseWidget {
 public:
+   GFCSDRAW_OBJECT(PosTestWidget, BaseWidget);
    PosTestWidget(std::string name);
    void render() const override;
    void _process(float dt) override;
    void registerProperties() override;
-   static std::shared_ptr<PosTestWidget> deserialize(std::string instanceName, PropertyPrototypeMap);
-
-private:
    TestProperty someString;
 };

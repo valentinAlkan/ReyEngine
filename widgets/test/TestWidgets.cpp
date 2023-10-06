@@ -10,7 +10,9 @@ using namespace GFCSDraw;
 PosTestWidget::PosTestWidget(string name)
 : BaseWidget(std::move(name), "PosTestWidget")
 , someString("someString")
-{}
+{
+   someString.set("default");
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void PosTestWidget::render() const {
@@ -18,7 +20,9 @@ Vec2<int> pos = getGlobalPos();
 stringstream text;
    text << getName() << "\n";
    text << getPos() << "\n";
-   text << "{" + to_string(pos.x) + "," + to_string(pos.y) + "}";
+   text << getRect().toString() << "\n";
+   text << "someString = " << someString.value << "\n";
+   text << "subProp = " << someString.subProp.value << "\n";
    _drawText(text.str(), {0,0}, 20, RED);
 }
 
@@ -31,11 +35,4 @@ void PosTestWidget::_process(float dt) {
 void PosTestWidget::registerProperties() {
    BaseWidget::registerProperties();
    registerProperty(someString);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<PosTestWidget> PosTestWidget::deserialize(std::string instanceName, PropertyPrototypeMap properties) {
-   auto retval = make_shared<PosTestWidget>(instanceName);
-   retval->_deserialize(properties);
-   return retval;
 }

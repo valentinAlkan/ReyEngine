@@ -162,7 +162,7 @@ void BaseWidget::_deserialize(PropertyPrototypeMap& propertyData){
       if (found == _properties.end()){
          throw std::runtime_error("Property " + name + " of type " + data.typeName + " not registered to type " + _typeName + ". Did you remember to call ParentType::registerProperties() for each parent type?");
       }
-      _properties[name]->load(data);
+      _properties[name]->_load(data);
    }
 }
 

@@ -35,7 +35,7 @@ void TypeManager::_registerTypes() {
    static constexpr char basewidget[] = "BaseWidget";
    instance()._types[basewidget] = make_shared<TypeMeta>(basewidget, "", true, nullptr);
    //register all other internal widget types here
-   BaseButton::registerType<BaseButton>("BaseButton", "BaseWidget", true, nullptr);
+   BaseButton::registerType("BaseButton", "BaseWidget", true, nullptr);
 
    //register custom types
    CustomTypes::registerTypes();

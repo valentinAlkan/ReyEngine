@@ -3,6 +3,6 @@
 namespace CustomTypes{
    void registerTypes(){
       /* put your custom type registration calls here */
-      BaseWidget::registerType<PosTestWidget>("PosTestWidget", "BaseWidget", false, &PosTestWidget::deserialize);
+      BaseWidget::registerType("PosTestWidget", "BaseWidget", false, &PosTestWidget::deserialize);
    }
 }
