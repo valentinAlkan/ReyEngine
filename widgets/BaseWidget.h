@@ -12,18 +12,24 @@
 #include <unordered_set>
 #include <unordered_map>
 
-#define GFCSDRAW_OBJECT(CLASSNAME, PARENT_CLASSNAME) \
+#define GFCSDRAW_CTOR(CLASSNAME, PARENT_CLASSNAME) \
+   public:                                           \
    static std::shared_ptr<BaseWidget> CLASSNAME::deserialize(const std::string& instanceName, PropertyPrototypeMap& properties) { \
    auto retval = std::make_shared<CLASSNAME>(instanceName); \
    retval->BaseWidget::_deserialize(properties);        \
    return retval;}                                   \
-   CLASSNAME(std::string name): CLASSNAME(std::move(name), #CLASSNAME){}
+   CLASSNAME(std::string name): CLASSNAME(std::move(name), #CLASSNAME){} \
 
-#define GFCSDRAW_OBJECT_SIMPLE(CLASSNAME, PARENT_CLASSNAME) \
-public:   \
-   GFCSDRAW_OBJECT(CLASSNAME, PARENT_CLASSNAME)             \
-protected:    \
-   CLASSNAME(std::string name, std::string typeName): PARENT_CLASSNAME(std::move(name), std::move(typeName))
+#define GFCSDRAW_OBJECT(CLASSNAME, PARENT_CLASSNAME) \
+   GFCSDRAW_CTOR(CLASSNAME, PARENT_CLASSNAME) \
+   protected: \
+   CLASSNAME(std::string name, std::string typeName): PARENT_CLASSNAME(name, std::move(typeName))
+
+
+//#define GFCSDRAW_OBJECT_SIMPLE(CLASSNAME, PARENT_CLASSNAME) \
+//   GFCSDRAW_CTOR(CLASSNAME, PARENT_CLASSNAME){} \
+//protected:    \
+//   CLASSNAME(std::string name, std::string typeName): PARENT_CLASSNAME(std::move(name), std::move(typeName))
 
 class Scene;
 class  BaseWidget

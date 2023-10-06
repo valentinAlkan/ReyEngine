@@ -17,14 +17,8 @@ struct TestProperty : StringProperty{
 };
 
 class PosTestWidget : public Control {
-protected:
-   static constexpr char DEFAULT_TEXT[] = "someString";
-   PosTestWidget(std::string name, std::string typeName)
-   : Control(std::move(name), std::move(typeName))
-   , someString(DEFAULT_TEXT)
-   {}
 public:
-   GFCSDRAW_OBJECT(PosTestWidget, Control)
+   GFCSDRAW_OBJECT(PosTestWidget, Control), someString("someString"){}
    void render() const override;
    void _process(float dt) override;
    void registerProperties() override;
