@@ -12,14 +12,20 @@
 #include <unordered_set>
 #include <unordered_map>
 
-#define GFCSDRAW_OBJECT(class, parent) \
-   static std::shared_ptr<BaseWidget> class::deserialize(const std::string& instanceName, PropertyPrototypeMap& properties) { \
-   auto retval = std::make_shared<class>(instanceName); \
+#define GFCSDRAW_OBJECT(CLASSNAME, PARENT_CLASSNAME) \
+   static std::shared_ptr<BaseWidget> CLASSNAME::deserialize(const std::string& instanceName, PropertyPrototypeMap& properties) { \
+   auto retval = std::make_shared<CLASSNAME>(instanceName); \
    retval->BaseWidget::_deserialize(properties);        \
-   return retval;}
+   return retval;}                                   \
+   CLASSNAME(std::string name): CLASSNAME(std::move(name), #CLASSNAME){}
+
+#define GFCSDRAW_OBJECT_SIMPLE(CLASSNAME, PARENT_CLASSNAME) \
+public:   \
+   GFCSDRAW_OBJECT(CLASSNAME, PARENT_CLASSNAME)             \
+protected:    \
+   CLASSNAME(std::string name, std::string typeName): PARENT_CLASSNAME(std::move(name), std::move(typeName))
 
 class Scene;
-
 class  BaseWidget
 : public std::enable_shared_from_this<BaseWidget>
 , public PropertyContainer
@@ -77,6 +83,7 @@ private:
    const std::string _typeName;
    std::string _name;
    RectProperty<double> _rect;
+   BoolProperty _isProcessed;
    std::optional<WidgetPtr> _parent; //todo: should be weak ptr
    ///If this widget is the root of a scene, then the rest of the scene data is here.
    std::optional<std::shared_ptr<Scene>> _scene;

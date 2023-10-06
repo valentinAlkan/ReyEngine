@@ -23,12 +23,25 @@ Window::Window(const std::string &title, int width, int height, std::shared_ptr<
             break;
       }
    }
+
    InitWindow(width, height, title.c_str());
    SetTargetFPS(targetFPS);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Window::exec(){
+   //set widgets as processed
+   //NOTE: This must be done here, because widgets can be created loaded and created before a window exists
+   // Since the window controls the process list, it might not exist yet.
+   auto applyProcess = [&](shared_ptr<BaseWidget> widget){
+      for (auto& [name, child] : widget->_children){
+         auto process = child->_isProcessed.value;
+         if (process) child->setProcess(true);
+      }
+      if (widget->_isProcessed.value) widget->setProcess(true);
+   };
+   applyProcess(_root);
+
    while (!WindowShouldClose()){
       float dt = getFrameDelta();
       //process widget logic
@@ -53,7 +66,7 @@ Window::~Window(){
 ///////////////////////////////////////////////////////////////////////////////////////////
 bool Window::setProcess(bool process, std::shared_ptr<BaseWidget> widget) {
    //return if the operation was successful
-   return process ? _processList.add(std::move(widget)) != nullopt : _processList.remove(std::move(widget)) != nullopt;
+   return process ? _processList.add(widget) != nullopt : _processList.remove(widget) != nullopt;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -63,7 +76,7 @@ bool Window::isProcessed(const std::shared_ptr<BaseWidget>& widget) const {
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 std::optional<shared_ptr<BaseWidget>> Window::ProcessList::add(std::shared_ptr<BaseWidget> widget) {
-   const lock_guard<mutex> lock(_mtx);
+   lock_guard<mutex> lock(_mtx);
    auto retval = _list.insert(widget);
    if (retval.second){
       return widget;

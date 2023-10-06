@@ -6,6 +6,7 @@ Root
 [Desc]
 Root - PosTestWidget:
    _rect|Rect|13|{10,10,10,10}
+   _isProcessed|Bool|1|1
    someString|String|12|blahblahblah
       subProp|String|11|iamasubprop
 Child - PosTestWidget:

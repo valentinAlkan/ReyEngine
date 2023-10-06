@@ -47,7 +47,7 @@ int main(int argc, char** argv)
 //   auto s = StringProperty().toString();
    if (optWindow){
       auto mainWindow = optWindow.value();
-      root->setProcess(true);
+//      root->setProcess(true);
       mainWindow->exec();
       return 0;
    }
