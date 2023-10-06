@@ -7,7 +7,8 @@ Root
 Root - PosTestWidget:
    _rect|Rect|13|{10,10,10,10}
    someString|String|12|blahblahblah
-      someString|String|12|blahblahblah
+      subProp|String|11|iamasubprop
 Child - PosTestWidget:
    _rect|Rect|13|{1000,200,10,10}
-      _subrect|Rect|13|{12,12,12,12}
+   someString|String|13|blahblahblah2
+      subProp|String|12|iamasubprop2
