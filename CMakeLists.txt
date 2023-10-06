@@ -50,8 +50,9 @@ add_library(widgets STATIC
     widgets/meta/SystemTime.cpp
     widgets/meta/Event.cpp
     widgets/meta/EventManager.cpp
-    widgets/Button.cpp
-    widgets/Label.cpp
+    widgets/Control.hpp
+    widgets/Button.hpp
+    widgets/Label.hpp
     widgets/BaseWidget.cpp
     ${CUSTOM_SOURCES}
 )

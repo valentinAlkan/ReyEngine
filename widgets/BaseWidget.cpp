@@ -12,6 +12,7 @@ BaseWidget::BaseWidget(std::string name, std::string typeName)
 :_name(std::move(name))
 , _typeName(typeName)
 , _rect("_rect")
+, _isProcessed("_isProcessed")
 , _rid(Application::instance().getNewRid())
 {}
 
@@ -169,4 +170,5 @@ void BaseWidget::_deserialize(PropertyPrototypeMap& propertyData){
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::registerProperties() {
    registerProperty(_rect);
+   registerProperty(_isProcessed);
 }
