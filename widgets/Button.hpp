@@ -9,7 +9,7 @@ public:
 
 class PushButton : public BaseButton{
    GFCSDRAW_OBJECT(PushButton, BaseButton)
-   , text("text"){}
+   , PROPERTY_DECLARE(text){}
    void registerProperties() override {};
    void render() const override {}
    StringProperty text;

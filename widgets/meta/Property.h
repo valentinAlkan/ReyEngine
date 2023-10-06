@@ -6,7 +6,9 @@
 #include <memory>
 #include <unordered_map>
 #include "DrawInterface.h"
+
 #define PROP_TYPE(propName) static constexpr char propName[] = #propName;
+#define PROPERTY_DECLARE(PROPERTYNAME) PROPERTYNAME(#PROPERTYNAME)
 
 struct BaseProperty;
 struct PropertyPrototype;
