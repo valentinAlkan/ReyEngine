@@ -25,11 +25,11 @@ BaseWidget::~BaseWidget() {
 bool BaseWidget::setName(const std::string& newName, bool append_index) {
    auto lock = childSafetyLock();
    //if the child has a sibling by the same name, it cannot be renamed
-   if (_parent) {
+   if (!_parent.expired()) {
       //has a parent
       auto self = shared_from_this();
       string _newName;
-      auto parent = _parent.value();
+      auto parent = _parent.lock();
       if (parent->getChild(newName)) {
          //parent has existing child with that name
          //if we are allowed to, just append an index to the name (start at 2)
@@ -98,11 +98,8 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::removeChild(WidgetPtr widget) {
 Vec2<double> BaseWidget::getGlobalPos() const {
    //sum up all our ancestors' positions and add our own to it
    auto offset = getPos();
-   auto parent = _parent;
-   while (parent && parent.value()) {
-      offset.x += parent.value()->getPos().x;
-      offset.y += parent.value()->getPos().y;
-      parent = parent.value()->_parent;
+   if (!_parent.expired()){ //todo: Race conditions?
+      offset += _parent.lock()->getGlobalPos();
    }
    return offset;
 }

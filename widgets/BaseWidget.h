@@ -55,7 +55,7 @@ public:
    bool setName(const std::string& name, bool append_index=false);
    std::string getTypeName(){return _typeName;}
 
-   std::optional<WidgetPtr> getParent(){return _parent;}
+   std::weak_ptr<BaseWidget> getParent(){return _parent;}
    const ChildMap& getChildren() const{return _children;}
    std::optional<WidgetPtr> getChild(const std::string& newName);
 
@@ -90,7 +90,7 @@ private:
    std::string _name;
    RectProperty<double> _rect;
    BoolProperty _isProcessed;
-   std::optional<WidgetPtr> _parent; //todo: should be weak ptr
+   std::weak_ptr<BaseWidget> _parent; //todo: should be weak ptr
    ///If this widget is the root of a scene, then the rest of the scene data is here.
    std::optional<std::shared_ptr<Scene>> _scene;
    bool _request_delete = false; //true when we want to remove this object from the tree

@@ -47,7 +47,6 @@ int main(int argc, char** argv)
    auto label = make_shared<Label>("label");
    root->addChild(label);
    auto optWindow = Application::instance().createWindow("MainWindow", screenWidth, screenHeight, root, {Window::RESIZE});
-//   auto s = StringProperty().toString();
    if (optWindow){
       auto mainWindow = optWindow.value();
       mainWindow->exec();
