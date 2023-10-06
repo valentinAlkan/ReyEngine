@@ -3,6 +3,7 @@
 #include "CustomTypes.h"
 #include "BaseWidget.h"
 #include "Button.hpp"
+#include "Label.hpp"
 
 using namespace std;
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -35,7 +36,9 @@ void TypeManager::_registerTypes() {
    static constexpr char basewidget[] = "BaseWidget";
    instance()._types[basewidget] = make_shared<TypeMeta>(basewidget, "", true, nullptr);
    //register all other internal widget types here
-   BaseButton::registerType("BaseButton", "BaseWidget", true, nullptr);
+   BaseWidget::registerType("Control", "BaseWidget", false, &Control::deserialize);
+   BaseWidget::registerType("BaseButton", "Control", true, nullptr);
+   BaseWidget::registerType("Label", "Control", false, &Label::deserialize);
 
    //register custom types
    CustomTypes::registerTypes();

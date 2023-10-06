@@ -13,6 +13,10 @@ class PushButton : public BaseButton{
    void registerProperties() override {};
    void render() const override {}
    StringProperty text;
+public:
+   std::string getText(){return text.value;}
+   void setText(const std::string& newText){text.value = newText;}
+protected:
 
 };
 
