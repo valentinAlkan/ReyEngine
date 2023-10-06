@@ -5,6 +5,7 @@
 #include "Logger.h"
 #include "ArgParse.h"
 #include "TestWidgets.h"
+#include "Label.hpp"
 
 using namespace std;
 using namespace GFCSDraw;
@@ -43,11 +44,12 @@ int main(int argc, char** argv)
       child->setPos(100, 100);
       root->addChild(child);
    }
+   auto label = make_shared<Label>("label");
+   root->addChild(label);
    auto optWindow = Application::instance().createWindow("MainWindow", screenWidth, screenHeight, root, {Window::RESIZE});
 //   auto s = StringProperty().toString();
    if (optWindow){
       auto mainWindow = optWindow.value();
-//      root->setProcess(true);
       mainWindow->exec();
       return 0;
    }

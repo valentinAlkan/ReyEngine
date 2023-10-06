@@ -1,17 +1,18 @@
 #pragma once
-#include "BaseWidget.h"
+#include "Control.hpp"
 
-class Label : public BaseWidget {
-   GFCSDRAW_OBJECT(Label, BaseWidget)
+class Label : public Control {
+   GFCSDRAW_OBJECT(Label, Control)
+   , PROPERTY_DECLARE(text){
+      text.value = "Label";
+   }
 public:
-   Label(std::string name)
-   : BaseWidget(std::move(name), "Label")
-   , text("DefaultText"){}
    void render() const override{
       _drawText(text.value, {0,0}, 20, BLACK);
    };
    void _process(float dt) override {};
    void registerProperties() override{
+      Control::registerProperties();
       registerProperty(text);
    };
 
