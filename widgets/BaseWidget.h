@@ -81,15 +81,17 @@ protected:
    // Drawing functions
    void renderChildren(); //draw the widget's children
    void _drawText(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color) const;
+   void _drawRectangle(const GFCSDraw::Rect<int>& rect, Color color) const;
+   void _drawRectangleRoundedLines(const GFCSDraw::Rect<float>& rect, float roundness, int segments, float lineThick, Color color) const;
 
    void registerProperties() override;
    void _deserialize(PropertyPrototypeMap&);
+   RectProperty<double> _rect;
 
 private:
    uint64_t _rid; //unique identifier
    const std::string _typeName;
    std::string _name;
-   RectProperty<double> _rect;
    BoolProperty _isProcessed;
    std::weak_ptr<BaseWidget> _parent; //todo: should be weak ptr
    ///If this widget is the root of a scene, then the rest of the scene data is here.

@@ -130,10 +130,22 @@ bool BaseWidget::isRoot() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::_drawText(const std::string &text, const GFCSDraw::Vec2<int> &pos, int fontSize, Color color) const{
-   GFCSDraw::drawText(text, getGlobalPos(), fontSize, color);
+   GFCSDraw::drawText(text, pos + getGlobalPos(), fontSize, color);
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::_drawRectangle(const Rect<int>& rect, Color color) const {
+   //use the size of the param rect but use the position of our rect + the param rect
+   Rect<int> newRect(rect + getGlobalPos());
+   GFCSDraw::drawRectangle(newRect, color);
+}
 
+/////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::_drawRectangleRoundedLines(const GFCSDraw::Rect<float> &rect, float roundness, int segments,float lineThick, Color color) const {
+   //use the size of the param rect but use the position of our rect + the param rect
+   Rect<float> newRect(rect + getGlobalPos());
+   GFCSDraw::drawRectangleRoundedLines(newRect, roundness, segments, lineThick, color);
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 bool BaseWidget::operator==(const shared_ptr<BaseWidget> &other) const {

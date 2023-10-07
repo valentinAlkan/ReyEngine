@@ -6,6 +6,7 @@
 #include "ArgParse.h"
 #include "TestWidgets.h"
 #include "Label.hpp"
+#include "Button.hpp"
 
 using namespace std;
 using namespace GFCSDraw;
@@ -39,10 +40,10 @@ int main(int argc, char** argv)
 
    //create a root widget
    if (!root) {
-      root = std::make_shared<PosTestWidget>("Root");
-      auto child = std::make_shared<PosTestWidget>("Child");
-      child->setPos(100, 100);
-      root->addChild(child);
+      root = make_shared<Control>("Root");
+      auto button = make_shared<PushButton>("Button");
+      button->setPos(100, 100);
+      root->addChild(button);
    }
 //   auto label = make_shared<Label>("label");
 //   root->addChild(label);
