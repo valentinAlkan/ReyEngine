@@ -12,6 +12,8 @@ namespace GFCSDraw {
          inline Vec2(const Vec2<int>& v)   : x((T)v.x), y((T)v.y){}
          inline Vec2(const Vec2<float>& v) : x((T)v.x), y((T)v.y){}
          inline Vec2(const Vec2<double>& v): x((T)v.x), y((T)v.y){}
+         inline Vec2 operator+(const Vec2& rhs) const {Vec2<T> val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
+         inline Vec2 operator-(const Vec2& rhs) const {Vec2<T> val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
          inline Vec2& operator+=(const Vec2& rhs){x += rhs.x; y += rhs.y; return *this;}
          inline Vec2& operator-=(const Vec2& rhs){x -= rhs.x; y -= rhs.y; return *this;}
          inline Vec2& operator*=(const Vec2& rhs){x *= rhs.x; y *= rhs.y; return *this;}

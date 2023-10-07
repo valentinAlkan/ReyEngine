@@ -176,5 +176,8 @@ optional<RuntimeArg*> ArgParse::getArg(const std::string& name) {
    {
       return nullopt;
    }
+   if (it->second._value.empty()){
+      return nullopt;
+   }
    return &it->second;
 }

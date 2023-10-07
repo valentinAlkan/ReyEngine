@@ -52,6 +52,7 @@ public:
    void setRect(const GFCSDraw::Rect<double>& r){_rect.value = r;}
    void setPos(double x, double y){_rect.value.x = x; _rect.value.y = y;}
    void setPos(const dVec& pos){_rect.value.x = pos.x; _rect.value.y = pos.y;}
+   void setGlobalPos(const dVec&);
    bool setName(const std::string& name, bool append_index=false);
    std::string getTypeName(){return _typeName;}
 

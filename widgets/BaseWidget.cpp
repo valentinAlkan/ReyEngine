@@ -56,6 +56,11 @@ bool BaseWidget::setName(const std::string& newName, bool append_index) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::setGlobalPos(const Vec2<double>& newPos) {
+   setPos(newPos - getGlobalPos());
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 std::optional<BaseWidget::WidgetPtr> BaseWidget::getChild(const std::string &childName) {
    auto lock = childSafetyLock();
    auto found = _children.find(childName);

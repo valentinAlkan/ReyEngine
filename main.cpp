@@ -44,8 +44,8 @@ int main(int argc, char** argv)
       child->setPos(100, 100);
       root->addChild(child);
    }
-   auto label = make_shared<Label>("label");
-   root->addChild(label);
+//   auto label = make_shared<Label>("label");
+//   root->addChild(label);
    auto optWindow = Application::instance().createWindow("MainWindow", screenWidth, screenHeight, root, {Window::RESIZE});
    if (optWindow){
       auto mainWindow = optWindow.value();
