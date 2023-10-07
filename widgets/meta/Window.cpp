@@ -33,10 +33,9 @@ void Window::exec(){
    //set widgets as processed
    //NOTE: This must be done here, because widgets can be created loaded and created before a window exists
    // Since the window controls the process list, it might not exist yet.
-   auto applyProcess = [&](shared_ptr<BaseWidget> widget){
+   std::function<void(shared_ptr<BaseWidget>)> applyProcess = [&](shared_ptr<BaseWidget> widget){
       for (auto& [name, child] : widget->_children){
-         auto process = child->_isProcessed.value;
-         if (process) child->setProcess(true);
+         applyProcess(child);
       }
       if (widget->_isProcessed.value) widget->setProcess(true);
    };
