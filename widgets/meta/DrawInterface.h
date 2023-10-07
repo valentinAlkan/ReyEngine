@@ -18,6 +18,7 @@ namespace GFCSDraw {
          inline Vec2& operator-=(const Vec2& rhs){x -= rhs.x; y -= rhs.y; return *this;}
          inline Vec2& operator*=(const Vec2& rhs){x *= rhs.x; y *= rhs.y; return *this;}
          inline Vec2& operator/=(const Vec2& rhs){x /= rhs.x; y /= rhs.y; return *this;}
+         inline Vec2 midpoint(){return {x/2, y/2};}
          inline std::string toString() const {return "{" + std::to_string(x) + ", " + std::to_string(y) + "}";}
          inline void fromString(const std::string& s){
             std::string sanitized;
@@ -62,6 +63,7 @@ namespace GFCSDraw {
          inline Rect& operator-=(const Rect<T>& rhs){x -= rhs.x; y -= rhs.y; width -= rhs.width; height -= rhs.height; return *this;}
          inline Rect& operator*=(const Rect<T>& rhs){x *= rhs.x; y *= rhs.y; width *= rhs.width; height *= rhs.height; return *this;}
          inline Rect& operator/=(const Rect<T>& rhs){x /= rhs.x; y /= rhs.y; width /= rhs.width; height /= rhs.height; return *this;}
+         [[nodiscard]] inline Vec2<T> center() const {return {(x+width)/2, (y+height)/2};}
          [[nodiscard]] inline std::string toString() const {
             return "{" + std::to_string(x) + ", " + std::to_string(y) + ", " +
             std::to_string(width) + ", " + std::to_string(height) + "}";

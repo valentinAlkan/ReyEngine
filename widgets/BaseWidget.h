@@ -81,6 +81,7 @@ protected:
    // Drawing functions
    void renderChildren(); //draw the widget's children
    void _drawText(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color) const;
+   void _drawTextCentered(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color) const;
    void _drawRectangle(const GFCSDraw::Rect<int>& rect, Color color) const;
    void _drawRectangleRoundedLines(const GFCSDraw::Rect<float>& rect, float roundness, int segments, float lineThick, Color color) const;
 
