@@ -21,7 +21,7 @@ class PushButton : public BaseButton{
    void render() const override {
       GFCSDraw::Rect<float> rec = {GFCSDraw::Vec2<float>(0,0), GFCSDraw::Vec2<float>(_rect.value.size())};
       _drawRectangleRoundedLines(rec, 2, 1, 1, BLACK);
-      _drawText(text.value, {0, 0}, 20, BLACK);
+      _drawTextCentered(text.value, rec.center(), 20, BLACK);
    }
    StringProperty text;
 public:
