@@ -43,11 +43,26 @@ namespace GFCSDraw {
       struct Rect {
          inline Rect(): x(0), y(0), width(0), height(0){}
          inline Rect(const T x, const T y) : x(x), y(y){}
-         inline Rect(const Rectangle& r): x((T)x), y((T)y), width((T)width), height((T)height){}
-         inline Rect(const Vec2<int>& v): x((T)x), y((T)y){}
-         inline Rect(const Vec2<float>& v): x((T)x), y((T)y){}
-         inline Rect(const Vec2<double>& v): x((T)x), y((T)y){}
-         inline std::string toString() const {
+         inline Rect(const T x, const T y, const T width, const T height) : x(x), y(y), width(width), height(height){}
+         inline explicit Rect(const Rectangle& r): x((T)r.x), y((T)r.y), width((T)r.width), height((T)r.height){}
+         inline Rect(const Rect<int>& r): x((T)r.x), y((T)r.y), width((T)r.width), height((T)r.height){}
+         inline Rect(const Rect<float>& r): x((T)r.x), y((T)r.y), width((T)r.width), height((T)r.height){}
+         inline Rect(const Rect<double>& r): x((T)r.x), y((T)r.y), width((T)r.width), height((T)r.height){}
+         inline explicit Rect(const Vec2<T>& v): x((T)v.x), y((T)v.y){}
+         inline Rect(const Vec2<T>& pos, const Vec2<T>& size): x((T)pos.x), y((T)pos.y), width((T)size.x), height((T)size.y){}
+         inline Rect operator+(const Vec2<T>& rhs) const {Rect<T> val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
+         inline Rect operator-(const Vec2<T>& rhs) const {Rect<T> val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
+         inline Rect& operator+=(const Vec2<T>& rhs){x += rhs.x; y += rhs.y; return *this;}
+         inline Rect& operator-=(const Vec2<T>& rhs){x -= rhs.x; y -= rhs.y; return *this;}
+         inline Rect& operator*=(const Vec2<T>& rhs){x *= rhs.x; y *= rhs.y; return *this;}
+         inline Rect& operator/=(const Vec2<T>& rhs){x /= rhs.x; y /= rhs.y; return *this;}
+         inline Rect operator+(const Rect<T>& rhs) const {Rect<T> val = *this; val.x += rhs.x; val.y += rhs.y; val.width += rhs.width; val.height += rhs.height; return val;}
+         inline Rect operator-(const Rect<T>& rhs) const {Rect<T> val = *this; val.x -= rhs.x; val.y -= rhs.y; val.width -= rhs.width; val.height -= rhs.height; return val;}
+         inline Rect& operator+=(const Rect<T>& rhs){x += rhs.x; y += rhs.y; width += rhs.width; height += rhs.height; return *this;}
+         inline Rect& operator-=(const Rect<T>& rhs){x -= rhs.x; y -= rhs.y; width -= rhs.width; height -= rhs.height; return *this;}
+         inline Rect& operator*=(const Rect<T>& rhs){x *= rhs.x; y *= rhs.y; width *= rhs.width; height *= rhs.height; return *this;}
+         inline Rect& operator/=(const Rect<T>& rhs){x /= rhs.x; y /= rhs.y; width /= rhs.width; height /= rhs.height; return *this;}
+         [[nodiscard]] inline std::string toString() const {
             return "{" + std::to_string(x) + ", " + std::to_string(y) + ", " +
             std::to_string(width) + ", " + std::to_string(height) + "}";
          }
@@ -72,16 +87,22 @@ namespace GFCSDraw {
             os << r.toString();
             return os;
          }
+         Vec2<T> pos() const {return {x, y};}
+         Vec2<T> size() const {return {width, height};}
+
          T x;
          T y;
          T width;
          T height;
       };
 
-      GFCSDraw::Vec2<double> getScreenCenter();
+      Vec2<double> getScreenCenter();
       void drawText(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color);
       void drawTextCentered(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color);
       void drawTextRelative(const std::string& text, const GFCSDraw::Vec2<int>& relPos, int fontSize, Color color);
-      GFCSDraw::Vec2<int> getMousePos();
-      float getFrameDelta();
+      void drawRectangle(const GFCSDraw::Rect<int>&, Color color);
+      void drawRectangleRoundedLines(const GFCSDraw::Rect<float>&, float roundness, int segments, float lineThick, Color color);
+//      void drawRectangleLines(const GFCSDraw::Rect<int>&, Color color);
+      inline Vec2<int> getMousePos(){return GetMousePosition();}
+      inline float getFrameDelta(){return GetFrameTime();}
 }

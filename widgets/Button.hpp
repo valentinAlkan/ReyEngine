@@ -2,16 +2,27 @@
 #include "Control.hpp"
 
 class BaseButton : public Control {
-   GFCSDRAW_OBJECT(BaseButton, Control){}
+   GFCSDRAW_OBJECT(BaseButton, Control){
+      _rect.value = GFCSDraw::Rect<double>(0,0,200,50);
+   }
 public:
-   void registerProperties() override;
+   void registerProperties() override{};
 };
 
 class PushButton : public BaseButton{
    GFCSDRAW_OBJECT(PushButton, BaseButton)
-   , PROPERTY_DECLARE(text){}
-   void registerProperties() override {};
-   void render() const override {}
+   , PROPERTY_DECLARE(text){
+      text.value = "PushButton";
+   }
+   void registerProperties() override {
+      BaseButton::registerProperties();
+      registerProperty(text);
+   };
+   void render() const override {
+      GFCSDraw::Rect<float> rec = {GFCSDraw::Vec2<float>(0,0), GFCSDraw::Vec2<float>(_rect.value.size())};
+      _drawRectangleRoundedLines(rec, 2, 1, 1, BLACK);
+      _drawText(text.value, {0, 0}, 20, BLACK);
+   }
    StringProperty text;
 public:
    std::string getText(){return text.value;}
