@@ -42,6 +42,8 @@ void Window::exec(){
    applyProcess(_root);
 
    while (!WindowShouldClose()){
+      //collect input
+
       float dt = getFrameDelta();
       //process widget logic
       for (auto& widget : _processList.getList()){

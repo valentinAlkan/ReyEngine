@@ -2,11 +2,15 @@
 #include "Control.hpp"
 
 class BaseButton : public Control {
-   GFCSDRAW_OBJECT(BaseButton, Control){
+   GFCSDRAW_OBJECT(BaseButton, Control)
+   , PROPERTY_DECLARE(down){
       _rect.value = GFCSDraw::Rect<double>(0,0,200,50);
    }
 public:
-   void registerProperties() override{};
+   void registerProperties() override{
+      registerProperty(down);
+   };
+   BoolProperty down;
 };
 
 class PushButton : public BaseButton{

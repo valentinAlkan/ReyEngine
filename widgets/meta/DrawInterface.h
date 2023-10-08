@@ -108,3 +108,13 @@ namespace GFCSDraw {
       inline Vec2<int> getMousePos(){return GetMousePosition();}
       inline float getFrameDelta(){return GetFrameTime();}
 }
+
+namespace InputInterface{
+   inline bool isKeyPressed(int key){IsKeyPressed(key);}
+   inline bool isKeyDown(int key){return IsKeyDown(key);}
+   inline bool isKeyReleased(int key){return IsKeyReleased(key);}
+   inline bool isKeyUp(int key){return IsKeyUp(key);}
+   inline void setExitKey(int key){return SetExitKey(key);}
+   inline int getKeyPressed(void){return GetKeyPressed();}
+   inline int getCharPressed(void){return GetCharPressed();}
+}
