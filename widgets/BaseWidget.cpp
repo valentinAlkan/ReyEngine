@@ -117,6 +117,32 @@ void BaseWidget::renderChildren() {
    }
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
+Handled BaseWidget::_process_unhandled_input(InputEvent& event) {
+   auto passInput = [&](InputEvent& event) {
+      for (auto &[name, child]: getChildren()) {
+         if (child->_process_unhandled_input(event)) {
+            return true;
+         }
+      }
+      return false;
+   };
+
+   switch (inputFilter){
+      case InputFilter::INPUT_FILTER_PASS_AND_PROCESS:
+         return passInput(event) || _unhandled_input(event);
+      case InputFilter::INPUT_FILTER_PROCESS_AND_PASS:
+         return _unhandled_input(event) || passInput(event);
+      case InputFilter::INPUT_FILTER_IGNORE_AND_PASS:
+         return passInput(event);
+      case InputFilter::INPUT_FILTER_PROCESS_AND_STOP:
+         return _unhandled_input(event);
+      case InputFilter::INPUT_FILTER_IGNORE_AND_STOP:
+         return false;
+      default:
+         throw std::runtime_error("INVALID INPUT FILTER STATE!");
+   }
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setProcess(bool process) {

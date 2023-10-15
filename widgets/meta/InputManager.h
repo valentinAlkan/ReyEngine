@@ -3,18 +3,55 @@
 #include "DrawInterface.h"
 
 namespace EventType {
-   DECLARE_EVENT(EVENT_INPUT)
-   DECLARE_EVENT(EVENT_INPUT_BUTTON)
    DECLARE_EVENT(EVENT_INPUT_KEY)
+   DECLARE_EVENT(EVENT_INPUT_BUTTON)
    DECLARE_EVENT(EVENT_INPUT_MOUSE_BUTTON)
+   DECLARE_EVENT(EVENT_INPUT_MOUSE_WHEEL)
    DECLARE_EVENT(EVENT_INPUT_MOUSE_MOTION)
 }
 
-struct InputEvent : public Event {};
-struct InputEventKey : public InputEvent{};
-struct InputEventMouse : public InputEvent{};
-struct InputEventMouseButton : public InputEventMouse{};
-struct InputEventMouseMotion : public InputEventMouse{};
+struct InputEvent : public Event {
+protected:
+   InputEvent(): Event("InputEvent", nullptr){}
+   explicit InputEvent(const std::string& eventType): Event(eventType, nullptr){};
+};
+
+struct InputEventKey : public InputEvent {
+   InputEventKey(): InputEvent(EventType::EVENT_INPUT_KEY){}
+   int key;
+   bool isDown;
+};
+
+struct InputEventMouse : public InputEvent{
+   GFCSDraw::Vec2<int> globalPos;
+protected:
+   explicit InputEventMouse(const std::string& eventType): InputEvent(eventType){};
+};
+
+struct InputEventMouseButton : public InputEventMouse{
+   InputEventMouseButton(): InputEventMouse(EventType::EVENT_INPUT_MOUSE_BUTTON){};
+   InputInterface::MouseButton button;
+   bool isDown;
+};
+
+struct InputEventMouseWheel : public InputEventMouse{
+   InputEventMouseWheel(): InputEventMouse(EventType::EVENT_INPUT_MOUSE_WHEEL){}
+   GFCSDraw::Vec2<int> wheelMove;
+};
+
+struct InputEventMouseMotion : public InputEventMouse{
+   InputEventMouseMotion(): InputEventMouse(EventType::EVENT_INPUT_MOUSE_MOTION){}
+   GFCSDraw::Vec2<int> mouseDelta;
+};
+
+enum class InputFilter {
+   INPUT_FILTER_PASS_AND_PROCESS, //passes input to children and then process it locally if it's not handled by a child (default)
+   INPUT_FILTER_PROCESS_AND_PASS, //processes input locally first, and passes it to children if we can't use it locally
+   INPUT_FILTER_PROCESS_AND_STOP, //processes input locally but does not pass it to children
+   INPUT_FILTER_IGNORE_AND_PASS, //passes input to children without handling it
+   INPUT_FILTER_IGNORE_AND_STOP //ignores input and does not pass or handle it
+};
+
 
 class InputManager
 {
@@ -25,9 +62,29 @@ private:
 public:
    InputManager(InputManager const&) = delete;
    void operator=(InputManager const&) = delete;
-   inline bool isKeyPressed(int key){IsKeyPressed(key);}
-   inline bool isKeyDown(int key){return IsKeyDown(key);}
-   inline bool isKeyReleased(int key){return IsKeyReleased(key);}
-   inline bool isKeyUp(int key){return IsKeyUp(key);}
-   inline void setExitKey(int key){return SetExitKey(key);}
+   inline bool isMouseButtonPressed(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonPressed(mouseButton);}
+   inline bool isMouseButtonDown(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonDown(mouseButton);}
+   inline bool isMouseButtonUp(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonUp(mouseButton);}
+   inline bool isMouseButtonReleased(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonReleased(mouseButton);}
+   inline bool isKeyPressed(InputInterface::KeyCode key){return InputInterface::isKeyPressed(key);}
+   inline bool isKeyDown(InputInterface::KeyCode key){return InputInterface::isKeyDown(key);}
+   inline bool isKeyReleased(InputInterface::KeyCode key){return InputInterface::isKeyReleased(key);}
+   inline bool isKeyUp(InputInterface::KeyCode key){return InputInterface::isKeyUp(key);}
+   inline void setExitKey(InputInterface::KeyCode key){return InputInterface::setExitKey(key);}
+protected:
+   InputInterface::KeyCode getKeyPressed();
+   InputInterface::KeyCode getKeyReleased();
+   InputInterface::MouseButton getMouseButtonPressed();
+   InputInterface::MouseButton getMouseButtonReleased();
+
+   std::vector<InputInterface::KeyCode> keyQueue; //holds keys that were pressed so we can check if they're still down
+   std::vector<InputInterface::MouseButton> mouseButtonQueue; //holds mousebuttons that were pressed so we can check if they're still down
+   template <typename T, typename R>
+   bool isInQueue(std::vector<T> queue, R button){
+     auto it = std::find(queue.begin(), queue.end(), button);
+     return it != queue.end();
+   }
+   friend class Window;
+
+
 };
