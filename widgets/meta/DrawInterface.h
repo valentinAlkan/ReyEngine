@@ -103,6 +103,7 @@ namespace GFCSDraw {
       void drawTextCentered(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color);
       void drawTextRelative(const std::string& text, const GFCSDraw::Vec2<int>& relPos, int fontSize, Color color);
       void drawRectangle(const GFCSDraw::Rect<int>&, Color color);
+      void drawRectangleRounded(const GFCSDraw::Rect<float>&, float roundness, int segments, Color color);
       void drawRectangleRoundedLines(const GFCSDraw::Rect<float>&, float roundness, int segments, float lineThick, Color color);
 //      void drawRectangleLines(const GFCSDraw::Rect<int>&, Color color);
       inline Vec2<int> getMousePos(){return GetMousePosition();}

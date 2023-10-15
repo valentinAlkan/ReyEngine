@@ -86,8 +86,8 @@ protected:
    void _drawText(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color) const;
    void _drawTextCentered(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color) const;
    void _drawRectangle(const GFCSDraw::Rect<int>& rect, Color color) const;
+   void _drawRectangleRounded(const GFCSDraw::Rect<int>& rect,  float roundness, int segments, Color color) const;
    void _drawRectangleRoundedLines(const GFCSDraw::Rect<float>& rect, float roundness, int segments, float lineThick, Color color) const;
-
    void registerProperties() override;
    void _deserialize(PropertyPrototypeMap&);
    RectProperty<double> _rect;
@@ -108,7 +108,7 @@ private:
    const std::lock_guard<std::recursive_mutex> childSafetyLock(){return std::lock_guard<std::recursive_mutex>(_childLock);}
    bool _scheduled_for_deletion = false; // true when the widget has been scheduled for deletion but is not yet deleted.
 
-   virtual Handled _process_unhandled_input(InputEvent&); //pass input to children if they want it and then process it for ourselves if necessary
+   Handled _process_unhandled_input(InputEvent&); //pass input to children if they want it and then process it for ourselves if necessary
    InputFilter inputFilter = InputFilter::INPUT_FILTER_PASS_AND_PROCESS;
 
    ChildMap _children;
