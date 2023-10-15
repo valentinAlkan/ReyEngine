@@ -44,9 +44,22 @@ int main(int argc, char** argv)
       auto button = make_shared<PushButton>("Button");
       button->setPos(100, 100);
       root->addChild(button);
+      auto label = make_shared<Label>("label");
+      root->addChild(label);
+
+      auto cb = [&](const std::shared_ptr<Event>& e){
+         static int pushCount = 0;
+         auto pbEvent = static_pointer_cast<PushButtonEvent>(e);
+         if (pbEvent->down){
+            label->setText(to_string(pushCount++));
+         }
+      };
+
+      label->subscribe(button, EventType::EVENT_PUSHBUTTON, cb);
    }
-//   auto label = make_shared<Label>("label");
-//   root->addChild(label);
+
+
+
    auto optWindow = Application::instance().createWindow("MainWindow", screenWidth, screenHeight, root, {Window::RESIZE});
    if (optWindow){
       auto mainWindow = optWindow.value();

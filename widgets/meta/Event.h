@@ -7,9 +7,8 @@
 class BaseWidget;
 class Event {
 public:
-   Event(std::string eventType, std::shared_ptr<BaseWidget> publisher)
-   : eventType(eventType)
-   , publisher(publisher){}
+   Event(const std::string& eventType)
+   : eventType(eventType){}
    std::shared_ptr<BaseWidget> publisher;
    std::string eventType;
 };

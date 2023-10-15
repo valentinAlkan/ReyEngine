@@ -15,7 +15,9 @@ public:
       Control::registerProperties();
       registerProperty(text);
    };
-
+   void setText(const std::string& newText){
+      text.set(newText);
+   }
 protected:
    StringProperty text;
 };

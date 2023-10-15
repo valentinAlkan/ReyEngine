@@ -12,8 +12,8 @@ namespace EventType {
 
 struct InputEvent : public Event {
 protected:
-   InputEvent(): Event("InputEvent", nullptr){}
-   explicit InputEvent(const std::string& eventType): Event(eventType, nullptr){};
+   InputEvent(): Event("InputEvent"){}
+   explicit InputEvent(const std::string& eventType): Event(eventType){};
 };
 
 struct InputEventKey : public InputEvent {
