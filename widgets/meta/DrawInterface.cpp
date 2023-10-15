@@ -17,6 +17,12 @@ void GFCSDraw::drawRectangle(const GFCSDraw::Rect<int>& r, Color color) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void GFCSDraw::drawRectangleRounded(const GFCSDraw::Rect<float>& r, float roundness, int segments, Color color) {
+   DrawRectangleRounded({r.x, r.y, r.width, r.height}, roundness, segments, color);
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void GFCSDraw::drawRectangleRoundedLines(const GFCSDraw::Rect<float>& r, float roundness, int segments, float lineThick, Color color) {
    DrawRectangleRoundedLines({r.x, r.y, r.width, r.height}, roundness, segments, lineThick, color);
 }

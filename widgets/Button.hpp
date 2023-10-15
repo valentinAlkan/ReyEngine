@@ -11,6 +11,15 @@ public:
       registerProperty(down);
    };
    BoolProperty down;
+protected:
+   Handled _unhandled_input(InputEvent& event) override{
+      auto& e = static_cast<InputEventMouseButton&>(event);
+      if (e.button == InputInterface::MouseButton::MOUSE_BUTTON_LEFT){
+         down.set(e.isDown);
+         return true;
+      }
+      return false;
+   }
 };
 
 class PushButton : public BaseButton{
@@ -23,8 +32,11 @@ class PushButton : public BaseButton{
       registerProperty(text);
    };
    void render() const override {
+      static constexpr int SEGMENTS = 10;
+      static constexpr int THICKNESS = 2;
       GFCSDraw::Rect<float> rec = {GFCSDraw::Vec2<float>(0,0), GFCSDraw::Vec2<float>(_rect.value.size())};
-      _drawRectangleRoundedLines(rec, 2, 1, 1, BLACK);
+      _drawRectangleRounded(rec, 2, SEGMENTS, down.value ? GRAY : LIGHTGRAY);
+      _drawRectangleRoundedLines(rec, 2, SEGMENTS, THICKNESS, BLACK);
       _drawTextCentered(text.value, rec.center(), 20, BLACK);
    }
    StringProperty text;

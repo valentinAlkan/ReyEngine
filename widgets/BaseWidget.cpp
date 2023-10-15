@@ -172,6 +172,13 @@ void BaseWidget::_drawRectangle(const Rect<int>& rect, Color color) const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::_drawRectangleRounded(const GFCSDraw::Rect<int> &rect, float roundness, int segments, Color color) const {
+   //use the size of the param rect but use the position of our rect + the param rect
+   Rect<int> newRect(rect + getGlobalPos());
+   GFCSDraw::drawRectangleRounded(newRect, roundness, segments, color);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::_drawRectangleRoundedLines(const GFCSDraw::Rect<float> &rect, float roundness, int segments,float lineThick, Color color) const {
    //use the size of the param rect but use the position of our rect + the param rect
    Rect<float> newRect(rect + getGlobalPos());
