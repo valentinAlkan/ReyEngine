@@ -110,11 +110,41 @@ namespace GFCSDraw {
 }
 
 namespace InputInterface{
-   inline bool isKeyPressed(int key){IsKeyPressed(key);}
-   inline bool isKeyDown(int key){return IsKeyDown(key);}
-   inline bool isKeyReleased(int key){return IsKeyReleased(key);}
-   inline bool isKeyUp(int key){return IsKeyUp(key);}
-   inline void setExitKey(int key){return SetExitKey(key);}
-   inline int getKeyPressed(void){return GetKeyPressed();}
-   inline int getCharPressed(void){return GetCharPressed();}
+   using KeyCode = int;
+   enum class MouseButton{
+      MOUSE_BUTTON_NONE = -1,
+      MOUSE_BUTTON_LEFT = MOUSE_BUTTON_LEFT,
+      MOUSE_BUTTON_RIGHT = MOUSE_BUTTON_RIGHT,
+      MOUSE_BUTTON_BACK = MOUSE_BUTTON_BACK,
+      MOUSE_BUTTON_EXTRA = MOUSE_BUTTON_EXTRA,
+      MOUSE_BUTTON_FORWARD = MOUSE_BUTTON_FORWARD,
+      MOUSE_BUTTON_MIDDLE = MOUSE_BUTTON_MIDDLE,
+      MOUSE_BUTTON_SIDE = MOUSE_BUTTON_SIDE,
+   };
+
+   //array of all mouse buttons
+   static constexpr MouseButton MouseButtons[] = {
+         MouseButton::MOUSE_BUTTON_LEFT,
+         MouseButton::MOUSE_BUTTON_RIGHT,
+         MouseButton::MOUSE_BUTTON_MIDDLE,
+         MouseButton::MOUSE_BUTTON_BACK,
+         MouseButton::MOUSE_BUTTON_FORWARD,
+         MouseButton::MOUSE_BUTTON_SIDE,
+         MouseButton::MOUSE_BUTTON_EXTRA,
+   };
+
+   inline float getMouseWheelMove(){return GetMouseWheelMove();} //returns largest of x or y
+   inline GFCSDraw::Vec2<float> getMouseWheelMoveV(){return GetMouseWheelMoveV();} //returns both x and y
+
+   inline bool isKeyPressed(KeyCode key){IsKeyPressed(key);}
+   inline bool isKeyDown(KeyCode key){return IsKeyDown(key);}
+   inline bool isKeyReleased(KeyCode key){return IsKeyReleased(key);}
+   inline bool isKeyUp(KeyCode key){return IsKeyUp(key);}
+   inline void setExitKey(KeyCode key){return SetExitKey(key);}
+   inline KeyCode getKeyPressed(){return GetKeyPressed();}
+   inline KeyCode getCharPressed(){return GetCharPressed();}
+   inline bool isMouseButtonPressed(MouseButton btn){return IsMouseButtonPressed(static_cast<int>(btn));}
+   inline bool isMouseButtonDown(MouseButton btn){return IsMouseButtonDown(static_cast<int>(btn));}
+   inline bool isMouseButtonUp(MouseButton btn){return IsMouseButtonUp(static_cast<int>(btn));}
+   inline bool isMouseButtonReleased(MouseButton btn){return IsMouseButtonReleased(static_cast<int>(btn));}
 }

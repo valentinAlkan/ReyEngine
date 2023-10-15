@@ -1,6 +1,7 @@
 #include "Window.h"
 #include <iostream>
 #include <utility>
+#include <array>
 #include "DrawInterface.h"
 
 using namespace std;
@@ -42,7 +43,61 @@ void Window::exec(){
    applyProcess(_root);
 
    while (!WindowShouldClose()){
-      //collect input
+      //collect key input (up to limit)
+      //do ups first so we don't process up and down on same frame
+      for (size_t i=0; i<Window::INPUT_COUNT_LIMIT; i++){
+         auto keyUp = InputManager::instance().getKeyReleased();
+         if (keyUp){
+            InputEventKey event;
+            event.key = keyUp;
+            event.isDown = false;
+            _root->_process_unhandled_input(event);
+         } else {
+            break;
+         }
+      }
+
+      //DOWNS
+      for (size_t i=0; i<Window::INPUT_COUNT_LIMIT; i++){
+         auto keyDown = InputManager::instance().getKeyPressed();
+         if (keyDown){
+            InputEventKey event;
+            event.key = keyDown;
+            event.isDown = true;
+            _root->_process_unhandled_input(event);
+         } else {
+            break;
+         }
+      }
+
+      //now do mouse input
+      //UPS
+      for (size_t i=0; i<Window::INPUT_COUNT_LIMIT; i++){
+         auto btnUp = InputManager::instance().getMouseButtonReleased();
+         if (btnUp != InputInterface::MouseButton::MOUSE_BUTTON_NONE){
+            InputEventMouseButton event;
+            event.button = btnUp;
+            event.isDown = false;
+            _root->_process_unhandled_input(event);
+         } else {
+            break;
+         }
+      }
+
+      //DOWNS
+      for (size_t i=0; i<Window::INPUT_COUNT_LIMIT; i++){
+         auto btnDown = InputManager::instance().getMouseButtonPressed();
+         if (btnDown != InputInterface::MouseButton::MOUSE_BUTTON_NONE){
+            InputEventMouseButton event;
+            event.button = btnDown;
+            event.isDown = true;
+            _root->_process_unhandled_input(event);
+         } else {
+            break;
+         }
+      }
+
+      //todo: mouse motion? mouse enter?
 
       float dt = getFrameDelta();
       //process widget logic

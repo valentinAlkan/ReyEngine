@@ -19,6 +19,7 @@ public:
    const std::shared_ptr<BaseWidget>& getRootWidget(){return _root;}
 protected:
    Window(const std::string& title, int width, int height, std::shared_ptr<BaseWidget> root, const std::vector<Flags>& flags, int targetFPS=60);
+   static constexpr size_t INPUT_COUNT_LIMIT = 256;
 private:
    std::shared_ptr<BaseWidget> _root; //the scene to draw
 

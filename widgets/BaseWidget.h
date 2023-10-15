@@ -3,6 +3,7 @@
 #include "DrawInterface.h"
 #include "Property.h"
 #include "TypeManager.h"
+#include "InputManager.h"
 #include <utility>
 #include <vector>
 #include <memory>
@@ -11,6 +12,8 @@
 #include <optional>
 #include <unordered_set>
 #include <unordered_map>
+
+using Handled = bool;
 
 #define GFCSDRAW_SERIALIZER(CLASSNAME, PARENT_CLASSNAME) \
    public:                                           \
@@ -89,6 +92,9 @@ protected:
    void _deserialize(PropertyPrototypeMap&);
    RectProperty<double> _rect;
 
+   //input
+   virtual Handled _unhandled_input(InputEvent&){return false;}
+
 private:
    uint64_t _rid; //unique identifier
    const std::string _typeName;
@@ -101,6 +107,9 @@ private:
    std::recursive_mutex _childLock;
    const std::lock_guard<std::recursive_mutex> childSafetyLock(){return std::lock_guard<std::recursive_mutex>(_childLock);}
    bool _scheduled_for_deletion = false; // true when the widget has been scheduled for deletion but is not yet deleted.
+
+   virtual Handled _process_unhandled_input(InputEvent&); //pass input to children if they want it and then process it for ourselves if necessary
+   InputFilter inputFilter = InputFilter::INPUT_FILTER_PASS_AND_PROCESS;
 
    ChildMap _children;
    friend class Window;
