@@ -18,10 +18,10 @@ class EventManager{
 public:
    static EventManager& instance(){static EventManager instance; return instance;}
    static void publish(Publisher&, const std::shared_ptr<Event>&);
-   static void subscribe(Publisher&, std::string eventType, Subscriber, EventHandler);
-   static void unsubscribe(Publisher& publisher, std::string eventType, Subscriber, EventHandler);
-   static void unsubscribe(Publisher& publisher, std::string eventType, Subscriber);
-   static void unsubscribe(Publisher& publisher, std::string eventType);
+   static void subscribe(Publisher&, const std::string& eventType, Subscriber, EventHandler);
+   static void unsubscribe(Publisher& publisher, const std::string& eventType, Subscriber, EventHandler);
+   static void unsubscribe(Publisher& publisher, const std::string& eventType, Subscriber);
+   static void unsubscribe(Publisher& publisher, const std::string& eventType);
    static void unsubscribe(Publisher& publisher);
 private:
    EventManager() {}

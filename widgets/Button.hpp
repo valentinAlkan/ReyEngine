@@ -1,6 +1,18 @@
 #pragma once
 #include "Control.hpp"
 
+namespace EventType {
+   DECLARE_EVENT(EVENT_PUSHBUTTON)
+}
+
+struct PushButtonEvent : public Event{
+   PushButtonEvent(bool down)
+   : Event(EventType::EVENT_PUSHBUTTON)
+   , down(down)
+   {}
+   bool down;
+};
+
 class BaseButton : public Control {
    GFCSDRAW_OBJECT(BaseButton, Control)
    , PROPERTY_DECLARE(down){
@@ -11,21 +23,29 @@ public:
       registerProperty(down);
    };
    BoolProperty down;
+   bool wasDown;
 protected:
    Handled _unhandled_input(InputEvent& event) override{
       auto& e = static_cast<InputEventMouseButton&>(event);
       if (e.button == InputInterface::MouseButton::MOUSE_BUTTON_LEFT){
-         down.set(e.isDown);
+         setDown(e.isDown);
          return true;
       }
       return false;
+   }
+   void setDown(bool newDown){
+      if (wasDown != newDown){
+         down.set(newDown);
+         auto e = std::make_shared<PushButtonEvent>(newDown);
+         publishEvent(e);
+      }
    }
 };
 
 class PushButton : public BaseButton{
    GFCSDRAW_OBJECT(PushButton, BaseButton)
    , PROPERTY_DECLARE(text){
-      text.value = "PushButton";
+      text.value = getName();
    }
    void registerProperties() override {
       BaseButton::registerProperties();

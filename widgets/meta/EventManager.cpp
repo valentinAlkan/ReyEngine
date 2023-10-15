@@ -17,7 +17,7 @@ void EventManager::publish(Publisher& publisher, const std::shared_ptr<Event>& e
 
    //get the vector of subscriber event maps
    auto& subscribers = _ev->second;
-   for (auto it=subscribers.begin(); it!= subscribers.end(); it++){
+   for (auto it=subscribers.begin(); it!= subscribers.end(); /**/){
       auto& weakSubscriber = it->first;
       if (weakSubscriber.expired()){
          //subscriber is dead, long live the subscriber
@@ -34,7 +34,7 @@ void EventManager::publish(Publisher& publisher, const std::shared_ptr<Event>& e
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void EventManager::subscribe(Publisher& publisher, std::string eventType, Subscriber subber, EventHandler fx) {
+void EventManager::subscribe(Publisher& publisher, const std::string& eventType, Subscriber subber, EventHandler fx) {
    //assumed to be passing a valid subscriber pointer
    auto foundpublisher = instance()._eventMap.find(publisher);
    if (foundpublisher == instance()._eventMap.end()){
@@ -42,29 +42,20 @@ void EventManager::subscribe(Publisher& publisher, std::string eventType, Subscr
       instance()._eventMap[publisher] = map<EventName, EventCallbackMap>();
    }
 
-   auto _ev = foundpublisher->second.find(eventType);
-   if (_ev == foundpublisher->second.end()){
+   auto _ev = instance()._eventMap[publisher].find(eventType);
+   if (_ev == instance()._eventMap[publisher].end()){
       //registered publisher doesn't have any events to publish
       instance()._eventMap[publisher][eventType] = EventCallbackMap();
    }
 
    //get the vector of subscriber event maps
-   auto& subscribers = _ev->second;
-   for (auto it=subscribers.begin(); it!= subscribers.end(); ){
-      auto& weakSubscriber = it->first;
-      if (weakSubscriber.expired()){
-         //subscriber is dead, long live the subscriber
-         it = subscribers.erase(it);
-         continue;
-      } else {
-         //call every callback
-         // add the eventHandler to the set
-         auto &vec = it->second;
-         //does not check if already inserted - may call same callback twice if same subscriber subscribes multiple times
-         vec.push_back(fx);
-         ++it;
-      }
+   auto& subscribers = instance()._eventMap[publisher][eventType];
+   auto found = subscribers.find(subber);
+   if (found == subscribers.end()){
+      //create new set
+      instance()._eventMap[publisher][eventType][subber];
    }
+   instance()._eventMap[publisher][eventType][subber].push_back(fx);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -79,7 +70,7 @@ void EventManager::unsubscribe(Publisher &publisher) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void EventManager::unsubscribe(Publisher &publisher, std::string eventType) {
+void EventManager::unsubscribe(Publisher &publisher, const std::string& eventType) {
    //assumed to be passing a valid subscriber pointer
    auto it = instance()._eventMap.find(publisher);
    if (it == instance()._eventMap.end()) {
@@ -96,7 +87,7 @@ void EventManager::unsubscribe(Publisher &publisher, std::string eventType) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void EventManager::unsubscribe(Publisher &publisher, std::string eventType, Subscriber subscriber) {
+void EventManager::unsubscribe(Publisher &publisher, const std::string& eventType, Subscriber subscriber) {
    //assumed to be passing a valid subscriber pointer
    auto it = instance()._eventMap.find(publisher);
    if (it == instance()._eventMap.end()) {
@@ -120,7 +111,7 @@ void EventManager::unsubscribe(Publisher &publisher, std::string eventType, Subs
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void EventManager::unsubscribe(Publisher &publisher, std::string eventType, Subscriber subscriber, EventHandler handler) {
+void EventManager::unsubscribe(Publisher &publisher, const std::string& eventType, Subscriber subscriber, EventHandler handler) {
 //assumed to be passing a valid subscriber pointer
    auto it = instance()._eventMap.find(publisher);
    if (it == instance()._eventMap.end()) {
