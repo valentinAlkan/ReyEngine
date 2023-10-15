@@ -3,11 +3,9 @@
 #include "DrawInterface.h"
 
 namespace EventType {
-   DECLARE_EVENT(EVENT_INPUT_KEY)
-   DECLARE_EVENT(EVENT_INPUT_BUTTON)
-   DECLARE_EVENT(EVENT_INPUT_MOUSE_BUTTON)
-   DECLARE_EVENT(EVENT_INPUT_MOUSE_WHEEL)
-   DECLARE_EVENT(EVENT_INPUT_MOUSE_MOTION)
+
+
+
 }
 
 struct InputEvent : public Event {
@@ -17,7 +15,8 @@ protected:
 };
 
 struct InputEventKey : public InputEvent {
-   InputEventKey(): InputEvent(EventType::EVENT_INPUT_KEY){}
+   DECLARE_EVENT(EVENT_INPUT_KEY);
+   InputEventKey(): InputEvent(EVENT_INPUT_KEY){}
    int key;
    bool isDown;
 };
@@ -29,18 +28,21 @@ protected:
 };
 
 struct InputEventMouseButton : public InputEventMouse{
-   InputEventMouseButton(): InputEventMouse(EventType::EVENT_INPUT_MOUSE_BUTTON){};
+   DECLARE_EVENT(EVENT_INPUT_MOUSE_BUTTON);
+   InputEventMouseButton(): InputEventMouse(EVENT_INPUT_MOUSE_BUTTON){};
    InputInterface::MouseButton button;
    bool isDown;
 };
 
 struct InputEventMouseWheel : public InputEventMouse{
-   InputEventMouseWheel(): InputEventMouse(EventType::EVENT_INPUT_MOUSE_WHEEL){}
+   DECLARE_EVENT(EVENT_INPUT_MOUSE_WHEEL)
+   InputEventMouseWheel(): InputEventMouse(EVENT_INPUT_MOUSE_WHEEL){}
    GFCSDraw::Vec2<int> wheelMove;
 };
 
 struct InputEventMouseMotion : public InputEventMouse{
-   InputEventMouseMotion(): InputEventMouse(EventType::EVENT_INPUT_MOUSE_MOTION){}
+   DECLARE_EVENT(EVENT_INPUT_MOUSE_MOTION)
+   InputEventMouseMotion(): InputEventMouse(EVENT_INPUT_MOUSE_MOTION){}
    GFCSDraw::Vec2<int> mouseDelta;
 };
 
