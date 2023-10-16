@@ -9,8 +9,7 @@ public:
    void renderBegin(GFCSDraw::Vec2<float>& textureOffset) override {
       renderTarget.beginRenderMode();
       renderTarget.clear();
-      auto globalpos = getGlobalPos();
-      textureOffset -= globalpos;
+      textureOffset -= getGlobalPos();
    }
    void renderEnd() override {
       renderTarget.endRenderMode();

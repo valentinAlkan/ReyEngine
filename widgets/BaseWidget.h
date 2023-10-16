@@ -94,8 +94,8 @@ protected:
    void renderChain(GFCSDraw::Vec2<float>& textureOffset);
    virtual void renderEnd(){}
    GFCSDraw::Vec2<float> getTextureRenderModeOffset(){return _textureRenderModeOffset;}
-   void renderTextureOffsetApply(GFCSDraw::Vec2<float>& textureOffset){_textureRenderModeOffset+=textureOffset;}
-   void renderTextureOffsetReset(GFCSDraw::Vec2<float>& textureOffset){_textureRenderModeOffset-=textureOffset;}
+   void renderTextureOffsetApply(GFCSDraw::Vec2<float>& textureOffset){;}
+   void renderTextureOffsetReset(GFCSDraw::Vec2<float>& textureOffset){;}
    void _drawText(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color) const;
    void _drawTextCentered(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color) const;
    void _drawRectangle(const GFCSDraw::Rect<int>& rect, Color color) const;
