@@ -1,5 +1,6 @@
 #pragma once
 #include "raylib.h"
+//#include "Application.h"
 #include "StringTools.h"
 #include <string>
 
@@ -91,6 +92,7 @@ namespace GFCSDraw {
          }
          Vec2<T> pos() const {return {x, y};}
          Vec2<T> size() const {return {width, height};}
+         Rect<T> toSizeRect() const {return {0,0,width, height};}
 
          T x;
          T y;
@@ -105,9 +107,32 @@ namespace GFCSDraw {
       void drawRectangle(const GFCSDraw::Rect<int>&, Color color);
       void drawRectangleRounded(const GFCSDraw::Rect<float>&, float roundness, int segments, Color color);
       void drawRectangleRoundedLines(const GFCSDraw::Rect<float>&, float roundness, int segments, float lineThick, Color color);
-//      void drawRectangleLines(const GFCSDraw::Rect<int>&, Color color);
+      void drawRectangleGradientV(const GFCSDraw::Rect<int>&, Color color1, Color color2);
       inline Vec2<int> getMousePos(){return GetMousePosition();}
       inline float getFrameDelta(){return GetFrameTime();}
+
+
+      class RenderTarget{
+      public:
+         RenderTarget(const Vec2<int>& size);
+         ~RenderTarget(){
+            if (_texLoaded) {
+               UnloadRenderTexture(_tex);
+            }
+         }
+         void resize(const Vec2<int>& newSize);
+         void beginRenderMode(){BeginTextureMode(_tex);}
+         void endRenderMode(){EndTextureMode();}
+         void clear(Color color=WHITE){ClearBackground(color);}
+         void render(Vec2<float> pos) const{
+            // NOTE: Render texture must be y-flipped due to default OpenGL coordinates (left-bottom)
+            DrawTextureRec(_tex.texture, {0, 0, (float)_tex.texture.width, (float)-_tex.texture.height }, {pos.x, pos.y}, WHITE);
+         }
+      protected:
+         bool _texLoaded = false;
+         RenderTexture2D _tex;
+         Vec2<float> _size;
+      };
 }
 
 namespace InputInterface{

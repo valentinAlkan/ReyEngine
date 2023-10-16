@@ -1,13 +1,10 @@
 #pragma once
 #include "Control.hpp"
 
-namespace EventType {
-   DECLARE_EVENT(EVENT_PUSHBUTTON)
-}
-
 struct PushButtonEvent : public Event{
+   DECLARE_EVENT(EVENT_PUSHBUTTON)
    PushButtonEvent(bool down)
-   : Event(EventType::EVENT_PUSHBUTTON)
+   : Event(EVENT_PUSHBUTTON)
    , down(down)
    {}
    bool down;

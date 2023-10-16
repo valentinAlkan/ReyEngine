@@ -54,6 +54,7 @@ add_library(widgets STATIC
     widgets/Control.hpp
     widgets/Button.hpp
     widgets/Label.hpp
+    widgets/ScrollArea.hpp
     widgets/BaseWidget.cpp
     ${CUSTOM_SOURCES}
 )

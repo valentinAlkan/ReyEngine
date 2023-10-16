@@ -3,6 +3,7 @@
 #include <utility>
 #include <array>
 #include "DrawInterface.h"
+#include "Application.h"
 
 using namespace std;
 using namespace GFCSDraw;
@@ -27,6 +28,7 @@ Window::Window(const std::string &title, int width, int height, std::shared_ptr<
 
    InitWindow(width, height, title.c_str());
    SetTargetFPS(targetFPS);
+   Application::ready();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -108,8 +110,8 @@ void Window::exec(){
       //draw children on top of their parents
       BeginDrawing();
       ClearBackground(RAYWHITE);
-      _root->renderChildren();
-      _root->render();
+      GFCSDraw::Vec2<float> texOffset;
+      _root->renderChain(texOffset);
       EndDrawing();
    }
 }
