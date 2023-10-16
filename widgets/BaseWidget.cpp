@@ -119,12 +119,13 @@ void BaseWidget::renderChildren(GFCSDraw::Vec2<float>& textureOffset) const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::renderChain(GFCSDraw::Vec2<float> &textureOffset) {
-   renderBegin(textureOffset);
-   renderTextureOffsetApply(textureOffset);
-   renderChildren(textureOffset);
+void BaseWidget::renderChain(GFCSDraw::Vec2<float>& parentOffset) {
+   GFCSDraw::Vec2<float> localOffset;
+   renderBegin(localOffset);
+   _textureRenderModeOffset = localOffset + parentOffset;
+   renderChildren(_textureRenderModeOffset);
    render();
-   renderTextureOffsetReset(textureOffset);
+   _textureRenderModeOffset = parentOffset; //subtract local offset when we are done
    renderEnd();
 }
 
