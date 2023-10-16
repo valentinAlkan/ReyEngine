@@ -1,5 +1,6 @@
 #include <utility>
 #include "DrawInterface.h"
+#include "ScrollArea.hpp"
 #include "Application.h"
 #include <iostream>
 #include "Logger.h"
@@ -45,7 +46,6 @@ int main(int argc, char** argv)
       button->setPos(100, 100);
       root->addChild(button);
       auto label = make_shared<Label>("label");
-      root->addChild(label);
 
       auto cb = [&](const std::shared_ptr<Event>& e){
          static int pushCount = 0;
@@ -55,9 +55,14 @@ int main(int argc, char** argv)
          }
       };
 
-      label->subscribe(button, EventType::EVENT_PUSHBUTTON, cb);
-   }
+      label->subscribe(button, PushButtonEvent::EVENT_PUSHBUTTON, cb);
 
+      //create a scroll area
+      auto scrollArea = make_shared<ScrollArea>("ScrollArea");
+      scrollArea->setRect({400, 200, 500,500});
+      root->addChild(scrollArea);
+      scrollArea->addChild(label);
+   }
 
 
    auto optWindow = Application::instance().createWindow("MainWindow", screenWidth, screenHeight, root, {Window::RESIZE});

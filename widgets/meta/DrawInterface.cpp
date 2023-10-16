@@ -1,4 +1,5 @@
 #include "DrawInterface.h"
+#include "Application.h"
 using namespace GFCSDraw;
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -28,6 +29,11 @@ void GFCSDraw::drawRectangleRoundedLines(const GFCSDraw::Rect<float>& r, float r
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void GFCSDraw::drawRectangleGradientV(const GFCSDraw::Rect<int>& rect, Color color1, Color color2) {
+   DrawRectangleGradientV(rect.x, rect.y, rect.width, rect.height, color1, color2);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void GFCSDraw::drawTextCentered(const std::string& text, const Vec2<int>& pos, int fontSize, Color color){
    auto textWidth = MeasureText(text.c_str(), fontSize);
    float newX = pos.x - (float)textWidth / 2;
@@ -42,4 +48,24 @@ void GFCSDraw::drawTextRelative(const std::string& text, const Vec2<int>& relPos
    auto newX = screenSize.x * relPos.x / 100.0;
    auto newY = screenSize.y * relPos.y / 100.0;
    drawText(text, Vec2<int>(newX, newY), fontSize, color);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+GFCSDraw::RenderTarget::RenderTarget(const Vec2<int>& size)
+: _size(size)
+{
+   auto doReady = [this]() {
+      _tex = LoadRenderTexture(_size.x, _size.y);
+      _texLoaded = true;
+   };
+   Application::registerForInit(doReady);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void GFCSDraw::RenderTarget::resize(const Vec2<int> &newSize) {
+   if (_texLoaded) {
+      UnloadRenderTexture(_tex);
+      LoadRenderTexture(newSize.x, newSize.y);
+   }
+   _size = newSize;
 }

@@ -5,6 +5,7 @@
 #include "TypeManager.h"
 #include "InputManager.h"
 #include "EventManager.h"
+#include <stack>
 #include <utility>
 #include <vector>
 #include <memory>
@@ -53,9 +54,9 @@ public:
    GFCSDraw::Rect<double> getRect() const {return _rect.value;}
    dVec getPos() const {return GFCSDraw::Vec2<double>(_rect.value.x, _rect.value.y);}
    dVec getGlobalPos() const;
-   void setRect(const GFCSDraw::Rect<double>& r){_rect.value = r;}
-   void setPos(double x, double y){_rect.value.x = x; _rect.value.y = y;}
-   void setPos(const dVec& pos){_rect.value.x = pos.x; _rect.value.y = pos.y;}
+   void setRect(const GFCSDraw::Rect<double>& r){_rect.value = r; _on_rect_changed();}
+   void setPos(double x, double y){_rect.value.x = x; _rect.value.y = y; _on_rect_changed();}
+   void setPos(const dVec& pos){_rect.value.x = pos.x; _rect.value.y = pos.y; _on_rect_changed();}
    void setGlobalPos(const dVec&);
    bool setName(const std::string& name, bool append_index=false);
    std::string getTypeName(){return _typeName;}
@@ -83,15 +84,24 @@ public:
    static void registerType(std::string typeName, std::string parentType, bool isVirtual, Deserializer fx){TypeManager::registerType(typeName, parentType, isVirtual, fx);}
    std::string serialize();
 protected:
+   virtual void _on_application_ready(){};
+   virtual void _on_rect_changed(){}
    //override and setProcess(true) to allow processing
    virtual void _process(float dt){};
    // Drawing functions
-   void renderChildren(); //draw the widget's children
+   virtual void renderBegin(GFCSDraw::Vec2<float>& textureOffset){}
+   void renderChildren(GFCSDraw::Vec2<float>& textureOffset) const; //draw the widget's children
+   void renderChain(GFCSDraw::Vec2<float>& textureOffset);
+   virtual void renderEnd(){}
+   GFCSDraw::Vec2<float> getTextureRenderModeOffset(){return _textureRenderModeOffset;}
+   void renderTextureOffsetApply(GFCSDraw::Vec2<float>& textureOffset){_textureRenderModeOffset+=textureOffset;}
+   void renderTextureOffsetReset(GFCSDraw::Vec2<float>& textureOffset){_textureRenderModeOffset-=textureOffset;}
    void _drawText(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color) const;
    void _drawTextCentered(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color) const;
    void _drawRectangle(const GFCSDraw::Rect<int>& rect, Color color) const;
    void _drawRectangleRounded(const GFCSDraw::Rect<int>& rect,  float roundness, int segments, Color color) const;
    void _drawRectangleRoundedLines(const GFCSDraw::Rect<float>& rect, float roundness, int segments, float lineThick, Color color) const;
+   void _drawRectangleGradientV(const GFCSDraw::Rect<int>& rect, Color color1, Color color2) const;
    void registerProperties() override;
    void _deserialize(PropertyPrototypeMap&);
    RectProperty<double> _rect;
@@ -112,9 +122,12 @@ private:
    const std::lock_guard<std::recursive_mutex> childSafetyLock(){return std::lock_guard<std::recursive_mutex>(_childLock);}
    bool _scheduled_for_deletion = false; // true when the widget has been scheduled for deletion but is not yet deleted.
 
+   GFCSDraw::Vec2<float> _textureRenderModeOffset; //used for texture rendering mode
+
    Handled _process_unhandled_input(InputEvent&); //pass input to children if they want it and then process it for ourselves if necessary
    InputFilter inputFilter = InputFilter::INPUT_FILTER_PASS_AND_PROCESS;
 
    ChildMap _children;
    friend class Window;
+   friend class Application;
 };
