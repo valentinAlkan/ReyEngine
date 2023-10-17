@@ -4,7 +4,9 @@
 class ScrollArea : public Control {
    GFCSDRAW_OBJECT(ScrollArea, Control)
    , renderTarget(_rect.value.size())
-   {}
+   {
+      //create scrollbars
+   }
 public:
    void renderBegin(GFCSDraw::Vec2<float>& textureOffset) override {
       renderTarget.beginRenderMode();
