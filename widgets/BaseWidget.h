@@ -17,24 +17,31 @@
 
 using Handled = bool;
 
+#define __CTOR_RECT__ GFCSDraw::Rect<float> r
+
 #define GFCSDRAW_SERIALIZER(CLASSNAME, PARENT_CLASSNAME) \
    public:                                           \
    static std::shared_ptr<BaseWidget> CLASSNAME::deserialize(const std::string& instanceName, PropertyPrototypeMap& properties) { \
-   auto retval = std::make_shared<CLASSNAME>(instanceName); \
+   __CTOR_RECT__ = {0,0,0,0}; \
+   auto retval = std::make_shared<CLASSNAME>(instanceName, r); \
    retval->BaseWidget::_deserialize(properties);        \
    return retval;}                                       \
 
-#define GFCSDRAW_DEFAULT_CTOR(CLASSNAME, PARENT_CLASSNAME) \
-   CLASSNAME(std::string name): CLASSNAME(std::move(name), #CLASSNAME){} \
+#define GFCSDRAW_DEFAULT_CTOR(CLASSNAME) \
+   CLASSNAME(std::string name, __CTOR_RECT__): CLASSNAME(std::move(name), #CLASSNAME, r){} \
 
 #define GFCSDRAW_CUSTOM_CTOR(CLASSNAME, PARENT_CLASSNAME, ...) \
       CLASSNAME(std::string name, __VA_ARGS__): CLASSNAME(std::move(name), #CLASSNAME){} \
 
 #define GFCSDRAW_OBJECT(CLASSNAME, PARENT_CLASSNAME) \
    GFCSDRAW_SERIALIZER(CLASSNAME, PARENT_CLASSNAME)  \
-   GFCSDRAW_DEFAULT_CTOR(CLASSNAME, PARENT_CLASSNAME) \
-   protected: \
-   CLASSNAME(std::string name, std::string typeName): PARENT_CLASSNAME(name, std::move(typeName))
+   GFCSDRAW_DEFAULT_CTOR(CLASSNAME) \
+   protected:                                        \
+   void _register_parent_properties(){               \
+      PARENT_CLASSNAME::_register_parent_properties(); \
+      PARENT_CLASSNAME::registerProperties();           \
+   } \
+   CLASSNAME(std::string name, std::string typeName, __CTOR_RECT__): PARENT_CLASSNAME(name, std::move(typeName), r)
 
 class Scene;
 class  BaseWidget
@@ -47,7 +54,7 @@ class  BaseWidget
    using iVec = GFCSDraw::Vec2<int>;
    using dVec = GFCSDraw::Vec2<double>;
 public:
-   BaseWidget(std::string name, std::string typeName);
+   BaseWidget(std::string name, std::string typeName, GFCSDraw::Rect<float> rect);
    ~BaseWidget();
    uint64_t getRid() const {return _rid;}
    std::string getName() const {return _name;}
@@ -108,6 +115,7 @@ protected:
 
    //input
    virtual Handled _unhandled_input(InputEvent&){return false;}
+   virtual void _register_parent_properties(){};
 
 private:
    uint64_t _rid; //unique identifier

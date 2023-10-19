@@ -126,7 +126,7 @@ namespace GFCSDraw {
          void clear(Color color=WHITE){ClearBackground(color);}
          void render(Vec2<float> pos) const{
             // NOTE: Render texture must be y-flipped due to default OpenGL coordinates (left-bottom)
-            DrawTextureRec(_tex.texture, {0, 0, (float)_tex.texture.width, (float)-_tex.texture.height }, {pos.x, pos.y}, WHITE);
+            DrawTextureRec(_tex.texture, {0, 0, (float)_tex.texture.width, (float)-_tex.texture.height }, {pos.x, pos.y}, {255,255,255,210});
          }
       protected:
          bool _texLoaded = false;

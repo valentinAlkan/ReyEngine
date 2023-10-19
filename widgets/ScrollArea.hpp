@@ -22,7 +22,6 @@ public:
    }
    void _process(float dt) override {}
    void registerProperties() override{
-      Control::registerProperties();
    }
    void _on_rect_changed() override {
       renderTarget.resize(_rect.value.size());
