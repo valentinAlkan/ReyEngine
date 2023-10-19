@@ -8,7 +8,7 @@ using namespace std;
 using namespace GFCSDraw;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-BaseWidget::BaseWidget(std::string name, std::string typeName, Rect<float> rect)
+BaseWidget::BaseWidget(const std::string& name, const std::string& typeName, Rect<float> rect)
 :_name(std::move(name))
 , _typeName(typeName)
 , _rect("_rect", rect)
@@ -213,7 +213,7 @@ std::string BaseWidget::serialize() {
    stringstream data;
    data << _name << " - " << _typeName << ":\n";
    for (const auto& [anme, property] : _properties){
-      auto value = property->dump();
+      auto value = property->toString();
       data << PropertyMeta::INDENT << property->instanceName();
       data << PropertyMeta::SEP << property->typeName(); //todo: ? pretty sure this isn't actually necesary
       data << PropertyMeta::SEP << value.size();
