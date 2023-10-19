@@ -25,6 +25,5 @@ void PosTestWidget::_process(float dt) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void PosTestWidget::registerProperties() {
-   BaseWidget::registerProperties();
    registerProperty(someString);
 }

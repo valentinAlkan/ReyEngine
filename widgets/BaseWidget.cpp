@@ -8,14 +8,13 @@ using namespace std;
 using namespace GFCSDraw;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-BaseWidget::BaseWidget(std::string name, std::string typeName)
+BaseWidget::BaseWidget(std::string name, std::string typeName, Rect<float> rect)
 :_name(std::move(name))
 , _typeName(typeName)
-, _rect("_rect")
+, _rect("_rect", rect)
 , _isProcessed("_isProcessed")
 , _rid(Application::instance().getNewRid())
 {
-   setRect({0,0,100,100});
 }
 
 BaseWidget::~BaseWidget() {
@@ -227,6 +226,7 @@ std::string BaseWidget::serialize() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::_deserialize(PropertyPrototypeMap& propertyData){
    //register all properties so we know what's what
+   _register_parent_properties();
    registerProperties();
    //   move the properties to their new home
    for (auto& [name, data] : propertyData){

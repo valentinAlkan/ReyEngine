@@ -42,6 +42,7 @@ protected:
 private:
    std::string _sanitizedName;
    std::string _rawValue; //the value as it exists on the commandline, including dashes and everything
+   bool _invoked; //whether or not the arg was invoked on the command-line (that is to say, parsed by the parser at runtime)
    std::string _docString;
    ArgType     _argType;
    ValueType   _valueType;

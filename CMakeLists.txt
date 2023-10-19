@@ -34,6 +34,8 @@ endif()
 
 set(CUSTOM_SOURCES
     widgets/test/TestWidgets.cpp
+    widgets/test/TextureTestWidget.hpp
+    widgets/test/RootWidget.hpp
 )
 
 add_library(widgets STATIC
@@ -52,6 +54,7 @@ add_library(widgets STATIC
     widgets/meta/EventManager.cpp
     widgets/meta/InputManager.cpp
     widgets/Control.hpp
+    widgets/Canvas.hpp
     widgets/Slider.hpp
     widgets/Button.hpp
     widgets/Label.hpp

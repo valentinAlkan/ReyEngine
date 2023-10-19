@@ -12,7 +12,6 @@ public:
    };
    void _process(float dt) override {};
    void registerProperties() override{
-      Control::registerProperties();
       registerProperty(text);
    };
    void setText(const std::string& newText){

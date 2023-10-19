@@ -8,6 +8,8 @@
 #include "TestWidgets.h"
 #include "Label.hpp"
 #include "Button.hpp"
+#include "RootWidget.hpp"
+#include "TextureTestWidget.hpp"
 
 using namespace std;
 using namespace GFCSDraw;
@@ -25,12 +27,13 @@ int main(int argc, char** argv)
    Application::instance(); //initialize the application
    ArgParse args;
    args.defineArg(RuntimeArg("--loadScene", "help", 1, RuntimeArg::ArgType::OPTIONAL));
+   args.defineArg(RuntimeArg("--basicTest", "help", 1, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    shared_ptr<BaseWidget> root;
-   auto optArg = args.getArg("loadScene");
-   if (optArg){
-      auto loadSceneArg = optArg.value();
+   auto argLoadScene = args.getArg("--loadScene");
+   if (argLoadScene){
+      auto loadSceneArg = argLoadScene.value();
       //open and test a scene file
       auto loadedScene = Scene::fromFile("./test/" + loadSceneArg->getParams()[0]);
       if (loadedScene){
@@ -39,13 +42,20 @@ int main(int argc, char** argv)
       }
    }
 
+   auto argBasicTest = args.getArg("--basicTest");
+   if (argBasicTest){
+      root = make_shared<RootWidget>("Root", GFCSDraw::Rect<float> {0,0,0,0});
+      auto textureTest = make_shared<TextureTestWidget>("TexTest", GFCSDraw::Rect<float> {0,0,100,100});
+      root->addChild(textureTest);
+   }
+
    //create a root widget
    if (!root) {
-      root = make_shared<Control>("Root");
-      auto button = make_shared<PushButton>("Button");
+      root = make_shared<RootWidget>("Root", GFCSDraw::Rect<float> {0,0,0,0});
+      auto button = make_shared<PushButton>("Button", GFCSDraw::Rect<float> {0,0,0,0});
       button->setPos(100, 100);
       root->addChild(button);
-      auto label = make_shared<Label>("label");
+      auto label = make_shared<Label>("label", GFCSDraw::Rect<float> {0,0,0,0});
 
       auto cb = [&](const std::shared_ptr<Event>& e){
          static int pushCount = 0;
@@ -58,8 +68,8 @@ int main(int argc, char** argv)
       label->subscribe(button, PushButtonEvent::EVENT_PUSHBUTTON, cb);
 
       //create a scroll area
-      auto scrollArea = make_shared<ScrollArea>("ScrollArea");
-      scrollArea->setRect({400, 200, 500,500});
+      auto scrollArea = make_shared<ScrollArea>("ScrollArea", GFCSDraw::Rect<float> {0,0,0,0});
+      scrollArea->setRect({0, 0, 500,500});
       root->addChild(scrollArea);
       scrollArea->addChild(label);
    }

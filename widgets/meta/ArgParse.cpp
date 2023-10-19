@@ -14,6 +14,7 @@ RuntimeArg::RuntimeArg(const std::string &arg, std::string docString, int paramC
 , _argType(argType)
 , _valueType(valueType)
 , _consume(consumeType)
+, _invoked(false)
 {
    _value = "";
    if (argType == ArgType::DEDUCE){
@@ -43,6 +44,7 @@ RuntimeArg::RuntimeArg(const RuntimeArg& other)
    _dest = other._dest;
    _metavar = other._metavar;
    _value = other._value;
+   _invoked = other._invoked;
    for (const auto& param : _params){
       _params.push_back(param);
    }
@@ -71,6 +73,7 @@ std::string RuntimeArg::sanitizeName(const std::string& arg){
 /////////////////////////////////////////////////////////////////////////////////////////
 void RuntimeArg::setValue(const std::string &value) {
    _rawValue = value;
+   _invoked = true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -176,7 +179,7 @@ optional<RuntimeArg*> ArgParse::getArg(const std::string& name) {
    {
       return nullopt;
    }
-   if (it->second._value.empty()){
+   if (!it->second._invoked){
       return nullopt;
    }
    return &it->second;

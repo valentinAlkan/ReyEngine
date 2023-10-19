@@ -45,7 +45,6 @@ class PushButton : public BaseButton{
       text.value = getName();
    }
    void registerProperties() override {
-      BaseButton::registerProperties();
       registerProperty(text);
    };
    void render() const override {
