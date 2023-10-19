@@ -17,18 +17,18 @@
 
 using Handled = bool;
 
-#define __CTOR_RECT__ GFCSDraw::Rect<float> r
+#define CTOR_RECT GFCSDraw::Rect<float> r
 
 #define GFCSDRAW_SERIALIZER(CLASSNAME, PARENT_CLASSNAME) \
    public:                                           \
    static std::shared_ptr<BaseWidget> CLASSNAME::deserialize(const std::string& instanceName, PropertyPrototypeMap& properties) { \
-   __CTOR_RECT__ = {0,0,0,0}; \
+   CTOR_RECT = {0,0,0,0}; \
    auto retval = std::make_shared<CLASSNAME>(instanceName, r); \
    retval->BaseWidget::_deserialize(properties);        \
    return retval;}                                       \
 
 #define GFCSDRAW_DEFAULT_CTOR(CLASSNAME) \
-   CLASSNAME(std::string name, __CTOR_RECT__): CLASSNAME(std::move(name), #CLASSNAME, r){} \
+   CLASSNAME(std::string name, CTOR_RECT): CLASSNAME(std::move(name), #CLASSNAME, r){} \
 
 #define GFCSDRAW_CUSTOM_CTOR(CLASSNAME, PARENT_CLASSNAME, ...) \
       CLASSNAME(std::string name, __VA_ARGS__): CLASSNAME(std::move(name), #CLASSNAME){} \
@@ -41,7 +41,7 @@ using Handled = bool;
       PARENT_CLASSNAME::_register_parent_properties(); \
       PARENT_CLASSNAME::registerProperties();           \
    } \
-   CLASSNAME(std::string name, std::string typeName, __CTOR_RECT__): PARENT_CLASSNAME(name, std::move(typeName), r)
+   CLASSNAME(std::string name, std::string typeName, CTOR_RECT): PARENT_CLASSNAME(name, std::move(typeName), r)
 
 class Scene;
 class  BaseWidget
