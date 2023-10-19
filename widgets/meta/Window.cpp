@@ -2,7 +2,6 @@
 #include <iostream>
 #include <utility>
 #include <array>
-#include "DrawInterface.h"
 #include "Application.h"
 
 using namespace std;
@@ -80,6 +79,7 @@ void Window::exec(){
             InputEventMouseButton event;
             event.button = btnUp;
             event.isDown = false;
+            event.globalPos = InputManager::getMousePos();
             _root->_process_unhandled_input(event);
          } else {
             break;
@@ -93,13 +93,21 @@ void Window::exec(){
             InputEventMouseButton event;
             event.button = btnDown;
             event.isDown = true;
+            event.globalPos = InputManager::getMousePos();
             _root->_process_unhandled_input(event);
          } else {
             break;
          }
       }
 
-      //todo: mouse motion? mouse enter?
+      //check the mouse delta compared to last frame
+      auto mouseDelta = InputManager::getMouseDelta();
+      if (mouseDelta) {
+         InputEventMouseMotion event;
+         event.mouseDelta = mouseDelta;
+         event.globalPos = InputManager::getMousePos();
+         _root->_process_unhandled_input(event);
+      }
 
       float dt = getFrameDelta();
       //process widget logic
@@ -156,7 +164,7 @@ std::optional<std::shared_ptr<BaseWidget>> Window::ProcessList::remove(std::shar
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 Vec2<int> Window::getMousePos(){
-   return GFCSDraw::getMousePos();
+   return InputManager::getMousePos();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

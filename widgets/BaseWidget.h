@@ -5,6 +5,7 @@
 #include "TypeManager.h"
 #include "InputManager.h"
 #include "EventManager.h"
+#include <iostream>
 #include <stack>
 #include <utility>
 #include <vector>
@@ -17,18 +18,18 @@
 
 using Handled = bool;
 
-#define CTOR_RECT GFCSDraw::Rect<float> r
+#define CTOR_RECT const GFCSDraw::Rect<float>& r
 
 #define GFCSDRAW_SERIALIZER(CLASSNAME, PARENT_CLASSNAME) \
    public:                                           \
-   static std::shared_ptr<BaseWidget> CLASSNAME::deserialize(const std::string& instanceName, PropertyPrototypeMap& properties) { \
+   static std::shared_ptr<BaseWidget> deserialize(const std::string& instanceName, PropertyPrototypeMap& properties) { \
    CTOR_RECT = {0,0,0,0}; \
    auto retval = std::make_shared<CLASSNAME>(instanceName, r); \
    retval->BaseWidget::_deserialize(properties);        \
    return retval;}                                       \
 
 #define GFCSDRAW_DEFAULT_CTOR(CLASSNAME) \
-   CLASSNAME(std::string name, CTOR_RECT): CLASSNAME(std::move(name), #CLASSNAME, r){} \
+   CLASSNAME(const std::string& name, CTOR_RECT): CLASSNAME(name, #CLASSNAME, r){} \
 
 #define GFCSDRAW_CUSTOM_CTOR(CLASSNAME, PARENT_CLASSNAME, ...) \
       CLASSNAME(std::string name, __VA_ARGS__): CLASSNAME(std::move(name), #CLASSNAME){} \
@@ -37,11 +38,11 @@ using Handled = bool;
    GFCSDRAW_SERIALIZER(CLASSNAME, PARENT_CLASSNAME)  \
    GFCSDRAW_DEFAULT_CTOR(CLASSNAME) \
    protected:                                        \
-   void _register_parent_properties(){               \
+   void _register_parent_properties() override{               \
       PARENT_CLASSNAME::_register_parent_properties(); \
       PARENT_CLASSNAME::registerProperties();           \
    } \
-   CLASSNAME(std::string name, std::string typeName, CTOR_RECT): PARENT_CLASSNAME(name, std::move(typeName), r)
+   CLASSNAME(const std::string& name, const std::string& typeName, CTOR_RECT): PARENT_CLASSNAME(name, typeName, r)
 
 class Scene;
 class  BaseWidget
@@ -54,17 +55,20 @@ class  BaseWidget
    using iVec = GFCSDraw::Vec2<int>;
    using dVec = GFCSDraw::Vec2<double>;
 public:
-   BaseWidget(std::string name, std::string typeName, GFCSDraw::Rect<float> rect);
+   BaseWidget(const std::string& name, const std::string& typeName, GFCSDraw::Rect<float> rect);
    ~BaseWidget();
    uint64_t getRid() const {return _rid;}
    std::string getName() const {return _name;}
    GFCSDraw::Rect<double> getRect() const {return _rect.value;}
    dVec getPos() const {return GFCSDraw::Vec2<double>(_rect.value.x, _rect.value.y);}
    dVec getGlobalPos() const;
+   dVec globalToLocal(const dVec& global) const{return global - getGlobalPos();}
+   dVec localToGlobal(const dVec& local) const {return local + getGlobalPos();}
    void setRect(const GFCSDraw::Rect<double>& r){_rect.value = r; _on_rect_changed();}
    void setPos(double x, double y){_rect.value.x = x; _rect.value.y = y; _on_rect_changed();}
    void setPos(const dVec& pos){_rect.value.x = pos.x; _rect.value.y = pos.y; _on_rect_changed();}
    void setGlobalPos(const dVec&);
+   bool isInside(const dVec& point){return _rect.value.toSizeRect().isInside(point);}
    bool setName(const std::string& name, bool append_index=false);
    std::string getTypeName(){return _typeName;}
 
@@ -88,7 +92,7 @@ public:
 
    bool operator==(const WidgetPtr&) const;
 
-   static void registerType(std::string typeName, std::string parentType, bool isVirtual, Deserializer fx){TypeManager::registerType(typeName, parentType, isVirtual, fx);}
+   static void registerType(const std::string& typeName, const std::string& parentType, bool isVirtual, Deserializer fx){TypeManager::registerType(typeName, parentType, isVirtual, fx);}
    std::string serialize();
 protected:
    virtual void _on_application_ready(){};

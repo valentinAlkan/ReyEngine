@@ -13,6 +13,7 @@ namespace GFCSDraw {
          inline Vec2(const Vec2<int>& v)   : x((T)v.x), y((T)v.y){}
          inline Vec2(const Vec2<float>& v) : x((T)v.x), y((T)v.y){}
          inline Vec2(const Vec2<double>& v): x((T)v.x), y((T)v.y){}
+         inline explicit operator bool() const {return x || y;}
          inline Vec2 operator+(const Vec2& rhs) const {Vec2<T> val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
          inline Vec2 operator-(const Vec2& rhs) const {Vec2<T> val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
          inline Vec2& operator+=(const Vec2& rhs){x += rhs.x; y += rhs.y; return *this;}
@@ -20,8 +21,8 @@ namespace GFCSDraw {
          inline Vec2& operator*=(const Vec2& rhs){x *= rhs.x; y *= rhs.y; return *this;}
          inline Vec2& operator/=(const Vec2& rhs){x /= rhs.x; y /= rhs.y; return *this;}
          inline Vec2 midpoint(){return {x/2, y/2};}
-         inline std::string toString() const {return "{" + std::to_string(x) + ", " + std::to_string(y) + "}";}
-         inline void fromString(const std::string& s){
+         [[nodiscard]] inline std::string toString() const {return "{" + std::to_string(x) + ", " + std::to_string(y) + "}";}
+         inline static void fromString(const std::string& s){
             std::string sanitized;
             for (const auto& c : s){
                if (::isdigit(c) || c == '-' || c==',' || c=='.'){
@@ -32,9 +33,10 @@ namespace GFCSDraw {
             if (split.size() != 2){
                return;
             }
-
-            x = std::stoi(split[0]);
-            y = std::stoi(split[1]);
+            GFCSDraw::Vec2<T> retval;
+            retval.x = std::stoi(split[0]);
+            retval.y = std::stoi(split[1]);
+            return retval;
          }
          friend std::ostream& operator<<(std::ostream& os, const Vec2<T>& v){os << v.toString();return os;}
          T x;
@@ -64,12 +66,17 @@ namespace GFCSDraw {
          inline Rect& operator-=(const Rect<T>& rhs){x -= rhs.x; y -= rhs.y; width -= rhs.width; height -= rhs.height; return *this;}
          inline Rect& operator*=(const Rect<T>& rhs){x *= rhs.x; y *= rhs.y; width *= rhs.width; height *= rhs.height; return *this;}
          inline Rect& operator/=(const Rect<T>& rhs){x /= rhs.x; y /= rhs.y; width /= rhs.width; height /= rhs.height; return *this;}
+         inline bool isInside(const Vec2<T>& point){
+            return (point.x > x && point.x < x + width) &&
+                  (point.y > y && point.y < y + height);
+         }
          [[nodiscard]] inline Vec2<T> center() const {return {(x+width)/2, (y+height)/2};}
+         inline void setCenter(const Vec2<T>& center) {x = center.x-width/2; y=center.y-height/2;}
          [[nodiscard]] inline std::string toString() const {
             return "{" + std::to_string(x) + ", " + std::to_string(y) + ", " +
             std::to_string(width) + ", " + std::to_string(height) + "}";
          }
-         inline void fromString(const std::string& s){
+         inline static GFCSDraw::Rect<T> fromString(const std::string& s){
             std::string sanitized;
             for (const auto& c : s){
                if (::isdigit(c) || c == '-' || c==',' || c=='.'){
@@ -78,21 +85,23 @@ namespace GFCSDraw {
             }
             auto split = string_tools::split(sanitized, ",");
             if (split.size() != 4){
-               return;
+               return GFCSDraw::Rect<T>();
             }
 
-            x = std::stoi(split[0]);
-            y = std::stoi(split[1]);
-            width = std::stoi(split[2]);
-            height = std::stoi(split[3]);
+            GFCSDraw::Rect<T> retval;
+            retval.x = std::stoi(split[0]);
+            retval.y = std::stoi(split[1]);
+            retval.width = std::stoi(split[2]);
+            retval.height = std::stoi(split[3]);
+            return retval;
          }
          friend std::ostream& operator<<(std::ostream& os, const Rect<T>& r){
             os << r.toString();
             return os;
          }
-         Vec2<T> pos() const {return {x, y};}
-         Vec2<T> size() const {return {width, height};}
-         Rect<T> toSizeRect() const {return {0,0,width, height};}
+         [[nodiscard]] inline Vec2<T> pos() const {return {x, y};}
+         [[nodiscard]] inline Vec2<T> size() const {return {width, height};}
+         [[nodiscard]] inline Rect<T> toSizeRect() const {return {0,0,width, height};}
 
          T x;
          T y;
@@ -108,7 +117,6 @@ namespace GFCSDraw {
       void drawRectangleRounded(const GFCSDraw::Rect<float>&, float roundness, int segments, Color color);
       void drawRectangleRoundedLines(const GFCSDraw::Rect<float>&, float roundness, int segments, float lineThick, Color color);
       void drawRectangleGradientV(const GFCSDraw::Rect<int>&, Color color1, Color color2);
-      inline Vec2<int> getMousePos(){return GetMousePosition();}
       inline float getFrameDelta(){return GetFrameTime();}
 
 
@@ -173,4 +181,6 @@ namespace InputInterface{
    inline bool isMouseButtonDown(MouseButton btn){return IsMouseButtonDown(static_cast<int>(btn));}
    inline bool isMouseButtonUp(MouseButton btn){return IsMouseButtonUp(static_cast<int>(btn));}
    inline bool isMouseButtonReleased(MouseButton btn){return IsMouseButtonReleased(static_cast<int>(btn));}
+   inline GFCSDraw::Vec2<int> getMousePos(){return GetMousePosition();}
+   inline GFCSDraw::Vec2<int> getMouseDelta(){return GetMouseDelta();}
 }

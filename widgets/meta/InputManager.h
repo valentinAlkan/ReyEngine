@@ -64,15 +64,17 @@ private:
 public:
    InputManager(InputManager const&) = delete;
    void operator=(InputManager const&) = delete;
-   inline bool isMouseButtonPressed(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonPressed(mouseButton);}
-   inline bool isMouseButtonDown(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonDown(mouseButton);}
-   inline bool isMouseButtonUp(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonUp(mouseButton);}
-   inline bool isMouseButtonReleased(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonReleased(mouseButton);}
-   inline bool isKeyPressed(InputInterface::KeyCode key){return InputInterface::isKeyPressed(key);}
-   inline bool isKeyDown(InputInterface::KeyCode key){return InputInterface::isKeyDown(key);}
-   inline bool isKeyReleased(InputInterface::KeyCode key){return InputInterface::isKeyReleased(key);}
-   inline bool isKeyUp(InputInterface::KeyCode key){return InputInterface::isKeyUp(key);}
-   inline void setExitKey(InputInterface::KeyCode key){return InputInterface::setExitKey(key);}
+   static inline bool isMouseButtonPressed(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonPressed(mouseButton);}
+   static inline bool isMouseButtonDown(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonDown(mouseButton);}
+   static inline bool isMouseButtonUp(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonUp(mouseButton);}
+   static inline bool isMouseButtonReleased(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonReleased(mouseButton);}
+   static inline bool isKeyPressed(InputInterface::KeyCode key){return InputInterface::isKeyPressed(key);}
+   static inline bool isKeyDown(InputInterface::KeyCode key){return InputInterface::isKeyDown(key);}
+   static inline bool isKeyReleased(InputInterface::KeyCode key){return InputInterface::isKeyReleased(key);}
+   static inline bool isKeyUp(InputInterface::KeyCode key){return InputInterface::isKeyUp(key);}
+   static inline void setExitKey(InputInterface::KeyCode key){return InputInterface::setExitKey(key);}
+   static inline GFCSDraw::Vec2<int> getMousePos(){return InputInterface::getMousePos();}
+   static inline GFCSDraw::Vec2<int> getMouseDelta(){return InputInterface::getMouseDelta();}
 protected:
    InputInterface::KeyCode getKeyPressed();
    InputInterface::KeyCode getKeyReleased();
