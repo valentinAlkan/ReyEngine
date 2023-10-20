@@ -46,7 +46,9 @@ using Handled = bool;
 
 class Scene;
 class  BaseWidget
-: public std::enable_shared_from_this<BaseWidget>
+: public inheritable_enable_shared_from_this<BaseWidget>
+, public EventSubscriber
+, public EventPublisher
 , public PropertyContainer
 {
    using WidgetPtr = std::shared_ptr<BaseWidget>;
@@ -76,9 +78,12 @@ public:
    const ChildMap& getChildren() const{return _children;}
    std::optional<WidgetPtr> getChild(const std::string& newName);
 
-   void subscribe(Publisher publisher, const std::string& eventType, EventHandler handler){auto me = shared_from_this(); EventManager::instance().subscribe(publisher, eventType, me, handler);}
    template <typename T>
-   void publishEvent(const Event<T>& event){auto me = shared_from_this(); EventManager::instance().publish(event);}
+   std::shared_ptr<T> toType(){
+      static_assert(std::is_base_of_v<BaseWidget, T>);
+      auto me = toBaseWidget();
+      return std::static_pointer_cast<T>(me);
+   }
 
    void setProcess(bool process);
    WidgetPtr setFree(); //request to remove this widget from the tree at next available opportunity. Does not immediately delete it
@@ -96,6 +101,7 @@ public:
    static void registerType(const std::string& typeName, const std::string& parentType, bool isVirtual, Deserializer fx){TypeManager::registerType(typeName, parentType, isVirtual, fx);}
    std::string serialize();
 protected:
+   std::shared_ptr<BaseWidget> toBaseWidget(){return inheritable_enable_shared_from_this<BaseWidget>::shared_from_this();}
    virtual void _on_application_ready(){};
    virtual void _on_rect_changed(){}
    //override and setProcess(true) to allow processing
