@@ -83,15 +83,22 @@ int main(int argc, char** argv)
       auto label = make_shared<Label>("Label", Rect<float> {0,0,0,0});
 
       auto vslider = make_shared<Slider>("Vslider", Rect<float>{200,100,20,100}, Slider::SliderType::VERTICAL);
+      auto hslider = make_shared<Slider>("Hslider", Rect<float>{250,100,100,20}, Slider::SliderType::HORIZONTAL);
 
       root->addChild(label);
       root->addChild(vslider);
+      root->addChild(hslider);
+
+      auto labelMoveX = [&](const Slider::SliderValueChangedEvent& event){
+         auto slider = event.publisher->toBaseWidget()->toType<Slider>();
+         label->setPos(Vec2<int>(0,screenWidth-label->getRect().width).lerp(slider->getSliderPct()), label->getPos().y);
+      };
 
       auto labelMoveY = [&](const Slider::SliderValueChangedEvent& event){
-         auto newPos = label->getPos();
          auto slider = event.publisher->toBaseWidget()->toType<Slider>();
-         label->setPos(newPos.x, Vec2<int>(0,screenHeight-label->getRect().height).lerp(slider->getSliderPct()));
+         label->setPos(label->getPos().x, Vec2<int>(0,screenHeight-label->getRect().height).lerp(slider->getSliderPct()));
       };
+      label->subscribe<Slider::SliderValueChangedEvent>(hslider, labelMoveX);
       label->subscribe<Slider::SliderValueChangedEvent>(vslider, labelMoveY);
    }
 

@@ -18,7 +18,7 @@ public:
    void setText(const std::string& newText){
       text.set(newText);
 //      auto textSize = GFCSDraw::measureText(GFCSDraw::getDefaultFont(), text.get().c_str(), 20, 1);
-      auto textWidth = MeasureText("yo", 20);
+      auto textWidth = MeasureText(newText.c_str(), 20);
       setRect({0,0,(double)textWidth, 20});
    }
 protected:
