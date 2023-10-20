@@ -12,7 +12,7 @@ public:
    enum class SliderType{VERTICAL, HORIZONTAL};
    struct SliderTypeProperty : public Property<SliderType>{
       SliderTypeProperty(const std::string& instanceName, SliderType defaultvalue = SliderType::VERTICAL)
-            : Property(instanceName, PropertyTypes::Int, defaultvalue)
+            : Property(instanceName, PropertyTypes::Float, defaultvalue)
       {}
       std::string toString() override {return value == SliderType::VERTICAL ? "VERTICAL" : "HORIZONTAL";}
       SliderType fromString(const std::string& str) override {return (str == "VERTICAL" ? SliderType::VERTICAL : SliderType::HORIZONTAL);}
@@ -33,9 +33,9 @@ public:
       _range = {minSliderValue.value, maxSlidervalue.value};
    }
    inline double getSliderValue(){return sliderValue.get();}
-   inline double setSliderValue(double value){sliderValue.set(value);}
+   inline void setSliderValue(double value){sliderValue.set(value);}
    inline double getSliderPct(){return _range.pct(sliderValue.value);}
-   inline void setSliderPct(double value){sliderValue.set(_range.pct(sliderValue.value)/100.0);}
+   inline void setSliderPct(double value){sliderValue.set(_range.pct(value));}
 protected:
    void _register_parent_properties() override{ Control::_register_parent_properties(); Control::registerProperties();}
    Slider(const std::string &name, const std::string &typeName, const GFCSDraw::Rect<float>& r, SliderType sliderDir)
@@ -45,54 +45,68 @@ protected:
    , maxSlidervalue("maxSliderValue", 100.0)
    , sliderType("sliderType", sliderDir)
    {
-      _grabber.width = _rect.value.width;
-      _grabber.height = _rect.value.height / 10;
+      switch(sliderType.get()) {
+         case SliderType::VERTICAL:
+            _grabber.width = _rect.value.width;
+            _grabber.height = _rect.value.height / 10;
+            break;
+         case SliderType::HORIZONTAL:
+            _grabber.width = _rect.value.width/10;
+            _grabber.height = _rect.value.height;
+            break;
+      }
       _range = {minSliderValue.get(), maxSlidervalue.get()};
    }
    virtual Handled _unhandled_input(InputEvent& e){
-      if (e.isEvent<InputEventMouseMotion>()) {
-         auto& mouseEvent = (InputEventMouseMotion&)(e);
-         auto localPos = globalToLocal(mouseEvent.globalPos);
+      auto& mouseEvent = (InputEventMouseMotion&)(e);
+      auto localPos = globalToLocal(mouseEvent.globalPos);
+      if (mouseEvent.isEvent<InputEventMouseMotion>()){
          _cursor_in_slider = isInside(localPos);
-         _cursor_in_grabber = _grabber.isInside(localPos);
-
-         //drag grabber
-         if (_is_dragging){
-            //set new slider value based on input
-            double newValue = 0;
-            switch(sliderType.get()){
-               case SliderType::VERTICAL: {
-                  newValue = _range.lerp(_range.pct(localPos.y));
-                  GFCSDraw::Vec2<double> adjustedRange = {0, _rect.get().height-_grabber.height};
-                  sliderValue.set(_range.clamp(newValue));
-                  _grabber.y = adjustedRange.lerp(_range.pct(sliderValue.get()));
+         if (_is_dragging) {
+            //drag grabber
+            if (_is_dragging) {
+               //set new slider value based on input
+               double newValue = 0;
+               switch (sliderType.get()) {
+                  case SliderType::VERTICAL: {
+                     newValue = _range.lerp(_range.pct(localPos.y));
+                     sliderValue.set(_range.clamp(newValue));
+                  }
+                     break;
+                  case SliderType::HORIZONTAL:
+                     newValue = _range.lerp(_range.pct(localPos.x));
+                     sliderValue.set(_range.clamp(newValue));
                }
-               break;
-               case SliderType::HORIZONTAL:
-                  newValue = _range.lerp(_range.pct(localPos.x));
-                  GFCSDraw::Vec2<double> adjustedRange = {0, _rect.get().width-_grabber.width};
-                  sliderValue.set(_range.clamp(newValue));
-                  _grabber.y = adjustedRange.lerp(_range.pct(sliderValue.get()));
+               _compute_appearance();
+               auto event = SliderValueChangedEvent(EventPublisher::shared_from_this());
+               event.value = sliderValue.get();
+               publish<SliderValueChangedEvent>(event);
             }
-            auto event = SliderValueChangedEvent(EventPublisher::shared_from_this());
-            event.value = sliderValue.get();
-            publish<SliderValueChangedEvent>(event);
+            return true;
          }
-         return true;
       }
 
       if (e.isEvent<InputEventMouseButton>()){
-         auto& mouseEvent = (InputEventMouseButton&)(e);
-         _cursor_down = mouseEvent.isDown;
-         _is_dragging = _cursor_in_grabber && _cursor_down;
-         return true;
+         auto &buttonEvent = e.toEventType<InputEventMouseButton>();
+         bool handled = false;
+         if (isInside(localPos) && buttonEvent.isDown) {
+            _cursor_down = true;
+            _is_dragging = _grabber.isInside(localPos) && _cursor_down;
+            return true;
+         }
+         if (_is_dragging && !buttonEvent.isDown) {
+            //only handle button up if we are dragging
+            _cursor_down = buttonEvent.isDown;
+            _is_dragging = false;
+            return true;
+         }
       }
    }
    void render() const override {
       //draw slider
-      _drawRectangle(_rect.value.toSizeRect(), _cursor_in_slider ? GREEN : RED);
+      _drawRectangle(_rect.value.toSizeRect(), _cursor_in_slider || _is_dragging? GREEN : RED);
       //draw grabber
-      _drawRectangle(_grabber, _cursor_down && _cursor_in_grabber ? YELLOW : BLUE);
+      _drawRectangle(_grabber, _cursor_down && _cursor_in_grabber || _is_dragging ? YELLOW : BLUE);
    }
    void _on_rect_changed() override {
 
@@ -111,25 +125,23 @@ protected:
       registerProperty(sliderType);
    }
 private:
-   void _compute_grabber(){
+   void _compute_appearance(){
       //find the midpoint of the short edge of the slider
-      auto grabberCenter = _range.lerp(sliderValue.get());
       GFCSDraw::Vec2<double> longSide;
       GFCSDraw::Vec2<double> shortSide;
       GFCSDraw::Line<double> travelLine; //the line the grabber travels along
-      switch(SliderType::VERTICAL){
-         case SliderType::VERTICAL:
-            longSide = {0, _rect.get().height};
-            shortSide = {0, _rect.get().width};
-            travelLine = {shortSide.midpoint(), longSide.midpoint()};
-            // lerp the longside
+      switch(sliderType.get()){
+         case SliderType::VERTICAL: {
+            GFCSDraw::Vec2<double> adjustedRange = {0, _rect.get().height - _grabber.height};
+            _grabber.y = adjustedRange.lerp(getSliderPct());
+         }
          break;
-         case SliderType::HORIZONTAL:
-            longSide = {0, _rect.get().width};
-            shortSide = {0, _rect.get().height};
+         case SliderType::HORIZONTAL: {
+            GFCSDraw::Vec2<double> adjustedRange = {0, _rect.get().width - _grabber.width};
+            _grabber.x = adjustedRange.lerp(getSliderPct());
+         }
          break;
       }
-      _grabber.setCenter(travelLine.lerp(_range.lerp(sliderValue.get())));
    }
 
    FloatProperty sliderValue;

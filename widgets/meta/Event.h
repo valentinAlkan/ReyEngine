@@ -42,7 +42,11 @@ public:
       static_assert(std::is_base_of_v<T, Other>);
       return eventId == Other::getUniqueEventId();
    }
-//   const T& toEventType(){return static_cast<T&>(*this); }
+   template <typename Other>
+   const Other& toEventType(){
+      static_assert(std::is_base_of_v<T, Other>);
+      return static_cast<Other&>(*this);
+   }
 };
 
 class EventPublisher;

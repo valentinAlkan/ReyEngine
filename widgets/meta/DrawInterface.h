@@ -23,7 +23,7 @@ namespace GFCSDraw {
       inline Vec2& operator*=(const Vec2& rhs){x *= rhs.x; y *= rhs.y; return *this;}
       inline Vec2& operator/=(const Vec2& rhs){x /= rhs.x; y /= rhs.y; return *this;}
       inline Vec2 midpoint(){return {x/2, y/2};}
-      inline double pct(double input){return (input-x)/(y-x);} //given an input value, what percentage of the range is it?
+      inline double pct(double input){return (input-x)/(y-x);} //given an input value, what percentage of the range is it from 0 to 1?
       inline double lerp(double lerpVal){return lerpVal * (y-x) + x;} //given a value from 0 to 1, what is the value of the range that corresponds to it?
       inline Vec2 lerp(Vec2 otherPoint, double xprm){return {xprm, y+(((xprm-x)*(otherPoint.y-y))/(otherPoint.x-x))};}
       inline T clamp(T value){if (value < x) return x; if (value > y) return y; return value;}
