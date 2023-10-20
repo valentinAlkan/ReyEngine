@@ -49,7 +49,7 @@ void Window::exec(){
       for (size_t i=0; i<Window::INPUT_COUNT_LIMIT; i++){
          auto keyUp = InputManager::instance().getKeyReleased();
          if (keyUp){
-            InputEventKey event;
+            InputEventKey event(nullptr);
             event.key = keyUp;
             event.isDown = false;
             _root->_process_unhandled_input(event);
@@ -62,7 +62,7 @@ void Window::exec(){
       for (size_t i=0; i<Window::INPUT_COUNT_LIMIT; i++){
          auto keyDown = InputManager::instance().getKeyPressed();
          if (keyDown){
-            InputEventKey event;
+            InputEventKey event(nullptr);
             event.key = keyDown;
             event.isDown = true;
             _root->_process_unhandled_input(event);
@@ -76,7 +76,7 @@ void Window::exec(){
       for (size_t i=0; i<Window::INPUT_COUNT_LIMIT; i++){
          auto btnUp = InputManager::instance().getMouseButtonReleased();
          if (btnUp != InputInterface::MouseButton::MOUSE_BUTTON_NONE){
-            InputEventMouseButton event;
+            InputEventMouseButton event(nullptr);
             event.button = btnUp;
             event.isDown = false;
             event.globalPos = InputManager::getMousePos();
@@ -90,7 +90,7 @@ void Window::exec(){
       for (size_t i=0; i<Window::INPUT_COUNT_LIMIT; i++){
          auto btnDown = InputManager::instance().getMouseButtonPressed();
          if (btnDown != InputInterface::MouseButton::MOUSE_BUTTON_NONE){
-            InputEventMouseButton event;
+            InputEventMouseButton event(nullptr);
             event.button = btnDown;
             event.isDown = true;
             event.globalPos = InputManager::getMousePos();
@@ -103,7 +103,7 @@ void Window::exec(){
       //check the mouse delta compared to last frame
       auto mouseDelta = InputManager::getMouseDelta();
       if (mouseDelta) {
-         InputEventMouseMotion event;
+         InputEventMouseMotion event(nullptr);
          event.mouseDelta = mouseDelta;
          event.globalPos = InputManager::getMousePos();
          _root->_process_unhandled_input(event);

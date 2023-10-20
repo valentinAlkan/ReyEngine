@@ -1,8 +1,10 @@
 #pragma once
 #include "raylib.h"
-//#include "Application.h"
+#include <stdexcept>
 #include "StringTools.h"
 #include <string>
+
+#define NOT_IMPLEMENTED throw std::runtime_error("Not implemented!")
 
 namespace GFCSDraw {
       template <typename T>
@@ -21,6 +23,10 @@ namespace GFCSDraw {
          inline Vec2& operator*=(const Vec2& rhs){x *= rhs.x; y *= rhs.y; return *this;}
          inline Vec2& operator/=(const Vec2& rhs){x /= rhs.x; y /= rhs.y; return *this;}
          inline Vec2 midpoint(){return {x/2, y/2};}
+         inline double pct(double input){return (input-x)/(y-x);} //lerp from 0.0 to 1.0
+         inline double lerp(double lerpVal){return lerpVal * (y-x) + x;} //lerp from 0.0 to 1.0
+         inline Vec2 lerp(Vec2 otherPoint, double xprm){return {xprm, y+(((xprm-x)*(otherPoint.y-y))/(otherPoint.x-x))};}
+         inline T clamp(T value){if (value < x) return x; if (value > y) return y; return value;}
          [[nodiscard]] inline std::string toString() const {return "{" + std::to_string(x) + ", " + std::to_string(y) + "}";}
          inline static void fromString(const std::string& s){
             std::string sanitized;
@@ -42,6 +48,18 @@ namespace GFCSDraw {
          T x;
          T y;
       };
+
+   template <typename T>
+   struct Line {
+      inline Line(): a(0,0), b(0,0){}
+      inline Line(Vec2<T> a, Vec2<T> b): a(a), b(b){}
+      inline Line(const T x1, const T y1, const T x2, const T y2): Line({x1, y1}, {x2, y2}){}
+      inline Line midpoint(){return {(a.x+b.x)/2, (a.y+b.y)/2};}
+      inline Vec2<T> lerp(double xprm){return a.lerp(b, xprm);}
+      inline double distance(){NOT_IMPLEMENTED;}
+      Vec2<T> a;
+      Vec2<T> b;
+   };
 
       template <typename T>
       struct Rect {

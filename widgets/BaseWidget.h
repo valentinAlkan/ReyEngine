@@ -77,7 +77,8 @@ public:
    std::optional<WidgetPtr> getChild(const std::string& newName);
 
    void subscribe(Publisher publisher, const std::string& eventType, EventHandler handler){auto me = shared_from_this(); EventManager::instance().subscribe(publisher, eventType, me, handler);}
-   void publishEvent(const std::shared_ptr<Event>& event){auto me = shared_from_this(); EventManager::instance().publish(me, event);}
+   template <typename T>
+   void publishEvent(const Event<T>& event){auto me = shared_from_this(); EventManager::instance().publish(event);}
 
    void setProcess(bool process);
    WidgetPtr setFree(); //request to remove this widget from the tree at next available opportunity. Does not immediately delete it
