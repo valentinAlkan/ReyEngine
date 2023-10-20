@@ -6,7 +6,7 @@ class Slider : public Control {
 public:
    class SliderValueChangedEvent : public Event<BaseEvent> {
    public:
-      EVENT_CTOR(SliderValueChangedEvent, Event<BaseEvent>, EVENT_SLIDER_VALUE_CHANGED);
+      EVENT_CTOR_SIMPLE(SliderValueChangedEvent, Event<BaseEvent>){}
       double value;
    };
    enum class SliderType{VERTICAL, HORIZONTAL};
@@ -32,6 +32,10 @@ public:
       maxSlidervalue.set(newRange.y);
       _range = {minSliderValue.value, maxSlidervalue.value};
    }
+   inline double getSliderValue(){return sliderValue.get();}
+   inline double setSliderValue(double value){sliderValue.set(value);}
+   inline double getSliderPct(){return _range.pct(sliderValue.value);}
+   inline void setSliderPct(double value){sliderValue.set(_range.pct(sliderValue.value)/100.0);}
 protected:
    void _register_parent_properties() override{ Control::_register_parent_properties(); Control::registerProperties();}
    Slider(const std::string &name, const std::string &typeName, const GFCSDraw::Rect<float>& r, SliderType sliderDir)
@@ -46,7 +50,7 @@ protected:
       _range = {minSliderValue.get(), maxSlidervalue.get()};
    }
    virtual Handled _unhandled_input(InputEvent& e){
-      if (e.eventType == InputEventMouseMotion::EVENT_INPUT_MOUSE_MOTION) {
+      if (e.isEvent<InputEventMouseMotion>()) {
          auto& mouseEvent = (InputEventMouseMotion&)(e);
          auto localPos = globalToLocal(mouseEvent.globalPos);
          _cursor_in_slider = isInside(localPos);
@@ -70,14 +74,14 @@ protected:
                   sliderValue.set(_range.clamp(newValue));
                   _grabber.y = adjustedRange.lerp(_range.pct(sliderValue.get()));
             }
-            auto event = SliderValueChangedEvent(shared_from_this());
+            auto event = SliderValueChangedEvent(EventPublisher::shared_from_this());
             event.value = sliderValue.get();
-            publishEvent(event);
+            publish<SliderValueChangedEvent>(event);
          }
          return true;
       }
 
-      if (e.eventType == InputEventMouseButton::EVENT_INPUT_MOUSE_BUTTON) {
+      if (e.isEvent<InputEventMouseButton>()){
          auto& mouseEvent = (InputEventMouseButton&)(e);
          _cursor_down = mouseEvent.isDown;
          _is_dragging = _cursor_in_grabber && _cursor_down;

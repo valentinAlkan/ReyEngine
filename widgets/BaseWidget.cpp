@@ -18,8 +18,8 @@ BaseWidget::BaseWidget(const std::string& name, const std::string& typeName, Rec
 }
 
 BaseWidget::~BaseWidget() {
-   auto thiz = shared_from_this();
-   EventManager::unsubscribe(thiz);
+//   auto thiz = shared_from_this();
+//   EventManager::unsubscribe(thiz);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -28,7 +28,7 @@ bool BaseWidget::setName(const std::string& newName, bool append_index) {
    //if the child has a sibling by the same name, it cannot be renamed
    if (!_parent.expired()) {
       //has a parent
-      auto self = shared_from_this();
+      auto self = toBaseWidget();
       string _newName;
       auto parent = _parent.lock();
       if (parent->getChild(newName)) {
@@ -82,7 +82,7 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::addChild(WidgetPtr widget){
       return nullopt;
    }
    _children[widget->getName()] = widget;
-   widget->_parent = shared_from_this();
+   widget->_parent = toBaseWidget();
    return widget;
 }
 
@@ -157,7 +157,7 @@ Handled BaseWidget::_process_unhandled_input(InputEvent& event) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setProcess(bool process) {
-   Application::instance().getWindow()->setProcess(process, shared_from_this());
+   Application::instance().getWindow()->setProcess(process, toBaseWidget());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

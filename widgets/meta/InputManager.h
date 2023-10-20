@@ -3,33 +3,33 @@
 #include "DrawInterface.h"
 
 struct InputEvent : public Event<BaseEvent> {
-   EVENT_CTOR(InputEvent, Event<BaseEvent>, EVENT_INPUT);
+   EVENT_CTOR_SIMPLE_OVERRIDABLE(InputEvent, Event<BaseEvent>){}
 };
 
 struct InputEventKey : public InputEvent {
-   EVENT_CTOR(InputEventKey, InputEvent, EVENT_INPUT_KEY)
+   EVENT_CTOR_SIMPLE(InputEventKey, InputEvent){}
    int key;
    bool isDown;
 };
 
 struct InputEventMouse : public InputEvent{
-   EVENT_CTOR(InputEventMouse, InputEvent, EVENT_INPUT_MOUSE)
+   EVENT_CTOR_SIMPLE_OVERRIDABLE(InputEventMouse, InputEvent){}
    GFCSDraw::Vec2<int> globalPos;
 };
 
 struct InputEventMouseButton : public InputEventMouse{
-   EVENT_CTOR(InputEventMouseButton, InputEventMouse, EVENT_INPUT_MOUSE_BUTTON);
+   EVENT_CTOR_SIMPLE(InputEventMouseButton, InputEventMouse){}
    InputInterface::MouseButton button;
    bool isDown;
 };
 
 struct InputEventMouseWheel : public InputEventMouse{
-   EVENT_CTOR(InputEventMouseWheel, InputEventMouse, EVENT_INPUT_MOUSE_WHEEL);
+   EVENT_CTOR_SIMPLE(InputEventMouseWheel, InputEventMouse){}
    GFCSDraw::Vec2<int> wheelMove;
 };
 
 struct InputEventMouseMotion : public InputEventMouse{
-   EVENT_CTOR(InputEventMouseMotion, InputEventMouse, EVENT_INPUT_MOUSE_MOTION);
+   EVENT_CTOR_SIMPLE(InputEventMouseMotion, InputEventMouse){}
    GFCSDraw::Vec2<int> mouseDelta;
 };
 

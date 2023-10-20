@@ -28,13 +28,21 @@ int main(int argc, char** argv)
    class EventTester : public EventSubscriber, public EventPublisher{
 
    };
-   auto cb = [](const TestEvent& testEvent){
-      cout << testEvent.eventType << endl;
+   auto cb1 = [](const TestEvent1& testEvent){
+      cout << "My event ID is " << testEvent.eventId << endl;
+   };
+   auto cb2 = [](const TestEvent2& testEvent){
+      cout << "My event ID is " << testEvent.eventId << endl;
    };
    auto tester = std::make_shared<EventTester>();
-   tester->subscribe<TestEvent>(tester, TestEvent::TESTEVENT, cb);
-   TestEvent tevent(tester);
-   tester->publish(tevent);
+   tester->subscribe<TestEvent1>(tester, cb1);
+   tester->subscribe<TestEvent2>(tester, cb2);
+   TestEvent1 tevent1(tester);
+   TestEvent2 tevent2(tester);
+   tester->publish(tevent1);
+   tester->publish(tevent1);
+   tester->publish(tevent1);
+   tester->publish(tevent2);
 
 
    Application::instance(); //initialize the application
@@ -79,12 +87,12 @@ int main(int argc, char** argv)
       root->addChild(label);
       root->addChild(vslider);
 
-//      auto labelMoveY = [&](const BaseEvent& baseEvent){
-//         auto sliderEvent = baseEvent
-//         auto newPos = label->getPos();
-//         label->setPos(newPos.x, Vec2<int>(0,screenHeight).lerp(baseEvent.publisher->))
-//      };
-//      label->subscribe(vslider, Slider::SliderValueChangedEvent::EVENT_SLIDER_VALUE_CHANGED, labelMoveY);
+      auto labelMoveY = [&](const Slider::SliderValueChangedEvent& event){
+         auto newPos = label->getPos();
+         auto slider = event.publisher->toBaseWidget()->toType<Slider>();
+         label->setPos(newPos.x, Vec2<int>(0,screenHeight-label->getRect().height).lerp(slider->getSliderPct()));
+      };
+      label->subscribe<Slider::SliderValueChangedEvent>(vslider, labelMoveY);
    }
 
    // default functionality

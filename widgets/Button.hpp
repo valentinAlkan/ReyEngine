@@ -2,7 +2,7 @@
 #include "Control.hpp"
 
 struct PushButtonEvent : public Event<BaseEvent>{
-   EVENT_CTOR(PushButtonEvent, Event<BaseEvent>, EVENT_PUSHBUTTON);
+   EVENT_CTOR_SIMPLE(PushButtonEvent, Event<BaseEvent>){}
    bool down;
 };
 
@@ -29,9 +29,9 @@ protected:
    void setDown(bool newDown){
       if (wasDown != newDown){
          down.set(newDown);
-         auto e = PushButtonEvent(shared_from_this());
+         auto e = PushButtonEvent(toEventPublisher());
          e.down = newDown;
-         publishEvent(e);
+         publish<PushButtonEvent>(e);
       }
    }
 };
