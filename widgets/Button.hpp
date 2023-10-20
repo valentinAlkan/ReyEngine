@@ -1,12 +1,8 @@
 #pragma once
 #include "Control.hpp"
 
-struct PushButtonEvent : public Event{
-   DECLARE_EVENT(EVENT_PUSHBUTTON)
-   PushButtonEvent(bool down)
-   : Event(EVENT_PUSHBUTTON)
-   , down(down)
-   {}
+struct PushButtonEvent : public Event<BaseEvent>{
+   EVENT_CTOR(PushButtonEvent, Event<BaseEvent>, EVENT_PUSHBUTTON);
    bool down;
 };
 
@@ -33,7 +29,8 @@ protected:
    void setDown(bool newDown){
       if (wasDown != newDown){
          down.set(newDown);
-         auto e = std::make_shared<PushButtonEvent>(newDown);
+         auto e = PushButtonEvent(shared_from_this());
+         e.down = newDown;
          publishEvent(e);
       }
    }

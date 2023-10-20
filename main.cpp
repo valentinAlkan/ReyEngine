@@ -25,6 +25,18 @@ void updateFrame(float);
 /////////////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char** argv)
 {
+   class EventTester : public EventSubscriber, public EventPublisher{
+
+   };
+   auto cb = [](const TestEvent& testEvent){
+      cout << testEvent.eventType << endl;
+   };
+   auto tester = std::make_shared<EventTester>();
+   tester->subscribe<TestEvent>(tester, TestEvent::TESTEVENT, cb);
+   TestEvent tevent(tester);
+   tester->publish(tevent);
+
+
    Application::instance(); //initialize the application
    ArgParse args;
    args.defineArg(RuntimeArg("--loadScene", "help", 1, RuntimeArg::ArgType::OPTIONAL));
@@ -66,6 +78,13 @@ int main(int argc, char** argv)
 
       root->addChild(label);
       root->addChild(vslider);
+
+//      auto labelMoveY = [&](const BaseEvent& baseEvent){
+//         auto sliderEvent = baseEvent
+//         auto newPos = label->getPos();
+//         label->setPos(newPos.x, Vec2<int>(0,screenHeight).lerp(baseEvent.publisher->))
+//      };
+//      label->subscribe(vslider, Slider::SliderValueChangedEvent::EVENT_SLIDER_VALUE_CHANGED, labelMoveY);
    }
 
    // default functionality
@@ -77,15 +96,15 @@ int main(int argc, char** argv)
       root->addChild(button);
       auto label = make_shared<Label>("label", Rect<float> {0,0,0,0});
 
-      auto cb = [&](const std::shared_ptr<Event>& e){
-         static int pushCount = 0;
-         auto pbEvent = static_pointer_cast<PushButtonEvent>(e);
-         if (pbEvent->down){
-            label->setText(to_string(pushCount++));
-         }
-      };
+//      auto cb = [&](const BaseEvent& e){
+//         static int pushCount = 0;
+//         auto& pbEvent = e.toType<PushButtonEvent>();
+//         if (pbEvent.down){
+//            label->setText(to_string(pushCount++));
+//         }
+//      };
 
-      label->subscribe(button, PushButtonEvent::EVENT_PUSHBUTTON, cb);
+//      label->subscribe(button, PushButtonEvent::EVENT_PUSHBUTTON, cb);
 
       //create a scroll area
       auto scrollArea = make_shared<ScrollArea>("ScrollArea", Rect<float> {0,0,0,0});
