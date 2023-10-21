@@ -51,8 +51,8 @@ add_library(widgets STATIC
     widgets/meta/Logger.cpp
     widgets/meta/SystemTime.cpp
     widgets/meta/Event.cpp
-    widgets/meta/EventManager.cpp
     widgets/meta/InputManager.cpp
+    widgets/meta/Timer.hpp
     widgets/Control.hpp
     widgets/Canvas.hpp
     widgets/Slider.hpp

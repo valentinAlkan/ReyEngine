@@ -33,9 +33,9 @@ public:
       _range = {minSliderValue.value, maxSlidervalue.value};
    }
    inline double getSliderValue(){return sliderValue.get();}
-   inline void setSliderValue(double value){sliderValue.set(value);}
+   inline void setSliderValue(double value){sliderValue.set(value);_publish_slider_val();_compute_appearance();}
    inline double getSliderPct(){return _range.pct(sliderValue.value);}
-   inline void setSliderPct(double value){sliderValue.set(_range.pct(value));}
+   inline void setSliderPct(double pct){setSliderValue(_range.lerp(pct));}
 protected:
    void _register_parent_properties() override{ Control::_register_parent_properties(); Control::registerProperties();}
    Slider(const std::string &name, const std::string &typeName, const GFCSDraw::Rect<float>& r, SliderType sliderDir)
@@ -78,9 +78,7 @@ protected:
                      sliderValue.set(_range.clamp(newValue));
                }
                _compute_appearance();
-               auto event = SliderValueChangedEvent(EventPublisher::shared_from_this());
-               event.value = sliderValue.get();
-               publish<SliderValueChangedEvent>(event);
+               _publish_slider_val();
             }
             return true;
          }
@@ -125,6 +123,11 @@ protected:
       registerProperty(sliderType);
    }
 private:
+   void _publish_slider_val(){
+      auto event = SliderValueChangedEvent(EventPublisher::shared_from_this());
+      event.value = sliderValue.get();
+      publish<SliderValueChangedEvent>(event);
+   }
    void _compute_appearance(){
       //find the midpoint of the short edge of the slider
       GFCSDraw::Vec2<double> longSide;

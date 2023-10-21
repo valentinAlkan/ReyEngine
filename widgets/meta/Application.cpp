@@ -4,11 +4,11 @@
 
 using namespace std;
 /////////////////////////////////////////////////////////////////////////////////////////
-std::optional<std::shared_ptr<Window>> Application::createWindow(const std::string &title, int width, int height, std::shared_ptr<BaseWidget> root, const std::vector<Window::Flags> &flags, int targetFPS){
+std::optional<std::shared_ptr<Window>> Application::createWindow(const std::string &title, int width, int height, const std::vector<Window::Flags> &flags, int targetFPS){
    if (_window){
       return nullptr;
    }
-   _window = std::shared_ptr<Window>(new Window("MainWindow", width, height, std::move(root), flags, targetFPS));
+   _window = std::shared_ptr<Window>(new Window("MainWindow", width, height, flags, targetFPS));
    return _window;
 }
 

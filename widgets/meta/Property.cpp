@@ -27,3 +27,9 @@ void PropertyContainer::registerProperty(BaseProperty& property) {
       subprop->registerProperties();
    }
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void PropertyContainer::moveProperty(std::shared_ptr<BaseProperty> property){
+   _ownedProperties[property->instanceName()] = property;
+   registerProperty(*property);
+};

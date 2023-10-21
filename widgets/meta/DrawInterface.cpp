@@ -8,6 +8,11 @@ Vec2<double> GFCSDraw::getScreenCenter() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+Vec2<double> GFCSDraw::getScreenSize() {
+   return {((float)GetScreenWidth()), ((float)GetScreenHeight())};
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void GFCSDraw::drawText(const std::string &text, const GFCSDraw::Vec2<int> &pos, int fontSize, Color color) {
    DrawText(text.c_str(), pos.x, pos.y, fontSize, color);
 }

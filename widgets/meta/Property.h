@@ -13,6 +13,7 @@
 struct BaseProperty;
 struct PropertyPrototype;
 using PropertyMap = std::unordered_map<std::string, BaseProperty*>;
+using OwnedPropertyMap = std::unordered_map<std::string, std::shared_ptr<BaseProperty>>;
 using PropertyPrototypeMap = std::unordered_map<std::string, PropertyPrototype>;
 
 namespace PropertyTypes{
@@ -22,6 +23,7 @@ namespace PropertyTypes{
    PROP_TYPE(Bool)
    PROP_TYPE(Vec2)
    PROP_TYPE(Rect)
+   PROP_TYPE(Timer)
 }
 
 namespace PropertyMeta{
@@ -41,11 +43,13 @@ struct PropertyContainer{
    ///make sure ALL register property functions are called
    virtual void registerProperties() = 0;
    void registerProperty(BaseProperty& property);
+   void moveProperty(std::shared_ptr<BaseProperty>);
    PropertyMap& getProperties(){return _properties;}
 protected:
    void _initProperties(){
    };
    PropertyMap _properties;
+   OwnedPropertyMap _ownedProperties; //properties we own
 };
 
 struct BaseProperty : PropertyContainer {
@@ -71,6 +75,9 @@ struct Property : public BaseProperty {
    void registerProperties() override {}
    Property& operator=(const T& newValue){
       value = newValue;
+   }
+   Property& operator=(const Property& other){
+      value = other.value;
    }
    virtual T fromString(const std::string& str) = 0;
    void load(const PropertyPrototype& data) override {value = fromString(data.data);}
