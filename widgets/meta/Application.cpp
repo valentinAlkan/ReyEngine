@@ -13,16 +13,21 @@ std::optional<std::shared_ptr<Window>> Application::createWindow(const std::stri
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Application::registerForInit(std::shared_ptr<BaseWidget> widget) {
+void Application::registerForEnterTree(std::shared_ptr<BaseWidget>& widget, BaseWidget& parent) {
+   instance()._initTreeList.emplace_back(widget, parent);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Application::registerForApplicationReady(std::shared_ptr<BaseWidget>& widget) {
    if (!isReady()) {
-      instance()._initListWidget.insert(widget);
+      instance()._applicationReadyList.insert(widget);
    } else {
       widget->_on_application_ready();
    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Application::registerForInit(std::function<void()> cb) {
+void Application::registerForApplicationReady(std::function<void()> cb) {
    if (!isReady()) {
       instance()._initListArbCallback.push_back(cb);
    } else {
@@ -32,13 +37,29 @@ void Application::registerForInit(std::function<void()> cb) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Application::ready() {
-   for (auto& widget : instance()._initListWidget){
+   for (auto& widget : instance()._applicationReadyList){
       widget->_on_application_ready();
    }
-   instance()._initListWidget.clear(); //done with this forever
+   instance()._applicationReadyList.clear(); //done with this forever
    for (auto& cb : instance()._initListArbCallback){
       cb();
    }
    instance()._initListArbCallback.clear(); //done with this forever
    instance()._is_ready = true;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Application::processEnterTree() {
+   //todo: also process enter tree
+   auto& initTreeList = instance()._initTreeList;
+   for (auto& [widget, parent] : initTreeList){
+      auto& hasEnteredTreeBefore = widget->_has_entered_tree_before;
+      if (!hasEnteredTreeBefore) {
+         widget->_init();
+         widget->_has_entered_tree_before = true;
+      }
+      parent._children[widget->getName()] = widget;
+      widget->_parent = parent.toBaseWidget();
+   }
+   initTreeList.clear();
 }

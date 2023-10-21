@@ -63,7 +63,7 @@ GFCSDraw::RenderTarget::RenderTarget(const Vec2<int>& size)
       _tex = LoadRenderTexture(_size.x, _size.y);
       _texLoaded = true;
    };
-   Application::registerForInit(doReady);
+   Application::registerForApplicationReady(doReady);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
