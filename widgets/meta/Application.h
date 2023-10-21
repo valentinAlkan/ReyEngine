@@ -43,11 +43,13 @@ public:
    static void exitError(std::string msg, ExitReason rsn){printError() << msg << std::endl; ::exit((int)rsn);}
    static void exit(ExitReason rsn){::exit((int)rsn);}
 
-   static void registerForInit(std::shared_ptr<BaseWidget>); //somethings require initwindow to have been called - so we can let the application know we want to be called when application is ready.
-   static void registerForInit(std::function<void()>); //somethings require initwindow to have been called - so we can let the application know we want to be called when application is ready.
+   static void registerForApplicationReady(std::shared_ptr<BaseWidget>&); //somethings require initwindow to have been called - so we can let the application know we want to be called when application is ready.
+   static void registerForApplicationReady(std::function<void()>); //somethings require initwindow to have been called - so we can let the application know we want to be called when application is ready.
+   static void registerForEnterTree(std::shared_ptr<BaseWidget>&, BaseWidget&); //widgets can't use shared_from_this in ctor so we need a place that gets called once on tree enter that can do it.
    static bool isReady(){return instance()._is_ready;}
 protected:
    uint64_t getNewRid(){return ++newRid;}
+   static void processEnterTree();
    static void ready();
 
 private:
@@ -58,8 +60,19 @@ private:
    Logger _info_logger;
    Logger _warn_logger;
    Logger _error_logger;
-   std::unordered_set<std::shared_ptr<BaseWidget>> _initListWidget; //list of widgets that want to be notified when the application is fully initialized
+   std::unordered_set<std::shared_ptr<BaseWidget>> _applicationReadyList; //list of widgets that want to be notified when the application is fully initialized
    std::vector<std::function<void()>> _initListArbCallback; //list of arbitrary callbacks that serve the same purpose as the above
+
+   //init list
+   using InitPair = std::pair<std::shared_ptr<BaseWidget>, BaseWidget&>;
+//   struct InitHasher {
+//      inline std::size_t operator()(const InitPair& pair) const {
+//         std::hash<std::string> hasher;
+//         return hasher(pair.first->getName());
+//      }
+//   };
+   std::vector<InitPair> _initTreeList; //list of widgets that want to be notified when they enter the tree for the first time (AND ONLY THE FIRST TIME); (pair = child, parent)
+
    friend class BaseWidget;
    friend class Window;
 };

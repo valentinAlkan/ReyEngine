@@ -103,12 +103,14 @@ public:
    std::optional<WidgetPtr> addChild(WidgetPtr);
    std::optional<WidgetPtr> removeChild(WidgetPtr);
 
-   bool operator==(const WidgetPtr&) const;
+   bool operator==(const WidgetPtr& other) const {if (other){return other->getRid()==_rid;}return false;}
+   bool operator==(const BaseWidget& other) const{return other._rid == _rid;}
 
    template <typename T> bool is_base_of(){return std::is_base_of_v<BaseWidget, T>;}
    static void registerType(const std::string& typeName, const std::string& parentType, bool isVirtual, Deserializer fx){TypeManager::registerType(typeName, parentType, isVirtual, fx);}
    std::string serialize();
 protected:
+   virtual void _init(){};
    std::shared_ptr<BaseWidget> toBaseWidget(){return inheritable_enable_shared_from_this<BaseWidget>::shared_from_this();}
    virtual void _on_application_ready(){};
    virtual void _on_rect_changed(){}
@@ -138,6 +140,8 @@ protected:
 
    void _is_extendable(){static_assert(true);}
    virtual std::string _get_static_constexpr_typename(){return TYPE_NAME;}
+
+   bool _has_entered_tree_before = false; //true THE FIRST TIME a widget enters the tree. Can do constructors of children and other stuff requiring shared_from_this();
 private:
    uint64_t _rid; //unique identifier
    const std::string _typeName; //can't just use static constexpr TYPE_NAME since we need to know what the type is if using type-erasure

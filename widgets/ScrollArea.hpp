@@ -1,12 +1,11 @@
 #pragma once
 #include "Control.hpp"
+#include "Slider.hpp"
 
 class ScrollArea : public Control {
    GFCSDRAW_OBJECT(ScrollArea, Control)
    , renderTarget(_rect.value.size())
-   {
-      //create scrollbars
-   }
+   {}
 public:
    void renderBegin(GFCSDraw::Vec2<float>& textureOffset) override {
       renderTarget.beginRenderMode();
@@ -28,6 +27,13 @@ public:
    }
 
 protected:
+   void _init() override {
+      //create scrollbars
+      auto vslider = std::make_shared<Slider>("__vslider", GFCSDraw::Rect<float>{0,0,20,100}, Slider::SliderType::VERTICAL);
+      auto hslider = std::make_shared<Slider>("__hslider", GFCSDraw::Rect<float>{20,20,100,20}, Slider::SliderType::HORIZONTAL);
+      addChild(vslider);
+      addChild(hslider);
+   }
    GFCSDraw::RenderTarget renderTarget;
    GFCSDraw::Vec2<float> scrollOfset;
 };

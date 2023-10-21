@@ -111,6 +111,9 @@ void Window::exec(){
          _root->_process_unhandled_input(event);
       }
 
+      //process widgets wanting to enter the tree for the first time
+      Application::processEnterTree();
+
       //process timers and call their callbacks
       SystemTime::processTimers();
 
@@ -188,4 +191,11 @@ std::optional<std::shared_ptr<BaseWidget>> Window::ProcessList::find(const std::
       return *it;
    }
    return nullopt;
+}
+///////////////////////////////////////////////////////////////////////////////////////////
+void Window::setRoot(std::shared_ptr<BaseWidget> newRoot) {
+   if (!newRoot->_has_entered_tree_before){
+      newRoot->_init();
+   }
+   _root = newRoot;
 }

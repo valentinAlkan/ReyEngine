@@ -81,8 +81,7 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::addChild(WidgetPtr widget){
       Application::printError() << ss.str() << endl;
       return nullopt;
    }
-   _children[widget->getName()] = widget;
-   widget->_parent = toBaseWidget();
+   Application::registerForEnterTree(widget, *this);
    return widget;
 }
 
@@ -201,11 +200,6 @@ void BaseWidget::_drawRectangleGradientV(const GFCSDraw::Rect<int>& rect, Color 
    //use the size of the param rect but use the position of our rect + the param rect
    Rect<float> newRect(rect + getGlobalPos() +_textureRenderModeOffset);
    GFCSDraw::drawRectangleGradientV(newRect, color1, color2);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-bool BaseWidget::operator==(const shared_ptr<BaseWidget> &other) const {
-   return _rid == other->_rid;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
