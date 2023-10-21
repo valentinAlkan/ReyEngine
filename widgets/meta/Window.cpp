@@ -10,12 +10,11 @@ using namespace GFCSDraw;
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
-Window::Window(const std::string &title, int width, int height, std::shared_ptr<BaseWidget> root, const std::vector<Flags>& flags, int targetFPS)
-: _root(std::move(root))
+Window::Window(const std::string &title, int width, int height, const std::vector<Flags>& flags, int targetFPS)
 {
-   if (!_root){
-      std::runtime_error("Window root cannot be null!");
-   }
+//   if (!_root){
+//      std::runtime_error("Window root cannot be null!");
+//   }
 
    for (const auto& flag : flags){
       switch (flag){
@@ -32,6 +31,9 @@ Window::Window(const std::string &title, int width, int height, std::shared_ptr<
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Window::exec(){
+   if (!_root){
+      throw std::runtime_error("Window does not have a root! Did you call setRoot()? I bet not. That's what I bet.");
+   }
    //set widgets as processed
    //NOTE: This must be done here, because widgets can be created loaded and created before a window exists
    // Since the window controls the process list, it might not exist yet.
@@ -109,6 +111,9 @@ void Window::exec(){
          _root->_process_unhandled_input(event);
       }
 
+      //process timers and call their callbacks
+      SystemTime::processTimers();
+
       float dt = getFrameDelta();
       //process widget logic
       for (auto& widget : _processList.getList()){
@@ -165,6 +170,15 @@ std::optional<std::shared_ptr<BaseWidget>> Window::ProcessList::remove(std::shar
 ///////////////////////////////////////////////////////////////////////////////////////////
 Vec2<int> Window::getMousePos(){
    return InputManager::getMousePos();
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+Vec2<double> Window::getMousePct() {
+   auto pos = getMousePos();
+   auto screenSize = GFCSDraw::getScreenSize();
+   auto xRange = Vec2<int>(0,(int)screenSize.x);
+   auto yRange = Vec2<int>(0,(int)screenSize.y);
+   return {xRange.pct(pos.x), yRange.pct(pos.y)};
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

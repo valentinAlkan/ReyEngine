@@ -128,6 +128,7 @@ namespace GFCSDraw {
    };
 
    Vec2<double> getScreenCenter();
+   Vec2<double> getScreenSize();
    void drawText(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color);
    void drawTextCentered(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color);
    void drawTextRelative(const std::string& text, const GFCSDraw::Vec2<int>& relPos, int fontSize, Color color);

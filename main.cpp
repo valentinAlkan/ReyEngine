@@ -11,6 +11,7 @@
 #include "RootWidget.hpp"
 #include "TextureTestWidget.hpp"
 #include "Slider.hpp"
+#include "Timer.hpp"
 
 using namespace std;
 using namespace GFCSDraw;
@@ -52,6 +53,11 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--scrollArea", "help", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--sliderTest", "help", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
+
+   //create window (or don't idk)
+   auto optWindow = Application::instance().createWindow("MainWindow", screenWidth, screenHeight, {Window::RESIZE});
+   if (!optWindow){throw std::runtime_error("Something went horribly wrong! Please make a note of it.");}
+   auto window = optWindow.value();
 
    shared_ptr<BaseWidget> root;
    auto argLoadScene = args.getArg("--loadScene");
@@ -100,6 +106,19 @@ int main(int argc, char** argv)
       };
       label->subscribe<Slider::SliderValueChangedEvent>(hslider, labelMoveX);
       label->subscribe<Slider::SliderValueChangedEvent>(vslider, labelMoveY);
+
+      //move timer
+      auto timerCb = [&](const Timer::TimeoutEvent& e){
+         auto pct = window->getMousePct();
+         cout << pct << endl;
+         hslider->setSliderPct(pct.x);
+         vslider->setSliderPct(pct.y);
+      };
+      auto timer = SystemTime::newTimer(std::chrono::milliseconds(1000/60));
+      label->subscribe<Timer::TimeoutEvent>(timer, timerCb);
+      auto timerProperty = make_shared<TimerProperty>("timer", timer);
+      label->moveProperty(timerProperty);
+
    }
 
    // default functionality
@@ -129,12 +148,7 @@ int main(int argc, char** argv)
    }
 
 
-   auto optWindow = Application::instance().createWindow("MainWindow", screenWidth, screenHeight, root, {Window::RESIZE});
-   if (optWindow){
-      auto mainWindow = optWindow.value();
-      mainWindow->exec();
-      return 0;
-   }
-
-   return 1;
+   window->setRoot(root);
+   window->exec();
+   return 0;
 }

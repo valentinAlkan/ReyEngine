@@ -15,10 +15,12 @@ public:
    virtual ~Window();
    bool isProcessed(const std::shared_ptr<BaseWidget>&) const;
    bool setProcess(bool, std::shared_ptr<BaseWidget>); //returns whether operation was successful. Returns false if widget already being processed or is not found.
+   void setRoot(std::shared_ptr<BaseWidget> newRoot){_root = newRoot;}
    static GFCSDraw::Vec2<int> getMousePos(); //returns global mouse position
+   static GFCSDraw::Vec2<double> getMousePct(); //returns global mouse position as a percentage of the window size from 0 to 1
    const std::shared_ptr<BaseWidget>& getRootWidget(){return _root;}
 protected:
-   Window(const std::string& title, int width, int height, std::shared_ptr<BaseWidget> root, const std::vector<Flags>& flags, int targetFPS=60);
+   Window(const std::string& title, int width, int height, const std::vector<Flags>& flags, int targetFPS=60);
    static constexpr size_t INPUT_COUNT_LIMIT = 256;
 private:
    std::shared_ptr<BaseWidget> _root; //the scene to draw
