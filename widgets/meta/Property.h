@@ -93,7 +93,7 @@ struct StringProperty : public Property<std::string>{
    : Property(instanceName, PropertyTypes::String, defaultvalue)
    {}
    std::string toString() override {return value;}
-   std::string fromString(const std::string& data) { return data;}
+   std::string fromString(const std::string& data) override { return data;}
 };
 
 struct BoolProperty : public Property<bool>{
@@ -101,7 +101,7 @@ struct BoolProperty : public Property<bool>{
    : Property(instanceName, PropertyTypes::Bool, defaultvalue)
    {}
    std::string toString() override {return std::to_string(value);}
-   bool fromString(const std::string& str) { return std::stoi(str);}
+   bool fromString(const std::string& str) override { return std::stoi(str);}
 };
 
 struct IntProperty : public Property<int>{
@@ -109,7 +109,7 @@ struct IntProperty : public Property<int>{
    : Property(instanceName, PropertyTypes::Int, defaultvalue)
    {}
    std::string toString() override {return std::to_string(value);}
-   int fromString(const std::string& str) { return std::stoi(str);}
+   int fromString(const std::string& str) override { return std::stoi(str);}
 };
 
 struct FloatProperty : public Property<double>{
@@ -117,7 +117,7 @@ struct FloatProperty : public Property<double>{
    : Property(instanceName, PropertyTypes::Int, defaultvalue)
    {}
    std::string toString() override {return std::to_string(value);}
-   double fromString(const std::string& str) { return std::stod(str);}
+   double fromString(const std::string& str) override { return std::stod(str);}
 };
 
 template <typename T>
@@ -126,7 +126,7 @@ struct Vec2Property : public Property<GFCSDraw::Vec2<T>>{
    : Property(instanceName, PropertyTypes::Vec2, defaultvalue)
    {}
    std::string toString() override {return value.toString();}
-   GFCSDraw::Vec2<T> fromString(const std::string& str) {return GFCSDraw::Vec2<T>::fromString(str);}
+   GFCSDraw::Vec2<T> fromString(const std::string& str) override {return GFCSDraw::Vec2<T>::fromString(str);}
 };
 
 template <typename T>
@@ -135,5 +135,5 @@ struct RectProperty : public Property<GFCSDraw::Rect<T>>{
    : Property(instanceName, PropertyTypes::Rect, defaultvalue)
    {}
    std::string toString() override {return value.toString();}
-   GFCSDraw::Rect<T> fromString(const std::string& str) {return GFCSDraw::Rect<T>::fromString(str);}
+   GFCSDraw::Rect<T> fromString(const std::string& str) override {return GFCSDraw::Rect<T>::fromString(str);}
 };

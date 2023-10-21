@@ -20,6 +20,10 @@ using Handled = bool;
 
 #define CTOR_RECT const GFCSDraw::Rect<float>& r
 
+#define GFCSDRAW_DECLARE_STATIC_CONSTEXPR_TYPENAME(TYPENAME) \
+static constexpr char TYPE_NAME[] = #TYPENAME;               \
+std::string _get_static_constexpr_typename() override {return TYPE_NAME;}
+
 #define GFCSDRAW_SERIALIZER(CLASSNAME, PARENT_CLASSNAME) \
    public:                                           \
    static std::shared_ptr<BaseWidget> deserialize(const std::string& instanceName, PropertyPrototypeMap& properties) { \
@@ -28,21 +32,23 @@ using Handled = bool;
    retval->BaseWidget::_deserialize(properties);        \
    return retval;}                                       \
 
-#define GFCSDRAW_DEFAULT_CTOR(CLASSNAME) \
-   CLASSNAME(const std::string& name, CTOR_RECT): CLASSNAME(name, #CLASSNAME, r){} \
-
-#define GFCSDRAW_CUSTOM_CTOR(CLASSNAME, PARENT_CLASSNAME, ...) \
-      CLASSNAME(std::string name, __VA_ARGS__): CLASSNAME(std::move(name), #CLASSNAME){} \
-
-#define GFCSDRAW_OBJECT(CLASSNAME, PARENT_CLASSNAME) \
-   GFCSDRAW_SERIALIZER(CLASSNAME, PARENT_CLASSNAME)  \
-   GFCSDRAW_DEFAULT_CTOR(CLASSNAME) \
-   protected:                                        \
-   void _register_parent_properties() override{               \
-      PARENT_CLASSNAME::_register_parent_properties(); \
-      PARENT_CLASSNAME::registerProperties();           \
-   } \
+#define GFCSDRAW_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME) \
    CLASSNAME(const std::string& name, const std::string& typeName, CTOR_RECT): PARENT_CLASSNAME(name, typeName, r)
+
+#define GFCSDRAW_DEFAULT_CTOR(CLASSNAME) \
+   CLASSNAME(const std::string& name, CTOR_RECT): CLASSNAME(name, _get_static_constexpr_typename(), r){}
+
+#define GFCSDRAW_OBJECT(CLASSNAME, PARENT_CLASSNAME)      \
+public:                                                   \
+   GFCSDRAW_DECLARE_STATIC_CONSTEXPR_TYPENAME(CLASSNAME)  \
+   GFCSDRAW_SERIALIZER(CLASSNAME, PARENT_CLASSNAME)       \
+   GFCSDRAW_DEFAULT_CTOR(CLASSNAME)                       \
+protected:                                                \
+   void _register_parent_properties() override{           \
+      PARENT_CLASSNAME::_register_parent_properties();    \
+      PARENT_CLASSNAME::registerProperties();             \
+   }                                                      \
+   GFCSDRAW_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME)   \
 
 class Scene;
 class  BaseWidget
@@ -57,12 +63,13 @@ class  BaseWidget
    using iVec = GFCSDraw::Vec2<int>;
    using dVec = GFCSDraw::Vec2<double>;
 public:
+   static constexpr char TYPE_NAME[] = "BaseWidget";
    BaseWidget(const std::string& name, const std::string& typeName, GFCSDraw::Rect<float> rect);
    ~BaseWidget();
    uint64_t getRid() const {return _rid;}
    std::string getName() const {return _name;}
    GFCSDraw::Rect<double> getRect() const {return _rect.value;}
-   dVec getPos() const {return GFCSDraw::Vec2<double>(_rect.value.x, _rect.value.y);}
+   dVec getPos() const {return {getRect().x, getRect().y};}
    dVec getGlobalPos() const;
    dVec globalToLocal(const dVec& global) const{return global - getGlobalPos();}
    dVec localToGlobal(const dVec& local) const {return local + getGlobalPos();}
@@ -98,6 +105,7 @@ public:
 
    bool operator==(const WidgetPtr&) const;
 
+   template <typename T> bool is_base_of(){return std::is_base_of_v<BaseWidget, T>;}
    static void registerType(const std::string& typeName, const std::string& parentType, bool isVirtual, Deserializer fx){TypeManager::registerType(typeName, parentType, isVirtual, fx);}
    std::string serialize();
 protected:
@@ -112,8 +120,8 @@ protected:
    void renderChain(GFCSDraw::Vec2<float>& textureOffset);
    virtual void renderEnd(){}
    GFCSDraw::Vec2<float> getTextureRenderModeOffset(){return _textureRenderModeOffset;}
-   void renderTextureOffsetApply(GFCSDraw::Vec2<float>& textureOffset){;}
-   void renderTextureOffsetReset(GFCSDraw::Vec2<float>& textureOffset){;}
+   void renderTextureOffsetApply(GFCSDraw::Vec2<float>& textureOffset){}
+   void renderTextureOffsetReset(GFCSDraw::Vec2<float>& textureOffset){}
    void _drawText(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color) const;
    void _drawTextCentered(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color) const;
    void _drawRectangle(const GFCSDraw::Rect<int>& rect, Color color) const;
@@ -128,9 +136,11 @@ protected:
    virtual Handled _unhandled_input(InputEvent&){return false;}
    virtual void _register_parent_properties(){};
 
+   void _is_extendable(){static_assert(true);}
+   virtual std::string _get_static_constexpr_typename(){return TYPE_NAME;}
 private:
    uint64_t _rid; //unique identifier
-   const std::string _typeName;
+   const std::string _typeName; //can't just use static constexpr TYPE_NAME since we need to know what the type is if using type-erasure
    std::string _name;
    BoolProperty _isProcessed;
    std::weak_ptr<BaseWidget> _parent; //todo: should be weak ptr

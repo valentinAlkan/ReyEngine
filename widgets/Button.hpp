@@ -1,12 +1,13 @@
 #pragma once
 #include "Control.hpp"
 
-struct PushButtonEvent : public Event<BaseEvent>{
-   EVENT_CTOR_SIMPLE(PushButtonEvent, Event<BaseEvent>){}
-   bool down;
-};
-
 class BaseButton : public Control {
+public:
+   struct PushButtonEvent : public Event<BaseEvent>{
+      EVENT_CTOR_SIMPLE(PushButtonEvent, Event<BaseEvent>){}
+      bool down;
+   };
+protected:
    GFCSDRAW_OBJECT(BaseButton, Control)
    , PROPERTY_DECLARE(down){
       _rect.value = GFCSDraw::Rect<double>(0,0,200,50);
@@ -47,10 +48,9 @@ class PushButton : public BaseButton{
    void render() const override {
       static constexpr int SEGMENTS = 10;
       static constexpr int THICKNESS = 2;
-      GFCSDraw::Rect<float> rec = {GFCSDraw::Vec2<float>(0,0), GFCSDraw::Vec2<float>(_rect.value.size())};
-      _drawRectangleRounded(rec, 2, SEGMENTS, down.value ? GRAY : LIGHTGRAY);
-      _drawRectangleRoundedLines(rec, 2, SEGMENTS, THICKNESS, BLACK);
-      _drawTextCentered(text.value, rec.center(), 20, BLACK);
+      _drawRectangleRounded(getRect().toSizeRect(), 2, SEGMENTS, down.value ? GRAY : LIGHTGRAY);
+      _drawRectangleRoundedLines(getRect().toSizeRect(), 2, SEGMENTS, THICKNESS, BLACK);
+      _drawTextCentered(text.value, getRect().toSizeRect().center(), 20, BLACK);
    }
    StringProperty text;
 public:

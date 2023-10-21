@@ -19,8 +19,6 @@ using namespace GFCSDraw;
 int screenWidth = 1500;
 int screenHeight = 800;
 
-void updateFrame(float);
-
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -50,7 +48,7 @@ int main(int argc, char** argv)
    ArgParse args;
    args.defineArg(RuntimeArg("--loadScene", "help", 1, RuntimeArg::ArgType::OPTIONAL));
    args.defineArg(RuntimeArg("--renderTest", "help", 0, RuntimeArg::ArgType::FLAG));
-   args.defineArg(RuntimeArg("--scrollArea", "help", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--scrollAreaTest", "help", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--sliderTest", "help", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
@@ -78,7 +76,7 @@ int main(int argc, char** argv)
    }
 
 
-   if (args.getArg("--scrollArea")){
+   if (args.getArg("--scrollAreaTest")){
       root = make_shared<ScrollArea>("RootScrollArea", Rect<float> {50,50,200,200});
       auto label = make_shared<Label>("ScrollAreaLabel", Rect<float> {0,0,0,0});
       root->addChild(label);
@@ -110,11 +108,10 @@ int main(int argc, char** argv)
       //move timer
       auto timerCb = [&](const Timer::TimeoutEvent& e){
          auto pct = window->getMousePct();
-         cout << pct << endl;
          hslider->setSliderPct(pct.x);
          vslider->setSliderPct(pct.y);
       };
-      auto timer = SystemTime::newTimer(std::chrono::milliseconds(1000/60));
+      auto timer = SystemTime::newTimer(std::chrono::milliseconds(1000));
       label->subscribe<Timer::TimeoutEvent>(timer, timerCb);
       auto timerProperty = make_shared<TimerProperty>("timer", timer);
       label->moveProperty(timerProperty);
