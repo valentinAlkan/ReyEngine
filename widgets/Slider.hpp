@@ -9,6 +9,7 @@ public:
       EVENT_CTOR_SIMPLE(SliderValueChangedEvent, Event<BaseEvent>){}
       double value;
    };
+
    enum class SliderType{VERTICAL, HORIZONTAL};
    struct SliderTypeProperty : public Property<SliderType>{
       SliderTypeProperty(const std::string& instanceName, SliderType defaultvalue = SliderType::VERTICAL)
@@ -18,32 +19,13 @@ public:
       SliderType fromString(const std::string& str) override {return (str == "VERTICAL" ? SliderType::VERTICAL : SliderType::HORIZONTAL);}
    };
 
-   static std::shared_ptr<BaseWidget> deserialize(const std::string &instanceName, PropertyPrototypeMap &properties) {
-      const GFCSDraw::Rect<float> &r = {0, 0, 0, 0};
-      SliderTypeProperty temp("temp");
-      auto retval = std::make_shared<Slider>(instanceName, r, temp.fromString(properties["sliderType"].data));
-      retval->BaseWidget::_deserialize(properties);
-      return retval;
-   }
-   Slider(const std::string &name, const GFCSDraw::Rect<float> &r, SliderType sliderType) : Slider(name, "Slider", r, sliderType) {}
-   GFCSDraw::Vec2<double> getRange(){return _range;}
-   void setRange(GFCSDraw::Vec2<double> newRange){
-      minSliderValue.set(newRange.x);
-      maxSlidervalue.set(newRange.y);
-      _range = {minSliderValue.value, maxSlidervalue.value};
-   }
-   inline double getSliderValue(){return sliderValue.get();}
-   inline void setSliderValue(double value){sliderValue.set(value);_publish_slider_val();_compute_appearance();}
-   inline double getSliderPct(){return _range.pct(sliderValue.value);}
-   inline void setSliderPct(double pct){setSliderValue(_range.lerp(pct));}
-protected:
-   void _register_parent_properties() override{ Control::_register_parent_properties(); Control::registerProperties();}
-   Slider(const std::string &name, const std::string &typeName, const GFCSDraw::Rect<float>& r, SliderType sliderDir)
-   : Control(name, typeName, r)
-   , sliderValue("sliderValue", 0.0)
-   , minSliderValue("minSliderValue", 0.0)
-   , maxSlidervalue("maxSliderValue", 100.0)
-   , sliderType("sliderType", sliderDir)
+   GFCSDRAW_DECLARE_STATIC_CONSTEXPR_TYPENAME(Slider)
+   Slider(const std::string &name, const GFCSDraw::Rect<float>& r, SliderType sliderDir)
+         : Control(name, _get_static_constexpr_typename(), r)
+         , sliderValue("sliderValue", 0.0)
+         , minSliderValue("minSliderValue", 0.0)
+         , maxSlidervalue("maxSliderValue", 100.0)
+         , sliderType("sliderType", sliderDir)
    {
       switch(sliderType.get()) {
          case SliderType::VERTICAL:
@@ -57,6 +39,26 @@ protected:
       }
       _range = {minSliderValue.get(), maxSlidervalue.get()};
    }
+
+   static std::shared_ptr<BaseWidget> deserialize(const std::string &instanceName, PropertyPrototypeMap &properties) {
+      const GFCSDraw::Rect<float> &r = {0, 0, 0, 0};
+      SliderTypeProperty temp("temp");
+      auto retval = std::make_shared<Slider>(instanceName, r, temp.fromString(properties["sliderType"].data));
+      retval->BaseWidget::_deserialize(properties);
+      return retval;
+   }
+   GFCSDraw::Vec2<double> getRange(){return _range;}
+   void setRange(GFCSDraw::Vec2<double> newRange){
+      minSliderValue.set(newRange.x);
+      maxSlidervalue.set(newRange.y);
+      _range = {minSliderValue.value, maxSlidervalue.value};
+   }
+   inline double getSliderValue(){return sliderValue.get();}
+   inline void setSliderValue(double value){sliderValue.set(value);_publish_slider_val();_compute_appearance();}
+   inline double getSliderPct(){return _range.pct(sliderValue.value);}
+   inline void setSliderPct(double pct){setSliderValue(_range.lerp(pct));}
+protected:
+   void _register_parent_properties() override{ Control::_register_parent_properties(); Control::registerProperties();}
    virtual Handled _unhandled_input(InputEvent& e){
       auto& mouseEvent = (InputEventMouseMotion&)(e);
       auto localPos = globalToLocal(mouseEvent.globalPos);
