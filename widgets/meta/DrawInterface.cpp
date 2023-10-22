@@ -41,9 +41,9 @@ void GFCSDraw::drawRectangleGradientV(const GFCSDraw::Rect<int>& rect, Color col
 /////////////////////////////////////////////////////////////////////////////////////////
 void GFCSDraw::drawTextCentered(const std::string& text, const Vec2<int>& pos, int fontSize, Color color){
    auto textWidth = MeasureText(text.c_str(), fontSize);
-   float newX = pos.x - (float)textWidth / 2;
-   float newY = pos.y - (float)fontSize / 2;
-   drawText(text, Vec2<int>(newX, newY), fontSize, color);
+   float newX = (float)pos.x - (float)textWidth / 2;
+   float newY = (float)pos.y - (float)fontSize / 2;
+   drawText(text, Vec2<int>((int)newX, (int)newY), fontSize, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

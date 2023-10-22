@@ -19,6 +19,7 @@ public:
    static GFCSDraw::Vec2<int> getMousePos(); //returns global mouse position
    static GFCSDraw::Vec2<double> getMousePct(); //returns global mouse position as a percentage of the window size from 0 to 1
    const std::shared_ptr<BaseWidget>& getRootWidget(){return _root;}
+   GFCSDraw::Vec2<int> getSize(){return {width, height};}
 protected:
    Window(const std::string& title, int width, int height, const std::vector<Flags>& flags, int targetFPS=60);
    static constexpr size_t INPUT_COUNT_LIMIT = 256;
@@ -35,6 +36,8 @@ private:
       std::unordered_set<std::shared_ptr<BaseWidget>> _list; //list of widgets that require processing. No specific order.
       std::mutex _mtx;
    } _processList;
+   int width;
+   int height;
 
    friend class Application;
 };

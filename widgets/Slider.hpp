@@ -8,6 +8,7 @@ public:
    public:
       EVENT_CTOR_SIMPLE(SliderValueChangedEvent, Event<BaseEvent>){}
       double value;
+      double pct;
    };
 
    enum class SliderType{VERTICAL, HORIZONTAL};
@@ -71,12 +72,14 @@ protected:
                double newValue = 0;
                switch (sliderType.get()) {
                   case SliderType::VERTICAL: {
-                     newValue = _range.lerp(_range.pct(localPos.y));
+                     auto heightRange = GFCSDraw::Vec2<double>(0, getRect().height);
+                     newValue = _range.lerp(heightRange.pct(localPos.y));
                      sliderValue.set(_range.clamp(newValue));
                   }
                      break;
                   case SliderType::HORIZONTAL:
-                     newValue = _range.lerp(_range.pct(localPos.x));
+                     auto widthRange = GFCSDraw::Vec2<double>(0, getRect().width);
+                     newValue = _range.lerp(widthRange.pct(localPos.x));
                      sliderValue.set(_range.clamp(newValue));
                }
                _compute_appearance();
@@ -109,13 +112,6 @@ protected:
       _drawRectangle(_grabber, _cursor_down && _cursor_in_grabber || _is_dragging ? YELLOW : BLUE);
    }
    void _on_rect_changed() override {
-
-//      switch(SliderType::VERTICAL){
-//            case SliderType::VERTICAL:
-//            break;
-//            case SliderType::HORIZONTAL:
-//            break;
-//         }
    };
    void _process(float dt) override {}
    void registerProperties() override{
@@ -127,7 +123,8 @@ protected:
 private:
    void _publish_slider_val(){
       auto event = SliderValueChangedEvent(EventPublisher::shared_from_this());
-      event.value = sliderValue.get();
+      event.value = getSliderValue();
+      event.pct = getSliderPct();
       publish<SliderValueChangedEvent>(event);
    }
    void _compute_appearance(){
