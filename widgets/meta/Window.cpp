@@ -11,6 +11,8 @@ using namespace GFCSDraw;
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 Window::Window(const std::string &title, int width, int height, const std::vector<Flags>& flags, int targetFPS)
+: width(width)
+, height(height)
 {
 //   if (!_root){
 //      std::runtime_error("Window root cannot be null!");

@@ -70,7 +70,11 @@ public:
    std::string getName() const {return _name;}
    GFCSDraw::Rect<double> getRect() const {return _rect.value;}
    dVec getPos() const {return {getRect().x, getRect().y};}
+   dVec getHeightRange() const {return {0, getRect().size().y};}
+   dVec getWidthtRange() const {return {0, getRect().size().x};}
+//   dVec getSizeRangePct(dVec point) const {return dVec(getWidthtRange(), getHeightRange()).pct(point);}
    dVec getGlobalPos() const;
+   dVec getLocalMousePos(){return globalToLocal(InputManager::getMousePos());}
    dVec globalToLocal(const dVec& global) const{return global - getGlobalPos();}
    dVec localToGlobal(const dVec& local) const {return local + getGlobalPos();}
    void setRect(const GFCSDraw::Rect<double>& r){_rect.value = r; _on_rect_changed();}
@@ -121,7 +125,7 @@ protected:
    void renderChildren(GFCSDraw::Vec2<float>& textureOffset) const; //draw the widget's children
    void renderChain(GFCSDraw::Vec2<float>& textureOffset);
    virtual void renderEnd(){}
-   GFCSDraw::Vec2<float> getTextureRenderModeOffset(){return _textureRenderModeOffset;}
+   GFCSDraw::Vec2<float> getTextureRenderModeOffset(){return _renderOffset;}
    void renderTextureOffsetApply(GFCSDraw::Vec2<float>& textureOffset){}
    void renderTextureOffsetReset(GFCSDraw::Vec2<float>& textureOffset){}
    void _drawText(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color) const;
@@ -155,7 +159,7 @@ private:
    const std::lock_guard<std::recursive_mutex> childSafetyLock(){return std::lock_guard<std::recursive_mutex>(_childLock);}
    bool _scheduled_for_deletion = false; // true when the widget has been scheduled for deletion but is not yet deleted.
 
-   GFCSDraw::Vec2<float> _textureRenderModeOffset; //used for texture rendering mode
+   GFCSDraw::Vec2<float> _renderOffset; //used for different rendering modes. does not offset position.
 
    Handled _process_unhandled_input(InputEvent&); //pass input to children if they want it and then process it for ourselves if necessary
    InputFilter inputFilter = InputFilter::INPUT_FILTER_PASS_AND_PROCESS;

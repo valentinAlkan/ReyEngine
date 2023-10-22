@@ -63,6 +63,8 @@ public:
       };
       publisher->addSubscriber(me, T::getUniqueEventId(), adapter);
    };
+protected:
+   std::shared_ptr<EventSubscriber> toEventSubscriber(){return inheritable_enable_shared_from_this<EventSubscriber>::shared_from_this();}
 //   template <typename T>
 //   static void subscribe(Publisher&, const std::string& eventType, Subscriber, EventHandler){};
 //   template <typename T>

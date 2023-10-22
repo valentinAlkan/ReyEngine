@@ -120,10 +120,10 @@ void BaseWidget::renderChildren(GFCSDraw::Vec2<float>& textureOffset) const {
 void BaseWidget::renderChain(GFCSDraw::Vec2<float>& parentOffset) {
    GFCSDraw::Vec2<float> localOffset;
    renderBegin(localOffset);
-   _textureRenderModeOffset = localOffset + parentOffset;
-   renderChildren(_textureRenderModeOffset);
+   _renderOffset = localOffset + parentOffset;
+   renderChildren(_renderOffset);
    render();
-   _textureRenderModeOffset = parentOffset; //subtract local offset when we are done
+   _renderOffset = parentOffset; //subtract local offset when we are done
    renderEnd();
 }
 
@@ -166,39 +166,39 @@ bool BaseWidget::isRoot() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::_drawText(const std::string &text, const GFCSDraw::Vec2<int> &pos, int fontSize, Color color) const{
-   GFCSDraw::drawText(text, pos + getGlobalPos() + _textureRenderModeOffset, fontSize, color);
+   GFCSDraw::drawText(text, pos + getGlobalPos() + _renderOffset, fontSize, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::_drawTextCentered(const std::string &text, const GFCSDraw::Vec2<int> &pos, int fontSize, Color color) const{
-   GFCSDraw::drawTextCentered(text, pos + getGlobalPos() + _textureRenderModeOffset, fontSize, color);
+   GFCSDraw::drawTextCentered(text, pos + getGlobalPos() + _renderOffset, fontSize, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::_drawRectangle(const Rect<int>& rect, Color color) const {
    //use the size of the param rect but use the position of our rect + the param rect
-   Rect<int> newRect(rect + getGlobalPos() + _textureRenderModeOffset);
+   Rect<int> newRect(rect + getGlobalPos() + _renderOffset);
    GFCSDraw::drawRectangle(newRect, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::_drawRectangleRounded(const GFCSDraw::Rect<int> &rect, float roundness, int segments, Color color) const {
    //use the size of the param rect but use the position of our rect + the param rect
-   Rect<int> newRect(rect + getGlobalPos() + _textureRenderModeOffset);
+   Rect<int> newRect(rect + getGlobalPos() + _renderOffset);
    GFCSDraw::drawRectangleRounded(newRect, roundness, segments, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::_drawRectangleRoundedLines(const GFCSDraw::Rect<float> &rect, float roundness, int segments,float lineThick, Color color) const {
    //use the size of the param rect but use the position of our rect + the param rect
-   Rect<float> newRect(rect + getGlobalPos() + _textureRenderModeOffset);
+   Rect<float> newRect(rect + getGlobalPos() + _renderOffset);
    GFCSDraw::drawRectangleRoundedLines(newRect, roundness, segments, lineThick, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::_drawRectangleGradientV(const GFCSDraw::Rect<int>& rect, Color color1, Color color2) const {
    //use the size of the param rect but use the position of our rect + the param rect
-   Rect<float> newRect(rect + getGlobalPos() +_textureRenderModeOffset);
+   Rect<float> newRect(rect + getGlobalPos() + _renderOffset);
    GFCSDraw::drawRectangleGradientV(newRect, color1, color2);
 }
 

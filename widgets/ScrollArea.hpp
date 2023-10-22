@@ -5,6 +5,7 @@
 class ScrollArea : public Control {
    GFCSDRAW_OBJECT(ScrollArea, Control)
    , renderTarget(_rect.value.size())
+   , scrollOffsetRange(GFCSDraw::Vec2<int>(0,1000))
    {}
 public:
    void renderBegin(GFCSDraw::Vec2<float>& textureOffset) override {
@@ -15,6 +16,7 @@ public:
    void renderEnd() override {
       renderTarget.endRenderMode();
       renderTarget.render(getGlobalPos() + getTextureRenderModeOffset());
+      GFCSDraw::drawTextCentered(scrollOffset.toString(), _rect.get().toSizeRect().center(), 20, RED);
    }
    void render() const override {
 //      _drawRectangleGradientV({0, 0, (int)_rect.value.width, (int)_rect.value.height}, BLUE, RED);
@@ -29,12 +31,25 @@ public:
 protected:
    void _init() override {
       //create scrollbars
-      auto vslider = std::make_shared<Slider>("__vslider", GFCSDraw::Rect<float>{0,0,20,100}, Slider::SliderType::VERTICAL);
-      auto hslider = std::make_shared<Slider>("__hslider", GFCSDraw::Rect<float>{20,20,100,20}, Slider::SliderType::HORIZONTAL);
+      auto scrollSize = _rect.get().size();
+      auto sliderSize = 20;
+      auto vslider = std::make_shared<Slider>("__vslider", GFCSDraw::Rect<float>{(float)(scrollSize.x-sliderSize), 0, (float)sliderSize, (float)scrollSize.y}, Slider::SliderType::VERTICAL);
+      auto hslider = std::make_shared<Slider>("__hslider", GFCSDraw::Rect<float>{0, (float)(scrollSize.y-sliderSize), (float)(scrollSize.x-sliderSize),  (float)sliderSize}, Slider::SliderType::HORIZONTAL);
       addChild(vslider);
       addChild(hslider);
+      auto setOffsetX = [&](const Slider::SliderValueChangedEvent& event){
+         auto slider = event.publisher->toBaseWidget()->toType<Slider>();
+         scrollOffset.x = (float)scrollOffsetRange.lerp(event.pct);
+      };
+      auto setOffsetY = [&](const Slider::SliderValueChangedEvent& event){
+         auto slider = event.publisher->toBaseWidget()->toType<Slider>();
+         scrollOffset.y = (float)scrollOffsetRange.lerp(event.pct);
+      };
+      subscribe<Slider::SliderValueChangedEvent>(hslider, setOffsetX);
+      subscribe<Slider::SliderValueChangedEvent>(vslider, setOffsetY);
    }
    GFCSDraw::RenderTarget renderTarget;
-   GFCSDraw::Vec2<float> scrollOfset;
+   GFCSDraw::Vec2<float> scrollOffset;
+   GFCSDraw::Vec2<float> scrollOffsetRange;
 };
 
