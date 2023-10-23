@@ -162,6 +162,13 @@ namespace GFCSDraw {
          RenderTexture2D _tex;
          Vec2<float> _size;
       };
+
+   //Everything drawn to a scissor target will be invisible
+   class ScissorTarget {
+   public:
+      void start(Rect<double> scissorArea){BeginScissorMode((int)scissorArea.x, (int)scissorArea.y, (int)scissorArea.width, (int)scissorArea.height);}
+      void stop(){EndScissorMode();}
+   };
 }
 
 namespace InputInterface{

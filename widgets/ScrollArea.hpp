@@ -4,28 +4,29 @@
 
 class ScrollArea : public Control {
    GFCSDRAW_OBJECT(ScrollArea, Control)
-   , renderTarget(_rect.value.size())
    , scrollOffsetRange(GFCSDraw::Vec2<int>(0,1000))
    {}
 public:
    void renderBegin(GFCSDraw::Vec2<float>& textureOffset) override {
-      renderTarget.beginRenderMode();
-      renderTarget.clear();
-      textureOffset -= getGlobalPos();
+//      renderTarget.beginRenderMode();
+//      renderTarget.clear();
+//      textureOffset -= getGlobalPos();
+      scissorTarget.start(getGlobalRect());
    }
    void renderEnd() override {
-      renderTarget.endRenderMode();
-      renderTarget.render(getGlobalPos() + getTextureRenderModeOffset());
-      GFCSDraw::drawTextCentered(scrollOffset.toString(), _rect.get().toSizeRect().center(), 20, RED);
+//      renderTarget.endRenderMode();
+//      renderTarget.render(getGlobalPos() + getTextureRenderModeOffset());
+//      GFCSDraw::drawTextCentered(scrollOffset.toString(), _rect.get().toSizeRect().center(), 20, RED);
+      scissorTarget.stop();
    }
    void render() const override {
-//      _drawRectangleGradientV({0, 0, (int)_rect.value.width, (int)_rect.value.height}, BLUE, RED);
+      _drawRectangleGradientV({100, 100, (int)_rect.value.width, (int)_rect.value.height}, BLUE, RED);
    }
    void _process(float dt) override {}
    void registerProperties() override{
    }
    void _on_rect_changed() override {
-      renderTarget.resize(_rect.value.size());
+//      renderTarget.resize(_rect.value.size());
    }
 
 protected:
@@ -48,7 +49,8 @@ protected:
       subscribe<Slider::SliderValueChangedEvent>(hslider, setOffsetX);
       subscribe<Slider::SliderValueChangedEvent>(vslider, setOffsetY);
    }
-   GFCSDraw::RenderTarget renderTarget;
+//   GFCSDraw::RenderTarget renderTarget;
+   GFCSDraw::ScissorTarget scissorTarget;
    GFCSDraw::Vec2<float> scrollOffset;
    GFCSDraw::Vec2<float> scrollOffsetRange;
 };

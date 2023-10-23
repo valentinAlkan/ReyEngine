@@ -69,7 +69,9 @@ public:
    uint64_t getRid() const {return _rid;}
    std::string getName() const {return _name;}
    GFCSDraw::Rect<double> getRect() const {return _rect.value;}
+   GFCSDraw::Rect<double> getGlobalRect() const {return {getGlobalPos().x, getGlobalPos().y, getSize().x, getSize().y};}
    dVec getPos() const {return {getRect().x, getRect().y};}
+   dVec getSize() const {return getRect().size();}
    dVec getHeightRange() const {return {0, getRect().size().y};}
    dVec getWidthtRange() const {return {0, getRect().size().x};}
 //   dVec getSizeRangePct(dVec point) const {return dVec(getWidthtRange(), getHeightRange()).pct(point);}
