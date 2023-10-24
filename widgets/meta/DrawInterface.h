@@ -3,18 +3,59 @@
 #include <stdexcept>
 #include "StringTools.h"
 #include <string>
-
+#include <array>
+#include <iostream>
 #define NOT_IMPLEMENTED throw std::runtime_error("Not implemented!")
 
 namespace GFCSDraw {
+
    template <typename T>
-   struct Vec2 {
-      inline Vec2(): x(0), y(0){}
-      inline Vec2(const T _x, const T _y) : x(_x), y(_y){}
-      inline Vec2(const Vector2& v)     : x((T)v.x), y((T)v.y){}
-      inline Vec2(const Vec2<int>& v)   : x((T)v.x), y((T)v.y){}
-      inline Vec2(const Vec2<float>& v) : x((T)v.x), y((T)v.y){}
-      inline Vec2(const Vec2<double>& v): x((T)v.x), y((T)v.y){}
+   struct Vec {
+      explicit Vec(size_t size): size(size){}
+      inline static std::vector<T> fromString(size_t size, const std::string& s) {
+         std::string sanitized;
+         for (const auto &c: s) {
+            if (::isdigit(c) || c == '-' || c == ',' || c == '.') {
+               sanitized += c;
+            }
+         }
+         auto split = string_tools::split(sanitized, ",");
+         if (split.size() != size) {
+            return;
+         }
+
+         std::vector<double> retval;
+         for (size_t i = 0; i < size; i++) {
+            retval.push_back(std::stod(split[i]));
+         }
+         return retval;
+      }
+      [[nodiscard]] inline std::string toString() const {
+         auto elements = getElements();
+         std::string retval = "{";
+         for (const auto& element : elements){
+            retval += std::to_string(element);
+            retval += ", ";
+         }
+         //remeove trailing comma
+         retval.pop_back();
+         retval.pop_back();
+         retval += "}";
+         return retval;
+      }
+      [[nodiscard]] virtual std::vector<T> getElements() const = 0;
+      const size_t size;
+   };
+
+
+   template <typename T>
+   struct Vec2 : protected Vec<T> {
+      inline Vec2(): Vec<T>(2), x(0), y(0){}
+      inline Vec2(const T& x, const T& y) : Vec<T>(2), x(x), y(y){}
+      inline Vec2(const Vector2& v)     : Vec<T>(2), x((T)v.x), y((T)v.y){}
+      inline Vec2(const Vec2<int>& v)   : Vec<T>(2), x((T)v.x), y((T)v.y){}
+      inline Vec2(const Vec2<float>& v) : Vec<T>(2), x((T)v.x), y((T)v.y){}
+      inline Vec2(const Vec2<double>& v): Vec<T>(2), x((T)v.x), y((T)v.y){}
       inline explicit operator bool() const {return x || y;}
       inline Vec2 operator+(const Vec2& rhs) const {Vec2<T> val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
       inline Vec2 operator-(const Vec2& rhs) const {Vec2<T> val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
@@ -22,31 +63,63 @@ namespace GFCSDraw {
       inline Vec2& operator-=(const Vec2& rhs){x -= rhs.x; y -= rhs.y; return *this;}
       inline Vec2& operator*=(const Vec2& rhs){x *= rhs.x; y *= rhs.y; return *this;}
       inline Vec2& operator/=(const Vec2& rhs){x /= rhs.x; y /= rhs.y; return *this;}
-      inline Vec2 midpoint(){return {x/2, y/2};}
-      inline double pct(double input){return (input-x)/(y-x);} //given an input value, what percentage of the range is it from 0 to 1?
-      inline double lerp(double lerpVal){return lerpVal * (y-x) + x;} //given a value from 0 to 1, what is the value of the range that corresponds to it?
-      inline Vec2 lerp(Vec2 otherPoint, double xprm){return {xprm, y+(((xprm-x)*(otherPoint.y-y))/(otherPoint.x-x))};}
+      inline Vec2& operator=(const Vec2& rhs){x = rhs.x; y=rhs.y; return *this;}
+      inline Vec2 midpoint(){return {x/2, y / 2};}
+      inline double pct(double input){return (input-x)/(y - x);} //given an input value, what percentage of the range is it from 0 to 1?
+      inline double lerp(double lerpVal){return lerpVal * (y - x) + x;} //given a value from 0 to 1, what is the value of the range that corresponds to it?
+      inline Vec2 lerp(Vec2 otherPoint, double xprm){return {xprm, y + (((xprm - x) * (otherPoint.y - y)) / (otherPoint.x - x))};}
       inline T clamp(T value){if (value < x) return x; if (value > y) return y; return value;}
-      [[nodiscard]] inline std::string toString() const {return "{" + std::to_string(x) + ", " + std::to_string(y) + "}";}
-      inline static void fromString(const std::string& s){
-         std::string sanitized;
-         for (const auto& c : s){
-            if (::isdigit(c) || c == '-' || c==',' || c=='.'){
-               sanitized += c;
-            }
-         }
-         auto split = string_tools::split(sanitized, ",");
-         if (split.size() != 2){
-            return;
-         }
-         GFCSDraw::Vec2<T> retval;
-         retval.x = std::stoi(split[0]);
-         retval.y = std::stoi(split[1]);
-         return retval;
-      }
-      friend std::ostream& operator<<(std::ostream& os, const Vec2<T>& v){os << v.toString();return os;}
+      inline static void fromString(const std::string& s){return Vec<T>::fromString(2, s);};
+      std::ostream& operator<<(std::ostream& os) const {os << Vec<T>::toString(); return os;}
+      friend std::ostream& operator<<(std::ostream& os, Vec2<T> v) {os << v.toString(); return os;}
       T x;
       T y;
+   protected:
+      [[nodiscard]] inline std::vector<T> getElements() const override {return {x,y};}
+   };
+
+   template <typename T>
+   struct Vec3 : protected Vec<T> {
+      inline Vec3(): Vec<T>(3), x(0), y(0){}
+       inline Vec3(const T& _x, const T& y, const T& _z) : Vec<T>(3), x(_x), y(y),z(_z) {}
+      inline explicit Vec3(const Vector3& v)     : Vec<T>(3), x((T)v.x), y((T)v.y), z((T)v.z){}
+      inline explicit Vec3(const Vec3<int>& v)   : Vec<T>(3), x((T)v.x), y((T)v.y), z((T)v.z){}
+      inline explicit Vec3(const Vec3<float>& v) : Vec<T>(3),  x((T)v.x), y((T)v.y), z((T)v.z){}
+      inline explicit Vec3(const Vec3<double>& v): Vec<T>(3),  x((T)v.x), y((T)v.y), z((T)v.z){}
+      inline Vec3& operator=(const Vec3& rhs){x = rhs.x; y=rhs.y; z=rhs.z; return *this;}
+      inline static void fromString(const std::string& s){return Vec<T>::fromString(3, s);};
+      [[nodiscard]] inline std::vector<T> getElements() const override {return {x,y,z};}
+      friend std::ostream& operator<<(std::ostream& os, Vec3<T> v) {os << v.toString(); return os;}
+      T x;
+      T y;
+      T z;
+   };
+
+   template <typename T>
+   class Range : private Vec3<T> {
+   public:
+      //Vec3 but x represents min, z represents max, and y represents value; Can lerp and set pct.
+      //Vec3 shall be considered x=min, y=max, z=default value
+      inline Range(): Vec3<T>::Vec3(){}
+      inline Range(const T& min, const T& max, const T& defaultValue) : Vec3<T>::Vec3(min, max, defaultValue){}
+      inline explicit Range(const Vector3& v)     : Vec3<T>::Vec3(v){}
+      inline explicit Range(const Vec3<int>& v)   : Vec3<T>::Vec3(v){}
+      inline explicit Range(const Vec3<float>& v) : Vec3<T>::Vec3(v){}
+      inline explicit Range(const Vec3<double>& v): Vec3<T>::Vec3(v){}
+      inline double getpct(){return getRange().pct(getValue());};
+      inline void setLerp(double pct){setValue(getRange().lerp(pct));}
+      inline T getMin() const {return Vec3<T>::x;}
+      inline T getMax() const {return Vec3<T>::y;}
+      inline T getValue() const {return Vec3<T>::z;}
+      inline T setMin(T value){return Vec3<T>::x = value;}
+      inline T setMax(T value){return Vec3<T>::y = value;}
+      inline T setValue(T value){return Vec3<T>::z = value;}
+      inline Vec2<T> getRange(){return Vec2<T>(Vec3<T>::x, Vec3<T>::y);}
+      inline void setRange(Vec2<T> newRange){ setMin(newRange.x); setMax(newRange.y);}
+      inline void setRange(T min, T max){ setMin(min); setMax(max);}
+      inline static void fromString(const std::string& s){return Vec3<T>::fromString();};
+      inline std::vector<T> getElements() const override {return Vec3<T>::getElements();}
+      friend std::ostream& operator<<(std::ostream& os, Range<T> r) {os << r.toString(); return os;}
    };
 
    template <typename T>
@@ -54,7 +127,7 @@ namespace GFCSDraw {
       inline Line(): a(0,0), b(0,0){}
       inline Line(Vec2<T> a, Vec2<T> b): a(a), b(b){}
       inline Line(const T x1, const T y1, const T x2, const T y2): Line({x1, y1}, {x2, y2}){}
-      inline Line midpoint(){return {(a.x+b.x)/2, (a.y+b.y)/2};}
+      inline Line midpoint(){return {(a.x+b.x)/2, (a.y + b.y) / 2};}
       inline Vec2<T> lerp(double xprm){return a.lerp(b, xprm);}
       inline double distance(){NOT_IMPLEMENTED;}
       Vec2<T> a;
@@ -89,7 +162,7 @@ namespace GFCSDraw {
                (point.y > y && point.y < y + height);
       }
       [[nodiscard]] inline Vec2<T> center() const {return {(x+width)/2, (y+height)/2};}
-      inline void setCenter(const Vec2<T>& center) {x = center.x-width/2; y=center.y-height/2;}
+      inline void setCenter(const Vec2<T>& center) {x = center.x-width/2; y= center.y - height / 2;}
       [[nodiscard]] inline std::string toString() const {
          return "{" + std::to_string(x) + ", " + std::to_string(y) + ", " +
          std::to_string(width) + ", " + std::to_string(height) + "}";
@@ -137,7 +210,6 @@ namespace GFCSDraw {
    void drawRectangleRoundedLines(const GFCSDraw::Rect<float>&, float roundness, int segments, float lineThick, Color color);
    void drawRectangleGradientV(const GFCSDraw::Rect<int>&, Color color1, Color color2);
    inline float getFrameDelta(){return GetFrameTime();}
-
    inline Font getDefaultFont(){return GetFontDefault();}
    inline Vec2<int> measureText(Font font, const char *text, float fontSize, float spacing){return MeasureTextEx(font, text, fontSize, spacing);}
 
@@ -155,7 +227,7 @@ namespace GFCSDraw {
          void clear(Color color=WHITE){ClearBackground(color);}
          void render(Vec2<float> pos) const{
             // NOTE: Render texture must be y-flipped due to default OpenGL coordinates (left-bottom)
-            DrawTextureRec(_tex.texture, {0, 0, (float)_tex.texture.width, (float)-_tex.texture.height }, {pos.x, pos.y}, {255,255,255,210});
+            DrawTextureRec(_tex.texture, {0, 0, (float)_tex.texture.width, (float)-_tex.texture.height }, {pos.x, pos.y}, {255, 255, 255, 210});
          }
       protected:
          bool _texLoaded = false;
