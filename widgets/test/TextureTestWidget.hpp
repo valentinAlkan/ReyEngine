@@ -5,7 +5,7 @@ class TextureTestWidget : public Control{
    GFCSDRAW_OBJECT(TextureTestWidget, Control)
    , target(_rect.value.size()){}
 public:
-   void renderBegin(GFCSDraw::Vec2<float>& textureOffset) override {
+   void renderBegin(GFCSDraw::Pos<double>& textureOffset) override {
 //      _render
    }
    void render() const override {}

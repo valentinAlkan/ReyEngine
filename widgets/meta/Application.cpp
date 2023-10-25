@@ -14,7 +14,7 @@ std::optional<std::shared_ptr<Window>> Application::createWindow(const std::stri
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Application::registerForEnterTree(std::shared_ptr<BaseWidget>& widget, BaseWidget& parent) {
-   instance()._initTreeList.emplace_back(widget, parent);
+   instance()._initStack.emplace(widget, parent);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -51,15 +51,20 @@ void Application::ready() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void Application::processEnterTree() {
    //todo: also process enter tree
-   auto& initTreeList = instance()._initTreeList;
-   for (auto& [widget, parent] : initTreeList){
-      auto& hasEnteredTreeBefore = widget->_has_entered_tree_before;
-      if (!hasEnteredTreeBefore) {
-         widget->_init();
-         widget->_has_entered_tree_before = true;
-      }
+   auto& stack = instance()._initStack;
+   while (!stack.empty()){
+      auto p = stack.top();
+      //pop immediately so we can add stuff to the stack in _init functions
+      stack.pop();
+      auto& widget = p.first;
+      auto& parent = p.second;
+      auto& hasInit = widget->_has_inited;
       parent._children[widget->getName()] = widget;
       widget->_parent = parent.toBaseWidget();
+      if (!hasInit) {
+         widget->_init();
+         hasInit = true;
+      }
+      widget->_on_child_added(widget);
    }
-   initTreeList.clear();
 }

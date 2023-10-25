@@ -128,7 +128,7 @@ void Window::exec(){
       //draw children on top of their parents
       BeginDrawing();
       ClearBackground(RAYWHITE);
-      GFCSDraw::Vec2<float> texOffset;
+      GFCSDraw::Pos<double> texOffset;
       _root->renderChain(texOffset);
       EndDrawing();
    }
@@ -195,8 +195,8 @@ std::optional<std::shared_ptr<BaseWidget>> Window::ProcessList::find(const std::
    return nullopt;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
-void Window::setRoot(std::shared_ptr<BaseWidget> newRoot) {
-   if (!newRoot->_has_entered_tree_before){
+void Window::setRoot(std::shared_ptr<BaseWidget>& newRoot) {
+   if (!newRoot->_has_inited){
       newRoot->_init();
    }
    _root = newRoot;

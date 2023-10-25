@@ -65,14 +65,7 @@ private:
 
    //init list
    using InitPair = std::pair<std::shared_ptr<BaseWidget>, BaseWidget&>;
-//   struct InitHasher {
-//      inline std::size_t operator()(const InitPair& pair) const {
-//         std::hash<std::string> hasher;
-//         return hasher(pair.first->getName());
-//      }
-//   };
-   std::vector<InitPair> _initTreeList; //list of widgets that want to be notified when they enter the tree for the first time (AND ONLY THE FIRST TIME); (pair = child, parent)
-
+   std::stack<InitPair> _initStack;
    friend class BaseWidget;
    friend class Window;
 };

@@ -8,7 +8,8 @@
 #define NOT_IMPLEMENTED throw std::runtime_error("Not implemented!")
 
 namespace GFCSDraw {
-
+   template <typename T> struct Size;
+   template <typename T> struct Pos;
    template <typename T>
    struct Vec {
       explicit Vec(size_t size): size(size){}
@@ -64,7 +65,12 @@ namespace GFCSDraw {
       inline Vec2& operator*=(const Vec2& rhs){x *= rhs.x; y *= rhs.y; return *this;}
       inline Vec2& operator/=(const Vec2& rhs){x /= rhs.x; y /= rhs.y; return *this;}
       inline Vec2& operator=(const Vec2& rhs){x = rhs.x; y=rhs.y; return *this;}
+      inline Vec2& operator-(){x = -x; y =-y; return *this;}
+      inline void operator=(Size<T>&) = delete;
+      inline void operator=(Pos<T>&) = delete;
       inline Vec2 midpoint(){return {x/2, y / 2};}
+      inline void min(Vec2<T> other){if (this->x > other.x) this->x = other.x; if (this->y > other.y) this->y = other.y;}
+      inline void max(Vec2<T> other){if (this->x < other.x) this->x = other.x; if (this->y < other.y) this->y = other.y;}
       inline double pct(double input){return (input-x)/(y - x);} //given an input value, what percentage of the range is it from 0 to 1?
       inline double lerp(double lerpVal){return lerpVal * (y - x) + x;} //given a value from 0 to 1, what is the value of the range that corresponds to it?
       inline Vec2 lerp(Vec2 otherPoint, double xprm){return {xprm, y + (((xprm - x) * (otherPoint.y - y)) / (otherPoint.x - x))};}
@@ -87,6 +93,7 @@ namespace GFCSDraw {
       inline explicit Vec3(const Vec3<float>& v) : Vec<T>(3),  x((T)v.x), y((T)v.y), z((T)v.z){}
       inline explicit Vec3(const Vec3<double>& v): Vec<T>(3),  x((T)v.x), y((T)v.y), z((T)v.z){}
       inline Vec3& operator=(const Vec3& rhs){x = rhs.x; y=rhs.y; z=rhs.z; return *this;}
+      inline Vec3& operator-(){x = -x; y =-y; z = -z; return *this}
       inline static void fromString(const std::string& s){return Vec<T>::fromString(3, s);};
       [[nodiscard]] inline std::vector<T> getElements() const override {return {x,y,z};}
       friend std::ostream& operator<<(std::ostream& os, Vec3<T> v) {os << v.toString(); return os;}
@@ -135,22 +142,60 @@ namespace GFCSDraw {
    };
 
    template <typename T>
+   struct Pos : public Vec2<T>{
+      inline Pos(): Vec2<T>(){}
+      inline Pos(const T& x, const T& y) : Vec2<T>(x, y){}
+      inline Pos(const Vector2& v)     : Vec2<T>(v){}
+      inline Pos(const Vec2<int>& v)   : Vec2<T>(v){}
+      inline Pos(const Vec2<double>& v): Vec2<T>(v){}
+      inline Pos(const Vec2<float>& v) : Vec2<T>(v){}
+
+      inline Pos operator+(const Pos& rhs) const {auto val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
+      inline Pos operator-(const Pos& rhs) const {auto val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
+      inline Pos& operator+=(const Pos& rhs){this->x += rhs.x; this->y += rhs.y; return *this;}
+      inline Pos& operator-=(const Pos& rhs){this->x -= rhs.x; this->y -= rhs.y; return *this;}
+
+      inline void operator=(Size<T>&) = delete;
+      inline void operator=(Pos<int>& other){x = other.x; y = other.y;};
+   };
+
+   template <typename T>
+   struct Size : public Vec2<T>{
+      inline Size(): Vec2<T>(){}
+      inline Size(const T& x, const T& y) : Vec2<T>(x, y){}
+      inline Size(const Vector2& v)     : Vec2<T>(v.x,v.y){}
+      inline Size(const Vec2<int>& v)   : Vec2<T>(v.x,v.y){}
+      inline void operator=(Pos<T>&) = delete;
+      inline Size operator+(const Size& rhs) const {auto val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
+      inline Size operator-(const Size& rhs) const {auto val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
+      inline Size& operator+=(const Size& rhs){this->x += rhs.x; this->y += rhs.y; return *this;}
+      inline Size& operator-=(const Size& rhs){this->x -= rhs.x; this->y -= rhs.y; return *this;}
+   };
+
+   template <typename T>
    struct Rect {
       inline Rect(): x(0), y(0), width(0), height(0){}
-      inline Rect(const T x, const T y) : x(x), y(y){}
       inline Rect(const T x, const T y, const T width, const T height) : x(x), y(y), width(width), height(height){}
       inline explicit Rect(const Rectangle& r): x((T)r.x), y((T)r.y), width((T)r.width), height((T)r.height){}
       inline Rect(const Rect<int>& r): x((T)r.x), y((T)r.y), width((T)r.width), height((T)r.height){}
       inline Rect(const Rect<float>& r): x((T)r.x), y((T)r.y), width((T)r.width), height((T)r.height){}
       inline Rect(const Rect<double>& r): x((T)r.x), y((T)r.y), width((T)r.width), height((T)r.height){}
-      inline explicit Rect(const Vec2<T>& v): x((T)v.x), y((T)v.y){}
-      inline Rect(const Vec2<T>& pos, const Vec2<T>& size): x((T)pos.x), y((T)pos.y), width((T)size.x), height((T)size.y){}
-      inline Rect operator+(const Vec2<T>& rhs) const {Rect<T> val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
-      inline Rect operator-(const Vec2<T>& rhs) const {Rect<T> val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
-      inline Rect& operator+=(const Vec2<T>& rhs){x += rhs.x; y += rhs.y; return *this;}
-      inline Rect& operator-=(const Vec2<T>& rhs){x -= rhs.x; y -= rhs.y; return *this;}
-      inline Rect& operator*=(const Vec2<T>& rhs){x *= rhs.x; y *= rhs.y; return *this;}
-      inline Rect& operator/=(const Vec2<T>& rhs){x /= rhs.x; y /= rhs.y; return *this;}
+      inline explicit Rect(const Vec2<T>&) = delete;
+      inline explicit Rect(const Pos<T>& v): x((T)v.x), y((T)v.y){}
+      inline explicit Rect(const Size<T>& v): width((T)v.x), height((T)v.y){}
+      inline Rect(const Pos<T>& pos, const Size<T>& size): x((T)pos.x), y((T)pos.y), width((T)size.x), height((T)size.y){}
+      inline Rect operator+(const Pos<T>& rhs) const {Rect<T> val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
+      inline Rect operator-(const Pos<T>& rhs) const {Rect<T> val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
+      inline Rect& operator+=(const Pos<T>& rhs){x += rhs.x; y += rhs.y; return *this;}
+      inline Rect& operator-=(const Pos<T>& rhs){x -= rhs.x; y -= rhs.y; return *this;}
+      inline Rect& operator*=(const Pos<T>& rhs){x *= rhs.x; y *= rhs.y; return *this;}
+      inline Rect& operator/=(const Pos<T>& rhs){x /= rhs.x; y /= rhs.y; return *this;}
+      inline Rect operator+(const Size<T>& rhs) const {Rect<T> val = *this; val.width += rhs.x; val.height += rhs.y; return val;}
+      inline Rect operator-(const Size<T>& rhs) const {Rect<T> val = *this; val.width -= rhs.x; val.height -= rhs.y; return val;}
+      inline Rect& operator+=(const Size<T>& rhs){width += rhs.width; height += rhs.height; return *this;}
+      inline Rect& operator-=(const Size<T>& rhs){width -= rhs.width; height -= rhs.height; return *this;}
+      inline Rect& operator*=(const Size<T>& rhs){width *= rhs.width; height *= rhs.height; return *this;}
+      inline Rect& operator/=(const Size<T>& rhs){width /= rhs.width; height /= rhs.height; return *this;}
       inline Rect operator+(const Rect<T>& rhs) const {Rect<T> val = *this; val.x += rhs.x; val.y += rhs.y; val.width += rhs.width; val.height += rhs.height; return val;}
       inline Rect operator-(const Rect<T>& rhs) const {Rect<T> val = *this; val.x -= rhs.x; val.y -= rhs.y; val.width -= rhs.width; val.height -= rhs.height; return val;}
       inline Rect& operator+=(const Rect<T>& rhs){x += rhs.x; y += rhs.y; width += rhs.width; height += rhs.height; return *this;}
@@ -190,8 +235,8 @@ namespace GFCSDraw {
          os << r.toString();
          return os;
       }
-      [[nodiscard]] inline Vec2<T> pos() const {return {x, y};}
-      [[nodiscard]] inline Vec2<T> size() const {return {width, height};}
+      [[nodiscard]] inline Pos<T> pos() const {return {x, y};}
+      [[nodiscard]] inline Size<T> size() const {return {width, height};}
       [[nodiscard]] inline Rect<T> toSizeRect() const {return {0,0,width, height};}
 
       T x;

@@ -3,19 +3,19 @@
 #include "Application.h"
 #include "EventManager.h"
 #include <iostream>
+#include <utility>
 
 using namespace std;
 using namespace GFCSDraw;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-BaseWidget::BaseWidget(const std::string& name, const std::string& typeName, Rect<float> rect)
+BaseWidget::BaseWidget(const std::string& name, std::string  typeName, Rect<float> rect)
 :_name(std::move(name))
-, _typeName(typeName)
+, _typeName(std::move(typeName))
 , _rect("_rect", rect)
 , _isProcessed("_isProcessed")
 , _rid(Application::instance().getNewRid())
-{
-}
+{}
 
 BaseWidget::~BaseWidget() {
 //   auto thiz = shared_from_this();
@@ -81,6 +81,12 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::addChild(WidgetPtr widget){
       Application::printError() << ss.str() << endl;
       return nullopt;
    }
+   if (widget->getParent().lock()){
+      stringstream ss;
+      ss << "Widget " << widget->getName() << " already has a parent! It needs to be removed from its existing parent first!";
+      Application::printError() << ss.str() << endl;
+      return nullopt;
+   }
    Application::registerForEnterTree(widget, *this);
    return widget;
 }
@@ -100,7 +106,7 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::removeChild(WidgetPtr widget) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Vec2<double> BaseWidget::getGlobalPos() const {
+Pos<double> BaseWidget::getGlobalPos() const {
    //sum up all our ancestors' positions and add our own to it
    auto offset = getPos();
    if (!_parent.expired()){ //todo: Race conditions?
@@ -110,20 +116,31 @@ Vec2<double> BaseWidget::getGlobalPos() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::renderChildren(GFCSDraw::Vec2<float>& textureOffset) const {
+GFCSDraw::Size<double> BaseWidget::getChildRectSize() const {
+   GFCSDraw::Size<double> childRect;
+   for (const auto& child : _children){
+      auto totalOffset = child.second->getRect().size() + Size<double>(child.second->getPos());
+      childRect.max(totalOffset);
+//     childRect +=  // add position
+   }
+   return childRect;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::renderChildren(GFCSDraw::Pos<double>& textureOffset) const {
    for (const auto& [name, child] : _children){
       child->renderChain(textureOffset);
    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::renderChain(GFCSDraw::Vec2<float>& parentOffset) {
-   GFCSDraw::Vec2<float> localOffset;
+void BaseWidget::renderChain(GFCSDraw::Pos<double>& parentOffset) {
+   GFCSDraw::Pos<double> localOffset;
    renderBegin(localOffset);
-   _renderOffset = localOffset + parentOffset;
+   _renderOffset += (localOffset + parentOffset);
    renderChildren(_renderOffset);
    render();
-   _renderOffset = parentOffset; //subtract local offset when we are done
+   _renderOffset -= (localOffset + parentOffset); //subtract local offset when we are done
    renderEnd();
 }
 
@@ -184,14 +201,14 @@ void BaseWidget::_drawRectangle(const Rect<int>& rect, Color color) const {
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::_drawRectangleRounded(const GFCSDraw::Rect<int> &rect, float roundness, int segments, Color color) const {
    //use the size of the param rect but use the position of our rect + the param rect
-   Rect<int> newRect(rect + getGlobalPos() + _renderOffset);
+   Rect<double> newRect(rect + Pos<int>(getGlobalPos()) + Pos<int>(_renderOffset));
    GFCSDraw::drawRectangleRounded(newRect, roundness, segments, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::_drawRectangleRoundedLines(const GFCSDraw::Rect<float> &rect, float roundness, int segments,float lineThick, Color color) const {
    //use the size of the param rect but use the position of our rect + the param rect
-   Rect<float> newRect(rect + getGlobalPos() + _renderOffset);
+   Rect<float> newRect(rect + Pos<float>(getGlobalPos()) + Pos<float>(_renderOffset));
    GFCSDraw::drawRectangleRoundedLines(newRect, roundness, segments, lineThick, color);
 }
 

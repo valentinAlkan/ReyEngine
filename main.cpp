@@ -58,6 +58,7 @@ int main(int argc, char** argv)
    auto window = optWindow.value();
 
    shared_ptr<BaseWidget> root;
+   root = make_shared<Control>("Root", Rect<float>{0,0,0,0});
    auto argLoadScene = args.getArg("--loadScene");
    if (argLoadScene){
       auto loadSceneArg = argLoadScene.value();
@@ -77,9 +78,14 @@ int main(int argc, char** argv)
 
 
    if (args.getArg("--scrollAreaTest")){
-      root = make_shared<ScrollArea>("RootScrollArea", Rect<float> {50,50,200,200});
-      auto label = make_shared<Label>("ScrollAreaLabel", Rect<float> {0,0,0,0});
-      root->addChild(label);
+      auto scrollArea = make_shared<ScrollArea>("RootScrollArea", Rect<float> {50,50,200,200});
+      root->addChild(scrollArea);
+      auto label1 = make_shared<Label>("ScrollAreaLabel", Rect<float> {50,50,0,0});
+      auto label2 = make_shared<Label>("ScrollAreaLabel", Rect<float> {50,50,0,0});
+      label1->setText("Hello from the upper left!");
+      label2->setText("Hello from the bottom right!");
+      scrollArea->addChild(label1);
+      scrollArea->addChild(label2);
    }
 
    if (args.getArg("--sliderTest")){
