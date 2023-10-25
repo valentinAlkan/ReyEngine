@@ -64,18 +64,20 @@ class  BaseWidget
    using dVec = GFCSDraw::Vec2<double>;
 public:
    static constexpr char TYPE_NAME[] = "BaseWidget";
-   BaseWidget(const std::string& name, const std::string& typeName, GFCSDraw::Rect<float> rect);
+   BaseWidget(const std::string& name, std::string  typeName, GFCSDraw::Rect<float> rect);
    ~BaseWidget();
    uint64_t getRid() const {return _rid;}
    std::string getName() const {return _name;}
    GFCSDraw::Rect<double> getRect() const {return _rect.value;}
    GFCSDraw::Rect<double> getGlobalRect() const {return {getGlobalPos().x, getGlobalPos().y, getSize().x, getSize().y};}
-   dVec getPos() const {return {getRect().x, getRect().y};}
-   dVec getSize() const {return getRect().size();}
+   GFCSDraw::Pos<double> getGlobalPos() const;
+   GFCSDraw::Size<double> getChildRectSize() const; //get the smallest rectangle that contains all children, starting from 0,0. Does not include grandchildren.
+   GFCSDraw::Pos<double> getPos() const {return {getRect().x, getRect().y};}
+   GFCSDraw::Size<double> getSize() const {return getRect().size();}
+   double getWidth(){return _rect.value.width;}
+   double getHeight(){return _rect.value.height;}
    dVec getHeightRange() const {return {0, getRect().size().y};}
    dVec getWidthtRange() const {return {0, getRect().size().x};}
-//   dVec getSizeRangePct(dVec point) const {return dVec(getWidthtRange(), getHeightRange()).pct(point);}
-   dVec getGlobalPos() const;
    dVec getLocalMousePos(){return globalToLocal(InputManager::getMousePos());}
    dVec globalToLocal(const dVec& global) const{return global - getGlobalPos();}
    dVec localToGlobal(const dVec& local) const {return local + getGlobalPos();}
@@ -120,16 +122,19 @@ protected:
    std::shared_ptr<BaseWidget> toBaseWidget(){return inheritable_enable_shared_from_this<BaseWidget>::shared_from_this();}
    virtual void _on_application_ready(){};
    virtual void _on_rect_changed(){}
+   virtual void _on_child_added(WidgetPtr&){}
+   virtual void _on_enter_tree(){}
    //override and setProcess(true) to allow processing
    virtual void _process(float dt){};
    // Drawing functions
-   virtual void renderBegin(GFCSDraw::Vec2<float>& textureOffset){}
-   void renderChildren(GFCSDraw::Vec2<float>& textureOffset) const; //draw the widget's children
-   void renderChain(GFCSDraw::Vec2<float>& textureOffset);
+   virtual void renderBegin(GFCSDraw::Pos<double>& textureOffset){}
+   void renderChildren(GFCSDraw::Pos<double>& textureOffset) const; //draw the widget's children
+   void renderChain(GFCSDraw::Pos<double>& textureOffset);
    virtual void renderEnd(){}
-   GFCSDraw::Vec2<float> getTextureRenderModeOffset(){return _renderOffset;}
-   void renderTextureOffsetApply(GFCSDraw::Vec2<float>& textureOffset){}
-   void renderTextureOffsetReset(GFCSDraw::Vec2<float>& textureOffset){}
+   GFCSDraw::Vec2<float> getRenderOffset() const {return _renderOffset;}
+   void setRenderOffset(GFCSDraw::Pos<double>& offset){_renderOffset = offset;}
+//   void renderTextureOffsetApply(GFCSDraw::Pos<float>& textureOffset){}
+//   void renderTextureOffsetReset(GFCSDraw::Pos<float>& textureOffset){}
    void _drawText(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color) const;
    void _drawTextCentered(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color) const;
    void _drawRectangle(const GFCSDraw::Rect<int>& rect, Color color) const;
@@ -147,7 +152,7 @@ protected:
    void _is_extendable(){static_assert(true);}
    virtual std::string _get_static_constexpr_typename(){return TYPE_NAME;}
 
-   bool _has_entered_tree_before = false; //true THE FIRST TIME a widget enters the tree. Can do constructors of children and other stuff requiring shared_from_this();
+   bool _has_inited = false; //set true THE FIRST TIME a widget enters the tree. Can do constructors of children and other stuff requiring shared_from_this();
 private:
    uint64_t _rid; //unique identifier
    const std::string _typeName; //can't just use static constexpr TYPE_NAME since we need to know what the type is if using type-erasure
@@ -158,10 +163,10 @@ private:
    std::optional<std::shared_ptr<Scene>> _scene;
    bool _request_delete = false; //true when we want to remove this object from the tree
    std::recursive_mutex _childLock;
-   const std::lock_guard<std::recursive_mutex> childSafetyLock(){return std::lock_guard<std::recursive_mutex>(_childLock);}
+   std::scoped_lock<std::recursive_mutex> childSafetyLock(){return std::scoped_lock<std::recursive_mutex>(_childLock);}
    bool _scheduled_for_deletion = false; // true when the widget has been scheduled for deletion but is not yet deleted.
 
-   GFCSDraw::Vec2<float> _renderOffset; //used for different rendering modes. does not offset position.
+   GFCSDraw::Pos<double> _renderOffset; //used for different rendering modes. does not offset position.
 
    Handled _process_unhandled_input(InputEvent&); //pass input to children if they want it and then process it for ourselves if necessary
    InputFilter inputFilter = InputFilter::INPUT_FILTER_PASS_AND_PROCESS;

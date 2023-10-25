@@ -4,23 +4,17 @@
 
 class ScrollArea : public Control {
    GFCSDRAW_OBJECT(ScrollArea, Control)
-   , scrollOffsetX(0, 100, 0)
-   , scrollOffsetY(0, 100, 0)
+   , scrollOffsetX(0, getWidth(), 0)
+   , scrollOffsetY(0, getHeight(), 0)
    {}
-public:
-   void renderBegin(GFCSDraw::Vec2<float>& textureOffset) override {
-//      renderTarget.beginRenderMode();
-//      renderTarget.clear();
-//      textureOffset -= getGlobalPos();
+   inline GFCSDraw::Size<double> getScrollAreaSize() const {return {scrollOffsetX.getMax(), scrollOffsetY.getMax()};}
+   inline GFCSDraw::Pos<double> getScrollOffset() const {return {scrollOffsetX.getValue(), scrollOffsetY.getValue()};}
+protected:
+   void renderBegin(GFCSDraw::Pos<double>& textureOffset) override {
+      textureOffset -= getScrollOffset();
       scissorTarget.start(getGlobalRect());
-      //draw test under children
-      auto offsetRange = getScrollAreaSize();
-      _drawRectangleGradientV({0, 0, (int)offsetRange.x, (int)offsetRange.y}, BLACK, BROWN);
    }
    void renderEnd() override {
-//      renderTarget.endRenderMode();
-//      renderTarget.render(getGlobalPos() + getTextureRenderModeOffset());
-//      GFCSDraw::drawTextCentered(scrollOffset.toString(), _rect.get().toSizeRect().center(), 20, RED);
       scissorTarget.stop();
    }
    void render() const override {}
@@ -32,45 +26,40 @@ public:
       scrollOffsetX.setRange(0, newSize.x);
       scrollOffsetY.setRange(0, newSize.y);
    }
-   inline GFCSDraw::Vec2<double> getScrollAreaSize() const {return {scrollOffsetX.getMax(), scrollOffsetY.getMax()};}
-   inline GFCSDraw::Vec2<double> getScrollOffset() const {return {scrollOffsetX.getValue(), scrollOffsetY.getValue()};}
+   void _on_child_added(std::shared_ptr<BaseWidget>& child) override {
+      //expand scroll size to fit children
+      auto rectSize = getChildRectSize();
+      scrollOffsetX.setMax(rectSize.x);
+      scrollOffsetY.setMax(rectSize.y);
+   }
 
 protected:
    void _init() override {
       //create scrollbars
       auto scrollSize = _rect.get().size();
       auto sliderSize = 20;
-      auto vslider = std::make_shared<Slider>("__vslider", GFCSDraw::Rect<float>{(float)(scrollSize.x-sliderSize), 0, (float)sliderSize, (float)scrollSize.y}, Slider::SliderType::VERTICAL);
-      auto hslider = std::make_shared<Slider>("__hslider", GFCSDraw::Rect<float>{0, (float)(scrollSize.y - sliderSize), (float)(scrollSize.x - sliderSize), (float)sliderSize}, Slider::SliderType::HORIZONTAL);
+      vslider = std::make_shared<Slider>("__vslider", GFCSDraw::Rect<float>{(float)(scrollSize.x-sliderSize), 0, (float)sliderSize, (float)scrollSize.y}, Slider::SliderType::VERTICAL);
+      hslider = std::make_shared<Slider>("__hslider", GFCSDraw::Rect<float>{0, (float)(scrollSize.y - sliderSize), (float)(scrollSize.x - sliderSize), (float)sliderSize}, Slider::SliderType::HORIZONTAL);
       addChild(vslider);
       addChild(hslider);
-      std::cout << "scrollOffsetX = " << scrollOffsetX << std::endl;
 
-      auto echo = [&](){
-         std::cout << "scrollOffsetX = " << scrollOffsetX << std::endl;
-         std::cout << "scrollOffsetY = " << scrollOffsetY << std::endl;
-      };
-
-      auto setOffsetX = [&](const Slider::SliderValueChangedEvent& event){
-         auto slider = event.publisher->toBaseWidget()->toType<Slider>();
+      auto setOffsetX = [this](const Slider::SliderValueChangedEvent& event){
          scrollOffsetX.setLerp(event.pct);
-         std::cout << "scrollOffsetX = " << scrollOffsetX << std::endl;
-         std::cout << "scrollOffsetY = " << scrollOffsetY << std::endl;
-//         echo();
+         hslider->setRenderOffset(getScrollOffset());
+         vslider->setRenderOffset(getScrollOffset());
       };
-      auto setOffsetY = [&](const Slider::SliderValueChangedEvent& event){
-         auto slider = event.publisher->toBaseWidget()->toType<Slider>();
+      auto setOffsetY = [this](const Slider::SliderValueChangedEvent& event){
          scrollOffsetY.setLerp(event.pct);
-         std::cout << "scrollOffsetX = " << scrollOffsetX << std::endl;
-         std::cout << "scrollOffsetY = " << scrollOffsetY << std::endl;
-//         echo();
+         hslider->setRenderOffset(getScrollOffset());
+         vslider->setRenderOffset(getScrollOffset());
       };
       subscribe<Slider::SliderValueChangedEvent>(hslider, setOffsetX);
       subscribe<Slider::SliderValueChangedEvent>(vslider, setOffsetY);
    }
-//   GFCSDraw::RenderTarget renderTarget;
    GFCSDraw::ScissorTarget scissorTarget;
    GFCSDraw::Range<double> scrollOffsetX;
    GFCSDraw::Range<double> scrollOffsetY;
+   std::shared_ptr<Slider> vslider;
+   std::shared_ptr<Slider> hslider;
 };
 

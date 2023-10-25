@@ -156,4 +156,5 @@ private:
    bool _is_dragging = false;
    GFCSDraw::Rect<double> _grabber = {0, 0, 0, 0};
    GFCSDraw::Vec2<double> _range = {0,0};
+   friend class ScrollArea;
 };
