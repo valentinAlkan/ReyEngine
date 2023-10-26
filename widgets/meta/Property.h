@@ -8,7 +8,7 @@
 #include "DrawInterface.h"
 
 #define PROP_TYPE(propName) static constexpr char propName[] = #propName;
-#define PROPERTY_DECLARE(PROPERTYNAME) PROPERTYNAME(#PROPERTYNAME)
+#define PROPERTY_DECLARE(PROPERTYNAME, ...) PROPERTYNAME(#PROPERTYNAME, __VA_ARGS__)
 
 struct BaseProperty;
 struct PropertyPrototype;
@@ -24,6 +24,7 @@ namespace PropertyTypes{
    PROP_TYPE(Vec2)
    PROP_TYPE(Rect)
    PROP_TYPE(Timer)
+   PROP_TYPE(Enum)
 }
 
 namespace PropertyMeta{
@@ -52,6 +53,7 @@ protected:
    OwnedPropertyMap _ownedProperties; //properties we own
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////
 struct BaseProperty : PropertyContainer {
    BaseProperty(const std::string instanceName, const std::string& typeName)
    : _instanceName(instanceName)
@@ -67,6 +69,7 @@ private:
    const std::string _typeName;
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////
 template <typename T>
 struct Property : public BaseProperty {
    Property(const std::string instanceName, const std::string& typeName, T defaultvalue)
@@ -88,6 +91,7 @@ struct Property : public BaseProperty {
    T value;
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////
 struct StringProperty : public Property<std::string>{
    StringProperty(const std::string& instanceName, const std::string defaultvalue = "")
    : Property(instanceName, PropertyTypes::String, defaultvalue)
@@ -96,6 +100,7 @@ struct StringProperty : public Property<std::string>{
    std::string fromString(const std::string& data) override { return data;}
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////
 struct BoolProperty : public Property<bool>{
    BoolProperty(const std::string& instanceName, bool defaultvalue = false)
    : Property(instanceName, PropertyTypes::Bool, defaultvalue)
@@ -104,6 +109,7 @@ struct BoolProperty : public Property<bool>{
    bool fromString(const std::string& str) override { return std::stoi(str);}
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////
 struct IntProperty : public Property<int>{
    IntProperty(const std::string& instanceName, int defaultvalue = 0)
    : Property(instanceName, PropertyTypes::Int, defaultvalue)
@@ -112,6 +118,7 @@ struct IntProperty : public Property<int>{
    int fromString(const std::string& str) override { return std::stoi(str);}
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////
 struct FloatProperty : public Property<double>{
    FloatProperty(const std::string& instanceName, int defaultvalue = 0)
    : Property(instanceName, PropertyTypes::Int, defaultvalue)
@@ -120,6 +127,7 @@ struct FloatProperty : public Property<double>{
    double fromString(const std::string& str) override { return std::stod(str);}
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////
 template <typename T>
 struct Vec2Property : public Property<GFCSDraw::Vec2<T>>{
    Vec2Property(const std::string& instanceName, int defaultvalue = 0)
@@ -129,6 +137,7 @@ struct Vec2Property : public Property<GFCSDraw::Vec2<T>>{
    GFCSDraw::Vec2<T> fromString(const std::string& str) override {return GFCSDraw::Vec2<T>::fromString(str);}
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////
 template <typename T>
 struct RectProperty : public Property<GFCSDraw::Rect<T>>{
    RectProperty(const std::string& instanceName, GFCSDraw::Rect<T> defaultvalue=GFCSDraw::Rect<T>())
@@ -136,4 +145,63 @@ struct RectProperty : public Property<GFCSDraw::Rect<T>>{
    {}
    std::string toString() override {return value.toString();}
    GFCSDraw::Rect<T> fromString(const std::string& str) override {return GFCSDraw::Rect<T>::fromString(str);}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////
+//template <typename T>
+//struct EnumProperty : public Property<T>{
+//   EnumProperty(const std::string& instanceName, T defaultvalue)
+//   : Property(instanceName, PropertyTypes::Enum, defaultvalue)
+//   {}
+//   std::string toString() override {
+//      for(int i=0;i<size;i++){
+//         auto _value = valueDict[i];
+//         if (_value == Property<T>::value){
+//            return std::string(nameDict[i]);
+//         }
+//      }
+//      throw std::runtime_error("Invalid EnumProperty lookup");
+//   }
+//   T fromString(const std::string& str) override {
+//      for(int i=0;i<size;i++){
+//         auto name = nameDict[i];
+//         if (name == str){
+//            return valueDict[i];
+//         }
+//      }
+//      throw std::runtime_error("Invalid EnumProperty value " + str);
+//   }
+//   virtual std::string_view& getNameDict(){nameDict;}
+//   static constexpr std::string_view nameDict[] = {{}};
+//   static constexpr T valueDict[] = {{}};
+//   static constexpr size_t size = 0;
+//};
+
+template <typename T, auto C>
+using EnumPair = std::array<std::pair<T, std::string_view>, C>;
+#define ENUM_PAIR_DECLARE(ENUM_NAME, MEMBER_NAME) std::pair<ENUM_NAME, std::string_view>(ENUM_NAME::MEMBER_NAME, #MEMBER_NAME)
+template <typename T, auto C>
+struct EnumProperty : public Property<T>{
+   EnumProperty(const std::string& instanceName, T defaultvalue)
+         : Property(instanceName, PropertyTypes::Enum, defaultvalue)
+   {}
+   std::string toString() override {
+      for(int i=0;i<getDict().size();i++){
+         auto _value = getDict()[i].first;
+         if (_value == Property<T>::value){
+            return std::string(getDict()[i].second);
+         }
+      }
+      throw std::runtime_error("Invalid EnumProperty lookup");
+   }
+   T fromString(const std::string& str) override {
+      for(int i=0;i<getDict().size();i++){
+         auto name = getDict()[i].second;
+         if (name == str){
+            return getDict()[i].first;
+         }
+      }
+      throw std::runtime_error("Invalid EnumProperty value " + str);
+   }
+   virtual const EnumPair<T, C>& getDict() = 0;
 };

@@ -50,6 +50,7 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--renderTest", "help", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--scrollAreaTest", "help", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--sliderTest", "help", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--labelTest", "help", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    //create window (or don't idk)
@@ -74,6 +75,12 @@ int main(int argc, char** argv)
       root = make_shared<RootWidget>("Root", Rect<float> {0,0,0,0});
       auto textureTest = make_shared<TextureTestWidget>("TexTest", Rect<float> {0,0,100,100});
       root->addChild(textureTest);
+   }
+
+   if (args.getArg("--labelTest")){
+      root = make_shared<RootWidget>("Root", Rect<float> {0,0,0,0});
+      auto testLabel = make_shared<Label>("Label", Rect<double>{0,0,50,50});
+      root->addChild(testLabel);
    }
 
 
