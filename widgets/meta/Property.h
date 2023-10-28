@@ -25,6 +25,7 @@ namespace PropertyTypes{
    PROP_TYPE(Rect)
    PROP_TYPE(Timer)
    PROP_TYPE(Enum)
+   PROP_TYPE(Color)
 }
 
 namespace PropertyMeta{
@@ -63,7 +64,7 @@ struct BaseProperty : PropertyContainer {
    virtual std::string toString() = 0;
    std::string instanceName() const {return _instanceName;}
    std::string typeName() const {return _typeName;}
-   virtual void registerProperties() = 0;
+   void registerProperties() override = 0;
 private:
    const std::string _instanceName;
    const std::string _typeName;
@@ -84,7 +85,7 @@ struct Property : public BaseProperty {
    }
    virtual T fromString(const std::string& str) = 0;
    void load(const PropertyPrototype& data) override {value = fromString(data.data);}
-   T get(){return value;}
+   [[nodiscard]] const T& get() const {return value;}
    void set(const T& newValue){
       value = newValue;
    }
@@ -93,7 +94,7 @@ struct Property : public BaseProperty {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 struct StringProperty : public Property<std::string>{
-   StringProperty(const std::string& instanceName, const std::string defaultvalue = "")
+   StringProperty(const std::string& instanceName, const std::string& defaultvalue = "")
    : Property(instanceName, PropertyTypes::String, defaultvalue)
    {}
    std::string toString() override {return value;}
@@ -119,18 +120,18 @@ struct IntProperty : public Property<int>{
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
-struct FloatProperty : public Property<double>{
-   FloatProperty(const std::string& instanceName, int defaultvalue = 0)
+struct FloatProperty : public Property<float>{
+   FloatProperty(const std::string& instanceName, float defaultvalue = 0)
    : Property(instanceName, PropertyTypes::Int, defaultvalue)
    {}
    std::string toString() override {return std::to_string(value);}
-   double fromString(const std::string& str) override { return std::stod(str);}
+   float fromString(const std::string& str) override { return (float)std::stod(str);}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
 template <typename T>
 struct Vec2Property : public Property<GFCSDraw::Vec2<T>>{
-   Vec2Property(const std::string& instanceName, int defaultvalue = 0)
+   Vec2Property(const std::string& instanceName, GFCSDraw::Vec2<T> defaultvalue = 0)
    : Property(instanceName, PropertyTypes::Vec2, defaultvalue)
    {}
    std::string toString() override {return value.toString();}
@@ -148,35 +149,18 @@ struct RectProperty : public Property<GFCSDraw::Rect<T>>{
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
-//template <typename T>
-//struct EnumProperty : public Property<T>{
-//   EnumProperty(const std::string& instanceName, T defaultvalue)
-//   : Property(instanceName, PropertyTypes::Enum, defaultvalue)
-//   {}
-//   std::string toString() override {
-//      for(int i=0;i<size;i++){
-//         auto _value = valueDict[i];
-//         if (_value == Property<T>::value){
-//            return std::string(nameDict[i]);
-//         }
-//      }
-//      throw std::runtime_error("Invalid EnumProperty lookup");
-//   }
-//   T fromString(const std::string& str) override {
-//      for(int i=0;i<size;i++){
-//         auto name = nameDict[i];
-//         if (name == str){
-//            return valueDict[i];
-//         }
-//      }
-//      throw std::runtime_error("Invalid EnumProperty value " + str);
-//   }
-//   virtual std::string_view& getNameDict(){nameDict;}
-//   static constexpr std::string_view nameDict[] = {{}};
-//   static constexpr T valueDict[] = {{}};
-//   static constexpr size_t size = 0;
-//};
+struct ColorProperty : public Property<GFCSDraw::ColorRGBA>{
+   ColorProperty(const std::string& instanceName,  GFCSDraw::ColorRGBA defaultvalue)
+   : Property<GFCSDraw::ColorRGBA>(instanceName, PropertyTypes::Color, defaultvalue)
+   {}
+   std::string toString() override {return "{" + std::to_string(value.r) + ", " + std::to_string(value.g) + ", " + std::to_string(value.b) + ", "  + std::to_string(value.a) + "}";}
+   GFCSDraw::ColorRGBA fromString(const std::string& str) override {
+      auto split = string_tools::fromArrayString(str);
+      return {std::stoi(split[0]), std::stoi(split[1]), std::stoi(split[2]), std::stoi(split[3])};
+   }
+};
 
+/////////////////////////////////////////////////////////////////////////////////////////
 template <typename T, auto C>
 using EnumPair = std::array<std::pair<T, std::string_view>, C>;
 #define ENUM_PAIR_DECLARE(ENUM_NAME, MEMBER_NAME) std::pair<ENUM_NAME, std::string_view>(ENUM_NAME::MEMBER_NAME, #MEMBER_NAME)
@@ -188,8 +172,10 @@ struct EnumProperty : public Property<T>{
    std::string toString() override {
       for(int i=0;i<getDict().size();i++){
          auto _value = getDict()[i].first;
+         auto _name = getDict()[i].second;
+         if (_name.empty())throw std::runtime_error("Empty EnumProperty value for enum " + this->instanceName());
          if (_value == Property<T>::value){
-            return std::string(getDict()[i].second);
+            return std::string(_name);
          }
       }
       throw std::runtime_error("Invalid EnumProperty lookup");
@@ -197,6 +183,7 @@ struct EnumProperty : public Property<T>{
    T fromString(const std::string& str) override {
       for(int i=0;i<getDict().size();i++){
          auto name = getDict()[i].second;
+         if (name.empty()) throw std::runtime_error("Empty EnumProperty value for enum " + this->instanceName());
          if (name == str){
             return getDict()[i].first;
          }

@@ -165,6 +165,9 @@ namespace GFCSDraw {
       inline Size(const T& x, const T& y) : Vec2<T>(x, y){}
       inline Size(const Vector2& v)     : Vec2<T>(v.x,v.y){}
       inline Size(const Vec2<int>& v)   : Vec2<T>(v.x,v.y){}
+      inline Size(const Size<int>& v)   : Vec2<T>(v){}
+      inline Size(const Size<double>& v): Vec2<T>(v){}
+      inline Size(const Size<float>& v) : Vec2<T>(v){}
       inline void operator=(Pos<T>&) = delete;
       inline Size operator+(const Size& rhs) const {auto val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
       inline Size operator-(const Size& rhs) const {auto val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
@@ -245,28 +248,54 @@ namespace GFCSDraw {
       T height;
    };
 
+   struct ColorRGBA {
+      ColorRGBA(): r(0), g(0), b(0), a(255){}
+      constexpr ColorRGBA(int r, int g, int b, int a): r(r), g(g), b(b), a(a){}
+      explicit ColorRGBA(Color color): r(color.r), g(color.g), b(color.b), a(color.a){}
+      inline ColorRGBA& operator=(const Color& rhs){r = rhs.r; g=rhs.g; b=rhs.b; a=rhs.a; return *this;}
+      inline operator Color() const {return {r, g, b, a};}
+//      friend Color operator=(const Color lhs, ColorRGBA rhs){r = rhs.r; g=rhs.g; b=rhs.b; a=rhs.a; return *this;}
+//      friend std::ostream& operator<<(std::ostream& os, Vec2<T> v) {os << v.toString(); return os;}
+      unsigned char r;
+      unsigned char g;
+      unsigned char b;
+      unsigned char a;
+   };
+
+   #define COLORS GFCSDraw::Colors
+   namespace Colors{
+      static constexpr ColorRGBA gray =  {130, 130, 130, 255};
+      static constexpr ColorRGBA lightGray =  {200, 200, 200, 255};
+      static constexpr ColorRGBA red =  {230, 41, 55, 255};
+      static constexpr ColorRGBA green =  { 0, 228, 48, 255};
+      static constexpr ColorRGBA blue =  { 0, 121, 241, 255};
+      static constexpr ColorRGBA black =  { 0, 0, 0, 255};
+      static constexpr ColorRGBA yellow =  {253, 249, 0, 255};
+   }
+
    Vec2<double> getScreenCenter();
    Vec2<double> getScreenSize();
    void drawText(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color);
    void drawTextCentered(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color);
    void drawTextRelative(const std::string& text, const GFCSDraw::Vec2<int>& relPos, int fontSize, Color color);
-   void drawRectangle(const GFCSDraw::Rect<int>&, Color color);
-   void drawRectangleRounded(const GFCSDraw::Rect<float>&, float roundness, int segments, Color color);
-   void drawRectangleRoundedLines(const GFCSDraw::Rect<float>&, float roundness, int segments, float lineThick, Color color);
-   void drawRectangleGradientV(const GFCSDraw::Rect<int>&, Color color1, Color color2);
+   void drawRectangle(const Rect<int>&, Color color);
+   void drawRectangleRounded(const Rect<float>&, float roundness, int segments, Color color);
+   void drawRectangleLines(const Rect<float>&, float lineThick, Color color);
+   void drawRectangleRoundedLines(const Rect<float>&, float roundness, int segments, float lineThick, Color color);
+   void drawRectangleGradientV(const Rect<int>&, Color color1, Color color2);
    inline float getFrameDelta(){return GetFrameTime();}
    inline Font getDefaultFont(){return GetFontDefault();}
    inline Vec2<int> measureText(Font font, const char *text, float fontSize, float spacing){return MeasureTextEx(font, text, fontSize, spacing);}
 
    class RenderTarget{
       public:
-         RenderTarget(const Vec2<int>& size);
+         explicit RenderTarget(const Size<int>& size);
          ~RenderTarget(){
             if (_texLoaded) {
                UnloadRenderTexture(_tex);
             }
          }
-         void resize(const Vec2<int>& newSize);
+         void resize(const Size<int>& newSize);
          void beginRenderMode(){BeginTextureMode(_tex);}
          void endRenderMode(){EndTextureMode();}
          void clear(Color color=WHITE){ClearBackground(color);}
@@ -277,7 +306,7 @@ namespace GFCSDraw {
       protected:
          bool _texLoaded = false;
          RenderTexture2D _tex;
-         Vec2<float> _size;
+         Size<int> _size;
       };
 
    //Everything drawn to a scissor target will be invisible

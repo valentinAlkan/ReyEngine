@@ -12,7 +12,7 @@ namespace string_tools{
    std::string rstrip(const std::string& s);
    std::string strip(const std::string& s, const std::function<bool(char c)>& charMatch, bool rtol = false);
    std::string lrstrip(const std::string& s);
-//   std::vector<std::string> fromCommaList(std::string& s){return string_tools::split(s, ",");} //converts SOME,STUFF,LIKE,THIS to {"SOME", "STUFF", "LIKE", "THIS"}
+   std::vector<std::string> fromArrayString(const std::string& s); //converts "{ARRAYS, OF, STRINGS} to vec<string>("ARRAYS", "OF", "STRINGS")
    int count(const std::string& s, char c);
    int lcount(const std::string& s, char c);
    int rcount(const std::string& s, char c);

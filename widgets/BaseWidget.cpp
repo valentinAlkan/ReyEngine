@@ -182,38 +182,44 @@ bool BaseWidget::isRoot() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::_drawText(const std::string &text, const GFCSDraw::Vec2<int> &pos, int fontSize, Color color) const{
+void BaseWidget::_drawText(const std::string &text, const GFCSDraw::Vec2<int> &pos, int fontSize, GFCSDraw::ColorRGBA color) const{
    GFCSDraw::drawText(text, pos + getGlobalPos() + _renderOffset, fontSize, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::_drawTextCentered(const std::string &text, const GFCSDraw::Vec2<int> &pos, int fontSize, Color color) const{
+void BaseWidget::_drawTextCentered(const std::string &text, const GFCSDraw::Vec2<int> &pos, int fontSize, GFCSDraw::ColorRGBA color) const{
    GFCSDraw::drawTextCentered(text, pos + getGlobalPos() + _renderOffset, fontSize, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::_drawRectangle(const Rect<int>& rect, Color color) const {
+void BaseWidget::_drawRectangle(const Rect<int>& rect, GFCSDraw::ColorRGBA color) const {
    //use the size of the param rect but use the position of our rect + the param rect
    Rect<int> newRect(rect + getGlobalPos() + _renderOffset);
    GFCSDraw::drawRectangle(newRect, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::_drawRectangleRounded(const GFCSDraw::Rect<int> &rect, float roundness, int segments, Color color) const {
+void BaseWidget::_drawRectangleLines(const GFCSDraw::Rect<float>& rect, float lineThick, GFCSDraw::ColorRGBA color) const {
+   Rect<int> newRect(rect + getGlobalPos() + _renderOffset);
+   GFCSDraw::drawRectangleLines(newRect, lineThick, color);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::_drawRectangleRounded(const GFCSDraw::Rect<int> &rect, float roundness, int segments, GFCSDraw::ColorRGBA color) const {
    //use the size of the param rect but use the position of our rect + the param rect
    Rect<double> newRect(rect + Pos<int>(getGlobalPos()) + Pos<int>(_renderOffset));
    GFCSDraw::drawRectangleRounded(newRect, roundness, segments, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::_drawRectangleRoundedLines(const GFCSDraw::Rect<float> &rect, float roundness, int segments,float lineThick, Color color) const {
+void BaseWidget::_drawRectangleRoundedLines(const GFCSDraw::Rect<float> &rect, float roundness, int segments,float lineThick, GFCSDraw::ColorRGBA color) const {
    //use the size of the param rect but use the position of our rect + the param rect
    Rect<float> newRect(rect + Pos<float>(getGlobalPos()) + Pos<float>(_renderOffset));
    GFCSDraw::drawRectangleRoundedLines(newRect, roundness, segments, lineThick, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::_drawRectangleGradientV(const GFCSDraw::Rect<int>& rect, Color color1, Color color2) const {
+void BaseWidget::_drawRectangleGradientV(const GFCSDraw::Rect<int>& rect, GFCSDraw::ColorRGBA color1, GFCSDraw::ColorRGBA color2) const {
    //use the size of the param rect but use the position of our rect + the param rect
    Rect<float> newRect(rect + getGlobalPos() + _renderOffset);
    GFCSDraw::drawRectangleGradientV(newRect, color1, color2);

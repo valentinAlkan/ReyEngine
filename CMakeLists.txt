@@ -53,6 +53,7 @@ add_library(widgets STATIC
     widgets/meta/Event.cpp
     widgets/meta/InputManager.cpp
     widgets/meta/Timer.hpp
+    widgets/meta/Theme.cpp
     widgets/Control.hpp
     widgets/Canvas.hpp
     widgets/Slider.hpp

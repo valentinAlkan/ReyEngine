@@ -29,6 +29,11 @@ void GFCSDraw::drawRectangleRounded(const GFCSDraw::Rect<float>& r, float roundn
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void GFCSDraw::drawRectangleLines(const Rect<float>& r, float lineThick, Color color) {
+   DrawRectangleLinesEx({r.x, r.y, r.width, r.height}, lineThick, color);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void GFCSDraw::drawRectangleRoundedLines(const GFCSDraw::Rect<float>& r, float roundness, int segments, float lineThick, Color color) {
    DrawRectangleRoundedLines({r.x, r.y, r.width, r.height}, roundness, segments, lineThick, color);
 }
@@ -56,7 +61,7 @@ void GFCSDraw::drawTextRelative(const std::string& text, const Vec2<int>& relPos
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-GFCSDraw::RenderTarget::RenderTarget(const Vec2<int>& size)
+GFCSDraw::RenderTarget::RenderTarget(const Size<int>& size)
 : _size(size)
 {
    auto doReady = [this]() {
@@ -67,7 +72,7 @@ GFCSDraw::RenderTarget::RenderTarget(const Vec2<int>& size)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void GFCSDraw::RenderTarget::resize(const Vec2<int> &newSize) {
+void GFCSDraw::RenderTarget::resize(const Size<int> &newSize) {
    if (_texLoaded) {
       UnloadRenderTexture(_tex);
       LoadRenderTexture(newSize.x, newSize.y);

@@ -3,7 +3,7 @@
 
 class TextureTestWidget : public Control{
    GFCSDRAW_OBJECT(TextureTestWidget, Control)
-   , target(_rect.value.size()){}
+   , target(getRect().size()){}
 public:
    void renderBegin(GFCSDraw::Pos<double>& textureOffset) override {
 //      _render

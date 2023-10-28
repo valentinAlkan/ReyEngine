@@ -81,6 +81,7 @@ int main(int argc, char** argv)
       root = make_shared<RootWidget>("Root", Rect<float> {0,0,0,0});
       auto testLabel = make_shared<Label>("Label", Rect<double>{0,0,50,50});
       root->addChild(testLabel);
+      testLabel->setOutlineType(Theme::Outline::LINE);
    }
 
 
