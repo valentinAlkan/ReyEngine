@@ -48,9 +48,9 @@ class PushButton : public BaseButton{
    void render() const override {
       static constexpr int SEGMENTS = 10;
       static constexpr int THICKNESS = 2;
-      _drawRectangleRounded(getRect().toSizeRect(), 2, SEGMENTS, down.value ? GRAY : LIGHTGRAY);
-      _drawRectangleRoundedLines(getRect().toSizeRect(), 2, SEGMENTS, THICKNESS, BLACK);
-      _drawTextCentered(text.value, getRect().toSizeRect().center(), 20, BLACK);
+      _drawRectangleRounded(getRect().toSizeRect(), 2, SEGMENTS, down.value ? COLORS::gray : COLORS::lightGray);
+      _drawRectangleRoundedLines(getRect().toSizeRect(), 2, SEGMENTS, THICKNESS, COLORS::black);
+      _drawTextCentered(text.value, getRect().toSizeRect().center(), 20, COLORS::black);
    }
    StringProperty text;
 public:

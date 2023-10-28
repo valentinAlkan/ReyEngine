@@ -146,3 +146,15 @@ int string_tools::countwhiter(const std::string &s) {
    }
    return count;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+vector<string> string_tools::fromArrayString(const std::string &s) {
+   auto lessLeftBracket = lstrip(s, '{');
+   auto lessBrackets = rstrip(lessLeftBracket, '}');
+   auto _split = split(lessBrackets, ",");
+   vector<string> retval;
+   for (const auto& element : _split){
+      retval.push_back(lrstrip(element));
+   }
+   return retval;
+}

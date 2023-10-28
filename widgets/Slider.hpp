@@ -104,12 +104,13 @@ protected:
             return true;
          }
       }
+      return false;
    }
    void render() const override {
       //draw slider
-      _drawRectangle(_rect.value.toSizeRect(), _cursor_in_slider || _is_dragging? GREEN : RED);
+      _drawRectangle(_rect.value.toSizeRect(), _cursor_in_slider || _is_dragging? GFCSDraw::Colors::green : GFCSDraw::Colors::red);
       //draw grabber
-      _drawRectangle(_grabber, _cursor_down && _cursor_in_grabber || _is_dragging ? YELLOW : BLUE);
+      _drawRectangle(_grabber, _cursor_down && _cursor_in_grabber || _is_dragging ? GFCSDraw::Colors::yellow : GFCSDraw::Colors::blue);
    }
    void _on_rect_changed() override {
    };

@@ -1,39 +1,30 @@
 #pragma once
 #include "Control.hpp"
 #include "StringTools.h"
-
-enum OutlineType {
-   NONE, LINE, SHADOW
-};
-
-struct OutlineTypeProperty : public EnumProperty<OutlineType, 3>{
-   OutlineTypeProperty(const std::string& instanceName,  OutlineType defaultvalue)
-   : EnumProperty<OutlineType, 3>(instanceName, defaultvalue)
-   {}
-   const EnumPair<OutlineType, 3>& getDict() override {return dict;}
-   static constexpr EnumPair<OutlineType, 3> dict = {
-         ENUM_PAIR_DECLARE(OutlineType, NONE),
-         ENUM_PAIR_DECLARE(OutlineType, LINE),
-         ENUM_PAIR_DECLARE(OutlineType, SHADOW),
-   };
-};
+#include "Theme.h"
 
 class Label : public Control {
    GFCSDRAW_OBJECT(Label, Control)
-   , PROPERTY_DECLARE(text)
-   , PROPERTY_DECLARE(outlineType, OutlineType::NONE)
-         {
-      setText("Label");
-   }
+   , PROPERTY_DECLARE(text, getName())
+   , PROPERTY_DECLARE(outline, Theme::Outline::NONE)
+   {}
 public:
    void render() const override{
       //todo: scissor text
-      if (outlineType.value == LINE){
-
+      switch(outline.value){
+         case Theme::Outline::LINE:
+            _drawRectangleLines(getRect(), outline.thickness.get(), outline.color.get());
+            break;
+         case Theme::Outline::SHADOW:
+            break;
+         default:
+            break;
       }
-      _drawText(text.value, {0,0}, 20, BLACK);
+       _drawText(text.value, {0, 0}, 20, GFCSDraw::Colors::black);
    };
    void _process(float dt) override {};
+   Theme::Outline getOutlineType(Theme::Outline outlineType){ return outline.get();}
+   void setOutlineType(Theme::Outline outlineType){outline.set(outlineType);}
    void registerProperties() override{
       registerProperty(text);
    };
@@ -45,6 +36,5 @@ public:
    }
 protected:
    StringProperty text;
-   OutlineTypeProperty outlineType;
-
+   Theme::OutlineTypeProperty outline;
 };

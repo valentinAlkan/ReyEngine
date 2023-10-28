@@ -135,12 +135,13 @@ protected:
    void setRenderOffset(GFCSDraw::Pos<double>& offset){_renderOffset = offset;}
 //   void renderTextureOffsetApply(GFCSDraw::Pos<float>& textureOffset){}
 //   void renderTextureOffsetReset(GFCSDraw::Pos<float>& textureOffset){}
-   void _drawText(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color) const;
-   void _drawTextCentered(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color) const;
-   void _drawRectangle(const GFCSDraw::Rect<int>& rect, Color color) const;
-   void _drawRectangleRounded(const GFCSDraw::Rect<int>& rect,  float roundness, int segments, Color color) const;
-   void _drawRectangleRoundedLines(const GFCSDraw::Rect<float>& rect, float roundness, int segments, float lineThick, Color color) const;
-   void _drawRectangleGradientV(const GFCSDraw::Rect<int>& rect, Color color1, Color color2) const;
+   void _drawText(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, GFCSDraw::ColorRGBA color) const;
+   void _drawTextCentered(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, GFCSDraw::ColorRGBA color) const;
+   void _drawRectangle(const GFCSDraw::Rect<int>& rect, GFCSDraw::ColorRGBA color) const;
+   void _drawRectangleLines(const GFCSDraw::Rect<float>& rect, float lineThick, GFCSDraw::ColorRGBA color) const;
+   void _drawRectangleRounded(const GFCSDraw::Rect<int>& rect,  float roundness, int segments, GFCSDraw::ColorRGBA color) const;
+   void _drawRectangleRoundedLines(const GFCSDraw::Rect<float>& rect, float roundness, int segments, float lineThick, GFCSDraw::ColorRGBA color) const;
+   void _drawRectangleGradientV(const GFCSDraw::Rect<int>& rect, GFCSDraw::ColorRGBA color1, GFCSDraw::ColorRGBA color2) const;
    void registerProperties() override;
    void _deserialize(PropertyPrototypeMap&);
    RectProperty<double> _rect;
