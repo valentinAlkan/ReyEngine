@@ -26,6 +26,7 @@ namespace PropertyTypes{
    PROP_TYPE(Timer)
    PROP_TYPE(Enum)
    PROP_TYPE(Color)
+   PROP_TYPE(Theme)
 }
 
 namespace PropertyMeta{
@@ -40,7 +41,7 @@ struct PropertyPrototype{
    std::map<std::string, PropertyPrototype> subproperties;
 };
 
-///Something can have properties (and therefore subproperties
+///Something that can have properties (and therefore subproperties
 struct PropertyContainer{
    ///make sure ALL register property functions are called
    virtual void registerProperties() = 0;
@@ -48,8 +49,7 @@ struct PropertyContainer{
    void moveProperty(std::shared_ptr<BaseProperty>);
    PropertyMap& getProperties(){return _properties;}
 protected:
-   void _initProperties(){
-   };
+   void _initProperties(){};
    PropertyMap _properties;
    OwnedPropertyMap _ownedProperties; //properties we own
 };

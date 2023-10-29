@@ -4,6 +4,8 @@
 #include "BaseWidget.h"
 #include "Button.hpp"
 #include "Label.hpp"
+#include "ScrollArea.hpp"
+#include "Slider.hpp"
 
 using namespace std;
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -38,7 +40,10 @@ void TypeManager::_registerTypes() {
    //register all other internal widget types here
    BaseWidget::registerType("Control", "BaseWidget", false, &Control::deserialize);
    BaseWidget::registerType("BaseButton", "Control", true, nullptr);
+   BaseWidget::registerType("PushButton", "BaseButton", false, &PushButton::deserialize);
    BaseWidget::registerType("Label", "Control", false, &Label::deserialize);
+   BaseWidget::registerType("ScrollArea", "Control", false, &ScrollArea::deserialize);
+   BaseWidget::registerType("Slider", "Control", false, &Slider::deserialize);
 
    //register custom types
    CustomTypes::registerTypes();

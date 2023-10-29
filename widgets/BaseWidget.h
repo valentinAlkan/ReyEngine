@@ -5,6 +5,7 @@
 #include "TypeManager.h"
 #include "InputManager.h"
 #include "EventManager.h"
+#include "Theme.h"
 #include <iostream>
 #include <stack>
 #include <utility>
@@ -55,7 +56,7 @@ class  BaseWidget
 : public inheritable_enable_shared_from_this<BaseWidget>
 , public EventSubscriber
 , public EventPublisher
-, public PropertyContainer
+, public Style::Themeable
 {
    using WidgetPtr = std::shared_ptr<BaseWidget>;
    using ChildMap = std::map<std::string, WidgetPtr>;
