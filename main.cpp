@@ -46,17 +46,18 @@ int main(int argc, char** argv)
 
    Application::instance(); //initialize the application
    ArgParse args;
-   args.defineArg(RuntimeArg("--loadScene", "help", 1, RuntimeArg::ArgType::OPTIONAL));
+   args.defineArg(RuntimeArg("--loadScene", "help", 1, RuntimeArg::ArgType::POSITIONAL));
    args.defineArg(RuntimeArg("--renderTest", "help", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--scrollAreaTest", "help", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--sliderTest", "help", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--labelTest", "help", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--saveLoadSceneTest", "Filename to save/load to", 1, RuntimeArg::ArgType::POSITIONAL));
+   args.defineArg(RuntimeArg("--layoutTest", "Test layouts", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    //create window (or don't idk)
-   auto optWindow = Application::instance().createWindow("MainWindow", screenWidth, screenHeight, {Window::RESIZE});
-   if (!optWindow){throw std::runtime_error("Something went horribly wrong! Please make a note of it.");}
-   auto window = optWindow.value();
+   auto window = Application::instance().createWindow("MainWindow", screenWidth, screenHeight, {Window::RESIZE});
+   if (!window){throw std::runtime_error("Something went horribly wrong! Please make a note of it.");}
 
    shared_ptr<BaseWidget> root;
    root = make_shared<Control>("Root", Rect<float>{0,0,0,0});
@@ -131,6 +132,26 @@ int main(int argc, char** argv)
       auto timerProperty = make_shared<TimerProperty>("timer", timer);
       label->moveProperty(timerProperty);
 
+   }
+
+   if (args.getArg("--saveLoadSceneTest")){
+//      auto
+   }
+
+   if (args.getArg("--layoutTest")){
+      Application::printDebug() << "Layout test!" << endl;
+      root = make_shared<RootWidget>("Root", Rect<float>({0,0}, window->getSize()));
+      auto label = make_shared<Label>("sizeLabel", Rect<float>({0,0}, {50, 100}));
+//      label->setText(window->getSize());
+      root->addChild(label);
+      //set primary background color
+      root->getTheme()->background.colorPrimary.set(Colors::red);
+      //connect to resize
+      auto resizeCB = [root, label](const Window::WindowResizeEvent& event){
+         root->setSize(event.size);
+         label->setText(event.size);
+      };
+      root->subscribe<Window::WindowResizeEvent>(window, resizeCB);
    }
 
    // default functionality

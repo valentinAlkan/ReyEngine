@@ -154,7 +154,7 @@ void ArgParse::parseArgs(int argc, char **argv) {
       openArg->setValue(rawArg);
       openParamCount = 0;
    }
-
+   if (openParamCount != openArg->_paramCount) throw std::runtime_error("Arg count mismatch!");
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 std::optional<std::string> RuntimeArg::flagParse(std::string rawArg) {

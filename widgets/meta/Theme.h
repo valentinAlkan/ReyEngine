@@ -12,7 +12,7 @@ namespace Style {
    struct OutlineProperty : public EnumProperty<Outline, 3>{
       OutlineProperty(const std::string& instanceName,  Outline defaultvalue)
       : EnumProperty<Outline, 3>(instanceName, defaultvalue),
-      PROPERTY_DECLARE(color, GFCSDraw::ColorRGBA(0,0,0,255)),
+      PROPERTY_DECLARE(color, GFCSDraw::Colors::black),
       PROPERTY_DECLARE(thickness, 1.0)
       {}
       const EnumPair<Outline, 3>& getDict() override {return dict;}
@@ -32,21 +32,31 @@ namespace Style {
    /////////////////////////////////////////////////////////////////////////////////////////
    /////////////////////////////////////////////////////////////////////////////////////////
    /////////////////////////////////////////////////////////////////////////////////////////
-   enum class Background{
+   enum class Fill {
       NONE, SOLID, GRADIENT
    };
 
+//   enum class
+
    /////////////////////////////////////////////////////////////////////////////////////////
-   struct BackgroundProperty : public EnumProperty<Background, 3>{
-      BackgroundProperty(const std::string& instanceName,  Background defaultvalue)
-      : EnumProperty<Background, 3>(instanceName, defaultvalue)
+   struct FillProperty : public EnumProperty<Fill, 3>{
+      FillProperty(const std::string& instanceName,  Fill defaultvalue)
+      : EnumProperty<Fill, 3>(instanceName, defaultvalue)
+      , PROPERTY_DECLARE(colorPrimary, GFCSDraw::Colors::none)
+      , PROPERTY_DECLARE(colorSecondary, GFCSDraw::Colors::none)
       {}
-      const EnumPair<Background, 3>& getDict() override {return dict;}
-      static constexpr EnumPair<Background, 3> dict = {
-         ENUM_PAIR_DECLARE(Background, NONE),
-         ENUM_PAIR_DECLARE(Background, SOLID),
-         ENUM_PAIR_DECLARE(Background, GRADIENT),
+      const EnumPair<Fill, 3>& getDict() override {return dict;}
+      static constexpr EnumPair<Fill, 3> dict = {
+         ENUM_PAIR_DECLARE(Fill, NONE),
+         ENUM_PAIR_DECLARE(Fill, SOLID),
+         ENUM_PAIR_DECLARE(Fill, GRADIENT),
       };
+      void registerProperties() override {
+         registerProperty(colorPrimary);
+         registerProperty(colorSecondary);
+      }
+      ColorProperty colorPrimary;
+      ColorProperty colorSecondary; //for gradient
    };
 
    /////////////////////////////////////////////////////////////////////////////////////////
@@ -67,12 +77,12 @@ namespace Style {
       Theme(const std::string& instanceName = "DefaultTheme")
       : Property<Empty>(instanceName, PropertyTypes::Theme, Empty()),
       PROPERTY_DECLARE(outline, Outline::NONE),
-      PROPERTY_DECLARE(background, Background::NONE)
+      PROPERTY_DECLARE(background, Fill::NONE)
       {}
       std::string toString() override {return "not impelenmeted";}
       Empty fromString(const std::string& data) override { return value;}
 
-      BackgroundProperty background;
+      FillProperty background;
       OutlineProperty outline;
    private:
       Empty value; //do not use - only exists to satisfy construction requirements
@@ -80,13 +90,19 @@ namespace Style {
 
    class Themeable : public PropertyContainer {
    public:
-      Themeable() = default;
+      Themeable(){
+         theme = std::make_unique<Theme>();
+      };
       void registerProperties() override {
-         registerProperty(theme);
+         registerProperty(*theme);
       }
-      Theme& getTheme(){return theme;}
-      void setTheme(Theme){}
+      const Theme& refTheme() const {return *theme;}
+      std::unique_ptr<Theme>& getTheme() {return theme;}
+      void setTheme(std::unique_ptr<Theme> newTheme){
+         theme = std::move(newTheme);
+         updateProperty(*theme);
+      }
    private:
-      Theme theme;
+      std::unique_ptr<Theme> theme;
    };
 }

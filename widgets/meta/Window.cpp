@@ -11,8 +11,7 @@ using namespace GFCSDraw;
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 Window::Window(const std::string &title, int width, int height, const std::vector<Flags>& flags, int targetFPS)
-: width(width)
-, height(height)
+: size(GFCSDraw::Size<int>(width, height))
 {
 //   if (!_root){
 //      std::runtime_error("Window root cannot be null!");
@@ -48,6 +47,15 @@ void Window::exec(){
    applyProcess(_root);
 
    while (!WindowShouldClose()){
+      //see if the window size has changed
+      auto newSize = GFCSDraw::getScreenSize();
+      if (newSize != size){
+         WindowResizeEvent event(inheritable_enable_shared_from_this<EventPublisher>::shared_from_this());
+         size = newSize;
+         event.size = size;
+         publish(event);
+      }
+
       //collect key input (up to limit)
       //do ups first so we don't process up and down on same frame
       for (size_t i=0; i<Window::INPUT_COUNT_LIMIT; i++){
@@ -173,7 +181,7 @@ std::optional<std::shared_ptr<BaseWidget>> Window::ProcessList::remove(std::shar
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-Vec2<int> Window::getMousePos(){
+Pos<int> Window::getMousePos(){
    return InputManager::getMousePos();
 }
 

@@ -3,13 +3,13 @@
 using namespace GFCSDraw;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Vec2<double> GFCSDraw::getScreenCenter() {
+Pos<double> GFCSDraw::getScreenCenter() {
    return {((float)GetScreenWidth())/2, ((float)GetScreenHeight())/2};
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Vec2<double> GFCSDraw::getScreenSize() {
-   return {((float)GetScreenWidth()), ((float)GetScreenHeight())};
+Size<int> GFCSDraw::getScreenSize() {
+   return {GetScreenWidth(),GetScreenHeight()};
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

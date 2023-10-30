@@ -65,6 +65,7 @@ namespace GFCSDraw {
       inline Vec2& operator*=(const Vec2& rhs){x *= rhs.x; y *= rhs.y; return *this;}
       inline Vec2& operator/=(const Vec2& rhs){x /= rhs.x; y /= rhs.y; return *this;}
       inline Vec2& operator=(const Vec2& rhs){x = rhs.x; y=rhs.y; return *this;}
+      inline bool operator==(const Vec2& rhs){return x==rhs.x && y==rhs.y;}
       inline Vec2& operator-(){x = -x; y =-y; return *this;}
       inline void operator=(Size<T>&) = delete;
       inline void operator=(Pos<T>&) = delete;
@@ -154,7 +155,7 @@ namespace GFCSDraw {
       inline Pos operator-(const Pos& rhs) const {auto val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
       inline Pos& operator+=(const Pos& rhs){this->x += rhs.x; this->y += rhs.y; return *this;}
       inline Pos& operator-=(const Pos& rhs){this->x -= rhs.x; this->y -= rhs.y; return *this;}
-
+      inline operator std::string() const {return (Vec2<T>(*this).toString());}
       inline void operator=(Size<T>&) = delete;
       inline void operator=(Pos<int>& other){x = other.x; y = other.y;};
    };
@@ -169,10 +170,13 @@ namespace GFCSDraw {
       inline Size(const Size<double>& v): Vec2<T>(v){}
       inline Size(const Size<float>& v) : Vec2<T>(v){}
       inline void operator=(Pos<T>&) = delete;
+      inline bool operator==(Size<T>& rhs){return x==rhs.x && y==rhs.y;}
+      inline bool operator!=(Size<T>& rhs){return x!=rhs.x || y!=rhs.y;}
       inline Size operator+(const Size& rhs) const {auto val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
       inline Size operator-(const Size& rhs) const {auto val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
       inline Size& operator+=(const Size& rhs){this->x += rhs.x; this->y += rhs.y; return *this;}
       inline Size& operator-=(const Size& rhs){this->x -= rhs.x; this->y -= rhs.y; return *this;}
+      inline operator std::string() const {return Vec2<T>::toString();}
    };
 
    template <typename T>
@@ -264,17 +268,18 @@ namespace GFCSDraw {
 
    #define COLORS GFCSDraw::Colors
    namespace Colors{
-      static constexpr ColorRGBA gray =  {130, 130, 130, 255};
-      static constexpr ColorRGBA lightGray =  {200, 200, 200, 255};
-      static constexpr ColorRGBA red =  {230, 41, 55, 255};
-      static constexpr ColorRGBA green =  { 0, 228, 48, 255};
-      static constexpr ColorRGBA blue =  { 0, 121, 241, 255};
-      static constexpr ColorRGBA black =  { 0, 0, 0, 255};
-      static constexpr ColorRGBA yellow =  {253, 249, 0, 255};
+      static constexpr ColorRGBA gray = {130, 130, 130, 255};
+      static constexpr ColorRGBA lightGray = {200, 200, 200, 255};
+      static constexpr ColorRGBA red = {230, 41, 55, 255};
+      static constexpr ColorRGBA green = { 0, 228, 48, 255};
+      static constexpr ColorRGBA blue = { 0, 121, 241, 255};
+      static constexpr ColorRGBA black = { 0, 0, 0, 255};
+      static constexpr ColorRGBA yellow = {253, 249, 0, 255};
+      static constexpr ColorRGBA none = {0, 0, 0, 0};
    }
 
-   Vec2<double> getScreenCenter();
-   Vec2<double> getScreenSize();
+   Pos<double> getScreenCenter();
+   Size<int> getScreenSize();
    void drawText(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color);
    void drawTextCentered(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color);
    void drawTextRelative(const std::string& text, const GFCSDraw::Vec2<int>& relPos, int fontSize, Color color);

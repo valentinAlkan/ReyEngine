@@ -19,6 +19,19 @@ void PropertyContainer::registerProperty(BaseProperty& property) {
    if (found != _properties.end()){
       throw runtime_error("Property instance " + property.instanceName() + " already registered to container");
    }
+   //adds property if it doesn't exist
+   updateProperty(property);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void PropertyContainer::moveProperty(std::shared_ptr<BaseProperty> property){
+   _ownedProperties[property->instanceName()] = property;
+   registerProperty(*property);
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void PropertyContainer::updateProperty(BaseProperty& property) {
    _properties[property.instanceName()] = &property;
    property.registerProperties();
 
@@ -27,10 +40,3 @@ void PropertyContainer::registerProperty(BaseProperty& property) {
       subprop->registerProperties();
    }
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void PropertyContainer::moveProperty(std::shared_ptr<BaseProperty> property){
-   _ownedProperties[property->instanceName()] = property;
-   registerProperty(*property);
-
-};

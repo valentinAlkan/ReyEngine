@@ -59,6 +59,7 @@ add_library(widgets STATIC
     widgets/Slider.hpp
     widgets/Button.hpp
     widgets/Label.hpp
+    widgets/Layout.hpp
     widgets/ScrollArea.hpp
     widgets/BaseWidget.cpp
     ${CUSTOM_SOURCES}
