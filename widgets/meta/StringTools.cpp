@@ -148,7 +148,7 @@ int string_tools::countwhiter(const std::string &s) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-vector<string> string_tools::fromArrayString(const std::string &s) {
+vector<string> string_tools::fromList(const std::string &s) {
    auto lessLeftBracket = lstrip(s, '{');
    auto lessBrackets = rstrip(lessLeftBracket, '}');
    auto _split = split(lessBrackets, ",");
@@ -157,4 +157,23 @@ vector<string> string_tools::fromArrayString(const std::string &s) {
       retval.push_back(lrstrip(element));
    }
    return retval;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::string string_tools::join(const std::string &s, const std::vector<std::string>& v) {
+   if (v.empty()) return "";
+   string retval;
+   for (const auto& _v : v){
+      retval += _v;
+      retval += s;
+   }
+   for (const auto& c : s) {
+      retval.pop_back();
+   }
+   return retval;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::string string_tools::listJoin(const std::vector<std::string> &v) {
+   return "{" + join(", ", v) + "}";
 }

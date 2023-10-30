@@ -138,8 +138,8 @@ void BaseWidget::renderChain(GFCSDraw::Pos<double>& parentOffset) {
    GFCSDraw::Pos<double> localOffset;
    renderBegin(localOffset);
    _renderOffset += (localOffset + parentOffset);
-   renderChildren(_renderOffset);
    render();
+   renderChildren(_renderOffset);
    _renderOffset -= (localOffset + parentOffset); //subtract local offset when we are done
    renderEnd();
 }

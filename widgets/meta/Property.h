@@ -27,6 +27,7 @@ namespace PropertyTypes{
    PROP_TYPE(Enum)
    PROP_TYPE(Color)
    PROP_TYPE(Theme)
+   PROP_TYPE(List)
 }
 
 namespace PropertyMeta{
@@ -47,6 +48,7 @@ struct PropertyContainer{
    virtual void registerProperties() = 0;
    void registerProperty(BaseProperty& property);
    void moveProperty(std::shared_ptr<BaseProperty>);
+   void updateProperty(BaseProperty&);
    PropertyMap& getProperties(){return _properties;}
 protected:
    void _initProperties(){};
@@ -155,7 +157,7 @@ struct ColorProperty : public Property<GFCSDraw::ColorRGBA>{
    {}
    std::string toString() override {return "{" + std::to_string(value.r) + ", " + std::to_string(value.g) + ", " + std::to_string(value.b) + ", "  + std::to_string(value.a) + "}";}
    GFCSDraw::ColorRGBA fromString(const std::string& str) override {
-      auto split = string_tools::fromArrayString(str);
+      auto split = string_tools::fromList(str);
       return {std::stoi(split[0]), std::stoi(split[1]), std::stoi(split[2]), std::stoi(split[3])};
    }
 };
@@ -191,4 +193,20 @@ struct EnumProperty : public Property<T>{
       throw std::runtime_error("Invalid EnumProperty value " + str);
    }
    virtual const EnumPair<T, C>& getDict() = 0;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////
+template <typename T>
+struct ListProperty : public Property<std::vector<T>>{
+   ListProperty(const std::string& instanceName) :
+   Property<std::vector<T>>(instanceName, PropertyTypes::List){
+
+   }
+   std::string toString() override {return string_tools::listJoin(Property<std::vector<T>>::value);}
+   std::vector<T> fromString(const std::string& str) override {
+      auto strList = string_tools::fromList(str);
+      for (const auto& s : strList){
+         Property<std::vector<T>>::value.push_back((T)(s));
+      }
+   }
 };

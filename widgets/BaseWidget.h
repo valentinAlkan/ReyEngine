@@ -85,6 +85,7 @@ public:
    void setRect(const GFCSDraw::Rect<double>& r){_rect.value = r; _on_rect_changed();}
    void setPos(double x, double y){_rect.value.x = x; _rect.value.y = y; _on_rect_changed();}
    void setPos(const dVec& pos){_rect.value.x = pos.x; _rect.value.y = pos.y; _on_rect_changed();}
+   void setSize(const GFCSDraw::Size<double>& size){_rect.value.width = size.x; _rect.value.height = size.y;}
    void setGlobalPos(const dVec&);
    bool isInside(const dVec& point){return _rect.value.toSizeRect().isInside(point);}
    bool setName(const std::string& name, bool append_index=false);

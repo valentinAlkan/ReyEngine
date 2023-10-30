@@ -8,7 +8,7 @@
 struct RuntimeArg{
    enum class ArgType{
       DEDUCE,  //if arg has leading dash and one char, or two leading dashes, then will be be a flag - otherwise positional if appears before another flag or optional, otherwise optional
-      POSITIONAL,
+      POSITIONAL, //args is required and an error is thrown if it is not there
       OPTIONAL,
       FLAG  //Flags will not consume args
    };
@@ -43,6 +43,7 @@ private:
    std::string _sanitizedName;
    std::string _rawValue; //the value as it exists on the commandline, including dashes and everything
    bool _invoked; //whether or not the arg was invoked on the command-line (that is to say, parsed by the parser at runtime)
+   unsigned int _invoked_args_count; //how many args were passed to the param. must match expected positional args count
    std::string _docString;
    ArgType     _argType;
    ValueType   _valueType;
