@@ -77,12 +77,14 @@ namespace Style {
       Theme(const std::string& instanceName = "DefaultTheme")
       : Property<Empty>(instanceName, PropertyTypes::Theme, Empty()),
       PROPERTY_DECLARE(outline, Outline::NONE),
-      PROPERTY_DECLARE(background, Fill::NONE)
+      PROPERTY_DECLARE(background, Fill::NONE),
+      PROPERTY_DECLARE(foreground, GFCSDraw::Colors::black)
       {}
       std::string toString() override {return "not impelenmeted";}
       Empty fromString(const std::string& data) override { return value;}
 
       FillProperty background;
+      ColorProperty foreground;
       OutlineProperty outline;
    private:
       Empty value; //do not use - only exists to satisfy construction requirements

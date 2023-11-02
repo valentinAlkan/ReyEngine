@@ -87,6 +87,7 @@ struct Property : public BaseProperty {
    }
    virtual T fromString(const std::string& str) = 0;
    void load(const PropertyPrototype& data) override {value = fromString(data.data);}
+   [[nodiscard]] T& ref() {return value;}
    [[nodiscard]] const T& get() const {return value;}
    void set(const T& newValue){
       value = newValue;
@@ -196,17 +197,35 @@ struct EnumProperty : public Property<T>{
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
 template <typename T>
 struct ListProperty : public Property<std::vector<T>>{
    ListProperty(const std::string& instanceName) :
-   Property<std::vector<T>>(instanceName, PropertyTypes::List){
+   Property<std::vector<T>>(instanceName, PropertyTypes::List, {}){
 
    }
-   std::string toString() override {return string_tools::listJoin(Property<std::vector<T>>::value);}
+   std::string toString() override {
+      auto vec = Property<std::vector<T>>::value;
+      std::vector<std::string> stringVec;
+      for (const auto& t : vec){
+         stringVec.push_back(elementToString(t));
+      }
+      return string_tools::listJoin(stringVec);
+   }
    std::vector<T> fromString(const std::string& str) override {
       auto strList = string_tools::fromList(str);
       for (const auto& s : strList){
-         Property<std::vector<T>>::value.push_back((T)(s));
+         Property<std::vector<T>>::value.push_back(stringToElement(s));
       }
+      return Property<std::vector<T>>::value;
    }
+   virtual T stringToElement(const std::string& s) = 0;
+   virtual std::string elementToString(const T& t){return std::to_string(t);}
+};
+
+struct FloatListProperty : public ListProperty<float>{
+   FloatListProperty(const std::string& instanceName): ListProperty<float>(instanceName){}
+   float stringToElement(const std::string& element){return (float)stod(element);}
+   float sum() const {float total=0;for (const auto& v : value){total += v;}return total;}
 };

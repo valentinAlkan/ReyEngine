@@ -20,11 +20,11 @@
 using Handled = bool;
 
 #define CTOR_RECT const GFCSDraw::Rect<float>& r
-
+/////////////////////////////////////////////////////////////////////////////////////////
 #define GFCSDRAW_DECLARE_STATIC_CONSTEXPR_TYPENAME(TYPENAME) \
 static constexpr char TYPE_NAME[] = #TYPENAME;               \
 std::string _get_static_constexpr_typename() override {return TYPE_NAME;}
-
+/////////////////////////////////////////////////////////////////////////////////////////
 #define GFCSDRAW_SERIALIZER(CLASSNAME, PARENT_CLASSNAME) \
    public:                                           \
    static std::shared_ptr<BaseWidget> deserialize(const std::string& instanceName, PropertyPrototypeMap& properties) { \
@@ -32,14 +32,14 @@ std::string _get_static_constexpr_typename() override {return TYPE_NAME;}
    auto retval = std::make_shared<CLASSNAME>(instanceName, r); \
    retval->BaseWidget::_deserialize(properties);        \
    return retval;}                                       \
-
+/////////////////////////////////////////////////////////////////////////////////////////
 #define GFCSDRAW_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME) \
    CLASSNAME(const std::string& name, const std::string& typeName, CTOR_RECT): PARENT_CLASSNAME(name, typeName, r)
-
-#define GFCSDRAW_DEFAULT_CTOR(CLASSNAME) \
-   CLASSNAME(const std::string& name, CTOR_RECT): CLASSNAME(name, _get_static_constexpr_typename(), r){}
-
-#define GFCSDRAW_OBJECT(CLASSNAME, PARENT_CLASSNAME)      \
+/////////////////////////////////////////////////////////////////////////////////////////
+#define GFCSDRAW_DEFAULT_CTOR(CLASSNAME, ...) \
+   CLASSNAME(const std::string& name, CTOR_RECT): CLASSNAME(name, _get_static_constexpr_typename(), r, __VA_ARGS__){}
+/////////////////////////////////////////////////////////////////////////////////////////
+#define GFCSDRAW_OBJECT(CLASSNAME, PARENT_CLASSNAME)  \
 public:                                                   \
    GFCSDRAW_DECLARE_STATIC_CONSTEXPR_TYPENAME(CLASSNAME)  \
    GFCSDRAW_SERIALIZER(CLASSNAME, PARENT_CLASSNAME)       \
@@ -49,7 +49,8 @@ protected:                                                \
       PARENT_CLASSNAME::_register_parent_properties();    \
       PARENT_CLASSNAME::registerProperties();             \
    }                                                      \
-   GFCSDRAW_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME)   \
+   GFCSDRAW_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME)
+
 
 class Scene;
 class  BaseWidget
@@ -58,8 +59,10 @@ class  BaseWidget
 , public EventPublisher
 , public Style::Themeable
 {
+   using ChildIndex = unsigned long;
    using WidgetPtr = std::shared_ptr<BaseWidget>;
-   using ChildMap = std::map<std::string, WidgetPtr>;
+   using ChildMap = std::map<std::string, std::pair<ChildIndex, WidgetPtr>>;
+   using ChildOrder = std::vector<std::shared_ptr<BaseWidget>>;
    using fVec = GFCSDraw::Vec2<float>;
    using iVec = GFCSDraw::Vec2<int>;
    using dVec = GFCSDraw::Vec2<double>;
@@ -89,10 +92,11 @@ public:
    void setGlobalPos(const dVec&);
    bool isInside(const dVec& point){return _rect.value.toSizeRect().isInside(point);}
    bool setName(const std::string& name, bool append_index=false);
+   bool setIndex(unsigned int newIndex);
    std::string getTypeName(){return _typeName;}
 
    std::weak_ptr<BaseWidget> getParent(){return _parent;}
-   const ChildMap& getChildren() const{return _children;}
+   const ChildOrder& getChildren() const {return _childrenOrdered;}
    std::optional<WidgetPtr> getChild(const std::string& newName);
 
    template <typename T>
@@ -156,12 +160,15 @@ protected:
    virtual std::string _get_static_constexpr_typename(){return TYPE_NAME;}
 
    bool _has_inited = false; //set true THE FIRST TIME a widget enters the tree. Can do constructors of children and other stuff requiring shared_from_this();
+   bool isLayout = false;
+   bool isInLayout = false;
 private:
+   void rename(WidgetPtr& child, const std::string& newName);
    uint64_t _rid; //unique identifier
    const std::string _typeName; //can't just use static constexpr TYPE_NAME since we need to know what the type is if using type-erasure
    std::string _name;
    BoolProperty _isProcessed;
-   std::weak_ptr<BaseWidget> _parent; //todo: should be weak ptr
+   std::weak_ptr<BaseWidget> _parent;
    ///If this widget is the root of a scene, then the rest of the scene data is here.
    std::optional<std::shared_ptr<Scene>> _scene;
    bool _request_delete = false; //true when we want to remove this object from the tree
@@ -175,6 +182,7 @@ private:
    InputFilter inputFilter = InputFilter::INPUT_FILTER_PASS_AND_PROCESS;
 
    ChildMap _children;
+   ChildOrder _childrenOrdered;
    friend class Window;
    friend class Application;
 };

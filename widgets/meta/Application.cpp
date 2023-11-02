@@ -58,13 +58,16 @@ void Application::processEnterTree() {
       stack.pop();
       auto& widget = p.first;
       auto& parent = p.second;
+      if (parent.getChild(widget->getName())) throw std::runtime_error("Parent already has child with the name " + widget->getName());
       auto& hasInit = widget->_has_inited;
-      parent._children[widget->getName()] = widget;
+      auto newIndex = parent._childrenOrdered.size(); //index of new child's location in ordered vector
+      parent._children[widget->getName()] = std::pair<int, std::shared_ptr<BaseWidget>>(newIndex, widget);
+      parent._childrenOrdered.push_back(widget);
       widget->_parent = parent.toBaseWidget();
       if (!hasInit) {
          widget->_init();
          hasInit = true;
       }
-      widget->_on_child_added(widget);
+      parent._on_child_added(widget);
    }
 }

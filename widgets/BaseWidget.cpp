@@ -29,7 +29,7 @@ bool BaseWidget::setName(const std::string& newName, bool append_index) {
    if (!_parent.expired()) {
       //has a parent
       auto self = toBaseWidget();
-      string _newName;
+      string _newName = newName;
       auto parent = _parent.lock();
       if (parent->getChild(newName)) {
          //parent has existing child with that name
@@ -39,21 +39,52 @@ bool BaseWidget::setName(const std::string& newName, bool append_index) {
             while (parent->getChild(newName + to_string(index))) {
                index++;
             }
+            //todo: is this right?
             _newName = newName + to_string(index);
-            //remove the child
-            parent->removeChild(self);
          } else {
             return false;
          }
       }
       //parent does not have a child with the name
-      self->_name = newName;
-      //add the child back to the parent
-      parent->addChild(self);
+      parent->rename(self, _newName);
    }
    //root widget, no need to deal with parent
    _name = newName;
    return true;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::rename(WidgetPtr &child, const std::string &newName) {
+   //rename but not move
+   //find the existing reference to the child
+   auto childIter = _children[child->_name];
+   auto oldName = child->_name;
+   _children[newName] = childIter;
+   _children.erase(oldName);
+   child->_name = newName;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+bool BaseWidget::setIndex(unsigned int newIndex){
+   if (_parent.expired()){
+      //root widget, there is no index
+      return false;
+   }
+   auto parent = _parent.lock();
+   //get reference to widget in map
+   auto selfMapIter = parent->_children[_name];
+   auto index = selfMapIter.first;
+
+   //delete reference to widget in ordered vector
+   auto selfVectorIter = parent->_childrenOrdered.begin() + index;
+   parent->_childrenOrdered.erase(selfVectorIter);
+
+   //insert new reference in new position
+   //todo: finish
+   throw std::runtime_error("not finished");
+
+
+
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -68,7 +99,7 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::getChild(const std::string &chi
    if (found == _children.end()) {
       return nullopt;
    }
-   return std::optional<WidgetPtr>(found->second);
+   return std::optional<WidgetPtr>(found->second.second);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -88,6 +119,7 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::addChild(WidgetPtr widget){
       return nullopt;
    }
    Application::registerForEnterTree(widget, *this);
+   widget->isInLayout = isLayout;
    return widget;
 }
 
@@ -102,7 +134,7 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::removeChild(WidgetPtr widget) {
       return nullopt;
    }
    _children.erase(found);
-   return found->second;
+   return found->second.second;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -118,8 +150,8 @@ Pos<double> BaseWidget::getGlobalPos() const {
 /////////////////////////////////////////////////////////////////////////////////////////
 GFCSDraw::Size<double> BaseWidget::getChildRectSize() const {
    GFCSDraw::Size<double> childRect;
-   for (const auto& child : _children){
-      auto totalOffset = child.second->getRect().size() + Size<double>(child.second->getPos());
+   for (const auto& childIter : _children){
+      auto totalOffset = childIter.second.second->getRect().size() + Size<double>(childIter.second.second->getPos());
       childRect.max(totalOffset);
 //     childRect +=  // add position
    }
@@ -128,8 +160,8 @@ GFCSDraw::Size<double> BaseWidget::getChildRectSize() const {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::renderChildren(GFCSDraw::Pos<double>& textureOffset) const {
-   for (const auto& [name, child] : _children){
-      child->renderChain(textureOffset);
+   for (const auto& [name, childIter] : _children){
+      childIter.second->renderChain(textureOffset);
    }
 }
 
@@ -147,8 +179,8 @@ void BaseWidget::renderChain(GFCSDraw::Pos<double>& parentOffset) {
 /////////////////////////////////////////////////////////////////////////////////////////
 Handled BaseWidget::_process_unhandled_input(InputEvent& event) {
    auto passInput = [&](InputEvent& event) {
-      for (auto &[name, child]: getChildren()) {
-         if (child->_process_unhandled_input(event)) {
+      for (auto& [name, childIter] : _children) {
+         if (childIter.second->_process_unhandled_input(event)) {
             return true;
          }
       }
