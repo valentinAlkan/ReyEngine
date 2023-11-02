@@ -12,6 +12,7 @@
 #include "TextureTestWidget.hpp"
 #include "Slider.hpp"
 #include "Timer.hpp"
+#include "Layout.hpp"
 
 using namespace std;
 using namespace GFCSDraw;
@@ -140,16 +141,24 @@ int main(int argc, char** argv)
 
    if (args.getArg("--layoutTest")){
       Application::printDebug() << "Layout test!" << endl;
-      root = make_shared<RootWidget>("Root", Rect<float>({0,0}, window->getSize()));
-      auto label = make_shared<Label>("sizeLabel", Rect<float>({0,0}, {50, 100}));
-//      label->setText(window->getSize());
-      root->addChild(label);
+      root = make_shared<HLayout>("Root", Rect<float>({0,0}, window->getSize()));
+      auto sizeLabel = make_shared<Label>("sizeLabel", Rect<float>({20,0}, {50, 100}));
+      auto randomLabel = make_shared<Label>("randomLabel", Rect<float>({50, 500}, {50, 100}));
+      sizeLabel->getTheme()->background.colorPrimary.set(Colors::blue);
+      sizeLabel->setText(window->getSize());
+      randomLabel->setText("lorem ipsum? damn near sat on em");
+      root->addChild(sizeLabel);
+      root->addChild(randomLabel);
+      sizeLabel->getTheme()->foreground.set(Colors::blue);
       //set primary background color
-      root->getTheme()->background.colorPrimary.set(Colors::red);
+      sizeLabel->getTheme()->background.set(Style::Fill::SOLID);
+      randomLabel->getTheme()->background.set(Style::Fill::SOLID);
+      sizeLabel->getTheme()->background.colorPrimary.set(Colors::red);
+      randomLabel->getTheme()->background.colorPrimary.set(Colors::green);
       //connect to resize
-      auto resizeCB = [root, label](const Window::WindowResizeEvent& event){
+      auto resizeCB = [root, sizeLabel](const Window::WindowResizeEvent& event){
          root->setSize(event.size);
-         label->setText(event.size);
+         sizeLabel->setText(event.size);
       };
       root->subscribe<Window::WindowResizeEvent>(window, resizeCB);
    }
