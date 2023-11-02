@@ -258,6 +258,10 @@ namespace GFCSDraw {
       explicit ColorRGBA(Color color): r(color.r), g(color.g), b(color.b), a(color.a){}
       inline ColorRGBA& operator=(const Color& rhs){r = rhs.r; g=rhs.g; b=rhs.b; a=rhs.a; return *this;}
       inline operator Color() const {return {r, g, b, a};}
+      inline static ColorRGBA random(int alpha = -1){
+         auto retval = ColorRGBA(std::rand() % 255, std::rand() % 256, std::rand() % 256, alpha >= 0 ? alpha % 256 : std::rand() % 256);
+         return retval;
+      }
 //      friend Color operator=(const Color lhs, ColorRGBA rhs){r = rhs.r; g=rhs.g; b=rhs.b; a=rhs.a; return *this;}
 //      friend std::ostream& operator<<(std::ostream& os, Vec2<T> v) {os << v.toString(); return os;}
       unsigned char r;

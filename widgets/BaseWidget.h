@@ -67,28 +67,36 @@ class  BaseWidget
    using iVec = GFCSDraw::Vec2<int>;
    using dVec = GFCSDraw::Vec2<double>;
 public:
+
+   struct WidgetResizeEvent : public Event<WidgetResizeEvent> {
+      EVENT_CTOR_SIMPLE(WidgetResizeEvent, Event<WidgetResizeEvent>){
+         size = publisher->toBaseWidget()->getSize();
+      }
+      GFCSDraw::Size<float> size;
+   };
+
    static constexpr char TYPE_NAME[] = "BaseWidget";
    BaseWidget(const std::string& name, std::string  typeName, GFCSDraw::Rect<float> rect);
    ~BaseWidget();
    uint64_t getRid() const {return _rid;}
    std::string getName() const {return _name;}
-   GFCSDraw::Rect<double> getRect() const {return _rect.value;}
-   GFCSDraw::Rect<double> getGlobalRect() const {return {getGlobalPos().x, getGlobalPos().y, getSize().x, getSize().y};}
-   GFCSDraw::Pos<double> getGlobalPos() const;
-   GFCSDraw::Size<double> getChildRectSize() const; //get the smallest rectangle that contains all children, starting from 0,0. Does not include grandchildren.
-   GFCSDraw::Pos<double> getPos() const {return {getRect().x, getRect().y};}
-   GFCSDraw::Size<double> getSize() const {return getRect().size();}
+   GFCSDraw::Rect<int> getRect() const {return _rect.value;}
+   GFCSDraw::Rect<int> getGlobalRect() const {return {getGlobalPos().x, getGlobalPos().y, getSize().x, getSize().y};}
+   GFCSDraw::Pos<int> getGlobalPos() const;
+   GFCSDraw::Size<int> getChildRectSize() const; //get the smallest rectangle that contains all children, starting from 0,0. Does not include grandchildren.
+   GFCSDraw::Pos<int> getPos() const {return {getRect().x, getRect().y};}
+   GFCSDraw::Size<int> getSize() const {return getRect().size();}
    double getWidth(){return _rect.value.width;}
    double getHeight(){return _rect.value.height;}
-   dVec getHeightRange() const {return {0, getRect().size().y};}
-   dVec getWidthtRange() const {return {0, getRect().size().x};}
-   dVec getLocalMousePos(){return globalToLocal(InputManager::getMousePos());}
-   dVec globalToLocal(const dVec& global) const{return global - getGlobalPos();}
-   dVec localToGlobal(const dVec& local) const {return local + getGlobalPos();}
-   void setRect(const GFCSDraw::Rect<double>& r){_rect.value = r; _on_rect_changed();}
-   void setPos(double x, double y){_rect.value.x = x; _rect.value.y = y; _on_rect_changed();}
-   void setPos(const dVec& pos){_rect.value.x = pos.x; _rect.value.y = pos.y; _on_rect_changed();}
-   void setSize(const GFCSDraw::Size<double>& size){_rect.value.width = size.x; _rect.value.height = size.y;}
+   iVec getHeightRange() const {return {0, getRect().size().y};}
+   iVec getWidthtRange() const {return {0, getRect().size().x};}
+   iVec getLocalMousePos(){return globalToLocal(InputManager::getMousePos());}
+   iVec globalToLocal(const dVec& global) const{return global - getGlobalPos();}
+   iVec localToGlobal(const dVec& local) const {return local + getGlobalPos();}
+   void setRect(const GFCSDraw::Rect<int>& r){_rect.value = r;_on_rect_changed();WidgetResizeEvent event(toEventPublisher());publish<decltype(event)>(event);}
+   void setPos(int x, int y){_rect.value.x = x; _rect.value.y = y; _on_rect_changed();WidgetResizeEvent event(toEventPublisher());publish<decltype(event)>(event);}
+   void setPos(const GFCSDraw::Pos<int>& pos){_rect.value.x = pos.x; _rect.value.y = pos.y; _on_rect_changed();WidgetResizeEvent event(toEventPublisher());publish<decltype(event)>(event);}
+   void setSize(const GFCSDraw::Size<int>& size){_rect.value.width = size.x; _rect.value.height = size.y; _on_rect_changed();WidgetResizeEvent event(toEventPublisher());publish<decltype(event)>(event);}
    void setGlobalPos(const dVec&);
    bool isInside(const dVec& point){return _rect.value.toSizeRect().isInside(point);}
    bool setName(const std::string& name, bool append_index=false);
@@ -144,13 +152,13 @@ protected:
    void _drawText(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, GFCSDraw::ColorRGBA color) const;
    void _drawTextCentered(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, GFCSDraw::ColorRGBA color) const;
    void _drawRectangle(const GFCSDraw::Rect<int>& rect, GFCSDraw::ColorRGBA color) const;
-   void _drawRectangleLines(const GFCSDraw::Rect<float>& rect, float lineThick, GFCSDraw::ColorRGBA color) const;
+   void _drawRectangleLines(const GFCSDraw::Rect<int>& rect, float lineThick, GFCSDraw::ColorRGBA color) const;
    void _drawRectangleRounded(const GFCSDraw::Rect<int>& rect,  float roundness, int segments, GFCSDraw::ColorRGBA color) const;
-   void _drawRectangleRoundedLines(const GFCSDraw::Rect<float>& rect, float roundness, int segments, float lineThick, GFCSDraw::ColorRGBA color) const;
+   void _drawRectangleRoundedLines(const GFCSDraw::Rect<int>& rect, float roundness, int segments, float lineThick, GFCSDraw::ColorRGBA color) const;
    void _drawRectangleGradientV(const GFCSDraw::Rect<int>& rect, GFCSDraw::ColorRGBA color1, GFCSDraw::ColorRGBA color2) const;
    void registerProperties() override;
    void _deserialize(PropertyPrototypeMap&);
-   RectProperty<double> _rect;
+   RectProperty<int> _rect;
 
    //input
    virtual Handled _unhandled_input(InputEvent&){return false;}
