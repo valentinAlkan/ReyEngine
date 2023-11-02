@@ -18,7 +18,7 @@ explicit CLASSNAME(const std::shared_ptr<EventPublisher>& publisher): PARENTCLAS
 EVENT_GENERATE_UNIQUE_ID(CLASSNAME)                           \
 explicit CLASSNAME(EventId eventId, const std::shared_ptr<EventPublisher>& publisher): PARENTCLASS(eventId, publisher)
 
-
+class EventSubscriber;
 using EventId = int;
 class EventPublisher;
 class BaseEvent{
@@ -29,6 +29,7 @@ public:
    {}
    const std::shared_ptr<EventPublisher>& publisher;
    const EventId eventId;
+   std::shared_ptr<EventSubscriber> subscriber;
 };
 
 template <typename T>
@@ -49,6 +50,7 @@ public:
    }
 };
 
+class BaseWidget;
 class EventPublisher;
 class EventSubscriber : public inheritable_enable_shared_from_this<EventSubscriber>{
 public:
@@ -63,8 +65,8 @@ public:
       };
       publisher->addSubscriber(me, T::getUniqueEventId(), adapter);
    };
-protected:
    std::shared_ptr<EventSubscriber> toEventSubscriber(){return inheritable_enable_shared_from_this<EventSubscriber>::shared_from_this();}
+   std::shared_ptr<BaseWidget> toBaseWidget();
 //   template <typename T>
 //   static void subscribe(Publisher&, const std::string& eventType, Subscriber, EventHandler){};
 //   template <typename T>
@@ -75,7 +77,6 @@ protected:
 
 using EventHandler = std::function<void(const BaseEvent&)>;
 using EventCallbackMap = std::map<std::weak_ptr<EventSubscriber>,std::vector<EventHandler>, std::owner_less<>>;
-class BaseWidget;
 class EventPublisher : public inheritable_enable_shared_from_this<EventPublisher>{
 public:
    void addSubscriber(std::weak_ptr<EventSubscriber> subscriber, EventId eventId, std::function<void(const BaseEvent&)> fx) {
@@ -116,6 +117,8 @@ public:
             //subscriber is dead, long live the subscriber
             it = subscribers.erase(it);
          } else {
+            //set the subscriber
+            ((BaseEvent&)event).subscriber = weakSubscriber.lock();
             //call every callback
             auto &handlers = it->second;
             for (auto& fx: handlers) {

@@ -40,7 +40,7 @@ public:
       if (!isInLayout) {
          auto textWidth = MeasureText(newText.c_str(), 20);
          auto pos = getPos();
-         setRect({pos.x, pos.y, (double) textWidth, 20});
+         setRect({pos.x, pos.y, textWidth, 20});
       }
    }
 protected:

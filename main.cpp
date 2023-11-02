@@ -141,26 +141,40 @@ int main(int argc, char** argv)
 
    if (args.getArg("--layoutTest")){
       Application::printDebug() << "Layout test!" << endl;
-      root = make_shared<HLayout>("Root", Rect<float>({0,0}, window->getSize()));
-      auto sizeLabel = make_shared<Label>("sizeLabel", Rect<float>({20,0}, {50, 100}));
-      auto randomLabel = make_shared<Label>("randomLabel", Rect<float>({50, 500}, {50, 100}));
-      sizeLabel->getTheme()->background.colorPrimary.set(Colors::blue);
-      sizeLabel->setText(window->getSize());
-      randomLabel->setText("lorem ipsum? damn near sat on em");
-      root->addChild(sizeLabel);
-      root->addChild(randomLabel);
-      sizeLabel->getTheme()->foreground.set(Colors::blue);
-      //set primary background color
-      sizeLabel->getTheme()->background.set(Style::Fill::SOLID);
-      randomLabel->getTheme()->background.set(Style::Fill::SOLID);
-      sizeLabel->getTheme()->background.colorPrimary.set(Colors::red);
-      randomLabel->getTheme()->background.colorPrimary.set(Colors::green);
-      //connect to resize
-      auto resizeCB = [root, sizeLabel](const Window::WindowResizeEvent& event){
+      root = make_shared<VLayout>("Root", Rect<float>({0,0}, window->getSize()));
+      auto resizeRoot = [root](const Window::WindowResizeEvent& event){
          root->setSize(event.size);
-         sizeLabel->setText(event.size);
       };
-      root->subscribe<Window::WindowResizeEvent>(window, resizeCB);
+      root->subscribe<Window::WindowResizeEvent>(window, resizeRoot);
+      auto parent = root;
+      for (int i=0;i<50;i++){
+         std::shared_ptr<Layout> layout;
+         if (i & 1){
+            layout = make_shared<VLayout>("layout" + to_string(i), Rect<float>());
+         } else {
+            layout = make_shared<HLayout>("layout" + to_string(i), Rect<float>());
+         }
+         auto label1 = make_shared<Label>("label" + to_string(i) + "_1", Rect<float>());
+         label1->setText("");
+//         auto label2 = make_shared<Label>("label" + to_string(i) + "_2", Rect<float>());
+         label1->getTheme()->background.set(Style::Fill::SOLID);
+//         label2->getTheme()->background.set(Style::Fill::SOLID);
+         label1->getTheme()->background.colorPrimary.set(ColorRGBA::random(254));
+//         label2->getTheme()->background.colorPrimary.set(ColorRGBA::random(100));
+         parent->addChild(layout);
+         layout->addChild(label1);
+//         layout->addChild(label2);
+         parent = layout;
+
+         //connect to resize
+//         auto resizeCB = [](const BaseWidget::WidgetResizeEvent& event){
+//            auto label = event.subscriber->toBaseWidget()->toType<Label>();
+//            label->setText(event.size);
+//         };
+//         label1->subscribe<BaseWidget::WidgetResizeEvent>(parent, resizeCB);
+//         label2->subscribe<BaseWidget::WidgetResizeEvent>(parent, resizeCB);
+      }
+
    }
 
    // default functionality

@@ -138,7 +138,7 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::removeChild(WidgetPtr widget) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Pos<double> BaseWidget::getGlobalPos() const {
+Pos<int> BaseWidget::getGlobalPos() const {
    //sum up all our ancestors' positions and add our own to it
    auto offset = getPos();
    if (!_parent.expired()){ //todo: Race conditions?
@@ -148,7 +148,7 @@ Pos<double> BaseWidget::getGlobalPos() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-GFCSDraw::Size<double> BaseWidget::getChildRectSize() const {
+GFCSDraw::Size<int> BaseWidget::getChildRectSize() const {
    GFCSDraw::Size<double> childRect;
    for (const auto& childIter : _children){
       auto totalOffset = childIter.second.second->getRect().size() + Size<double>(childIter.second.second->getPos());
@@ -231,7 +231,7 @@ void BaseWidget::_drawRectangle(const Rect<int>& rect, GFCSDraw::ColorRGBA color
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::_drawRectangleLines(const GFCSDraw::Rect<float>& rect, float lineThick, GFCSDraw::ColorRGBA color) const {
+void BaseWidget::_drawRectangleLines(const GFCSDraw::Rect<int>& rect, float lineThick, GFCSDraw::ColorRGBA color) const {
    Rect<int> newRect(rect + getGlobalPos() + _renderOffset);
    GFCSDraw::drawRectangleLines(newRect, lineThick, color);
 }
@@ -244,9 +244,9 @@ void BaseWidget::_drawRectangleRounded(const GFCSDraw::Rect<int> &rect, float ro
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::_drawRectangleRoundedLines(const GFCSDraw::Rect<float> &rect, float roundness, int segments,float lineThick, GFCSDraw::ColorRGBA color) const {
+void BaseWidget::_drawRectangleRoundedLines(const GFCSDraw::Rect<int> &rect, float roundness, int segments,float lineThick, GFCSDraw::ColorRGBA color) const {
    //use the size of the param rect but use the position of our rect + the param rect
-   Rect<float> newRect(rect + Pos<float>(getGlobalPos()) + Pos<float>(_renderOffset));
+   Rect<float> newRect(rect + Pos<double>(getGlobalPos()) + Pos<double>(_renderOffset));
    GFCSDraw::drawRectangleRoundedLines(newRect, roundness, segments, lineThick, color);
 }
 

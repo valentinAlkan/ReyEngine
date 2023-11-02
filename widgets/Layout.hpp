@@ -21,6 +21,9 @@ protected:
       childScales.ref().push_back(1.0);
       arrangeChildren();
    }
+   void _on_rect_changed() override {
+      arrangeChildren();
+   }
    void arrangeChildren(){
       auto& children = getChildren();
       size_t childCount = children.size();
@@ -34,10 +37,10 @@ protected:
             //how much space we will allocate to each child
             auto sizeEach = totalSpace / (float) childCount;
             unsigned long i = 0;
-            auto pos = GFCSDraw::Pos<double>(0, 0);
+            auto pos = GFCSDraw::Pos<int>(0, 0);
             for (auto &child: getChildren()) {
                auto thisRatio = childScales.value[i];
-               auto thisSize = sizeEach * thisRatio;
+               int thisSize = (int)sizeEach * thisRatio;
                child->setRect({pos, {thisSize, _rect.value.height}});
                pos.x += thisSize;
             }
@@ -49,10 +52,10 @@ protected:
             //how much space we will allocate to each child
             auto sizeEach = totalSpace / (float)childCount;
             unsigned long i=0;
-            auto pos = GFCSDraw::Pos<double>(0,0);
+            auto pos = GFCSDraw::Pos<int>(0,0);
             for (auto& child : getChildren()){
                auto thisRatio = childScales.value[i];
-               auto thisSize = sizeEach * thisRatio;
+               int thisSize = sizeEach * thisRatio;
                child->setRect({pos, {_rect.value.width, thisSize}});
                pos.y += thisSize;
             }
