@@ -179,8 +179,8 @@ std::string string_tools::listJoin(const std::vector<std::string> &v) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-size_t string_tools::lcountUntil(const std::string &s, char c) {
-   if (s.empty()) return 0;
+std::optional<size_t> string_tools::lcountUntil(const std::string &s, char c) {
+   if (s.empty()) return nullopt;
    auto retval = 0;
    bool found = false;
    for (const auto& _c : s){
@@ -191,14 +191,14 @@ size_t string_tools::lcountUntil(const std::string &s, char c) {
       retval++;
    }
    if (!found){
-      return string::npos;
+      return nullopt;
    }
    return retval;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-size_t string_tools::rcountUntil(const std::string &s, char c) {
-   if (s.empty()) return 0;
+std::optional<size_t> string_tools::rcountUntil(const std::string &s, char c) {
+   if (s.empty()) return nullopt;
    auto retval = 0;
    bool found = false;
    for (auto it = s.rbegin(); it!=s.rend(); it++){
@@ -209,7 +209,46 @@ size_t string_tools::rcountUntil(const std::string &s, char c) {
       retval++;
    }
    if (!found){
-      return string::npos;
+      return nullopt;
    }
    return retval;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<std::pair<size_t, size_t>> string_tools::decimalCount(const std::string &numeric) {
+   //enforce a real number with only one scan
+   if (numeric.empty()) return nullopt;
+   auto decimalCount = 0;
+   auto integerCount = 0;
+   bool foundDecimal = false;
+   for (auto it = numeric.begin(); it!=numeric.end(); it++){
+      auto c = *it;
+      //must be a number
+      if (c == '.') {
+         if (foundDecimal) return nullopt; //non-real number
+         foundDecimal = true;
+         continue;
+      } else {
+         if (!::isdigit(c) && c != '+' && c != '-') return nullopt;
+         foundDecimal ? decimalCount++ : integerCount++;
+      }
+   }
+   return std::pair<size_t, size_t>(integerCount, decimalCount);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::pair<size_t, size_t> string_tools::decimalCount(double d) {
+   auto decimalCount = 0;
+   auto integerCount = 0;
+   bool foundDecimal = false;
+   auto numeric = to_string(d);
+   for (auto it = numeric.begin(); it!=numeric.end(); it++){
+      if (*it == '.') {
+         foundDecimal = true;
+         continue;
+      } else {
+         foundDecimal ? integerCount++ : decimalCount++;
+      }
+   }
+   return {integerCount, decimalCount};
 }
