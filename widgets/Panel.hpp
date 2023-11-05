@@ -9,8 +9,8 @@ public:
    }
 public:
    void render() const override {
-      auto roundness = refTheme().roundness.get();
-      auto color = refTheme().background.colorPrimary.get();
+      auto roundness = getThemeReadOnly().roundness.get();
+      auto color = getThemeReadOnly().background.colorPrimary.get();
       _drawRectangleRounded(_rect.value.toSizeRect(), roundness, 1, color);
    }
    void _process(float dt) override {}

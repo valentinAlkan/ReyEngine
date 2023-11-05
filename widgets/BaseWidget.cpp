@@ -118,6 +118,8 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::addChild(WidgetPtr widget){
       Application::printError() << ss.str() << endl;
       return nullopt;
    }
+   //call immediate callback
+   _on_child_added_immediate(widget);
    Application::registerForEnterTree(widget, *this);
    widget->isInLayout = isLayout;
    return widget;
@@ -134,6 +136,7 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::removeChild(WidgetPtr widget) {
       return nullopt;
    }
    _children.erase(found);
+   found->second.second->isInLayout = false;
    return found->second.second;
 }
 

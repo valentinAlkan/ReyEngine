@@ -177,3 +177,39 @@ std::string string_tools::join(const std::string &s, const std::vector<std::stri
 std::string string_tools::listJoin(const std::vector<std::string> &v) {
    return "{" + join(", ", v) + "}";
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+size_t string_tools::lcountUntil(const std::string &s, char c) {
+   if (s.empty()) return 0;
+   auto retval = 0;
+   bool found = false;
+   for (const auto& _c : s){
+      if (_c == c) {
+         found = true;
+         break;
+      }
+      retval++;
+   }
+   if (!found){
+      return string::npos;
+   }
+   return retval;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+size_t string_tools::rcountUntil(const std::string &s, char c) {
+   if (s.empty()) return 0;
+   auto retval = 0;
+   bool found = false;
+   for (auto it = s.rbegin(); it!=s.rend(); it++){
+      if (*it == c) {
+         found = true;
+         break;
+      }
+      retval++;
+   }
+   if (!found){
+      return string::npos;
+   }
+   return retval;
+}

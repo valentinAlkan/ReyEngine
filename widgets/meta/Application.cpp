@@ -14,7 +14,7 @@ std::shared_ptr<Window> Application::createWindow(const std::string &title, int 
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Application::registerForEnterTree(std::shared_ptr<BaseWidget>& widget, BaseWidget& parent) {
-   instance()._initStack.emplace(widget, parent);
+   instance()._initQueue.emplace(widget, parent);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -51,11 +51,9 @@ void Application::ready() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void Application::processEnterTree() {
    //todo: also process enter tree
-   auto& stack = instance()._initStack;
-   while (!stack.empty()){
-      auto p = stack.top();
-      //pop immediately so we can add stuff to the stack in _init functions
-      stack.pop();
+   auto& queue = instance()._initQueue;
+   while (!queue.empty()){
+      auto& p = queue.front();
       auto& widget = p.first;
       auto& parent = p.second;
       if (parent.getChild(widget->getName())) throw std::runtime_error("Parent already has child with the name " + widget->getName());
@@ -69,5 +67,6 @@ void Application::processEnterTree() {
          hasInit = true;
       }
       parent._on_child_added(widget);
+      queue.pop();
    }
 }

@@ -6,7 +6,7 @@ class RootWidget : public Control{
 public:
 //   void renderBegin(GFCSDraw::Vec2<float>& textureOffset) override {}
    void render() const override {
-      auto& theme = refTheme();
+      auto& theme = getThemeReadOnly();
       _drawRectangle(_rect.value, theme.background.colorPrimary.get());
    }
 //   void renderEnd() override{}

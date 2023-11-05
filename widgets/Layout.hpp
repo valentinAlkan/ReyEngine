@@ -17,19 +17,24 @@ protected:
       Control::_register_parent_properties();
       Control::registerProperties();
    }
-   void _on_child_added(std::shared_ptr<BaseWidget>&) override {
-      childScales.ref().push_back(1.0);
+   void _on_child_added(std::shared_ptr<BaseWidget>& child) override {
+      Application::printDebug() << child->getName() << " added to layout " << getName() << std::endl;
       arrangeChildren();
+   }
+   void _on_child_added_immediate(std::shared_ptr<BaseWidget>& child) override {
+      childScales.ref().push_back(1.0);
    }
    void _on_rect_changed() override {
       arrangeChildren();
    }
    void arrangeChildren(){
       auto& children = getChildren();
+      if (children.empty()) return; //early return
       size_t childCount = children.size();
       //each childs scale value
       float totalScale = childScales.sum();
       //todo: ratios
+      bool canExpand = isInLayout; //if we're not in a layout we can expand ourselves to fit our children
       switch (dir) {
          case LayoutDir::HORIZONTAL: {
             //how much space we have to allocate
@@ -63,6 +68,7 @@ protected:
          }
       }
    }
+public:
    FloatListProperty childScales;
 protected:
    const LayoutDir dir;

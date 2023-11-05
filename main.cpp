@@ -187,6 +187,37 @@ int main(int argc, char** argv)
 
       //add a panel to the layout
       auto panel = make_shared<Panel>("Panel", Rect<int>());
+
+      //add a slider so we can adjust the roundness dynamically
+      auto slider = make_shared<Slider>("Slider", Rect<int>(40, 20, 100, 20), Slider::SliderType::HORIZONTAL);
+      panel->addChild(slider);
+      //add an hlayout to fill the slider
+      auto sliderHLayout = make_shared<HLayout>("sliderLayout", slider->getRect().toSizeRect());
+      slider->addChild(sliderHLayout);
+
+      //add a name label to the slider
+      auto fieldLabel = make_shared<Label>("FieldNameRoundness", Rect<int>());
+      fieldLabel->setText("Roundness: ");
+      //add a value label to the slider
+      auto valueLabel = make_shared<Label>("roundnessLabel", Rect<int>());
+      valueLabel->setText(0, 3);
+
+      sliderHLayout->addChild(fieldLabel);
+      sliderHLayout->addChild(valueLabel);
+      sliderHLayout->setWidth(fieldLabel->getWidth() + valueLabel->getWidth());
+
+      //set the layout ratio so everything can be displayed nicely
+      sliderHLayout->childScales.set(0, 1.5);
+
+      //resize slider so it fits all our text
+      slider->setWidth(sliderHLayout->getWidth());
+
+      auto updateLabel = [panel, valueLabel](const Slider::SliderValueChangedEvent& event){
+         double newRound = (float)event.value/100.0;
+         valueLabel->setText(newRound, 3);
+         panel->getTheme()->roundness.set(newRound);
+      };
+      valueLabel->subscribe<Slider::SliderValueChangedEvent>(slider, updateLabel);
       root->addChild(panel);
    }
 

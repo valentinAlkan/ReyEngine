@@ -2,6 +2,8 @@
 #include "Control.hpp"
 #include "StringTools.h"
 #include "Theme.h"
+#include <iomanip>
+#include <sstream>
 
 class Label : public Control {
    GFCSDRAW_OBJECT(Label, Control)
@@ -10,9 +12,9 @@ class Label : public Control {
 public:
    void render() const override{
       //todo: scissor text
-      auto& outline = refTheme().outline;
-      auto& background = refTheme().background;
-      auto& foreground = refTheme().foreground;
+      auto& outline = getThemeReadOnly().outline;
+      auto& background = getThemeReadOnly().background;
+      auto& foreground = getThemeReadOnly().foreground;
       switch (background.value){
          case Style::Fill::SOLID:
             _drawRectangle(_rect.value.toSizeRect(), background.colorPrimary.value);
@@ -36,12 +38,32 @@ public:
    };
    void setText(const std::string& newText){
       text.set(newText);
-//      auto textSize = GFCSDraw::measureText(GFCSDraw::getDefaultFont(), text.get().c_str(), 20, 1);
       if (!isInLayout) {
          auto textWidth = MeasureText(newText.c_str(), 20);
          auto pos = getPos();
          setRect({pos.x, pos.y, textWidth, 20});
       }
+   }
+   //precision refers to how many decimal places should appear
+   void setText(double newText, int precision){
+      std::stringstream ss;
+      ss << std::setprecision(precision) << newText;
+      auto textrep = ss.str();
+      auto existDecimal = string_tools::rcountUntil(textrep, '.');
+      if (existDecimal == std::string::npos){
+         //no decimal
+         textrep += '.';
+         textrep.append(precision, '0');
+      } else if (existDecimal < precision){
+         //has too few decimals
+         auto fillNeeded = precision - existDecimal;
+         textrep.append(fillNeeded, '0');
+      }
+
+      setText(textrep);
+   }
+   void setText(int newText){
+      setText(std::to_string(newText));
    }
 protected:
    StringProperty text;
