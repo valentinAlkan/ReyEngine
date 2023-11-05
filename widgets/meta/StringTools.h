@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include <optional>
 
 namespace string_tools{
    std::vector<std::string> split(const std::string& s, const std::string& delimString);
@@ -15,8 +16,10 @@ namespace string_tools{
    int count(const std::string& s, char c); //counts ocurrences of a character in a string
    int lcount(const std::string& s, char c); //counts ocurrences of a character in a string until non-match, left start
    int rcount(const std::string& s, char c); //counts ocurrences of a character in a string until non-match, right start
-   size_t lcountUntil(const std::string& s, char c); //counts number of characters in a string until match, left start
-   size_t rcountUntil(const std::string& s, char c); //counts number of characters in a string until match, right start
+   std::optional<size_t> lcountUntil(const std::string& s, char c); //counts number of characters in a string until match, left start
+   std::optional<size_t> rcountUntil(const std::string& s, char c); //counts number of characters in a string until match, right start
+   std::optional<std::pair<size_t, size_t>> decimalCount(const std::string& numeric); //returns a pair of size_t's, char count before decimal and after, respectively. Optionally null if non-real number or null string.
+   std::pair<size_t, size_t> decimalCount(double d); //more optimized than the above since we assume its a number to begin with
    int countwhitel(const std::string& s);
    int countwhiter(const std::string& s);
    int countwhite(const std::string& s);

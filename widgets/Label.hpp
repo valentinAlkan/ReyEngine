@@ -46,21 +46,11 @@ public:
    }
    //precision refers to how many decimal places should appear
    void setText(double newText, int precision){
-      std::stringstream ss;
-      ss << std::setprecision(precision) << newText;
-      auto textrep = ss.str();
-      auto existDecimal = string_tools::rcountUntil(textrep, '.');
-      if (existDecimal == std::string::npos){
-         //no decimal
-         textrep += '.';
-         textrep.append(precision, '0');
-      } else if (existDecimal < precision){
-         //has too few decimals
-         auto fillNeeded = precision - existDecimal;
-         textrep.append(fillNeeded, '0');
-      }
-
-      setText(textrep);
+      auto textRepr = std::to_string(newText);
+      auto digitsCount = string_tools::decimalCount(textRepr);
+      auto integerCount = digitsCount.value().first;
+      auto decimalCount = digitsCount.value().second;
+      setText(std::string(textRepr, 0, integerCount + 1 + (decimalCount > precision ? precision : decimalCount)));
    }
    void setText(int newText){
       setText(std::to_string(newText));
