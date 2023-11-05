@@ -2,8 +2,8 @@
 #include "Event.h"
 #include "DrawInterface.h"
 
-struct InputEvent : public Event<BaseEvent> {
-   EVENT_CTOR_SIMPLE_OVERRIDABLE(InputEvent, Event<BaseEvent>){}
+struct InputEvent : public Event<InputEvent> {
+   EVENT_CTOR_SIMPLE_OVERRIDABLE(InputEvent, Event<InputEvent>){}
 };
 
 struct InputEventKey : public InputEvent {

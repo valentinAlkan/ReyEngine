@@ -78,7 +78,8 @@ namespace Style {
       : Property<Empty>(instanceName, PropertyTypes::Theme, Empty()),
       PROPERTY_DECLARE(outline, Outline::NONE),
       PROPERTY_DECLARE(background, Fill::NONE),
-      PROPERTY_DECLARE(foreground, GFCSDraw::Colors::black)
+      PROPERTY_DECLARE(foreground, GFCSDraw::Colors::black),
+      PROPERTY_DECLARE(roundness, 0.01)
       {}
       std::string toString() override {return "not impelenmeted";}
       Empty fromString(const std::string& data) override { return value;}
@@ -86,6 +87,7 @@ namespace Style {
       FillProperty background;
       ColorProperty foreground;
       OutlineProperty outline;
+      FloatProperty roundness;
    private:
       Empty value; //do not use - only exists to satisfy construction requirements
    };

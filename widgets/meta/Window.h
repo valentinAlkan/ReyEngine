@@ -12,8 +12,16 @@ class Window : public EventPublisher {
 public:
 //   using ProcessListIterator = std::unordered_set<std::shared_ptr<BaseWidget>>::iterator;
    struct WindowResizeEvent : public Event<WindowResizeEvent> {
-      EVENT_CTOR_SIMPLE(WindowResizeEvent, Event<WindowResizeEvent>){}
+      EVENT_CTOR_SIMPLE(WindowResizeEvent, Event<WindowResizeEvent>){
+//         std::cout << "Window resize is event id " << getUniqueEventId() << std::endl;
+      }
       GFCSDraw::Size<int> size;
+   };
+   struct WindowMoveEvent : public Event<WindowMoveEvent> {
+      EVENT_CTOR_SIMPLE(WindowMoveEvent, Event<WindowMoveEvent>){
+//         std::cout << "Window move is event id " << getUniqueEventId() << std::endl;
+      }
+      GFCSDraw::Pos<int> position;
    };
    enum Flags{RESIZE};
    virtual void exec();
@@ -24,7 +32,12 @@ public:
    static GFCSDraw::Pos<int> getMousePos(); //returns global mouse position
    static GFCSDraw::Vec2<double> getMousePct(); //returns global mouse position as a percentage of the window size from 0 to 1
    const std::shared_ptr<BaseWidget>& getRootWidget(){return _root;}
-   GFCSDraw::Size<int> getSize(){return size;}
+   GFCSDraw::Size<int> getSize(){return GFCSDraw::getWindowSize();}
+   void setSize(GFCSDraw::Size<int> newSize){GFCSDraw::setWindowSize(newSize);}
+   GFCSDraw::Pos<int> getPosition(){return GFCSDraw::getWindowPosition();}
+   void setPosition(GFCSDraw::Pos<int> newPos){GFCSDraw::setWindowPosition(newPos);}
+   void maximize(){GFCSDraw::maximizeWindow();}
+   void minimize(){GFCSDraw::minimizeWindow();}
 protected:
    Window(const std::string& title, int width, int height, const std::vector<Flags>& flags, int targetFPS=60);
    static constexpr size_t INPUT_COUNT_LIMIT = 256;
@@ -41,7 +54,6 @@ private:
       std::unordered_set<std::shared_ptr<BaseWidget>> _list; //list of widgets that require processing. No specific order.
       std::mutex _mtx;
    } _processList;
-   GFCSDraw::Size<int> size;
 
    friend class Application;
 };

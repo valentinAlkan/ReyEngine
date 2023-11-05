@@ -3,8 +3,8 @@
 
 class BaseButton : public Control {
 public:
-   struct PushButtonEvent : public Event<BaseEvent>{
-      EVENT_CTOR_SIMPLE(PushButtonEvent, Event<BaseEvent>){}
+   struct PushButtonEvent : public Event<PushButtonEvent>{
+      EVENT_CTOR_SIMPLE(PushButtonEvent, Event<PushButtonEvent>){}
       bool down;
    };
 protected:

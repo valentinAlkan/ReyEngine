@@ -4,9 +4,9 @@
 
 class Slider : public Control {
 public:
-   class SliderValueChangedEvent : public Event<BaseEvent> {
+   class SliderValueChangedEvent : public Event<SliderValueChangedEvent> {
    public:
-      EVENT_CTOR_SIMPLE(SliderValueChangedEvent, Event<BaseEvent>){}
+      EVENT_CTOR_SIMPLE(SliderValueChangedEvent, Event<SliderValueChangedEvent>){}
       double value;
       double pct;
    };
