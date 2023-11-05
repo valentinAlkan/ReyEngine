@@ -56,6 +56,7 @@ add_library(widgets STATIC
     widgets/meta/Theme.cpp
     widgets/Control.hpp
     widgets/Canvas.hpp
+    widgets/Panel.hpp
     widgets/Slider.hpp
     widgets/Button.hpp
     widgets/Label.hpp

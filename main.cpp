@@ -13,6 +13,7 @@
 #include "Slider.hpp"
 #include "Timer.hpp"
 #include "Layout.hpp"
+#include "Panel.hpp"
 
 using namespace std;
 using namespace GFCSDraw;
@@ -54,14 +55,15 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--labelTest", "help", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--saveLoadSceneTest", "Filename to save/load to", 1, RuntimeArg::ArgType::POSITIONAL));
    args.defineArg(RuntimeArg("--layoutTest", "Test layouts", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--panelTest", "Test panel", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--editor", "Editor", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    //create window (or don't idk)
    auto window = Application::instance().createWindow("MainWindow", screenWidth, screenHeight, {Window::RESIZE});
    if (!window){throw std::runtime_error("Something went horribly wrong! Please make a note of it.");}
 
-   shared_ptr<BaseWidget> root;
-   root = make_shared<Control>("Root", Rect<float>{0,0,0,0});
+   shared_ptr<BaseWidget> root = make_shared<Control>("Root", Rect<float>{0,0,0,0});
    auto argLoadScene = args.getArg("--loadScene");
    if (argLoadScene){
       auto loadSceneArg = argLoadScene.value();
@@ -174,8 +176,20 @@ int main(int argc, char** argv)
 //         label1->subscribe<BaseWidget::WidgetResizeEvent>(parent, resizeCB);
 //         label2->subscribe<BaseWidget::WidgetResizeEvent>(parent, resizeCB);
       }
-
    }
+
+   if (args.getArg("--panelTest")){
+      root = make_shared<VLayout>("MainLayout", Rect<int>());
+      auto resizeRoot = [root](const Window::WindowResizeEvent& event){
+         root->setSize(event.size);
+      };
+      root->subscribe<Window::WindowResizeEvent>(window, resizeRoot);
+
+      //add a panel to the layout
+      auto panel = make_shared<Panel>("Panel", Rect<int>());
+      root->addChild(panel);
+   }
+
 
    // default functionality
    //create a root widget
@@ -203,6 +217,18 @@ int main(int argc, char** argv)
       scrollArea->addChild(label);
    }
 
+   if (args.getArg("--editor")){
+      root = make_shared<VLayout>("MainVLayout", Rect<int>{0,0,0,0});
+
+      //maximize window and lock root to window size
+      auto resizeRoot = [root](const Window::WindowResizeEvent& event){
+         root->setSize(event.size);
+      };
+      root->subscribe<Window::WindowResizeEvent>(window, resizeRoot);
+      window->maximize();
+
+
+   }
 
    window->setRoot(root);
    window->exec();

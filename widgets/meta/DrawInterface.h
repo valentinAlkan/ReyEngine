@@ -155,6 +155,7 @@ namespace GFCSDraw {
       inline Pos operator-(const Pos& rhs) const {auto val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
       inline Pos& operator+=(const Pos& rhs){this->x += rhs.x; this->y += rhs.y; return *this;}
       inline Pos& operator-=(const Pos& rhs){this->x -= rhs.x; this->y -= rhs.y; return *this;}
+      inline bool operator!=(const Pos& rhs){return this->x != rhs.x || this->y != rhs.y;}
       inline operator std::string() const {return (Vec2<T>(*this).toString());}
       inline void operator=(Size<T>&) = delete;
       inline void operator=(Pos<int>& other){x = other.x; y = other.y;};
@@ -284,6 +285,12 @@ namespace GFCSDraw {
 
    Pos<double> getScreenCenter();
    Size<int> getScreenSize();
+   GFCSDraw::Size<int> getWindowSize();
+   void setWindowSize(GFCSDraw::Size<int>);
+   GFCSDraw::Pos<int> getWindowPosition();
+   void setWindowPosition(GFCSDraw::Pos<int>);
+   void maximizeWindow();
+   void minimizeWindow();
    void drawText(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color);
    void drawTextCentered(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color);
    void drawTextRelative(const std::string& text, const GFCSDraw::Vec2<int>& relPos, int fontSize, Color color);

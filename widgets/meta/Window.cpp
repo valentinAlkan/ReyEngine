@@ -11,7 +11,6 @@ using namespace GFCSDraw;
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 Window::Window(const std::string &title, int width, int height, const std::vector<Flags>& flags, int targetFPS)
-: size(GFCSDraw::Size<int>(width, height))
 {
 //   if (!_root){
 //      std::runtime_error("Window root cannot be null!");
@@ -45,14 +44,26 @@ void Window::exec(){
       if (widget->_isProcessed.value) widget->setProcess(true);
    };
    applyProcess(_root);
-
+   GFCSDraw::Size<int> size;
+   GFCSDraw::Pos<int> position;
    while (!WindowShouldClose()){
+      //process widgets wanting to enter the tree for the first time
+      Application::processEnterTree();
+
       //see if the window size has changed
-      auto newSize = GFCSDraw::getScreenSize();
+      auto newSize = getSize();
       if (newSize != size){
          WindowResizeEvent event(inheritable_enable_shared_from_this<EventPublisher>::shared_from_this());
          size = newSize;
          event.size = size;
+         publish(event);
+      }
+      //see if the window has moved
+      auto newPos = getPosition();
+      if (newPos != position){
+         WindowMoveEvent event(inheritable_enable_shared_from_this<EventPublisher>::shared_from_this());
+         position = newPos;
+         event.position = newPos;
          publish(event);
       }
 
@@ -120,9 +131,6 @@ void Window::exec(){
          event.globalPos = InputManager::getMousePos();
          _root->_process_unhandled_input(event);
       }
-
-      //process widgets wanting to enter the tree for the first time
-      Application::processEnterTree();
 
       //process timers and call their callbacks
       SystemTime::processTimers();
