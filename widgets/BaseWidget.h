@@ -86,8 +86,8 @@ public:
    GFCSDraw::Size<int> getChildRectSize() const; //get the smallest rectangle that contains all children, starting from 0,0. Does not include grandchildren.
    GFCSDraw::Pos<int> getPos() const {return {getRect().x, getRect().y};}
    GFCSDraw::Size<int> getSize() const {return getRect().size();}
-   double getWidth(){return _rect.value.width;}
-   double getHeight(){return _rect.value.height;}
+   int getWidth(){return _rect.value.width;}
+   int getHeight(){return _rect.value.height;}
    iVec getHeightRange() const {return {0, getRect().size().y};}
    iVec getWidthtRange() const {return {0, getRect().size().x};}
    iVec getLocalMousePos(){return globalToLocal(InputManager::getMousePos());}
@@ -97,6 +97,8 @@ public:
    void setPos(int x, int y){_rect.value.x = x; _rect.value.y = y; _on_rect_changed();WidgetResizeEvent event(toEventPublisher());publish<decltype(event)>(event);}
    void setPos(const GFCSDraw::Pos<int>& pos){_rect.value.x = pos.x; _rect.value.y = pos.y; _on_rect_changed();WidgetResizeEvent event(toEventPublisher());publish<decltype(event)>(event);}
    void setSize(const GFCSDraw::Size<int>& size){_rect.value.width = size.x; _rect.value.height = size.y; _on_rect_changed();WidgetResizeEvent event(toEventPublisher());publish<decltype(event)>(event);}
+   void setWidth(int width){_rect.value.width = width; _on_rect_changed();WidgetResizeEvent event(toEventPublisher());publish<decltype(event)>(event);}
+   void setHeight(int height){_rect.value.height = height; _on_rect_changed();WidgetResizeEvent event(toEventPublisher());publish<decltype(event)>(event);}
    void setGlobalPos(const dVec&);
    bool isInside(const dVec& point){return _rect.value.toSizeRect().isInside(point);}
    bool setName(const std::string& name, bool append_index=false);
@@ -136,7 +138,8 @@ protected:
    std::shared_ptr<BaseWidget> toBaseWidget(){return inheritable_enable_shared_from_this<BaseWidget>::shared_from_this();}
    virtual void _on_application_ready(){};
    virtual void _on_rect_changed(){}
-   virtual void _on_child_added(WidgetPtr&){}
+   virtual void _on_child_added_immediate(WidgetPtr&){} //Called immediately upon a call to addChild - DANGER: widget is not actually a child yet! It is (probably) a very bad idea to do much at all here. Make sure you know what you're doing.
+   virtual void _on_child_added(WidgetPtr&){} // called at the beginning of the next frame after a child is added. Child is now owned by us. Safe to manipulate child.
    virtual void _on_enter_tree(){}
    //override and setProcess(true) to allow processing
    virtual void _process(float dt){};

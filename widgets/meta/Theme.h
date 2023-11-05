@@ -100,7 +100,7 @@ namespace Style {
       void registerProperties() override {
          registerProperty(*theme);
       }
-      const Theme& refTheme() const {return *theme;}
+      const Theme& getThemeReadOnly() const {return *theme;}
       std::unique_ptr<Theme>& getTheme() {return theme;}
       void setTheme(std::unique_ptr<Theme> newTheme){
          theme = std::move(newTheme);

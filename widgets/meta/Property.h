@@ -170,7 +170,7 @@ using EnumPair = std::array<std::pair<T, std::string_view>, C>;
 template <typename T, auto C>
 struct EnumProperty : public Property<T>{
    EnumProperty(const std::string& instanceName, T defaultvalue)
-         : Property(instanceName, PropertyTypes::Enum, defaultvalue)
+   : Property(instanceName, PropertyTypes::Enum, defaultvalue)
    {}
    std::string toString() override {
       for(int i=0;i<getDict().size();i++){
@@ -203,7 +203,6 @@ template <typename T>
 struct ListProperty : public Property<std::vector<T>>{
    ListProperty(const std::string& instanceName) :
    Property<std::vector<T>>(instanceName, PropertyTypes::List, {}){
-
    }
    std::string toString() override {
       auto vec = Property<std::vector<T>>::value;
@@ -219,6 +218,12 @@ struct ListProperty : public Property<std::vector<T>>{
          Property<std::vector<T>>::value.push_back(stringToElement(s));
       }
       return Property<std::vector<T>>::value;
+   }
+   void set(int index, T newValue){
+      value.at(index) = newValue;
+   }
+   void get(int index){
+      return value.at(index);
    }
    virtual T stringToElement(const std::string& s) = 0;
    virtual std::string elementToString(const T& t){return std::to_string(t);}

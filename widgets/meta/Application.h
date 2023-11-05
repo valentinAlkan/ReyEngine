@@ -1,6 +1,6 @@
 #pragma once
 #include <memory>
-#include <unordered_set>
+#include <queue>
 #include "Window.h"
 #include "Logger.h"
 
@@ -65,7 +65,7 @@ private:
 
    //init list
    using InitPair = std::pair<std::shared_ptr<BaseWidget>, BaseWidget&>;
-   std::stack<InitPair> _initStack;
+   std::queue<InitPair> _initQueue;
    friend class BaseWidget;
    friend class Window;
 };

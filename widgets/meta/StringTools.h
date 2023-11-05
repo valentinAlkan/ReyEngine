@@ -12,9 +12,11 @@ namespace string_tools{
    std::string rstrip(const std::string& s);
    std::string strip(const std::string& s, const std::function<bool(char c)>& charMatch, bool rtol = false);
    std::string lrstrip(const std::string& s);
-   int count(const std::string& s, char c);
-   int lcount(const std::string& s, char c);
-   int rcount(const std::string& s, char c);
+   int count(const std::string& s, char c); //counts ocurrences of a character in a string
+   int lcount(const std::string& s, char c); //counts ocurrences of a character in a string until non-match, left start
+   int rcount(const std::string& s, char c); //counts ocurrences of a character in a string until non-match, right start
+   size_t lcountUntil(const std::string& s, char c); //counts number of characters in a string until match, left start
+   size_t rcountUntil(const std::string& s, char c); //counts number of characters in a string until match, right start
    int countwhitel(const std::string& s);
    int countwhiter(const std::string& s);
    int countwhite(const std::string& s);
