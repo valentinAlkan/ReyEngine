@@ -13,7 +13,7 @@ std::shared_ptr<Window> Application::createWindow(const std::string &title, int 
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Application::registerForEnterTree(std::shared_ptr<BaseWidget>& widget, BaseWidget& parent) {
+void Application::registerForEnterTree(std::shared_ptr<BaseWidget>& widget, std::shared_ptr<BaseWidget>& parent) {
    instance()._initQueue.emplace(widget, parent);
 }
 
@@ -56,17 +56,20 @@ void Application::processEnterTree() {
       auto& p = queue.front();
       auto& widget = p.first;
       auto& parent = p.second;
-      if (parent.getChild(widget->getName())) throw std::runtime_error("Parent already has child with the name " + widget->getName());
+      if (parent->hasChild(widget->getName())){
+         throw std::runtime_error("Parent already has child with the name " + widget->getName());
+      }
       auto& hasInit = widget->_has_inited;
-      auto newIndex = parent._childrenOrdered.size(); //index of new child's location in ordered vector
-      parent._children[widget->getName()] = std::pair<int, std::shared_ptr<BaseWidget>>(newIndex, widget);
-      parent._childrenOrdered.push_back(widget);
-      widget->_parent = parent.toBaseWidget();
+      auto newIndex = parent->_childrenOrdered.size(); //index of new child's location in ordered vector
+      parent->_children[widget->getName()] = std::pair<int, std::shared_ptr<BaseWidget>>(newIndex, widget);
+      parent->_childrenOrdered.push_back(widget);
+      widget->_parent = parent->toBaseWidget();
       if (!hasInit) {
          widget->_init();
          hasInit = true;
       }
-      parent._on_child_added(widget);
+      widget->_on_enter_tree();
+      parent->_on_child_added(widget);
       queue.pop();
    }
 }

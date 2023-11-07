@@ -249,7 +249,21 @@ int main(int argc, char** argv)
    }
 
    if (args.getArg("--editor")){
-      root = make_shared<VLayout>("MainVLayout", Rect<int>{0,0,0,0});
+      root = make_shared<VLayout>("MainVLayout", Rect<int>());
+      auto mainPanel = make_shared<Panel>("MainPanel", Rect<int>());
+      root->addChild(mainPanel);
+
+      //add an hlayout for the menubar
+      auto menuBarLayout = make_shared<HLayout>("menuBarLayout", Rect<int>());
+      auto menuBarPanel= make_shared<Panel>("menuBarPanel", Rect<int>());
+      menuBarLayout->addChild(menuBarPanel);
+
+
+
+
+
+
+
 
       //maximize window and lock root to window size
       auto resizeRoot = [root](const Window::WindowResizeEvent& event){
@@ -257,8 +271,6 @@ int main(int argc, char** argv)
       };
       root->subscribe<Window::WindowResizeEvent>(window, resizeRoot);
       window->maximize();
-
-
    }
 
    window->setRoot(root);

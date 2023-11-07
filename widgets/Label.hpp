@@ -55,6 +55,10 @@ public:
    void setText(int newText){
       setText(std::to_string(newText));
    }
+   void calculateTextWidth(){
+      //calculate the width of the text in the label
+//      GFCSDraw::measureText(GetFontDefault(), text.value, )
+   }
 protected:
    StringProperty text;
 };
