@@ -24,7 +24,7 @@ BaseWidget::~BaseWidget() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 bool BaseWidget::setName(const std::string& newName, bool append_index) {
-   auto lock = childSafetyLock();
+   auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
    //if the child has a sibling by the same name, it cannot be renamed
    if (!_parent.expired()) {
       //has a parent
@@ -93,8 +93,14 @@ void BaseWidget::setGlobalPos(const Vec2<double>& newPos) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+bool BaseWidget::hasChild(const std::string &name) {
+   auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
+   return _children.find(name) != _children.end();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 std::optional<BaseWidget::WidgetPtr> BaseWidget::getChild(const std::string &childName) {
-   auto lock = childSafetyLock();
+   auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
    auto found = _children.find(childName);
    if (found == _children.end()) {
       return nullopt;
@@ -104,7 +110,7 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::getChild(const std::string &chi
 
 /////////////////////////////////////////////////////////////////////////////////////////
 std::optional<BaseWidget::WidgetPtr> BaseWidget::addChild(WidgetPtr widget){
-   auto lock = childSafetyLock();
+   auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
    auto found = getChild(widget->getName());
    if (found){
       stringstream ss;
@@ -120,24 +126,28 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::addChild(WidgetPtr widget){
    }
    //call immediate callback
    _on_child_added_immediate(widget);
-   Application::registerForEnterTree(widget, *this);
+   auto me = toBaseWidget();
+   Application::registerForEnterTree(widget, me);
    widget->isInLayout = isLayout;
    return widget;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::optional<BaseWidget::WidgetPtr> BaseWidget::removeChild(WidgetPtr widget) {
-   auto lock = childSafetyLock();
-   auto found = _children.find(widget->getName());
+std::optional<BaseWidget::WidgetPtr> BaseWidget::removeChild(const std::string& name, bool quiet) {
+   auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
+   auto found = _children.find(name);
    if (found == _children.end()){
-      stringstream ss;
-      ss << "Widget " << getName() << " does not have a child with name <" << widget->getName() << ">";
-      Application::printError() << ss.str() << endl;
+      if (!quiet) {
+         stringstream ss;
+         ss << "Widget " << getName() << " does not have a child with name <" << name << ">";
+         Application::printError() << ss.str() << endl;
+      }
       return nullopt;
    }
+   auto child = found->second.second;
    _children.erase(found);
-   found->second.second->isInLayout = false;
-   return found->second.second;
+   child->isInLayout = false;
+   return child;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

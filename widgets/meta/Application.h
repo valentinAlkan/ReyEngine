@@ -45,7 +45,7 @@ public:
 
    static void registerForApplicationReady(std::shared_ptr<BaseWidget>&); //somethings require initwindow to have been called - so we can let the application know we want to be called when application is ready.
    static void registerForApplicationReady(std::function<void()>); //somethings require initwindow to have been called - so we can let the application know we want to be called when application is ready.
-   static void registerForEnterTree(std::shared_ptr<BaseWidget>&, BaseWidget&); //widgets can't use shared_from_this in ctor so we need a place that gets called once on tree enter that can do it.
+   static void registerForEnterTree(std::shared_ptr<BaseWidget>&, std::shared_ptr<BaseWidget>&); //widgets can't use shared_from_this in ctor so we need a place that gets called once on tree enter that can do it.
    static bool isReady(){return instance()._is_ready;}
 protected:
    uint64_t getNewRid(){return ++newRid;}
@@ -64,7 +64,7 @@ private:
    std::vector<std::function<void()>> _initListArbCallback; //list of arbitrary callbacks that serve the same purpose as the above
 
    //init list
-   using InitPair = std::pair<std::shared_ptr<BaseWidget>, BaseWidget&>;
+   using InitPair = std::pair<std::shared_ptr<BaseWidget>, std::shared_ptr<BaseWidget>>;
    std::queue<InitPair> _initQueue;
    friend class BaseWidget;
    friend class Window;

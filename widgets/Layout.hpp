@@ -4,7 +4,20 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 class Layout : public Control {
 public:
+   /////////////////////////////////////////////////////////////////////////////////////////
    enum class LayoutDir{HORIZONTAL, VERTICAL};
+   /////////////////////////////////////////////////////////////////////////////////////////
+   struct LayoutProperty : public EnumProperty<LayoutDir, 2>{
+      LayoutProperty(const std::string& instanceName,  LayoutDir defaultvalue)
+            : EnumProperty<LayoutDir, 2>(instanceName, defaultvalue){}
+      const EnumPair<LayoutDir, 2>& getDict() override {return dict;}
+      static constexpr EnumPair<LayoutDir, 2> dict = {
+            ENUM_PAIR_DECLARE(LayoutDir, VERTICAL),
+            ENUM_PAIR_DECLARE(LayoutDir, HORIZONTAL),
+      };
+      void registerProperties() override {}
+   };
+   /////////////////////////////////////////////////////////////////////////////////////////
 protected:
    Layout(const std::string &name, const std::string &typeName, const GFCSDraw::Rect<float> &r, LayoutDir layoutDir)
    : Control(name, typeName, r)

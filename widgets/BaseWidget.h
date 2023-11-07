@@ -39,16 +39,19 @@ std::string _get_static_constexpr_typename() override {return TYPE_NAME;}
 #define GFCSDRAW_DEFAULT_CTOR(CLASSNAME, ...) \
    CLASSNAME(const std::string& name, CTOR_RECT): CLASSNAME(name, _get_static_constexpr_typename(), r, __VA_ARGS__){}
 /////////////////////////////////////////////////////////////////////////////////////////
+#define GFCSDRAW_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME) \
+protected:                                                \
+   void _register_parent_properties() override{           \
+      PARENT_CLASSNAME::_register_parent_properties();    \
+      PARENT_CLASSNAME::registerProperties();             \
+   }
+
 #define GFCSDRAW_OBJECT(CLASSNAME, PARENT_CLASSNAME)  \
 public:                                                   \
    GFCSDRAW_DECLARE_STATIC_CONSTEXPR_TYPENAME(CLASSNAME)  \
    GFCSDRAW_SERIALIZER(CLASSNAME, PARENT_CLASSNAME)       \
    GFCSDRAW_DEFAULT_CTOR(CLASSNAME)                       \
-protected:                                                \
-   void _register_parent_properties() override{           \
-      PARENT_CLASSNAME::_register_parent_properties();    \
-      PARENT_CLASSNAME::registerProperties();             \
-   }                                                      \
+   GFCSDRAW_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME)  \
    GFCSDRAW_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME)
 
 
@@ -107,7 +110,8 @@ public:
 
    std::weak_ptr<BaseWidget> getParent(){return _parent;}
    const ChildOrder& getChildren() const {return _childrenOrdered;}
-   std::optional<WidgetPtr> getChild(const std::string& newName);
+   std::optional<WidgetPtr> getChild(const std::string& name);
+   bool hasChild(const std::string& name);
 
    template <typename T>
    std::shared_ptr<T> toType(){
@@ -125,7 +129,7 @@ public:
    bool isRoot();
 
    std::optional<WidgetPtr> addChild(WidgetPtr);
-   std::optional<WidgetPtr> removeChild(WidgetPtr);
+   std::optional<WidgetPtr> removeChild(const std::string& name, bool quiet = false); //quiet silences the output if child is not found.
 
    bool operator==(const WidgetPtr& other) const {if (other){return other->getRid()==_rid;}return false;}
    bool operator==(const BaseWidget& other) const{return other._rid == _rid;}
@@ -134,15 +138,19 @@ public:
    static void registerType(const std::string& typeName, const std::string& parentType, bool isVirtual, Deserializer fx){TypeManager::registerType(typeName, parentType, isVirtual, fx);}
    std::string serialize();
 protected:
-   virtual void _init(){};
    std::shared_ptr<BaseWidget> toBaseWidget(){return inheritable_enable_shared_from_this<BaseWidget>::shared_from_this();}
-   virtual void _on_application_ready(){};
-   virtual void _on_rect_changed(){}
+   virtual void _on_application_ready(){}; //called when the main loop is starting, or immediately if that's already happened
+   virtual void _init(){}; //run ONCE PER OBJECt when it enters tree for first time.
+   virtual void _on_rect_changed(){} //called when the rect is manipulated
    virtual void _on_child_added_immediate(WidgetPtr&){} //Called immediately upon a call to addChild - DANGER: widget is not actually a child yet! It is (probably) a very bad idea to do much at all here. Make sure you know what you're doing.
    virtual void _on_child_added(WidgetPtr&){} // called at the beginning of the next frame after a child is added. Child is now owned by us. Safe to manipulate child.
-   virtual void _on_enter_tree(){}
+   virtual void _on_enter_tree(){} //called every time a widget enters the tree
+   virtual void _on_exit_tree(){}
+   virtual void _on_child_removed(){}
+
    //override and setProcess(true) to allow processing
    virtual void _process(float dt){};
+
    // Drawing functions
    virtual void renderBegin(GFCSDraw::Pos<double>& textureOffset){}
    void renderChildren(GFCSDraw::Pos<double>& textureOffset) const; //draw the widget's children
@@ -184,7 +192,6 @@ private:
    std::optional<std::shared_ptr<Scene>> _scene;
    bool _request_delete = false; //true when we want to remove this object from the tree
    std::recursive_mutex _childLock;
-   std::scoped_lock<std::recursive_mutex> childSafetyLock(){return std::scoped_lock<std::recursive_mutex>(_childLock);}
    bool _scheduled_for_deletion = false; // true when the widget has been scheduled for deletion but is not yet deleted.
 
    GFCSDraw::Pos<double> _renderOffset; //used for different rendering modes. does not offset position.
