@@ -1,5 +1,6 @@
 #pragma once
 #include "BaseWidget.h"
+#include "Application.h"
 
 class Control : public BaseWidget {
 public:

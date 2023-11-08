@@ -107,7 +107,8 @@ namespace GFCSDraw {
    class Range : private Vec3<T> {
    public:
       //Vec3 but x represents min, z represents max, and y represents value; Can lerp and set pct.
-      //Vec3 shall be considered x=min, y=max, z=default value
+      //Vec3 shall be considered x=min, y=max, z=default value.
+      //Does not enforce limits (ie value is free to be more or less than min or max.
       inline Range(): Vec3<T>::Vec3(){}
       inline Range(const T& min, const T& max, const T& defaultValue) : Vec3<T>::Vec3(min, max, defaultValue){}
       inline explicit Range(const Vector3& v)     : Vec3<T>::Vec3(v){}

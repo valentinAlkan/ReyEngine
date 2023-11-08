@@ -105,7 +105,7 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::getChild(const std::string &chi
    if (found == _children.end()) {
       return nullopt;
    }
-   return std::optional<WidgetPtr>(found->second.second);
+   return {found->second.second};
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -127,6 +127,7 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::addChild(WidgetPtr widget){
    //call immediate callback
    _on_child_added_immediate(widget);
    auto me = toBaseWidget();
+   Application::printDebug() << "Registering child " << widget->getName() << " to parent " << getName() << endl;
    Application::registerForEnterTree(widget, me);
    widget->isInLayout = isLayout;
    return widget;
