@@ -9,7 +9,7 @@
 #include "SharedFromThis.h"
 
 #define EVENT_GENERATE_UNIQUE_ID(CLASSNAME) static constexpr int CLASSNAME##_UNIQUE_ID = __COUNTER__; \
-static int getUniqueEventId(){return CLASSNAME##_UNIQUE_ID;}
+static constexpr int getUniqueEventId(){return CLASSNAME##_UNIQUE_ID;}
 #define EVENT_GET_NAME(CLASSNAME) static std::string getEventName() {return #CLASSNAME + std::string("_") + std::to_string(CLASSNAME##_UNIQUE_ID);}
 #define EVENT_CTOR_SIMPLE(CLASSNAME, PARENTCLASS) \
 EVENT_GENERATE_UNIQUE_ID(CLASSNAME)               \

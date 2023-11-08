@@ -20,10 +20,23 @@ public:
    bool wasDown;
 protected:
    Handled _unhandled_input(InputEvent& event) override{
-      auto& e = static_cast<InputEventMouseButton&>(event);
-      if (e.button == InputInterface::MouseButton::MOUSE_BUTTON_LEFT){
-         setDown(e.isDown);
-         return true;
+      switch (event.eventId) {
+         case InputEventMouseButton::getUniqueEventId(): {
+            auto mouseEvent = event.toEventType<InputEventMouseButton>();
+            if (isInside(globalToLocal(mouseEvent.globalPos))) {
+               if (mouseEvent.button == InputInterface::MouseButton::MOUSE_BUTTON_LEFT) {
+                  setDown(mouseEvent.isDown);
+                  return true;
+               }
+            }
+         }
+         break;
+         case InputEventMouseMotion::getUniqueEventId():
+            auto mouseEvent = event.toEventType<InputEventMouseMotion>();
+            if (isInside(globalToLocal(mouseEvent.globalPos))) {
+               Application::printDebug() << "isInside" << std::endl;
+            }
+         break;
       }
       return false;
    }

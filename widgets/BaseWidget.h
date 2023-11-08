@@ -83,6 +83,8 @@ public:
    ~BaseWidget();
    uint64_t getRid() const {return _rid;}
    std::string getName() const {return _name;}
+
+   //rect stuff
    GFCSDraw::Rect<int> getRect() const {return _rect.value;}
    GFCSDraw::Rect<int> getGlobalRect() const {return {getGlobalPos().x, getGlobalPos().y, getSize().x, getSize().y};}
    GFCSDraw::Pos<int> getGlobalPos() const;
@@ -93,15 +95,20 @@ public:
    int getHeight(){return _rect.value.height;}
    iVec getHeightRange() const {return {0, getRect().size().y};}
    iVec getWidthtRange() const {return {0, getRect().size().x};}
-   iVec getLocalMousePos(){return globalToLocal(InputManager::getMousePos());}
-   iVec globalToLocal(const dVec& global) const{return global - getGlobalPos();}
-   iVec localToGlobal(const dVec& local) const {return local + getGlobalPos();}
    void setRect(const GFCSDraw::Rect<int>& r){_rect.value = r;_on_rect_changed();WidgetResizeEvent event(toEventPublisher());publish<decltype(event)>(event);}
    void setPos(int x, int y){_rect.value.x = x; _rect.value.y = y; _on_rect_changed();WidgetResizeEvent event(toEventPublisher());publish<decltype(event)>(event);}
    void setPos(const GFCSDraw::Pos<int>& pos){_rect.value.x = pos.x; _rect.value.y = pos.y; _on_rect_changed();WidgetResizeEvent event(toEventPublisher());publish<decltype(event)>(event);}
+   void setMaxSize(const GFCSDraw::Size<int>& size){maxSize = size;}
+   void setMinSize(const GFCSDraw::Size<int>& size){minSize = size;}
+   GFCSDraw::Size<int> getMinSize(){return minSize;}
+   GFCSDraw::Size<int> getMaxSize(){return maxSize;}
    void setSize(const GFCSDraw::Size<int>& size){_rect.value.width = size.x; _rect.value.height = size.y; _on_rect_changed();WidgetResizeEvent event(toEventPublisher());publish<decltype(event)>(event);}
    void setWidth(int width){_rect.value.width = width; _on_rect_changed();WidgetResizeEvent event(toEventPublisher());publish<decltype(event)>(event);}
    void setHeight(int height){_rect.value.height = height; _on_rect_changed();WidgetResizeEvent event(toEventPublisher());publish<decltype(event)>(event);}
+
+   iVec getLocalMousePos(){return globalToLocal(InputManager::getMousePos());}
+   iVec globalToLocal(const dVec& global) const{return global - getGlobalPos();}
+   iVec localToGlobal(const dVec& local) const {return local + getGlobalPos();}
    void setGlobalPos(const dVec&);
    bool isInside(const dVec& point){return _rect.value.toSizeRect().isInside(point);}
    bool setName(const std::string& name, bool append_index=false);
@@ -181,6 +188,8 @@ protected:
    bool _has_inited = false; //set true THE FIRST TIME a widget enters the tree. Can do constructors of children and other stuff requiring shared_from_this();
    bool isLayout = false;
    bool isInLayout = false;
+   GFCSDraw::Size<int> maxSize = {INT_MAX, INT_MAX};
+   GFCSDraw::Size<int> minSize = {0,0};
 private:
    void rename(WidgetPtr& child, const std::string& newName);
    uint64_t _rid; //unique identifier

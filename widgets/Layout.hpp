@@ -1,5 +1,6 @@
 #pragma once
 #include "Control.hpp"
+#include "MathTools.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////
 class Layout : public Control {
@@ -44,40 +45,38 @@ protected:
       auto& children = getChildren();
       if (children.empty()) return; //early return
       size_t childCount = children.size();
-      //each childs scale value
+      //sum of each childs scale values
       float totalScale = childScales.sum();
-      //todo: ratios
-      bool canExpand = isInLayout; //if we're not in a layout we can expand ourselves to fit our children
-      switch (dir) {
-         case LayoutDir::HORIZONTAL: {
-            //how much space we have to allocate
-            auto totalSpace = getWidth();
-            //how much space we will allocate to each child
-            auto sizeEach = totalSpace / (float) childCount;
-            unsigned long i = 0;
-            auto pos = GFCSDraw::Pos<int>(0, 0);
-            for (auto &child: getChildren()) {
-               auto thisRatio = childScales.value[i];
-               int thisSize = (int)sizeEach * thisRatio;
-               child->setRect({pos, {thisSize, _rect.value.height}});
-               pos.x += thisSize;
-            }
-            break;
+      //how much space we have to allocate
+      auto totalSpace = dir == LayoutDir::HORIZONTAL ? getWidth() : getHeight();
+      auto sizeEach = (float)totalSpace / (float) childCount;
+      unsigned long i = 0;
+      auto pos = GFCSDraw::Pos<int>(0, 0);
+      //how much space we will allocate to each child
+      for (auto& child: getChildren()) {
+         auto thisRatio = childScales.value[i];
+         int thisSize = (int)(sizeEach * thisRatio);
+         auto newSize = dir == LayoutDir::HORIZONTAL ? GFCSDraw::Rect<int>(pos, {thisSize, _rect.value.height}) : GFCSDraw::Rect<int>(pos, {_rect.value.width, thisSize});
+         auto minSize = dir == LayoutDir::HORIZONTAL ? child->getMinSize().x : child->getMinSize().y;
+         auto maxSize = dir == LayoutDir::HORIZONTAL ? child->getMaxSize().x : child->getMaxSize().y;
+         //enforce min/max bounds
+         switch(dir) {
+            case LayoutDir::HORIZONTAL:
+               newSize.width = math_tools::clamp(minSize, maxSize, newSize.width);
+               break;
+            case LayoutDir::VERTICAL:
+               newSize.height = math_tools::clamp(minSize, maxSize, newSize.height);
+               break;
          }
-         case LayoutDir::VERTICAL: {
-            //how much space we have to allocate
-            auto totalSpace = getHeight();
-            //how much space we will allocate to each child
-            auto sizeEach = totalSpace / (float)childCount;
-            unsigned long i=0;
-            auto pos = GFCSDraw::Pos<int>(0,0);
-            for (auto& child : getChildren()){
-               auto thisRatio = childScales.value[i];
-               int thisSize = sizeEach * thisRatio;
-               child->setRect({pos, {_rect.value.width, thisSize}});
+         //apply transformations
+         child->setRect(newSize);
+         switch(dir){
+            case LayoutDir::HORIZONTAL:
+               pos.x += thisSize;
+               break;
+            case LayoutDir::VERTICAL:
                pos.y += thisSize;
-            }
-            break;
+               break;
          }
       }
    }
@@ -90,7 +89,7 @@ protected:
 /////////////////////////////////////////////////////////////////////////////////////////
 class VLayout : public Layout {
 public:
-   VLayout(const std::string& instanceName, const GFCSDraw::Rect<float>& r)
+   VLayout(const std::string& instanceName, const GFCSDraw::Rect<int>& r)
    : Layout(instanceName, _get_static_constexpr_typename(), r, Layout::LayoutDir::VERTICAL)
    {}
    static constexpr char TYPE_NAME[] = "VLayout";
@@ -107,7 +106,7 @@ protected:
 /////////////////////////////////////////////////////////////////////////////////////////
 class HLayout : public Layout {
 public:
-   HLayout(const std::string& instanceName, const GFCSDraw::Rect<float>& r)
+   HLayout(const std::string& instanceName, const GFCSDraw::Rect<int>& r)
    : Layout(instanceName, _get_static_constexpr_typename(), r, Layout::LayoutDir::HORIZONTAL)
    {}
    static std::shared_ptr<BaseWidget> deserialize(const std::string &instanceName, PropertyPrototypeMap &properties) {

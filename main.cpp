@@ -251,17 +251,23 @@ int main(int argc, char** argv)
    if (args.getArg("--editor")){
       root = make_shared<VLayout>("MainVLayout", Rect<int>());
       auto mainPanel = make_shared<Panel>("MainPanel", Rect<int>());
+      mainPanel->setLayout<VLayout>();
       root->addChild(mainPanel);
 
-      //add an hlayout for the menubar
-      auto menuBarLayout = make_shared<HLayout>("menuBarLayout", Rect<int>());
       auto menuBarPanel= make_shared<Panel>("menuBarPanel", Rect<int>());
-      menuBarLayout->addChild(menuBarPanel);
+      menuBarPanel->setLayout<HLayout>();
+      mainPanel->addToLayout(menuBarPanel);
+      //set blue background (you gotta color it hard...so they can *see* it)
+      menuBarPanel->getTheme()->background.colorPrimary.set(GFCSDraw::Colors::blue);
+      //set menubar size
+      menuBarPanel->setMinSize({0,25});
+      //add some buttons to the menu bar
+      auto fileButton  = std::make_shared<PushButton>("fileBtn", Rect<int>());
+      fileButton->setMaxSize({100,99999});
+      menuBarPanel->addToLayout(fileButton);
 
-
-
-
-
+      auto randomPushbutton = std::make_shared<PushButton>("randombutton", Rect<int>(100,100,100,100));
+      root->addChild(randomPushbutton);
 
 
 
@@ -270,7 +276,7 @@ int main(int argc, char** argv)
          root->setSize(event.size);
       };
       root->subscribe<Window::WindowResizeEvent>(window, resizeRoot);
-      window->maximize();
+//      window->maximize();
    }
 
    window->setRoot(root);
