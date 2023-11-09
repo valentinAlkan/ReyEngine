@@ -44,6 +44,7 @@ namespace Style {
       : EnumProperty<Fill, 3>(instanceName, defaultvalue)
       , PROPERTY_DECLARE(colorPrimary, GFCSDraw::Colors::none)
       , PROPERTY_DECLARE(colorSecondary, GFCSDraw::Colors::none)
+      , PROPERTY_DECLARE(colorTertiary, GFCSDraw::Colors::none)
       {}
       const EnumPair<Fill, 3>& getDict() override {return dict;}
       static constexpr EnumPair<Fill, 3> dict = {
@@ -54,9 +55,11 @@ namespace Style {
       void registerProperties() override {
          registerProperty(colorPrimary);
          registerProperty(colorSecondary);
+         registerProperty(colorTertiary);
       }
       ColorProperty colorPrimary;
       ColorProperty colorSecondary; //for gradient
+      ColorProperty colorTertiary; //for whatever
    };
 
    /////////////////////////////////////////////////////////////////////////////////////////

@@ -73,3 +73,28 @@ void Application::processEnterTree() {
       queue.pop();
    }
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Application::clearHover() {
+   if (!instance()._hovered.expired()) {
+      auto oldHover = instance()._hovered.lock();
+      oldHover->_hovered = false;
+      oldHover->_on_mouse_exit();
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Application::setHover(std::weak_ptr<BaseWidget> widget) {
+   instance().clearHover();
+   if (!widget.expired()){
+      instance()._hovered = widget;
+      widget.lock()->_hovered = true;
+      widget.lock()->_on_mouse_enter();
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<std::weak_ptr<BaseWidget>> Application::getHovered() {
+   if (instance()._hovered.expired()) return nullopt;
+   return instance()._hovered;
+}
