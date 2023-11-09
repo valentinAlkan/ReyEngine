@@ -260,7 +260,7 @@ int main(int argc, char** argv)
       //set blue background (you gotta color it hard...so they can *see* it)
       menuBarPanel->getTheme()->background.colorPrimary.set(GFCSDraw::Colors::blue);
       //set menubar size
-      menuBarPanel->setMinSize({0,25});
+      menuBarPanel->setMaxSize({0,25});
       //add some buttons to the menu bar
       auto fileButton  = std::make_shared<PushButton>("fileBtn", Rect<int>());
       fileButton->setMaxSize({100,99999});

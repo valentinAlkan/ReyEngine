@@ -119,6 +119,7 @@ public:
    const ChildOrder& getChildren() const {return _childrenOrdered;}
    std::optional<WidgetPtr> getChild(const std::string& name);
    bool hasChild(const std::string& name);
+   bool isHovered() const{return _hovered;}
 
    template <typename T>
    std::shared_ptr<T> toType(){
@@ -149,6 +150,8 @@ protected:
    virtual void _on_application_ready(){}; //called when the main loop is starting, or immediately if that's already happened
    virtual void _init(){}; //run ONCE PER OBJECt when it enters tree for first time.
    virtual void _on_rect_changed(){} //called when the rect is manipulated
+   virtual void _on_mouse_enter(){};
+   virtual void _on_mouse_exit(){};
    virtual void _on_child_added_immediate(WidgetPtr&){} //Called immediately upon a call to addChild - DANGER: widget is not actually a child yet! It is (probably) a very bad idea to do much at all here. Make sure you know what you're doing.
    virtual void _on_child_added(WidgetPtr&){} // called at the beginning of the next frame after a child is added. Child is now owned by us. Safe to manipulate child.
    virtual void _on_enter_tree(){} //called every time a widget enters the tree
@@ -188,6 +191,7 @@ protected:
    bool _has_inited = false; //set true THE FIRST TIME a widget enters the tree. Can do constructors of children and other stuff requiring shared_from_this();
    bool isLayout = false;
    bool isInLayout = false;
+   bool acceptsHover = false;
    GFCSDraw::Size<int> maxSize = {INT_MAX, INT_MAX};
    GFCSDraw::Size<int> minSize = {0,0};
 private:
@@ -200,6 +204,7 @@ private:
    ///If this widget is the root of a scene, then the rest of the scene data is here.
    std::optional<std::shared_ptr<Scene>> _scene;
    bool _request_delete = false; //true when we want to remove this object from the tree
+   bool _hovered = false; //true when hovered, set by application
    std::recursive_mutex _childLock;
    bool _scheduled_for_deletion = false; // true when the widget has been scheduled for deletion but is not yet deleted.
 

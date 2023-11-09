@@ -11,6 +11,7 @@ protected:
    GFCSDRAW_OBJECT(BaseButton, Control)
    , PROPERTY_DECLARE(down){
       _rect.value = GFCSDraw::Rect<double>(0,0,200,50);
+      acceptsHover = true;
    }
 public:
    void registerProperties() override{
@@ -33,8 +34,8 @@ protected:
          break;
          case InputEventMouseMotion::getUniqueEventId():
             auto mouseEvent = event.toEventType<InputEventMouseMotion>();
-            if (isInside(globalToLocal(mouseEvent.globalPos))) {
-               Application::printDebug() << "isInside" << std::endl;
+            if (isInside(globalToLocal(mouseEvent.globalPos))){
+
             }
          break;
       }
@@ -50,10 +51,14 @@ protected:
    }
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////
 class PushButton : public BaseButton{
    GFCSDRAW_OBJECT(PushButton, BaseButton)
    , PROPERTY_DECLARE(text){
       text.value = getName();
+      getTheme()->background.colorPrimary.set(COLORS::gray);
+      getTheme()->background.colorSecondary.set(COLORS::lightGray);
+      getTheme()->background.colorTertiary.set(COLORS::blue);
    }
    void registerProperties() override {
       registerProperty(text);
@@ -61,7 +66,10 @@ class PushButton : public BaseButton{
    void render() const override {
       static constexpr int SEGMENTS = 10;
       static constexpr int THICKNESS = 2;
-      _drawRectangleRounded(getRect().toSizeRect(), 2, SEGMENTS, down.value ? COLORS::gray : COLORS::lightGray);
+      auto color = getThemeReadOnly().background.colorPrimary.value;
+      if (isHovered()) color = getThemeReadOnly().background.colorSecondary.value;
+      if (down.value) color = getThemeReadOnly().background.colorTertiary.value;
+      _drawRectangleRounded(getRect().toSizeRect(), 2, SEGMENTS, color);
       _drawRectangleRoundedLines(getRect().toSizeRect(), 2, SEGMENTS, THICKNESS, COLORS::black);
       _drawTextCentered(text.value, getRect().toSizeRect().center(), 20, COLORS::black);
    }
