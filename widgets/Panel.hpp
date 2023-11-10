@@ -2,6 +2,7 @@
 #include <utility>
 
 #include "Control.hpp"
+#include "Layout.hpp"
 
 // A simple visual panel that just gives us something to look at. No other functionality.
 class Panel : public Control {
@@ -11,7 +12,7 @@ public:
    GFCSDRAW_OBJECT(Panel, Control)
    , PROPERTY_DECLARE(_layoutDir, Layout::LayoutDir::HORIZONTAL)
    {
-      getTheme()->background.colorPrimary.set(GFCSDraw::ColorRGBA(156, 181, 156, 255));
+      getTheme()->background.colorPrimary.set(GFCSDraw::ColorRGBA(94, 142, 181, 255));
    }
 public:
    void render() const override {

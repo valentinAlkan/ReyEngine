@@ -14,6 +14,7 @@
 #include "Timer.hpp"
 #include "Layout.hpp"
 #include "Panel.hpp"
+#include "Editor.h"
 
 using namespace std;
 using namespace GFCSDraw;
@@ -55,6 +56,7 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--labelTest", "help", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--saveLoadSceneTest", "Filename to save/load to", 1, RuntimeArg::ArgType::POSITIONAL));
    args.defineArg(RuntimeArg("--layoutTest", "Test layouts", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--layoutTestBasic", "Basic Test layouts", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--panelTest", "Test panel", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--editor", "Editor", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
@@ -141,6 +143,28 @@ int main(int argc, char** argv)
 //      auto
    }
 
+   if (args.getArg("--layoutTestBasic")){
+      Application::printDebug() << "Layout test basic!" << endl;
+      auto rootLayout = make_shared<VLayout>("Root", Rect<float>({0,0}, window->getSize()));
+      root = rootLayout;
+      auto resizeRoot = [root](const Window::WindowResizeEvent& event){
+         root->setSize(event.size);
+      };
+      root->subscribe<Window::WindowResizeEvent>(window, resizeRoot);
+      auto mainPanel = make_shared<Panel>("MainPanel", Rect<int>());
+      mainPanel->getTheme()->background.colorPrimary.set(GFCSDraw::Colors::red);
+      root->addChild(mainPanel);
+      mainPanel->setLayout<HLayout>();
+
+      auto child1 = make_shared<Panel>("Child1", Rect<int>());
+      auto child2 = make_shared<Panel>("Child2", Rect<int>());
+//      child1->getTheme()->background.colorPrimary.set(GFCSDraw::Colors::blue);
+//      child2->getTheme()->background.colorPrimary.set(GFCSDraw::Colors::green);
+      mainPanel->addToLayout(child1);
+      mainPanel->addToLayout(child2);
+
+   }
+
    if (args.getArg("--layoutTest")){
       Application::printDebug() << "Layout test!" << endl;
       root = make_shared<VLayout>("Root", Rect<float>({0,0}, window->getSize()));
@@ -222,6 +246,17 @@ int main(int argc, char** argv)
    }
 
 
+   if (args.getArg("--editor")){
+      root = make_shared<Editor>("Editor", Rect<int>());
+      //lock root to window size
+      auto resizeRoot = [root](const Window::WindowResizeEvent& event){
+         root->setSize(event.size);
+      };
+
+      //panels
+      root->subscribe<Window::WindowResizeEvent>(window, resizeRoot);
+   }
+
    // default functionality
    //create a root widget
    if (!root) {
@@ -246,37 +281,6 @@ int main(int argc, char** argv)
       scrollArea->setRect({0, 0, 500,500});
       root->addChild(scrollArea);
       scrollArea->addChild(label);
-   }
-
-   if (args.getArg("--editor")){
-      root = make_shared<VLayout>("MainVLayout", Rect<int>());
-      auto mainPanel = make_shared<Panel>("MainPanel", Rect<int>());
-      mainPanel->setLayout<VLayout>();
-      root->addChild(mainPanel);
-
-      auto menuBarPanel= make_shared<Panel>("menuBarPanel", Rect<int>());
-      menuBarPanel->setLayout<HLayout>();
-      mainPanel->addToLayout(menuBarPanel);
-      //set blue background (you gotta color it hard...so they can *see* it)
-      menuBarPanel->getTheme()->background.colorPrimary.set(GFCSDraw::Colors::blue);
-      //set menubar size
-      menuBarPanel->setMaxSize({0,25});
-      //add some buttons to the menu bar
-      auto fileButton  = std::make_shared<PushButton>("fileBtn", Rect<int>());
-      fileButton->setMaxSize({100,99999});
-      menuBarPanel->addToLayout(fileButton);
-
-      auto randomPushbutton = std::make_shared<PushButton>("randombutton", Rect<int>(100,100,100,100));
-      root->addChild(randomPushbutton);
-
-
-
-      //maximize window and lock root to window size
-      auto resizeRoot = [root](const Window::WindowResizeEvent& event){
-         root->setSize(event.size);
-      };
-      root->subscribe<Window::WindowResizeEvent>(window, resizeRoot);
-//      window->maximize();
    }
 
    window->setRoot(root);
