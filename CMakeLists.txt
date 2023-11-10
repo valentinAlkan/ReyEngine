@@ -68,7 +68,9 @@ add_library(widgets STATIC
     ${CUSTOM_SOURCES}
 )
 
-
+add_library(editor STATIC
+    editor/Editor.cpp
+)
 
 target_include_directories(widgets PUBLIC
     widgets
@@ -82,12 +84,19 @@ if (UNIX)
     target_link_libraries(widgets stdc++fs)
 endif (UNIX)
 
+target_include_directories(editor PUBLIC
+    editor
+)
+
+target_link_libraries(editor PUBLIC widgets)
+
+
 # Our Project
 add_executable(${PROJECT_NAME}
         main.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} widgets)
+target_link_libraries(${PROJECT_NAME} widgets editor)
 
 install_file(./widgets/test/test.scn ./test/test.scn)
 install_file(./widgets/test/posTest.scn ./test/posTest.scn)

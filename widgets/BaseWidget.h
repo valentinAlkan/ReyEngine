@@ -36,8 +36,8 @@ std::string _get_static_constexpr_typename() override {return TYPE_NAME;}
 #define GFCSDRAW_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME) \
    CLASSNAME(const std::string& name, const std::string& typeName, CTOR_RECT): PARENT_CLASSNAME(name, typeName, r)
 /////////////////////////////////////////////////////////////////////////////////////////
-#define GFCSDRAW_DEFAULT_CTOR(CLASSNAME, ...) \
-   CLASSNAME(const std::string& name, CTOR_RECT): CLASSNAME(name, _get_static_constexpr_typename(), r, __VA_ARGS__){}
+#define GFCSDRAW_DEFAULT_CTOR(CLASSNAME) \
+   CLASSNAME(const std::string& name, CTOR_RECT): CLASSNAME(name, _get_static_constexpr_typename(), r){}
 /////////////////////////////////////////////////////////////////////////////////////////
 #define GFCSDRAW_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME) \
 protected:                                                \

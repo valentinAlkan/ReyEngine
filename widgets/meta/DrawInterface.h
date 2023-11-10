@@ -20,12 +20,12 @@ namespace GFCSDraw {
                sanitized += c;
             }
          }
+         std::vector<double> retval;
          auto split = string_tools::split(sanitized, ",");
          if (split.size() != size) {
-            return;
+            return retval;
          }
 
-         std::vector<double> retval;
          for (size_t i = 0; i < size; i++) {
             retval.push_back(std::stod(split[i]));
          }
@@ -94,7 +94,7 @@ namespace GFCSDraw {
       inline explicit Vec3(const Vec3<float>& v) : Vec<T>(3),  x((T)v.x), y((T)v.y), z((T)v.z){}
       inline explicit Vec3(const Vec3<double>& v): Vec<T>(3),  x((T)v.x), y((T)v.y), z((T)v.z){}
       inline Vec3& operator=(const Vec3& rhs){x = rhs.x; y=rhs.y; z=rhs.z; return *this;}
-      inline Vec3& operator-(){x = -x; y =-y; z = -z; return *this}
+      inline Vec3& operator-(){x = -x; y =-y; z = -z; return *this;}
       inline static void fromString(const std::string& s){return Vec<T>::fromString(3, s);};
       [[nodiscard]] inline std::vector<T> getElements() const override {return {x,y,z};}
       friend std::ostream& operator<<(std::ostream& os, Vec3<T> v) {os << v.toString(); return os;}
@@ -159,7 +159,7 @@ namespace GFCSDraw {
       inline bool operator!=(const Pos& rhs){return this->x != rhs.x || this->y != rhs.y;}
       inline operator std::string() const {return (Vec2<T>(*this).toString());}
       inline void operator=(Size<T>&) = delete;
-      inline void operator=(Pos<int>& other){x = other.x; y = other.y;};
+      inline void operator=(Pos<int>& other){Pos::x = other.x; Pos::y = other.y;};
    };
 
    template <typename T>
@@ -172,8 +172,8 @@ namespace GFCSDraw {
       inline Size(const Size<double>& v): Vec2<T>(v){}
       inline Size(const Size<float>& v) : Vec2<T>(v){}
       inline void operator=(Pos<T>&) = delete;
-      inline bool operator==(Size<T>& rhs){return x==rhs.x && y==rhs.y;}
-      inline bool operator!=(Size<T>& rhs){return x!=rhs.x || y!=rhs.y;}
+      inline bool operator==(Size<T>& rhs){return Size::x==rhs.x && Size::y==rhs.y;}
+      inline bool operator!=(Size<T>& rhs){return Size::x!=rhs.x || Size::y!=rhs.y;}
       inline Size operator+(const Size& rhs) const {auto val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
       inline Size operator-(const Size& rhs) const {auto val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
       inline Size& operator+=(const Size& rhs){this->x += rhs.x; this->y += rhs.y; return *this;}
@@ -361,7 +361,7 @@ namespace InputInterface{
    inline float getMouseWheelMove(){return GetMouseWheelMove();} //returns largest of x or y
    inline GFCSDraw::Vec2<float> getMouseWheelMoveV(){return GetMouseWheelMoveV();} //returns both x and y
 
-   inline bool isKeyPressed(KeyCode key){IsKeyPressed(key);}
+   inline bool isKeyPressed(KeyCode key){return IsKeyPressed(key);}
    inline bool isKeyDown(KeyCode key){return IsKeyDown(key);}
    inline bool isKeyReleased(KeyCode key){return IsKeyReleased(key);}
    inline bool isKeyUp(KeyCode key){return IsKeyUp(key);}

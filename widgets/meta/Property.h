@@ -135,9 +135,9 @@ struct FloatProperty : public Property<float>{
 template <typename T>
 struct Vec2Property : public Property<GFCSDraw::Vec2<T>>{
    Vec2Property(const std::string& instanceName, GFCSDraw::Vec2<T> defaultvalue = 0)
-   : Property(instanceName, PropertyTypes::Vec2, defaultvalue)
+   : Property<GFCSDraw::Vec2<T>>(instanceName, PropertyTypes::Vec2, defaultvalue)
    {}
-   std::string toString() override {return value.toString();}
+   std::string toString() override {return Property<GFCSDraw::Vec2<T>>::value.toString();}
    GFCSDraw::Vec2<T> fromString(const std::string& str) override {return GFCSDraw::Vec2<T>::fromString(str);}
 };
 
@@ -145,9 +145,9 @@ struct Vec2Property : public Property<GFCSDraw::Vec2<T>>{
 template <typename T>
 struct RectProperty : public Property<GFCSDraw::Rect<T>>{
    RectProperty(const std::string& instanceName, GFCSDraw::Rect<T> defaultvalue=GFCSDraw::Rect<T>())
-   : Property(instanceName, PropertyTypes::Rect, defaultvalue)
+   : Property<GFCSDraw::Rect<T>>(instanceName, PropertyTypes::Rect, defaultvalue)
    {}
-   std::string toString() override {return value.toString();}
+   std::string toString() override {return Property<GFCSDraw::Rect<T>>::value.toString();}
    GFCSDraw::Rect<T> fromString(const std::string& str) override {return GFCSDraw::Rect<T>::fromString(str);}
 };
 
@@ -170,7 +170,7 @@ using EnumPair = std::array<std::pair<T, std::string_view>, C>;
 template <typename T, auto C>
 struct EnumProperty : public Property<T>{
    EnumProperty(const std::string& instanceName, T defaultvalue)
-   : Property(instanceName, PropertyTypes::Enum, defaultvalue)
+   : Property<T>(instanceName, PropertyTypes::Enum, defaultvalue)
    {}
    std::string toString() override {
       for(int i=0;i<getDict().size();i++){
@@ -220,13 +220,14 @@ struct ListProperty : public Property<std::vector<T>>{
       return Property<std::vector<T>>::value;
    }
    void set(int index, T newValue){
-      value.at(index) = newValue;
+       Property<std::vector<T>>::value.at(index) = newValue;
    }
-   void get(int index){
-      return value.at(index);
+   T get(int index){
+      return Property<std::vector<T>>::value.at(index);
    }
    virtual T stringToElement(const std::string& s) = 0;
    virtual std::string elementToString(const T& t){return std::to_string(t);}
+   size_t size(){return Property<std::vector<T>>::value.size();}
 };
 
 struct FloatListProperty : public ListProperty<float>{
