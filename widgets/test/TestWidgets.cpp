@@ -15,7 +15,7 @@ stringstream text;
    text << getRect().toString() << "\n";
    text << "someString = " << someString.value << "\n";
    text << "subProp = " << someString.subProp.value << "\n";
-   _drawText(text.str(), {0,0}, 20, Colors::red);
+   _drawText(text.str(), {0,0}, getThemeReadOnly().font.value);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

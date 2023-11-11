@@ -13,8 +13,9 @@ Size<int> GFCSDraw::getScreenSize() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void GFCSDraw::drawText(const std::string &text, const GFCSDraw::Vec2<int> &pos, int fontSize, Color color) {
-   DrawText(text.c_str(), pos.x, pos.y, fontSize, color);
+void GFCSDraw::drawText(const std::string &text, const GFCSDraw::Pos<int>& pos, const GFCSDrawFont& font) {
+//   void DrawTextPro(Font font, const char *text, Vector2 position, Vector2 origin, float rotation, float fontSize, float spacing, Color tint);
+   DrawTextPro(font.font, text.c_str(), {(float)pos.x, (float)pos.y}, {0, 0}, 0, font.size, font.spacing, font.color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -44,20 +45,20 @@ void GFCSDraw::drawRectangleGradientV(const GFCSDraw::Rect<int>& rect, Color col
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void GFCSDraw::drawTextCentered(const std::string& text, const Vec2<int>& pos, int fontSize, Color color){
-   auto textWidth = MeasureText(text.c_str(), fontSize);
+void GFCSDraw::drawTextCentered(const std::string& text, const Pos<int>& pos, const GFCSDrawFont& font){
+   auto textWidth = MeasureText(text.c_str(), font.size);
    float newX = (float)pos.x - (float)textWidth / 2;
-   float newY = (float)pos.y - (float)fontSize / 2;
-   drawText(text, Vec2<int>((int)newX, (int)newY), fontSize, color);
+   float newY = (float)pos.y - (float)font.size / 2;
+   drawText(text, Vec2<int>((int)newX, (int)newY), font);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void GFCSDraw::drawTextRelative(const std::string& text, const Vec2<int>& relPos, int fontSize, Color color){
+void GFCSDraw::drawTextRelative(const std::string& text, const Pos<int>& relPos, const GFCSDrawFont& font){
    //draw text relative as a percentage of the screen
    Vector2 screenSize = {(float)GetScreenWidth(), (float)GetScreenHeight()};
    auto newX = screenSize.x * relPos.x / 100.0;
    auto newY = screenSize.y * relPos.y / 100.0;
-   drawText(text, Vec2<int>(newX, newY), fontSize, color);
+   drawText(text, {(int)newX, (int)newY}, font);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -109,4 +110,15 @@ void GFCSDraw::maximizeWindow() {
 void GFCSDraw::minimizeWindow() {
    //desktop only, only if window resizable
    MinimizeWindow();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+GFCSDrawFont GFCSDraw::getDefaultFont() {
+   GFCSDrawFont font;
+   font.font = GetFontDefault();
+   font.size = 20;
+   font.isDefault = true;
+   return font;
 }

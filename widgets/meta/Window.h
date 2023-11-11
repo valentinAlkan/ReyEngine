@@ -10,9 +10,8 @@
 
 class Window : public EventPublisher {
 public:
-//   using ProcessListIterator = std::unordered_set<std::shared_ptr<BaseWidget>>::iterator;
    struct WindowResizeEvent : public Event<WindowResizeEvent> {
-      EVENT_CTOR_SIMPLE(WindowResizeEvent, Event<WindowResizeEvent>){
+      EVENT_CTOR_SIMPLE(WindowResizeEvent, Event<WindowResizeEvent>, GFCSDraw::Pos<int> newSize), size(newSize){
 //         std::cout << "Window resize is event id " << getUniqueEventId() << std::endl;
       }
       GFCSDraw::Size<int> size;

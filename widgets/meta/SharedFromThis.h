@@ -15,9 +15,7 @@ class inheritable_enable_shared_from_this
       : virtual public MultipleInheritableEnableSharedFromThis {
 public:
    std::shared_ptr<T> shared_from_this() {
-      return std::dynamic_pointer_cast<T>(
-            MultipleInheritableEnableSharedFromThis::shared_from_this()
-      );
+      return std::dynamic_pointer_cast<T>(MultipleInheritableEnableSharedFromThis::shared_from_this());
    }
    /* Utility method to easily downcast.
     * Useful when a child doesn't inherit directly from enable_shared_from_this
@@ -25,9 +23,7 @@ public:
     */
    template <class Down>
    std::shared_ptr<Down> downcasted_shared_from_this() {
-      return std::dynamic_pointer_cast<Down>(
-            MultipleInheritableEnableSharedFromThis::shared_from_this()
-      );
+      return std::dynamic_pointer_cast<Down>(MultipleInheritableEnableSharedFromThis::shared_from_this());
    }
 };
 

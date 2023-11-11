@@ -146,7 +146,7 @@ public:
    static void registerType(const std::string& typeName, const std::string& parentType, bool isVirtual, Deserializer fx){TypeManager::registerType(typeName, parentType, isVirtual, fx);}
    std::string serialize();
 protected:
-   std::shared_ptr<BaseWidget> toBaseWidget(){return inheritable_enable_shared_from_this<BaseWidget>::shared_from_this();}
+   std::shared_ptr<BaseWidget> toBaseWidget(){return inheritable_enable_shared_from_this<BaseWidget>::downcasted_shared_from_this<BaseWidget>();}
    virtual void _on_application_ready(){}; //called when the main loop is starting, or immediately if that's already happened
    virtual void _init(){}; //run ONCE PER OBJECt when it enters tree for first time.
    virtual void _on_rect_changed(){} //called when the rect is manipulated
@@ -170,8 +170,8 @@ protected:
    void setRenderOffset(GFCSDraw::Pos<double>& offset){_renderOffset = offset;}
 //   void renderTextureOffsetApply(GFCSDraw::Pos<float>& textureOffset){}
 //   void renderTextureOffsetReset(GFCSDraw::Pos<float>& textureOffset){}
-   void _drawText(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, GFCSDraw::ColorRGBA color) const;
-   void _drawTextCentered(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, GFCSDraw::ColorRGBA color) const;
+   void _drawText(const std::string& text, const GFCSDraw::Pos<int>& pos, const GFCSDraw::GFCSDrawFont& font) const;
+   void _drawTextCentered(const std::string& text, const GFCSDraw::Pos<int>& pos, const GFCSDraw::GFCSDrawFont& font) const;
    void _drawRectangle(const GFCSDraw::Rect<int>& rect, GFCSDraw::ColorRGBA color) const;
    void _drawRectangleLines(const GFCSDraw::Rect<int>& rect, float lineThick, GFCSDraw::ColorRGBA color) const;
    void _drawRectangleRounded(const GFCSDraw::Rect<int>& rect,  float roundness, int segments, GFCSDraw::ColorRGBA color) const;

@@ -284,6 +284,20 @@ namespace GFCSDraw {
       static constexpr ColorRGBA none = {0, 0, 0, 0};
    }
 
+   struct GFCSDrawFont{
+      Font font;
+      float size = 20;
+      float spacing = 1;
+      GFCSDraw::ColorRGBA color = COLORS::black;
+      std::string fileName;
+      bool isDefault = false;
+//      inline GFCSDrawFont& operator=(const GFCSDrawFont& rhs){font = rhs.font; size = rhs.size; spacing = rhs.spacing; color = rhs.color; fileName = rhs.fileName; isDefault = rhs.isDefault; return *this;}
+//      std::string toString();
+//      static GFCSDrawFont fromString(const std::string& str);
+   };
+   GFCSDrawFont getDefaultFont();
+   GFCSDrawFont getFont(const std::string& fileName);
+
    Pos<double> getScreenCenter();
    Size<int> getScreenSize();
    GFCSDraw::Size<int> getWindowSize();
@@ -292,16 +306,15 @@ namespace GFCSDraw {
    void setWindowPosition(GFCSDraw::Pos<int>);
    void maximizeWindow();
    void minimizeWindow();
-   void drawText(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color);
-   void drawTextCentered(const std::string& text, const GFCSDraw::Vec2<int>& pos, int fontSize, Color color);
-   void drawTextRelative(const std::string& text, const GFCSDraw::Vec2<int>& relPos, int fontSize, Color color);
+   void drawText(const std::string& text, const GFCSDraw::Pos<int>& pos, const GFCSDrawFont& font);
+   void drawTextCentered(const std::string& text, const GFCSDraw::Pos<int>& pos, const GFCSDrawFont& font);
+   void drawTextRelative(const std::string& text, const GFCSDraw::Pos<int>& relPos, const GFCSDrawFont& font);
    void drawRectangle(const Rect<int>&, Color color);
    void drawRectangleRounded(const Rect<float>&, float roundness, int segments, Color color);
    void drawRectangleLines(const Rect<float>&, float lineThick, Color color);
    void drawRectangleRoundedLines(const Rect<float>&, float roundness, int segments, float lineThick, Color color);
    void drawRectangleGradientV(const Rect<int>&, Color color1, Color color2);
    inline float getFrameDelta(){return GetFrameTime();}
-   inline Font getDefaultFont(){return GetFontDefault();}
    inline Vec2<int> measureText(Font font, const char *text, float fontSize, float spacing){return MeasureTextEx(font, text, fontSize, spacing);}
 
    class RenderTarget{

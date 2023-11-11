@@ -4,7 +4,7 @@
 class BaseButton : public Control {
 public:
    struct PushButtonEvent : public Event<PushButtonEvent>{
-      EVENT_CTOR_SIMPLE(PushButtonEvent, Event<PushButtonEvent>){}
+      EVENT_CTOR_SIMPLE(PushButtonEvent, Event<PushButtonEvent>, bool down), down(down){}
       bool down;
    };
 protected:
@@ -44,8 +44,7 @@ protected:
    void setDown(bool newDown){
       if (wasDown != newDown){
          down.set(newDown);
-         auto e = PushButtonEvent(toEventPublisher());
-         e.down = newDown;
+         auto e = PushButtonEvent(toEventPublisher(), newDown);
          publish<PushButtonEvent>(e);
       }
    }
@@ -71,7 +70,7 @@ class PushButton : public BaseButton{
       if (down.value) color = getThemeReadOnly().background.colorTertiary.value;
       _drawRectangleRounded(getRect().toSizeRect(), getThemeReadOnly().roundness.get(), SEGMENTS, color);
       _drawRectangleRoundedLines(getRect().toSizeRect(), getThemeReadOnly().roundness.get(), SEGMENTS, THICKNESS, COLORS::black);
-      _drawTextCentered(text.value, getRect().toSizeRect().center(), 20, COLORS::black);
+      _drawTextCentered(text.value, getRect().toSizeRect().center(), getThemeReadOnly().font.value);
    }
    StringProperty text;
 public:

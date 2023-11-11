@@ -11,10 +11,10 @@
 #define EVENT_GENERATE_UNIQUE_ID(CLASSNAME) static constexpr int CLASSNAME##_UNIQUE_ID = __COUNTER__; \
 static constexpr int getUniqueEventId(){return CLASSNAME##_UNIQUE_ID;}
 #define EVENT_GET_NAME(CLASSNAME) static std::string getEventName() {return #CLASSNAME + std::string("_") + std::to_string(CLASSNAME##_UNIQUE_ID);}
-#define EVENT_CTOR_SIMPLE(CLASSNAME, PARENTCLASS) \
+#define EVENT_CTOR_SIMPLE(CLASSNAME, PARENTCLASS, ...) \
 EVENT_GENERATE_UNIQUE_ID(CLASSNAME)               \
 EVENT_GET_NAME(CLASSNAME)                                     \
-explicit CLASSNAME(const std::shared_ptr<EventPublisher>& publisher): PARENTCLASS(CLASSNAME##_UNIQUE_ID, publisher)
+explicit CLASSNAME(const std::shared_ptr<EventPublisher> publisher, __VA_ARGS__): PARENTCLASS(CLASSNAME##_UNIQUE_ID, publisher)
 
 #define EVENT_CTOR_SIMPLE_OVERRIDABLE(CLASSNAME, PARENTCLASS) \
 EVENT_GENERATE_UNIQUE_ID(CLASSNAME)                           \
@@ -109,7 +109,7 @@ public:
    template <typename T>
    void publish(const T& event){
       static_assert(std::is_base_of_v<BaseEvent, T>); //compile time check
-      auto publisher = shared_from_this();
+      auto publisher = downcasted_shared_from_this<EventPublisher>();
 //      std::cout << "Publishing eventType " << T::getUniqueEventId() << "(" << T::getEventName() << ")" << std::endl;
       auto _ev = _eventMap.find(T::getEventName());
       if (_ev == _eventMap.end()){
@@ -139,7 +139,7 @@ public:
    }
    std::shared_ptr<BaseWidget> toBaseWidget();
 protected:
-   std::shared_ptr<EventPublisher> toEventPublisher(){return inheritable_enable_shared_from_this<EventPublisher>::shared_from_this();}
+   std::shared_ptr<EventPublisher> toEventPublisher(){return downcasted_shared_from_this<EventPublisher>();}
 private:
    std::map<std::string, EventCallbackMap> _eventMap;
 };

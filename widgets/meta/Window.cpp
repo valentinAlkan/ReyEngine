@@ -53,9 +53,8 @@ void Window::exec(){
       //see if the window size has changed
       auto newSize = getSize();
       if (newSize != size){
-         WindowResizeEvent event(inheritable_enable_shared_from_this<EventPublisher>::shared_from_this());
+         WindowResizeEvent event(toEventPublisher(), newSize);
          size = newSize;
-         event.size = size;
          publish(event);
       }
       //see if the window has moved

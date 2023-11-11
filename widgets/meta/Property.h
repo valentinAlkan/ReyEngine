@@ -28,6 +28,7 @@ namespace PropertyTypes{
    PROP_TYPE(Color)
    PROP_TYPE(Theme)
    PROP_TYPE(List)
+   PROP_TYPE(Font)
 }
 
 namespace PropertyMeta{

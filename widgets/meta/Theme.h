@@ -1,5 +1,6 @@
 #pragma once
 #include "Property.h"
+#include "Font.hpp"
 namespace Style {
    /////////////////////////////////////////////////////////////////////////////////////////
    /////////////////////////////////////////////////////////////////////////////////////////
@@ -83,7 +84,7 @@ namespace Style {
       PROPERTY_DECLARE(background, Fill::NONE),
       PROPERTY_DECLARE(foreground, GFCSDraw::Colors::black),
       PROPERTY_DECLARE(roundness, 0.01),
-      PROPERTY_DECLARE(fontSize, 20)
+      PROPERTY_DECLARE(font)
       {}
       std::string toString() override {return "not impelenmeted";}
       Empty fromString(const std::string& data) override { return value;}
@@ -92,15 +93,14 @@ namespace Style {
       ColorProperty foreground;
       OutlineProperty outline;
       FloatProperty roundness;
-      FloatProperty fontSize;
-//      FontProperty font;
+      FontProperty font;
 
       void registerProperties() override {
          registerProperty(background);
          registerProperty(foreground);
          registerProperty(outline);
          registerProperty(roundness);
-         registerProperty(fontSize);
+         registerProperty(font);
       }
    private:
       Empty value; //do not use - only exists to satisfy construction requirements
