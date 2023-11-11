@@ -3,27 +3,25 @@
 using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::optional<std::shared_ptr<TreeItem>> TreeItem::getDescendent(size_t& index) {
-   //query as if the tree is fully expanded. So the first descendent is the root's first child,
-   // the second descendent is THAT child's first child, and so on. Only when a child does not have any children
-   // do we move to a sibling
-   //check if the descendent is us
-   if (index == 0){
-      return downcasted_shared_from_this<TreeItem>();
-   }
+void TreeItem::push_back(std::shared_ptr<TreeItem> &item) {
+   children.push_back(item);
+   auto me = downcasted_shared_from_this<TreeItem>();
+   item->parent = me;
+   //find the root and recalculate the reference vector
+   item->tree = me->tree;
+   tree->determineOrdering();
+}
 
-   auto& children = getChildren();
-   for (auto& child : children){
-      index--;
-      auto descendent = child->getDescendent(index);
-      if (descendent){
-         return descendent;
-      }
-   }
-   if (children.size() > index) {
-      return children[index];
-   }
-   //we don't have enough descendents - pop off how many we do have from the index
-   index -= children.size();
-   return nullopt;
+/////////////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<TreeItem> TreeItem::removeItem(size_t index){
+   auto ptr = getChildren().at(index);
+   auto it = getChildren().begin() + index;
+   getChildren().erase(it);
+   ptr->parent.reset();
+
+   //let the tree know to recalculate
+   tree->determineOrdering();
+   //remove reference to tree
+   ptr->tree = nullptr;
+   return ptr;
 }
