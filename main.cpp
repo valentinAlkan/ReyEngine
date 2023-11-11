@@ -240,10 +240,16 @@ int main(int argc, char** argv)
    }
 
    if (args.getArg("--treeTest")){
-//      auto tree =
-      root = make_shared<Tree>("Tree", Rect<int>());
-//      auto treeItem = std::make_shared<TreeItem>("some text");
-//      tree->pushBack(treeItem);
+      auto treeRoot = std::make_shared<TreeItem>("Root");
+      auto tree = make_shared<Tree>("Tree", Rect<int>(), treeRoot);
+      root = tree;
+      auto treeItem = std::make_shared<TreeItem>("some text");
+      tree->getRoot()->push_back(treeItem);
+
+      //iterate over the tree
+      for (const auto& item : *tree){
+         Application::printDebug() << item.getText() << endl;
+      }
    }
 
    // default functionality
@@ -274,7 +280,7 @@ int main(int argc, char** argv)
 
    //lock root to window size
    auto resizeRoot = [&](const Window::WindowResizeEvent& event){
-      Application::printDebug() << "Hi my name is " << root->getName() << endl;
+      Application::printDebug() << "Running scene. Root's name is " << root->getName() << endl;
       root->setSize(event.size);
    };
 
