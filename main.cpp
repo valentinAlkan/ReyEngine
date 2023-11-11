@@ -15,6 +15,7 @@
 #include "Layout.hpp"
 #include "Panel.hpp"
 #include "Editor.h"
+#include "Tree.h"
 
 using namespace std;
 using namespace GFCSDraw;
@@ -59,6 +60,7 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--layoutTestBasic", "Basic Test layouts", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--panelTest", "Test panel", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--editor", "Editor", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--treeTest", "TreeTest", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    //create window (or don't idk)
@@ -147,10 +149,6 @@ int main(int argc, char** argv)
       Application::printDebug() << "Layout test basic!" << endl;
       auto rootLayout = make_shared<VLayout>("Root", Rect<float>({0,0}, window->getSize()));
       root = rootLayout;
-      auto resizeRoot = [root](const Window::WindowResizeEvent& event){
-         root->setSize(event.size);
-      };
-      root->subscribe<Window::WindowResizeEvent>(window, resizeRoot);
       auto mainPanel = make_shared<Panel>("MainPanel", Rect<int>());
       mainPanel->getTheme()->background.colorPrimary.set(GFCSDraw::Colors::red);
       root->addChild(mainPanel);
@@ -168,10 +166,6 @@ int main(int argc, char** argv)
    if (args.getArg("--layoutTest")){
       Application::printDebug() << "Layout test!" << endl;
       root = make_shared<VLayout>("Root", Rect<float>({0,0}, window->getSize()));
-      auto resizeRoot = [root](const Window::WindowResizeEvent& event){
-         root->setSize(event.size);
-      };
-      root->subscribe<Window::WindowResizeEvent>(window, resizeRoot);
       auto parent = root;
       for (int i=0;i<50;i++){
          std::shared_ptr<Layout> layout;
@@ -204,10 +198,6 @@ int main(int argc, char** argv)
 
    if (args.getArg("--panelTest")){
       root = make_shared<VLayout>("MainLayout", Rect<int>());
-      auto resizeRoot = [root](const Window::WindowResizeEvent& event){
-         root->setSize(event.size);
-      };
-      root->subscribe<Window::WindowResizeEvent>(window, resizeRoot);
 
       //add a panel to the layout
       auto panel = make_shared<Panel>("Panel", Rect<int>());
@@ -245,16 +235,15 @@ int main(int argc, char** argv)
       root->addChild(panel);
    }
 
-
    if (args.getArg("--editor")){
       root = make_shared<Editor>("Editor", Rect<int>());
-      //lock root to window size
-      auto resizeRoot = [root](const Window::WindowResizeEvent& event){
-         root->setSize(event.size);
-      };
+   }
 
-      //panels
-      root->subscribe<Window::WindowResizeEvent>(window, resizeRoot);
+   if (args.getArg("--treeTest")){
+//      auto tree =
+      root = make_shared<Tree>("Tree", Rect<int>());
+//      auto treeItem = std::make_shared<TreeItem>("some text");
+//      tree->pushBack(treeItem);
    }
 
    // default functionality
@@ -282,6 +271,15 @@ int main(int argc, char** argv)
       root->addChild(scrollArea);
       scrollArea->addChild(label);
    }
+
+   //lock root to window size
+   auto resizeRoot = [&](const Window::WindowResizeEvent& event){
+      Application::printDebug() << "Hi my name is " << root->getName() << endl;
+      root->setSize(event.size);
+   };
+
+   //panels
+   root->subscribe<Window::WindowResizeEvent>(window, resizeRoot);
 
    window->setRoot(root);
    window->exec();

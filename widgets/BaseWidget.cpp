@@ -228,13 +228,13 @@ bool BaseWidget::isRoot() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::_drawText(const std::string &text, const GFCSDraw::Vec2<int> &pos, int fontSize, GFCSDraw::ColorRGBA color) const{
-   GFCSDraw::drawText(text, pos + getGlobalPos() + _renderOffset, fontSize, color);
+void BaseWidget::_drawText(const std::string &text, const GFCSDraw::Pos<int> &pos, const GFCSDraw::GFCSDrawFont& font) const{
+   GFCSDraw::drawText(text, pos + getGlobalPos() + _renderOffset, font);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::_drawTextCentered(const std::string &text, const GFCSDraw::Vec2<int> &pos, int fontSize, GFCSDraw::ColorRGBA color) const{
-   GFCSDraw::drawTextCentered(text, pos + getGlobalPos() + _renderOffset, fontSize, color);
+void BaseWidget::_drawTextCentered(const std::string &text, const GFCSDraw::Pos<int> &pos, const GFCSDraw::GFCSDrawFont& font) const{
+   GFCSDraw::drawTextCentered(text, pos + getGlobalPos() + _renderOffset, font);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

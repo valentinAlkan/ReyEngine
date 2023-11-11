@@ -56,6 +56,8 @@ add_library(widgets STATIC
     widgets/meta/Timer.hpp
     widgets/meta/Theme.cpp
     widgets/meta/Font.hpp
+    widgets/meta/IndexedMap.cpp
+    widgets/BaseWidget.cpp
     widgets/Control.hpp
     widgets/Canvas.hpp
     widgets/Panel.hpp
@@ -64,7 +66,7 @@ add_library(widgets STATIC
     widgets/Label.hpp
     widgets/Layout.hpp
     widgets/ScrollArea.hpp
-    widgets/BaseWidget.cpp
+    widgets/Tree.cpp
     ${CUSTOM_SOURCES}
 )
 

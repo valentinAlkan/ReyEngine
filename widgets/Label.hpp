@@ -30,7 +30,7 @@ public:
          default:
             break;
       }
-       _drawText(text.value, {0, 0}, 20, foreground.value);
+       _drawText(text.value, {0, 0}, getThemeReadOnly().font.value);
    };
    void _process(float dt) override {};
    void registerProperties() override{
