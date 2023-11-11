@@ -14,15 +14,9 @@ class TreeItemContainerInterface {
 public:
    virtual void push_back(std::shared_ptr<TreeItem>& item) = 0;
    /////////////////////////////////////////////////////////////////////////////////////////
-   void insertItem(int index, std::shared_ptr<TreeItem>& item){getChildren().insert(getChildren().begin()+index, item);}
+//   void insertItem(int index, std::shared_ptr<TreeItem>& item){getChildren().insert(getChildren().begin()+index, item);}
    /////////////////////////////////////////////////////////////////////////////////////////
-   std::shared_ptr<TreeItem> removeItem(int index){
-      auto ptr = getChildren().at(index);
-      auto it = getChildren().begin() + index;
-      getChildren().erase(it);
-      return ptr;
-   }
-   /////////////////////////////////////////////////////////////////////////////////////////
+   virtual std::shared_ptr<TreeItem> removeItem(size_t index) = 0;
    void sort(std::function<bool(const std::shared_ptr<TreeItem>& a, const std::shared_ptr<TreeItem>& b)>& fxLessthan){
       std::sort(getChildren().begin(), getChildren().end(), fxLessthan);
    }
@@ -36,50 +30,17 @@ public:
    TreeItem(const std::string& text=""): _text(text){}
    void setText(const std::string& text){_text = text;}
    std::string getText() const {return _text;}
-   void push_back(std::shared_ptr<TreeItem>& item) override {
-      children.push_back(item);
-      item->parent = downcasted_shared_from_this<TreeItem>();
-   }
+   void push_back(std::shared_ptr<TreeItem>& item) override;
+   std::shared_ptr<TreeItem> removeItem(size_t index) override;
+   std::vector<std::shared_ptr<TreeItem>>& getChildren() override {return children;}
 protected:
    std::string _text;
    std::weak_ptr<TreeItem> parent;
-   std::optional<std::shared_ptr<TreeItem>> getDescendent(size_t& index);
-   //travel through the tree and get descendent at position <index>
-   std::optional<std::shared_ptr<TreeItem>> getNext(size_t nextIndex){
-      auto optDescendent = getDescendent(nextIndex);
-      if (optDescendent){
-         return optDescendent.value();
-      }
-      // we have run out of descendents, so we need to travel up the tree
-      if (parent.expired()){
-         //something is wrong
-         throw std::runtime_error("Invalid TreeItem iterator! Parent does not exist!");
-      }
-      auto _parent = parent.lock();
-      //determine what is the index of this in the parent
-      size_t siblingIndex = 0;
-      for (auto it = _parent->getChildren().begin(); it != _parent->getChildren().end(); it++){
-         siblingIndex++;
-         auto sibling = *it;
-         if (sibling == downcasted_shared_from_this<TreeItem>()){
-            //this is us
-            break;
-         }
-      }
-      //we now know our own index in our parent's children array. First verify if we have a sibling.
-      if (_parent->getChildren().size() <= siblingIndex){
-         //there is nowhere else to go
-         return std::nullopt;
-      }
-      // See if our next sibling has a descendent;
-      auto sibling = _parent->getChildren().at(siblingIndex);
-      //do the same query as before
-      return sibling->getNext(nextIndex);
-   }
-protected:
-   /////////////////////////////////////////////////////////////////////////////////////////
-   std::vector<std::shared_ptr<TreeItem>>& getChildren() override {return children;}
+   bool isRoot = false;
+   Tree* tree = nullptr;
    std::vector<std::shared_ptr<TreeItem>> children;
+
+private:
    friend class Tree;
    friend class TreeItemContainerInterface;
 };
@@ -106,7 +67,11 @@ protected:
    Tree(const std::string &name, const std::string &typeName, const GFCSDraw::Rect<float> &r, std::shared_ptr<TreeItem>& root)
    : VLayout(name, typeName, r)
    , root(root)
-   {}
+   {
+      root->isRoot = true;
+      order.push_back(root);
+      root->tree = this;
+   }
 //   root = std::make_shared<TreeItem>("Root");
 
 public:
@@ -136,25 +101,27 @@ public:
       using pointer           = std::shared_ptr<TreeItem>;
       using reference         = TreeItem&;
 
-      Iterator(pointer ptr) : m_ptr(ptr) {}
+      Iterator(pointer ptr) : iterPtr(ptr), root(ptr) {}
 
-      reference operator*() const { return *m_ptr.get(); }
-      pointer operator->() { return m_ptr; }
+      reference operator*() const { return *iterPtr.get(); }
+      pointer operator->() { return iterPtr; }
       Iterator& operator++() {
-         auto optNext = m_ptr->getNext(1);
-         if (!optNext){
-            m_ptr = nullptr;
+         auto& order = root->tree->order;
+         if (leafIndex >= order.size()){
+            iterPtr = nullptr;
          } else {
-            m_ptr = optNext.value();
+            iterPtr = order[leafIndex++].lock();
          }
          return *this;
       }
       Iterator operator++(int) { Iterator tmp = *this; ++(*this); return tmp; }
-      friend bool operator== (const Iterator& a, const Iterator& b) { return a.m_ptr == b.m_ptr; };
-      friend bool operator!= (const Iterator& a, const Iterator& b) { return a.m_ptr != b.m_ptr; };
+      friend bool operator== (const Iterator& a, const Iterator& b) { return a.iterPtr == b.iterPtr; };
+      friend bool operator!= (const Iterator& a, const Iterator& b) { return a.iterPtr != b.iterPtr; };
 
    private:
-      pointer m_ptr;
+      pointer iterPtr;
+      size_t leafIndex = 1;
+      std::shared_ptr<TreeItem> root;
    };
 
    Iterator begin() { return {root}; }
@@ -164,6 +131,16 @@ public:
 
 
 protected:
+   void determineOrdering(){
+      order.clear();
+      std::function<void(std::shared_ptr<TreeItem>&)> pushToVector = [&](std::shared_ptr<TreeItem>& item){
+         order.push_back(item);
+         for (auto& child : item->children){
+            pushToVector(child);
+         }
+      };
+      pushToVector(root);
+   }
    void render() const override{
       _drawRectangle(getRect().toSizeRect(), COLORS::red);
 //      draw the items
@@ -174,7 +151,8 @@ protected:
    }
 
 private:
-//   IndexedMap<size_t, std::unique_ptr<TreeItem>> _map; //todo: gotta go fast?
    std::shared_ptr<TreeItem> root;
+   std::vector<std::weak_ptr<TreeItem>> order;
    bool _hideRoot = false; //if true, the root is hidden and we can appear as a "flat" tree.
+   friend class TreeItem;
 };

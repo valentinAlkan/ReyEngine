@@ -243,8 +243,36 @@ int main(int argc, char** argv)
       auto treeRoot = std::make_shared<TreeItem>("Root");
       auto tree = make_shared<Tree>("Tree", Rect<int>(), treeRoot);
       root = tree;
-      auto treeItem = std::make_shared<TreeItem>("some text");
-      tree->getRoot()->push_back(treeItem);
+      for (auto item : {
+         std::make_shared<TreeItem>("Child1"),
+         std::make_shared<TreeItem>("Child2"),
+         std::make_shared<TreeItem>("Child3")
+               }) {
+         tree->getRoot()->push_back(item);
+      }
+      for (auto item : {
+            std::make_shared<TreeItem>("GrandChild01"),
+            std::make_shared<TreeItem>("GrandChild02"),
+            std::make_shared<TreeItem>("GrandChild03")
+      }) {
+         tree->getRoot()->getChildren()[0]->push_back(item);
+      }
+
+      for (auto item : {
+            std::make_shared<TreeItem>("GrandChild11"),
+            std::make_shared<TreeItem>("GrandChild12"),
+            std::make_shared<TreeItem>("GrandChild13")
+      }) {
+         tree->getRoot()->getChildren()[1]->push_back(item);
+      }
+
+      for (auto item : {
+            std::make_shared<TreeItem>("GrandChild21"),
+            std::make_shared<TreeItem>("GrandChild22"),
+            std::make_shared<TreeItem>("GrandChild23")
+      }) {
+         tree->getRoot()->getChildren()[2]->push_back(item);
+      }
 
       //iterate over the tree
       for (const auto& item : *tree){
