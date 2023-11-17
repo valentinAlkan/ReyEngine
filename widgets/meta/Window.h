@@ -22,7 +22,7 @@ public:
       }
       GFCSDraw::Pos<int> position;
    };
-   enum Flags{RESIZE};
+   enum Flags{RESIZE, IS_EDITOR};
    virtual void exec();
    virtual ~Window();
    bool isProcessed(const std::shared_ptr<BaseWidget>&) const;
@@ -42,7 +42,7 @@ protected:
    static constexpr size_t INPUT_COUNT_LIMIT = 256;
 private:
    std::shared_ptr<BaseWidget> _root; //the scene to draw
-
+   bool _isEditor = false; //enables other features
    class ProcessList {
    public:
       std::optional<std::shared_ptr<BaseWidget>> add(std::shared_ptr<BaseWidget> widget);

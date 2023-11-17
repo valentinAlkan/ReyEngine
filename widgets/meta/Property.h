@@ -221,7 +221,10 @@ struct ListProperty : public Property<std::vector<T>>{
       return Property<std::vector<T>>::value;
    }
    void set(int index, T newValue){
-       Property<std::vector<T>>::value.at(index) = newValue;
+      if(Property<std::vector<T>>::value.size()<=index){
+         throw std::runtime_error("List " + BaseProperty::instanceName() + " index " + std::to_string(index) + " out of range!");
+      }
+      Property<std::vector<T>>::value.at(index) = newValue;
    }
    T get(int index){
       return Property<std::vector<T>>::value.at(index);

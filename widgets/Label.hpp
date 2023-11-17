@@ -39,9 +39,12 @@ public:
    void setText(const std::string& newText){
       text.set(newText);
       if (!isInLayout) {
-         auto textWidth = MeasureText(newText.c_str(), 20);
-         auto pos = getPos();
-         setRect({pos.x, pos.y, textWidth, 20});
+         auto textSize = measureText();
+         //set the label to the max size allowable
+         auto newSize = getClampedSize(textSize);
+         if (newSize.x > getSize().x || newSize.y > getSize().y){
+            setSize(newSize);
+         }
       }
    }
    //precision refers to how many decimal places should appear
@@ -55,10 +58,7 @@ public:
    void setText(int newText){
       setText(std::to_string(newText));
    }
-   void calculateTextWidth(){
-      //calculate the width of the text in the label
-//      GFCSDraw::measureText(GetFontDefault(), text.value, )
-   }
 protected:
+   inline GFCSDraw::Size<int> measureText() const {return getThemeReadOnly().font.value.measure(text.value);}
    StringProperty text;
 };

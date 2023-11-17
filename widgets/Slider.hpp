@@ -28,16 +28,6 @@ public:
          , maxSlidervalue("maxSliderValue", 100.0)
          , sliderType("sliderType", sliderDir)
    {
-      switch(sliderType.get()) {
-         case SliderType::VERTICAL:
-            _grabber.width = _rect.value.width;
-            _grabber.height = _rect.value.height / 10;
-            break;
-         case SliderType::HORIZONTAL:
-            _grabber.width = _rect.value.width/10;
-            _grabber.height = _rect.value.height;
-            break;
-      }
       _range = {minSliderValue.get(), maxSlidervalue.get()};
    }
 
@@ -113,6 +103,7 @@ protected:
       _drawRectangle(_grabber, _cursor_down && _cursor_in_grabber || _is_dragging ? GFCSDraw::Colors::yellow : GFCSDraw::Colors::blue);
    }
    void _on_rect_changed() override {
+      _compute_appearance();
    };
    void _process(float dt) override {}
    void registerProperties() override{
@@ -129,17 +120,17 @@ private:
       publish<SliderValueChangedEvent>(event);
    }
    void _compute_appearance(){
-      //find the midpoint of the short edge of the slider
-      GFCSDraw::Vec2<double> longSide;
-      GFCSDraw::Vec2<double> shortSide;
-      GFCSDraw::Line<double> travelLine; //the line the grabber travels along
       switch(sliderType.get()){
          case SliderType::VERTICAL: {
+            _grabber.width = _rect.value.width;
+            _grabber.height = _rect.value.height / 10;
             GFCSDraw::Vec2<double> adjustedRange = {0, _rect.get().height - _grabber.height};
             _grabber.y = adjustedRange.lerp(getSliderPct());
          }
          break;
          case SliderType::HORIZONTAL: {
+            _grabber.width = _rect.value.width/10;
+            _grabber.height = _rect.value.height;
             GFCSDraw::Vec2<double> adjustedRange = {0, _rect.get().width - _grabber.width};
             _grabber.x = adjustedRange.lerp(getSliderPct());
          }

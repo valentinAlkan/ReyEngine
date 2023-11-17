@@ -159,7 +159,8 @@ namespace GFCSDraw {
       inline bool operator!=(const Pos& rhs){return this->x != rhs.x || this->y != rhs.y;}
       inline operator std::string() const {return (Vec2<T>(*this).toString());}
       inline void operator=(Size<T>&) = delete;
-      inline void operator=(Pos<int>& other){Pos::x = other.x; Pos::y = other.y;};
+      inline void operator=(Pos<T>& other){Pos::x = other.x; Pos::y = other.y;};
+      inline void operator=(Vec2<T>& other){Pos::x = other.x; Pos::y = other.y;};
    };
 
    template <typename T>
@@ -172,8 +173,8 @@ namespace GFCSDraw {
       inline Size(const Size<double>& v): Vec2<T>(v){}
       inline Size(const Size<float>& v) : Vec2<T>(v){}
       inline void operator=(Pos<T>&) = delete;
-      inline bool operator==(Size<T>& rhs){return Size::x==rhs.x && Size::y==rhs.y;}
-      inline bool operator!=(Size<T>& rhs){return Size::x!=rhs.x || Size::y!=rhs.y;}
+      inline bool operator==(const Size<T>& rhs){return Size::x==rhs.x && Size::y==rhs.y;}
+      inline bool operator!=(const Size<T>& rhs){return Size::x!=rhs.x || Size::y!=rhs.y;}
       inline Size operator+(const Size& rhs) const {auto val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
       inline Size operator-(const Size& rhs) const {auto val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
       inline Size& operator+=(const Size& rhs){this->x += rhs.x; this->y += rhs.y; return *this;}
@@ -285,12 +286,15 @@ namespace GFCSDraw {
    }
 
    struct GFCSDrawFont{
+      GFCSDrawFont(const std::string& fontFile="");
       Font font;
       float size = 20;
       float spacing = 1;
+      bool isDefault = false;
       GFCSDraw::ColorRGBA color = COLORS::black;
       std::string fileName;
-      bool isDefault = false;
+      Size<int> measure(const std::string& text) const;
+      GFCSDrawFont& operator=(const GFCSDrawFont& rhs);
 //      inline GFCSDrawFont& operator=(const GFCSDrawFont& rhs){font = rhs.font; size = rhs.size; spacing = rhs.spacing; color = rhs.color; fileName = rhs.fileName; isDefault = rhs.isDefault; return *this;}
 //      std::string toString();
 //      static GFCSDrawFont fromString(const std::string& str);
@@ -315,7 +319,7 @@ namespace GFCSDraw {
    void drawRectangleRoundedLines(const Rect<float>&, float roundness, int segments, float lineThick, Color color);
    void drawRectangleGradientV(const Rect<int>&, Color color1, Color color2);
    inline float getFrameDelta(){return GetFrameTime();}
-   inline Vec2<int> measureText(Font font, const char *text, float fontSize, float spacing){return MeasureTextEx(font, text, fontSize, spacing);}
+   inline Size<int> measureText(const std::string& text, GFCSDrawFont font){return MeasureTextEx(font.font, text.c_str(), font.size, font.spacing);}
 
    class RenderTarget{
       public:

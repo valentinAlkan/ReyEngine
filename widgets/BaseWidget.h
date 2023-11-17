@@ -91,20 +91,24 @@ public:
    GFCSDraw::Size<int> getChildRectSize() const; //get the smallest rectangle that contains all children, starting from 0,0. Does not include grandchildren.
    GFCSDraw::Pos<int> getPos() const {return {getRect().x, getRect().y};}
    GFCSDraw::Size<int> getSize() const {return getRect().size();}
-   int getWidth(){return _rect.value.width;}
-   int getHeight(){return _rect.value.height;}
+   int getWidth() const {return _rect.value.width;}
+   int getHeight() const {return _rect.value.height;}
    iVec getHeightRange() const {return {0, getRect().size().y};}
    iVec getWidthtRange() const {return {0, getRect().size().x};}
-   void setRect(const GFCSDraw::Rect<int>& r){_rect.value = r;_on_rect_changed();WidgetResizeEvent event(toEventPublisher());publish<decltype(event)>(event);}
-   void setPos(int x, int y){_rect.value.x = x; _rect.value.y = y; _on_rect_changed();WidgetResizeEvent event(toEventPublisher());publish<decltype(event)>(event);}
-   void setPos(const GFCSDraw::Pos<int>& pos){_rect.value.x = pos.x; _rect.value.y = pos.y; _on_rect_changed();WidgetResizeEvent event(toEventPublisher());publish<decltype(event)>(event);}
+   void setRect(const GFCSDraw::Rect<int>& r){_rect.value = r;_on_rect_changed();_publishSize();}
+   void setPos(int x, int y){_rect.value.x = x; _rect.value.y = y; _on_rect_changed();_publishSize();}
+   void setPos(const GFCSDraw::Pos<int>& pos){_rect.value.x = pos.x; _rect.value.y = pos.y; _on_rect_changed();_publishSize();}
    void setMaxSize(const GFCSDraw::Size<int>& size){maxSize = size;}
    void setMinSize(const GFCSDraw::Size<int>& size){minSize = size;}
    GFCSDraw::Size<int> getMinSize(){return minSize;}
    GFCSDraw::Size<int> getMaxSize(){return maxSize;}
-   void setSize(const GFCSDraw::Size<int>& size){_rect.value.width = size.x; _rect.value.height = size.y; _on_rect_changed();WidgetResizeEvent event(toEventPublisher());publish<decltype(event)>(event);}
-   void setWidth(int width){_rect.value.width = width; _on_rect_changed();WidgetResizeEvent event(toEventPublisher());publish<decltype(event)>(event);}
-   void setHeight(int height){_rect.value.height = height; _on_rect_changed();WidgetResizeEvent event(toEventPublisher());publish<decltype(event)>(event);}
+   GFCSDraw::Size<int> getClampedSize();
+   GFCSDraw::Size<int> getClampedSize(GFCSDraw::Size<int>);
+   void setSize(const GFCSDraw::Size<int>& size){_rect.value.width = size.x; _rect.value.height = size.y; _on_rect_changed();_publishSize();}
+   void setWidth(int width){_rect.value.width = width; _on_rect_changed();_publishSize();}
+   void setHeight(int height){_rect.value.height = height; _on_rect_changed();_publishSize();}
+   void setVisible(bool visible){_visible = visible;}
+   bool getVisible() const {return _visible;}
 
    iVec getLocalMousePos(){return globalToLocal(InputManager::getMousePos());}
    iVec globalToLocal(const dVec& global) const{return global - getGlobalPos();}
@@ -164,6 +168,7 @@ protected:
    // Drawing functions
    virtual void renderBegin(GFCSDraw::Pos<double>& textureOffset){}
    void renderChildren(GFCSDraw::Pos<double>& textureOffset) const; //draw the widget's children
+   void renderEditorFeatures();
    void renderChain(GFCSDraw::Pos<double>& textureOffset);
    virtual void renderEnd(){}
    GFCSDraw::Vec2<float> getRenderOffset() const {return _renderOffset;}
@@ -188,12 +193,23 @@ protected:
    void _is_extendable(){static_assert(true);}
    virtual std::string _get_static_constexpr_typename(){return TYPE_NAME;}
 
+   //convenience
+   bool _getIsEditorWidget(){return _isEditorWidget;}
+   void _setIsEditorWidget(bool isEditorWidget){_isEditorWidget = isEditorWidget;}
+   void _publishSize(){WidgetResizeEvent event(toEventPublisher());publish<decltype(event)>(event);}
+
    bool _has_inited = false; //set true THE FIRST TIME a widget enters the tree. Can do constructors of children and other stuff requiring shared_from_this();
    bool isLayout = false;
    bool isInLayout = false;
    bool acceptsHover = false;
    GFCSDraw::Size<int> maxSize = {INT_MAX, INT_MAX};
    GFCSDraw::Size<int> minSize = {0,0};
+
+   //editor stuff
+   bool _editor_show_grab_handles = false; //used in editor mode
+   static constexpr int GRAB_HANDLE_SIZE = 10;
+   GFCSDraw::Rect<int> _getGrabHandle(int index);// 0-3 clockwise starting in top left (TL,TR,BR,BL)
+   int _editor_grab_handles_dragging = -1; //which grab handle is being drug around
 private:
    void rename(WidgetPtr& child, const std::string& newName);
    uint64_t _rid; //unique identifier
@@ -205,12 +221,14 @@ private:
    std::optional<std::shared_ptr<Scene>> _scene;
    bool _request_delete = false; //true when we want to remove this object from the tree
    bool _hovered = false; //true when hovered, set by application
+   bool _visible = true; //whether to show the widget (and its children)
    std::recursive_mutex _childLock;
    bool _scheduled_for_deletion = false; // true when the widget has been scheduled for deletion but is not yet deleted.
-
+   bool _isEditorWidget = false; //true if this is a widget THE USER HAS PLACED IN THE EDITOR WORKSPACE (not a widget that the editor uses for normal stuff)
    GFCSDraw::Pos<double> _renderOffset; //used for different rendering modes. does not offset position.
 
    Handled _process_unhandled_input(InputEvent&); //pass input to children if they want it and then process it for ourselves if necessary
+   Handled _process_unhandled_editor_input(InputEvent&); //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)
    InputFilter inputFilter = InputFilter::INPUT_FILTER_PASS_AND_PROCESS;
 
    ChildMap _children;

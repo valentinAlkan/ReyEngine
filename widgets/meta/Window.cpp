@@ -12,14 +12,14 @@ using namespace GFCSDraw;
 /////////////////////////////////////////////////////////////////////////////////////////
 Window::Window(const std::string &title, int width, int height, const std::vector<Flags>& flags, int targetFPS)
 {
-//   if (!_root){
-//      std::runtime_error("Window root cannot be null!");
-//   }
 
    for (const auto& flag : flags){
       switch (flag){
          case Flags::RESIZE:
             SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+            break;
+         case Flags::IS_EDITOR:
+            _isEditor = true;
             break;
       }
    }
