@@ -69,7 +69,7 @@ public:
       };
 
       //connect to resize signal
-      newLayout->subscribe<WidgetResizeEvent>(toEventPublisher(), resizeCB);
+      newLayout->template subscribe<WidgetResizeEvent>(toEventPublisher(), resizeCB);
       return newLayout;
    }
 

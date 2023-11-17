@@ -11,7 +11,6 @@ function(install_file SOURCE DEST)
     configure_file(${CMAKE_SOURCE_DIR}/${SOURCE} ${CMAKE_CURRENT_BINARY_DIR}/${DEST} COPYONLY)
 endfunction()
 
-
 # Dependencies
 set(RAYLIB_VERSION 4.5.0)
 find_package(raylib ${RAYLIB_VERSION} QUIET) # QUIET or REQUIRED
@@ -86,12 +85,12 @@ if (UNIX)
     target_link_libraries(widgets stdc++fs)
 endif (UNIX)
 
+
 target_include_directories(editor PUBLIC
     editor
 )
 
 target_link_libraries(editor PUBLIC widgets)
-
 
 # Our Project
 add_executable(${PROJECT_NAME}

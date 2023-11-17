@@ -61,6 +61,7 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--panelTest", "Test panel", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--editor", "Editor", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--treeTest", "TreeTest", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--childBoundingBoxTest", "ChildBoundingBoxTest", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    //create window (or don't idk)
@@ -113,11 +114,11 @@ int main(int argc, char** argv)
       //add scroll area
       auto scrollArea = make_shared<ScrollArea>("ScrollArea",Rect<int>(50, 50, 500, 500));
       auto label1 = make_shared<Label>("ScrollAreaLabel1", Rect<float> {0,0,0,0});
-//      auto label2 = make_shared<Label>("ScrollAreaLabel2", Rect<float> {500,500,0,0});
+      auto label2 = make_shared<Label>("ScrollAreaLabel2", Rect<float> {300,300,0,0});
       label1->setText("Hello from the upper left!");
-//      label2->setText("Hello from the bottom right!");
+      label2->setText("Hello from the bottom right!");
       scrollArea->addChild(label1);
-//      scrollArea->addChild(label2);
+      scrollArea->addChild(label2);
 //      scrollArea->hideHSlider(true);
 //      scrollArea->hideVSlider(true);
       scrollArea->getTheme()->background.colorPrimary.set(COLORS::red);
@@ -143,8 +144,26 @@ int main(int argc, char** argv)
       };
       labelLayout->subscribe<BaseWidget::WidgetResizeEvent>(scrollArea, displaySize);
 
-//      add a box around the layout
+      // add a pushbutton to toggle grab handles
+//      auto grabToggleButton = make_shared<PushButton>("grabToggleButton", Rect<int>(700,100,50,30));
+//      root->addChild(grabToggleButton);
    }
+
+   if (args.getArg("--childBoundingBoxTest")){
+      auto rootControl = make_shared<Control>("RootControl", Rect<int>(0,0,2000,2000));
+      root = rootControl;
+      //add some children
+      auto label1 = make_shared<Label>("Label1", Rect<int>(40,40,0,0));
+      root->addChild(label1);
+
+      //draw the child bounding box
+      std::function<void()> drawBoundingBox = [&](){
+         cout << "do some stuff" << endl;
+      };
+      rootControl->setRenderCallback(drawBoundingBox);
+
+   }
+
 
    if (args.getArg("--sliderTest")){
       root = make_shared<Control>("Root", Rect<float> {0,0,0,0});

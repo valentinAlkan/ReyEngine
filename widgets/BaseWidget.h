@@ -78,6 +78,10 @@ public:
       GFCSDraw::Size<float> size;
    };
 
+   struct WidgetRenderEvent : public Event<WidgetRenderEvent>{
+      EVENT_CTOR_SIMPLE(WidgetRenderEvent, Event<WidgetRenderEvent>){}
+   };
+
    static constexpr char TYPE_NAME[] = "BaseWidget";
    BaseWidget(const std::string& name, std::string  typeName, GFCSDraw::Rect<float> rect);
    ~BaseWidget();
@@ -88,7 +92,7 @@ public:
    GFCSDraw::Rect<int> getRect() const {return _rect.value;}
    GFCSDraw::Rect<int> getGlobalRect() const {return {getGlobalPos().x, getGlobalPos().y, getSize().x, getSize().y};}
    GFCSDraw::Pos<int> getGlobalPos() const;
-   GFCSDraw::Size<int> getChildRectSize() const; //get the smallest rectangle that contains all children, starting from 0,0. Does not include grandchildren.
+   GFCSDraw::Size<int> getChildBoundingBox() const; //get the smallest rectangle that contains all children, starting from 0,0. Does not include grandchildren.
    GFCSDraw::Pos<int> getPos() const {return {getRect().x, getRect().y};}
    GFCSDraw::Size<int> getSize() const {return getRect().size();}
    int getWidth() const {return _rect.value.width;}
@@ -167,12 +171,11 @@ protected:
 
    // Drawing functions
    virtual void renderBegin(GFCSDraw::Pos<double>& textureOffset){}
-   void renderChildren(GFCSDraw::Pos<double>& textureOffset) const; //draw the widget's children
    void renderEditorFeatures();
    void renderChain(GFCSDraw::Pos<double>& textureOffset);
    virtual void renderEnd(){}
    GFCSDraw::Vec2<float> getRenderOffset() const {return _renderOffset;}
-   void setRenderOffset(GFCSDraw::Pos<double>& offset){_renderOffset = offset;}
+   void setRenderOffset(GFCSDraw::Pos<double> offset){_renderOffset = offset;}
 //   void renderTextureOffsetApply(GFCSDraw::Pos<float>& textureOffset){}
 //   void renderTextureOffsetReset(GFCSDraw::Pos<float>& textureOffset){}
    void _drawText(const std::string& text, const GFCSDraw::Pos<int>& pos, const GFCSDraw::GFCSDrawFont& font) const;

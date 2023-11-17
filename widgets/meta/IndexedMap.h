@@ -6,8 +6,8 @@
 template <typename K, typename V>
 class IndexedMap {
    using KVP = std::pair<K, V>;
-   using Locator = std::pair<size_t, KVP>;
-   void insert(K key, V value, size_t index){
+   using Locator = std::pair<std::size_t, KVP>;
+   void insert(K key, V value, std::size_t index){
       //do a vector style insert
       _vector.insert();
    }
