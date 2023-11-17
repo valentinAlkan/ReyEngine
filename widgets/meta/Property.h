@@ -8,7 +8,7 @@
 #include "DrawInterface.h"
 
 #define PROP_TYPE(propName) static constexpr char propName[] = #propName;
-#define PROPERTY_DECLARE(PROPERTYNAME, ...) PROPERTYNAME(#PROPERTYNAME, __VA_ARGS__)
+#define PROPERTY_DECLARE(PROPERTYNAME, ...) PROPERTYNAME(#PROPERTYNAME, ##__VA_ARGS__)
 
 struct BaseProperty;
 struct PropertyPrototype;

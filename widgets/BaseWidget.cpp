@@ -174,7 +174,7 @@ Pos<int> BaseWidget::getGlobalPos() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-GFCSDraw::Size<int> BaseWidget::getChildRectSize() const {
+GFCSDraw::Size<int> BaseWidget::getChildBoundingBox() const {
    GFCSDraw::Size<double> childRect;
    for (const auto& childIter : _children){
       auto totalOffset = childIter.second.second->getRect().size() + Size<double>(childIter.second.second->getPos());
@@ -185,23 +185,19 @@ GFCSDraw::Size<int> BaseWidget::getChildRectSize() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::renderChildren(GFCSDraw::Pos<double>& textureOffset) const {
-   for (const auto& [name, childIter] : _children){
-      childIter.second->renderChain(textureOffset);
-   }
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::renderChain(GFCSDraw::Pos<double>& parentOffset) {
    if (!_visible) return;
    GFCSDraw::Pos<double> localOffset;
    renderBegin(localOffset);
    _renderOffset += (localOffset + parentOffset);
    render();
-   renderEditorFeatures();
-   renderChildren(_renderOffset);
+   //renderChildren
+   for (const auto& [name, childIter] : _children){
+      childIter.second->renderChain(_renderOffset);
+   }
    _renderOffset -= (localOffset + parentOffset); //subtract local offset when we are done
    renderEnd();
+   renderEditorFeatures();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -264,7 +260,7 @@ Handled BaseWidget::_process_unhandled_editor_input(InputEvent& event) {
                      _editor_grab_handles_dragging = 3;
                      return true;
                   }
-               } else if (!mouseButton.isDown){
+               } else if (!mouseButton.isDown && _editor_grab_handles_dragging != -1){
                   _editor_grab_handles_dragging = -1;
                   return true;
                }
