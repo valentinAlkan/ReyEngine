@@ -4,42 +4,68 @@
 
 class ScrollArea : public Control {
    GFCSDRAW_OBJECT(ScrollArea, Control)
-   , scrollOffsetX(0, getWidth(), 0)
-   , scrollOffsetY(0, getHeight(), 0)
-   {}
+   , scrollOffsetX(0, 0, 0)
+   , scrollOffsetY(0, 0, 0)
+   {
+      _setIsEditorWidget(true);
+      _editor_show_grab_handles = true;
+   }
+public:
    inline GFCSDraw::Size<double> getScrollAreaSize() const {return {scrollOffsetX.getMax(), scrollOffsetY.getMax()};}
    inline GFCSDraw::Pos<double> getScrollOffset() const {return {scrollOffsetX.getValue(), scrollOffsetY.getValue()};}
+   void hideVSlider(bool hidden){_hideVSlider = hidden; if (vslider) vslider->setVisible(!hidden);}
+   void hideHSlider(bool hidden){_hideHSlider = hidden; if (hslider) hslider->setVisible(!hidden);}
 protected:
+   static constexpr std::string_view VSLIDER_NAME = "__vslider";
+   static constexpr std::string_view HSLIDER_NAME = "__hslider";
    void renderBegin(GFCSDraw::Pos<double>& textureOffset) override {
-      textureOffset -= getScrollOffset();
-      scissorTarget.start(getGlobalRect());
+//      textureOffset -= getScrollOffset();
+//      scissorTarget.start(getGlobalRect());
    }
    void renderEnd() override {
-      scissorTarget.stop();
+//      scissorTarget.stop();
+//      int size = 20;
+//      _drawRectangle({0,0,size,size}, getThemeReadOnly().background.colorPrimary.value);
+//      _drawRectangle({0,getHeight()-size,size,size}, getThemeReadOnly().background.colorPrimary.value);
+//      _drawRectangle({getWidth()-size,0,size,size}, getThemeReadOnly().background.colorPrimary.value);
+//      _drawRectangle({getWidth()-size,getHeight()-size,size,size}, getThemeReadOnly().background.colorPrimary.value);
    }
-   void render() const override {}
    void _process(float dt) override {}
    void registerProperties() override{
    }
    void _on_rect_changed() override {
+      auto ourSize = _rect.get().size();
+      auto sliderSize = 20;
       auto newSize = getRect().size();
       scrollOffsetX.setRange(0, newSize.x);
       scrollOffsetY.setRange(0, newSize.y);
+      auto vsliderNewRect = GFCSDraw::Rect<int>((ourSize.x - sliderSize), 0, sliderSize, ourSize.y);
+      auto hsliderNewRect = GFCSDraw::Rect<int>(0, (float)(ourSize.y - sliderSize), (float)(ourSize.x - sliderSize), (float)sliderSize);
+      vslider->setRect(vsliderNewRect);
+      hslider->setRect(hsliderNewRect);
    }
    void _on_child_added(std::shared_ptr<BaseWidget>& child) override {
       //expand scroll size to fit children
       auto rectSize = getChildRectSize();
-      scrollOffsetX.setMax(rectSize.x);
-      scrollOffsetY.setMax(rectSize.y);
+      if (!isInLayout) {
+         scrollOffsetX.setMax(rectSize.x);
+         scrollOffsetY.setMax(rectSize.y);
+      }
+      // reconfigure ourselves when our children's size changes (but ignore the sliders)
+      auto cb = [&](const WidgetResizeEvent& e){_on_rect_changed();};
+
+      if (child != vslider && child != hslider) {
+         subscribe<WidgetResizeEvent>(child, cb);
+      }
    }
 
 protected:
    void _init() override {
       //create scrollbars
-      auto scrollSize = _rect.get().size();
-      auto sliderSize = 20;
-      vslider = std::make_shared<Slider>("__vslider", GFCSDraw::Rect<float>{(float)(scrollSize.x-sliderSize), 0, (float)sliderSize, (float)scrollSize.y}, Slider::SliderType::VERTICAL);
-      hslider = std::make_shared<Slider>("__hslider", GFCSDraw::Rect<float>{0, (float)(scrollSize.y - sliderSize), (float)(scrollSize.x - sliderSize), (float)sliderSize}, Slider::SliderType::HORIZONTAL);
+      vslider = std::make_shared<Slider>(std::string(VSLIDER_NAME), GFCSDraw::Rect<float>(), Slider::SliderType::VERTICAL);
+      hslider = std::make_shared<Slider>(std::string(HSLIDER_NAME), GFCSDraw::Rect<float>(), Slider::SliderType::HORIZONTAL);
+      vslider->setVisible(!_hideVSlider);
+      hslider->setVisible(!_hideHSlider);
       addChild(vslider);
       addChild(hslider);
 
@@ -61,5 +87,7 @@ protected:
    GFCSDraw::Range<double> scrollOffsetY;
    std::shared_ptr<Slider> vslider;
    std::shared_ptr<Slider> hslider;
+   bool _hideVSlider = true; //always hidden until we get a child
+   bool _hideHSlider = true; //always hidden until we get a child
 };
 

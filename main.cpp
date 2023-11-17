@@ -95,14 +95,55 @@ int main(int argc, char** argv)
 
 
    if (args.getArg("--scrollAreaTest")){
-      auto scrollArea = make_shared<ScrollArea>("RootScrollArea", Rect<float> {50,50,200,200});
-      root->addChild(scrollArea);
-      auto label1 = make_shared<Label>("ScrollAreaLabel", Rect<float> {50,50,0,0});
-      auto label2 = make_shared<Label>("ScrollAreaLabel", Rect<float> {50,50,0,0});
+      root = make_shared<Control>("RootControl", Rect<int>(0,0, 2000, 2000));
+
+      //add labels
+      auto labelLayout = make_shared<HLayout>("labelLayout", Rect<int>(50,20,150,20));
+      root->addChild(labelLayout);
+      auto xlabel = make_shared<Label>("XLabel", Rect<float>());
+      auto ylabel = make_shared<Label>("YLabel", Rect<float>());
+      auto spacer = make_shared<Control>("spacer", Rect<float>());
+      labelLayout->addChild(xlabel);
+      labelLayout->addChild(ylabel);
+//      labelLayout->addChild(spacer);
+//      labelLayout->childScales.set(0, .1);
+//      labelLayout->childScales.set(1, .1);
+//      labelLayout->childScales.set(2, .8);
+
+      //add scroll area
+      auto scrollArea = make_shared<ScrollArea>("ScrollArea",Rect<int>(50, 50, 500, 500));
+      auto label1 = make_shared<Label>("ScrollAreaLabel1", Rect<float> {0,0,0,0});
+//      auto label2 = make_shared<Label>("ScrollAreaLabel2", Rect<float> {500,500,0,0});
       label1->setText("Hello from the upper left!");
-      label2->setText("Hello from the bottom right!");
+//      label2->setText("Hello from the bottom right!");
       scrollArea->addChild(label1);
-      scrollArea->addChild(label2);
+//      scrollArea->addChild(label2);
+//      scrollArea->hideHSlider(true);
+//      scrollArea->hideVSlider(true);
+      scrollArea->getTheme()->background.colorPrimary.set(COLORS::red);
+
+      //draw a box around the scroll area
+      auto boxRect = scrollArea->getRect();
+      boxRect.x -= 1;
+      boxRect.y -= 1;
+      boxRect.width += 1;
+      boxRect.height += 1;
+      auto box = std::make_shared<Label>("BoxLabel", boxRect);
+      box->setText("");
+      box->getTheme().get()->background.set(Style::Fill::SOLID);
+      box->getTheme().get()->background.colorPrimary.set({125, 125, 125, 127});
+      root->addChild(box);
+
+      root->addChild(scrollArea);
+//
+      auto displaySize = [&](const BaseWidget::WidgetResizeEvent&){
+         xlabel->setText(scrollArea->getWidth());
+         ylabel->setText(scrollArea->getHeight());
+         box->setRect(scrollArea->getRect());
+      };
+      labelLayout->subscribe<BaseWidget::WidgetResizeEvent>(scrollArea, displaySize);
+
+//      add a box around the layout
    }
 
    if (args.getArg("--sliderTest")){
@@ -243,6 +284,7 @@ int main(int argc, char** argv)
       auto treeRoot = std::make_shared<TreeItem>("Root");
       auto tree = make_shared<Tree>("Tree", Rect<int>(), treeRoot);
       root = tree;
+
       for (auto item : {
          std::make_shared<TreeItem>("Child1"),
          std::make_shared<TreeItem>("Child2"),
@@ -257,6 +299,23 @@ int main(int argc, char** argv)
       }) {
          tree->getRoot()->getChildren()[0]->push_back(item);
       }
+
+      for (auto item : {
+            std::make_shared<TreeItem>("GreatGrandChild01"),
+            std::make_shared<TreeItem>("GreatGrandChild02"),
+            std::make_shared<TreeItem>("GreatGrandChild03")
+      }) {
+         tree->getRoot()->getChildren()[0]->getChildren()[0]->push_back(item);
+      }
+
+      for (auto item : {
+            std::make_shared<TreeItem>("GreatGreatGrandChild01"),
+            std::make_shared<TreeItem>("GreatGreatGrandChild02"),
+            std::make_shared<TreeItem>("GreatGreatGrandChild03")
+      }) {
+         tree->getRoot()->getChildren()[0]->getChildren()[0]->getChildren()[0]->push_back(item);
+      }
+
 
       for (auto item : {
             std::make_shared<TreeItem>("GrandChild11"),
@@ -278,6 +337,8 @@ int main(int argc, char** argv)
       for (const auto& item : *tree){
          Application::printDebug() << item.getText() << endl;
       }
+
+      tree->setHideRoot(true);
    }
 
    // default functionality

@@ -93,6 +93,18 @@ void BaseWidget::setGlobalPos(const Vec2<double>& newPos) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+GFCSDraw::Size<int> BaseWidget::getClampedSize(GFCSDraw::Size<int> size){
+   auto newX = GFCSDraw::Vec2<int>(minSize.x, maxSize.x).clamp(size.x);
+   auto newY = GFCSDraw::Vec2<int>(minSize.y, maxSize.y).clamp(size.y);
+   return {newX, newY};
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+GFCSDraw::Size<int> BaseWidget::getClampedSize(){
+   return getClampedSize(getSize());
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 bool BaseWidget::hasChild(const std::string &name) {
    auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
    return _children.find(name) != _children.end();
@@ -181,10 +193,12 @@ void BaseWidget::renderChildren(GFCSDraw::Pos<double>& textureOffset) const {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::renderChain(GFCSDraw::Pos<double>& parentOffset) {
+   if (!_visible) return;
    GFCSDraw::Pos<double> localOffset;
    renderBegin(localOffset);
    _renderOffset += (localOffset + parentOffset);
    render();
+   renderEditorFeatures();
    renderChildren(_renderOffset);
    _renderOffset -= (localOffset + parentOffset); //subtract local offset when we are done
    renderEnd();
@@ -201,6 +215,10 @@ Handled BaseWidget::_process_unhandled_input(InputEvent& event) {
       return false;
    };
 
+   if (_isEditorWidget){
+      if (_process_unhandled_editor_input(event) > 0) return true;
+   }
+
    switch (inputFilter){
       case InputFilter::INPUT_FILTER_PASS_AND_PROCESS:
          return passInput(event) || _unhandled_input(event);
@@ -215,6 +233,79 @@ Handled BaseWidget::_process_unhandled_input(InputEvent& event) {
       default:
          throw std::runtime_error("INVALID INPUT FILTER STATE!");
    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Handled BaseWidget::_process_unhandled_editor_input(InputEvent& event) {
+   if (!_editor_show_grab_handles) return false;
+   switch(event.eventId){
+      case InputEventMouseButton::getUniqueEventId():
+      case InputEventMouseMotion::getUniqueEventId():
+         auto mouseEvent = event.toEventType<InputEventMouseButton>();
+         auto localPos = globalToLocal(mouseEvent.globalPos);
+         switch (event.eventId){
+            case InputEventMouseButton::getUniqueEventId(): {
+               auto mouseButton = event.toEventType<InputEventMouseButton>();
+               if (_editor_grab_handles_dragging == -1 && mouseButton.isDown) {
+                  //check if we click in the grab handles
+                  if (_getGrabHandle(0).isInside(localPos)) {
+                     _editor_grab_handles_dragging = 0;
+                     return true;
+                  }
+                  if (_getGrabHandle(1).isInside(localPos)) {
+                     _editor_grab_handles_dragging = 1;
+                     return true;
+                  }
+                  if (_getGrabHandle(2).isInside(localPos)) {
+                     _editor_grab_handles_dragging = 2;
+                     return true;
+                  }
+                  if (_getGrabHandle(3).isInside(localPos)) {
+                     _editor_grab_handles_dragging = 3;
+                     return true;
+                  }
+               } else if (!mouseButton.isDown){
+                  _editor_grab_handles_dragging = -1;
+                  return true;
+               }
+               break;
+            }
+            case InputEventMouseMotion::getUniqueEventId():
+               auto delta = event.toEventType<InputEventMouseMotion>().mouseDelta;
+               //see which handle we are dragging
+               auto _newRect = getRect();
+               switch(_editor_grab_handles_dragging){
+                  case 0:
+                     //resize the rect
+                     _newRect.x += delta.x;
+                     _newRect.y += delta.y;
+                     _newRect.width -= delta.x;
+                     _newRect.height -= delta.y;
+                     setRect(_newRect);
+                     return true;
+                  case 1:
+                     _newRect.y += delta.y;
+                     _newRect.height -= delta.y;
+                     _newRect.width += delta.x;
+                     setRect(_newRect);
+                     return true;
+                  case 2:
+                     _newRect.height += delta.y;
+                     _newRect.width += delta.x;
+                     setRect(_newRect);
+                     return true;
+                  case 3:
+                     _newRect.x += delta.x;
+                     _newRect.width -= delta.x;
+                     _newRect.height += delta.y;
+                     setRect(_newRect);
+                     return true;
+                  default:
+                     break;
+               }
+         }
+   }
+   return false;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -305,4 +396,30 @@ void BaseWidget::_deserialize(PropertyPrototypeMap& propertyData){
 void BaseWidget::registerProperties() {
    registerProperty(_rect);
    registerProperty(_isProcessed);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::renderEditorFeatures(){
+   if (_editor_show_grab_handles){
+      //render the grab handles
+      static constexpr GFCSDraw::ColorRGBA GRAB_HANDLE_COLOR = COLORS::blue;
+      _drawRectangleRounded(_getGrabHandle(0), 1.0, 5, GRAB_HANDLE_COLOR);
+      _drawRectangleRounded(_getGrabHandle(1), 1.0, 5, GRAB_HANDLE_COLOR);
+      _drawRectangleRounded(_getGrabHandle(2), 1.0, 5, GRAB_HANDLE_COLOR);
+      _drawRectangleRounded(_getGrabHandle(3), 1.0, 5, GRAB_HANDLE_COLOR);
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+GFCSDraw::Rect<int> BaseWidget::_getGrabHandle(int index) {
+   switch(index){
+      case 0:
+         return {-GRAB_HANDLE_SIZE,-GRAB_HANDLE_SIZE,GRAB_HANDLE_SIZE,GRAB_HANDLE_SIZE};
+      case 1:
+         return {getWidth(),-GRAB_HANDLE_SIZE,GRAB_HANDLE_SIZE,GRAB_HANDLE_SIZE};
+      case 2:
+         return {getWidth(),getHeight(),GRAB_HANDLE_SIZE,GRAB_HANDLE_SIZE};
+      case 3:
+         return {-GRAB_HANDLE_SIZE, getHeight(),GRAB_HANDLE_SIZE,GRAB_HANDLE_SIZE};
+   }
 }

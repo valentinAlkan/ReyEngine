@@ -115,10 +115,30 @@ void GFCSDraw::minimizeWindow() {
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
+GFCSDraw::GFCSDrawFont::GFCSDrawFont(const std::string& fontFile){
+   if (fontFile.empty()) {
+      font = GetFontDefault();
+   } else {
+      font = LoadFont(fontFile.c_str());
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 GFCSDrawFont GFCSDraw::getDefaultFont() {
-   GFCSDrawFont font;
-   font.font = GetFontDefault();
-   font.size = 20;
-   font.isDefault = true;
-   return font;
+   return GFCSDrawFont();
+}
+
+GFCSDrawFont &GFCSDrawFont::operator=(const GFCSDrawFont &rhs)
+{
+   size = rhs.size;
+   spacing = rhs.spacing;
+   isDefault = rhs.isDefault;
+   fileName = rhs.fileName;
+   font = LoadFont(fileName.c_str());
+   return *this;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Size<int> GFCSDrawFont::measure(const std::string &text) const {
+   return GFCSDraw::measureText(text, *this);
 }

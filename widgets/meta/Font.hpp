@@ -14,7 +14,7 @@ namespace Style{
       }
       GFCSDraw::GFCSDrawFont fromString(const std::string& str) override {
          //deserialize
-         return GFCSDraw::GFCSDrawFont();
+         return {};
       }
    };
 }

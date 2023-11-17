@@ -1,14 +1,8 @@
 #pragma once
-
-#include <utility>
-
-#include "Control.hpp"
-#include "IndexedMap.h"
 #include "Layout.hpp"
 
 class Tree;
 class TreeItem;
-
 //todo: this doesn't need to be an interface since tree doesn't do it anymore. move all this to tree item
 class TreeItemContainerInterface {
 public:
@@ -27,20 +21,31 @@ protected:
 
 class TreeItem: public TreeItemContainerInterface, public inheritable_enable_shared_from_this<TreeItem> {
 public:
+   static constexpr long long GENERATION_NULL = -1;
    TreeItem(const std::string& text=""): _text(text){}
    void setText(const std::string& text){_text = text;}
    std::string getText() const {return _text;}
    void push_back(std::shared_ptr<TreeItem>& item) override;
    std::shared_ptr<TreeItem> removeItem(size_t index) override;
    std::vector<std::shared_ptr<TreeItem>>& getChildren() override {return children;}
+   bool getExpanded(){return expanded;}
+   void setExpanded(bool _expanded){expanded = _expanded;}
 protected:
    std::string _text;
    std::weak_ptr<TreeItem> parent;
    bool isRoot = false;
+   bool expanded = true; //unexpanded tree items are visible, it's their children that are not;
+   bool visible = true;
    Tree* tree = nullptr;
    std::vector<std::shared_ptr<TreeItem>> children;
 
 private:
+   //the "level" of the branch on which this leaf appears.
+   // For example, the root is always generation 0, its children are generation 1,
+   // those children's children are generation 2, and so on.
+   // Orphaned items have generation -1;
+   long long generation = GENERATION_NULL;
+
    friend class Tree;
    friend class TreeItemContainerInterface;
 };
@@ -59,20 +64,11 @@ public:
    }
    Tree(const std::string &name, const GFCSDraw::Rect<float> &r, std::shared_ptr<TreeItem>& root) : Tree(name, _get_static_constexpr_typename(), r, root){}
 protected:
-   void _register_parent_properties()
-   override{
+   void _register_parent_properties() override{
       VLayout::_register_parent_properties();
       VLayout::registerProperties();
    }
-   Tree(const std::string &name, const std::string &typeName, const GFCSDraw::Rect<float> &r, std::shared_ptr<TreeItem>& root)
-   : VLayout(name, typeName, r)
-   , root(root)
-   {
-      root->isRoot = true;
-      order.push_back(root);
-      root->tree = this;
-   }
-//   root = std::make_shared<TreeItem>("Root");
+   Tree(const std::string &name, const std::string &typeName, const GFCSDraw::Rect<float> &r, std::shared_ptr<TreeItem>& root);
 
 public:
    /////////////////////////////////////////////////////////////////////////////////////////
@@ -91,7 +87,7 @@ public:
    };
 
    std::shared_ptr<TreeItem> getRoot(){return root;}
-
+   void setHideRoot(bool hide){_hideRoot = hide; determineVisible();}
 
 public:
    struct Iterator{
@@ -110,7 +106,7 @@ public:
          if (leafIndex >= order.size()){
             iterPtr = nullptr;
          } else {
-            iterPtr = order[leafIndex++].lock();
+            iterPtr = order[leafIndex++];
          }
          return *this;
       }
@@ -126,33 +122,20 @@ public:
 
    Iterator begin() { return {root}; }
    Iterator end()   { return {nullptr}; }
-
-
-
-
 protected:
-   void determineOrdering(){
-      order.clear();
-      std::function<void(std::shared_ptr<TreeItem>&)> pushToVector = [&](std::shared_ptr<TreeItem>& item){
-         order.push_back(item);
-         for (auto& child : item->children){
-            pushToVector(child);
-         }
-      };
-      pushToVector(root);
-   }
-   void render() const override{
-      _drawRectangle(getRect().toSizeRect(), COLORS::red);
-//      draw the items
-      auto font = getThemeReadOnly().font.value;
-//      for (const auto& item : _data){
-//         _drawText(item)
-//      }
-   }
-
+   void determineOrdering();
+   void determineVisible();
+   void render() const override;
+   virtual Handled _unhandled_input(InputEvent&);
+   virtual void _on_mouse_enter(){};
+   virtual void _on_mouse_exit(){ _hoveredRowNum = -1;}
 private:
    std::shared_ptr<TreeItem> root;
-   std::vector<std::weak_ptr<TreeItem>> order;
+   std::vector<std::shared_ptr<TreeItem>> order;
+   std::vector<std::shared_ptr<TreeItem>> visible;
    bool _hideRoot = false; //if true, the root is hidden and we can appear as a "flat" tree.
+   size_t _hoveredRowNum = -1; //the row number currently being hovered
+
+   GFCSDraw::Pos<int> testPos;
    friend class TreeItem;
 };
