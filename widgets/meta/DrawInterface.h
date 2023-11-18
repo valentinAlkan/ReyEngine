@@ -134,13 +134,13 @@ namespace GFCSDraw {
    template <typename T>
    struct Line {
       inline Line(): a(0,0), b(0,0){}
-      inline Line(Vec2<T> a, Vec2<T> b): a(a), b(b){}
+      inline Line(Pos<T> a, Pos<T> b): a(a), b(b){}
       inline Line(const T x1, const T y1, const T x2, const T y2): Line({x1, y1}, {x2, y2}){}
       inline Line midpoint(){return {(a.x+b.x)/2, (a.y + b.y) / 2};}
-      inline Vec2<T> lerp(double xprm){return a.lerp(b, xprm);}
+      inline Pos<T> lerp(double xprm){return a.lerp(b, xprm);}
       inline double distance(){NOT_IMPLEMENTED;}
-      Vec2<T> a;
-      Vec2<T> b;
+      Pos<T> a;
+      Pos<T> b;
    };
 
    template <typename T>
@@ -194,6 +194,7 @@ namespace GFCSDraw {
       inline explicit Rect(const Pos<T>& v): x((T)v.x), y((T)v.y){}
       inline explicit Rect(const Size<T>& v): width((T)v.x), height((T)v.y){}
       inline Rect(const Pos<T>& pos, const Size<T>& size): x((T)pos.x), y((T)pos.y), width((T)size.x), height((T)size.y){}
+      inline bool operator!=(const Rect<T>& rhs) const {return rhs.x != x || rhs.y != y || rhs.width != width || rhs.height != height;}
       inline Rect operator+(const Pos<T>& rhs) const {Rect<T> val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
       inline Rect operator-(const Pos<T>& rhs) const {Rect<T> val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
       inline Rect& operator+=(const Pos<T>& rhs){x += rhs.x; y += rhs.y; return *this;}
@@ -313,11 +314,12 @@ namespace GFCSDraw {
    void drawText(const std::string& text, const GFCSDraw::Pos<int>& pos, const GFCSDrawFont& font);
    void drawTextCentered(const std::string& text, const GFCSDraw::Pos<int>& pos, const GFCSDrawFont& font);
    void drawTextRelative(const std::string& text, const GFCSDraw::Pos<int>& relPos, const GFCSDrawFont& font);
-   void drawRectangle(const Rect<int>&, Color color);
+   void drawRectangle(const Rect<int>&, GFCSDraw::ColorRGBA color);
    void drawRectangleRounded(const Rect<float>&, float roundness, int segments, Color color);
    void drawRectangleLines(const Rect<float>&, float lineThick, Color color);
    void drawRectangleRoundedLines(const Rect<float>&, float roundness, int segments, float lineThick, Color color);
    void drawRectangleGradientV(const Rect<int>&, Color color1, Color color2);
+   void drawLine(const Line<int>&, GFCSDraw::ColorRGBA color);
    inline float getFrameDelta(){return GetFrameTime();}
    inline Size<int> measureText(const std::string& text, GFCSDrawFont font){return MeasureTextEx(font.font, text.c_str(), font.size, font.spacing);}
 

@@ -103,6 +103,8 @@ void ArgParse::parseArgs(int argc, char **argv) {
       _rawArgs.emplace_back(argv[i]);
    }
 
+   if (argc == 1) return; //no args
+
    RuntimeArg* openArg = nullptr;
    size_t openParamCount = 0;
    for (auto rawArg: _rawArgs){

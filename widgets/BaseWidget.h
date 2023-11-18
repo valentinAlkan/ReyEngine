@@ -90,7 +90,7 @@ public:
 
    //rect stuff
    GFCSDraw::Rect<int> getRect() const {return _rect.value;}
-   GFCSDraw::Rect<int> getGlobalRect() const {return {getGlobalPos().x, getGlobalPos().y, getSize().x, getSize().y};}
+   GFCSDraw::Rect<int> getGlobalRect() const {auto globalPos = getGlobalPos(); return {globalPos.x, globalPos.y, getSize().x, getSize().y};}
    GFCSDraw::Pos<int> getGlobalPos() const;
    GFCSDraw::Size<int> getChildBoundingBox() const; //get the smallest rectangle that contains all children, starting from 0,0. Does not include grandchildren.
    GFCSDraw::Pos<int> getPos() const {return {getRect().x, getRect().y};}
@@ -114,11 +114,11 @@ public:
    void setVisible(bool visible){_visible = visible;}
    bool getVisible() const {return _visible;}
 
-   iVec getLocalMousePos(){return globalToLocal(InputManager::getMousePos());}
-   iVec globalToLocal(const dVec& global) const{return global - getGlobalPos();}
-   iVec localToGlobal(const dVec& local) const {return local + getGlobalPos();}
-   void setGlobalPos(const dVec&);
-   bool isInside(const dVec& point){return _rect.value.toSizeRect().isInside(point);}
+   GFCSDraw::Pos<int> getLocalMousePos(){return globalToLocal(InputManager::getMousePos());}
+   GFCSDraw::Pos<int> globalToLocal(const GFCSDraw::Pos<int>& global) const;
+   GFCSDraw::Pos<int> localToGlobal(const GFCSDraw::Pos<int>& local) const;
+   void setGlobalPos(const iVec&);
+   bool isInside(const iVec& point){return _rect.value.toSizeRect().isInside(point);}
    bool setName(const std::string& name, bool append_index=false);
    bool setIndex(unsigned int newIndex);
    std::string getTypeName(){return _typeName;}

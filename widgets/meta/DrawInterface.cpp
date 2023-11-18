@@ -19,7 +19,7 @@ void GFCSDraw::drawText(const std::string &text, const GFCSDraw::Pos<int>& pos, 
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void GFCSDraw::drawRectangle(const GFCSDraw::Rect<int>& r, Color color) {
+void GFCSDraw::drawRectangle(const GFCSDraw::Rect<int>& r, GFCSDraw::ColorRGBA color) {
    DrawRectangle(r.x, r.y, r.width, r.height, color);
 }
 
@@ -42,6 +42,11 @@ void GFCSDraw::drawRectangleRoundedLines(const GFCSDraw::Rect<float>& r, float r
 /////////////////////////////////////////////////////////////////////////////////////////
 void GFCSDraw::drawRectangleGradientV(const GFCSDraw::Rect<int>& rect, Color color1, Color color2) {
    DrawRectangleGradientV(rect.x, rect.y, rect.width, rect.height, color1, color2);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void GFCSDraw::drawLine(const Line<int>& line, GFCSDraw::ColorRGBA color) {
+   DrawLine(line.a.x, line.a.y, line.b.x, line.b.y, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
