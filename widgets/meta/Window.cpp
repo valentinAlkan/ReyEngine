@@ -35,7 +35,7 @@ void Window::exec(){
       throw std::runtime_error("Window does not have a root! Did you call setRoot()? I bet not. That's what I bet.");
    }
    //set widgets as processed
-   //NOTE: This must be done here, because widgets can be created loaded and created before a window exists
+   //NOTE: This must be done here, because widgets can be created and loaded before a window exists
    // Since the window controls the process list, it might not exist yet.
    std::function<void(shared_ptr<BaseWidget>)> applyProcess = [&](shared_ptr<BaseWidget> widget){
       for (auto& [name, childIter] : widget->_children){

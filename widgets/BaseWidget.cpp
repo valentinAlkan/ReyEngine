@@ -88,7 +88,7 @@ bool BaseWidget::setIndex(unsigned int newIndex){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::setGlobalPos(const Vec2<double>& newPos) {
+void BaseWidget::setGlobalPos(const Vec2<int>& newPos) {
    setPos(newPos - getGlobalPos());
 }
 
@@ -171,6 +171,18 @@ Pos<int> BaseWidget::getGlobalPos() const {
       offset += _parent.lock()->getGlobalPos();
    }
    return offset;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Pos<int> BaseWidget::globalToLocal(const Pos<int>& global) const {
+   auto globalPos = getGlobalPos();
+   auto retval = global - globalPos;
+   return retval;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+GFCSDraw::Pos<int> BaseWidget::localToGlobal(const GFCSDraw::Pos<int> &local) const {
+   return local + getGlobalPos();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -8,7 +8,12 @@
 class Label : public Control {
    GFCSDRAW_OBJECT(Label, Control)
    , PROPERTY_DECLARE(text, getName())
-   {}
+   {
+      auto expandOpt = needsExpand();
+      if (expandOpt){
+         _rect.value = {_rect.value.pos(), expandOpt.value().size()};
+      }
+   }
 public:
    void render() const override{
       //todo: scissor text
@@ -39,11 +44,9 @@ public:
    void setText(const std::string& newText){
       text.set(newText);
       if (!isInLayout) {
-         auto textSize = measureText();
-         //set the label to the max size allowable
-         auto newSize = getClampedSize(textSize);
-         if (newSize.x > getSize().x || newSize.y > getSize().y){
-            setSize(newSize);
+         auto expandOpt = needsExpand();
+         if (expandOpt) {
+            setRect(expandOpt.value());
          }
       }
    }
@@ -59,6 +62,23 @@ public:
       setText(std::to_string(newText));
    }
 protected:
+   inline GFCSDraw::Rect<int> calculateBoundingRect(){
+      auto textSize = measureText();
+      auto newSize = getClampedSize(textSize);
+      if (newSize.x > getSize().x || newSize.y > getSize().y){
+         return {{0, 0}, newSize};
+      }
+      return _rect.value.toSizeRect();
+   }
+
+   inline std::optional<GFCSDraw::Rect<int>> needsExpand(){
+      auto boundingBox = calculateBoundingRect();
+      auto thisBox = getRect();
+      if (boundingBox.width > thisBox.width || boundingBox.height > thisBox.height) {
+         return boundingBox;
+      }
+      return std::nullopt;
+   };
    inline GFCSDraw::Size<int> measureText() const {return getThemeReadOnly().font.value.measure(text.value);}
    StringProperty text;
 };

@@ -62,6 +62,7 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--editor", "Editor", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--treeTest", "TreeTest", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--childBoundingBoxTest", "ChildBoundingBoxTest", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--inputPositionTest", "InputPositionTest", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    //create window (or don't idk)
@@ -78,6 +79,27 @@ int main(int argc, char** argv)
          Application::printDebug() << "Got loaded file!" << endl;
          root = loadedScene.value()->getRoot();
       }
+   }
+
+   if (args.getArg("--inputPositionTest")){
+      auto control = make_shared<Control>("MainControl", Rect<int>(40,40, 50,50));
+      auto subcontrol = make_shared<Control>("SubControl", Rect<int>(100,100, 50,50));
+      control->getTheme()->background.set(Style::Fill::SOLID);
+      control->getTheme()->background.colorPrimary.set(COLORS::lightGray);
+
+      auto renderSubControl = [subcontrol](){
+         auto rect = subcontrol->getGlobalRect();
+         GFCSDraw::drawRectangle(rect, COLORS::blue);
+      };
+
+      auto process = [&](){
+         subcontrol->setRect({{control->globalToLocal(InputManager::getMousePos())},{50,50}});
+      };
+
+      control->addChild(subcontrol);
+      subcontrol->setRenderCallback(renderSubControl);
+      subcontrol->setProcessCallback(process);
+      root = control;
    }
 
    if (args.getArg("--renderTest")){
@@ -155,12 +177,27 @@ int main(int argc, char** argv)
       //add some children
       auto label1 = make_shared<Label>("Label1", Rect<int>(40,40,0,0));
       root->addChild(label1);
+      auto label2 = make_shared<Label>("Label2", Rect<int>(40,300,0,0));
+      root->addChild(label2);
 
       //draw the child bounding box
-      std::function<void()> drawBoundingBox = [&](){
-         cout << "do some stuff" << endl;
+      auto drawBoundingBox = [&](){
+         auto size = rootControl->getChildBoundingBox();
+         auto mousePos = InputManager::getMousePos();
+         GFCSDraw::drawRectangle({{0,0},size}, GFCSDraw::Colors::yellow);
+         GFCSDraw::drawRectangle(label1->getRect(), GFCSDraw::Colors::green);
+         GFCSDraw::drawRectangle(label2->getRect(), GFCSDraw::Colors::green);
+         GFCSDraw::drawLine({label1->localToGlobal({0, 0}), mousePos}, COLORS::red);
       };
       rootControl->setRenderCallback(drawBoundingBox);
+
+      auto process = [&](){
+         auto globalPos = InputManager::getMousePos();
+         // reposition label
+         auto newPos = label1->getParent().lock()->globalToLocal(globalPos);
+         label1->setRect({newPos, label1->getSize()});
+      };
+      rootControl->setProcessCallback(process);
 
    }
 
@@ -389,7 +426,7 @@ int main(int argc, char** argv)
    //lock root to window size
    auto resizeRoot = [&](const Window::WindowResizeEvent& event){
       Application::printDebug() << "Running scene. Root's name is " << root->getName() << endl;
-      root->setSize(event.size);
+      root->setRect({{0,0},event.size});
    };
 
    //panels
