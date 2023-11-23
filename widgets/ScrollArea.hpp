@@ -29,11 +29,14 @@ protected:
    void registerProperties() override{
    }
    void _on_rect_changed() override {
+      //reset to 0 so we don't get weird bugs
+      scrollOffsetX.setValue(0);
+      scrollOffsetY.setValue(0);
       auto ourSize = _rect.get().size();
       auto sliderSize = 20;
-      auto newSize = getRect().size();
-      scrollOffsetX.setRange(0, newSize.x);
-      scrollOffsetY.setRange(0, newSize.y);
+      _childBoundingBox = getScrollAreaChildBoundingBox();
+      scrollOffsetX.setMax(_childBoundingBox.x-getWidth());
+      scrollOffsetY.setMax(_childBoundingBox.y-getHeight());
       auto vsliderNewRect = GFCSDraw::Rect<int>((ourSize.x - sliderSize), 0, sliderSize, ourSize.y);
       auto hsliderNewRect = GFCSDraw::Rect<int>(0, (float)(ourSize.y - sliderSize), (float)(ourSize.x - sliderSize), (float)sliderSize);
       if (vslider){
@@ -47,11 +50,7 @@ protected:
    }
    void _on_child_added(std::shared_ptr<BaseWidget>& child) override {
       //expand scroll size to fit children
-      _childBoundingBox = getChildBoundingBox();
-      if (!isInLayout) {
-         scrollOffsetX.setMax(_childBoundingBox.x);
-         scrollOffsetY.setMax(_childBoundingBox.y);
-      }
+
       // reconfigure ourselves when our children's size changes (but ignore the sliders)
       auto cb = [&](const WidgetResizeEvent& e){_on_rect_changed();};
 
@@ -85,6 +84,25 @@ protected:
       subscribe<Slider::SliderValueChangedEvent>(hslider, setOffsetX);
       subscribe<Slider::SliderValueChangedEvent>(vslider, setOffsetY);
    }
+
+   ///Ignores scroll bars, but adds their widths if they are visible
+   GFCSDraw::Size<int> getScrollAreaChildBoundingBox(){
+      GFCSDraw::Size<double> childRect;
+      for (const auto& child : getChildren()){
+         if (child->getName() == VSLIDER_NAME){
+            if (vslider->getVisible()) childRect.x += vslider->getWidth();
+            continue;
+         } else if (child->getName() == HSLIDER_NAME){
+            if (hslider->getVisible()) childRect.y += hslider->getHeight();
+            continue;
+         }
+         auto totalOffset = child->getRect().size() + GFCSDraw::Size<double>(child->getPos());
+         childRect.max(totalOffset);
+      }
+      return childRect;
+   }
+
+
    GFCSDraw::ScissorTarget scissorTarget;
    GFCSDraw::Range<double> scrollOffsetX;
    GFCSDraw::Range<double> scrollOffsetY;

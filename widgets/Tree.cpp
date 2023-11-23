@@ -1,17 +1,6 @@
 #include "Tree.h"
 
 using namespace std;
-
-Tree::Tree(const std::string &name, const std::string &typeName, const GFCSDraw::Rect<float> &r, std::shared_ptr<TreeItem> &root)
-: VLayout(name, typeName, r)
-, root(root)
-{
-   root->isRoot = true;
-   order.push_back(root);
-   root->tree = this;
-   root->generation = 0;
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////
 void TreeItem::push_back(std::shared_ptr<TreeItem> &item) {
    children.push_back(item);
@@ -59,7 +48,8 @@ void Tree::determineVisible() {
       //root must not be hidden, otherwise if it isn't root, then it's parent must be expanded
 //      Application::printDebug() << "visiting " << item->_text << endl;
       if ((item->isRoot && !_hideRoot) || (!item->isRoot)){
-         visible.push_back(item);
+         auto meta = make_shared<TreeItemMeta>(item);
+         visible.push_back(meta);
       }
       if (item->expanded) {
          for (auto &child: item->children) {
@@ -72,14 +62,15 @@ void Tree::determineVisible() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Tree::render() const{
-   _drawRectangle(getRect().toSizeRect(), COLORS::red);
+   _drawRectangle(getRect().toSizeRect(), getThemeReadOnly().background.colorPrimary.get());
    // draw the items
    auto font = getThemeReadOnly().font.value;
    auto pos = GFCSDraw::Pos<int>(0,-20);
    long long generationOffset = _hideRoot ? -1 : 0;
    size_t currentRow = 0;
    for (auto it = visible.begin(); it!=visible.end(); it++) {
-      auto& item = *it;
+      auto& itemMeta = *it;
+      auto& item = itemMeta->item;
       pos += GFCSDraw::Pos<int>(0, getThemeReadOnly().font.get().size);
 
       //highlight the hovered row
@@ -88,11 +79,11 @@ void Tree::render() const{
       }
 
       char c = item->expanded ? '-' : '+';
-      _drawText(c + std::string(generationOffset + item->generation, c) + item->getText(), pos, font);
+      std::string expansionRegionText = c + std::string(generationOffset + item->generation, c);
+      _drawText(expansionRegionText + item->getText(), pos, font);
+      itemMeta->expansionIconClickRegion = {pos, GFCSDraw::measureText(expansionRegionText, font)};
       currentRow++;
    }
-
-   _drawRectangle({testPos, {20,20}}, COLORS::blue);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -101,17 +92,25 @@ Handled Tree::_unhandled_input(InputEvent& event) {
        case InputEventMouseMotion::getUniqueEventId():
        case InputEventMouseButton::getUniqueEventId():
           auto mouseEvent = event.toEventType<InputEventMouse>();
-          auto posLocal = globalToLocal(mouseEvent.globalPos);
-          testPos = posLocal;
+          auto localPos = globalToLocal(mouseEvent.globalPos);
+          if (!_rect.value.toSizeRect().isInside(localPos)){
+             return false;
+          }
 
           //figure out which row the cursor is in
           auto rowHeight = getThemeReadOnly().font.get().size;
-          int rowAt = posLocal.y / rowHeight;
+          int rowAt = localPos.y / rowHeight;
+          std::shared_ptr<TreeItemMeta> metaAt;
           std::shared_ptr<TreeItem> itemAt;
           if (rowAt < visible.size()) {
              _hoveredRowNum = rowAt;
-             itemAt = visible.at(rowAt);
-//             Application::printDebug() << "item at = " << itemAt->_text << endl;
+             metaAt = visible.at(rowAt);
+             itemAt = metaAt->item;
+             //item hover event
+             ItemHoverEvent itemHoverEvent(toEventPublisher(), itemAt);
+             publish(itemHoverEvent);
+          } else {
+             _hoveredRowNum = -1;
           }
 
           //mouse click
@@ -119,14 +118,79 @@ Handled Tree::_unhandled_input(InputEvent& event) {
              //expand/shrink branch
              auto btnEvent = event.toEventType<InputEventMouseButton>();
              if (!btnEvent.isDown) {
-                Application::printDebug() << "click at = " << itemAt->_text << endl;
-                if (!itemAt->children.empty()) {
-                   itemAt->setExpanded(!itemAt->getExpanded());
-                   determineVisible();
+//                Application::printDebug() << "click at = " << itemAt->_text << endl;
+                if (!itemAt->children.empty() && itemAt->getExpandable()){
+                   //todo:click only on expansion icon
+                   if (metaAt->expansionIconClickRegion.isInside(localPos)) {
+                      itemAt->setExpanded(!itemAt->getExpanded());
+                      determineVisible();
+                   }
                 }
+                //publish on item click
+                ItemClickedEvent itemClickedEvent(toEventPublisher(), itemAt);
+                publish(itemClickedEvent);
              }
           }
-
           return true;
        }
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Tree::setRoot(std::shared_ptr<TreeItem> item) {
+    root = item;
+    order.clear();
+    order.push_back(root);
+    root->isRoot = true;
+    root->tree = this;
+    root->generation = 0;
+    determineOrdering();
+}
+//
+///////////////////////////////////////////////////////////////////////////////////////////
+//std::vector<std::shared_ptr<TreeItem>> Tree::getItem(const Tree::TreePath& path) const {
+//   //traverse the tree and try to find the item in question
+//   std::vector<std::shared_ptr<TreeItem>> retval;
+//   if (!getRoot()) return retval;
+//   auto currentBranch = getRoot().value();
+//   for (const auto& element : path.elements()){
+//      if (currentBranch->getText() == element){
+//         continue;
+//      }
+//      return retval;
+//   }
+//}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+//Tree::TreePath::TreePath(const std::string &path) {
+//   if (path.empty()) return;
+//   _tail_elements = string_tools::split(path, TreePath::separator);
+//   if (_tail_elements.empty()) return;
+//   _head = _tail_elements.back();
+//   _tail_elements.pop_back();
+//   empty = false;
+//}
+//
+///////////////////////////////////////////////////////////////////////////////////////////
+//std::string Tree::TreePath::tail() const {
+//   return string_tools::join(string(separator, 1), _tail_elements);
+//}
+//
+///////////////////////////////////////////////////////////////////////////////////////////
+//std::string Tree::TreePath::head() const {
+//   return _head;
+//}
+//
+///////////////////////////////////////////////////////////////////////////////////////////
+//std::string Tree::TreePath::path() const {
+//   auto tail = string_tools::join(string(separator, 1), elements());
+//   return tail + separator + head();
+//}
+//
+///////////////////////////////////////////////////////////////////////////////////////////
+//std::vector<std::string> Tree::TreePath::elements() const {
+//   vector<string> retval = _tail_elements;
+//   retval.push_back(_head);
+//   return retval;
+//}

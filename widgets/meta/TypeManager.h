@@ -11,28 +11,28 @@ class BaseWidget;
 using Deserializer = std::function<std::shared_ptr<BaseWidget>(const std::string& instanceName, PropertyPrototypeMap&)>;
 
 struct TypeMeta {
-   TypeMeta(std::string typeName, std::string parent, bool isVirtual, Deserializer deserializer)
+   TypeMeta(std::string typeName, std::string parentTypeName, bool isVirtual, Deserializer deserializer)
    : typeName(typeName)
-   , parent(parent)
+   , parentTypeName(parentTypeName)
    , isVirtual(isVirtual)
    , deserializer(deserializer)
    {}
    std::string typeName;
    Deserializer deserializer;
-   std::string parent;
+   std::string parentTypeName;
    std::map<std::string, std::shared_ptr<TypeMeta>> children;
    bool isVirtual; //whether or not it can be instanced
 };
 
 class TypeManager{
 public:
-   static void registerType(std::string typeName, std::string parentType, bool isVirtual, Deserializer);
+   static void registerType(std::string typeName, std::string parentTypeName, bool isVirtual, Deserializer);
    static std::shared_ptr<BaseWidget> deserialize(const std::string& typeName, const std::string& instanceName, PropertyPrototypeMap&);
    std::shared_ptr<TypeMeta> getType(std::string typeName);
    std::shared_ptr<TypeMeta> getRoot(){return getType("BaseWidget");};
+   static TypeManager& instance(){static TypeManager instance;return instance;}
 protected:
    void _registerTypes();
-   static TypeManager& instance(){static TypeManager instance;return instance;}
    friend class Application;
 private:
    TypeManager(){}

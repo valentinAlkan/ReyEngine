@@ -87,13 +87,17 @@ void Application::clearHover() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Application::setHover(std::weak_ptr<BaseWidget> widget) {
-   instance().clearHover();
-   if (!widget.expired()){
-      instance()._hovered = widget;
-      widget.lock()->_hovered = true;
-      widget.lock()->_on_mouse_enter();
+void Application::setHover(std::shared_ptr<BaseWidget>& widget) {
+   if (!instance()._hovered.expired()){
+      auto oldHover = instance()._hovered.lock();
+      if (oldHover !=  widget){
+         oldHover->_hovered = false;
+         oldHover->_on_mouse_exit();
+      }
    }
+   instance()._hovered = widget;
+   widget->_hovered = true;
+   widget->_on_mouse_enter();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

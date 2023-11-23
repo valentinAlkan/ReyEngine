@@ -9,12 +9,12 @@
 
 using namespace std;
 /////////////////////////////////////////////////////////////////////////////////////////
-void TypeManager::registerType(std::string typeName, string parentType, bool isVirtual, Deserializer fx) {
+void TypeManager::registerType(std::string typeName, string parentTypeName, bool isVirtual, Deserializer fx) {
    if (typeName.empty()){
       throw std::runtime_error("Typename cannot be empty!");
    }
    string msg = "Typename " + typeName +" ";
-   if (parentType.empty()){
+   if (parentTypeName.empty()){
       throw std::runtime_error(msg + "parentType cannot be empty!");
    }
    if (instance().getTypeCanBeNull(typeName)){
@@ -23,13 +23,17 @@ void TypeManager::registerType(std::string typeName, string parentType, bool isV
    if (!isVirtual && fx == nullptr){
       throw std::runtime_error(msg + "requires a valid deserializer function!");
    }
-   if (!instance().getTypeCanBeNull(parentType)){
-      throw std::runtime_error(msg + "parent type " + parentType + " has not been registered!");
+   if (!instance().getTypeCanBeNull(parentTypeName)){
+      throw std::runtime_error(msg + "parent type " + parentTypeName + " has not been registered!");
    }
    if (isVirtual && fx){
       throw std::runtime_error(msg + " virtual types cannot have deserializers!");
    }
-   instance()._types[typeName] = make_shared<TypeMeta>(typeName, parentType, isVirtual, std::move(fx));
+
+   auto parentType = instance().getType(parentTypeName);
+   auto newType = make_shared<TypeMeta>(typeName, parentTypeName, isVirtual, std::move(fx));
+   parentType->children[typeName] = newType;
+   instance()._types[typeName] = newType;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

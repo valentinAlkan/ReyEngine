@@ -71,6 +71,8 @@ add_library(widgets STATIC
 
 add_library(editor STATIC
     editor/Editor.cpp
+    editor/WidgetTree.cpp
+    editor/SceneTree.cpp
 )
 
 target_include_directories(widgets PUBLIC
