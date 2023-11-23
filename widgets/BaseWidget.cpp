@@ -191,7 +191,6 @@ GFCSDraw::Size<int> BaseWidget::getChildBoundingBox() const {
    for (const auto& childIter : _children){
       auto totalOffset = childIter.second.second->getRect().size() + Size<double>(childIter.second.second->getPos());
       childRect.max(totalOffset);
-//     childRect +=  // add position
    }
    return childRect;
 }

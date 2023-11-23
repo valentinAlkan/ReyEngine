@@ -12,7 +12,7 @@ public:
          renderCallback();
       } else {
          if (getThemeReadOnly().background.value == Style::Fill::SOLID) {
-            _drawRectangle(getRect(), getThemeReadOnly().background.colorPrimary.value);
+            _drawRectangle(getRect().toSizeRect(), getThemeReadOnly().background.colorPrimary.value);
          }
       }
    }

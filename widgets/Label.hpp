@@ -11,7 +11,7 @@ class Label : public Control {
    {
       auto expandOpt = needsExpand();
       if (expandOpt){
-         _rect.value = {_rect.value.pos(), expandOpt.value().size()};
+         _rect.value = {_rect.value.pos(), expandOpt.value()};
       }
    }
 public:
@@ -46,7 +46,7 @@ public:
       if (!isInLayout) {
          auto expandOpt = needsExpand();
          if (expandOpt) {
-            setRect(expandOpt.value());
+            setSize(expandOpt.value());
          }
       }
    }
@@ -71,11 +71,11 @@ protected:
       return _rect.value.toSizeRect();
    }
 
-   inline std::optional<GFCSDraw::Rect<int>> needsExpand(){
+   inline std::optional<GFCSDraw::Size<int>> needsExpand(){
       auto boundingBox = calculateBoundingRect();
       auto thisBox = getRect();
       if (boundingBox.width > thisBox.width || boundingBox.height > thisBox.height) {
-         return boundingBox;
+         return boundingBox.size();
       }
       return std::nullopt;
    };

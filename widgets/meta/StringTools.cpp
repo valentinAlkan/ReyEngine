@@ -23,6 +23,11 @@ vector<string> string_tools::split(const std::string &s, const std::string &deli
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+vector<string> string_tools::split(const std::string &s, char delimChar) {
+   split(s, string(delimChar, 1));
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 std::string string_tools::lstrip(const std::string &s, char c) {
    auto charMatch = [c](char _c){
       return _c == c;

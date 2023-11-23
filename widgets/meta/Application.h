@@ -44,7 +44,7 @@ public:
    static void exit(ExitReason rsn){::exit((int)rsn);}
 
    static void clearHover();
-   static void setHover(std::weak_ptr<BaseWidget>);
+   static void setHover(std::shared_ptr<BaseWidget>&);
    static std::optional<std::weak_ptr<BaseWidget>> getHovered();
    static void registerForApplicationReady(std::shared_ptr<BaseWidget>&); //somethings require initwindow to have been called - so we can let the application know we want to be called when application is ready.
    static void registerForApplicationReady(std::function<void()>); //somethings require initwindow to have been called - so we can let the application know we want to be called when application is ready.

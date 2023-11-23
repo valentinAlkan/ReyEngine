@@ -30,12 +30,15 @@ public:
    std::vector<std::shared_ptr<TreeItem>>& getChildren() override {return children;}
    bool getExpanded(){return expanded;}
    void setExpanded(bool _expanded){expanded = _expanded;}
+   bool getExpandable(){return expandable;}
+   void setExpandable(bool _expandable){expandable = _expandable;}
 protected:
    std::string _text;
    std::weak_ptr<TreeItem> parent;
    bool isRoot = false;
    bool expanded = true; //unexpanded tree items are visible, it's their children that are not;
    bool visible = true;
+   bool expandable = true;
    Tree* tree = nullptr;
    std::vector<std::shared_ptr<TreeItem>> children;
 
@@ -51,26 +54,26 @@ private:
 };
 
 class Tree : public VLayout {
-public:
-   GFCSDRAW_DECLARE_STATIC_CONSTEXPR_TYPENAME(Tree)
-public:
-   static std::shared_ptr<BaseWidget> deserialize(const std::string &instanceName, PropertyPrototypeMap &properties) {
-      const GFCSDraw::Rect<float> &r = {0, 0, 0, 0};
-      throw std::runtime_error("Need to implement tree item deserializing");
-      auto root = std::make_shared<TreeItem>("root");
-      auto retval = std::make_shared<Tree>(instanceName, r, root);
-      retval->BaseWidget::_deserialize(properties);
-      return retval;
+   GFCSDRAW_OBJECT(Tree, VLayout){
+      acceptsHover=true;
    }
-   Tree(const std::string &name, const GFCSDraw::Rect<float> &r, std::shared_ptr<TreeItem>& root) : Tree(name, _get_static_constexpr_typename(), r, root){}
-protected:
-   void _register_parent_properties() override{
-      VLayout::_register_parent_properties();
-      VLayout::registerProperties();
-   }
-   Tree(const std::string &name, const std::string &typeName, const GFCSDraw::Rect<float> &r, std::shared_ptr<TreeItem>& root);
-
 public:
+   ///! not sure if this is necessary, why do we need to index tree items by a string? The
+   /// tree is a gui element, intended to be clicked on, so anyone can get an element by
+   /// clicking on it or traversing it from the root based on some other criteria.
+   /// Leaving here for now just in case, but I dont think its necessary.
+//   struct TreePath{
+//      static constexpr char separator = '/';
+//      TreePath(const std::string& path);
+//      std::string head() const;
+//      std::string tail() const;
+//      std::string path() const;
+//      std::vector<std::string> elements() const;
+//   protected:
+//      std::vector<std::string> _tail_elements;
+//      std::string _head;
+//      bool empty = true;
+//   };
    /////////////////////////////////////////////////////////////////////////////////////////
    /////////////////////////////////////////////////////////////////////////////////////////
    /////////////////////////////////////////////////////////////////////////////////////////
@@ -85,11 +88,35 @@ public:
       EVENT_CTOR_SIMPLE(ItemRemovedEvent, Event<ItemRemovedEvent>, std::shared_ptr<TreeItem>& item), item(item){}
       std::shared_ptr<TreeItem> item;
    };
+   /////////////////////////////////////////////////////////////////////////////////////////
+   /////////////////////////////////////////////////////////////////////////////////////////
+   /////////////////////////////////////////////////////////////////////////////////////////
+   struct ItemClickedEvent : public Event<ItemClickedEvent> {
+      EVENT_CTOR_SIMPLE(ItemClickedEvent, Event<ItemClickedEvent>, std::shared_ptr<TreeItem>& item), item(item){}
+      std::shared_ptr<TreeItem> item;
+   };
 
-   std::shared_ptr<TreeItem> getRoot(){return root;}
+   /////////////////////////////////////////////////////////////////////////////////////////
+   /////////////////////////////////////////////////////////////////////////////////////////
+   /////////////////////////////////////////////////////////////////////////////////////////
+   struct ItemHoverEvent : public Event<ItemHoverEvent> {
+      EVENT_CTOR_SIMPLE(ItemHoverEvent, Event<ItemHoverEvent>, std::shared_ptr<TreeItem>& item), item(item){}
+      std::shared_ptr<TreeItem> item;
+   };
+
+   /////////////////////////////////////////////////////////////////////////////////////////
+   /////////////////////////////////////////////////////////////////////////////////////////
+   /////////////////////////////////////////////////////////////////////////////////////////
+   struct TreeClickEvent : public Event<TreeClickEvent> {
+      EVENT_CTOR_SIMPLE(TreeClickEvent, Event<TreeClickEvent>, GFCSDraw::Pos<int> localPos), localPos(localPos){}
+      GFCSDraw::Pos<int> localPos;
+   };
+
+   std::optional<std::shared_ptr<TreeItem>> getRoot() const {if (root) return root; return {};}
    void setHideRoot(bool hide){_hideRoot = hide; determineVisible();}
+   void setRoot(std::shared_ptr<TreeItem> item);
+//   std::vector<std::shared_ptr<TreeItem>> getItem(const TreePath&) const;
 
-public:
    struct Iterator{
       using iterator_category = std::forward_iterator_tag;
       using difference_type   = std::ptrdiff_t;
@@ -130,12 +157,19 @@ protected:
    virtual void _on_mouse_enter(){};
    virtual void _on_mouse_exit(){ _hoveredRowNum = -1;}
 private:
+
+   //Stores extra details that the tree can use
+   struct TreeItemMeta{
+      TreeItemMeta(std::shared_ptr<TreeItem> item): item(item){}
+      GFCSDraw::Rect<int> expansionIconClickRegion; //where we can click to determine if an item should be "expanded" or not;
+      std::shared_ptr<TreeItem> item;
+   };
+
    std::shared_ptr<TreeItem> root;
    std::vector<std::shared_ptr<TreeItem>> order;
-   std::vector<std::shared_ptr<TreeItem>> visible;
+   std::vector<std::shared_ptr<TreeItemMeta>> visible;
    bool _hideRoot = false; //if true, the root is hidden and we can appear as a "flat" tree.
    size_t _hoveredRowNum = -1; //the row number currently being hovered
 
-   GFCSDraw::Pos<int> testPos;
    friend class TreeItem;
 };

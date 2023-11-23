@@ -123,9 +123,9 @@ int main(int argc, char** argv)
       //add labels
       auto labelLayout = make_shared<HLayout>("labelLayout", Rect<int>(50,20,150,20));
       root->addChild(labelLayout);
-      auto xlabel = make_shared<Label>("XLabel", Rect<float>());
-      auto ylabel = make_shared<Label>("YLabel", Rect<float>());
-      auto spacer = make_shared<Control>("spacer", Rect<float>());
+      auto xlabel = make_shared<Label>("XLabel", Rect<int>());
+      auto ylabel = make_shared<Label>("YLabel", Rect<int>());
+      auto spacer = make_shared<Control>("spacer", Rect<int>());
       labelLayout->addChild(xlabel);
       labelLayout->addChild(ylabel);
 //      labelLayout->addChild(spacer);
@@ -135,8 +135,8 @@ int main(int argc, char** argv)
 
       //add scroll area
       auto scrollArea = make_shared<ScrollArea>("ScrollArea",Rect<int>(50, 50, 500, 500));
-      auto label1 = make_shared<Label>("ScrollAreaLabel1", Rect<float> {0,0,0,0});
-      auto label2 = make_shared<Label>("ScrollAreaLabel2", Rect<float> {300,300,0,0});
+      auto label1 = make_shared<Label>("ScrollAreaLabel1", Rect<int> {0,0,0,0});
+      auto label2 = make_shared<Label>("ScrollAreaLabel2", Rect<int> {300,300,0,0});
       label1->setText("Hello from the upper left!");
       label2->setText("Hello from the bottom right!");
       scrollArea->addChild(label1);
@@ -151,8 +151,7 @@ int main(int argc, char** argv)
       boxRect.y -= 1;
       boxRect.width += 1;
       boxRect.height += 1;
-      auto box = std::make_shared<Label>("BoxLabel", boxRect);
-      box->setText("");
+      auto box = std::make_shared<Control>("OutlineControl", boxRect);
       box->getTheme().get()->background.set(Style::Fill::SOLID);
       box->getTheme().get()->background.colorPrimary.set({125, 125, 125, 127});
       root->addChild(box);
@@ -338,22 +337,23 @@ int main(int argc, char** argv)
 
    if (args.getArg("--treeTest")){
       auto treeRoot = std::make_shared<TreeItem>("Root");
-      auto tree = make_shared<Tree>("Tree", Rect<int>(), treeRoot);
+      auto tree = make_shared<Tree>("Tree", Rect<int>());
+      tree->setRoot(treeRoot);
       root = tree;
-
+      
       for (auto item : {
          std::make_shared<TreeItem>("Child1"),
          std::make_shared<TreeItem>("Child2"),
          std::make_shared<TreeItem>("Child3")
                }) {
-         tree->getRoot()->push_back(item);
+         treeRoot->push_back(item);
       }
       for (auto item : {
             std::make_shared<TreeItem>("GrandChild01"),
             std::make_shared<TreeItem>("GrandChild02"),
             std::make_shared<TreeItem>("GrandChild03")
       }) {
-         tree->getRoot()->getChildren()[0]->push_back(item);
+         treeRoot->getChildren()[0]->push_back(item);
       }
 
       for (auto item : {
@@ -361,7 +361,7 @@ int main(int argc, char** argv)
             std::make_shared<TreeItem>("GreatGrandChild02"),
             std::make_shared<TreeItem>("GreatGrandChild03")
       }) {
-         tree->getRoot()->getChildren()[0]->getChildren()[0]->push_back(item);
+         treeRoot->getChildren()[0]->getChildren()[0]->push_back(item);
       }
 
       for (auto item : {
@@ -369,7 +369,7 @@ int main(int argc, char** argv)
             std::make_shared<TreeItem>("GreatGreatGrandChild02"),
             std::make_shared<TreeItem>("GreatGreatGrandChild03")
       }) {
-         tree->getRoot()->getChildren()[0]->getChildren()[0]->getChildren()[0]->push_back(item);
+         treeRoot->getChildren()[0]->getChildren()[0]->getChildren()[0]->push_back(item);
       }
 
 
@@ -378,7 +378,7 @@ int main(int argc, char** argv)
             std::make_shared<TreeItem>("GrandChild12"),
             std::make_shared<TreeItem>("GrandChild13")
       }) {
-         tree->getRoot()->getChildren()[1]->push_back(item);
+         treeRoot->getChildren()[1]->push_back(item);
       }
 
       for (auto item : {
@@ -386,7 +386,7 @@ int main(int argc, char** argv)
             std::make_shared<TreeItem>("GrandChild22"),
             std::make_shared<TreeItem>("GrandChild23")
       }) {
-         tree->getRoot()->getChildren()[2]->push_back(item);
+         treeRoot->getChildren()[2]->push_back(item);
       }
 
       //iterate over the tree

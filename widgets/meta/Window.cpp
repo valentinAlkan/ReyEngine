@@ -128,13 +128,12 @@ void Window::exec(){
          InputEventMouseMotion event(nullptr);
          event.mouseDelta = mouseDelta;
          event.globalPos = InputManager::getMousePos();
-         _root->_process_unhandled_input(event);
 
          //find out which widget will accept the mouse motion as focus
          std::function<std::optional<std::shared_ptr<BaseWidget>>(const std::shared_ptr<BaseWidget>&)> askHover = [&](const std::shared_ptr<BaseWidget>& widget)->std::optional<std::shared_ptr<BaseWidget>>{
             //ask this widget to accept the hover
             auto isInside = [&](const std::shared_ptr<BaseWidget>& widget){
-               return widget->getRect().toSizeRect().isInside(widget->globalToLocal(event.globalPos));
+               return widget->getGlobalRect().isInside(event.globalPos);
             };
 
             auto process = [&](const std::shared_ptr<BaseWidget>& widget) -> std::optional<std::shared_ptr<BaseWidget>> {
@@ -173,6 +172,8 @@ void Window::exec(){
          };
          auto hovered = askHover(_root);
          if (hovered) Application::setHover(hovered.value()); else Application::clearHover();
+
+         _root->_process_unhandled_input(event);
       }
 
       //process timers and call their callbacks

@@ -24,13 +24,29 @@ void Editor::_init() {
 
    //create the workspace
    auto mainHLayout = make_shared<HLayout>("mainHLayout", Rect<int>());
-   mainHLayout->getTheme()->background.colorPrimary.set(GFCSDraw::Colors::yellow);
+   mainHLayout->getTheme()->background.colorPrimary.set(GFCSDraw::Colors::lightGray);
    mainPanel->addToLayout(mainHLayout);
 
-   //create tree panel
-   auto treePanel = make_shared<Panel>("treePanel", Rect<int>());
-   mainHLayout->addChild(treePanel);
-   treePanel->getTheme()->background.colorPrimary.set(GFCSDraw::Colors::green);
+   //create left panel
+   auto mainHLayoutLeftPanel = make_shared<VLayout>("mainHLayoutLeftPanel", Rect<int>());
+   mainHLayout->addChild(mainHLayoutLeftPanel);
+
+   //create scene tree panel
+   {
+      auto treeRoot = make_shared<TreeItem>("SceneRoot");
+      sceneTree = make_shared<SceneTree>("sceneTree", Rect<int>());
+      sceneTree->setRoot(treeRoot);
+      mainHLayoutLeftPanel->addChild(sceneTree);
+      sceneTree->getTheme()->background.colorPrimary.set(GFCSDraw::Colors::yellow);
+   }
+
+   //create widget tree panel
+   {
+      widgetTree = make_shared<WidgetTree>("widgetTree", Rect<int>());
+      mainHLayoutLeftPanel->addChild(widgetTree);
+      widgetTree->getTheme()->background.colorPrimary.set(GFCSDraw::Colors::green);
+   }
+
 //
 //      //create the (blank) workspace
 //      // todo: this should be a workspace widget
