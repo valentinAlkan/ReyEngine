@@ -69,7 +69,6 @@ void Application::processEnterTree() {
          hasInit = true;
          widget->_on_rect_changed(); //initialize the rectangle
          widget->_publishSize();
-
       }
       widget->_on_enter_tree();
       parent->_on_child_added(widget);

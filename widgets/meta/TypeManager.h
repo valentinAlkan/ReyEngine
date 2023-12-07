@@ -28,7 +28,7 @@ class TypeManager{
 public:
    static void registerType(std::string typeName, std::string parentTypeName, bool isVirtual, Deserializer);
    static std::shared_ptr<BaseWidget> deserialize(const std::string& typeName, const std::string& instanceName, PropertyPrototypeMap&);
-   std::shared_ptr<TypeMeta> getType(std::string typeName);
+   static std::shared_ptr<TypeMeta> getType(std::string typeName);
    std::shared_ptr<TypeMeta> getRoot(){return getType("BaseWidget");};
    static TypeManager& instance(){static TypeManager instance;return instance;}
 protected:

@@ -97,14 +97,28 @@ void Window::exec(){
       //UPS
       for (size_t i=0; i<Window::INPUT_COUNT_LIMIT; i++){
          auto btnUp = InputManager::instance().getMouseButtonReleased();
+         auto pos = InputManager::getMousePos();
          if (btnUp != InputInterface::MouseButton::MOUSE_BUTTON_NONE){
+            if (btnUp == InputInterface::MouseButton::MOUSE_BUTTON_LEFT){
+               //check for drag n drop
+               if (_dragNDrop.has_value() && _isDragging){
+                  //we have a widget being dragged, lets try to drop it
+                  bool handled = false;
+                  auto widgetAt = getWidgetAt(pos);
+                  if (widgetAt){
+                     handled = widgetAt.value()->_on_drag_drop(_dragNDrop.value());
+                  }
+                  _dragNDrop.reset();
+                  _isDragging = false;
+                  if (handled) continue; //otherwise continue on to publishing an event
+               }
+            }
+
             InputEventMouseButton event(nullptr);
             event.button = btnUp;
             event.isDown = false;
-            event.globalPos = InputManager::getMousePos();
+            event.globalPos = pos;
             _root->_process_unhandled_input(event);
-         } else {
-            break;
          }
       }
 
@@ -112,10 +126,25 @@ void Window::exec(){
       for (size_t i=0; i<Window::INPUT_COUNT_LIMIT; i++){
          auto btnDown = InputManager::instance().getMouseButtonPressed();
          if (btnDown != InputInterface::MouseButton::MOUSE_BUTTON_NONE){
+            auto pos = InputManager::getMousePos();
+            //check for dragndrops
+            if (btnDown == InputInterface::MouseButton::MOUSE_BUTTON_LEFT){
+               auto widgetAt = getWidgetAt(pos);
+               if (widgetAt){
+                  auto willDrag = widgetAt.value()->_on_drag_start(pos);
+                  if (willDrag){
+                     _dragNDrop = willDrag.value();
+                     _dragNDrop.value()->startPos = pos;
+                  } else {
+                     _dragNDrop = nullopt;
+                  }
+                  _isDragging = false;
+               }
+            }
             InputEventMouseButton event(nullptr);
             event.button = btnDown;
             event.isDown = true;
-            event.globalPos = InputManager::getMousePos();
+            event.globalPos = pos;
             _root->_process_unhandled_input(event);
          } else {
             break;
@@ -170,10 +199,19 @@ void Window::exec(){
                   return pass(widget);
             }
          };
-         auto hovered = askHover(_root);
-         if (hovered) Application::setHover(hovered.value()); else Application::clearHover();
 
-         _root->_process_unhandled_input(event);
+         //don't do hovering or mouse input if we're dragging and dropping
+         static constexpr unsigned int DRAG_THRESHOLD = 20;
+         if (_dragNDrop){
+            auto dragDelta = _dragNDrop.value()->startPos - getMousePos();
+            if (abs(dragDelta.x) > DRAG_THRESHOLD || abs(dragDelta.y) > DRAG_THRESHOLD) {
+               _isDragging = true;
+            }
+         } else {
+            auto hovered = askHover(_root);
+            if (hovered) Application::setHover(hovered.value()); else Application::clearHover();
+            _root->_process_unhandled_input(event);
+         }
       }
 
       //process timers and call their callbacks
@@ -190,6 +228,13 @@ void Window::exec(){
       ClearBackground(RAYWHITE);
       GFCSDraw::Pos<double> texOffset;
       _root->renderChain(texOffset);
+
+      //draw the drag and drop preview (if any)
+      if (_isDragging && _dragNDrop && _dragNDrop.value()->preview){
+         _dragNDrop.value()->preview.value()->setPos(InputManager::getMousePos());
+         _dragNDrop.value()->preview.value()->renderChain(texOffset);
+      }
+
       EndDrawing();
    }
 }
@@ -260,4 +305,21 @@ void Window::setRoot(std::shared_ptr<BaseWidget>& newRoot) {
       newRoot->_init();
    }
    _root = newRoot;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+std::optional<std::shared_ptr<BaseWidget>> Window::getWidgetAt(GFCSDraw::Pos<int> pos) {
+   //query the root and figure out which of it's children is the topmost widget at he position
+   std::shared_ptr<BaseWidget> widgetAt;
+   std::function<std::shared_ptr<BaseWidget>(std::shared_ptr<BaseWidget>)> findWidget = [&](std::shared_ptr<BaseWidget> currentWidget){
+      if (currentWidget->getGlobalRect().isInside(pos)) widgetAt = currentWidget;
+      for (auto& child : currentWidget->getChildren()) {
+         if (child->getGlobalRect().isInside(pos)) widgetAt = child;
+         findWidget(child);
+      }
+      return std::shared_ptr<BaseWidget>();
+   };
+   findWidget(_root);
+   if (widgetAt) return widgetAt;
+   return nullopt;
 }

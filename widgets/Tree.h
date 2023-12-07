@@ -32,8 +32,11 @@ public:
    void setExpanded(bool _expanded){expanded = _expanded;}
    bool getExpandable(){return expandable;}
    void setExpandable(bool _expandable){expandable = _expandable;}
+   bool getEnabled(){return _enabled;}
+   void setEnabled(bool enabled){_enabled = enabled;}
 protected:
    std::string _text;
+   bool _enabled = true; //used to limit interaction and gray it out.
    std::weak_ptr<TreeItem> parent;
    bool isRoot = false;
    bool expanded = true; //unexpanded tree items are visible, it's their children that are not;
@@ -58,22 +61,6 @@ class Tree : public VLayout {
       acceptsHover=true;
    }
 public:
-   ///! not sure if this is necessary, why do we need to index tree items by a string? The
-   /// tree is a gui element, intended to be clicked on, so anyone can get an element by
-   /// clicking on it or traversing it from the root based on some other criteria.
-   /// Leaving here for now just in case, but I dont think its necessary.
-//   struct TreePath{
-//      static constexpr char separator = '/';
-//      TreePath(const std::string& path);
-//      std::string head() const;
-//      std::string tail() const;
-//      std::string path() const;
-//      std::vector<std::string> elements() const;
-//   protected:
-//      std::vector<std::string> _tail_elements;
-//      std::string _head;
-//      bool empty = true;
-//   };
    /////////////////////////////////////////////////////////////////////////////////////////
    /////////////////////////////////////////////////////////////////////////////////////////
    /////////////////////////////////////////////////////////////////////////////////////////
@@ -146,30 +133,34 @@ public:
       size_t leafIndex = 1;
       std::shared_ptr<TreeItem> root;
    };
-
    Iterator begin() { return {root}; }
    Iterator end()   { return {nullptr}; }
+
 protected:
+
+   //Stores extra details that the tree can use
+   struct TreeItemMeta{
+      TreeItemMeta(std::shared_ptr<TreeItem> item, int visibleRowindex): item(item), visibleRowIndex(visibleRowindex){}
+      GFCSDraw::Rect<int> expansionIconClickRegion; //where we can click to determine if an item should be "expanded" or not;
+      std::shared_ptr<TreeItem> item;
+      const int visibleRowIndex = -1;
+   };
+
    void determineOrdering();
    void determineVisible();
    void render() const override;
    virtual Handled _unhandled_input(InputEvent&);
    virtual void _on_mouse_enter(){};
-   virtual void _on_mouse_exit(){ _hoveredRowNum = -1;}
+   virtual void _on_mouse_exit(){ _hoveredMeta.reset();/*_hoveredRowNum = -1;*/}
+   std::optional<std::shared_ptr<TreeItemMeta>> getMetaAt(const GFCSDraw::Pos<int>& localPos);
 private:
-
-   //Stores extra details that the tree can use
-   struct TreeItemMeta{
-      TreeItemMeta(std::shared_ptr<TreeItem> item): item(item){}
-      GFCSDraw::Rect<int> expansionIconClickRegion; //where we can click to determine if an item should be "expanded" or not;
-      std::shared_ptr<TreeItem> item;
-   };
 
    std::shared_ptr<TreeItem> root;
    std::vector<std::shared_ptr<TreeItem>> order;
    std::vector<std::shared_ptr<TreeItemMeta>> visible;
    bool _hideRoot = false; //if true, the root is hidden and we can appear as a "flat" tree.
-   size_t _hoveredRowNum = -1; //the row number currently being hovered
+//   size_t _hoveredRowNum = -1; //the row number currently being hovered
+   std::optional<std::shared_ptr<TreeItemMeta>>_hoveredMeta;
 
    friend class TreeItem;
 };

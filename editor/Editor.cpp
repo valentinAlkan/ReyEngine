@@ -1,10 +1,12 @@
 #include "Editor.h"
 #include "Panel.hpp"
 #include "Button.hpp"
+#include "Workspace.h"
 
 using namespace GFCSDraw;
 using namespace std;
 
+/////////////////////////////////////////////////////////////////////////////////////////
 void Editor::_init() {
    auto mainPanel = make_shared<Panel>("MainPanel", Rect<int>());
    mainPanel->setLayout<VLayout>();
@@ -47,14 +49,13 @@ void Editor::_init() {
       widgetTree->getTheme()->background.colorPrimary.set(GFCSDraw::Colors::green);
    }
 
-//
-//      //create the (blank) workspace
-//      // todo: this should be a workspace widget
-   auto workspace = make_shared<Control>("Panel", Rect<int>());
+
+   //create the (blank) workspace
+   auto workspace = make_shared<Workspace>("Workspace", Rect<int>());
    workspace->getTheme()->background.colorPrimary.set(COLORS::gray);
    mainHLayout->addChild(workspace);
-//
-//      //create the rightpanel
+
+   //create the rightpanel
    auto rightPanel = make_shared<Panel>("rightPanel", Rect<int>());
    rightPanel->getTheme()->background.colorPrimary.set(GFCSDraw::Colors::red);
    mainHLayout->addChild(rightPanel);
@@ -64,3 +65,5 @@ void Editor::_init() {
    mainHLayout->childScales.set(1, 0.70);
    mainHLayout->childScales.set(2, 0.15);
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////

@@ -61,6 +61,7 @@ public:
    void setText(int newText){
       setText(std::to_string(newText));
    }
+   std::string getText(){return text.value;}
 protected:
    inline GFCSDraw::Rect<int> calculateBoundingRect(){
       auto textSize = measureText();

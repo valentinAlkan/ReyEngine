@@ -8,6 +8,15 @@
 #include "Scene.h"
 #include "Event.h"
 
+//implement to enable dragndrop
+class Draggable{
+public:
+   Draggable(const std::string& id, std::shared_ptr<BaseWidget> preview) : id(id), preview(preview){}
+   std::optional<std::shared_ptr<BaseWidget>> preview;
+   const std::string id;
+   GFCSDraw::Pos<int> startPos;
+};
+
 class Window : public EventPublisher {
 public:
    struct WindowResizeEvent : public Event<WindowResizeEvent> {
@@ -31,18 +40,22 @@ public:
    static GFCSDraw::Pos<int> getMousePos(); //returns global mouse position
    static GFCSDraw::Vec2<double> getMousePct(); //returns global mouse position as a percentage of the window size from 0 to 1
    const std::shared_ptr<BaseWidget>& getRootWidget(){return _root;}
+   std::optional<std::shared_ptr<BaseWidget>> getWidgetAt(GFCSDraw::Pos<int>);
    GFCSDraw::Size<int> getSize(){return GFCSDraw::getWindowSize();}
    void setSize(GFCSDraw::Size<int> newSize){GFCSDraw::setWindowSize(newSize);}
    GFCSDraw::Pos<int> getPosition(){return GFCSDraw::getWindowPosition();}
    void setPosition(GFCSDraw::Pos<int> newPos){GFCSDraw::setWindowPosition(newPos);}
    void maximize(){GFCSDraw::maximizeWindow();}
    void minimize(){GFCSDraw::minimizeWindow();}
+   std::optional<std::shared_ptr<Draggable>>getDragNDrop(){if (_dragNDrop) return _dragNDrop; return std::nullopt;}
 protected:
    Window(const std::string& title, int width, int height, const std::vector<Flags>& flags, int targetFPS=60);
    static constexpr size_t INPUT_COUNT_LIMIT = 256;
 private:
    std::shared_ptr<BaseWidget> _root; //the scene to draw
    bool _isEditor = false; //enables other features
+   std::optional<std::shared_ptr<Draggable>> _dragNDrop; //the widget currently being drag n dropped
+   bool _isDragging = false; //true when we start a dragndrop
    class ProcessList {
    public:
       std::optional<std::shared_ptr<BaseWidget>> add(std::shared_ptr<BaseWidget> widget);
