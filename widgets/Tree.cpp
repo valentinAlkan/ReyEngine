@@ -48,7 +48,7 @@ void Tree::determineVisible() {
       //root must not be hidden, otherwise if it isn't root, then it's parent must be expanded
 //      Application::printDebug() << "visiting " << item->_text << endl;
       if ((item->isRoot && !_hideRoot) || (!item->isRoot)){
-         auto meta = make_shared<TreeItemMeta>(item);
+         auto meta = make_shared<TreeItemMeta>(item, visible.size());
          visible.push_back(meta);
       }
       if (item->expanded) {
@@ -74,13 +74,22 @@ void Tree::render() const{
       pos += GFCSDraw::Pos<int>(0, getThemeReadOnly().font.get().size);
 
       //highlight the hovered row
-      if (_hoveredRowNum == currentRow){
+      if (_hoveredMeta && _hoveredMeta.value()->visibleRowIndex == currentRow){
          _drawRectangle({pos, {getWidth(), (int)getThemeReadOnly().font.get().size}}, COLORS::gray);
       }
 
       char c = item->expanded ? '-' : '+';
+
       std::string expansionRegionText = c + std::string(generationOffset + item->generation, c);
+      auto enabledColor = font.color;
+      GFCSDraw::ColorRGBA disabledColor = {127, 127, 127, 255};
+      if (!item->_enabled) {
+         font.color = disabledColor;
+      }
       _drawText(expansionRegionText + item->getText(), pos, font);
+      if (!item->_enabled) {
+         font.color = enabledColor;
+      }
       itemMeta->expansionIconClickRegion = {pos, GFCSDraw::measureText(expansionRegionText, font)};
       currentRow++;
    }
@@ -98,37 +107,34 @@ Handled Tree::_unhandled_input(InputEvent& event) {
           }
 
           //figure out which row the cursor is in
-          auto rowHeight = getThemeReadOnly().font.get().size;
-          int rowAt = localPos.y / rowHeight;
-          std::shared_ptr<TreeItemMeta> metaAt;
-          std::shared_ptr<TreeItem> itemAt;
-          if (rowAt < visible.size()) {
-             _hoveredRowNum = rowAt;
-             metaAt = visible.at(rowAt);
-             itemAt = metaAt->item;
+          auto meta = getMetaAt(localPos);
+          if (meta){
+             _hoveredMeta = meta;
              //item hover event
-             ItemHoverEvent itemHoverEvent(toEventPublisher(), itemAt);
+             ItemHoverEvent itemHoverEvent(toEventPublisher(), meta.value()->item);
              publish(itemHoverEvent);
           } else {
-             _hoveredRowNum = -1;
+             _hoveredMeta.reset();
           }
 
           //mouse click
-          if (event.isEvent<InputEventMouseButton>() && itemAt){
+          if (event.isEvent<InputEventMouseButton>() && meta){
+             auto itemAt = meta.value()->item;
              //expand/shrink branch
              auto btnEvent = event.toEventType<InputEventMouseButton>();
              if (!btnEvent.isDown) {
 //                Application::printDebug() << "click at = " << itemAt->_text << endl;
                 if (!itemAt->children.empty() && itemAt->getExpandable()){
-                   //todo:click only on expansion icon
-                   if (metaAt->expansionIconClickRegion.isInside(localPos)) {
+                   if (meta.value()->expansionIconClickRegion.isInside(localPos)) {
                       itemAt->setExpanded(!itemAt->getExpanded());
                       determineVisible();
+                      return true;
                    }
                 }
                 //publish on item click
                 ItemClickedEvent itemClickedEvent(toEventPublisher(), itemAt);
                 publish(itemClickedEvent);
+
              }
           }
           return true;
@@ -145,6 +151,17 @@ void Tree::setRoot(std::shared_ptr<TreeItem> item) {
     root->generation = 0;
     determineOrdering();
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<std::shared_ptr<Tree::TreeItemMeta>> Tree::getMetaAt(const GFCSDraw::Pos<int>& localPos) {
+   auto rowHeight = getThemeReadOnly().font.get().size;
+   int rowAt = localPos.y / rowHeight;
+   if (rowAt < visible.size()) {
+      return visible.at(rowAt);
+   }
+   return nullopt;
+}
+
 //
 ///////////////////////////////////////////////////////////////////////////////////////////
 //std::vector<std::shared_ptr<TreeItem>> Tree::getItem(const Tree::TreePath& path) const {

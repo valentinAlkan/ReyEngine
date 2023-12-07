@@ -56,6 +56,7 @@ public:                                                   \
 
 
 class Scene;
+class Draggable;
 class  BaseWidget
 : public inheritable_enable_shared_from_this<BaseWidget>
 , public EventSubscriber
@@ -165,6 +166,8 @@ protected:
    virtual void _on_enter_tree(){} //called every time a widget enters the tree
    virtual void _on_exit_tree(){}
    virtual void _on_child_removed(){}
+   virtual std::optional<std::shared_ptr<Draggable>> _on_drag_start(GFCSDraw::Pos<int> globalPos){return std::nullopt;} //override and return something to implement drag and drop
+   virtual Handled _on_drag_drop(std::shared_ptr<Draggable>){return false;}
 
    //override and setProcess(true) to allow processing
    virtual void _process(float dt){};
