@@ -6,10 +6,7 @@ class ScrollArea : public Control {
    GFCSDRAW_OBJECT(ScrollArea, Control)
    , scrollOffsetX(0, 0, 0)
    , scrollOffsetY(0, 0, 0)
-   {
-      _setIsEditorWidget(true);
-      _editor_show_grab_handles = true;
-   }
+   {}
 public:
    inline GFCSDraw::Size<double> getScrollAreaSize() const {return {scrollOffsetX.getMax(), scrollOffsetY.getMax()};}
    inline GFCSDraw::Pos<double> getScrollOffset() const {return {scrollOffsetX.getValue(), scrollOffsetY.getValue()};}

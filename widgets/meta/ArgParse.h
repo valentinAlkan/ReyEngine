@@ -62,11 +62,11 @@ class ArgParse {
 public:
    ArgParse(){};
    void parseArgs(int argc, char** argv);
+   std::string getDocString();
    std::optional<RuntimeArg*> getArg(const std::string& name);
    void defineArg(const RuntimeArg& arg);
 private:
    std::string _arg0;
-   size_t _argc;
    std::vector<std::string> _rawArgs;
    std::map<std::string, RuntimeArg> _definedArgs;
 };

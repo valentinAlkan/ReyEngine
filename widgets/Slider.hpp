@@ -16,7 +16,7 @@ public:
       SliderTypeProperty(const std::string& instanceName, SliderType defaultvalue = SliderType::VERTICAL)
             : Property(instanceName, PropertyTypes::Float, defaultvalue)
       {}
-      std::string toString() override {return value == SliderType::VERTICAL ? "VERTICAL" : "HORIZONTAL";}
+      std::string toString() const override {return value == SliderType::VERTICAL ? "VERTICAL" : "HORIZONTAL";}
       SliderType fromString(const std::string& str) override {return (str == "VERTICAL" ? SliderType::VERTICAL : SliderType::HORIZONTAL);}
    };
 

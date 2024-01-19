@@ -55,10 +55,15 @@ void Editor::_init() {
    workspace->getTheme()->background.colorPrimary.set(COLORS::gray);
    mainHLayout->addChild(workspace);
 
-   //create the rightpanel
-   auto rightPanel = make_shared<Panel>("rightPanel", Rect<int>());
-   rightPanel->getTheme()->background.colorPrimary.set(GFCSDraw::Colors::red);
-   mainHLayout->addChild(rightPanel);
+   //create the right panel inspector
+   inspector = make_shared<Inspector>("Inspector", Rect<int>());
+   mainHLayout->addChild(inspector);
+   //connect events
+   auto onWidgetAdded = [&](const Workspace::EventWidgetAdded& event){
+      Application::printDebug() << "Inspecting widget " << event.widget->getName() << endl;
+      inspector->inspect(event.widget);
+   };
+   inspector->subscribe<Workspace::EventWidgetAdded>(workspace, onWidgetAdded);
 
    //set the panel ratios
    mainHLayout->childScales.set(0, 0.15);
@@ -66,4 +71,9 @@ void Editor::_init() {
    mainHLayout->childScales.set(2, 0.15);
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+//void Editor::inspect(std::shared_ptr<BaseWidget> widget){
+//   if (inspector) {
+//      inspector->inspect(widget);
+//   }
+//}

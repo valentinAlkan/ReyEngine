@@ -50,7 +50,8 @@ void Application::ready() {
 
 ////////////////////////////////////////////////////////////////////////////////////////
 void Application::processEnterTree() {
-   //todo: also process enter tree
+   //todo: should this happen immediately on addChild or should we wait until the parent is
+   // added to the tree? Potentially a bunch of stuff could be added to tree and then not actually be in the tree
    auto& queue = instance()._initQueue;
    while (!queue.empty()){
       auto& p = queue.front();
@@ -67,7 +68,7 @@ void Application::processEnterTree() {
       if (!hasInit) {
          widget->_init();
          hasInit = true;
-         widget->_on_rect_changed(); //initialize the rectangle
+         widget->setRect(widget->getRect()); //initialize the rectangle
          widget->_publishSize();
       }
       widget->_on_enter_tree();

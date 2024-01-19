@@ -104,7 +104,7 @@ void Window::exec(){
                if (_dragNDrop.has_value() && _isDragging){
                   //we have a widget being dragged, lets try to drop it
                   bool handled = false;
-                  auto widgetAt = getWidgetAt(pos);
+                  auto widgetAt = _root->getWidgetAt(pos);
                   if (widgetAt){
                      handled = widgetAt.value()->_on_drag_drop(_dragNDrop.value());
                   }
@@ -129,7 +129,7 @@ void Window::exec(){
             auto pos = InputManager::getMousePos();
             //check for dragndrops
             if (btnDown == InputInterface::MouseButton::MOUSE_BUTTON_LEFT){
-               auto widgetAt = getWidgetAt(pos);
+               auto widgetAt = _root->getWidgetAt(pos);
                if (widgetAt){
                   auto willDrag = widgetAt.value()->_on_drag_start(pos);
                   if (willDrag){
@@ -203,6 +203,7 @@ void Window::exec(){
          //don't do hovering or mouse input if we're dragging and dropping
          static constexpr unsigned int DRAG_THRESHOLD = 20;
          if (_dragNDrop){
+            //only drag if we've moved the mouse above a certain threshold
             auto dragDelta = _dragNDrop.value()->startPos - getMousePos();
             if (abs(dragDelta.x) > DRAG_THRESHOLD || abs(dragDelta.y) > DRAG_THRESHOLD) {
                _isDragging = true;
@@ -210,6 +211,7 @@ void Window::exec(){
          } else {
             auto hovered = askHover(_root);
             if (hovered) Application::setHover(hovered.value()); else Application::clearHover();
+//            if (_isEditor) continue;
             _root->_process_unhandled_input(event);
          }
       }
@@ -305,21 +307,4 @@ void Window::setRoot(std::shared_ptr<BaseWidget>& newRoot) {
       newRoot->_init();
    }
    _root = newRoot;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
-std::optional<std::shared_ptr<BaseWidget>> Window::getWidgetAt(GFCSDraw::Pos<int> pos) {
-   //query the root and figure out which of it's children is the topmost widget at he position
-   std::shared_ptr<BaseWidget> widgetAt;
-   std::function<std::shared_ptr<BaseWidget>(std::shared_ptr<BaseWidget>)> findWidget = [&](std::shared_ptr<BaseWidget> currentWidget){
-      if (currentWidget->getGlobalRect().isInside(pos)) widgetAt = currentWidget;
-      for (auto& child : currentWidget->getChildren()) {
-         if (child->getGlobalRect().isInside(pos)) widgetAt = child;
-         findWidget(child);
-      }
-      return std::shared_ptr<BaseWidget>();
-   };
-   findWidget(_root);
-   if (widgetAt) return widgetAt;
-   return nullopt;
 }
