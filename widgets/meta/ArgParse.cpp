@@ -97,7 +97,6 @@ void ArgParse::parseArgs(int argc, char **argv) {
       exit(1);
    }
    _arg0 = argv[0];
-   _argc = argc;
    if (argc >= SIZE_MAX) exit(1);
    for (size_t i=0; i<argc; i++){
       _rawArgs.emplace_back(argv[i]);
@@ -185,4 +184,14 @@ optional<RuntimeArg*> ArgParse::getArg(const std::string& name) {
       return nullopt;
    }
    return &it->second;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::string ArgParse::getDocString() {
+   std::string retval;
+   retval += "Try one of the following parameters:\n";
+   for (const auto& definedArg : _definedArgs){
+      retval += "    --" + definedArg.first + " : " + definedArg.second._docString + "\n";
+   }
+   return retval;
 }

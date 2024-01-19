@@ -16,7 +16,7 @@ namespace Style {
       PROPERTY_DECLARE(color, GFCSDraw::Colors::black),
       PROPERTY_DECLARE(thickness, 1.0)
       {}
-      const EnumPair<Outline, 3>& getDict() override {return dict;}
+      const EnumPair<Outline, 3>& getDict() const override {return dict;}
       static constexpr EnumPair<Outline, 3> dict = {
          ENUM_PAIR_DECLARE(Outline, NONE),
          ENUM_PAIR_DECLARE(Outline, LINE),
@@ -47,7 +47,7 @@ namespace Style {
       , PROPERTY_DECLARE(colorSecondary, GFCSDraw::Colors::none)
       , PROPERTY_DECLARE(colorTertiary, GFCSDraw::Colors::none)
       {}
-      const EnumPair<Fill, 3>& getDict() override {return dict;}
+      const EnumPair<Fill, 3>& getDict() const override {return dict;}
       static constexpr EnumPair<Fill, 3> dict = {
          ENUM_PAIR_DECLARE(Fill, NONE),
          ENUM_PAIR_DECLARE(Fill, SOLID),
@@ -86,7 +86,7 @@ namespace Style {
       PROPERTY_DECLARE(roundness, 0.01),
       PROPERTY_DECLARE(font)
       {}
-      std::string toString() override {return "not impelenmeted";}
+      std::string toString() const override {return "not impelenmeted";}
       Empty fromString(const std::string& data) override { return value;}
 
       FillProperty background;

@@ -139,6 +139,7 @@ Handled Tree::_unhandled_input(InputEvent& event) {
           }
           return true;
        }
+       return false;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

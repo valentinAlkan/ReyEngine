@@ -16,6 +16,7 @@
 #include "Panel.hpp"
 #include "Editor.h"
 #include "Tree.h"
+#include "Inspector.h"
 
 using namespace std;
 using namespace GFCSDraw;
@@ -28,24 +29,25 @@ int screenHeight = 800;
 /////////////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char** argv)
 {
-   class EventTester : public EventSubscriber, public EventPublisher{
-
-   };
-   auto cb1 = [](const TestEvent1& testEvent){
-      cout << "My event ID is " << testEvent.eventId << endl;
-   };
-   auto cb2 = [](const TestEvent2& testEvent){
-      cout << "My event ID is " << testEvent.eventId << endl;
-   };
-   auto tester = std::make_shared<EventTester>();
-   tester->subscribe<TestEvent1>(tester, cb1);
-   tester->subscribe<TestEvent2>(tester, cb2);
-   TestEvent1 tevent1(tester);
-   TestEvent2 tevent2(tester);
-   tester->publish(tevent1);
-   tester->publish(tevent1);
-   tester->publish(tevent1);
-   tester->publish(tevent2);
+   SetTraceLogLevel(LOG_ERROR);
+//   class EventTester : public EventSubscriber, public EventPublisher{
+//
+//   };
+//   auto cb1 = [](const TestEvent1& testEvent){
+//      cout << "My event ID is " << testEvent.eventId << endl;
+//   };
+//   auto cb2 = [](const TestEvent2& testEvent){
+//      cout << "My event ID is " << testEvent.eventId << endl;
+//   };
+//   auto tester = std::make_shared<EventTester>();
+//   tester->subscribe<TestEvent1>(tester, cb1);
+//   tester->subscribe<TestEvent2>(tester, cb2);
+//   TestEvent1 tevent1(tester);
+//   TestEvent2 tevent2(tester);
+//   tester->publish(tevent1);
+//   tester->publish(tevent1);
+//   tester->publish(tevent1);
+//   tester->publish(tevent2);
 
 
    Application::instance(); //initialize the application
@@ -63,6 +65,7 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--treeTest", "TreeTest", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--childBoundingBoxTest", "ChildBoundingBoxTest", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--inputPositionTest", "InputPositionTest", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--inspector", "InspectorTest", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    //create window (or don't idk)
@@ -81,7 +84,7 @@ int main(int argc, char** argv)
       }
    }
 
-   if (args.getArg("--inputPositionTest")){
+   else if (args.getArg("--inputPositionTest")){
       auto control = make_shared<Control>("MainControl", Rect<int>(40,40, 50,50));
       auto subcontrol = make_shared<Control>("SubControl", Rect<int>(100,100, 50,50));
       control->getTheme()->background.set(Style::Fill::SOLID);
@@ -102,13 +105,13 @@ int main(int argc, char** argv)
       root = control;
    }
 
-   if (args.getArg("--renderTest")){
+   else if (args.getArg("--renderTest")){
       root = make_shared<RootWidget>("Root", Rect<float> {0,0,0,0});
       auto textureTest = make_shared<TextureTestWidget>("TexTest", Rect<float> {0,0,100,100});
       root->addChild(textureTest);
    }
 
-   if (args.getArg("--labelTest")){
+   else if (args.getArg("--labelTest")){
       root = make_shared<RootWidget>("Root", Rect<float> {0,0,0,0});
       auto testLabel = make_shared<Label>("Label", Rect<double>{0,0,50,50});
       root->addChild(testLabel);
@@ -117,7 +120,7 @@ int main(int argc, char** argv)
    }
 
 
-   if (args.getArg("--scrollAreaTest")){
+   else if (args.getArg("--scrollAreaTest")){
       root = make_shared<Control>("RootControl", Rect<int>(0,0, 2000, 2000));
 
       //add labels
@@ -128,10 +131,6 @@ int main(int argc, char** argv)
       auto spacer = make_shared<Control>("spacer", Rect<int>());
       labelLayout->addChild(xlabel);
       labelLayout->addChild(ylabel);
-//      labelLayout->addChild(spacer);
-//      labelLayout->childScales.set(0, .1);
-//      labelLayout->childScales.set(1, .1);
-//      labelLayout->childScales.set(2, .8);
 
       //add scroll area
       auto scrollArea = make_shared<ScrollArea>("ScrollArea",Rect<int>(50, 50, 500, 500));
@@ -141,8 +140,6 @@ int main(int argc, char** argv)
       label2->setText("Hello from the bottom right!");
       scrollArea->addChild(label1);
       scrollArea->addChild(label2);
-//      scrollArea->hideHSlider(true);
-//      scrollArea->hideVSlider(true);
       scrollArea->getTheme()->background.colorPrimary.set(COLORS::red);
 
       //draw a box around the scroll area
@@ -164,13 +161,10 @@ int main(int argc, char** argv)
          box->setRect(scrollArea->getRect());
       };
       labelLayout->subscribe<BaseWidget::WidgetResizeEvent>(scrollArea, displaySize);
-
-      // add a pushbutton to toggle grab handles
-//      auto grabToggleButton = make_shared<PushButton>("grabToggleButton", Rect<int>(700,100,50,30));
-//      root->addChild(grabToggleButton);
+      scrollArea->setInEditor(true);
    }
 
-   if (args.getArg("--childBoundingBoxTest")){
+   else if (args.getArg("--childBoundingBoxTest")){
       auto rootControl = make_shared<Control>("RootControl", Rect<int>(0,0,2000,2000));
       root = rootControl;
       //add some children
@@ -201,7 +195,7 @@ int main(int argc, char** argv)
    }
 
 
-   if (args.getArg("--sliderTest")){
+   else if (args.getArg("--sliderTest")){
       root = make_shared<Control>("Root", Rect<float> {0,0,0,0});
       auto label = make_shared<Label>("Label", Rect<float> {0,0,0,0});
 
@@ -237,11 +231,11 @@ int main(int argc, char** argv)
 
    }
 
-   if (args.getArg("--saveLoadSceneTest")){
+   else if (args.getArg("--saveLoadSceneTest")){
 //      auto
    }
 
-   if (args.getArg("--layoutTestBasic")){
+   else if (args.getArg("--layoutTestBasic")){
       Application::printDebug() << "Layout test basic!" << endl;
       auto rootLayout = make_shared<VLayout>("Root", Rect<float>({0,0}, window->getSize()));
       root = rootLayout;
@@ -259,7 +253,7 @@ int main(int argc, char** argv)
 
    }
 
-   if (args.getArg("--layoutTest")){
+   else if (args.getArg("--layoutTest")){
       Application::printDebug() << "Layout test!" << endl;
       root = make_shared<VLayout>("Root", Rect<float>({0,0}, window->getSize()));
       auto parent = root;
@@ -292,7 +286,7 @@ int main(int argc, char** argv)
       }
    }
 
-   if (args.getArg("--panelTest")){
+   else if (args.getArg("--panelTest")){
       root = make_shared<VLayout>("MainLayout", Rect<int>());
 
       //add a panel to the layout
@@ -331,11 +325,11 @@ int main(int argc, char** argv)
       root->addChild(panel);
    }
 
-   if (args.getArg("--editor")){
+   else if (args.getArg("--editor")){
       root = make_shared<Editor>("Editor", Rect<int>());
    }
 
-   if (args.getArg("--treeTest")){
+   else if (args.getArg("--treeTest")){
       auto treeRoot = std::make_shared<TreeItem>("Root");
       auto tree = make_shared<Tree>("Tree", Rect<int>());
       tree->setRoot(treeRoot);
@@ -397,42 +391,37 @@ int main(int argc, char** argv)
       tree->setHideRoot(true);
    }
 
-   // default functionality
-   //create a root widget
-   if (!root) {
-      root = make_shared<RootWidget>("Root", Rect<float> {0,0,0,0});
-      auto button = make_shared<PushButton>("Button", Rect<float> {0,0,0,0});
-      button->setPos(100, 100);
-      root->addChild(button);
-      auto label = make_shared<Label>("label", Rect<float> {0,0,0,0});
+   else if (args.getArg("--inputPositionTest")){
 
-//      auto cb = [&](const BaseEvent& e){
-//         static int pushCount = 0;
-//         auto& pbEvent = e.toType<PushButtonEvent>();
-//         if (pbEvent.down){
-//            label->setText(to_string(pushCount++));
-//         }
-//      };
+   }
 
-//      label->subscribe(button, PushButtonEvent::EVENT_PUSHBUTTON, cb);
+   else if (args.getArg("--inspector")){
+      //make a vlayout - put a widget at the top and the inspector below it
+      root = make_shared<VLayout>("VLayout", Rect<int>());
+      auto someWidget = make_shared<Label>("SomeWidget", GFCSDraw::Rect<int>());
+      auto inspector = make_shared<Inspector>("Inspector", GFCSDraw::Rect<int>());
+      someWidget->getTheme()->background.set(Style::Fill::SOLID);
+      someWidget->getTheme()->background.colorPrimary.set(Colors::blue);
+      root->addChild(someWidget);
+      root->addChild(inspector);
+      inspector->inspect(someWidget);
+   }
 
-      //create a scroll area
-      auto scrollArea = make_shared<ScrollArea>("ScrollArea", Rect<float> {0,0,0,0});
-      scrollArea->setRect({0, 0, 500,500});
-      root->addChild(scrollArea);
-      scrollArea->addChild(label);
+   else {
+      cout << args.getDocString() << endl;
+      return 0;
    }
 
    //lock root to window size
-   auto resizeRoot = [&](const Window::WindowResizeEvent& event){
-      Application::printDebug() << "Running scene. Root's name is " << root->getName() << endl;
-      root->setRect({{0,0},event.size});
-   };
+//   auto resizeRoot = [&](const Window::WindowResizeEvent& event){
+//      Application::printDebug() << "Running scene. Root's name is " << root->getName() << endl;
+////      root->setRect({{0,0}, event.size});
+//   };
 
    //panels
-   root->subscribe<Window::WindowResizeEvent>(window, resizeRoot);
-
+//   root->subscribe<Window::WindowResizeEvent>(window, resizeRoot);
    window->setRoot(root);
+   root->setAnchoring(BaseWidget::Anchor::FILL);
    window->exec();
    return 0;
 }

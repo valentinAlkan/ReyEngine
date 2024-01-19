@@ -35,12 +35,12 @@ public:
    virtual void exec();
    virtual ~Window();
    bool isProcessed(const std::shared_ptr<BaseWidget>&) const;
+   bool isEditor(){return _isEditor;}
    bool setProcess(bool, std::shared_ptr<BaseWidget>); //returns whether operation was successful. Returns false if widget already being processed or is not found.
    void setRoot(std::shared_ptr<BaseWidget>&);
    static GFCSDraw::Pos<int> getMousePos(); //returns global mouse position
    static GFCSDraw::Vec2<double> getMousePct(); //returns global mouse position as a percentage of the window size from 0 to 1
    const std::shared_ptr<BaseWidget>& getRootWidget(){return _root;}
-   std::optional<std::shared_ptr<BaseWidget>> getWidgetAt(GFCSDraw::Pos<int>);
    GFCSDraw::Size<int> getSize(){return GFCSDraw::getWindowSize();}
    void setSize(GFCSDraw::Size<int> newSize){GFCSDraw::setWindowSize(newSize);}
    GFCSDraw::Pos<int> getPosition(){return GFCSDraw::getWindowPosition();}

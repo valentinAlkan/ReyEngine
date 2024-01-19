@@ -8,7 +8,7 @@ namespace Style{
       FontProperty(const std::string& instanceName)
       : Property<GFCSDraw::GFCSDrawFont>(instanceName, PropertyTypes::Font, GFCSDraw::GFCSDrawFont())
       {}
-      std::string toString() override {
+      std::string toString() const override {
          //serialize
          return "";
       }

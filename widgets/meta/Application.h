@@ -19,7 +19,7 @@ private:
    , _error_logger(std::cout, "ERROR")
    {
       //initialize time and log current time
-      _info_logger << "Application start!" << std::endl;
+//      _info_logger << "Application start!" << std::endl;
       //initialize built-in types
       TypeManager::instance()._registerTypes();
    }

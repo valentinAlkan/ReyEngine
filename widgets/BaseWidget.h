@@ -6,6 +6,7 @@
 #include "InputManager.h"
 #include "EventManager.h"
 #include "Theme.h"
+#include "Property.h"
 #include <iostream>
 #include <stack>
 #include <utility>
@@ -79,8 +80,25 @@ public:
       GFCSDraw::Size<float> size;
    };
 
-   struct WidgetRenderEvent : public Event<WidgetRenderEvent>{
-      EVENT_CTOR_SIMPLE(WidgetRenderEvent, Event<WidgetRenderEvent>){}
+   enum class Anchor{NONE, LEFT, RIGHT, TOP, BOTTOM, FILL, TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT};
+   /////////////////////////////////////////////////////////////////////////////////////////
+   struct AnchorProperty : public EnumProperty<Anchor, 10>{
+      AnchorProperty(const std::string& instanceName,  Anchor defaultvalue)
+      : EnumProperty<Anchor, 10>(instanceName, defaultvalue)
+      {}
+      const EnumPair<Anchor, 10>& getDict() const  override {return dict;}
+      static constexpr EnumPair<Anchor, 10> dict = {
+            ENUM_PAIR_DECLARE(Anchor, NONE),
+            ENUM_PAIR_DECLARE(Anchor, LEFT),
+            ENUM_PAIR_DECLARE(Anchor, RIGHT),
+            ENUM_PAIR_DECLARE(Anchor, TOP),
+            ENUM_PAIR_DECLARE(Anchor, BOTTOM),
+            ENUM_PAIR_DECLARE(Anchor, BOTTOM_LEFT),
+            ENUM_PAIR_DECLARE(Anchor, BOTTOM_RIGHT),
+            ENUM_PAIR_DECLARE(Anchor, TOP_LEFT),
+            ENUM_PAIR_DECLARE(Anchor, TOP_RIGHT),
+            ENUM_PAIR_DECLARE(Anchor, FILL)
+      };
    };
 
    static constexpr char TYPE_NAME[] = "BaseWidget";
@@ -100,20 +118,23 @@ public:
    int getHeight() const {return _rect.value.height;}
    iVec getHeightRange() const {return {0, getRect().size().y};}
    iVec getWidthtRange() const {return {0, getRect().size().x};}
-   void setRect(const GFCSDraw::Rect<int>& r){_rect.value = r;_on_rect_changed();_publishSize();}
-   void setPos(int x, int y){_rect.value.x = x; _rect.value.y = y; _on_rect_changed();_publishSize();}
-   void setPos(const GFCSDraw::Pos<int>& pos){_rect.value.x = pos.x; _rect.value.y = pos.y; _on_rect_changed();_publishSize();}
-   void setMaxSize(const GFCSDraw::Size<int>& size){maxSize = size;}
-   void setMinSize(const GFCSDraw::Size<int>& size){minSize = size;}
    GFCSDraw::Size<int> getMinSize(){return minSize;}
    GFCSDraw::Size<int> getMaxSize(){return maxSize;}
    GFCSDraw::Size<int> getClampedSize();
    GFCSDraw::Size<int> getClampedSize(GFCSDraw::Size<int>);
-   void setSize(const GFCSDraw::Size<int>& size){_rect.value.width = size.x; _rect.value.height = size.y; _on_rect_changed();_publishSize();}
-   void setWidth(int width){_rect.value.width = width; _on_rect_changed();_publishSize();}
-   void setHeight(int height){_rect.value.height = height; _on_rect_changed();_publishSize();}
    void setVisible(bool visible){_visible = visible;}
    bool getVisible() const {return _visible;}
+   //sizing
+   void setAnchoring(Anchor newAnchor){_anchor.set(newAnchor);setRect(getRect());}
+   Anchor getAnchoring(){return _anchor.get();}
+   void setMaxSize(const GFCSDraw::Size<int>& size){maxSize = size;}
+   void setMinSize(const GFCSDraw::Size<int>& size){minSize = size;}
+   void setRect(const GFCSDraw::Rect<int>& r);
+   void setPos(int x, int y);
+   void setPos(const GFCSDraw::Pos<int>& pos);
+   void setSize(const GFCSDraw::Size<int>& size);
+   void setWidth(int width);
+   void setHeight(int height);
 
    GFCSDraw::Pos<int> getLocalMousePos(){return globalToLocal(InputManager::getMousePos());}
    GFCSDraw::Pos<int> globalToLocal(const GFCSDraw::Pos<int>& global) const;
@@ -124,6 +145,7 @@ public:
    bool setIndex(unsigned int newIndex);
    std::string getTypeName(){return _typeName;}
 
+   std::optional<std::shared_ptr<BaseWidget>> getWidgetAt(GFCSDraw::Pos<int> pos);
    std::weak_ptr<BaseWidget> getParent(){return _parent;}
    const ChildOrder& getChildren() const {return _childrenOrdered;}
    std::optional<WidgetPtr> getChild(const std::string& name);
@@ -147,6 +169,7 @@ public:
 
    std::optional<WidgetPtr> addChild(WidgetPtr);
    std::optional<WidgetPtr> removeChild(const std::string& name, bool quiet = false); //quiet silences the output if child is not found.
+   void removeAllChildren(); //removes all children and DOES NOT RETURN THEM!
 
    bool operator==(const WidgetPtr& other) const {if (other){return other->getRid()==_rid;}return false;}
    bool operator==(const BaseWidget& other) const{return other._rid == _rid;}
@@ -200,8 +223,6 @@ protected:
    virtual std::string _get_static_constexpr_typename(){return TYPE_NAME;}
 
    //convenience
-   bool _getIsEditorWidget(){return _isEditorWidget;}
-   void _setIsEditorWidget(bool isEditorWidget){_isEditorWidget = isEditorWidget;}
    void _publishSize(){WidgetResizeEvent event(toEventPublisher());publish<decltype(event)>(event);}
 
    bool _has_inited = false; //set true THE FIRST TIME a widget enters the tree. Can do constructors of children and other stuff requiring shared_from_this();
@@ -212,11 +233,20 @@ protected:
    GFCSDraw::Size<int> minSize = {0,0};
 
    //editor stuff
-   bool _editor_show_grab_handles = false; //used in editor mode
+public:
+   void setInEditor(bool state){_isEditorWidget = state;}
+   bool isInEditor(){return _isEditorWidget;}
+   void setEditorSelected(bool selected){_editor_selected = selected;}
+   bool isEditorSelected(){return _editor_selected;}
+protected:
+   bool _isEditorWidget = false; //true if this is a widget THE USER HAS PLACED IN THE EDITOR WORKSPACE (not a widget that the editor uses for normal stuff)
+   bool _editor_selected = false; // true when the object is *selected* in the editor
    static constexpr int GRAB_HANDLE_SIZE = 10;
    GFCSDraw::Rect<int> _getGrabHandle(int index);// 0-3 clockwise starting in top left (TL,TR,BR,BL)
    int _editor_grab_handles_dragging = -1; //which grab handle is being drug around
 private:
+   GFCSDraw::Rect<int> calculateAnchoring(const GFCSDraw::Rect<int>& r); //new size accounting for anchoring
+   AnchorProperty _anchor;
    void rename(WidgetPtr& child, const std::string& newName);
    uint64_t _rid; //unique identifier
    const std::string _typeName; //can't just use static constexpr TYPE_NAME since we need to know what the type is if using type-erasure
@@ -230,7 +260,6 @@ private:
    bool _visible = true; //whether to show the widget (and its children)
    std::recursive_mutex _childLock;
    bool _scheduled_for_deletion = false; // true when the widget has been scheduled for deletion but is not yet deleted.
-   bool _isEditorWidget = false; //true if this is a widget THE USER HAS PLACED IN THE EDITOR WORKSPACE (not a widget that the editor uses for normal stuff)
    GFCSDraw::Pos<double> _renderOffset; //used for different rendering modes. does not offset position.
 
    Handled _process_unhandled_input(InputEvent&); //pass input to children if they want it and then process it for ourselves if necessary

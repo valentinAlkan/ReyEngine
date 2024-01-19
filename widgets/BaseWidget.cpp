@@ -10,10 +10,11 @@ using namespace GFCSDraw;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 BaseWidget::BaseWidget(const std::string& name, std::string  typeName, Rect<float> rect)
-:_name(std::move(name))
+: _name(std::move(name))
 , _typeName(std::move(typeName))
 , _rect("_rect", rect)
 , _isProcessed("_isProcessed")
+, _anchor("Anchor", Anchor::NONE)
 , _rid(Application::instance().getNewRid())
 {}
 
@@ -48,7 +49,7 @@ bool BaseWidget::setName(const std::string& newName, bool append_index) {
       //parent does not have a child with the name
       parent->rename(self, _newName);
    }
-   //root widget, no need to deal with parent
+   //root widget or orphaned, no need to deal with parent
    _name = newName;
    return true;
 }
@@ -164,6 +165,15 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::removeChild(const std::string& 
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::removeAllChildren() {
+   auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
+   for (auto& child : _children){
+      child.second.second->isInLayout = false;
+   }
+   _children.clear();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 Pos<int> BaseWidget::getGlobalPos() const {
    //sum up all our ancestors' positions and add our own to it
    auto offset = getPos();
@@ -244,7 +254,7 @@ Handled BaseWidget::_process_unhandled_input(InputEvent& event) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Handled BaseWidget::_process_unhandled_editor_input(InputEvent& event) {
-   if (!_editor_show_grab_handles) return false;
+   if (!_editor_selected) return false;
    switch(event.eventId){
       case InputEventMouseButton::getUniqueEventId():
       case InputEventMouseMotion::getUniqueEventId():
@@ -403,11 +413,12 @@ void BaseWidget::_deserialize(PropertyPrototypeMap& propertyData){
 void BaseWidget::registerProperties() {
    registerProperty(_rect);
    registerProperty(_isProcessed);
+   registerProperty(_anchor);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::renderEditorFeatures(){
-   if (_editor_show_grab_handles){
+   if (_editor_selected){
       //render the grab handles
       static constexpr GFCSDraw::ColorRGBA GRAB_HANDLE_COLOR = COLORS::blue;
       _drawRectangleRounded(_getGrabHandle(0), 1.0, 5, GRAB_HANDLE_COLOR);
@@ -429,4 +440,85 @@ GFCSDraw::Rect<int> BaseWidget::_getGrabHandle(int index) {
       case 3:
          return {-GRAB_HANDLE_SIZE, getHeight(),GRAB_HANDLE_SIZE,GRAB_HANDLE_SIZE};
    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+std::optional<std::shared_ptr<BaseWidget>> BaseWidget::getWidgetAt(GFCSDraw::Pos<int> pos) {
+   //query the widget and figure out which of its children is the topmost widget at the position
+   std::shared_ptr<BaseWidget> widgetAt;
+   std::function<std::shared_ptr<BaseWidget>(std::shared_ptr<BaseWidget>)> findWidget = [&](std::shared_ptr<BaseWidget> currentWidget){
+      if (currentWidget->getGlobalRect().isInside(pos)) widgetAt = currentWidget;
+      for (auto& child : currentWidget->getChildren()) {
+         if (child->getGlobalRect().isInside(pos)) widgetAt = child;
+         findWidget(child);
+      }
+      return std::shared_ptr<BaseWidget>();
+   };
+   findWidget(toBaseWidget());
+   if (widgetAt) return widgetAt;
+   return nullopt;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+GFCSDraw::Rect<int> BaseWidget::calculateAnchoring(const GFCSDraw::Rect<int>& r) {
+
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::setRect(const GFCSDraw::Rect<int>& r){
+   GFCSDraw::Rect<int> newRect(r);
+   auto parent = getParent();
+   if(getAnchoring() != Anchor::NONE) {
+      if (!parent.expired()) {
+         newRect = {{0, 0}, getSize()};
+      } else if (isRoot()) {
+         newRect = {{0, 0}, Application::instance().getWindow()->getSize()};
+      } else {
+         _rect.set(r);
+         _on_rect_changed();
+         _publishSize();
+         return;
+         //todo: this is weird, find a way to make this flow better
+      }
+   }
+   switch (_anchor.get()) {
+      case Anchor::NONE:
+         _rect.set(r);
+         break;
+      case Anchor::FILL: {
+         //take up as much space as parent has to offer
+         _rect.set(newRect);
+         break;
+      }
+      default:
+         break;
+   }
+   _on_rect_changed();
+   _publishSize();
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::setPos(int x, int y){
+   GFCSDraw::Rect<int> r(x, y, _rect.get().width, _rect.get().height);
+   setRect(r);
+}
+///////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::setPos(const GFCSDraw::Pos<int>& pos) {
+   GFCSDraw::Rect<int> r(pos, _rect.get().size());
+   setRect(r);
+}
+///////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::setSize(const GFCSDraw::Size<int>& size){
+   GFCSDraw::Rect<int> r(_rect.get().pos(), size);
+   setRect(r);
+}
+///////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::setWidth(int width){
+   GFCSDraw::Rect<int> r(_rect.get().pos(), {width, _rect.get().height});
+   setRect(r);
+}
+///////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::setHeight(int height){
+   GFCSDraw::Rect<int> r(_rect.get().pos(), {_rect.get().width, height});
+   setRect(r);
 }

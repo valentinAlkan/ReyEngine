@@ -21,6 +21,7 @@ public:
    bool wasDown;
 protected:
    Handled _unhandled_input(InputEvent& event) override{
+      if (_isEditorWidget) return false;
       switch (event.eventId) {
          case InputEventMouseButton::getUniqueEventId(): {
             auto mouseEvent = event.toEventType<InputEventMouseButton>();
