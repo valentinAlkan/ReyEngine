@@ -43,6 +43,7 @@ protected:
             return true;
          }
       }
+      return false;
    }
 private:
    void reset(){startTime = SystemTime::instance().nowSteady();}

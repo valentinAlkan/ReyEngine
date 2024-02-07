@@ -17,6 +17,6 @@ std::shared_ptr<BaseWidget> InspectorWidgetFactory::generateWidget(const BasePro
       auto valueLabel = make_shared<Label>("__valueLabel", r);
       valueLabel->setText(property.toString());
       hbox->addChild(valueLabel);
-      return retval;
    }
+    return retval;
 }

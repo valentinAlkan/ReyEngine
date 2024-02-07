@@ -439,6 +439,8 @@ ReyEngine::Rect<int> BaseWidget::_getGrabHandle(int index) {
          return {getWidth(),getHeight(),GRAB_HANDLE_SIZE,GRAB_HANDLE_SIZE};
       case 3:
          return {-GRAB_HANDLE_SIZE, getHeight(),GRAB_HANDLE_SIZE,GRAB_HANDLE_SIZE};
+       default:
+           throw std::runtime_error("Invalid grab handle index");
    }
 }
 
@@ -461,7 +463,8 @@ std::optional<std::shared_ptr<BaseWidget>> BaseWidget::getWidgetAt(ReyEngine::Po
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::Rect<int> BaseWidget::calculateAnchoring(const ReyEngine::Rect<int>& r) {
-
+    //todo: not implemented
+    return {};
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
