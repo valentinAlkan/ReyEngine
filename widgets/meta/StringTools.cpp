@@ -24,7 +24,7 @@ vector<string> string_tools::split(const std::string &s, const std::string &deli
 
 /////////////////////////////////////////////////////////////////////////////////////////
 vector<string> string_tools::split(const std::string &s, char delimChar) {
-   split(s, string(delimChar, 1));
+   return split(s, string(delimChar, 1));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

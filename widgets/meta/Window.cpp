@@ -197,7 +197,10 @@ void Window::exec(){
                   return nullopt;
                case InputFilter::INPUT_FILTER_IGNORE_AND_PASS:
                   return pass(widget);
+                default:
+                    return nullopt;
             }
+
          };
 
          //don't do hovering or mouse input if we're dragging and dropping
