@@ -8,13 +8,13 @@
 struct RuntimeArg{
    enum class ArgType{
       DEDUCE,  //if arg has leading dash and one char, or two leading dashes, then will be be a flag - otherwise positional if appears before another flag or optional, otherwise optional
-      POSITIONAL, //args is required and an error is thrown if it is not there
+      POSITIONAL, //arg is required and an error is thrown if it is not there
       OPTIONAL,
       FLAG  //Flags will not consume args
    };
    enum class ConsumeType{
-      CONSUME_COUNT,
-      CONSUME_ALL,
+      CONSUME_COUNT, //consume the specified amount of parameters
+      CONSUME_ALL, //consume as many arguments as are supplied, until the next arg is encountered
    };
 
    enum class ValueType{
@@ -65,6 +65,7 @@ public:
    std::string getDocString();
    std::optional<RuntimeArg*> getArg(const std::string& name);
    void defineArg(const RuntimeArg& arg);
+   size_t argCount() const {return _rawArgs.size();} //will always include the first arg
 private:
    std::string _arg0;
    std::vector<std::string> _rawArgs;

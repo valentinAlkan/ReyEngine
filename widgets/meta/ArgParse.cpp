@@ -120,23 +120,36 @@ void ArgParse::parseArgs(int argc, char **argv) {
       //parse the next arg as a parameter if we have an open arg, or close an open arg where appropriate
       bool isFlag = argType == RuntimeArg::ArgType::FLAG;
       if (openArg) {
-         if (openArg->_paramCount > openParamCount){
-            if (!isFlag) {
-               //parse paramaters of an existing arg
-               openArg->_params.push_back(rawArg);
-               openParamCount++;
-               continue;
-            } else {
-               //raise error
-               stringstream msg;
-               msg << "Expected parameter #" << openParamCount << " to arg \"" << openArg->name() << "\" but got flag \"" << rawArg << "\" instead!" << endl;
-               Application::printError() << msg.str() << endl;
-               exit(1);
-            }
-         } else {
-            //close the arg
-            openArg = nullptr;
-         }
+          if (openArg->_consume == RuntimeArg::ConsumeType::CONSUME_COUNT) {
+              if (openArg->_paramCount > openParamCount) {
+                  if (!isFlag) {
+                      //parse paramaters of an existing arg
+                      openArg->_params.push_back(rawArg);
+                      openParamCount++;
+                      continue;
+                  } else {
+                      //raise error
+                      stringstream msg;
+                      msg << "Expected parameter #" << openParamCount << " to arg \"" << openArg->name()
+                          << "\" but got flag \"" << rawArg << "\" instead!" << endl;
+                      Application::printError() << msg.str() << endl;
+                      exit(1);
+                  }
+              } else {
+                  //close the arg
+                  openArg = nullptr;
+              }
+          } else {
+              //consume as many args as we can
+              if (!isFlag) {
+                  openArg->_params.push_back(rawArg);
+                  openParamCount++;
+                  continue;
+              } else {
+                  //close arg
+                  openArg = nullptr;
+              }
+          }
       }
 
       //parse a new arg
@@ -155,7 +168,7 @@ void ArgParse::parseArgs(int argc, char **argv) {
       openArg->setValue(rawArg);
       openParamCount = 0;
    }
-   if (openParamCount != openArg->_paramCount) throw std::runtime_error("Arg count mismatch!");
+   if (openArg->_consume == RuntimeArg::ConsumeType::CONSUME_COUNT && openParamCount != openArg->_paramCount) throw std::runtime_error("Arg count mismatch!");
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 std::optional<std::string> RuntimeArg::flagParse(std::string rawArg) {
