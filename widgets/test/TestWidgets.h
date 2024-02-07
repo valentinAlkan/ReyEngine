@@ -18,7 +18,7 @@ struct TestProperty : StringProperty{
 
 class PosTestWidget : public Control {
 public:
-   GFCSDRAW_OBJECT(PosTestWidget, Control), someString("someString"){}
+   REYENGINE_OBJECT(PosTestWidget, Control), someString("someString"){}
    void render() const override;
    void _process(float dt) override;
    void registerProperties() override;

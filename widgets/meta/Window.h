@@ -14,22 +14,22 @@ public:
    Draggable(const std::string& id, std::shared_ptr<BaseWidget> preview) : id(id), preview(preview){}
    std::optional<std::shared_ptr<BaseWidget>> preview;
    const std::string id;
-   GFCSDraw::Pos<int> startPos;
+   ReyEngine::Pos<int> startPos;
 };
 
 class Window : public EventPublisher {
 public:
    struct WindowResizeEvent : public Event<WindowResizeEvent> {
-      EVENT_CTOR_SIMPLE(WindowResizeEvent, Event<WindowResizeEvent>, GFCSDraw::Pos<int> newSize), size(newSize){
+      EVENT_CTOR_SIMPLE(WindowResizeEvent, Event<WindowResizeEvent>, ReyEngine::Pos<int> newSize), size(newSize){
 //         std::cout << "Window resize is event id " << getUniqueEventId() << std::endl;
       }
-      GFCSDraw::Size<int> size;
+      ReyEngine::Size<int> size;
    };
    struct WindowMoveEvent : public Event<WindowMoveEvent> {
       EVENT_CTOR_SIMPLE(WindowMoveEvent, Event<WindowMoveEvent>){
 //         std::cout << "Window move is event id " << getUniqueEventId() << std::endl;
       }
-      GFCSDraw::Pos<int> position;
+      ReyEngine::Pos<int> position;
    };
    enum Flags{RESIZE, IS_EDITOR};
    virtual void exec();
@@ -38,15 +38,15 @@ public:
    bool isEditor(){return _isEditor;}
    bool setProcess(bool, std::shared_ptr<BaseWidget>); //returns whether operation was successful. Returns false if widget already being processed or is not found.
    void setRoot(std::shared_ptr<BaseWidget>&);
-   static GFCSDraw::Pos<int> getMousePos(); //returns global mouse position
-   static GFCSDraw::Vec2<double> getMousePct(); //returns global mouse position as a percentage of the window size from 0 to 1
+   static ReyEngine::Pos<int> getMousePos(); //returns global mouse position
+   static ReyEngine::Vec2<double> getMousePct(); //returns global mouse position as a percentage of the window size from 0 to 1
    const std::shared_ptr<BaseWidget>& getRootWidget(){return _root;}
-   GFCSDraw::Size<int> getSize(){return GFCSDraw::getWindowSize();}
-   void setSize(GFCSDraw::Size<int> newSize){GFCSDraw::setWindowSize(newSize);}
-   GFCSDraw::Pos<int> getPosition(){return GFCSDraw::getWindowPosition();}
-   void setPosition(GFCSDraw::Pos<int> newPos){GFCSDraw::setWindowPosition(newPos);}
-   void maximize(){GFCSDraw::maximizeWindow();}
-   void minimize(){GFCSDraw::minimizeWindow();}
+   ReyEngine::Size<int> getSize(){return ReyEngine::getWindowSize();}
+   void setSize(ReyEngine::Size<int> newSize){ReyEngine::setWindowSize(newSize);}
+   ReyEngine::Pos<int> getPosition(){return ReyEngine::getWindowPosition();}
+   void setPosition(ReyEngine::Pos<int> newPos){ReyEngine::setWindowPosition(newPos);}
+   void maximize(){ReyEngine::maximizeWindow();}
+   void minimize(){ReyEngine::minimizeWindow();}
    std::optional<std::shared_ptr<Draggable>>getDragNDrop(){if (_dragNDrop) return _dragNDrop; return std::nullopt;}
 protected:
    Window(const std::string& title, int width, int height, const std::vector<Flags>& flags, int targetFPS=60);

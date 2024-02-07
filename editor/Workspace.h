@@ -6,11 +6,11 @@
 //   bool selected = false;
 //public:
 //   /////////////////////////////////////////////////////////////////////////////////////////
-//   void renderChain(GFCSDraw::Pos<double>& parentOffset) {
+//   void renderChain(ReyEngine::Pos<double>& parentOffset) {
 //      stastic_assert(std::is_base_of_v<T, BaseWidget>());
 //      auto& bw = static_cast<BaseWidget&>(*this);
 //      if (!bw._visible) return;
-//      GFCSDraw::Pos<double> localOffset;
+//      ReyEngine::Pos<double> localOffset;
 //      bw.renderBegin(localOffset);
 //      bw._renderOffset += (localOffset + parentOffset);
 //      bw.render();
@@ -36,7 +36,7 @@ class WorkspaceWidget : public BaseWidget {
 
 
 class Workspace : public Panel {
-   GFCSDRAW_OBJECT(Workspace, Panel){}
+   REYENGINE_OBJECT(Workspace, Panel){}
 public:
    struct EventWidgetAdded : public Event<EventWidgetAdded> {
       EVENT_CTOR_SIMPLE(EventWidgetAdded, Event<EventWidgetAdded>){}

@@ -15,9 +15,9 @@ public:
 
 
 class WidgetTree : public Tree{
-   GFCSDRAW_OBJECT(WidgetTree, Tree){}
+   REYENGINE_OBJECT(WidgetTree, Tree){}
 public:
-   std::optional<std::shared_ptr<Draggable>> _on_drag_start(GFCSDraw::Pos<int> globalPos) override;
+   std::optional<std::shared_ptr<Draggable>> _on_drag_start(ReyEngine::Pos<int> globalPos) override;
 protected:
    void _init();
 };

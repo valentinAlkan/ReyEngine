@@ -3,7 +3,7 @@
 #include "Button.hpp"
 #include "Workspace.h"
 
-using namespace GFCSDraw;
+using namespace ReyEngine;
 using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -16,7 +16,7 @@ void Editor::_init() {
    menuBarPanel->setLayout<HLayout>();
    mainPanel->addToLayout(menuBarPanel);
    //set blue background (you gotta color it hard...so they can *see* it)
-   menuBarPanel->getTheme()->background.colorPrimary.set(GFCSDraw::Colors::blue);
+   menuBarPanel->getTheme()->background.colorPrimary.set(ReyEngine::Colors::blue);
    //set menubar size
    menuBarPanel->setMaxSize({0,25});
    //add some buttons to the menu bar
@@ -26,7 +26,7 @@ void Editor::_init() {
 
    //create the workspace
    auto mainHLayout = make_shared<HLayout>("mainHLayout", Rect<int>());
-   mainHLayout->getTheme()->background.colorPrimary.set(GFCSDraw::Colors::lightGray);
+   mainHLayout->getTheme()->background.colorPrimary.set(ReyEngine::Colors::lightGray);
    mainPanel->addToLayout(mainHLayout);
 
    //create left panel
@@ -39,14 +39,14 @@ void Editor::_init() {
       sceneTree = make_shared<SceneTree>("sceneTree", Rect<int>());
       sceneTree->setRoot(treeRoot);
       mainHLayoutLeftPanel->addChild(sceneTree);
-      sceneTree->getTheme()->background.colorPrimary.set(GFCSDraw::Colors::yellow);
+      sceneTree->getTheme()->background.colorPrimary.set(ReyEngine::Colors::yellow);
    }
 
    //create widget tree panel
    {
       widgetTree = make_shared<WidgetTree>("widgetTree", Rect<int>());
       mainHLayoutLeftPanel->addChild(widgetTree);
-      widgetTree->getTheme()->background.colorPrimary.set(GFCSDraw::Colors::green);
+      widgetTree->getTheme()->background.colorPrimary.set(ReyEngine::Colors::green);
    }
 
    //create the (blank) workspace

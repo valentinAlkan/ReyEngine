@@ -57,7 +57,7 @@ private:
 };
 
 class Tree : public VLayout {
-   GFCSDRAW_OBJECT(Tree, VLayout){
+   REYENGINE_OBJECT(Tree, VLayout){
       acceptsHover=true;
    }
 public:
@@ -95,8 +95,8 @@ public:
    /////////////////////////////////////////////////////////////////////////////////////////
    /////////////////////////////////////////////////////////////////////////////////////////
    struct TreeClickEvent : public Event<TreeClickEvent> {
-      EVENT_CTOR_SIMPLE(TreeClickEvent, Event<TreeClickEvent>, GFCSDraw::Pos<int> localPos), localPos(localPos){}
-      GFCSDraw::Pos<int> localPos;
+      EVENT_CTOR_SIMPLE(TreeClickEvent, Event<TreeClickEvent>, ReyEngine::Pos<int> localPos), localPos(localPos){}
+      ReyEngine::Pos<int> localPos;
    };
 
    std::optional<std::shared_ptr<TreeItem>> getRoot() const {if (root) return root; return {};}
@@ -141,7 +141,7 @@ protected:
    //Stores extra details that the tree can use
    struct TreeItemMeta{
       TreeItemMeta(std::shared_ptr<TreeItem> item, int visibleRowindex): item(item), visibleRowIndex(visibleRowindex){}
-      GFCSDraw::Rect<int> expansionIconClickRegion; //where we can click to determine if an item should be "expanded" or not;
+      ReyEngine::Rect<int> expansionIconClickRegion; //where we can click to determine if an item should be "expanded" or not;
       std::shared_ptr<TreeItem> item;
       const int visibleRowIndex = -1;
    };
@@ -152,7 +152,7 @@ protected:
    virtual Handled _unhandled_input(InputEvent&);
    virtual void _on_mouse_enter(){};
    virtual void _on_mouse_exit(){ _hoveredMeta.reset();/*_hoveredRowNum = -1;*/}
-   std::optional<std::shared_ptr<TreeItemMeta>> getMetaAt(const GFCSDraw::Pos<int>& localPos);
+   std::optional<std::shared_ptr<TreeItemMeta>> getMetaAt(const ReyEngine::Pos<int>& localPos);
 private:
 
    std::shared_ptr<TreeItem> root;

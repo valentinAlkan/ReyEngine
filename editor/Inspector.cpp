@@ -3,7 +3,7 @@
 #include "InspectorWidgetFactory.h"
 
 using namespace std;
-using namespace GFCSDraw;
+using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Inspector::_init() {

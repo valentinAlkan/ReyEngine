@@ -9,10 +9,10 @@ class Panel : public Control {
 public:
    static constexpr std::string_view LAYOUT_NAME = "layout";
    static constexpr Layout::LayoutDir defaultLayout = Layout::LayoutDir::VERTICAL;
-   GFCSDRAW_OBJECT(Panel, Control)
+   REYENGINE_OBJECT(Panel, Control)
    , PROPERTY_DECLARE(_layoutDir, Layout::LayoutDir::HORIZONTAL)
    {
-      getTheme()->background.colorPrimary.set(GFCSDraw::ColorRGBA(94, 142, 181, 255));
+      getTheme()->background.colorPrimary.set(ReyEngine::ColorRGBA(94, 142, 181, 255));
    }
 public:
    void render() const override {
@@ -43,7 +43,7 @@ public:
    std::shared_ptr<Layout> setLayout(){
       static_assert(std::is_base_of_v<Layout, T>);
       //create new layout
-      auto newLayout = std::make_shared<T>(std::string(LAYOUT_NAME), GFCSDraw::Rect<int>());
+      auto newLayout = std::make_shared<T>(std::string(LAYOUT_NAME), ReyEngine::Rect<int>());
       //get existing layout
       auto layoutOpt = getChild(std::string(LAYOUT_NAME));
       if (layoutOpt) {

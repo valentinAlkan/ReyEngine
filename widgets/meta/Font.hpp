@@ -4,15 +4,15 @@
 namespace Style{
    /////////////////////////////////////////////////////////////////////////////////////////
 
-   struct FontProperty : public Property<GFCSDraw::GFCSDrawFont>{
+   struct FontProperty : public Property<ReyEngine::ReyEngineFont>{
       FontProperty(const std::string& instanceName)
-      : Property<GFCSDraw::GFCSDrawFont>(instanceName, PropertyTypes::Font, GFCSDraw::GFCSDrawFont())
+      : Property<ReyEngine::ReyEngineFont>(instanceName, PropertyTypes::Font, ReyEngine::ReyEngineFont())
       {}
       std::string toString() const override {
          //serialize
          return "";
       }
-      GFCSDraw::GFCSDrawFont fromString(const std::string& str) override {
+      ReyEngine::ReyEngineFont fromString(const std::string& str) override {
          //deserialize
          return {};
       }

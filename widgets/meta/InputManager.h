@@ -14,7 +14,7 @@ struct InputEventKey : public InputEvent {
 
 struct InputEventMouse : public InputEvent{
    EVENT_CTOR_SIMPLE_OVERRIDABLE(InputEventMouse, InputEvent){}
-   GFCSDraw::Vec2<int> globalPos;
+   ReyEngine::Vec2<int> globalPos;
 };
 
 struct InputEventMouseButton : public InputEventMouse{
@@ -25,12 +25,12 @@ struct InputEventMouseButton : public InputEventMouse{
 
 struct InputEventMouseWheel : public InputEventMouse{
    EVENT_CTOR_SIMPLE(InputEventMouseWheel, InputEventMouse){}
-   GFCSDraw::Vec2<int> wheelMove;
+   ReyEngine::Vec2<int> wheelMove;
 };
 
 struct InputEventMouseMotion : public InputEventMouse{
    EVENT_CTOR_SIMPLE(InputEventMouseMotion, InputEventMouse){}
-   GFCSDraw::Vec2<int> mouseDelta;
+   ReyEngine::Vec2<int> mouseDelta;
 };
 
 enum class InputFilter {
@@ -60,8 +60,8 @@ public:
    static inline bool isKeyReleased(InputInterface::KeyCode key){return InputInterface::isKeyReleased(key);}
    static inline bool isKeyUp(InputInterface::KeyCode key){return InputInterface::isKeyUp(key);}
    static inline void setExitKey(InputInterface::KeyCode key){return InputInterface::setExitKey(key);}
-   static inline GFCSDraw::Vec2<int> getMousePos(){return InputInterface::getMousePos();}
-   static inline GFCSDraw::Vec2<int> getMouseDelta(){return InputInterface::getMouseDelta();}
+   static inline ReyEngine::Vec2<int> getMousePos(){return InputInterface::getMousePos();}
+   static inline ReyEngine::Vec2<int> getMouseDelta(){return InputInterface::getMouseDelta();}
 protected:
    InputInterface::KeyCode getKeyPressed();
    InputInterface::KeyCode getKeyReleased();

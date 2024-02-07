@@ -5,7 +5,7 @@
 class Control : public BaseWidget {
 
 public:
-   GFCSDRAW_OBJECT(Control, BaseWidget){}
+   REYENGINE_OBJECT(Control, BaseWidget){}
 public:
    void render() const override {
       if (renderCallback){

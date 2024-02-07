@@ -134,31 +134,31 @@ struct FloatProperty : public Property<float>{
 
 /////////////////////////////////////////////////////////////////////////////////////////
 template <typename T>
-struct Vec2Property : public Property<GFCSDraw::Vec2<T>>{
-   Vec2Property(const std::string& instanceName, GFCSDraw::Vec2<T> defaultvalue = 0)
-   : Property<GFCSDraw::Vec2<T>>(instanceName, PropertyTypes::Vec2, defaultvalue)
+struct Vec2Property : public Property<ReyEngine::Vec2<T>>{
+   Vec2Property(const std::string& instanceName, ReyEngine::Vec2<T> defaultvalue = 0)
+   : Property<ReyEngine::Vec2<T>>(instanceName, PropertyTypes::Vec2, defaultvalue)
    {}
-   std::string toString() const override {return Property<GFCSDraw::Vec2<T>>::value.toString();}
-   GFCSDraw::Vec2<T> fromString(const std::string& str) override {return GFCSDraw::Vec2<T>::fromString(str);}
+   std::string toString() const override {return Property<ReyEngine::Vec2<T>>::value.toString();}
+   ReyEngine::Vec2<T> fromString(const std::string& str) override {return ReyEngine::Vec2<T>::fromString(str);}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
 template <typename T>
-struct RectProperty : public Property<GFCSDraw::Rect<T>>{
-   RectProperty(const std::string& instanceName, GFCSDraw::Rect<T> defaultvalue=GFCSDraw::Rect<T>())
-   : Property<GFCSDraw::Rect<T>>(instanceName, PropertyTypes::Rect, defaultvalue)
+struct RectProperty : public Property<ReyEngine::Rect<T>>{
+   RectProperty(const std::string& instanceName, ReyEngine::Rect<T> defaultvalue=ReyEngine::Rect<T>())
+   : Property<ReyEngine::Rect<T>>(instanceName, PropertyTypes::Rect, defaultvalue)
    {}
-   std::string toString() const override {return Property<GFCSDraw::Rect<T>>::value.toString();}
-   GFCSDraw::Rect<T> fromString(const std::string& str) override {return GFCSDraw::Rect<T>::fromString(str);}
+   std::string toString() const override {return Property<ReyEngine::Rect<T>>::value.toString();}
+   ReyEngine::Rect<T> fromString(const std::string& str) override {return ReyEngine::Rect<T>::fromString(str);}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
-struct ColorProperty : public Property<GFCSDraw::ColorRGBA>{
-   ColorProperty(const std::string& instanceName,  GFCSDraw::ColorRGBA defaultvalue)
-   : Property<GFCSDraw::ColorRGBA>(instanceName, PropertyTypes::Color, defaultvalue)
+struct ColorProperty : public Property<ReyEngine::ColorRGBA>{
+   ColorProperty(const std::string& instanceName,  ReyEngine::ColorRGBA defaultvalue)
+   : Property<ReyEngine::ColorRGBA>(instanceName, PropertyTypes::Color, defaultvalue)
    {}
    std::string toString() const override {return "{" + std::to_string(value.r) + ", " + std::to_string(value.g) + ", " + std::to_string(value.b) + ", "  + std::to_string(value.a) + "}";}
-   GFCSDraw::ColorRGBA fromString(const std::string& str) override {
+   ReyEngine::ColorRGBA fromString(const std::string& str) override {
       auto split = string_tools::fromList(str);
       return {std::stoi(split[0]), std::stoi(split[1]), std::stoi(split[2]), std::stoi(split[3])};
    }

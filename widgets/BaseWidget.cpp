@@ -6,7 +6,7 @@
 #include <utility>
 
 using namespace std;
-using namespace GFCSDraw;
+using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 BaseWidget::BaseWidget(const std::string& name, std::string  typeName, Rect<float> rect)
@@ -94,14 +94,14 @@ void BaseWidget::setGlobalPos(const Vec2<int>& newPos) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-GFCSDraw::Size<int> BaseWidget::getClampedSize(GFCSDraw::Size<int> size){
-   auto newX = GFCSDraw::Vec2<int>(minSize.x, maxSize.x).clamp(size.x);
-   auto newY = GFCSDraw::Vec2<int>(minSize.y, maxSize.y).clamp(size.y);
+ReyEngine::Size<int> BaseWidget::getClampedSize(ReyEngine::Size<int> size){
+   auto newX = ReyEngine::Vec2<int>(minSize.x, maxSize.x).clamp(size.x);
+   auto newY = ReyEngine::Vec2<int>(minSize.y, maxSize.y).clamp(size.y);
    return {newX, newY};
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-GFCSDraw::Size<int> BaseWidget::getClampedSize(){
+ReyEngine::Size<int> BaseWidget::getClampedSize(){
    return getClampedSize(getSize());
 }
 
@@ -191,13 +191,13 @@ Pos<int> BaseWidget::globalToLocal(const Pos<int>& global) const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-GFCSDraw::Pos<int> BaseWidget::localToGlobal(const GFCSDraw::Pos<int> &local) const {
+ReyEngine::Pos<int> BaseWidget::localToGlobal(const ReyEngine::Pos<int> &local) const {
    return local + getGlobalPos();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-GFCSDraw::Size<int> BaseWidget::getChildBoundingBox() const {
-   GFCSDraw::Size<double> childRect;
+ReyEngine::Size<int> BaseWidget::getChildBoundingBox() const {
+   ReyEngine::Size<double> childRect;
    for (const auto& childIter : _children){
       auto totalOffset = childIter.second.second->getRect().size() + Size<double>(childIter.second.second->getPos());
       childRect.max(totalOffset);
@@ -206,9 +206,9 @@ GFCSDraw::Size<int> BaseWidget::getChildBoundingBox() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::renderChain(GFCSDraw::Pos<double>& parentOffset) {
+void BaseWidget::renderChain(ReyEngine::Pos<double>& parentOffset) {
    if (!_visible) return;
-   GFCSDraw::Pos<double> localOffset;
+   ReyEngine::Pos<double> localOffset;
    renderBegin(localOffset);
    _renderOffset += (localOffset + parentOffset);
    render();
@@ -336,47 +336,47 @@ bool BaseWidget::isRoot() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::_drawText(const std::string &text, const GFCSDraw::Pos<int> &pos, const GFCSDraw::GFCSDrawFont& font) const{
-   GFCSDraw::drawText(text, pos + getGlobalPos() + _renderOffset, font);
+void BaseWidget::_drawText(const std::string &text, const ReyEngine::Pos<int> &pos, const ReyEngine::ReyEngineFont& font) const{
+   ReyEngine::drawText(text, pos + getGlobalPos() + _renderOffset, font);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::_drawTextCentered(const std::string &text, const GFCSDraw::Pos<int> &pos, const GFCSDraw::GFCSDrawFont& font) const{
-   GFCSDraw::drawTextCentered(text, pos + getGlobalPos() + _renderOffset, font);
+void BaseWidget::_drawTextCentered(const std::string &text, const ReyEngine::Pos<int> &pos, const ReyEngine::ReyEngineFont& font) const{
+   ReyEngine::drawTextCentered(text, pos + getGlobalPos() + _renderOffset, font);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::_drawRectangle(const Rect<int>& rect, GFCSDraw::ColorRGBA color) const {
+void BaseWidget::_drawRectangle(const Rect<int>& rect, ReyEngine::ColorRGBA color) const {
    //use the size of the param rect but use the position of our rect + the param rect
    Rect<int> newRect(rect + getGlobalPos() + _renderOffset);
-   GFCSDraw::drawRectangle(newRect, color);
+   ReyEngine::drawRectangle(newRect, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::_drawRectangleLines(const GFCSDraw::Rect<int>& rect, float lineThick, GFCSDraw::ColorRGBA color) const {
+void BaseWidget::_drawRectangleLines(const ReyEngine::Rect<int>& rect, float lineThick, ReyEngine::ColorRGBA color) const {
    Rect<int> newRect(rect + getGlobalPos() + _renderOffset);
-   GFCSDraw::drawRectangleLines(newRect, lineThick, color);
+   ReyEngine::drawRectangleLines(newRect, lineThick, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::_drawRectangleRounded(const GFCSDraw::Rect<int> &rect, float roundness, int segments, GFCSDraw::ColorRGBA color) const {
+void BaseWidget::_drawRectangleRounded(const ReyEngine::Rect<int> &rect, float roundness, int segments, ReyEngine::ColorRGBA color) const {
    //use the size of the param rect but use the position of our rect + the param rect
    Rect<double> newRect(rect + Pos<int>(getGlobalPos()) + Pos<int>(_renderOffset));
-   GFCSDraw::drawRectangleRounded(newRect, roundness, segments, color);
+   ReyEngine::drawRectangleRounded(newRect, roundness, segments, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::_drawRectangleRoundedLines(const GFCSDraw::Rect<int> &rect, float roundness, int segments,float lineThick, GFCSDraw::ColorRGBA color) const {
+void BaseWidget::_drawRectangleRoundedLines(const ReyEngine::Rect<int> &rect, float roundness, int segments,float lineThick, ReyEngine::ColorRGBA color) const {
    //use the size of the param rect but use the position of our rect + the param rect
    Rect<float> newRect(rect + Pos<double>(getGlobalPos()) + Pos<double>(_renderOffset));
-   GFCSDraw::drawRectangleRoundedLines(newRect, roundness, segments, lineThick, color);
+   ReyEngine::drawRectangleRoundedLines(newRect, roundness, segments, lineThick, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::_drawRectangleGradientV(const GFCSDraw::Rect<int>& rect, GFCSDraw::ColorRGBA color1, GFCSDraw::ColorRGBA color2) const {
+void BaseWidget::_drawRectangleGradientV(const ReyEngine::Rect<int>& rect, ReyEngine::ColorRGBA color1, ReyEngine::ColorRGBA color2) const {
    //use the size of the param rect but use the position of our rect + the param rect
    Rect<float> newRect(rect + getGlobalPos() + _renderOffset);
-   GFCSDraw::drawRectangleGradientV(newRect, color1, color2);
+   ReyEngine::drawRectangleGradientV(newRect, color1, color2);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -420,7 +420,7 @@ void BaseWidget::registerProperties() {
 void BaseWidget::renderEditorFeatures(){
    if (_editor_selected){
       //render the grab handles
-      static constexpr GFCSDraw::ColorRGBA GRAB_HANDLE_COLOR = COLORS::blue;
+      static constexpr ReyEngine::ColorRGBA GRAB_HANDLE_COLOR = COLORS::blue;
       _drawRectangleRounded(_getGrabHandle(0), 1.0, 5, GRAB_HANDLE_COLOR);
       _drawRectangleRounded(_getGrabHandle(1), 1.0, 5, GRAB_HANDLE_COLOR);
       _drawRectangleRounded(_getGrabHandle(2), 1.0, 5, GRAB_HANDLE_COLOR);
@@ -429,7 +429,7 @@ void BaseWidget::renderEditorFeatures(){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-GFCSDraw::Rect<int> BaseWidget::_getGrabHandle(int index) {
+ReyEngine::Rect<int> BaseWidget::_getGrabHandle(int index) {
    switch(index){
       case 0:
          return {-GRAB_HANDLE_SIZE,-GRAB_HANDLE_SIZE,GRAB_HANDLE_SIZE,GRAB_HANDLE_SIZE};
@@ -443,7 +443,7 @@ GFCSDraw::Rect<int> BaseWidget::_getGrabHandle(int index) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-std::optional<std::shared_ptr<BaseWidget>> BaseWidget::getWidgetAt(GFCSDraw::Pos<int> pos) {
+std::optional<std::shared_ptr<BaseWidget>> BaseWidget::getWidgetAt(ReyEngine::Pos<int> pos) {
    //query the widget and figure out which of its children is the topmost widget at the position
    std::shared_ptr<BaseWidget> widgetAt;
    std::function<std::shared_ptr<BaseWidget>(std::shared_ptr<BaseWidget>)> findWidget = [&](std::shared_ptr<BaseWidget> currentWidget){
@@ -460,13 +460,13 @@ std::optional<std::shared_ptr<BaseWidget>> BaseWidget::getWidgetAt(GFCSDraw::Pos
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-GFCSDraw::Rect<int> BaseWidget::calculateAnchoring(const GFCSDraw::Rect<int>& r) {
+ReyEngine::Rect<int> BaseWidget::calculateAnchoring(const ReyEngine::Rect<int>& r) {
 
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::setRect(const GFCSDraw::Rect<int>& r){
-   GFCSDraw::Rect<int> newRect(r);
+void BaseWidget::setRect(const ReyEngine::Rect<int>& r){
+   ReyEngine::Rect<int> newRect(r);
    auto parent = getParent();
    if(getAnchoring() != Anchor::NONE) {
       if (!parent.expired()) {
@@ -499,26 +499,26 @@ void BaseWidget::setRect(const GFCSDraw::Rect<int>& r){
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setPos(int x, int y){
-   GFCSDraw::Rect<int> r(x, y, _rect.get().width, _rect.get().height);
+   ReyEngine::Rect<int> r(x, y, _rect.get().width, _rect.get().height);
    setRect(r);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::setPos(const GFCSDraw::Pos<int>& pos) {
-   GFCSDraw::Rect<int> r(pos, _rect.get().size());
+void BaseWidget::setPos(const ReyEngine::Pos<int>& pos) {
+   ReyEngine::Rect<int> r(pos, _rect.get().size());
    setRect(r);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::setSize(const GFCSDraw::Size<int>& size){
-   GFCSDraw::Rect<int> r(_rect.get().pos(), size);
+void BaseWidget::setSize(const ReyEngine::Size<int>& size){
+   ReyEngine::Rect<int> r(_rect.get().pos(), size);
    setRect(r);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setWidth(int width){
-   GFCSDraw::Rect<int> r(_rect.get().pos(), {width, _rect.get().height});
+   ReyEngine::Rect<int> r(_rect.get().pos(), {width, _rect.get().height});
    setRect(r);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setHeight(int height){
-   GFCSDraw::Rect<int> r(_rect.get().pos(), {_rect.get().width, height});
+   ReyEngine::Rect<int> r(_rect.get().pos(), {_rect.get().width, height});
    setRect(r);
 }

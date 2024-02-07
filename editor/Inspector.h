@@ -5,7 +5,7 @@
 
 class Inspector : public ScrollArea {
 public:
-   GFCSDRAW_OBJECT(Inspector, ScrollArea){}
+   REYENGINE_OBJECT(Inspector, ScrollArea){}
 public:
    void inspect(std::shared_ptr<BaseWidget>); //load an object into the inspector
 protected:

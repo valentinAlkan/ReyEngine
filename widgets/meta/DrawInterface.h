@@ -7,7 +7,7 @@
 #include <iostream>
 #define NOT_IMPLEMENTED throw std::runtime_error("Not implemented!")
 
-namespace GFCSDraw {
+namespace ReyEngine {
    template <typename T> struct Size;
    template <typename T> struct Pos;
    template <typename T>
@@ -223,7 +223,7 @@ namespace GFCSDraw {
          return "{" + std::to_string(x) + ", " + std::to_string(y) + ", " +
          std::to_string(width) + ", " + std::to_string(height) + "}";
       }
-      inline static GFCSDraw::Rect<T> fromString(const std::string& s){
+      inline static ReyEngine::Rect<T> fromString(const std::string& s){
          std::string sanitized;
          for (const auto& c : s){
             if (::isdigit(c) || c == '-' || c==',' || c=='.'){
@@ -232,10 +232,10 @@ namespace GFCSDraw {
          }
          auto split = string_tools::split(sanitized, ",");
          if (split.size() != 4){
-            return GFCSDraw::Rect<T>();
+            return ReyEngine::Rect<T>();
          }
 
-         GFCSDraw::Rect<T> retval;
+         ReyEngine::Rect<T> retval;
          retval.x = std::stoi(split[0]);
          retval.y = std::stoi(split[1]);
          retval.width = std::stoi(split[2]);
@@ -274,7 +274,7 @@ namespace GFCSDraw {
       unsigned char a;
    };
 
-   #define COLORS GFCSDraw::Colors
+   #define COLORS ReyEngine::Colors
    namespace Colors{
       static constexpr ColorRGBA gray = {130, 130, 130, 255};
       static constexpr ColorRGBA lightGray = {200, 200, 200, 255};
@@ -286,42 +286,42 @@ namespace GFCSDraw {
       static constexpr ColorRGBA none = {0, 0, 0, 0};
    }
 
-   struct GFCSDrawFont{
-      GFCSDrawFont(const std::string& fontFile="");
+   struct ReyEngineFont{
+      ReyEngineFont(const std::string& fontFile="");
       Font font;
       float size = 20;
       float spacing = 1;
       bool isDefault = false;
-      GFCSDraw::ColorRGBA color = COLORS::black;
+      ReyEngine::ColorRGBA color = COLORS::black;
       std::string fileName;
       Size<int> measure(const std::string& text) const;
-      GFCSDrawFont& operator=(const GFCSDrawFont& rhs);
-//      inline GFCSDrawFont& operator=(const GFCSDrawFont& rhs){font = rhs.font; size = rhs.size; spacing = rhs.spacing; color = rhs.color; fileName = rhs.fileName; isDefault = rhs.isDefault; return *this;}
+      ReyEngineFont& operator=(const ReyEngineFont& rhs);
+//      inline ReyEngineFont& operator=(const ReyEngineFont& rhs){font = rhs.font; size = rhs.size; spacing = rhs.spacing; color = rhs.color; fileName = rhs.fileName; isDefault = rhs.isDefault; return *this;}
 //      std::string toString();
-//      static GFCSDrawFont fromString(const std::string& str);
+//      static ReyEngineFont fromString(const std::string& str);
    };
-   GFCSDrawFont getDefaultFont();
-   GFCSDrawFont getFont(const std::string& fileName);
+   ReyEngineFont getDefaultFont();
+   ReyEngineFont getFont(const std::string& fileName);
 
    Pos<double> getScreenCenter();
    Size<int> getScreenSize();
-   GFCSDraw::Size<int> getWindowSize();
-   void setWindowSize(GFCSDraw::Size<int>);
-   GFCSDraw::Pos<int> getWindowPosition();
-   void setWindowPosition(GFCSDraw::Pos<int>);
+   ReyEngine::Size<int> getWindowSize();
+   void setWindowSize(ReyEngine::Size<int>);
+   ReyEngine::Pos<int> getWindowPosition();
+   void setWindowPosition(ReyEngine::Pos<int>);
    void maximizeWindow();
    void minimizeWindow();
-   void drawText(const std::string& text, const GFCSDraw::Pos<int>& pos, const GFCSDrawFont& font);
-   void drawTextCentered(const std::string& text, const GFCSDraw::Pos<int>& pos, const GFCSDrawFont& font);
-   void drawTextRelative(const std::string& text, const GFCSDraw::Pos<int>& relPos, const GFCSDrawFont& font);
-   void drawRectangle(const Rect<int>&, GFCSDraw::ColorRGBA color);
+   void drawText(const std::string& text, const ReyEngine::Pos<int>& pos, const ReyEngineFont& font);
+   void drawTextCentered(const std::string& text, const ReyEngine::Pos<int>& pos, const ReyEngineFont& font);
+   void drawTextRelative(const std::string& text, const ReyEngine::Pos<int>& relPos, const ReyEngineFont& font);
+   void drawRectangle(const Rect<int>&, ReyEngine::ColorRGBA color);
    void drawRectangleRounded(const Rect<float>&, float roundness, int segments, Color color);
    void drawRectangleLines(const Rect<float>&, float lineThick, Color color);
    void drawRectangleRoundedLines(const Rect<float>&, float roundness, int segments, float lineThick, Color color);
    void drawRectangleGradientV(const Rect<int>&, Color color1, Color color2);
-   void drawLine(const Line<int>&, GFCSDraw::ColorRGBA color);
+   void drawLine(const Line<int>&, ReyEngine::ColorRGBA color);
    inline float getFrameDelta(){return GetFrameTime();}
-   inline Size<int> measureText(const std::string& text, GFCSDrawFont font){return MeasureTextEx(font.font, text.c_str(), font.size, font.spacing);}
+   inline Size<int> measureText(const std::string& text, ReyEngineFont font){return MeasureTextEx(font.font, text.c_str(), font.size, font.spacing);}
 
    class RenderTarget{
       public:
@@ -378,7 +378,7 @@ namespace InputInterface{
    };
 
    inline float getMouseWheelMove(){return GetMouseWheelMove();} //returns largest of x or y
-   inline GFCSDraw::Vec2<float> getMouseWheelMoveV(){return GetMouseWheelMoveV();} //returns both x and y
+   inline ReyEngine::Vec2<float> getMouseWheelMoveV(){return GetMouseWheelMoveV();} //returns both x and y
 
    inline bool isKeyPressed(KeyCode key){return IsKeyPressed(key);}
    inline bool isKeyDown(KeyCode key){return IsKeyDown(key);}
@@ -391,6 +391,6 @@ namespace InputInterface{
    inline bool isMouseButtonDown(MouseButton btn){return IsMouseButtonDown(static_cast<int>(btn));}
    inline bool isMouseButtonUp(MouseButton btn){return IsMouseButtonUp(static_cast<int>(btn));}
    inline bool isMouseButtonReleased(MouseButton btn){return IsMouseButtonReleased(static_cast<int>(btn));}
-   inline GFCSDraw::Vec2<int> getMousePos(){return GetMousePosition();}
-   inline GFCSDraw::Vec2<int> getMouseDelta(){return GetMouseDelta();}
+   inline ReyEngine::Vec2<int> getMousePos(){return GetMousePosition();}
+   inline ReyEngine::Vec2<int> getMouseDelta(){return GetMouseDelta();}
 }

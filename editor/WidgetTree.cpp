@@ -29,14 +29,14 @@ void WidgetTree::_init(){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::optional<std::shared_ptr<Draggable>> WidgetTree::_on_drag_start(GFCSDraw::Pos<int> globalPos){
+std::optional<std::shared_ptr<Draggable>> WidgetTree::_on_drag_start(ReyEngine::Pos<int> globalPos){
    auto metaAt = getMetaAt(globalToLocal(globalPos));
    if (metaAt) {
       auto typeName = metaAt.value()->item->getText();
       auto typeMeta = TypeManager::getType(typeName);
       if (typeMeta->isVirtual) return nullopt;
       cout << "drag start at " << globalPos << endl;
-      auto label = make_shared<Label>("dragLabel", GFCSDraw::Rect<int>());
+      auto label = make_shared<Label>("dragLabel", ReyEngine::Rect<int>());
       label->setText(typeName);
       auto draggable = make_shared<Draggable>(label->getText(), label);
       return draggable;
