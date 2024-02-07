@@ -21,6 +21,9 @@ EVENT_GENERATE_UNIQUE_ID(CLASSNAME)                           \
 EVENT_GET_NAME(CLASSNAME)                                     \
 explicit CLASSNAME(EventId eventId, const std::shared_ptr<EventPublisher>& publisher): PARENTCLASS(eventId, publisher)
 
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
 class EventSubscriber;
 using EventId = int;
 class EventPublisher;
@@ -55,9 +58,75 @@ public:
       return static_cast<Other&>(*this);
    }
 };
-
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
 class BaseWidget;
-class EventPublisher;
+using EventHandler = std::function<void(const BaseEvent&)>;
+using EventCallbackMap = std::map<std::weak_ptr<EventSubscriber>,std::vector<EventHandler>, std::owner_less<>>;
+class EventPublisher : public inheritable_enable_shared_from_this<EventPublisher>{
+public:
+    void addSubscriber(std::weak_ptr<EventSubscriber> subscriber, std::string eventName, std::function<void(const BaseEvent&)> fx) {
+        //assumed to be passing a valid subscriber pointer
+        if (subscriber.expired()){
+            throw std::runtime_error("Bad ptr!");
+        }
+        auto _ev = _eventMap.find(eventName);
+        if (_ev == _eventMap.end()){
+            //registered publisher doesn't have any events to publish
+            _eventMap[eventName] = EventCallbackMap();
+        }
+
+        //get the vector of subscriber event maps
+        auto& subscribers = _eventMap[eventName]; //call again since iterator could be invalid
+        auto found = subscribers.find(subscriber);
+        if (found == subscribers.end()){
+            //create new set
+            auto vec = _eventMap[eventName][subscriber];
+        }
+        _eventMap[eventName][subscriber].push_back(fx);
+    }
+    template <typename T>
+    void publish(const T& event){
+        static_assert(std::is_base_of_v<BaseEvent, T>); //compile time check
+        auto publisher = downcasted_shared_from_this<EventPublisher>();
+//      std::cout << "Publishing eventType " << T::getUniqueEventId() << "(" << T::getEventName() << ")" << std::endl;
+        auto _ev = _eventMap.find(T::getEventName());
+        if (_ev == _eventMap.end()){
+            //publisher doesn't have any events to publish
+            return;
+        }
+
+        //get the vector of subscriber event maps
+        auto& subscribers = _ev->second;
+        for (auto it=subscribers.begin(); it!= subscribers.end(); /**/){
+            auto& weakSubscriber = it->first;
+            if (weakSubscriber.expired()){
+                //subscriber is dead, long live the subscriber
+                it = subscribers.erase(it);
+            } else {
+                //set the subscriber
+                ((BaseEvent&)event).subscriber = weakSubscriber.lock();
+                //call every callback WITH A MATCHING EVENT TYPE!
+                auto &handlers = it->second;
+                for (auto& fx: handlers) {
+                    //make safe call w/ base
+                    fx((BaseEvent&)event);
+                }
+                it++;
+            }
+        }
+    }
+    std::shared_ptr<BaseWidget> toBaseWidget();
+protected:
+    std::shared_ptr<EventPublisher> toEventPublisher(){return downcasted_shared_from_this<EventPublisher>();}
+private:
+    std::map<std::string, EventCallbackMap> _eventMap;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
 class EventSubscriber : public inheritable_enable_shared_from_this<EventSubscriber>{
 public:
    template <typename T>
@@ -69,85 +138,21 @@ public:
          auto s = (T&)baseEvent;
          typedEventHandler(s);
       };
-//      std::cout << "Adding event subsciber for eventType " << T::getUniqueEventId() << "(" << T::getEventName() << ")" << std::endl;
       publisher->addSubscriber(me, T::getEventName(), adapter);
    };
    std::shared_ptr<EventSubscriber> toEventSubscriber(){return inheritable_enable_shared_from_this<EventSubscriber>::shared_from_this();}
    std::shared_ptr<BaseWidget> toBaseWidget();
-//   template <typename T>
-//   static void subscribe(Publisher&, const std::string& eventType, Subscriber, EventHandler){};
-//   template <typename T>
-//   static void unsubscribe(Publisher& publisher, const std::string& eventType, Subscriber, EventHandler){};
-//   template <typename T>
-//   void unsubscribe(Publisher& publisher, const std::string& eventType, EventHandler){};
 };
 
-using EventHandler = std::function<void(const BaseEvent&)>;
-using EventCallbackMap = std::map<std::weak_ptr<EventSubscriber>,std::vector<EventHandler>, std::owner_less<>>;
-class EventPublisher : public inheritable_enable_shared_from_this<EventPublisher>{
-public:
-   void addSubscriber(std::weak_ptr<EventSubscriber> subscriber, std::string eventName, std::function<void(const BaseEvent&)> fx) {
-      //assumed to be passing a valid subscriber pointer
-      if (subscriber.expired()){
-         throw std::runtime_error("Bad ptr!");
-      }
-      auto _ev = _eventMap.find(eventName);
-      if (_ev == _eventMap.end()){
-         //registered publisher doesn't have any events to publish
-         _eventMap[eventName] = EventCallbackMap();
-      }
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
 
-      //get the vector of subscriber event maps
-      auto& subscribers = _eventMap[eventName]; //call again since iterator could be invalid
-      auto found = subscribers.find(subscriber);
-      if (found == subscribers.end()){
-         //create new set
-         auto vec = _eventMap[eventName][subscriber];
-      }
-      _eventMap[eventName][subscriber].push_back(fx);
-   }
-   template <typename T>
-   void publish(const T& event){
-      static_assert(std::is_base_of_v<BaseEvent, T>); //compile time check
-      auto publisher = downcasted_shared_from_this<EventPublisher>();
-//      std::cout << "Publishing eventType " << T::getUniqueEventId() << "(" << T::getEventName() << ")" << std::endl;
-      auto _ev = _eventMap.find(T::getEventName());
-      if (_ev == _eventMap.end()){
-         //publisher doesn't have any events to publish
-         return;
-      }
-
-      //get the vector of subscriber event maps
-      auto& subscribers = _ev->second;
-      for (auto it=subscribers.begin(); it!= subscribers.end(); /**/){
-         auto& weakSubscriber = it->first;
-         if (weakSubscriber.expired()){
-            //subscriber is dead, long live the subscriber
-            it = subscribers.erase(it);
-         } else {
-            //set the subscriber
-            ((BaseEvent&)event).subscriber = weakSubscriber.lock();
-            //call every callback WITH A MATCHING EVENT TYPE!
-            auto &handlers = it->second;
-            for (auto& fx: handlers) {
-               //make safe call w/ base
-               fx((BaseEvent&)event);
-            }
-            it++;
-         }
-      }
-   }
-   std::shared_ptr<BaseWidget> toBaseWidget();
-protected:
-   std::shared_ptr<EventPublisher> toEventPublisher(){return downcasted_shared_from_this<EventPublisher>();}
-private:
-   std::map<std::string, EventCallbackMap> _eventMap;
-};
 
 struct TestEvent1 : public Event<TestEvent1> {
-   EVENT_CTOR_SIMPLE(TestEvent1, Event<TestEvent1>){}
+    EVENT_CTOR_SIMPLE(TestEvent1, Event<TestEvent1>){}
 };
 
 struct TestEvent2 : public Event<TestEvent2> {
-   EVENT_CTOR_SIMPLE(TestEvent2, Event<TestEvent2>){}
+    EVENT_CTOR_SIMPLE(TestEvent2, Event<TestEvent2>){}
 };
