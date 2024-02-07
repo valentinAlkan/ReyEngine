@@ -5,7 +5,7 @@
 #include "Inspector.h"
 
 class Editor : public VLayout {
-   GFCSDRAW_OBJECT(Editor, VLayout){}
+   REYENGINE_OBJECT(Editor, VLayout){}
 
 public:
    void _init() override;

@@ -19,7 +19,7 @@
 #include "Inspector.h"
 
 using namespace std;
-using namespace GFCSDraw;
+using namespace ReyEngine;
 
 int screenWidth = 1500;
 int screenHeight = 800;
@@ -92,7 +92,7 @@ int main(int argc, char** argv)
 
       auto renderSubControl = [subcontrol](){
          auto rect = subcontrol->getGlobalRect();
-         GFCSDraw::drawRectangle(rect, COLORS::blue);
+         ReyEngine::drawRectangle(rect, COLORS::blue);
       };
 
       auto process = [&](){
@@ -177,10 +177,10 @@ int main(int argc, char** argv)
       auto drawBoundingBox = [&](){
          auto size = rootControl->getChildBoundingBox();
          auto mousePos = InputManager::getMousePos();
-         GFCSDraw::drawRectangle({{0,0},size}, GFCSDraw::Colors::yellow);
-         GFCSDraw::drawRectangle(label1->getRect(), GFCSDraw::Colors::green);
-         GFCSDraw::drawRectangle(label2->getRect(), GFCSDraw::Colors::green);
-         GFCSDraw::drawLine({label1->localToGlobal({0, 0}), mousePos}, COLORS::red);
+         ReyEngine::drawRectangle({{0,0},size}, ReyEngine::Colors::yellow);
+         ReyEngine::drawRectangle(label1->getRect(), ReyEngine::Colors::green);
+         ReyEngine::drawRectangle(label2->getRect(), ReyEngine::Colors::green);
+         ReyEngine::drawLine({label1->localToGlobal({0, 0}), mousePos}, COLORS::red);
       };
       rootControl->setRenderCallback(drawBoundingBox);
 
@@ -240,14 +240,14 @@ int main(int argc, char** argv)
       auto rootLayout = make_shared<VLayout>("Root", Rect<float>({0,0}, window->getSize()));
       root = rootLayout;
       auto mainPanel = make_shared<Panel>("MainPanel", Rect<int>());
-      mainPanel->getTheme()->background.colorPrimary.set(GFCSDraw::Colors::red);
+      mainPanel->getTheme()->background.colorPrimary.set(ReyEngine::Colors::red);
       root->addChild(mainPanel);
       mainPanel->setLayout<HLayout>();
 
       auto child1 = make_shared<Panel>("Child1", Rect<int>());
       auto child2 = make_shared<Panel>("Child2", Rect<int>());
-//      child1->getTheme()->background.colorPrimary.set(GFCSDraw::Colors::blue);
-//      child2->getTheme()->background.colorPrimary.set(GFCSDraw::Colors::green);
+//      child1->getTheme()->background.colorPrimary.set(ReyEngine::Colors::blue);
+//      child2->getTheme()->background.colorPrimary.set(ReyEngine::Colors::green);
       mainPanel->addToLayout(child1);
       mainPanel->addToLayout(child2);
 
@@ -398,8 +398,8 @@ int main(int argc, char** argv)
    else if (args.getArg("--inspector")){
       //make a vlayout - put a widget at the top and the inspector below it
       root = make_shared<VLayout>("VLayout", Rect<int>());
-      auto someWidget = make_shared<Label>("SomeWidget", GFCSDraw::Rect<int>());
-      auto inspector = make_shared<Inspector>("Inspector", GFCSDraw::Rect<int>());
+      auto someWidget = make_shared<Label>("SomeWidget", ReyEngine::Rect<int>());
+      auto inspector = make_shared<Inspector>("Inspector", ReyEngine::Rect<int>());
       someWidget->getTheme()->background.set(Style::Fill::SOLID);
       someWidget->getTheme()->background.colorPrimary.set(Colors::blue);
       root->addChild(someWidget);

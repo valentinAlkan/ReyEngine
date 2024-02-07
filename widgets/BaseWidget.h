@@ -20,13 +20,13 @@
 
 using Handled = bool;
 
-#define CTOR_RECT const GFCSDraw::Rect<float>& r
+#define CTOR_RECT const ReyEngine::Rect<float>& r
 /////////////////////////////////////////////////////////////////////////////////////////
-#define GFCSDRAW_DECLARE_STATIC_CONSTEXPR_TYPENAME(TYPENAME) \
+#define REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(TYPENAME) \
 static constexpr char TYPE_NAME[] = #TYPENAME;               \
 std::string _get_static_constexpr_typename() override {return TYPE_NAME;}
 /////////////////////////////////////////////////////////////////////////////////////////
-#define GFCSDRAW_SERIALIZER(CLASSNAME, PARENT_CLASSNAME) \
+#define REYENGINE_SERIALIZER(CLASSNAME, PARENT_CLASSNAME) \
    public:                                           \
    static std::shared_ptr<BaseWidget> deserialize(const std::string& instanceName, PropertyPrototypeMap& properties) { \
    CTOR_RECT = {0,0,0,0}; \
@@ -34,26 +34,26 @@ std::string _get_static_constexpr_typename() override {return TYPE_NAME;}
    retval->BaseWidget::_deserialize(properties);        \
    return retval;}                                       \
 /////////////////////////////////////////////////////////////////////////////////////////
-#define GFCSDRAW_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME) \
+#define REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME) \
    CLASSNAME(const std::string& name, const std::string& typeName, CTOR_RECT): PARENT_CLASSNAME(name, typeName, r)
 /////////////////////////////////////////////////////////////////////////////////////////
-#define GFCSDRAW_DEFAULT_CTOR(CLASSNAME) \
+#define REYENGINE_DEFAULT_CTOR(CLASSNAME) \
    CLASSNAME(const std::string& name, CTOR_RECT): CLASSNAME(name, _get_static_constexpr_typename(), r){}
 /////////////////////////////////////////////////////////////////////////////////////////
-#define GFCSDRAW_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME) \
+#define REYENGINE_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME) \
 protected:                                                \
    void _register_parent_properties() override{           \
       PARENT_CLASSNAME::_register_parent_properties();    \
       PARENT_CLASSNAME::registerProperties();             \
    }
 
-#define GFCSDRAW_OBJECT(CLASSNAME, PARENT_CLASSNAME)  \
+#define REYENGINE_OBJECT(CLASSNAME, PARENT_CLASSNAME)  \
 public:                                                   \
-   GFCSDRAW_DECLARE_STATIC_CONSTEXPR_TYPENAME(CLASSNAME)  \
-   GFCSDRAW_SERIALIZER(CLASSNAME, PARENT_CLASSNAME)       \
-   GFCSDRAW_DEFAULT_CTOR(CLASSNAME)                       \
-   GFCSDRAW_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME)  \
-   GFCSDRAW_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME)
+   REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(CLASSNAME)  \
+   REYENGINE_SERIALIZER(CLASSNAME, PARENT_CLASSNAME)       \
+   REYENGINE_DEFAULT_CTOR(CLASSNAME)                       \
+   REYENGINE_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME)  \
+   REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME)
 
 
 class Scene;
@@ -68,16 +68,16 @@ class  BaseWidget
    using WidgetPtr = std::shared_ptr<BaseWidget>;
    using ChildMap = std::map<std::string, std::pair<ChildIndex, WidgetPtr>>;
    using ChildOrder = std::vector<std::shared_ptr<BaseWidget>>;
-   using fVec = GFCSDraw::Vec2<float>;
-   using iVec = GFCSDraw::Vec2<int>;
-   using dVec = GFCSDraw::Vec2<double>;
+   using fVec = ReyEngine::Vec2<float>;
+   using iVec = ReyEngine::Vec2<int>;
+   using dVec = ReyEngine::Vec2<double>;
 public:
 
    struct WidgetResizeEvent : public Event<WidgetResizeEvent> {
       EVENT_CTOR_SIMPLE(WidgetResizeEvent, Event<WidgetResizeEvent>){
          size = publisher->toBaseWidget()->getSize();
       }
-      GFCSDraw::Size<float> size;
+      ReyEngine::Size<float> size;
    };
 
    enum class Anchor{NONE, LEFT, RIGHT, TOP, BOTTOM, FILL, TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT};
@@ -102,50 +102,50 @@ public:
    };
 
    static constexpr char TYPE_NAME[] = "BaseWidget";
-   BaseWidget(const std::string& name, std::string  typeName, GFCSDraw::Rect<float> rect);
+   BaseWidget(const std::string& name, std::string  typeName, ReyEngine::Rect<float> rect);
    ~BaseWidget();
    uint64_t getRid() const {return _rid;}
    std::string getName() const {return _name;}
 
    //rect stuff
-   GFCSDraw::Rect<int> getRect() const {return _rect.value;}
-   GFCSDraw::Rect<int> getGlobalRect() const {auto globalPos = getGlobalPos(); return {globalPos.x, globalPos.y, getSize().x, getSize().y};}
-   GFCSDraw::Pos<int> getGlobalPos() const;
-   GFCSDraw::Size<int> getChildBoundingBox() const; //get the smallest rectangle that contains all children, starting from 0,0. Does not include grandchildren.
-   GFCSDraw::Pos<int> getPos() const {return {getRect().x, getRect().y};}
-   GFCSDraw::Size<int> getSize() const {return getRect().size();}
+   ReyEngine::Rect<int> getRect() const {return _rect.value;}
+   ReyEngine::Rect<int> getGlobalRect() const {auto globalPos = getGlobalPos(); return {globalPos.x, globalPos.y, getSize().x, getSize().y};}
+   ReyEngine::Pos<int> getGlobalPos() const;
+   ReyEngine::Size<int> getChildBoundingBox() const; //get the smallest rectangle that contains all children, starting from 0,0. Does not include grandchildren.
+   ReyEngine::Pos<int> getPos() const {return {getRect().x, getRect().y};}
+   ReyEngine::Size<int> getSize() const {return getRect().size();}
    int getWidth() const {return _rect.value.width;}
    int getHeight() const {return _rect.value.height;}
    iVec getHeightRange() const {return {0, getRect().size().y};}
    iVec getWidthtRange() const {return {0, getRect().size().x};}
-   GFCSDraw::Size<int> getMinSize(){return minSize;}
-   GFCSDraw::Size<int> getMaxSize(){return maxSize;}
-   GFCSDraw::Size<int> getClampedSize();
-   GFCSDraw::Size<int> getClampedSize(GFCSDraw::Size<int>);
+   ReyEngine::Size<int> getMinSize(){return minSize;}
+   ReyEngine::Size<int> getMaxSize(){return maxSize;}
+   ReyEngine::Size<int> getClampedSize();
+   ReyEngine::Size<int> getClampedSize(ReyEngine::Size<int>);
    void setVisible(bool visible){_visible = visible;}
    bool getVisible() const {return _visible;}
    //sizing
    void setAnchoring(Anchor newAnchor){_anchor.set(newAnchor);setRect(getRect());}
    Anchor getAnchoring(){return _anchor.get();}
-   void setMaxSize(const GFCSDraw::Size<int>& size){maxSize = size;}
-   void setMinSize(const GFCSDraw::Size<int>& size){minSize = size;}
-   void setRect(const GFCSDraw::Rect<int>& r);
+   void setMaxSize(const ReyEngine::Size<int>& size){maxSize = size;}
+   void setMinSize(const ReyEngine::Size<int>& size){minSize = size;}
+   void setRect(const ReyEngine::Rect<int>& r);
    void setPos(int x, int y);
-   void setPos(const GFCSDraw::Pos<int>& pos);
-   void setSize(const GFCSDraw::Size<int>& size);
+   void setPos(const ReyEngine::Pos<int>& pos);
+   void setSize(const ReyEngine::Size<int>& size);
    void setWidth(int width);
    void setHeight(int height);
 
-   GFCSDraw::Pos<int> getLocalMousePos(){return globalToLocal(InputManager::getMousePos());}
-   GFCSDraw::Pos<int> globalToLocal(const GFCSDraw::Pos<int>& global) const;
-   GFCSDraw::Pos<int> localToGlobal(const GFCSDraw::Pos<int>& local) const;
+   ReyEngine::Pos<int> getLocalMousePos(){return globalToLocal(InputManager::getMousePos());}
+   ReyEngine::Pos<int> globalToLocal(const ReyEngine::Pos<int>& global) const;
+   ReyEngine::Pos<int> localToGlobal(const ReyEngine::Pos<int>& local) const;
    void setGlobalPos(const iVec&);
    bool isInside(const iVec& point){return _rect.value.toSizeRect().isInside(point);}
    bool setName(const std::string& name, bool append_index=false);
    bool setIndex(unsigned int newIndex);
    std::string getTypeName(){return _typeName;}
 
-   std::optional<std::shared_ptr<BaseWidget>> getWidgetAt(GFCSDraw::Pos<int> pos);
+   std::optional<std::shared_ptr<BaseWidget>> getWidgetAt(ReyEngine::Pos<int> pos);
    std::weak_ptr<BaseWidget> getParent(){return _parent;}
    const ChildOrder& getChildren() const {return _childrenOrdered;}
    std::optional<WidgetPtr> getChild(const std::string& name);
@@ -189,28 +189,28 @@ protected:
    virtual void _on_enter_tree(){} //called every time a widget enters the tree
    virtual void _on_exit_tree(){}
    virtual void _on_child_removed(){}
-   virtual std::optional<std::shared_ptr<Draggable>> _on_drag_start(GFCSDraw::Pos<int> globalPos){return std::nullopt;} //override and return something to implement drag and drop
+   virtual std::optional<std::shared_ptr<Draggable>> _on_drag_start(ReyEngine::Pos<int> globalPos){return std::nullopt;} //override and return something to implement drag and drop
    virtual Handled _on_drag_drop(std::shared_ptr<Draggable>){return false;}
 
    //override and setProcess(true) to allow processing
    virtual void _process(float dt){};
 
    // Drawing functions
-   virtual void renderBegin(GFCSDraw::Pos<double>& textureOffset){}
+   virtual void renderBegin(ReyEngine::Pos<double>& textureOffset){}
    void renderEditorFeatures();
-   void renderChain(GFCSDraw::Pos<double>& textureOffset);
+   void renderChain(ReyEngine::Pos<double>& textureOffset);
    virtual void renderEnd(){}
-   GFCSDraw::Vec2<float> getRenderOffset() const {return _renderOffset;}
-   void setRenderOffset(GFCSDraw::Pos<double> offset){_renderOffset = offset;}
-//   void renderTextureOffsetApply(GFCSDraw::Pos<float>& textureOffset){}
-//   void renderTextureOffsetReset(GFCSDraw::Pos<float>& textureOffset){}
-   void _drawText(const std::string& text, const GFCSDraw::Pos<int>& pos, const GFCSDraw::GFCSDrawFont& font) const;
-   void _drawTextCentered(const std::string& text, const GFCSDraw::Pos<int>& pos, const GFCSDraw::GFCSDrawFont& font) const;
-   void _drawRectangle(const GFCSDraw::Rect<int>& rect, GFCSDraw::ColorRGBA color) const;
-   void _drawRectangleLines(const GFCSDraw::Rect<int>& rect, float lineThick, GFCSDraw::ColorRGBA color) const;
-   void _drawRectangleRounded(const GFCSDraw::Rect<int>& rect,  float roundness, int segments, GFCSDraw::ColorRGBA color) const;
-   void _drawRectangleRoundedLines(const GFCSDraw::Rect<int>& rect, float roundness, int segments, float lineThick, GFCSDraw::ColorRGBA color) const;
-   void _drawRectangleGradientV(const GFCSDraw::Rect<int>& rect, GFCSDraw::ColorRGBA color1, GFCSDraw::ColorRGBA color2) const;
+   ReyEngine::Vec2<float> getRenderOffset() const {return _renderOffset;}
+   void setRenderOffset(ReyEngine::Pos<double> offset){_renderOffset = offset;}
+//   void renderTextureOffsetApply(ReyEngine::Pos<float>& textureOffset){}
+//   void renderTextureOffsetReset(ReyEngine::Pos<float>& textureOffset){}
+   void _drawText(const std::string& text, const ReyEngine::Pos<int>& pos, const ReyEngine::ReyEngineFont& font) const;
+   void _drawTextCentered(const std::string& text, const ReyEngine::Pos<int>& pos, const ReyEngine::ReyEngineFont& font) const;
+   void _drawRectangle(const ReyEngine::Rect<int>& rect, ReyEngine::ColorRGBA color) const;
+   void _drawRectangleLines(const ReyEngine::Rect<int>& rect, float lineThick, ReyEngine::ColorRGBA color) const;
+   void _drawRectangleRounded(const ReyEngine::Rect<int>& rect,  float roundness, int segments, ReyEngine::ColorRGBA color) const;
+   void _drawRectangleRoundedLines(const ReyEngine::Rect<int>& rect, float roundness, int segments, float lineThick, ReyEngine::ColorRGBA color) const;
+   void _drawRectangleGradientV(const ReyEngine::Rect<int>& rect, ReyEngine::ColorRGBA color1, ReyEngine::ColorRGBA color2) const;
    void registerProperties() override;
    void _deserialize(PropertyPrototypeMap&);
    RectProperty<int> _rect;
@@ -229,8 +229,8 @@ protected:
    bool isLayout = false;
    bool isInLayout = false;
    bool acceptsHover = false;
-   GFCSDraw::Size<int> maxSize = {INT_MAX, INT_MAX};
-   GFCSDraw::Size<int> minSize = {0,0};
+   ReyEngine::Size<int> maxSize = {INT_MAX, INT_MAX};
+   ReyEngine::Size<int> minSize = {0,0};
 
    //editor stuff
 public:
@@ -242,10 +242,10 @@ protected:
    bool _isEditorWidget = false; //true if this is a widget THE USER HAS PLACED IN THE EDITOR WORKSPACE (not a widget that the editor uses for normal stuff)
    bool _editor_selected = false; // true when the object is *selected* in the editor
    static constexpr int GRAB_HANDLE_SIZE = 10;
-   GFCSDraw::Rect<int> _getGrabHandle(int index);// 0-3 clockwise starting in top left (TL,TR,BR,BL)
+   ReyEngine::Rect<int> _getGrabHandle(int index);// 0-3 clockwise starting in top left (TL,TR,BR,BL)
    int _editor_grab_handles_dragging = -1; //which grab handle is being drug around
 private:
-   GFCSDraw::Rect<int> calculateAnchoring(const GFCSDraw::Rect<int>& r); //new size accounting for anchoring
+   ReyEngine::Rect<int> calculateAnchoring(const ReyEngine::Rect<int>& r); //new size accounting for anchoring
    AnchorProperty _anchor;
    void rename(WidgetPtr& child, const std::string& newName);
    uint64_t _rid; //unique identifier
@@ -260,7 +260,7 @@ private:
    bool _visible = true; //whether to show the widget (and its children)
    std::recursive_mutex _childLock;
    bool _scheduled_for_deletion = false; // true when the widget has been scheduled for deletion but is not yet deleted.
-   GFCSDraw::Pos<double> _renderOffset; //used for different rendering modes. does not offset position.
+   ReyEngine::Pos<double> _renderOffset; //used for different rendering modes. does not offset position.
 
    Handled _process_unhandled_input(InputEvent&); //pass input to children if they want it and then process it for ourselves if necessary
    Handled _process_unhandled_editor_input(InputEvent&); //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)

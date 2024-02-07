@@ -8,9 +8,9 @@ public:
       bool down;
    };
 protected:
-   GFCSDRAW_OBJECT(BaseButton, Control)
+   REYENGINE_OBJECT(BaseButton, Control)
    , PROPERTY_DECLARE(down){
-      _rect.value = GFCSDraw::Rect<double>(0,0,200,50);
+      _rect.value = ReyEngine::Rect<double>(0,0,200,50);
       acceptsHover = true;
    }
 public:
@@ -53,7 +53,7 @@ protected:
 
 /////////////////////////////////////////////////////////////////////////////////////////
 class PushButton : public BaseButton{
-   GFCSDRAW_OBJECT(PushButton, BaseButton)
+   REYENGINE_OBJECT(PushButton, BaseButton)
    , PROPERTY_DECLARE(text){
       text.value = getName();
       getTheme()->background.colorPrimary.set(COLORS::gray);

@@ -6,7 +6,7 @@
 #include <sstream>
 
 class Label : public Control {
-   GFCSDRAW_OBJECT(Label, Control)
+   REYENGINE_OBJECT(Label, Control)
    , PROPERTY_DECLARE(text, getName())
    {
       auto expandOpt = needsExpand();
@@ -63,7 +63,7 @@ public:
    }
    std::string getText(){return text.value;}
 protected:
-   inline GFCSDraw::Rect<int> calculateBoundingRect(){
+   inline ReyEngine::Rect<int> calculateBoundingRect(){
       auto textSize = measureText();
       auto newSize = getClampedSize(textSize);
       if (newSize.x > getSize().x || newSize.y > getSize().y){
@@ -72,7 +72,7 @@ protected:
       return _rect.value.toSizeRect();
    }
 
-   inline std::optional<GFCSDraw::Size<int>> needsExpand(){
+   inline std::optional<ReyEngine::Size<int>> needsExpand(){
       auto boundingBox = calculateBoundingRect();
       auto thisBox = getRect();
       if (boundingBox.width > thisBox.width || boundingBox.height > thisBox.height) {
@@ -80,6 +80,6 @@ protected:
       }
       return std::nullopt;
    };
-   inline GFCSDraw::Size<int> measureText() const {return getThemeReadOnly().font.value.measure(text.value);}
+   inline ReyEngine::Size<int> measureText() const {return getThemeReadOnly().font.value.measure(text.value);}
    StringProperty text;
 };

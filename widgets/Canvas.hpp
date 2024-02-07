@@ -4,10 +4,10 @@
 class Canvas : public Control{
 
 public:
-   GFCSDRAW_OBJECT(Canvas, Control)
+   REYENGINE_OBJECT(Canvas, Control)
    {}
 public:
-   void renderBegin(GFCSDraw::Vec2<float>& textureOffset) override {
+   void renderBegin(ReyEngine::Vec2<float>& textureOffset) override {
 
    }
    void render() const override {
@@ -20,5 +20,5 @@ public:
    void registerProperties() override{
       //register properties specific to your type here.
    }
-   GFCSDraw::RenderTarget target;
+   ReyEngine::RenderTarget target;
 };

@@ -13,7 +13,7 @@ namespace Style {
    struct OutlineProperty : public EnumProperty<Outline, 3>{
       OutlineProperty(const std::string& instanceName,  Outline defaultvalue)
       : EnumProperty<Outline, 3>(instanceName, defaultvalue),
-      PROPERTY_DECLARE(color, GFCSDraw::Colors::black),
+      PROPERTY_DECLARE(color, ReyEngine::Colors::black),
       PROPERTY_DECLARE(thickness, 1.0)
       {}
       const EnumPair<Outline, 3>& getDict() const override {return dict;}
@@ -43,9 +43,9 @@ namespace Style {
    struct FillProperty : public EnumProperty<Fill, 3>{
       FillProperty(const std::string& instanceName,  Fill defaultvalue)
       : EnumProperty<Fill, 3>(instanceName, defaultvalue)
-      , PROPERTY_DECLARE(colorPrimary, GFCSDraw::Colors::none)
-      , PROPERTY_DECLARE(colorSecondary, GFCSDraw::Colors::none)
-      , PROPERTY_DECLARE(colorTertiary, GFCSDraw::Colors::none)
+      , PROPERTY_DECLARE(colorPrimary, ReyEngine::Colors::none)
+      , PROPERTY_DECLARE(colorSecondary, ReyEngine::Colors::none)
+      , PROPERTY_DECLARE(colorTertiary, ReyEngine::Colors::none)
       {}
       const EnumPair<Fill, 3>& getDict() const override {return dict;}
       static constexpr EnumPair<Fill, 3> dict = {
@@ -82,7 +82,7 @@ namespace Style {
       : Property<Empty>(instanceName, PropertyTypes::Theme, Empty()),
       PROPERTY_DECLARE(outline, Outline::NONE),
       PROPERTY_DECLARE(background, Fill::NONE),
-      PROPERTY_DECLARE(foreground, GFCSDraw::Colors::black),
+      PROPERTY_DECLARE(foreground, ReyEngine::Colors::black),
       PROPERTY_DECLARE(roundness, 0.01),
       PROPERTY_DECLARE(font)
       {}

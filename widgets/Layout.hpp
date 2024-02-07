@@ -20,7 +20,7 @@ public:
    };
    /////////////////////////////////////////////////////////////////////////////////////////
 protected:
-   Layout(const std::string &name, const std::string &typeName, const GFCSDraw::Rect<float> &r, LayoutDir layoutDir)
+   Layout(const std::string &name, const std::string &typeName, const ReyEngine::Rect<float> &r, LayoutDir layoutDir)
    : Control(name, typeName, r)
    , childScales("layoutRatios")
    , dir(layoutDir)
@@ -48,7 +48,7 @@ protected:
    void arrangeChildren(){
       //how much space we have to allocate
       auto totalSpace = dir == LayoutDir::HORIZONTAL ? getWidth() : getHeight();
-      auto pos = GFCSDraw::Pos<int>(0, 0);
+      auto pos = ReyEngine::Pos<int>(0, 0);
       //how much space we will allocate to each child
       unsigned int childIndex = 0;
       auto calcRatio = [this](int startIndex) -> float{
@@ -62,7 +62,7 @@ protected:
       auto sizeLeft = totalSpace;
       for (auto& child: getChildren()) {
          int allowedSpace = (int)(sizeLeft * calcRatio(childIndex));
-         auto newSize = dir == LayoutDir::HORIZONTAL ? GFCSDraw::Rect<int>(pos, {allowedSpace, _rect.value.height}) : GFCSDraw::Rect<int>(pos, {_rect.value.width, allowedSpace});
+         auto newSize = dir == LayoutDir::HORIZONTAL ? ReyEngine::Rect<int>(pos, {allowedSpace, _rect.value.height}) : ReyEngine::Rect<int>(pos, {_rect.value.width, allowedSpace});
          auto minSize = dir == LayoutDir::HORIZONTAL ? child->getMinSize().x : child->getMinSize().y;
          auto maxSize = dir == LayoutDir::HORIZONTAL ? child->getMaxSize().x : child->getMaxSize().y;
          //enforce min/max bounds
@@ -96,12 +96,12 @@ protected:
 /////////////////////////////////////////////////////////////////////////////////////////
 class VLayout : public Layout {
 public:
-   VLayout(const std::string& instanceName, const GFCSDraw::Rect<int>& r)
+   VLayout(const std::string& instanceName, const ReyEngine::Rect<int>& r)
    : Layout(instanceName, _get_static_constexpr_typename(), r, LayoutDir::VERTICAL)
    {}
    static constexpr char TYPE_NAME[] = "VLayout";
    static std::shared_ptr<BaseWidget> deserialize(const std::string &instanceName, PropertyPrototypeMap &properties) {
-      const GFCSDraw::Rect<float> &r = {0, 0, 0, 0};
+      const ReyEngine::Rect<float> &r = {0, 0, 0, 0};
       auto retval = std::make_shared<VLayout>(instanceName, r);
       retval->BaseWidget::_deserialize(properties);
    return retval;
@@ -114,11 +114,11 @@ protected:
 /////////////////////////////////////////////////////////////////////////////////////////
 class HLayout : public Layout {
 public:
-   HLayout(const std::string& instanceName, const GFCSDraw::Rect<int>& r)
+   HLayout(const std::string& instanceName, const ReyEngine::Rect<int>& r)
    : Layout(instanceName, _get_static_constexpr_typename(), r, Layout::LayoutDir::HORIZONTAL)
    {}
    static std::shared_ptr<BaseWidget> deserialize(const std::string &instanceName, PropertyPrototypeMap &properties) {
-      const GFCSDraw::Rect<float> &r = {0, 0, 0, 0};
+      const ReyEngine::Rect<float> &r = {0, 0, 0, 0};
       auto retval = std::make_shared<HLayout>(instanceName, r);
       retval->BaseWidget::_deserialize(properties);
    return retval;

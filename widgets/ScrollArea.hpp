@@ -3,19 +3,19 @@
 #include "Slider.hpp"
 
 class ScrollArea : public Control {
-   GFCSDRAW_OBJECT(ScrollArea, Control)
+   REYENGINE_OBJECT(ScrollArea, Control)
    , scrollOffsetX(0, 0, 0)
    , scrollOffsetY(0, 0, 0)
    {}
 public:
-   inline GFCSDraw::Size<double> getScrollAreaSize() const {return {scrollOffsetX.getMax(), scrollOffsetY.getMax()};}
-   inline GFCSDraw::Pos<double> getScrollOffset() const {return {scrollOffsetX.getValue(), scrollOffsetY.getValue()};}
+   inline ReyEngine::Size<double> getScrollAreaSize() const {return {scrollOffsetX.getMax(), scrollOffsetY.getMax()};}
+   inline ReyEngine::Pos<double> getScrollOffset() const {return {scrollOffsetX.getValue(), scrollOffsetY.getValue()};}
    void hideVSlider(bool hidden){_hideVSlider = hidden; if (vslider) vslider->setVisible(!hidden);}
    void hideHSlider(bool hidden){_hideHSlider = hidden; if (hslider) hslider->setVisible(!hidden);}
 protected:
    static constexpr std::string_view VSLIDER_NAME = "__vslider";
    static constexpr std::string_view HSLIDER_NAME = "__hslider";
-   void renderBegin(GFCSDraw::Pos<double>& textureOffset) override {
+   void renderBegin(ReyEngine::Pos<double>& textureOffset) override {
       textureOffset -= getScrollOffset();
       scissorTarget.start(getGlobalRect());
    }
@@ -34,8 +34,8 @@ protected:
       _childBoundingBox = getScrollAreaChildBoundingBox();
       scrollOffsetX.setMax(_childBoundingBox.x-getWidth());
       scrollOffsetY.setMax(_childBoundingBox.y-getHeight());
-      auto vsliderNewRect = GFCSDraw::Rect<int>((ourSize.x - sliderSize), 0, sliderSize, ourSize.y);
-      auto hsliderNewRect = GFCSDraw::Rect<int>(0, (float)(ourSize.y - sliderSize), (float)(ourSize.x - sliderSize), (float)sliderSize);
+      auto vsliderNewRect = ReyEngine::Rect<int>((ourSize.x - sliderSize), 0, sliderSize, ourSize.y);
+      auto hsliderNewRect = ReyEngine::Rect<int>(0, (float)(ourSize.y - sliderSize), (float)(ourSize.x - sliderSize), (float)sliderSize);
       if (vslider){
          vslider->setRect(vsliderNewRect);
          hslider->setVisible(!_hideHSlider && _childBoundingBox.x > getWidth());
@@ -61,8 +61,8 @@ protected:
 protected:
    void _init() override {
       //create scrollbars
-      vslider = std::make_shared<Slider>(std::string(VSLIDER_NAME), GFCSDraw::Rect<float>(), Slider::SliderType::VERTICAL);
-      hslider = std::make_shared<Slider>(std::string(HSLIDER_NAME), GFCSDraw::Rect<float>(), Slider::SliderType::HORIZONTAL);
+      vslider = std::make_shared<Slider>(std::string(VSLIDER_NAME), ReyEngine::Rect<float>(), Slider::SliderType::VERTICAL);
+      hslider = std::make_shared<Slider>(std::string(HSLIDER_NAME), ReyEngine::Rect<float>(), Slider::SliderType::HORIZONTAL);
       vslider->setVisible(false);
       hslider->setVisible(false);
       addChild(vslider);
@@ -83,8 +83,8 @@ protected:
    }
 
    ///Ignores scroll bars, but adds their widths if they are visible
-   GFCSDraw::Size<int> getScrollAreaChildBoundingBox(){
-      GFCSDraw::Size<double> childRect;
+   ReyEngine::Size<int> getScrollAreaChildBoundingBox(){
+      ReyEngine::Size<double> childRect;
       for (const auto& child : getChildren()){
          if (child->getName() == VSLIDER_NAME){
             if (vslider->getVisible()) childRect.x += vslider->getWidth();
@@ -93,19 +93,19 @@ protected:
             if (hslider->getVisible()) childRect.y += hslider->getHeight();
             continue;
          }
-         auto totalOffset = child->getRect().size() + GFCSDraw::Size<double>(child->getPos());
+         auto totalOffset = child->getRect().size() + ReyEngine::Size<double>(child->getPos());
          childRect.max(totalOffset);
       }
       return childRect;
    }
 
 
-   GFCSDraw::ScissorTarget scissorTarget;
-   GFCSDraw::Range<double> scrollOffsetX;
-   GFCSDraw::Range<double> scrollOffsetY;
+   ReyEngine::ScissorTarget scissorTarget;
+   ReyEngine::Range<double> scrollOffsetX;
+   ReyEngine::Range<double> scrollOffsetY;
    std::shared_ptr<Slider> vslider;
    std::shared_ptr<Slider> hslider;
-   GFCSDraw::Size<int> _childBoundingBox;
+   ReyEngine::Size<int> _childBoundingBox;
    bool _hideVSlider = false;
    bool _hideHSlider = false;
 };

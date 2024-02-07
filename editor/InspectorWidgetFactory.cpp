@@ -2,7 +2,7 @@
 #include "Layout.hpp"
 #include "Label.hpp"
 using namespace std;
-using namespace GFCSDraw;
+using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<BaseWidget> InspectorWidgetFactory::generateWidget(const BaseProperty& property) {

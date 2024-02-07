@@ -5,7 +5,7 @@
 #include "Application.h"
 
 using namespace std;
-using namespace GFCSDraw;
+using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -44,8 +44,8 @@ void Window::exec(){
       if (widget->_isProcessed.value) widget->setProcess(true);
    };
    applyProcess(_root);
-   GFCSDraw::Size<int> size;
-   GFCSDraw::Pos<int> position;
+   ReyEngine::Size<int> size;
+   ReyEngine::Pos<int> position;
    while (!WindowShouldClose()){
       //process widgets wanting to enter the tree for the first time
       Application::processEnterTree();
@@ -228,7 +228,7 @@ void Window::exec(){
       //draw children on top of their parents
       BeginDrawing();
       ClearBackground(RAYWHITE);
-      GFCSDraw::Pos<double> texOffset;
+      ReyEngine::Pos<double> texOffset;
       _root->renderChain(texOffset);
 
       //draw the drag and drop preview (if any)
@@ -287,7 +287,7 @@ Pos<int> Window::getMousePos(){
 ///////////////////////////////////////////////////////////////////////////////////////////
 Vec2<double> Window::getMousePct() {
    auto pos = getMousePos();
-   auto screenSize = GFCSDraw::getScreenSize();
+   auto screenSize = ReyEngine::getScreenSize();
    auto xRange = Vec2<int>(0,(int)screenSize.x);
    auto yRange = Vec2<int>(0,(int)screenSize.y);
    return {xRange.pct(pos.x), yRange.pct(pos.y)};

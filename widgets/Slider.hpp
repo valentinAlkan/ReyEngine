@@ -20,8 +20,8 @@ public:
       SliderType fromString(const std::string& str) override {return (str == "VERTICAL" ? SliderType::VERTICAL : SliderType::HORIZONTAL);}
    };
 
-   GFCSDRAW_DECLARE_STATIC_CONSTEXPR_TYPENAME(Slider)
-   Slider(const std::string &name, const GFCSDraw::Rect<float>& r, SliderType sliderDir)
+   REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(Slider)
+   Slider(const std::string &name, const ReyEngine::Rect<float>& r, SliderType sliderDir)
          : Control(name, _get_static_constexpr_typename(), r)
          , sliderValue("sliderValue", 0.0)
          , minSliderValue("minSliderValue", 0.0)
@@ -32,14 +32,14 @@ public:
    }
 
    static std::shared_ptr<BaseWidget> deserialize(const std::string &instanceName, PropertyPrototypeMap &properties) {
-      const GFCSDraw::Rect<float> &r = {0, 0, 0, 0};
+      const ReyEngine::Rect<float> &r = {0, 0, 0, 0};
       SliderTypeProperty temp("temp");
       auto retval = std::make_shared<Slider>(instanceName, r, temp.fromString(properties["sliderType"].data));
       retval->BaseWidget::_deserialize(properties);
       return retval;
    }
-   GFCSDraw::Vec2<double> getRange(){return _range;}
-   void setRange(GFCSDraw::Vec2<double> newRange){
+   ReyEngine::Vec2<double> getRange(){return _range;}
+   void setRange(ReyEngine::Vec2<double> newRange){
       minSliderValue.set(newRange.x);
       maxSlidervalue.set(newRange.y);
       _range = {minSliderValue.value, maxSlidervalue.value};
@@ -62,13 +62,13 @@ protected:
                double newValue = 0;
                switch (sliderType.get()) {
                   case SliderType::VERTICAL: {
-                     auto heightRange = GFCSDraw::Vec2<double>(0, getRect().height);
+                     auto heightRange = ReyEngine::Vec2<double>(0, getRect().height);
                      newValue = _range.lerp(heightRange.pct(localPos.y));
                      sliderValue.set(_range.clamp(newValue));
                   }
                      break;
                   case SliderType::HORIZONTAL:
-                     auto widthRange = GFCSDraw::Vec2<double>(0, getRect().width);
+                     auto widthRange = ReyEngine::Vec2<double>(0, getRect().width);
                      newValue = _range.lerp(widthRange.pct(localPos.x));
                      sliderValue.set(_range.clamp(newValue));
                }
@@ -98,9 +98,9 @@ protected:
    }
    void render() const override {
       //draw slider
-      _drawRectangle(_rect.value.toSizeRect(), _cursor_in_slider || _is_dragging? GFCSDraw::Colors::green : GFCSDraw::Colors::red);
+      _drawRectangle(_rect.value.toSizeRect(), _cursor_in_slider || _is_dragging? ReyEngine::Colors::green : ReyEngine::Colors::red);
       //draw grabber
-      _drawRectangle(_grabber, _cursor_down && _cursor_in_grabber || _is_dragging ? GFCSDraw::Colors::yellow : GFCSDraw::Colors::blue);
+      _drawRectangle(_grabber, _cursor_down && _cursor_in_grabber || _is_dragging ? ReyEngine::Colors::yellow : ReyEngine::Colors::blue);
    }
    void _on_rect_changed() override {
       _compute_appearance();
@@ -124,14 +124,14 @@ private:
          case SliderType::VERTICAL: {
             _grabber.width = _rect.value.width;
             _grabber.height = _rect.value.height / 10;
-            GFCSDraw::Vec2<double> adjustedRange = {0, _rect.get().height - _grabber.height};
+            ReyEngine::Vec2<double> adjustedRange = {0, _rect.get().height - _grabber.height};
             _grabber.y = adjustedRange.lerp(getSliderPct());
          }
          break;
          case SliderType::HORIZONTAL: {
             _grabber.width = _rect.value.width/10;
             _grabber.height = _rect.value.height;
-            GFCSDraw::Vec2<double> adjustedRange = {0, _rect.get().width - _grabber.width};
+            ReyEngine::Vec2<double> adjustedRange = {0, _rect.get().width - _grabber.width};
             _grabber.x = adjustedRange.lerp(getSliderPct());
          }
          break;
@@ -146,7 +146,7 @@ private:
    bool _cursor_in_grabber = false;
    bool _cursor_down = false;
    bool _is_dragging = false;
-   GFCSDraw::Rect<double> _grabber = {0, 0, 0, 0};
-   GFCSDraw::Vec2<double> _range = {0,0};
+   ReyEngine::Rect<double> _grabber = {0, 0, 0, 0};
+   ReyEngine::Vec2<double> _range = {0,0};
    friend class ScrollArea;
 };

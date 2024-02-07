@@ -2,10 +2,10 @@
 //#include "Application.h"
 
 class TextureTestWidget : public Control{
-   GFCSDRAW_OBJECT(TextureTestWidget, Control)
+   REYENGINE_OBJECT(TextureTestWidget, Control)
    , target(getRect().size()){}
 public:
-   void renderBegin(GFCSDraw::Pos<double>& textureOffset) override {
+   void renderBegin(ReyEngine::Pos<double>& textureOffset) override {
 //      _render
    }
    void render() const override {}
@@ -15,5 +15,5 @@ public:
       //register properties specific to your type here.
    }
 protected:
-   GFCSDraw::RenderTarget target;
+   ReyEngine::RenderTarget target;
 };
