@@ -27,7 +27,7 @@ protected:
    {
       isLayout = true;
    }
-   void _register_parent_properties() override{
+   void _register_parent_properties() override {
       Control::_register_parent_properties();
       Control::registerProperties();
    }
@@ -40,6 +40,10 @@ protected:
    }
    void _on_rect_changed() override {
       arrangeChildren();
+   }
+
+   void renderEnd() override{
+      _drawRectangleLines(_rect.get(), 2.0, COLORS::black);
    }
    void arrangeChildren(){
       //how much space we have to allocate

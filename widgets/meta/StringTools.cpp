@@ -257,3 +257,21 @@ std::pair<size_t, size_t> string_tools::decimalCount(double d) {
    }
    return {integerCount, decimalCount};
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<float> string_tools::isNumeric(const std::string &s) {
+    try {
+        return std::stof(s);
+    } catch (...){
+        return nullopt;
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<int> string_tools::isInteger(const std::string &s) {
+    try {
+        return std::stoi(s);
+    } catch (...){
+        return nullopt;
+    }
+}

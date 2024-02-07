@@ -49,7 +49,6 @@ void Editor::_init() {
       widgetTree->getTheme()->background.colorPrimary.set(GFCSDraw::Colors::green);
    }
 
-
    //create the (blank) workspace
    auto workspace = make_shared<Workspace>("Workspace", Rect<int>());
    workspace->getTheme()->background.colorPrimary.set(COLORS::gray);

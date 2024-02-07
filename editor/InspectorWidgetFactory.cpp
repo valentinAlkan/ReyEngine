@@ -4,18 +4,8 @@
 using namespace std;
 using namespace GFCSDraw;
 
-unique_ptr<InspectorWidgetFactory> InspectorWidgetFactory::_self;
-
 /////////////////////////////////////////////////////////////////////////////////////////
-InspectorWidgetFactory &InspectorWidgetFactory::instance() {
-   if (_self){
-      _self = make_unique<InspectorWidgetFactory>();
-   }
-   return *_self;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<BaseWidget> InspectorWidgetFactory::generateWidget(const BaseProperty& property) const {
+std::shared_ptr<BaseWidget> InspectorWidgetFactory::generateWidget(const BaseProperty& property) {
    auto r = Rect<int>();
    std::shared_ptr<BaseWidget> retval = make_shared<VLayout>("__vLayout", r);
    if (property.typeName() == PropertyTypes::Rect){
