@@ -37,7 +37,6 @@ public:
       }
        _drawText(text.value, {0, 0}, getThemeReadOnly().font.value);
    };
-   void _process(float dt) override {};
    void registerProperties() override{
       registerProperty(text);
    };
