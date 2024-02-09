@@ -56,6 +56,10 @@ void Window::exec(){
          WindowResizeEvent event(toEventPublisher(), newSize);
          size = newSize;
          publish(event);
+         //see if our root needs to resize
+         if (_root && _root->getAnchoring() != BaseWidget::Anchor::NONE){
+            _root->setRect({});//dummy size
+         }
       }
       //see if the window has moved
       auto newPos = getPosition();
