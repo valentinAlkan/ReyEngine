@@ -246,7 +246,6 @@ protected:
    ReyEngine::Rect<int> _getGrabHandle(int index);// 0-3 clockwise starting in top left (TL,TR,BR,BL)
    int _editor_grab_handles_dragging = -1; //which grab handle is being drug around
 private:
-   ReyEngine::Rect<int> calculateAnchoring(const ReyEngine::Rect<int>& r); //new size accounting for anchoring
    AnchorProperty _anchor;
    void rename(WidgetPtr& child, const std::string& newName);
    uint64_t _rid; //unique identifier

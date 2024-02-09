@@ -462,12 +462,6 @@ std::optional<std::shared_ptr<BaseWidget>> BaseWidget::getWidgetAt(ReyEngine::Po
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-ReyEngine::Rect<int> BaseWidget::calculateAnchoring(const ReyEngine::Rect<int>& r) {
-    //todo: not implemented
-    return {};
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setRect(const ReyEngine::Rect<int>& r){
    ReyEngine::Rect<int> newRect(r);
    auto parent = getParent();
