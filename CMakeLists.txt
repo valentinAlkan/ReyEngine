@@ -70,6 +70,10 @@ add_library(widgets STATIC
     ${CUSTOM_SOURCES}
 )
 
+add_library(widgets3d STATIC
+    widgets/3d/Viewport.cpp
+)
+
 add_library(editor STATIC
     editor/Editor.cpp
     editor/WidgetTree.cpp
@@ -106,6 +110,7 @@ add_executable( ${TEST_PROJECT}
 
 target_link_libraries(${TEST_PROJECT}
     widgets
+    widgets3d
     editor
 )
 
