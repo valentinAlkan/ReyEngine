@@ -28,7 +28,7 @@ public:
          , maxSlidervalue("maxSliderValue", 100.0)
          , sliderType("sliderType", sliderDir)
    {
-      _range = {minSliderValue.get(), maxSlidervalue.get()};
+      _range = {minSliderValue.getConst(), maxSlidervalue.getConst()};
    }
 
    static std::shared_ptr<BaseWidget> deserialize(const std::string &instanceName, PropertyPrototypeMap &properties) {
@@ -44,7 +44,7 @@ public:
       maxSlidervalue.set(newRange.y);
       _range = {minSliderValue.value, maxSlidervalue.value};
    }
-   inline double getSliderValue(){return sliderValue.get();}
+   inline double getSliderValue(){return sliderValue.getConst();}
    inline void setSliderValue(double value){sliderValue.set(value);_publish_slider_val();_compute_appearance();}
    inline double getSliderPct(){return _range.pct(sliderValue.value);}
    inline void setSliderPct(double pct){setSliderValue(_range.lerp(pct));}
@@ -60,7 +60,7 @@ protected:
             if (_is_dragging) {
                //set new slider value based on input
                double newValue = 0;
-               switch (sliderType.get()) {
+               switch (sliderType.getConst()) {
                   case SliderType::VERTICAL: {
                      auto heightRange = ReyEngine::Vec2<double>(0, getRect().height);
                      newValue = _range.lerp(heightRange.pct(localPos.y));
@@ -120,18 +120,18 @@ private:
       publish<SliderValueChangedEvent>(event);
    }
    void _compute_appearance(){
-      switch(sliderType.get()){
+      switch(sliderType.getConst()){
          case SliderType::VERTICAL: {
             _grabber.width = _rect.value.width;
             _grabber.height = _rect.value.height / 10;
-            ReyEngine::Vec2<double> adjustedRange = {0, _rect.get().height - _grabber.height};
+            ReyEngine::Vec2<double> adjustedRange = {0, _rect.getConst().height - _grabber.height};
             _grabber.y = adjustedRange.lerp(getSliderPct());
          }
          break;
          case SliderType::HORIZONTAL: {
             _grabber.width = _rect.value.width/10;
             _grabber.height = _rect.value.height;
-            ReyEngine::Vec2<double> adjustedRange = {0, _rect.get().width - _grabber.width};
+            ReyEngine::Vec2<double> adjustedRange = {0, _rect.getConst().width - _grabber.width};
             _grabber.x = adjustedRange.lerp(getSliderPct());
          }
          break;

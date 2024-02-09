@@ -126,7 +126,7 @@ public:
    bool getVisible() const {return _visible;}
    //sizing
    void setAnchoring(Anchor newAnchor){_anchor.set(newAnchor);setRect(getRect());}
-   Anchor getAnchoring(){return _anchor.get();}
+   Anchor getAnchoring(){return _anchor.getConst();}
    void setMaxSize(const ReyEngine::Size<int>& size){maxSize = size;}
    void setMinSize(const ReyEngine::Size<int>& size){minSize = size;}
    void setRect(const ReyEngine::Rect<int>& r);

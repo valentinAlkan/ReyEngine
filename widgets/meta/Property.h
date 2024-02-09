@@ -88,8 +88,8 @@ struct Property : public BaseProperty {
    }
    virtual T fromString(const std::string& str) = 0;
    void load(const PropertyPrototype& data) override {value = fromString(data.data);}
-   [[nodiscard]] T& ref() {return value;}
-   [[nodiscard]] const T& get() const {return value;}
+   [[nodiscard]] T& get() {return value;}
+   [[nodiscard]] const T& getConst() const {return value;}
    void set(const T& newValue){
       value = newValue;
    }

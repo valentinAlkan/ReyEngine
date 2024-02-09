@@ -29,7 +29,7 @@ protected:
       //reset to 0 so we don't get weird bugs
       scrollOffsetX.setValue(0);
       scrollOffsetY.setValue(0);
-      auto ourSize = _rect.get().size();
+      auto ourSize = _rect.getConst().size();
       auto sliderSize = 20;
       _childBoundingBox = getScrollAreaChildBoundingBox();
       scrollOffsetX.setMax(_childBoundingBox.x-getWidth());

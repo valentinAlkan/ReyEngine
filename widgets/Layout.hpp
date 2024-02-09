@@ -36,7 +36,7 @@ protected:
       arrangeChildren();
    }
    void _on_child_added_immediate(std::shared_ptr<BaseWidget>& child) override {
-      childScales.ref().push_back(1.0);
+      childScales.get().push_back(1.0);
    }
    void _on_rect_changed() override {
       arrangeChildren();
@@ -44,7 +44,7 @@ protected:
 
    void renderEnd() override{
       //debug
-      _drawRectangleLines({0,0,_rect.get().width, _rect.get().height}, 2.0, COLORS::black);
+      _drawRectangleLines({0, 0, _rect.getConst().width, _rect.getConst().height}, 2.0, COLORS::black);
    }
    void arrangeChildren(){
       //how much space we have to allocate
