@@ -492,6 +492,9 @@ void BaseWidget::setRect(const ReyEngine::Rect<int>& r){
          //take up as much space as parent has to offer
          _rect.set(newRect);
          break;
+//         case Anchor::BOTTOM:
+//            //bottom of this widget aligns with bottom of parent
+//            _rect.set()
       }
       default:
          break;

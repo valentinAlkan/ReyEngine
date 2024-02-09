@@ -63,6 +63,7 @@ add_library(widgets STATIC
     widgets/Slider.hpp
     widgets/Button.hpp
     widgets/Label.hpp
+    widgets/Sprite.cpp
     widgets/Layout.hpp
     widgets/ScrollArea.hpp
     widgets/Tree.cpp
