@@ -19,7 +19,7 @@ if (NOT raylib_FOUND) # If there's none, fetch and build raylib
     FetchContent_Declare(
             raylib
             DOWNLOAD_EXTRACT_TIMESTAMP OFF
-            URL https://github.com/raysan5/raylib/archive/refs/tags/${RAYLIB_VERSION}.tar.gz
+            URL https:/github.com/raysan5/raylib/archive/refs/tags/${RAYLIB_VERSION}.tar.gz
     )
     FetchContent_GetProperties(raylib)
     if (NOT raylib_POPULATED) # Have we downloaded raylib yet?
@@ -32,84 +32,110 @@ endif()
 
 
 set(CUSTOM_SOURCES
-    widgets/test/TestWidgets.cpp
-    widgets/test/TextureTestWidget.hpp
-    widgets/test/RootWidget.hpp
+    test/TestWidgets.cpp
+    test/TextureTestWidget.hpp
+    test/RootWidget.hpp
 )
 
-add_library(widgets STATIC
-    widgets/meta/ArgParse.cpp
-    widgets/meta/FileSystem.cpp
-    widgets/meta/StringTools.cpp
-    widgets/meta/MathTools.cpp
-    widgets/meta/DrawInterface.cpp
-    widgets/meta/Application.cpp
-    widgets/meta/TypeManager.cpp
-    widgets/meta/Window.cpp
-    widgets/meta/Scene.cpp
-    widgets/meta/Property.cpp
-    widgets/meta/Logger.cpp
-    widgets/meta/SystemTime.cpp
-    widgets/meta/Event.cpp
-    widgets/meta/InputManager.cpp
-    widgets/meta/Timer.hpp
-    widgets/meta/Theme.cpp
-    widgets/meta/Font.hpp
-    widgets/meta/IndexedMap.cpp
-    widgets/BaseWidget.cpp
-    widgets/Control.hpp
-    widgets/Canvas.hpp
-    widgets/Panel.hpp
-    widgets/Slider.hpp
-    widgets/Button.hpp
-    widgets/Label.hpp
-    widgets/Sprite.cpp
-    widgets/Layout.hpp
-    widgets/ScrollArea.hpp
-    widgets/Tree.cpp
-    ${CUSTOM_SOURCES}
+###################################
+#ReyMeta
+###################################
+add_library(ReyMeta STATIC
+    src/meta/ArgParse.cpp
+    src/meta/FileSystem.cpp
+    src/meta/StringTools.cpp
+    src/meta/MathTools.cpp
+    src/meta/DrawInterface.cpp
+    src/meta/Application.cpp
+    src/meta/TypeManager.cpp
+    src/meta/Window.cpp
+    src/meta/Scene.cpp
+    src/meta/Property.cpp
+    src/meta/Logger.cpp
+    src/meta/SystemTime.cpp
+    src/meta/Event.cpp
+    src/meta/InputManager.cpp
+    src/meta/Timer.hpp
+    src/meta/Theme.cpp
+    src/meta/Font.hpp
+    src/meta/IndexedMap.cpp
 )
 
-add_library(editor STATIC
-    editor/Editor.cpp
-    editor/WidgetTree.cpp
-    editor/SceneTree.cpp
-    editor/Workspace.cpp
-    editor/Inspector.cpp
-    editor/InspectorWidgetFactory.cpp
+target_include_directories(ReyMeta PUBLIC
+    src/meta
 )
 
-target_include_directories(widgets PUBLIC
-    widgets
-    widgets/meta
-    widgets/test
+target_link_libraries(ReyMeta PUBLIC
+    raylib
 )
-
-target_link_libraries(widgets raylib)
-
-if (UNIX)
-    target_link_libraries(widgets stdc++fs)
-endif (UNIX)
-
-
-target_include_directories(editor PUBLIC
-    editor
-)
-
-target_link_libraries(editor PUBLIC widgets)
-
-# Test Project
-set(TEST_PROJECT ReyTest)
-add_executable( ${TEST_PROJECT}
-        widgets/test/reyTestMain.cpp
-)
-
-target_link_libraries(${TEST_PROJECT}
-    widgets
-    editor
-)
-
-install_file(./widgets/test/test.scn ./test/test.scn)
-install_file(./widgets/test/posTest.scn ./test/posTest.scn)
-install_file(./widgets/test/posTest.scn ./test/serializeTest.scn)
-install_file(./widgets/test/characters.png ./test/characters.png)
+#
+####################################
+##Rey2D
+####################################
+#add_library(Rey2D STATIC
+#    src/Rey2d/BaseWidget.cpp
+#    src/Rey2d/Control.hpp
+#    src/Rey2d/Canvas.hpp
+#    src/Rey2d/Panel.hpp
+#    src/Rey2d/Slider.hpp
+#    src/Rey2d/Button.hpp
+#    src/Rey2d/Label.hpp
+#    src/Rey2d/Sprite.cpp
+#    src/Rey2d/Layout.hpp
+#    src/Rey2d/ScrollArea.hpp
+#    src/Rey2d/Tree.cpp
+#    ${CUSTOM_SOURCES}
+#)
+#
+#target_include_directories(Rey2D PUBLIC
+#    src/Rey2d
+#)
+#
+#target_link_libraries(Rey2D PUBLIC
+#    ReyMeta
+#)
+#
+#add_library(Rey3D STATIC
+#    src/Rey3d/Camera3D.cpp
+#)
+#
+#add_library(editor STATIC
+#    src/editor/Editor.cpp
+#    src/editor/WidgetTree.cpp
+#    src/editor/SceneTree.cpp
+#    src/editor/Workspace.cpp
+#    src/editor/Inspector.cpp
+#    src/editor/InspectorWidgetFactory.cpp
+#)
+#
+#
+#
+#target_link_libraries(ReyEngine raylib)
+#
+#if (UNIX)
+#    target_link_libraries(Rey2D stdc++fs)
+#    target_link_libraries(Rey3D stdc++fs)
+#endif (UNIX)
+#
+#
+#target_include_directories(editor PUBLIC
+#    editor
+#)
+#
+#target_link_libraries(editor PUBLIC widgets)
+#
+## Test Project
+#set(TEST_PROJECT ReyTest)
+#add_executable( ${TEST_PROJECT}
+#    test/reyTestMain.cpp
+#)
+#
+#target_link_libraries(${TEST_PROJECT}
+#    widgets
+#    editor
+#)
+#
+#install_file(./test/test.scn ./test/test.scn)
+#install_file(./test/posTest.scn ./test/posTest.scn)
+#install_file(./test/posTest.scn ./test/serializeTest.scn)
+#install_file(./test/characters.png ./test/characters.png)

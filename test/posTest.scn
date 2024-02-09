@@ -1,0 +1,17 @@
+[Meta]
+SceneName: someScene
+[Tree]
+Root
+   Label
+   Child
+[Desc]
+Root - Control:
+   _rect|Rect|11|{0,0,10,10}
+Label - Label:
+   _rect|Rect|15|{100,200,10,10}
+   text|String|11|yoyowhaddup
+Child - PosTestWidget:
+   _rect|Rect|16|{1000,200,10,10}
+   _isProcessed|Bool|1|1
+   someString|String|13|blahblahblah2
+      subProp|String|12|iamasubprop2
