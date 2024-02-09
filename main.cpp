@@ -410,13 +410,13 @@ int main(int argc, char** argv)
       root->addChild(vlayout);
 
       //callback lambda(s)
-      auto cb = [&](const Event<BaseButton::ButtonPressEvent> event){
+      auto cb = [&](const Event<BaseButton::ButtonPressEvent>& event){
          auto senderName = event.publisher->toBaseWidget()->getName();
          label->setText(senderName);
          //you can do whatever else here
       };
 
-      auto cbSecret = [&](const Event<BaseButton::ButtonPressEvent> event){
+      auto cbSecret = [&](const Event<BaseButton::ButtonPressEvent>& event){
          auto senderName = event.publisher->toBaseWidget()->getName();
          label->setText(senderName + " is the secret button! You win it all!");
          //you can do whatever else here
@@ -438,7 +438,7 @@ int main(int argc, char** argv)
          }
       }
 
-      auto cbExit = [&](const Event<BaseButton::ButtonPressEvent> event){
+      auto cbExit = [&](const Event<BaseButton::ButtonPressEvent>& event){
          //quit (crashes atm but w/e)
          Application::exit(Application::ExitReason::CLEAN);
       };
