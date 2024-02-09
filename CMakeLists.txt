@@ -19,7 +19,7 @@ if (NOT raylib_FOUND) # If there's none, fetch and build raylib
     FetchContent_Declare(
             raylib
             DOWNLOAD_EXTRACT_TIMESTAMP OFF
-            URL https:/github.com/raysan5/raylib/archive/refs/tags/${RAYLIB_VERSION}.tar.gz
+            URL https://github.com/raysan5/raylib/archive/refs/tags/${RAYLIB_VERSION}.tar.gz
     )
     FetchContent_GetProperties(raylib)
     if (NOT raylib_POPULATED) # Have we downloaded raylib yet?
@@ -29,7 +29,6 @@ if (NOT raylib_FOUND) # If there's none, fetch and build raylib
         add_subdirectory(${raylib_SOURCE_DIR} ${raylib_BINARY_DIR})
     endif()
 endif()
-
 
 set(CUSTOM_SOURCES
     test/TestWidgets.cpp
@@ -68,7 +67,7 @@ target_include_directories(ReyMeta PUBLIC
 target_link_libraries(ReyMeta PUBLIC
     raylib
 )
-#
+##
 ####################################
 ##Rey2D
 ####################################
