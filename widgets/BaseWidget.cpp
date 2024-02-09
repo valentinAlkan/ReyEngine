@@ -518,6 +518,13 @@ void BaseWidget::setSize(const ReyEngine::Size<int>& size){
    ReyEngine::Rect<int> r(_rect.value.pos(), size);
    setRect(r);
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::scale(const Vec2<float> &scale) {
+   _rect.value.width = (int)((float)_rect.value.width * scale.x);
+   _rect.value.height = (int)((float)_rect.value.height * scale.y);
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setWidth(int width){
    ReyEngine::Rect<int> r(_rect.value.pos(), {width, _rect.value.height});

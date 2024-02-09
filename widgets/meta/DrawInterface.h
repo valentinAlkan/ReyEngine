@@ -13,29 +13,36 @@ namespace ReyEngine {
       struct Directory;
       struct Path {
          Path(){};
-         Path(const std::string& path);
-         bool exists();
-         std::optional<Path> head();
-         std::optional<Path> tail();
-         std::optional<File> toFile();
-         std::optional<Directory> toDirectory();
+         Path(const std::string& path): path(path){}
+         Path(const char* path): path(path){}
+         bool exists() const;
+         std::optional<Path> head() const;
+         std::optional<Path> tail() const;
+         std::optional<File> toFile() const;
+         std::optional<Directory> toDirectory() const;
+         std::string abs() const;
          const std::string& str() const {return path;}
-         operator std::string() {return path;}
+         inline std::string operator+(const Path& rhs) const {return path + rhs.str();}
+         inline std::string operator+(const char* rhs) const {return path + std::string(rhs);}
+         inline operator std::string() const {return path;}
+         inline Path& operator=(const char* rhs){path = rhs; return *this;}
          inline Path& operator=(const std::string& rhs){path = rhs; return *this;}
-         inline operator bool(){return !path.empty();}
+         inline operator bool() const {return !path.empty();}
       protected:
          std::string path;
       };
 
       struct File : public Path {
          File(){}
-         File(const std::string& path):Path(path){}
+         File(const std::string& path): Path(path){}
+         File(const char* path): Path(path){}
          operator Directory() = delete;
       };
 
       struct Directory : public Path {
          Directory(){}
-         Directory(const std::string& path):Path(path){}
+         Directory(const std::string& path): Path(path){}
+         Directory(const char* path): Path(path){}
          operator File() = delete;
       };
 
@@ -138,8 +145,8 @@ namespace ReyEngine {
    template <typename T>
    class Range : private Vec3<T> {
    public:
-      //Vec3 but x represents min, z represents max, and y represents value; Can lerp and set pct.
-      //Vec3 shall be considered x=min, y=max, z=default value.
+      //Vec3, but x represents min, z represents max, and y represents value; Can lerp and set pct.
+      //When creating from Vec3, vec3 shall be considered x=min, y=max, z=default value.
       //Does not enforce limits (ie value is free to be more or less than min or max.
       inline Range(): Vec3<T>::Vec3(){}
       inline Range(const T& min, const T& max, const T& defaultValue) : Vec3<T>::Vec3(min, max, defaultValue){}
@@ -225,6 +232,7 @@ namespace ReyEngine {
       inline explicit Rect(const Vec2<T>&) = delete;
       inline explicit Rect(const Pos<T>& v): x((T)v.x), y((T)v.y){}
       inline explicit Rect(const Size<T>& v): width((T)v.x), height((T)v.y){}
+      inline operator bool(){return x || y || width || height;}
       inline Rect(const Pos<T>& pos, const Size<T>& size): x((T)pos.x), y((T)pos.y), width((T)size.x), height((T)size.y){}
       inline bool operator!=(const Rect<T>& rhs) const {return rhs.x != x || rhs.y != y || rhs.width != width || rhs.height != height;}
       inline Rect operator+(const Pos<T>& rhs) const {Rect<T> val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
@@ -246,7 +254,7 @@ namespace ReyEngine {
       inline Rect& operator*=(const Rect<T>& rhs){x *= rhs.x; y *= rhs.y; width *= rhs.width; height *= rhs.height; return *this;}
       inline Rect& operator/=(const Rect<T>& rhs){x /= rhs.x; y /= rhs.y; width /= rhs.width; height /= rhs.height; return *this;}
       inline operator Rectangle() {return {x,y,width,height};}
-      inline bool isInside(const Vec2<T>& point){
+      inline bool isInside(const Vec2<T>& point) const {
          return (point.x > x && point.x < x + width) &&
                (point.y > y && point.y < y + height);
       }
@@ -279,9 +287,10 @@ namespace ReyEngine {
          os << r.toString();
          return os;
       }
-      [[nodiscard]] inline Pos<T> pos() const {return {x, y};}
-      [[nodiscard]] inline Size<T> size() const {return {width, height};}
-      [[nodiscard]] inline Rect<T> toSizeRect() const {return {0,0,width, height};}
+      [[nodiscard]] inline const Pos<T> pos() const {return {x, y};}
+      [[nodiscard]] inline const Size<T> size() const {return {width, height};}
+      [[nodiscard]] inline const Rect<T> toSizeRect() const {return {0,0,width, height};}
+      inline void setSize(ReyEngine::Size<T> size){width = size.x; height = size.y;}
 
       T x;
       T y;
@@ -316,7 +325,9 @@ namespace ReyEngine {
       static constexpr ColorRGBA blue = { 0, 121, 241, 255};
       static constexpr ColorRGBA black = { 0, 0, 0, 255};
       static constexpr ColorRGBA yellow = {253, 249, 0, 255};
-      static constexpr ColorRGBA none = {0, 0, 0, 0};
+      static constexpr ColorRGBA white = {130, 130, 130, 255};
+      static constexpr ColorRGBA transparent = {0, 0, 0, 0};
+      static constexpr ColorRGBA none = {255, 255, 255, 255};
    }
 
    struct ReyEngineFont{
@@ -343,8 +354,9 @@ namespace ReyEngine {
             UnloadTexture(_tex);
          }
       }
-      Texture2D getTexture(){return _tex;}
-      operator bool(){return _texLoaded;}
+      const Texture2D& getTexture() const {return _tex;}
+      operator bool() const {return _texLoaded;}
+      Size<int> size;
    protected:
       Texture2D _tex;
       bool _texLoaded;
@@ -367,8 +379,8 @@ namespace ReyEngine {
    void drawRectangleRoundedLines(const Rect<float>&, float roundness, int segments, float lineThick, const ReyEngine::ColorRGBA& color);
    void drawRectangleGradientV(const Rect<int>&, ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2);
    void drawLine(const Line<int>&, const ReyEngine::ColorRGBA& color);
-   void drawTexture(ReyTexture texture, const Rect<int>& source, const Rect<int>& dest, float rotation, float scale, const ReyEngine::ColorRGBA& tint);
-   inline float getFrameDelta(){return GetFrameTime();}
+   void drawTexture(const ReyTexture& texture, const Rect<int>& source, const Rect<int>& dest, float rotation, const ReyEngine::ColorRGBA& tint);
+   inline float getFrameDelta() {return GetFrameTime();}
    inline Size<int> measureText(const std::string& text, ReyEngineFont font){return MeasureTextEx(font.font, text.c_str(), font.size, font.spacing);}
 
    class RenderTarget{

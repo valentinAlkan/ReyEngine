@@ -112,3 +112,4 @@ target_link_libraries(${TEST_PROJECT}
 install_file(./widgets/test/test.scn ./test/test.scn)
 install_file(./widgets/test/posTest.scn ./test/posTest.scn)
 install_file(./widgets/test/posTest.scn ./test/serializeTest.scn)
+install_file(./widgets/test/characters.png ./test/characters.png)

@@ -4,27 +4,26 @@ using namespace ReyEngine;
 using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyEngine::FileSystem::Path::Path(const std::string &path)
-: path(path)
-{
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-bool ReyEngine::FileSystem::Path::exists() {
+bool ReyEngine::FileSystem::Path::exists() const {
  //todo
  return true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::optional<FileSystem::Path> ReyEngine::FileSystem::Path::head() {
+std::optional<FileSystem::Path> ReyEngine::FileSystem::Path::head() const {
    //todo:
    return nullopt;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::optional<FileSystem::Path> ReyEngine::FileSystem::Path::tail() {
+std::optional<FileSystem::Path> ReyEngine::FileSystem::Path::tail() const {
    //todo:
    return nullopt;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+string ReyEngine::FileSystem::Path::abs() const {
+   return Application::getWorkingDirectory() + "\\" + path;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -32,8 +31,10 @@ std::optional<FileSystem::Path> ReyEngine::FileSystem::Path::tail() {
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::ReyTexture::ReyTexture(FileSystem::File file) {
    auto doReady = [&]() {
-      _tex = LoadTexture(file.str().c_str());
+      auto path = file.abs();
+      _tex = LoadTexture(path.c_str());
       _texLoaded = true;
+      size = {_tex.width, _tex.height};
    };
    Application::registerForApplicationReady(doReady);
 }
@@ -87,7 +88,7 @@ void ReyEngine::drawLine(const Line<int>& line, const ReyEngine::ColorRGBA& colo
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawTexture(ReyTexture texture, const Rect<int> &source, const Rect<int> &dest, float rotation, float scale, const ReyEngine::ColorRGBA &tint){
+void ReyEngine::drawTexture(const ReyTexture& texture, const Rect<int> &source, const Rect<int> &dest, float rotation, const ReyEngine::ColorRGBA &tint) {
    auto tex = texture.getTexture();
    Rectangle rSource =  {(float)source.x, (float)source.y, (float)source.width, (float)source.height};
    Rectangle rDest =  {(float)dest.x, (float)dest.y, (float)dest.width, (float)dest.height};
