@@ -8,6 +8,38 @@
 #define NOT_IMPLEMENTED throw std::runtime_error("Not implemented!")
 
 namespace ReyEngine {
+   namespace FileSystem {
+      struct File;
+      struct Directory;
+      struct Path {
+         Path(){};
+         Path(const std::string& path);
+         bool exists();
+         std::optional<Path> head();
+         std::optional<Path> tail();
+         std::optional<File> toFile();
+         std::optional<Directory> toDirectory();
+         const std::string& str() const {return path;}
+         operator std::string() {return path;}
+         inline Path& operator=(const std::string& rhs){path = rhs; return *this;}
+         inline operator bool(){return !path.empty();}
+      protected:
+         std::string path;
+      };
+
+      struct File : public Path {
+         File(){}
+         File(const std::string& path):Path(path){}
+         operator Directory() = delete;
+      };
+
+      struct Directory : public Path {
+         Directory(){}
+         Directory(const std::string& path):Path(path){}
+         operator File() = delete;
+      };
+
+   }
    template <typename T> struct Size;
    template <typename T> struct Pos;
    template <typename T>
@@ -213,6 +245,7 @@ namespace ReyEngine {
       inline Rect& operator-=(const Rect<T>& rhs){x -= rhs.x; y -= rhs.y; width -= rhs.width; height -= rhs.height; return *this;}
       inline Rect& operator*=(const Rect<T>& rhs){x *= rhs.x; y *= rhs.y; width *= rhs.width; height *= rhs.height; return *this;}
       inline Rect& operator/=(const Rect<T>& rhs){x /= rhs.x; y /= rhs.y; width /= rhs.width; height /= rhs.height; return *this;}
+      inline operator Rectangle() {return {x,y,width,height};}
       inline bool isInside(const Vec2<T>& point){
          return (point.x > x && point.x < x + width) &&
                (point.y > y && point.y < y + height);
@@ -303,6 +336,20 @@ namespace ReyEngine {
    ReyEngineFont getDefaultFont();
    ReyEngineFont getFont(const std::string& fileName);
 
+   struct ReyTexture{
+      ReyTexture(FileSystem::File file);
+      ~ReyTexture(){
+         if (_texLoaded) {
+            UnloadTexture(_tex);
+         }
+      }
+      Texture2D getTexture(){return _tex;}
+      operator bool(){return _texLoaded;}
+   protected:
+      Texture2D _tex;
+      bool _texLoaded;
+   };
+
    Pos<double> getScreenCenter();
    Size<int> getScreenSize();
    ReyEngine::Size<int> getWindowSize();
@@ -314,12 +361,13 @@ namespace ReyEngine {
    void drawText(const std::string& text, const ReyEngine::Pos<int>& pos, const ReyEngineFont& font);
    void drawTextCentered(const std::string& text, const ReyEngine::Pos<int>& pos, const ReyEngineFont& font);
    void drawTextRelative(const std::string& text, const ReyEngine::Pos<int>& relPos, const ReyEngineFont& font);
-   void drawRectangle(const Rect<int>&, ReyEngine::ColorRGBA color);
-   void drawRectangleRounded(const Rect<float>&, float roundness, int segments, Color color);
-   void drawRectangleLines(const Rect<float>&, float lineThick, Color color);
-   void drawRectangleRoundedLines(const Rect<float>&, float roundness, int segments, float lineThick, Color color);
-   void drawRectangleGradientV(const Rect<int>&, Color color1, Color color2);
-   void drawLine(const Line<int>&, ReyEngine::ColorRGBA color);
+   void drawRectangle(const Rect<int>&, const ReyEngine::ColorRGBA& color);
+   void drawRectangleRounded(const Rect<float>&, float roundness, int segments, const ReyEngine::ColorRGBA& color);
+   void drawRectangleLines(const Rect<float>&, float lineThick, const ReyEngine::ColorRGBA& color);
+   void drawRectangleRoundedLines(const Rect<float>&, float roundness, int segments, float lineThick, const ReyEngine::ColorRGBA& color);
+   void drawRectangleGradientV(const Rect<int>&, ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2);
+   void drawLine(const Line<int>&, const ReyEngine::ColorRGBA& color);
+   void drawTexture(ReyTexture texture, const Rect<int>& source, const Rect<int>& dest, float rotation, float scale, const ReyEngine::ColorRGBA& tint);
    inline float getFrameDelta(){return GetFrameTime();}
    inline Size<int> measureText(const std::string& text, ReyEngineFont font){return MeasureTextEx(font.font, text.c_str(), font.size, font.spacing);}
 

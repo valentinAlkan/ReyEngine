@@ -43,7 +43,8 @@ protected:
    }
 
    void renderEnd() override{
-      _drawRectangleLines(_rect.get(), 2.0, COLORS::black);
+      //debug
+      _drawRectangleLines({0,0,_rect.get().width, _rect.get().height}, 2.0, COLORS::black);
    }
    void arrangeChildren(){
       //how much space we have to allocate

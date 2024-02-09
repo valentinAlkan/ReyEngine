@@ -3,8 +3,8 @@
 
 class BaseButton : public Control {
 public:
-   struct PushButtonEvent : public Event<PushButtonEvent>{
-      EVENT_CTOR_SIMPLE(PushButtonEvent, Event<PushButtonEvent>, bool down), down(down){}
+   struct ButtonPressEvent : public Event<ButtonPressEvent>{
+      EVENT_CTOR_SIMPLE(ButtonPressEvent, Event<ButtonPressEvent>, bool down), down(down){}
       bool down;
    };
 protected:
@@ -45,8 +45,8 @@ protected:
    void setDown(bool newDown){
       if (wasDown != newDown){
          down.set(newDown);
-         auto e = PushButtonEvent(toEventPublisher(), newDown);
-         publish<PushButtonEvent>(e);
+         auto e = ButtonPressEvent(toEventPublisher(), newDown);
+         publish<ButtonPressEvent>(e);
       }
    }
 };

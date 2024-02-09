@@ -66,6 +66,8 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--childBoundingBoxTest", "ChildBoundingBoxTest", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--inputPositionTest", "InputPositionTest", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--inspector", "InspectorTest", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--spriteTest", "SpriteTest", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--buttonTest", "PushButton usage example", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    //create window (or don't idk)
@@ -392,6 +394,58 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--inputPositionTest")){
+
+   }
+
+   else if (args.getArg("--spriteTest")){
+        root = make_shared<Control>("Root", Rect<int>());
+
+   }
+
+   else if (args.getArg("--buttonTest")) {
+      root = make_shared<Control>("root", Rect<int>());
+      auto label = make_shared<Label>("Label", Rect<int>(50,650,1000,50));
+      root->addChild(label);
+      auto vlayout = make_shared<VLayout>("VLayout", Rect<int>(100, 100, 200, 250));
+      root->addChild(vlayout);
+
+      //callback lambda(s)
+      auto cb = [&](const Event<BaseButton::ButtonPressEvent> event){
+         auto senderName = event.publisher->toBaseWidget()->getName();
+         label->setText(senderName);
+         //you can do whatever else here
+      };
+
+      auto cbSecret = [&](const Event<BaseButton::ButtonPressEvent> event){
+         auto senderName = event.publisher->toBaseWidget()->getName();
+         label->setText(senderName + " is the secret button! You win it all!");
+         //you can do whatever else here
+      };
+
+      for (int i=0; i<5; i++) {
+         static constexpr int secret = 2;
+         auto button = make_shared<PushButton>("PushButton" + to_string(i), Rect<int>());
+         vlayout->addChild(button);
+         //Subscribers don't have to have any relationship with the callbacks they call. In this example,
+         // the vlayout is subscribing to the buttons' pushbutton events. However, the callback has nothing
+         // to do with the vlayout itself. It's just a lambda. That's just a cool feature of this engine!
+         //Callbacks are also typed - every event emits an event, and any handlers that wish to intercept it
+         // must have the same signature.
+         if (button->getName() == "PushButton" + to_string(secret)) {
+            vlayout->subscribe<BaseButton::ButtonPressEvent>(button, cbSecret);
+         } else {
+            vlayout->subscribe<BaseButton::ButtonPressEvent>(button, cb);
+         }
+      }
+
+      auto cbExit = [&](const Event<BaseButton::ButtonPressEvent> event){
+         //quit (crashes atm but w/e)
+         Application::exit(Application::ExitReason::CLEAN);
+      };
+
+      auto exitButton = make_shared<PushButton>("Exit", Rect<int>());
+      vlayout->addChild(exitButton);
+      exitButton->subscribe<BaseButton::ButtonPressEvent>(exitButton, cbExit);
 
    }
 

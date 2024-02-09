@@ -25,6 +25,7 @@ private:
    }
 public:
    enum class ExitReason{
+      CLEAN = 0,
       INVALID_ARGS = 1,
       INVALID_SCENE_FILE_FORMAT,
    };
