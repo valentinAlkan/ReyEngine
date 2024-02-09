@@ -9,6 +9,8 @@ std::shared_ptr<Window> Application::createWindow(const std::string &title, int 
       return nullptr;
    }
    _window = std::shared_ptr<Window>(new Window("MainWindow", width, height, flags, targetFPS));
+   //set working directory
+   _workingDirectory = std::filesystem::current_path().string();
    return _window;
 }
 

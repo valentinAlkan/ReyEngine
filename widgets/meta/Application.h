@@ -1,8 +1,10 @@
 #pragma once
 #include <memory>
+#include <filesystem>
 #include <queue>
 #include "Window.h"
 #include "Logger.h"
+#include "DrawInterface.h"
 
 class Application
 {
@@ -30,7 +32,7 @@ public:
       INVALID_SCENE_FILE_FORMAT,
    };
 
-   Application(Application const&)         = delete;
+   Application(Application const&)    = delete;
    void operator=(Application const&) = delete;
 
    std::shared_ptr<Window> createWindow(const std::string& title, int width, int height, const std::vector<Window::Flags>& flags, int targetFPS=60);
@@ -51,12 +53,14 @@ public:
    static void registerForApplicationReady(std::function<void()>); //somethings require initwindow to have been called - so we can let the application know we want to be called when application is ready.
    static void registerForEnterTree(std::shared_ptr<BaseWidget>&, std::shared_ptr<BaseWidget>&); //widgets can't use shared_from_this in ctor so we need a place that gets called once on tree enter that can do it.
    static bool isReady(){return instance()._is_ready;}
+   static ReyEngine::FileSystem::Directory getWorkingDirectory(){return instance()._workingDirectory;}
 protected:
    uint64_t getNewRid(){return ++newRid;}
    static void processEnterTree();
    static void ready();
 
 private:
+   ReyEngine::FileSystem::Directory _workingDirectory;
    bool _is_ready = false;
    std::shared_ptr<Window> _window;
    std::weak_ptr<BaseWidget> _hovered; //the currently hovered widget

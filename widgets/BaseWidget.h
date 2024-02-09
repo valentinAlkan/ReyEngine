@@ -133,6 +133,7 @@ public:
    void setPos(int x, int y);
    void setPos(const ReyEngine::Pos<int>& pos);
    void setSize(const ReyEngine::Size<int>& size);
+   void scale(const ReyEngine::Vec2<float>& scale);
    void setWidth(int width);
    void setHeight(int height);
 

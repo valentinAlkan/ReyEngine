@@ -17,6 +17,7 @@
 #include "Editor.h"
 #include "Tree.h"
 #include "Inspector.h"
+#include "Sprite.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -398,7 +399,20 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--spriteTest")){
-        root = make_shared<Control>("Root", Rect<int>());
+      //make sure you've installed any sprite resources in the CMake file or they will not be visible to the engine.
+      // The executable runs out of the build directory and not the src directory.
+      // use install_file() in the cmake
+      root = make_shared<Control>("Root", Rect<int>());
+      auto spriteSheet = make_shared<Sprite>("SpriteSheet", Rect<int>()); //either pass in a rect or do fit texture later
+      spriteSheet->setTexture("test\\characters.png", Rect<int>()); //if no rect passed in, region = texture size
+      spriteSheet->fitTexture();
+      root->addChild(spriteSheet);
+
+      auto animatedSprite = make_shared<Sprite>("AnimatedSpriteSheet", Rect<int>(550,0,0,0));
+      animatedSprite->setTexture("test\\characters.png", Rect<int>());
+      animatedSprite->fitTexture();
+      animatedSprite->scale(Vec2<float>(5,5));
+      root->addChild(animatedSprite);
 
    }
 
@@ -466,14 +480,6 @@ int main(int argc, char** argv)
       return 0;
    }
 
-   //lock root to window size
-//   auto resizeRoot = [&](const Window::WindowResizeEvent& event){
-//      Application::printDebug() << "Running scene. Root's name is " << root->getName() << endl;
-////      root->setRect({{0,0}, event.size});
-//   };
-
-   //panels
-//   root->subscribe<Window::WindowResizeEvent>(window, resizeRoot);
    window->setRoot(root);
    root->setAnchoring(BaseWidget::Anchor::FILL);
    window->exec();

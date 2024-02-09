@@ -82,17 +82,17 @@ struct Property : public BaseProperty {
    void registerProperties() override {}
    Property& operator=(const T& newValue){
       value = newValue;
+      return *this;
    }
+   operator bool(){return bool(value);}
    Property& operator=(const Property& other){
       value = other.value;
+      return *this;
    }
    virtual T fromString(const std::string& str) = 0;
    void load(const PropertyPrototype& data) override {value = fromString(data.data);}
-//   [[nodiscard]] T& get() {return value;}
-//   [[nodiscard]] const T& value const {return value;}
    operator const T&() const {return value;}
    operator T&(){return value;}
-//   operator T(){return value;}
    void set(const T& newValue){
       value = newValue;
    }
@@ -101,6 +101,7 @@ struct Property : public BaseProperty {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 struct StringProperty : public Property<std::string>{
+   using Property<std::string>::operator=;
    StringProperty(const std::string& instanceName, const std::string& defaultvalue = "")
    : Property(instanceName, PropertyTypes::String, defaultvalue)
    {}
@@ -110,6 +111,7 @@ struct StringProperty : public Property<std::string>{
 
 /////////////////////////////////////////////////////////////////////////////////////////
 struct BoolProperty : public Property<bool>{
+   using Property<bool>::operator=;
    BoolProperty(const std::string& instanceName, bool defaultvalue = false)
    : Property(instanceName, PropertyTypes::Bool, defaultvalue)
    {}
@@ -119,6 +121,7 @@ struct BoolProperty : public Property<bool>{
 
 /////////////////////////////////////////////////////////////////////////////////////////
 struct IntProperty : public Property<int>{
+   using Property<int>::operator=;
    IntProperty(const std::string& instanceName, int defaultvalue = 0)
    : Property(instanceName, PropertyTypes::Int, defaultvalue)
    {}
@@ -128,6 +131,7 @@ struct IntProperty : public Property<int>{
 
 /////////////////////////////////////////////////////////////////////////////////////////
 struct FloatProperty : public Property<float>{
+   using Property<float>::operator=;
    FloatProperty(const std::string& instanceName, float defaultvalue = 0)
    : Property(instanceName, PropertyTypes::Int, defaultvalue)
    {}
@@ -138,6 +142,7 @@ struct FloatProperty : public Property<float>{
 /////////////////////////////////////////////////////////////////////////////////////////
 template <typename T>
 struct Vec2Property : public Property<ReyEngine::Vec2<T>>{
+   using Property<ReyEngine::Vec2<T>>::operator=;
    Vec2Property(const std::string& instanceName, ReyEngine::Vec2<T> defaultvalue = 0)
    : Property<ReyEngine::Vec2<T>>(instanceName, PropertyTypes::Vec2, defaultvalue)
    {}
@@ -148,6 +153,7 @@ struct Vec2Property : public Property<ReyEngine::Vec2<T>>{
 /////////////////////////////////////////////////////////////////////////////////////////
 template <typename T>
 struct RectProperty : public Property<ReyEngine::Rect<T>>{
+   using Property<ReyEngine::Rect<T>>::operator=;
    RectProperty(const std::string& instanceName, ReyEngine::Rect<T> defaultvalue=ReyEngine::Rect<T>())
    : Property<ReyEngine::Rect<T>>(instanceName, PropertyTypes::Rect, defaultvalue)
    {}
@@ -157,6 +163,7 @@ struct RectProperty : public Property<ReyEngine::Rect<T>>{
 
 /////////////////////////////////////////////////////////////////////////////////////////
 struct ColorProperty : public Property<ReyEngine::ColorRGBA>{
+   using Property<ReyEngine::ColorRGBA>::operator=;
    ColorProperty(const std::string& instanceName,  ReyEngine::ColorRGBA defaultvalue)
    : Property<ReyEngine::ColorRGBA>(instanceName, PropertyTypes::Color, defaultvalue)
    {}
@@ -173,6 +180,7 @@ using EnumPair = std::array<std::pair<T, std::string_view>, C>;
 #define ENUM_PAIR_DECLARE(ENUM_NAME, MEMBER_NAME) std::pair<ENUM_NAME, std::string_view>(ENUM_NAME::MEMBER_NAME, #MEMBER_NAME)
 template <typename T, auto C>
 struct EnumProperty : public Property<T>{
+   using Property<T>::operator=;
    EnumProperty(const std::string& instanceName, T defaultvalue)
    : Property<T>(instanceName, PropertyTypes::Enum, defaultvalue)
    {}
@@ -205,6 +213,7 @@ struct EnumProperty : public Property<T>{
 /////////////////////////////////////////////////////////////////////////////////////////
 template <typename T>
 struct ListProperty : public Property<std::vector<T>>{
+   using Property<std::vector<T>>::operator=;
    ListProperty(const std::string& instanceName) :
    Property<std::vector<T>>(instanceName, PropertyTypes::List, {}){
    }
@@ -239,6 +248,7 @@ struct ListProperty : public Property<std::vector<T>>{
 
 struct FloatListProperty : public ListProperty<float>{
    FloatListProperty(const std::string& instanceName): ListProperty<float>(instanceName){}
-   float stringToElement(const std::string& element){return (float)stod(element);}
+   float stringToElement(const std::string& element) override {return (float)stod(element);}
    float sum() const {float total=0;for (const auto& v : value){total += v;}return total;}
+   FloatListProperty& operator=(const std::vector<float>& other){value = other; return *this;}
 };
