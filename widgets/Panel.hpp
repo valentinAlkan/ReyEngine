@@ -16,8 +16,8 @@ public:
    }
 public:
    void render() const override {
-      auto roundness = getThemeReadOnly().roundness.getConst();
-      auto color = getThemeReadOnly().background.colorPrimary.getConst();
+      auto roundness = getThemeReadOnly().roundness.value;
+      auto color = getThemeReadOnly().background.colorPrimary.value;
       _drawRectangleRounded(_rect.value.toSizeRect(), roundness, 1, color);
    }
    void _init() override {}

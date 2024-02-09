@@ -28,7 +28,7 @@ public:
       }
       switch(outline.value){
          case Style::Outline::LINE:
-            _drawRectangleLines(getRect(), outline.thickness.getConst(), outline.color.getConst());
+            _drawRectangleLines(getRect(), outline.thickness.value, outline.color.value);
             break;
 //         case Style::Outline::SHADOW:
 //            break;

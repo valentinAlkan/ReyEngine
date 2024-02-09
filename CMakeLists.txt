@@ -98,12 +98,16 @@ target_include_directories(editor PUBLIC
 
 target_link_libraries(editor PUBLIC widgets)
 
-# Our Project
-add_executable(${PROJECT_NAME}
-        main.cpp
+# Test Project
+set(TEST_PROJECT ReyTest)
+add_executable( ${TEST_PROJECT}
+        widgets/test/reyTestMain.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} widgets editor)
+target_link_libraries(${TEST_PROJECT}
+    widgets
+    editor
+)
 
 install_file(./widgets/test/test.scn ./test/test.scn)
 install_file(./widgets/test/posTest.scn ./test/posTest.scn)
