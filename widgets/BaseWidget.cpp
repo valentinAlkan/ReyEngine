@@ -484,7 +484,7 @@ void BaseWidget::setRect(const ReyEngine::Rect<int>& r){
          //todo: this is weird, find a way to make this flow better
       }
    }
-   switch (_anchor.getConst()) {
+   switch (_anchor.value) {
       case Anchor::NONE:
          _rect.set(r);
          break;
@@ -505,26 +505,26 @@ void BaseWidget::setRect(const ReyEngine::Rect<int>& r){
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setPos(int x, int y){
-   ReyEngine::Rect<int> r(x, y, _rect.getConst().width, _rect.getConst().height);
+   ReyEngine::Rect<int> r(x, y, _rect.value.width, _rect.value.height);
    setRect(r);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setPos(const ReyEngine::Pos<int>& pos) {
-   ReyEngine::Rect<int> r(pos, _rect.getConst().size());
+   ReyEngine::Rect<int> r(pos, _rect.value.size());
    setRect(r);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setSize(const ReyEngine::Size<int>& size){
-   ReyEngine::Rect<int> r(_rect.getConst().pos(), size);
+   ReyEngine::Rect<int> r(_rect.value.pos(), size);
    setRect(r);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setWidth(int width){
-   ReyEngine::Rect<int> r(_rect.getConst().pos(), {width, _rect.getConst().height});
+   ReyEngine::Rect<int> r(_rect.value.pos(), {width, _rect.value.height});
    setRect(r);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setHeight(int height){
-   ReyEngine::Rect<int> r(_rect.getConst().pos(), {_rect.getConst().width, height});
+   ReyEngine::Rect<int> r(_rect.value.pos(), {_rect.value.width, height});
    setRect(r);
 }
