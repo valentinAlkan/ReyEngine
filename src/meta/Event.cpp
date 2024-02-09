@@ -1,14 +1,14 @@
 #include "Event.h"
-#include "BaseWidget.h"
+#include "Node.h"
 using namespace std;
 /////////////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<BaseWidget> EventPublisher::toBaseWidget() {
-   return downcasted_shared_from_this<BaseWidget>();
+std::shared_ptr<Node> EventPublisher::toNode() {
+   return downcasted_shared_from_this<Node>();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<BaseWidget> EventSubscriber::toBaseWidget() {
-   return downcasted_shared_from_this<BaseWidget>();
+std::shared_ptr<Node> EventSubscriber::toNode() {
+   return downcasted_shared_from_this<Node>();
 }

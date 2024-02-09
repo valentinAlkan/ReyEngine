@@ -40,6 +40,7 @@ set(CUSTOM_SOURCES
 #ReyMeta
 ###################################
 add_library(ReyMeta STATIC
+    src/meta/Node.cpp
     src/meta/ArgParse.cpp
     src/meta/FileSystem.cpp
     src/meta/StringTools.cpp
@@ -47,6 +48,8 @@ add_library(ReyMeta STATIC
     src/meta/DrawInterface.cpp
     src/meta/Application.cpp
     src/meta/TypeManager.cpp
+    src/meta/Canvas.cpp
+    src/meta/CustomTypes.h
     src/meta/Window.cpp
     src/meta/Scene.cpp
     src/meta/Property.cpp
@@ -67,32 +70,31 @@ target_include_directories(ReyMeta PUBLIC
 target_link_libraries(ReyMeta PUBLIC
     raylib
 )
-##
+
 ####################################
 ##Rey2D
 ####################################
-#add_library(Rey2D STATIC
-#    src/Rey2d/BaseWidget.cpp
-#    src/Rey2d/Control.hpp
-#    src/Rey2d/Canvas.hpp
-#    src/Rey2d/Panel.hpp
-#    src/Rey2d/Slider.hpp
-#    src/Rey2d/Button.hpp
-#    src/Rey2d/Label.hpp
-#    src/Rey2d/Sprite.cpp
-#    src/Rey2d/Layout.hpp
-#    src/Rey2d/ScrollArea.hpp
-#    src/Rey2d/Tree.cpp
-#    ${CUSTOM_SOURCES}
-#)
-#
-#target_include_directories(Rey2D PUBLIC
-#    src/Rey2d
-#)
-#
-#target_link_libraries(Rey2D PUBLIC
-#    ReyMeta
-#)
+add_library(Rey2D STATIC
+    src/Rey2d/Control.hpp
+    src/Rey2d/Canvas.hpp
+    src/Rey2d/Panel.hpp
+    src/Rey2d/Slider.hpp
+    src/Rey2d/Button.hpp
+    src/Rey2d/Label.hpp
+    src/Rey2d/Sprite.cpp
+    src/Rey2d/Layout.hpp
+    src/Rey2d/ScrollArea.hpp
+    src/Rey2d/Tree.cpp
+    ${CUSTOM_SOURCES}
+)
+
+target_include_directories(Rey2D PUBLIC
+    src/Rey2d
+)
+
+target_link_libraries(Rey2D PUBLIC
+    ReyMeta
+)
 #
 #add_library(Rey3D STATIC
 #    src/Rey3d/Camera3D.cpp

@@ -36,7 +36,7 @@ class WorkspaceWidget : public BaseWidget {
 
 
 class Workspace : public Panel {
-   REYENGINE_OBJECT(Workspace, Panel){}
+   REYENGINE_NODE(Workspace, Panel){}
 public:
    struct EventWidgetAdded : public Event<EventWidgetAdded> {
       EVENT_CTOR_SIMPLE(EventWidgetAdded, Event<EventWidgetAdded>){}

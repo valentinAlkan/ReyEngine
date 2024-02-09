@@ -4,7 +4,7 @@
 class Canvas : public Control{
 
 public:
-   REYENGINE_OBJECT(Canvas, Control)
+   REYENGINE_NODE(Canvas, Control)
    {}
 public:
    void renderBegin(ReyEngine::Vec2<float>& textureOffset) override {

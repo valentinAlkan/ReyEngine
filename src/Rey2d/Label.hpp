@@ -6,7 +6,7 @@
 #include <sstream>
 
 class Label : public Control {
-   REYENGINE_OBJECT(Label, Control)
+   REYENGINE_NODE(Label, Control)
    , PROPERTY_DECLARE(text, getName())
    {
       auto expandOpt = needsExpand();

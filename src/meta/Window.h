@@ -1,18 +1,19 @@
 #pragma once
 #include <vector>
 #include <functional>
-#include <BaseWidget.h>
+#include <Node.h>
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <unordered_set>
 #include "Scene.h"
 #include "Event.h"
 
 //implement to enable dragndrop
 class Draggable{
 public:
-   Draggable(const std::string& id, std::shared_ptr<BaseWidget> preview) : id(id), preview(preview){}
-   std::optional<std::shared_ptr<BaseWidget>> preview;
+   Draggable(const std::string& id, std::shared_ptr<Node> preview) : id(id), preview(preview){}
+   std::optional<std::shared_ptr<Node>> preview;
    const std::string id;
    ReyEngine::Pos<int> startPos;
 };
@@ -34,13 +35,13 @@ public:
    enum Flags{RESIZE, IS_EDITOR};
    virtual void exec();
    virtual ~Window();
-   bool isProcessed(const std::shared_ptr<BaseWidget>&) const;
+   bool isProcessed(const std::shared_ptr<Node>&) const;
    bool isEditor(){return _isEditor;}
-   bool setProcess(bool, std::shared_ptr<BaseWidget>); //returns whether operation was successful. Returns false if widget already being processed or is not found.
-   void setRoot(std::shared_ptr<BaseWidget>&);
+   bool setProcess(bool, std::shared_ptr<Node>); //returns whether operation was successful. Returns false if widget already being processed or is not found.
+   void setRoot(std::shared_ptr<Node>&);
    static ReyEngine::Pos<int> getMousePos(); //returns global mouse position
    static ReyEngine::Vec2<double> getMousePct(); //returns global mouse position as a percentage of the window size from 0 to 1
-   const std::shared_ptr<BaseWidget>& getRootWidget(){return _root;}
+   const std::shared_ptr<Node>& getRootWidget(){return _root;}
    ReyEngine::Size<int> getSize(){return ReyEngine::getWindowSize();}
    void setSize(ReyEngine::Size<int> newSize){ReyEngine::setWindowSize(newSize);}
    ReyEngine::Pos<int> getPosition(){return ReyEngine::getWindowPosition();}
@@ -52,18 +53,17 @@ protected:
    Window(const std::string& title, int width, int height, const std::vector<Flags>& flags, int targetFPS=60);
    static constexpr size_t INPUT_COUNT_LIMIT = 256;
 private:
-   std::shared_ptr<BaseWidget> _root; //the scene to draw
+   std::shared_ptr<Node> _root; //the scene to draw
    bool _isEditor = false; //enables other features
-   std::optional<std::shared_ptr<Draggable>> _dragNDrop; //the widget currently being drag n dropped
-   bool _isDragging = false; //true when we start a dragndrop
+
    class ProcessList {
    public:
-      std::optional<std::shared_ptr<BaseWidget>> add(std::shared_ptr<BaseWidget> widget);
-      std::optional<std::shared_ptr<BaseWidget>> remove(std::shared_ptr<BaseWidget> widget);
-      std::optional<std::shared_ptr<BaseWidget>> find(const std::shared_ptr<BaseWidget>& widget) const;
-      std::unordered_set<std::shared_ptr<BaseWidget>>& getList(){return _list;}
+      std::optional<std::shared_ptr<Node>> add(std::shared_ptr<Node> widget);
+      std::optional<std::shared_ptr<Node>> remove(std::shared_ptr<Node> widget);
+      std::optional<std::shared_ptr<Node>> find(const std::shared_ptr<Node>& widget) const;
+      std::unordered_set<std::shared_ptr<Node>>& getList(){return _list;}
    private:
-      std::unordered_set<std::shared_ptr<BaseWidget>> _list; //list of widgets that require processing. No specific order.
+      std::unordered_set<std::shared_ptr<Node>> _list; //list of widgets that require processing. No specific order.
       std::mutex _mtx;
    } _processList;
 

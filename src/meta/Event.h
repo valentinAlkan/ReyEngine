@@ -14,7 +14,7 @@ static constexpr int getUniqueEventId(){return CLASSNAME##_UNIQUE_ID;}
 #define EVENT_CTOR_SIMPLE(CLASSNAME, PARENTCLASS, ...) \
 EVENT_GENERATE_UNIQUE_ID(CLASSNAME)               \
 EVENT_GET_NAME(CLASSNAME)                                     \
-explicit CLASSNAME(const std::shared_ptr<EventPublisher> publisher, ##__VA_ARGS__): PARENTCLASS(CLASSNAME##_UNIQUE_ID, publisher)
+explicit CLASSNAME(const std::shared_ptr<EventPublisher>& publisher, ##__VA_ARGS__): PARENTCLASS(CLASSNAME##_UNIQUE_ID, publisher)
 
 #define EVENT_CTOR_SIMPLE_OVERRIDABLE(CLASSNAME, PARENTCLASS) \
 EVENT_GENERATE_UNIQUE_ID(CLASSNAME)                           \
@@ -61,7 +61,7 @@ public:
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
-class BaseWidget;
+class Node;
 using EventHandler = std::function<void(const BaseEvent&)>;
 using EventCallbackMap = std::map<std::weak_ptr<EventSubscriber>,std::vector<EventHandler>, std::owner_less<>>;
 class EventPublisher : public inheritable_enable_shared_from_this<EventPublisher>{
@@ -117,7 +117,7 @@ public:
             }
         }
     }
-    std::shared_ptr<BaseWidget> toBaseWidget();
+    std::shared_ptr<Node> toNode();
 protected:
     std::shared_ptr<EventPublisher> toEventPublisher(){return downcasted_shared_from_this<EventPublisher>();}
 private:
@@ -141,7 +141,7 @@ public:
       publisher->addSubscriber(me, T::getEventName(), adapter);
    };
    std::shared_ptr<EventSubscriber> toEventSubscriber(){return inheritable_enable_shared_from_this<EventSubscriber>::shared_from_this();}
-   std::shared_ptr<BaseWidget> toBaseWidget();
+   std::shared_ptr<Node> toNode();
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////

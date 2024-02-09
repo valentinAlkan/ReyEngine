@@ -57,8 +57,8 @@ private:
 };
 
 class Tree : public VLayout {
-   REYENGINE_OBJECT(Tree, VLayout){
-      acceptsHover=true;
+   REYENGINE_NODE(Tree, VLayout){
+      _acceptsHover=true;
    }
 public:
    /////////////////////////////////////////////////////////////////////////////////////////

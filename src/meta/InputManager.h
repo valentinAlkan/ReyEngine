@@ -76,6 +76,4 @@ protected:
      return it != queue.end();
    }
    friend class Window;
-
-
 };

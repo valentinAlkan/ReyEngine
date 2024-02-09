@@ -7,7 +7,7 @@
 class Sprite : public BaseWidget {
 
 public:
-REYENGINE_OBJECT(Sprite, BaseWidget)
+REYENGINE_NODE(Sprite, BaseWidget)
    , PROPERTY_DECLARE(region)
    {}
 public:
@@ -27,7 +27,7 @@ protected:
 class AnimatedSprite : public BaseWidget {
 
 public:
-REYENGINE_OBJECT(AnimatedSprite, BaseWidget){}
+REYENGINE_NODE(AnimatedSprite, BaseWidget){}
 public:
    void render() const override;
    void registerProperties() override;

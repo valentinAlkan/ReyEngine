@@ -8,10 +8,10 @@ public:
       bool down;
    };
 protected:
-   REYENGINE_OBJECT(BaseButton, Control)
+   REYENGINE_NODE(BaseButton, Control)
    , PROPERTY_DECLARE(down){
       _rect.value = ReyEngine::Rect<double>(0,0,200,50);
-      acceptsHover = true;
+      _acceptsHover = true;
    }
 public:
    void registerProperties() override{
@@ -53,7 +53,7 @@ protected:
 
 /////////////////////////////////////////////////////////////////////////////////////////
 class PushButton : public BaseButton{
-   REYENGINE_OBJECT(PushButton, BaseButton)
+   REYENGINE_NODE(PushButton, BaseButton)
    , PROPERTY_DECLARE(text){
       text.value = getName();
       getTheme()->background.colorPrimary.set(COLORS::gray);

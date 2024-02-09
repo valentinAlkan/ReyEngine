@@ -5,7 +5,7 @@
 
 class Inspector : public ScrollArea {
 public:
-   REYENGINE_OBJECT(Inspector, ScrollArea){}
+   REYENGINE_NODE(Inspector, ScrollArea){}
 public:
    void inspect(std::shared_ptr<BaseWidget>); //load an object into the inspector
 protected:

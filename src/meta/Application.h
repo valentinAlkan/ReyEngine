@@ -2,9 +2,11 @@
 #include <memory>
 #include <filesystem>
 #include <queue>
+#include <set>
 #include "Window.h"
 #include "Logger.h"
 #include "DrawInterface.h"
+#include "BaseWidget.h"
 
 class Application
 {
@@ -47,11 +49,11 @@ public:
    static void exit(ExitReason rsn){::exit((int)rsn);}
 
    static void clearHover();
-   static void setHover(std::shared_ptr<BaseWidget>&);
-   static std::optional<std::weak_ptr<BaseWidget>> getHovered();
-   static void registerForApplicationReady(std::shared_ptr<BaseWidget>&); //somethings require initwindow to have been called - so we can let the application know we want to be called when application is ready.
+   static void setHover(std::shared_ptr<Node>&);
+   static std::optional<std::weak_ptr<Node>> getHovered();
+   static void registerForApplicationReady(std::shared_ptr<Node>&); //somethings require initwindow to have been called - so we can let the application know we want to be called when application is ready.
    static void registerForApplicationReady(std::function<void()>); //somethings require initwindow to have been called - so we can let the application know we want to be called when application is ready.
-   static void registerForEnterTree(std::shared_ptr<BaseWidget>&, std::shared_ptr<BaseWidget>&); //widgets can't use shared_from_this in ctor so we need a place that gets called once on tree enter that can do it.
+   static void registerForEnterTree(std::shared_ptr<Node>&, std::shared_ptr<Node>&); //widgets can't use shared_from_this in ctor so we need a place that gets called once on tree enter that can do it.
    static bool isReady(){return instance()._is_ready;}
    static ReyEngine::FileSystem::Directory getWorkingDirectory(){return instance()._workingDirectory;}
 protected:
@@ -69,12 +71,12 @@ private:
    Logger _info_logger;
    Logger _warn_logger;
    Logger _error_logger;
-   std::unordered_set<std::shared_ptr<BaseWidget>> _applicationReadyList; //list of widgets that want to be notified when the application is fully initialized
+   std::unordered_set<std::shared_ptr<Node>> _applicationReadyList; //list of widgets that want to be notified when the application is fully initialized
    std::vector<std::function<void()>> _initListArbCallback; //list of arbitrary callbacks that serve the same purpose as the above
 
    //init list
-   using InitPair = std::pair<std::shared_ptr<BaseWidget>, std::shared_ptr<BaseWidget>>;
+   using InitPair = std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>;
    std::queue<InitPair> _initQueue;
-   friend class BaseWidget;
+   friend class Node;
    friend class Window;
 };

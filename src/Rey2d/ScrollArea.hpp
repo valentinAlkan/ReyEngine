@@ -3,7 +3,7 @@
 #include "Slider.hpp"
 
 class ScrollArea : public Control {
-   REYENGINE_OBJECT(ScrollArea, Control)
+   REYENGINE_NODE(ScrollArea, Control)
    , scrollOffsetX(0, 0, 0)
    , scrollOffsetY(0, 0, 0)
    {}

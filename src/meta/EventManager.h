@@ -7,13 +7,13 @@
 #include "SharedFromThis.h"
 #include "Event.h"
 
-//class BaseWidget;
+//class Node;
 //using EventHandler = std::function<void(const BaseEvent&)>;
 //template <typename T>
 //using TypedEventHandler = std::function<void(const T&)>;
 ////using EventHandler = void(*)(const std::shared_ptr<Event>& Event);
-//using Publisher = std::shared_ptr<BaseWidget>;
-//using Subscriber = std::weak_ptr<BaseWidget>;
+//using Publisher = std::shared_ptr<Node>;
+//using Subscriber = std::weak_ptr<Node>;
 //using EventCallbackMap = std::map<Subscriber,std::vector<EventHandler>, std::owner_less<>>;
 //class EventManager{
 //public:

@@ -2,7 +2,7 @@
 #include "Tree.h"
 
 class SceneTree : public Tree{
-    REYENGINE_OBJECT(SceneTree, Tree){}
+    REYENGINE_NODE(SceneTree, Tree){}
 public:
 };
 

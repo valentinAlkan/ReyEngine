@@ -1,5 +1,5 @@
 #include "Application.h"
-#include "BaseWidget.h"
+#include "Node.h"
 #include <utility>
 
 using namespace std;
@@ -15,12 +15,12 @@ std::shared_ptr<Window> Application::createWindow(const std::string &title, int 
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Application::registerForEnterTree(std::shared_ptr<BaseWidget>& widget, std::shared_ptr<BaseWidget>& parent) {
+void Application::registerForEnterTree(std::shared_ptr<Node>& widget, std::shared_ptr<Node>& parent) {
    instance()._initQueue.emplace(widget, parent);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Application::registerForApplicationReady(std::shared_ptr<BaseWidget>& widget) {
+void Application::registerForApplicationReady(std::shared_ptr<Node>& widget) {
    if (!isReady()) {
       instance()._applicationReadyList.insert(widget);
    } else {
@@ -64,14 +64,12 @@ void Application::processEnterTree() {
       }
       auto& hasInit = widget->_has_inited;
       auto newIndex = parent->_childrenOrdered.size(); //index of new child's location in ordered vector
-      parent->_children[widget->getName()] = std::pair<int, std::shared_ptr<BaseWidget>>(newIndex, widget);
+      parent->_children[widget->getName()] = std::pair<int, std::shared_ptr<Node>>(newIndex, widget);
       parent->_childrenOrdered.push_back(widget);
-      widget->_parent = parent->toBaseWidget();
+      widget->_parent = parent->toNode();
       if (!hasInit) {
          widget->_init();
          hasInit = true;
-         widget->setRect(widget->getRect()); //initialize the rectangle
-         widget->_publishSize();
       }
       widget->_on_enter_tree();
       parent->_on_child_added(widget);
@@ -89,7 +87,7 @@ void Application::clearHover() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Application::setHover(std::shared_ptr<BaseWidget>& widget) {
+void Application::setHover(std::shared_ptr<Node>& widget) {
    if (!instance()._hovered.expired()){
       auto oldHover = instance()._hovered.lock();
       if (oldHover !=  widget){
@@ -103,7 +101,7 @@ void Application::setHover(std::shared_ptr<BaseWidget>& widget) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::optional<std::weak_ptr<BaseWidget>> Application::getHovered() {
+std::optional<std::weak_ptr<Node>> Application::getHovered() {
    if (instance()._hovered.expired()) return nullopt;
    return instance()._hovered;
 }

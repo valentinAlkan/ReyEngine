@@ -5,7 +5,7 @@
 class Control : public BaseWidget {
 
 public:
-   REYENGINE_OBJECT(Control, BaseWidget){}
+   REYENGINE_NODE(Control, BaseWidget){}
 public:
    void render() const override {
       if (renderCallback){

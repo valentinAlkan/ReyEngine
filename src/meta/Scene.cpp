@@ -12,7 +12,7 @@ using namespace SceneFileParser;
 using namespace FileSystem;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Scene::Scene(std::shared_ptr<BaseWidget> root)
+Scene::Scene(std::shared_ptr<Node> root)
 : _root(root){
 
 }
@@ -204,7 +204,7 @@ std::shared_ptr<TreeObject> SceneFileParser::TreeStruct::parse(){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::string SceneFileParser::TreeStruct::toString(std::shared_ptr<BaseWidget> root) {
+std::string SceneFileParser::TreeStruct::toString(std::shared_ptr<Node> root) {
    return "";
 }
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -336,7 +336,7 @@ std::shared_ptr<Scene> SceneFileParser::DescStruct::parse(std::shared_ptr<TreeOb
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::string SceneFileParser::DescStruct::toString(std::shared_ptr<BaseWidget> root) {
+std::string SceneFileParser::DescStruct::toString(std::shared_ptr<Node> root) {
    stringstream ss;
    ss << TOKEN_DESC_START;
    map<string, std::string> descs;
@@ -367,6 +367,6 @@ std::shared_ptr<Scene> SceneFileParser::MetaStruct::parse(std::shared_ptr<Scene>
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::string SceneFileParser::MetaStruct::toString(std::shared_ptr<BaseWidget> root) {
+std::string SceneFileParser::MetaStruct::toString(std::shared_ptr<Node> root) {
    return "";
 }

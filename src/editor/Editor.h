@@ -5,7 +5,7 @@
 #include "Inspector.h"
 
 class Editor : public VLayout {
-   REYENGINE_OBJECT(Editor, VLayout){}
+   REYENGINE_NODE(Editor, VLayout){}
 
 public:
    void _init() override;

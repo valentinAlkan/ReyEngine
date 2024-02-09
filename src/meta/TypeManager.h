@@ -7,8 +7,8 @@
 #include <optional>
 #include "Property.h"
 
-class BaseWidget;
-using Deserializer = std::function<std::shared_ptr<BaseWidget>(const std::string& instanceName, PropertyPrototypeMap&)>;
+class Node;
+using Deserializer = std::function<std::shared_ptr<Node>(const std::string& instanceName, PropertyPrototypeMap&)>;
 
 struct TypeMeta {
    TypeMeta(std::string typeName, std::string parentTypeName, bool isVirtual, Deserializer deserializer)
@@ -27,9 +27,9 @@ struct TypeMeta {
 class TypeManager{
 public:
    static void registerType(std::string typeName, std::string parentTypeName, bool isVirtual, Deserializer);
-   static std::shared_ptr<BaseWidget> deserialize(const std::string& typeName, const std::string& instanceName, PropertyPrototypeMap&);
+   static std::shared_ptr<Node> deserialize(const std::string& typeName, const std::string& instanceName, PropertyPrototypeMap&);
    static std::shared_ptr<TypeMeta> getType(std::string typeName);
-   std::shared_ptr<TypeMeta> getRoot(){return getType("BaseWidget");};
+   std::shared_ptr<TypeMeta> getRoot(){return getType("Node");};
    static TypeManager& instance(){static TypeManager instance;return instance;}
 protected:
    void _registerTypes();

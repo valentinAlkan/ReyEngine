@@ -17,7 +17,10 @@ BaseWidget::BaseWidget(const std::string& name, std::string  typeName, Rect<floa
 , _isProcessed("_isProcessed")
 , _anchor("Anchor", Anchor::NONE)
 , _rid(Application::instance().getNewRid())
-{}
+{
+   //subscribe to window resize events if we're the Top Level widget
+   if (getParent()->toType<BaseWidget>())
+}
 
 BaseWidget::~BaseWidget() {
 //   auto thiz = shared_from_this();

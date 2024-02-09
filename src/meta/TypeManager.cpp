@@ -1,11 +1,11 @@
 #include <stdexcept>
 #include "TypeManager.h"
 #include "CustomTypes.h"
-#include "BaseWidget.h"
-#include "Button.hpp"
-#include "Label.hpp"
-#include "ScrollArea.hpp"
-#include "Slider.hpp"
+#include "Node.h"
+//#include "Button.hpp"
+//#include "Label.hpp"
+//#include "ScrollArea.hpp"
+//#include "Slider.hpp"
 
 using namespace std;
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -38,23 +38,23 @@ void TypeManager::registerType(std::string typeName, string parentTypeName, bool
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void TypeManager::_registerTypes() {
-   //Manually register BaseWidget
-   static constexpr char basewidget[] = "BaseWidget";
+   //Manually register Node
+   static constexpr char basewidget[] = "Node";
    instance()._types[basewidget] = make_shared<TypeMeta>(basewidget, "", true, nullptr);
    //register all other internal widget types here
-   BaseWidget::registerType("Control", "BaseWidget", false, &Control::deserialize);
-   BaseWidget::registerType("BaseButton", "Control", true, nullptr);
-   BaseWidget::registerType("PushButton", "BaseButton", false, &PushButton::deserialize);
-   BaseWidget::registerType("Label", "Control", false, &Label::deserialize);
-   BaseWidget::registerType("ScrollArea", "Control", false, &ScrollArea::deserialize);
-   BaseWidget::registerType("Slider", "Control", false, &Slider::deserialize);
+//   Node::registerType("Control", "Node", false, &Control::deserialize);
+//   Node::registerType("BaseButton", "Control", true, nullptr);
+//   Node::registerType("PushButton", "BaseButton", false, &PushButton::deserialize);
+//   Node::registerType("Label", "Control", false, &Label::deserialize);
+//   Node::registerType("ScrollArea", "Control", false, &ScrollArea::deserialize);
+//   Node::registerType("Slider", "Control", false, &Slider::deserialize);
 
    //register custom types
    CustomTypes::registerTypes();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<BaseWidget> TypeManager::deserialize(const std::string &typeName, const std::string &instanceName, PropertyPrototypeMap& protoperties) {
+std::shared_ptr<Node> TypeManager::deserialize(const std::string &typeName, const std::string &instanceName, PropertyPrototypeMap& protoperties) {
    auto& instance = TypeManager::instance();
    auto found = instance.getType(typeName);
    if (!found->deserializer){

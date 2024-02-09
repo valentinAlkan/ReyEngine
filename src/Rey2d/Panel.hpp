@@ -9,7 +9,7 @@ class Panel : public Control {
 public:
    static constexpr std::string_view LAYOUT_NAME = "layout";
    static constexpr Layout::LayoutDir defaultLayout = Layout::LayoutDir::VERTICAL;
-   REYENGINE_OBJECT(Panel, Control)
+   REYENGINE_NODE(Panel, Control)
    , PROPERTY_DECLARE(_layoutDir, Layout::LayoutDir::HORIZONTAL)
    {
       getTheme()->background.colorPrimary.set(ReyEngine::ColorRGBA(94, 142, 181, 255));
