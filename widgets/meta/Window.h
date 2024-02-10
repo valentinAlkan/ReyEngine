@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <functional>
-#include <BaseWidget.h>
+#include <Canvas.hpp>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -37,10 +37,10 @@ public:
    bool isProcessed(const std::shared_ptr<BaseWidget>&) const;
    bool isEditor(){return _isEditor;}
    bool setProcess(bool, std::shared_ptr<BaseWidget>); //returns whether operation was successful. Returns false if widget already being processed or is not found.
-   void setRoot(std::shared_ptr<BaseWidget>&);
+   void setRoot(std::shared_ptr<Canvas>&);
    static ReyEngine::Pos<int> getMousePos(); //returns global mouse position
    static ReyEngine::Vec2<double> getMousePct(); //returns global mouse position as a percentage of the window size from 0 to 1
-   const std::shared_ptr<BaseWidget>& getRootWidget(){return _root;}
+   const std::shared_ptr<Canvas>& getCanvas() const {return _root;}
    ReyEngine::Size<int> getSize(){return ReyEngine::getWindowSize();}
    void setSize(ReyEngine::Size<int> newSize){ReyEngine::setWindowSize(newSize);}
    ReyEngine::Pos<int> getPosition(){return ReyEngine::getWindowPosition();}
@@ -52,7 +52,7 @@ protected:
    Window(const std::string& title, int width, int height, const std::vector<Flags>& flags, int targetFPS=60);
    static constexpr size_t INPUT_COUNT_LIMIT = 256;
 private:
-   std::shared_ptr<BaseWidget> _root; //the scene to draw
+   std::shared_ptr<Canvas> _root; //the scene to draw
    bool _isEditor = false; //enables other features
    std::optional<std::shared_ptr<Draggable>> _dragNDrop; //the widget currently being drag n dropped
    bool _isDragging = false; //true when we start a dragndrop

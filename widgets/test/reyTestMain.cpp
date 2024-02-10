@@ -75,7 +75,8 @@ int main(int argc, char** argv)
    auto window = Application::instance().createWindow("MainWindow", screenWidth, screenHeight, {Window::RESIZE});
    if (!window){throw std::runtime_error("Something went horribly wrong! Please make a note of it.");}
 
-   shared_ptr<BaseWidget> root = make_shared<Control>("Root", Rect<float>{0,0,0,0});
+   auto root = make_shared<Canvas>("Root", Rect<float>{0,0,0,0});
+   root->setAnchoring(BaseWidget::Anchor::FILL);
    auto argLoadScene = args.getArg("--loadScene");
    if (argLoadScene){
       auto loadSceneArg = argLoadScene.value();
@@ -83,7 +84,7 @@ int main(int argc, char** argv)
       auto loadedScene = Scene::fromFile("./test/" + loadSceneArg->getParams()[0]);
       if (loadedScene){
          Application::printDebug() << "Got loaded file!" << endl;
-         root = loadedScene.value()->getRoot();
+         root->addChild(loadedScene.value()->getRoot());
       }
    }
 
@@ -105,17 +106,17 @@ int main(int argc, char** argv)
       control->addChild(subcontrol);
       subcontrol->setRenderCallback(renderSubControl);
       subcontrol->setProcessCallback(process);
-      root = control;
+      root->addChild(control);
    }
 
    else if (args.getArg("--renderTest")){
-      root = make_shared<RootWidget>("Root", Rect<float> {0,0,0,0});
+      root->addChild(make_shared<RootWidget>("Root", Rect<float> {0,0,0,0}));
       auto textureTest = make_shared<TextureTestWidget>("TexTest", Rect<float> {0,0,100,100});
       root->addChild(textureTest);
    }
 
    else if (args.getArg("--labelTest")){
-      root = make_shared<RootWidget>("Root", Rect<float> {0,0,0,0});
+      root->addChild(make_shared<RootWidget>("Root", Rect<float> {0,0,0,0}));
       auto testLabel = make_shared<Label>("Label", Rect<double>{0,0,50,50});
       root->addChild(testLabel);
 //      testLabel->setOutlineType(Style::Outline::LINE);
@@ -124,7 +125,7 @@ int main(int argc, char** argv)
 
 
    else if (args.getArg("--scrollAreaTest")){
-      root = make_shared<Control>("RootControl", Rect<int>(0,0, 2000, 2000));
+      root->addChild(make_shared<Control>("Control", Rect<int>(0,0, 2000, 2000)));
 
       //add labels
       auto labelLayout = make_shared<HLayout>("labelLayout", Rect<int>(50,20,150,20));
@@ -169,7 +170,7 @@ int main(int argc, char** argv)
 
    else if (args.getArg("--childBoundingBoxTest")){
       auto rootControl = make_shared<Control>("RootControl", Rect<int>(0,0,2000,2000));
-      root = rootControl;
+      root->addChild(rootControl);
       //add some children
       auto label1 = make_shared<Label>("Label1", Rect<int>(40,40,0,0));
       root->addChild(label1);
@@ -199,7 +200,7 @@ int main(int argc, char** argv)
 
 
    else if (args.getArg("--sliderTest")){
-      root = make_shared<Control>("Root", Rect<float> {0,0,0,0});
+      root->addChild(make_shared<Control>("Root", Rect<float> {0,0,0,0}));
       auto label = make_shared<Label>("Label", Rect<float> {0,0,0,0});
 
       auto vslider = make_shared<Slider>("Vslider", Rect<float>{200,100,20,100}, Slider::SliderType::VERTICAL);
@@ -241,7 +242,7 @@ int main(int argc, char** argv)
    else if (args.getArg("--layoutTestBasic")){
       Application::printDebug() << "Layout test basic!" << endl;
       auto rootLayout = make_shared<VLayout>("Root", Rect<float>({0,0}, window->getSize()));
-      root = rootLayout;
+      root->addChild(rootLayout);
       auto mainPanel = make_shared<Panel>("MainPanel", Rect<int>());
       mainPanel->getTheme()->background.colorPrimary.set(ReyEngine::Colors::red);
       root->addChild(mainPanel);
@@ -258,8 +259,7 @@ int main(int argc, char** argv)
 
    else if (args.getArg("--layoutTest")){
       Application::printDebug() << "Layout test!" << endl;
-      root = make_shared<VLayout>("Root", Rect<float>({0,0}, window->getSize()));
-      auto parent = root;
+      root->addChild(make_shared<VLayout>("Root", Rect<float>({0,0}, window->getSize())));
       for (int i=0;i<50;i++){
          std::shared_ptr<Layout> layout;
          if (i & 1){
@@ -274,10 +274,10 @@ int main(int argc, char** argv)
 //         label2->getTheme()->background.set(Style::Fill::SOLID);
          label1->getTheme()->background.colorPrimary.set(ColorRGBA::random(254));
 //         label2->getTheme()->background.colorPrimary.set(ColorRGBA::random(100));
-         parent->addChild(layout);
+         root->addChild(layout);
          layout->addChild(label1);
 //         layout->addChild(label2);
-         parent = layout;
+         root->addChild(layout);
 
          //connect to resize
 //         auto resizeCB = [](const BaseWidget::WidgetResizeEvent& event){
@@ -290,7 +290,7 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--panelTest")){
-      root = make_shared<VLayout>("MainLayout", Rect<int>());
+      root->addChild(make_shared<VLayout>("MainLayout", Rect<int>()));
 
       //add a panel to the layout
       auto panel = make_shared<Panel>("Panel", Rect<int>());
@@ -329,14 +329,14 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--editor")){
-      root = make_shared<Editor>("Editor", Rect<int>());
+      root->addChild(make_shared<Editor>("Editor", Rect<int>()));
    }
 
    else if (args.getArg("--treeTest")){
       auto treeRoot = std::make_shared<TreeItem>("Root");
       auto tree = make_shared<Tree>("Tree", Rect<int>());
       tree->setRoot(treeRoot);
-      root = tree;
+      root->addChild(tree);
       
       for (auto item : {
          std::make_shared<TreeItem>("Child1"),
@@ -402,7 +402,7 @@ int main(int argc, char** argv)
       //make sure you've installed any sprite resources in the CMake file or they will not be visible to the engine.
       // The executable runs out of the build directory and not the src directory.
       // use install_file() in the cmake
-      root = make_shared<Control>("Root", Rect<int>());
+      root->addChild(make_shared<Control>("Root", Rect<int>()));
       auto spriteSheet = make_shared<Sprite>("SpriteSheet", Rect<int>()); //either pass in a rect or do fit texture later
       spriteSheet->setTexture("test\\characters.png", Rect<int>()); //if no rect passed in, region = texture size
       spriteSheet->fitTexture();
@@ -417,7 +417,7 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--buttonTest")) {
-      root = make_shared<Control>("root", Rect<int>());
+      root->addChild(make_shared<Control>("root", Rect<int>()));
       auto label = make_shared<Label>("Label", Rect<int>(50,650,1000,50));
       root->addChild(label);
       auto vlayout = make_shared<VLayout>("VLayout", Rect<int>(100, 100, 200, 250));
@@ -465,7 +465,7 @@ int main(int argc, char** argv)
 
    else if (args.getArg("--inspector")){
       //make a vlayout - put a widget at the top and the inspector below it
-      root = make_shared<VLayout>("VLayout", Rect<int>());
+      root->addChild(make_shared<VLayout>("VLayout", Rect<int>()));
       auto someWidget = make_shared<Label>("SomeWidget", ReyEngine::Rect<int>());
       auto inspector = make_shared<Inspector>("Inspector", ReyEngine::Rect<int>());
       someWidget->getTheme()->background.set(Style::Fill::SOLID);

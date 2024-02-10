@@ -120,15 +120,18 @@ ReyEngine::RenderTarget::RenderTarget(const Size<int>& size)
       _tex = LoadRenderTexture(_size.x, _size.y);
       _texLoaded = true;
    };
-   Application::registerForApplicationReady(doReady);
+   if (size) {
+      Application::registerForApplicationReady(doReady);
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::RenderTarget::resize(const Size<int> &newSize) {
    if (_texLoaded) {
       UnloadRenderTexture(_tex);
-      LoadRenderTexture(newSize.x, newSize.y);
    }
+   _tex = LoadRenderTexture(newSize.x, newSize.y);
+   _texLoaded = true;
    _size = newSize;
 }
 
