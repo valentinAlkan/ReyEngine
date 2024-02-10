@@ -80,14 +80,14 @@ public:
       ReyEngine::Size<float> size;
    };
 
-   enum class Anchor{NONE, LEFT, RIGHT, TOP, BOTTOM, FILL, TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT};
+   enum class Anchor{NONE, LEFT, RIGHT, TOP, BOTTOM, FILL, TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, CENTER};
    /////////////////////////////////////////////////////////////////////////////////////////
-   struct AnchorProperty : public EnumProperty<Anchor, 10>{
+   struct AnchorProperty : public EnumProperty<Anchor, 11>{
       AnchorProperty(const std::string& instanceName,  Anchor defaultvalue)
-      : EnumProperty<Anchor, 10>(instanceName, defaultvalue)
+      : EnumProperty<Anchor, 11>(instanceName, defaultvalue)
       {}
-      const EnumPair<Anchor, 10>& getDict() const  override {return dict;}
-      static constexpr EnumPair<Anchor, 10> dict = {
+      const EnumPair<Anchor, 11>& getDict() const  override {return dict;}
+      static constexpr EnumPair<Anchor, 11> dict = {
             ENUM_PAIR_DECLARE(Anchor, NONE),
             ENUM_PAIR_DECLARE(Anchor, LEFT),
             ENUM_PAIR_DECLARE(Anchor, RIGHT),
@@ -97,7 +97,8 @@ public:
             ENUM_PAIR_DECLARE(Anchor, BOTTOM_RIGHT),
             ENUM_PAIR_DECLARE(Anchor, TOP_LEFT),
             ENUM_PAIR_DECLARE(Anchor, TOP_RIGHT),
-            ENUM_PAIR_DECLARE(Anchor, FILL)
+            ENUM_PAIR_DECLARE(Anchor, FILL),
+            ENUM_PAIR_DECLARE(Anchor, CENTER)
       };
    };
 
