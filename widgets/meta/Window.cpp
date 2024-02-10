@@ -309,7 +309,7 @@ std::optional<std::shared_ptr<BaseWidget>> Window::ProcessList::find(const std::
    return nullopt;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
-void Window::setRoot(std::shared_ptr<BaseWidget>& newRoot) {
+void Window::setRoot(std::shared_ptr<Canvas>& newRoot) {
    if (!newRoot->_has_inited){
       newRoot->_init();
    }

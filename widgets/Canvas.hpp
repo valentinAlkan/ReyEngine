@@ -1,20 +1,23 @@
 #pragma once
-#include "Control.hpp"
+#include "BaseWidget.h"
 
-class Canvas : public Control{
+class Canvas : public BaseWidget {
 
 public:
-   REYENGINE_OBJECT(Canvas, Control)
-   {}
+REYENGINE_OBJECT(Canvas, BaseWidget)
+, target(r.size())
+{}
 public:
-   void renderBegin(ReyEngine::Vec2<float>& textureOffset) override {
-
+   void renderBegin(ReyEngine::Pos<double>& textureOffset) override {
+      target.beginRenderMode();
    }
-   void render() const override {
-
-   }
+   void render() const override {}
    void renderEnd() override{
-
+      target.endRenderMode();
+      target.render(getGlobalRect().pos());
+   }
+   void _on_rect_changed() override {
+      target.resize(_rect.value.size());
    }
    void _process(float dt) override {}
    void registerProperties() override{
