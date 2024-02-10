@@ -469,8 +469,11 @@ std::optional<std::shared_ptr<BaseWidget>> BaseWidget::getWidgetAt(ReyEngine::Po
 void BaseWidget::setRect(const ReyEngine::Rect<int>& r){
    ReyEngine::Rect<int> newRect(r);
    auto parent = getParent();
+   int parentHeight, parentWidth;
    if(getAnchoring() != Anchor::NONE) {
       if (!parent.expired()) {
+          parentHeight = parent.lock()->getHeight();
+          parentWidth = parent.lock()->getWidth();
          newRect = {{0, 0}, getSize()};
       } else if (isRoot()) {
          newRect = {{0, 0}, Application::instance().getWindow()->getSize()};
@@ -482,21 +485,42 @@ void BaseWidget::setRect(const ReyEngine::Rect<int>& r){
          //todo: this is weird, find a way to make this flow better
       }
    }
+
+   // enum class Anchor{NONE, LEFT, RIGHT, TOP, BOTTOM, FILL, TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, CENTER};
    switch (_anchor.value) {
       case Anchor::NONE:
          _rect.set(r);
          break;
       case Anchor::FILL: {
          //take up as much space as parent has to offer
-         _rect.set(newRect);
          break;
-//         case Anchor::BOTTOM:
-//            //bottom of this widget aligns with bottom of parent
-//            _rect.set()
       }
+      case Anchor::LEFT: {
+          //Place on the center left of the parent
+          newRect = {{0, parentHeight / 2 - getHeight() / 2}, getSize()};
+          break;
+      }
+      case Anchor::RIGHT: {
+          //Place on the center right of the parent
+          newRect = {{parentWidth - getWidth(), parentHeight / 2 - getHeight() / 2}, getSize()};
+          break;
+      }
+      case Anchor::TOP: {
+          //Place at the center top of the parent
+          newRect = {{parentWidth / 2 - getWidth() / 2, 0}, getSize()};
+          break;
+      }
+      case Anchor::BOTTOM: {}
+      case Anchor::TOP_LEFT: {}
+      case Anchor::TOP_RIGHT: {}
+      case Anchor::BOTTOM_RIGHT: {}
+      case Anchor::BOTTOM_LEFT: {}
+      case Anchor::CENTER: {}
+
       default:
          break;
    }
+    _rect.set(newRect);
    _on_rect_changed();
    _publishSize();
 }
