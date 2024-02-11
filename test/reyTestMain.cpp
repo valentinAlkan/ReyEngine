@@ -68,6 +68,7 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--inspector", "InspectorTest", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--spriteTest", "SpriteTest", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--buttonTest", "PushButton usage example", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--anchorTest", "Anchoring options test", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    //create window (or don't idk)
@@ -483,6 +484,83 @@ int main(int argc, char** argv)
       vlayout->addChild(exitButton);
       exitButton->subscribe<BaseButton::ButtonPressEvent>(exitButton, cbExit);
 
+   }
+
+   else if (args.getArg("--anchorTest")){
+       auto vLayout = make_shared<VLayout>("VLayout", Rect<int>({0, 0}, window->getSize()));
+
+       //create the 3 HLayouts
+       auto hLayoutTop = make_shared<HLayout>("TopHLayout", Rect<int>());
+       hLayoutTop->setSize({vLayout->getWidth(), vLayout->getHeight() / 4});
+       auto hLayoutMiddle = make_shared<HLayout>("MiddleHLayout", Rect<int>());
+       hLayoutMiddle->setSize({vLayout->getWidth(), vLayout->getHeight() / 4});
+       auto hLayoutBottom = make_shared<HLayout>("BottomHLayout", Rect<int>());
+       hLayoutBottom->setSize({vLayout->getWidth(), vLayout->getHeight() / 4});
+       auto hLayoutFill = make_shared<HLayout>("FillHLayout", Rect<int>());
+       hLayoutBottom->setSize({vLayout->getWidth(), vLayout->getHeight() / 4});
+
+       vLayout->addChild(hLayoutTop);
+       vLayout->addChild(hLayoutMiddle);
+       vLayout->addChild(hLayoutBottom);
+       vLayout->addChild(hLayoutFill);
+
+       //create test labels for all anchoring
+       auto noneLabel = make_shared<Label>("NoneLabel", Rect<int>());
+       noneLabel->setText("None");
+       noneLabel->setAnchoring(BaseWidget::Anchor::NONE);
+       hLayoutTop->addChild(noneLabel);
+
+       auto leftLabel = make_shared<Label>("LeftLabel", Rect<int>());
+       leftLabel->setText("Left");
+       leftLabel->setAnchoring(BaseWidget::Anchor::LEFT);
+       hLayoutTop->addChild(leftLabel);
+
+       auto rightLabel = make_shared<Label>("RightLabel", Rect<int>());
+       rightLabel->setText("Right");
+       rightLabel->setAnchoring(BaseWidget::Anchor::RIGHT);
+       hLayoutTop->addChild(rightLabel);
+
+       auto topLabel = make_shared<Label>("TopLabel", Rect<int>());
+       topLabel->setText("Top");
+       topLabel->setAnchoring(BaseWidget::Anchor::TOP);
+       hLayoutTop->addChild(topLabel);
+
+       auto bottomLabel = make_shared<Label>("BottomLabel", Rect<int>());
+       bottomLabel->setText("Bottom");
+       bottomLabel->setAnchoring(BaseWidget::Anchor::BOTTOM);
+       hLayoutMiddle->addChild(bottomLabel);
+
+       auto bottomLeftLabel = make_shared<Label>("BottomLeftLabel", Rect<int>());
+       bottomLeftLabel->setText("Bottom Left");
+       bottomLeftLabel->setAnchoring(BaseWidget::Anchor::BOTTOM_LEFT);
+       hLayoutMiddle->addChild(bottomLeftLabel);
+
+       auto bottomRightLabel = make_shared<Label>("BottomRightLabel", Rect<int>());
+       bottomRightLabel->setText("Bottom Right");
+       bottomRightLabel->setAnchoring(BaseWidget::Anchor::BOTTOM_RIGHT);
+       hLayoutMiddle->addChild(bottomRightLabel);
+
+       auto topLeftLabel = make_shared<Label>("TopLeftLabel", Rect<int>());
+       topLeftLabel->setText("Top Left");
+       topLeftLabel->setAnchoring(BaseWidget::Anchor::TOP_LEFT);
+       hLayoutMiddle->addChild(topLeftLabel);
+
+       auto topRightLabel = make_shared<Label>("TopRightLabel", Rect<int>());
+       topRightLabel->setText("Top Right");
+       topRightLabel->setAnchoring(BaseWidget::Anchor::TOP_RIGHT);
+       hLayoutBottom->addChild(topLabel);
+
+       auto fillButton = make_shared<PushButton>("FillLabel", Rect<int>());
+       fillButton->setText("Fill");
+       fillButton->setAnchoring(BaseWidget::Anchor::FILL);
+       hLayoutFill->addChild(fillButton);
+
+       auto centerLabel = make_shared<Label>("CenterLabel", Rect<int>());
+       centerLabel->setText("Center");
+       centerLabel->setAnchoring(BaseWidget::Anchor::CENTER);
+       hLayoutBottom->addChild(centerLabel);
+
+       root->addChild(vLayout);
    }
 
    else if (args.getArg("--inspector")){
