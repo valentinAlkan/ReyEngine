@@ -31,7 +31,13 @@ Window::Window(const std::string &title, int width, int height, const std::vecto
    Application::ready();
    //Create canvas
    _root = make_shared<Canvas>("root");
-   _root->setSize(getSize());
+   _root->_isRoot = true;
+   auto base = _root->toBaseWidget();
+   //make sure we init the root\
+   widget->_init();
+   _root->_has_inited = true;
+   _root->setRect(Rect<int>(0,0,width, height)); //initialize to be the same size as the window
+   _root->_on_enter_tree();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -49,7 +55,7 @@ void Window::exec(){
       if (widget->_isProcessed.value) widget->setProcess(true);
    };
    applyProcess(_root);
-   ReyEngine::Size<int> size;
+   ReyEngine::Size<int> size = getSize();
    ReyEngine::Pos<int> position;
    while (!WindowShouldClose()){
       //process widgets wanting to enter the tree for the first time

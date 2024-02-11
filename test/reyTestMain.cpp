@@ -10,7 +10,7 @@
 #include "TextureTestWidget.hpp"
 #include "Slider.hpp"
 #include "Timer.hpp"
-#include "Layout.hpp"
+#include "Layout.h"
 #include "Panel.hpp"
 #include "Editor.h"
 #include "Tree.h"
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
    auto window = Application::instance().createWindow("MainWindow", screenWidth, screenHeight, {Window::RESIZE});
    if (!window){throw std::runtime_error("Something went horribly wrong! Please make a note of it.");}
 
-   auto root = make_shared<Canvas>("Root");
+   auto root = window->getCanvas();
    root->setAnchoring(BaseWidget::Anchor::FILL);
    auto argLoadScene = args.getArg("--loadScene");
    if (argLoadScene){
@@ -487,80 +487,87 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--anchorTest")){
-       auto vLayout = make_shared<VLayout>("VLayout", Rect<int>({0, 0}, window->getSize()));
+      auto vLayout = make_shared<VLayout>("VLayout");
+      vLayout->setAnchoring(BaseWidget::Anchor::FILL);
+      
+      //create the 4 Controls
+      auto controlTop = make_shared<Control>("TopControl");
+      auto controlMiddle = make_shared<Control>("MiddleControl");
+      auto controlBottom = make_shared<Control>("BottomControl");
+      auto controlFill = make_shared<Control>("FillControl");
 
-       //create the 3 HLayouts
-       auto hLayoutTop = make_shared<HLayout>("TopHLayout", Rect<int>());
-       hLayoutTop->setSize({vLayout->getWidth(), vLayout->getHeight() / 4});
-       auto hLayoutMiddle = make_shared<HLayout>("MiddleHLayout", Rect<int>());
-       hLayoutMiddle->setSize({vLayout->getWidth(), vLayout->getHeight() / 4});
-       auto hLayoutBottom = make_shared<HLayout>("BottomHLayout", Rect<int>());
-       hLayoutBottom->setSize({vLayout->getWidth(), vLayout->getHeight() / 4});
-       auto hLayoutFill = make_shared<HLayout>("FillHLayout", Rect<int>());
-       hLayoutBottom->setSize({vLayout->getWidth(), vLayout->getHeight() / 4});
+      vLayout->addChild(controlTop);
+      vLayout->addChild(controlMiddle);
+      vLayout->addChild(controlBottom);
+      vLayout->addChild(controlFill);
 
-       vLayout->addChild(hLayoutTop);
-       vLayout->addChild(hLayoutMiddle);
-       vLayout->addChild(hLayoutBottom);
-       vLayout->addChild(hLayoutFill);
+      for (auto& control : {controlTop, controlMiddle, controlMiddle, controlFill}) {
+         control->getTheme()->background.set(Style::Fill::SOLID);
+         control->getTheme()->background.colorPrimary.set(Colors::randColor());
+      }
 
-       //create test labels for all anchoring
-       auto noneLabel = make_shared<Label>("NoneLabel", Rect<int>());
-       noneLabel->setText("None");
-       noneLabel->setAnchoring(BaseWidget::Anchor::NONE);
-       hLayoutTop->addChild(noneLabel);
+      //create test labels for all anchoring
+      auto noneLabel = make_shared<Label>("NoneLabel");
+      noneLabel->setText("None");
+      noneLabel->setAnchoring(BaseWidget::Anchor::NONE);
+      controlTop->addChild(noneLabel);
 
-       auto leftLabel = make_shared<Label>("LeftLabel", Rect<int>());
-       leftLabel->setText("Left");
-       leftLabel->setAnchoring(BaseWidget::Anchor::LEFT);
-       hLayoutTop->addChild(leftLabel);
+      auto leftLabel = make_shared<Label>("LeftLabel");
+      leftLabel->setText("Left");
+      leftLabel->setAnchoring(BaseWidget::Anchor::LEFT);
+      controlTop->addChild(leftLabel);
 
-       auto rightLabel = make_shared<Label>("RightLabel", Rect<int>());
-       rightLabel->setText("Right");
-       rightLabel->setAnchoring(BaseWidget::Anchor::RIGHT);
-       hLayoutTop->addChild(rightLabel);
+      auto rightLabel = make_shared<Label>("RightLabel");
+      rightLabel->setText("Right");
+      rightLabel->setAnchoring(BaseWidget::Anchor::RIGHT);
+      controlTop->addChild(rightLabel);
 
-       auto topLabel = make_shared<Label>("TopLabel", Rect<int>());
-       topLabel->setText("Top");
-       topLabel->setAnchoring(BaseWidget::Anchor::TOP);
-       hLayoutTop->addChild(topLabel);
+      auto topLabel = make_shared<Label>("TopLabel");
+      topLabel->setText("Top");
+      topLabel->setAnchoring(BaseWidget::Anchor::TOP);
+      controlTop->addChild(topLabel);
 
-       auto bottomLabel = make_shared<Label>("BottomLabel", Rect<int>());
-       bottomLabel->setText("Bottom");
-       bottomLabel->setAnchoring(BaseWidget::Anchor::BOTTOM);
-       hLayoutMiddle->addChild(bottomLabel);
+      auto bottomLabel = make_shared<Label>("BottomLabel");
+      bottomLabel->setText("Bottom");
+      bottomLabel->setAnchoring(BaseWidget::Anchor::BOTTOM);
+      controlMiddle->addChild(bottomLabel);
 
-       auto bottomLeftLabel = make_shared<Label>("BottomLeftLabel", Rect<int>());
-       bottomLeftLabel->setText("Bottom Left");
-       bottomLeftLabel->setAnchoring(BaseWidget::Anchor::BOTTOM_LEFT);
-       hLayoutMiddle->addChild(bottomLeftLabel);
+      auto bottomLeftLabel = make_shared<Label>("BottomLeftLabel");
+      bottomLeftLabel->setText("Bottom Left");
+      bottomLeftLabel->setAnchoring(BaseWidget::Anchor::BOTTOM_LEFT);
+      controlMiddle->addChild(bottomLeftLabel);
 
-       auto bottomRightLabel = make_shared<Label>("BottomRightLabel", Rect<int>());
-       bottomRightLabel->setText("Bottom Right");
-       bottomRightLabel->setAnchoring(BaseWidget::Anchor::BOTTOM_RIGHT);
-       hLayoutMiddle->addChild(bottomRightLabel);
+      auto bottomRightLabel = make_shared<Label>("BottomRightLabel");
+      bottomRightLabel->setText("Bottom Right");
+      bottomRightLabel->setAnchoring(BaseWidget::Anchor::BOTTOM_RIGHT);
+      controlMiddle->addChild(bottomRightLabel);
 
-       auto topLeftLabel = make_shared<Label>("TopLeftLabel", Rect<int>());
-       topLeftLabel->setText("Top Left");
-       topLeftLabel->setAnchoring(BaseWidget::Anchor::TOP_LEFT);
-       hLayoutMiddle->addChild(topLeftLabel);
+      auto topLeftLabel = make_shared<Label>("TopLeftLabel");
+      topLeftLabel->setText("Top Left");
+      topLeftLabel->setAnchoring(BaseWidget::Anchor::TOP_LEFT);
+      controlMiddle->addChild(topLeftLabel);
 
-       auto topRightLabel = make_shared<Label>("TopRightLabel", Rect<int>());
-       topRightLabel->setText("Top Right");
-       topRightLabel->setAnchoring(BaseWidget::Anchor::TOP_RIGHT);
-       hLayoutBottom->addChild(topLabel);
+      auto topRightLabel = make_shared<Label>("TopRightLabel");
+      topRightLabel->setText("Top Right");
+      topRightLabel->setAnchoring(BaseWidget::Anchor::TOP_RIGHT);
+      controlBottom->addChild(topLabel);
 
-       auto fillButton = make_shared<PushButton>("FillLabel", Rect<int>());
-       fillButton->setText("Fill");
-       fillButton->setAnchoring(BaseWidget::Anchor::FILL);
-       hLayoutFill->addChild(fillButton);
+      auto fillButton = make_shared<PushButton>("FillLabel");
+      fillButton->setText("Fill");
+      fillButton->setAnchoring(BaseWidget::Anchor::FILL);
+      controlFill->addChild(fillButton);
 
-       auto centerLabel = make_shared<Label>("CenterLabel", Rect<int>());
-       centerLabel->setText("Center");
-       centerLabel->setAnchoring(BaseWidget::Anchor::CENTER);
-       hLayoutBottom->addChild(centerLabel);
+      auto centerLabel = make_shared<Label>("CenterLabel");
+      centerLabel->setText("Center");
+      centerLabel->setAnchoring(BaseWidget::Anchor::CENTER);
+      controlBottom->addChild(centerLabel);
 
-       root->addChild(vLayout);
+      for (auto& label : {noneLabel, leftLabel, rightLabel, topLabel, bottomLabel, bottomLeftLabel, bottomRightLabel, topLeftLabel, topRightLabel, centerLabel}) {
+         label->getTheme().get()->background.set(Style::Fill::SOLID);
+         label->getTheme().get()->background.colorPrimary.set(Colors::green);
+      }
+      
+      root->addChild(vLayout);
    }
 
    else if (args.getArg("--inspector")){
@@ -580,7 +587,6 @@ int main(int argc, char** argv)
       return 0;
    }
 
-   window->setRoot(root);
    root->setAnchoring(BaseWidget::Anchor::FILL);
    window->exec();
    return 0;
