@@ -2,7 +2,7 @@
 #include <utility>
 
 #include "Control.hpp"
-#include "Layout.hpp"
+#include "Layout.h"
 
 // A simple visual panel that just gives us something to look at. No other functionality.
 class Panel : public Control {

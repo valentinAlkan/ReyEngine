@@ -172,11 +172,27 @@ std::string string_tools::join(const std::string &s, const std::vector<std::stri
       retval += _v;
       retval += s;
    }
+   //there will be an extra string on the end, pop it off char by char (prolly theres a more efficient way to do this?)
    for (const auto& c : s) {
       retval.pop_back();
    }
    return retval;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::string string_tools::join(char c, const std::vector<std::string>& v) {
+   if (v.empty()) return "";
+   string retval;
+   for (const auto& _v : v){
+      retval += _v;
+      retval += c;
+   }
+
+   //pop off extra char
+   retval.pop_back();
+   return retval;
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////
 std::string string_tools::listJoin(const std::vector<std::string> &v) {

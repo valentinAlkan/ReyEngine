@@ -64,7 +64,7 @@ add_library(ReyEngine2D STATIC
     src/2d/Button.hpp
     src/2d/Label.hpp
     src/2d/Sprite.cpp
-    src/2d/Layout.hpp
+    src/2d/Layout.cpp
     src/2d/ScrollArea.hpp
     src/2d/Tree.cpp
     ${CUSTOM_SOURCES}

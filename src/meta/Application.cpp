@@ -67,18 +67,27 @@ void Application::processEnterTree() {
       parent->_children[widget->getName()] = std::pair<int, std::shared_ptr<BaseWidget>>(newIndex, widget);
       parent->_childrenOrdered.push_back(widget);
       widget->_parent = parent->toBaseWidget();
+      widget->isInLayout = parent->isLayout;
+      //recalculate the size rect if need to
+      //todo: fix size published twice (setrect and later _publishSize
+      if (widget->isAnchored() || widget->isLayout){
+         //anchoring and layout of children managed by this widget
+         widget->setRect(widget->_rect.value);
+      }
+      if (widget->isInLayout){
+         //placement of layout managed by parent
+         parent->setRect(parent->_rect.value);
+      }
       if (!hasInit) {
          widget->_init();
          hasInit = true;
-         widget->setRect(widget->getRect()); //initialize the rectangle
          widget->_publishSize();
       }
       widget->_on_enter_tree();
-      parent->_on_child_added(widget);
+      parent->__on_child_added(widget);
       queue.pop();
    }
 }
-
 /////////////////////////////////////////////////////////////////////////////////////////
 void Application::clearHover() {
    if (!instance()._hovered.expired()) {
