@@ -1,11 +1,9 @@
-#include <utility>
 #include "DrawInterface.h"
 #include "ScrollArea.hpp"
 #include "Application.h"
 #include <iostream>
 #include "Logger.h"
 #include "ArgParse.h"
-#include "TestWidgets.h"
 #include "Label.hpp"
 #include "Button.hpp"
 #include "RootWidget.hpp"
@@ -18,6 +16,7 @@
 #include "Tree.h"
 #include "Inspector.h"
 #include "Sprite.h"
+#include "Canvas.hpp"
 
 using namespace std;
 using namespace ReyEngine;
@@ -75,7 +74,7 @@ int main(int argc, char** argv)
    auto window = Application::instance().createWindow("MainWindow", screenWidth, screenHeight, {Window::RESIZE});
    if (!window){throw std::runtime_error("Something went horribly wrong! Please make a note of it.");}
 
-   auto root = make_shared<Canvas>("Root", Rect<float>{0,0,0,0});
+   auto root = make_shared<Canvas>("Root");
    root->setAnchoring(BaseWidget::Anchor::FILL);
    auto argLoadScene = args.getArg("--loadScene");
    if (argLoadScene){
@@ -89,8 +88,10 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--inputPositionTest")){
-      auto control = make_shared<Control>("MainControl", Rect<int>(40,40, 50,50));
-      auto subcontrol = make_shared<Control>("SubControl", Rect<int>(100,100, 50,50));
+      auto control = make_shared<Control>("MainControl");
+      control->setRect(Rect<int>(40,40, 50,50));
+      auto subcontrol = make_shared<Control>("SubControl");
+      subcontrol->setRect(Rect<int>(100,100, 50,50));
       control->getTheme()->background.set(Style::Fill::SOLID);
       control->getTheme()->background.colorPrimary.set(COLORS::lightGray);
 
@@ -110,14 +111,17 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--renderTest")){
-      root->addChild(make_shared<RootWidget>("Root", Rect<float> {0,0,0,0}));
-      auto textureTest = make_shared<TextureTestWidget>("TexTest", Rect<float> {0,0,100,100});
+      root->addChild(make_shared<RootWidget>("Root"));
+      root->setRect({0,0,0,0});
+      auto textureTest = make_shared<TextureTestWidget>("TexTest");
+      textureTest->setRect({0,0,100,100});
       root->addChild(textureTest);
    }
 
    else if (args.getArg("--labelTest")){
-      root->addChild(make_shared<RootWidget>("Root", Rect<float> {0,0,0,0}));
-      auto testLabel = make_shared<Label>("Label", Rect<double>{0,0,50,50});
+      root->addChild(make_shared<RootWidget>("Root"));
+      auto testLabel = make_shared<Label>("Label");
+      testLabel->setRect({0,0,50,50});  
       root->addChild(testLabel);
 //      testLabel->setOutlineType(Style::Outline::LINE);
 //      testLabel->setBackgroundType(Theme::Outline::LINE);
@@ -125,21 +129,25 @@ int main(int argc, char** argv)
 
 
    else if (args.getArg("--scrollAreaTest")){
-      root->addChild(make_shared<Control>("Control", Rect<int>(0,0, 2000, 2000)));
+      root->addChild(make_shared<Control>("Control"));
+      root->setRect({0, 0, 2000, 2000});
 
       //add labels
-      auto labelLayout = make_shared<HLayout>("labelLayout", Rect<int>(50,20,150,20));
+      auto labelLayout = make_shared<HLayout>("labelLayout");
+      labelLayout->setRect(Rect<int>(50,20,150,20));
       root->addChild(labelLayout);
-      auto xlabel = make_shared<Label>("XLabel", Rect<int>());
-      auto ylabel = make_shared<Label>("YLabel", Rect<int>());
-      auto spacer = make_shared<Control>("spacer", Rect<int>());
+      auto xlabel = make_shared<Label>("XLabel");
+      auto ylabel = make_shared<Label>("YLabel");
+      auto spacer = make_shared<Control>("spacer");
       labelLayout->addChild(xlabel);
       labelLayout->addChild(ylabel);
 
       //add scroll area
-      auto scrollArea = make_shared<ScrollArea>("ScrollArea",Rect<int>(50, 50, 500, 500));
-      auto label1 = make_shared<Label>("ScrollAreaLabel1", Rect<int> {0,0,0,0});
-      auto label2 = make_shared<Label>("ScrollAreaLabel2", Rect<int> {300,300,0,0});
+      auto scrollArea = make_shared<ScrollArea>("ScrollArea");
+      scrollArea->setRect(Rect<int>(50, 50, 500, 500));
+      auto label1 = make_shared<Label>("ScrollAreaLabel1");
+      auto label2 = make_shared<Label>("ScrollAreaLabel2");
+      label2->setRect({300,300,0,0});
       label1->setText("Hello from the upper left!");
       label2->setText("Hello from the bottom right!");
       scrollArea->addChild(label1);
@@ -152,7 +160,8 @@ int main(int argc, char** argv)
       boxRect.y -= 1;
       boxRect.width += 1;
       boxRect.height += 1;
-      auto box = std::make_shared<Control>("OutlineControl", boxRect);
+      auto box = std::make_shared<Control>("OutlineControl");
+      box->setRect(boxRect);
       box->getTheme().get()->background.set(Style::Fill::SOLID);
       box->getTheme().get()->background.colorPrimary.set({125, 125, 125, 127});
       root->addChild(box);
@@ -169,12 +178,15 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--childBoundingBoxTest")){
-      auto rootControl = make_shared<Control>("RootControl", Rect<int>(0,0,2000,2000));
+      auto rootControl = make_shared<Control>("RootControl");
+      rootControl->setRect({0,0,2000,2000});
       root->addChild(rootControl);
       //add some children
-      auto label1 = make_shared<Label>("Label1", Rect<int>(40,40,0,0));
+      auto label1 = make_shared<Label>("Label1");
+      label1->setRect(Rect<int>(40,40,0,0));
       root->addChild(label1);
-      auto label2 = make_shared<Label>("Label2", Rect<int>(40,300,0,0));
+      auto label2 = make_shared<Label>("Label2");
+      label2->setRect(Rect<int>(40,300,0,0));
       root->addChild(label2);
 
       //draw the child bounding box
@@ -200,11 +212,13 @@ int main(int argc, char** argv)
 
 
    else if (args.getArg("--sliderTest")){
-      root->addChild(make_shared<Control>("Root", Rect<float> {0,0,0,0}));
-      auto label = make_shared<Label>("Label", Rect<float> {0,0,0,0});
+      root->addChild(make_shared<Control>("Root"));
+      auto label = make_shared<Label>("Label");
 
-      auto vslider = make_shared<Slider>("Vslider", Rect<float>{200,100,20,100}, Slider::SliderType::VERTICAL);
-      auto hslider = make_shared<Slider>("Hslider", Rect<float>{250,100,100,20}, Slider::SliderType::HORIZONTAL);
+      auto vslider = make_shared<Slider>("Vslider", Slider::SliderType::VERTICAL);
+      vslider->setRect({200,100,20,100});
+      auto hslider = make_shared<Slider>("Hslider", Slider::SliderType::HORIZONTAL);
+      hslider->setRect({250,100,100,20});
 
       root->addChild(label);
       root->addChild(vslider);
@@ -241,15 +255,16 @@ int main(int argc, char** argv)
 
    else if (args.getArg("--layoutTestBasic")){
       Application::printDebug() << "Layout test basic!" << endl;
-      auto rootLayout = make_shared<VLayout>("Root", Rect<float>({0,0}, window->getSize()));
+      auto rootLayout = make_shared<VLayout>("Root");
+      rootLayout->setRect(Rect<float>({0,0}, window->getSize()));
       root->addChild(rootLayout);
-      auto mainPanel = make_shared<Panel>("MainPanel", Rect<int>());
+      auto mainPanel = make_shared<Panel>("MainPanel");
       mainPanel->getTheme()->background.colorPrimary.set(ReyEngine::Colors::red);
       root->addChild(mainPanel);
       mainPanel->setLayout<HLayout>();
 
-      auto child1 = make_shared<Panel>("Child1", Rect<int>());
-      auto child2 = make_shared<Panel>("Child2", Rect<int>());
+      auto child1 = make_shared<Panel>("Child1");
+      auto child2 = make_shared<Panel>("Child2");
 //      child1->getTheme()->background.colorPrimary.set(ReyEngine::Colors::blue);
 //      child2->getTheme()->background.colorPrimary.set(ReyEngine::Colors::green);
       mainPanel->addToLayout(child1);
@@ -259,15 +274,17 @@ int main(int argc, char** argv)
 
    else if (args.getArg("--layoutTest")){
       Application::printDebug() << "Layout test!" << endl;
-      root->addChild(make_shared<VLayout>("Root", Rect<float>({0,0}, window->getSize())));
+      auto rootChild = make_shared<VLayout>("RootChild");
+      rootChild->setRect(Rect<float>({0,0}, window->getSize()));
+      root->addChild(rootChild);
       for (int i=0;i<50;i++){
          std::shared_ptr<Layout> layout;
          if (i & 1){
-            layout = make_shared<VLayout>("layout" + to_string(i), Rect<float>());
+            layout = make_shared<VLayout>("layout" + to_string(i));
          } else {
-            layout = make_shared<HLayout>("layout" + to_string(i), Rect<float>());
+            layout = make_shared<HLayout>("layout" + to_string(i));
          }
-         auto label1 = make_shared<Label>("label" + to_string(i) + "_1", Rect<float>());
+         auto label1 = make_shared<Label>("label" + to_string(i) + "_1");
          label1->setText("");
 //         auto label2 = make_shared<Label>("label" + to_string(i) + "_2", Rect<float>());
          label1->getTheme()->background.set(Style::Fill::SOLID);
@@ -290,23 +307,25 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--panelTest")){
-      root->addChild(make_shared<VLayout>("MainLayout", Rect<int>()));
+      root->addChild(make_shared<VLayout>("MainLayout"));
 
       //add a panel to the layout
-      auto panel = make_shared<Panel>("Panel", Rect<int>());
+      auto panel = make_shared<Panel>("Panel");
 
       //add a slider so we can adjust the roundness dynamically
-      auto slider = make_shared<Slider>("Slider", Rect<int>(40, 20, 100, 20), Slider::SliderType::HORIZONTAL);
+      auto slider = make_shared<Slider>("Slider", Slider::SliderType::HORIZONTAL);
+      slider->setRect(Rect<int>(40, 20, 100, 20));
       panel->addChild(slider);
       //add an hlayout to fill the slider
-      auto sliderHLayout = make_shared<HLayout>("sliderLayout", slider->getRect().toSizeRect());
+      auto sliderHLayout = make_shared<HLayout>("sliderLayout");
+      sliderHLayout->setRect(slider->getRect().toSizeRect());
       slider->addChild(sliderHLayout);
 
       //add a name label to the slider
-      auto fieldLabel = make_shared<Label>("FieldNameRoundness", Rect<int>());
+      auto fieldLabel = make_shared<Label>("FieldNameRoundness");
       fieldLabel->setText("Roundness: ");
       //add a value label to the slider
-      auto valueLabel = make_shared<Label>("roundnessLabel", Rect<int>());
+      auto valueLabel = make_shared<Label>("roundnessLabel");
       valueLabel->setText(0, 3);
 
       sliderHLayout->addChild(fieldLabel);
@@ -329,12 +348,12 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--editor")){
-      root->addChild(make_shared<Editor>("Editor", Rect<int>()));
+      root->addChild(make_shared<Editor>("Editor"));
    }
 
    else if (args.getArg("--treeTest")){
       auto treeRoot = std::make_shared<TreeItem>("Root");
-      auto tree = make_shared<Tree>("Tree", Rect<int>());
+      auto tree = make_shared<Tree>("Tree");
       tree->setRoot(treeRoot);
       root->addChild(tree);
       
@@ -402,14 +421,15 @@ int main(int argc, char** argv)
       //make sure you've installed any sprite resources in the CMake file or they will not be visible to the engine.
       // The executable runs out of the build directory and not the src directory.
       // use install_file() in the cmake
-      root->addChild(make_shared<Control>("Root", Rect<int>()));
-      auto spriteSheet = make_shared<Sprite>("SpriteSheet", Rect<int>()); //either pass in a rect or do fit texture later
-      spriteSheet->setTexture("test\\characters.png", Rect<int>()); //if no rect passed in, region = texture size
+      root->addChild(make_shared<Control>("Control"));
+      auto spriteSheet = make_shared<Sprite>("SpriteSheet"); //either pass in a rect or do fit texture later
+      spriteSheet->setTexture("test\\characters.png"); //if no rect passed in, region = texture size
       spriteSheet->fitTexture();
       root->addChild(spriteSheet);
 
-      auto animatedSprite = make_shared<Sprite>("AnimatedSpriteSheet", Rect<int>(550,0,0,0));
-      animatedSprite->setTexture("test\\characters.png", Rect<int>());
+      auto animatedSprite = make_shared<Sprite>("AnimatedSpriteSheet");
+      animatedSprite->setRect(Rect<int>(550,0,0,0));
+      animatedSprite->setTexture("test\\characters.png");
       animatedSprite->fitTexture();
       animatedSprite->scale(Vec2<float>(5,5));
       root->addChild(animatedSprite);
@@ -417,10 +437,12 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--buttonTest")) {
-      root->addChild(make_shared<Control>("root", Rect<int>()));
-      auto label = make_shared<Label>("Label", Rect<int>(50,650,1000,50));
+      root->addChild(make_shared<Control>("root"));
+      auto label = make_shared<Label>("Label");
+      label->setRect(Rect<int>(50,650,1000,50));
       root->addChild(label);
-      auto vlayout = make_shared<VLayout>("VLayout", Rect<int>(100, 100, 200, 250));
+      auto vlayout = make_shared<VLayout>("VLayout");
+      vlayout->setRect({100, 100, 200, 250});
       root->addChild(vlayout);
 
       //callback lambda(s)
@@ -438,7 +460,7 @@ int main(int argc, char** argv)
 
       for (int i=0; i<5; i++) {
          static constexpr int secret = 2;
-         auto button = make_shared<PushButton>("PushButton" + to_string(i), Rect<int>());
+         auto button = make_shared<PushButton>("PushButton" + to_string(i));
          vlayout->addChild(button);
          //Subscribers don't have to have any relationship with the callbacks they call. In this example,
          // the vlayout is subscribing to the buttons' pushbutton events. However, the callback has nothing
@@ -457,7 +479,7 @@ int main(int argc, char** argv)
          Application::exit(Application::ExitReason::CLEAN);
       };
 
-      auto exitButton = make_shared<PushButton>("Exit", Rect<int>());
+      auto exitButton = make_shared<PushButton>("Exit");
       vlayout->addChild(exitButton);
       exitButton->subscribe<BaseButton::ButtonPressEvent>(exitButton, cbExit);
 
@@ -465,9 +487,9 @@ int main(int argc, char** argv)
 
    else if (args.getArg("--inspector")){
       //make a vlayout - put a widget at the top and the inspector below it
-      root->addChild(make_shared<VLayout>("VLayout", Rect<int>()));
-      auto someWidget = make_shared<Label>("SomeWidget", ReyEngine::Rect<int>());
-      auto inspector = make_shared<Inspector>("Inspector", ReyEngine::Rect<int>());
+      root->addChild(make_shared<VLayout>("VLayout"));
+      auto someWidget = make_shared<Label>("SomeWidget");
+      auto inspector = make_shared<Inspector>("Inspector");
       someWidget->getTheme()->background.set(Style::Fill::SOLID);
       someWidget->getTheme()->background.colorPrimary.set(Colors::blue);
       root->addChild(someWidget);

@@ -11,8 +11,8 @@ public:
       if (renderCallback){
          renderCallback();
       } else {
-         if (getThemeReadOnly().background.value == Style::Fill::SOLID) {
-            _drawRectangle(getRect().toSizeRect(), getThemeReadOnly().background.colorPrimary.value);
+         if (theme->background.value == Style::Fill::SOLID) {
+            _drawRectangle(getRect().toSizeRect(), theme->background.colorPrimary.value);
          }
       }
    }

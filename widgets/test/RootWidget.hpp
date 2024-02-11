@@ -6,8 +6,7 @@ class RootWidget : public Control{
 public:
 //   void renderBegin(ReyEngine::Vec2<float>& textureOffset) override {}
    void render() const override {
-      auto& theme = getThemeReadOnly();
-      _drawRectangle(_rect.value, theme.background.colorPrimary.value);
+      _drawRectangle(_rect.value, theme->background.colorPrimary.value);
    }
 //   void renderEnd() override{}
    void _process(float dt) override {}

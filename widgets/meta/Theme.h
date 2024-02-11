@@ -106,21 +106,21 @@ namespace Style {
       Empty value; //do not use - only exists to satisfy construction requirements
    };
 
-   class Themeable : public PropertyContainer {
-   public:
-      Themeable(){
-         theme = std::make_unique<Theme>();
-      };
-      void registerProperties() override {
-         registerProperty(*theme);
-      }
-      const Theme& getThemeReadOnly() const {return *theme;}
-      std::unique_ptr<Theme>& getTheme() {return theme;}
-      void setTheme(std::unique_ptr<Theme> newTheme){
-         theme = std::move(newTheme);
-         updateProperty(*theme);
-      }
-   private:
-      std::unique_ptr<Theme> theme;
-   };
+//   class Themeable : public PropertyContainer {
+//   public:
+//      Themeable(){
+//         theme = std::make_unique<Theme>();
+//      };
+//      void registerProperties() override {
+//         registerProperty(*theme);
+//      }
+//      const Theme& theme-> const {return *theme;}
+//      std::unique_ptr<Theme>& getTheme() {return theme;}
+//      void setTheme(std::unique_ptr<Theme> newTheme){
+//         theme = std::move(newTheme);
+//         updateProperty(*theme);
+//      }
+//   private:
+//      std::unique_ptr<Theme> theme;
+//   };
 }

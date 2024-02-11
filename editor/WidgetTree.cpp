@@ -36,7 +36,7 @@ std::optional<std::shared_ptr<Draggable>> WidgetTree::_on_drag_start(ReyEngine::
       auto typeMeta = TypeManager::getType(typeName);
       if (typeMeta->isVirtual) return nullopt;
       cout << "drag start at " << globalPos << endl;
-      auto label = make_shared<Label>("dragLabel", ReyEngine::Rect<int>());
+      auto label = make_shared<Label>("dragLabel");
       label->setText(typeName);
       auto draggable = make_shared<Draggable>(label->getText(), label);
       return draggable;

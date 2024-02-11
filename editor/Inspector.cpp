@@ -8,7 +8,8 @@ using namespace ReyEngine;
 /////////////////////////////////////////////////////////////////////////////////////////
 void Inspector::_init() {
    //add some fields
-   mainVLayout = make_shared<VLayout>("MainVLayout", Rect<int>(0,0,100,100));
+   mainVLayout = make_shared<VLayout>("MainVLayout");
+   mainVLayout->setSize({100,100});
    addChild(mainVLayout);
 }
 

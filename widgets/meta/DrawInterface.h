@@ -385,13 +385,13 @@ namespace ReyEngine {
 
    class RenderTarget{
       public:
-         explicit RenderTarget(const Size<int>& size);
+         explicit RenderTarget();
          ~RenderTarget(){
             if (_texLoaded) {
                UnloadRenderTexture(_tex);
             }
          }
-         void resize(const Size<int>& newSize);
+         void setSize(const Size<int>& newSize);
          void beginRenderMode(){BeginTextureMode(_tex);}
          void endRenderMode(){EndTextureMode();}
          void clear(Color color=WHITE){ClearBackground(color);}

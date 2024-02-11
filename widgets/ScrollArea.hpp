@@ -61,8 +61,8 @@ protected:
 protected:
    void _init() override {
       //create scrollbars
-      vslider = std::make_shared<Slider>(std::string(VSLIDER_NAME), ReyEngine::Rect<float>(), Slider::SliderType::VERTICAL);
-      hslider = std::make_shared<Slider>(std::string(HSLIDER_NAME), ReyEngine::Rect<float>(), Slider::SliderType::HORIZONTAL);
+      vslider = std::make_shared<Slider>(std::string(VSLIDER_NAME), Slider::SliderType::VERTICAL);
+      hslider = std::make_shared<Slider>(std::string(HSLIDER_NAME), Slider::SliderType::HORIZONTAL);
       vslider->setVisible(false);
       hslider->setVisible(false);
       addChild(vslider);

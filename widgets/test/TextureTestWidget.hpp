@@ -2,8 +2,7 @@
 //#include "Application.h"
 
 class TextureTestWidget : public Control{
-   REYENGINE_OBJECT(TextureTestWidget, Control)
-   , target(getRect().size()){}
+   REYENGINE_OBJECT(TextureTestWidget, Control){}
 public:
    void renderBegin(ReyEngine::Pos<double>& textureOffset) override {
 //      _render

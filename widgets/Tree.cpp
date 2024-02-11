@@ -62,20 +62,20 @@ void Tree::determineVisible() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Tree::render() const{
-   _drawRectangle(getRect().toSizeRect(), getThemeReadOnly().background.colorPrimary.value);
+   _drawRectangle(getRect().toSizeRect(), theme->background.colorPrimary.value);
    // draw the items
-   auto font = getThemeReadOnly().font.value;
+   auto font = theme->font.value;
    auto pos = ReyEngine::Pos<int>(0,-20);
    long long generationOffset = _hideRoot ? -1 : 0;
    size_t currentRow = 0;
    for (auto it = visible.begin(); it!=visible.end(); it++) {
       auto& itemMeta = *it;
       auto& item = itemMeta->item;
-      pos += ReyEngine::Pos<int>(0, getThemeReadOnly().font.value.size);
+      pos += ReyEngine::Pos<int>(0, theme->font.value.size);
 
       //highlight the hovered row
       if (_hoveredMeta && _hoveredMeta.value()->visibleRowIndex == currentRow){
-         _drawRectangle({pos, {getWidth(), (int) getThemeReadOnly().font.value.size}}, COLORS::gray);
+         _drawRectangle({pos, {getWidth(), (int) theme->font.value.size}}, COLORS::gray);
       }
 
       char c = item->expanded ? '-' : '+';
@@ -155,7 +155,7 @@ void Tree::setRoot(std::shared_ptr<TreeItem> item) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 std::optional<std::shared_ptr<Tree::TreeItemMeta>> Tree::getMetaAt(const ReyEngine::Pos<int>& localPos) {
-   auto rowHeight = getThemeReadOnly().font.value.size;
+   auto rowHeight = theme->font.value.size;
    int rowAt = localPos.y / rowHeight;
    if (rowAt < visible.size()) {
       return visible.at(rowAt);

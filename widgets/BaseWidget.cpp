@@ -4,18 +4,18 @@
 #include "EventManager.h"
 #include <iostream>
 #include <utility>
+#include "Canvas.hpp"
 
 using namespace std;
 using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-BaseWidget::BaseWidget(const std::string& name, std::string  typeName, Rect<float> rect)
-: _name(std::move(name))
+BaseWidget::BaseWidget(const std::string& name, std::string  typeName)
+: Component(name)
 , _typeName(std::move(typeName))
-, _rect("_rect", rect)
-, _isProcessed("_isProcessed")
+, _rect("_rect")
 , _anchor("Anchor", Anchor::NONE)
-, _rid(Application::instance().getNewRid())
+, theme(make_shared<Style::Theme>())
 {}
 
 BaseWidget::~BaseWidget() {
@@ -332,7 +332,11 @@ void BaseWidget::setProcess(bool process) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 bool BaseWidget::isRoot() {
-   return Application::instance().getWindow()->getCanvas().get() == this;
+   auto root = Application::instance().getWindow()->getCanvas();
+   if (root) {
+      return Application::instance().getWindow()->getCanvas()->getRid() == getRid();
+   }
+   return false;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

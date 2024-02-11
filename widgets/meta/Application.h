@@ -76,5 +76,6 @@ private:
    using InitPair = std::pair<std::shared_ptr<BaseWidget>, std::shared_ptr<BaseWidget>>;
    std::queue<InitPair> _initQueue;
    friend class BaseWidget;
+   friend class Component;
    friend class Window;
 };

@@ -20,8 +20,8 @@ public:
    };
    /////////////////////////////////////////////////////////////////////////////////////////
 protected:
-   Layout(const std::string &name, const std::string &typeName, const ReyEngine::Rect<float> &r, LayoutDir layoutDir)
-   : Control(name, typeName, r)
+   Layout(const std::string &name, const std::string &typeName, LayoutDir layoutDir)
+   : Control(name, typeName)
    , childScales("layoutRatios")
    , dir(layoutDir)
    {
@@ -97,35 +97,34 @@ protected:
 /////////////////////////////////////////////////////////////////////////////////////////
 class VLayout : public Layout {
 public:
-   VLayout(const std::string& instanceName, const ReyEngine::Rect<int>& r)
-   : Layout(instanceName, _get_static_constexpr_typename(), r, LayoutDir::VERTICAL)
+   VLayout(const std::string& instanceName)
+   : Layout(instanceName, _get_static_constexpr_typename(), LayoutDir::VERTICAL)
    {}
    static constexpr char TYPE_NAME[] = "VLayout";
    static std::shared_ptr<BaseWidget> deserialize(const std::string &instanceName, PropertyPrototypeMap &properties) {
-      const ReyEngine::Rect<float> &r = {0, 0, 0, 0};
-      auto retval = std::make_shared<VLayout>(instanceName, r);
+      auto retval = std::make_shared<VLayout>(instanceName);
       retval->BaseWidget::_deserialize(properties);
    return retval;
 }
 protected:
    std::string _get_static_constexpr_typename() override{ return TYPE_NAME;}
-   VLayout(const std::string& name, const std::string& typeName, CTOR_RECT): Layout(name, typeName, r, LayoutDir::VERTICAL){}
+   VLayout(const std::string& name, const std::string& typeName): Layout(name, typeName, LayoutDir::VERTICAL){}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
 class HLayout : public Layout {
 public:
-   HLayout(const std::string& instanceName, const ReyEngine::Rect<int>& r)
-   : Layout(instanceName, _get_static_constexpr_typename(), r, Layout::LayoutDir::HORIZONTAL)
+   HLayout(const std::string& instanceName)
+   : Layout(instanceName, _get_static_constexpr_typename(), Layout::LayoutDir::HORIZONTAL)
    {}
    static std::shared_ptr<BaseWidget> deserialize(const std::string &instanceName, PropertyPrototypeMap &properties) {
       const ReyEngine::Rect<float> &r = {0, 0, 0, 0};
-      auto retval = std::make_shared<HLayout>(instanceName, r);
+      auto retval = std::make_shared<HLayout>(instanceName);
       retval->BaseWidget::_deserialize(properties);
    return retval;
 }
    static constexpr char TYPE_NAME[] = "HLayout";
 protected:
    std::string _get_static_constexpr_typename() override{ return TYPE_NAME;}
-   HLayout(const std::string& name, const std::string& typeName, CTOR_RECT): Layout(name, typeName, r, LayoutDir::VERTICAL){}
+   HLayout(const std::string& name, const std::string& typeName): Layout(name, typeName, LayoutDir::VERTICAL){}
 };

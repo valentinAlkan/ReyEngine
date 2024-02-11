@@ -1,4 +1,4 @@
-#include "Theme.h"
+#include "theme.h"
 
 using namespace Style;
 using namespace std;
