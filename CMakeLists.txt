@@ -32,89 +32,90 @@ endif()
 
 
 set(CUSTOM_SOURCES
-    widgets/test/TestWidgets.cpp
-    widgets/test/TextureTestWidget.hpp
-    widgets/test/RootWidget.hpp
+    test/TestWidgets.cpp
+    test/TextureTestWidget.hpp
+    test/RootWidget.hpp
 )
 
-add_library(widgets STATIC
-    widgets/meta/ArgParse.cpp
-    widgets/meta/FileSystem.cpp
-    widgets/meta/StringTools.cpp
-    widgets/meta/MathTools.cpp
-    widgets/meta/DrawInterface.cpp
-    widgets/meta/Application.cpp
-    widgets/meta/TypeManager.cpp
-    widgets/meta/Window.cpp
-    widgets/meta/Scene.cpp
-    widgets/meta/Property.cpp
-    widgets/meta/Logger.cpp
-    widgets/meta/SystemTime.cpp
-    widgets/meta/Event.cpp
-    widgets/meta/InputManager.cpp
-    widgets/meta/Timer.hpp
-    widgets/meta/theme.cpp
-    widgets/meta/Font.hpp
-    widgets/meta/Component.cpp
-    widgets/BaseWidget.cpp
-    widgets/Control.hpp
-    widgets/Canvas.hpp
-    widgets/Panel.hpp
-    widgets/Slider.hpp
-    widgets/Button.hpp
-    widgets/Label.hpp
-    widgets/Sprite.cpp
-    widgets/Layout.hpp
-    widgets/ScrollArea.hpp
-    widgets/Tree.cpp
+add_library(ReyEngine2D STATIC
+    src/meta/ArgParse.cpp
+    src/meta/FileSystem.cpp
+    src/meta/StringTools.cpp
+    src/meta/MathTools.cpp
+    src/meta/DrawInterface.cpp
+    src/meta/Application.cpp
+    src/meta/TypeManager.cpp
+    src/meta/Window.cpp
+    src/meta/Scene.cpp
+    src/meta/Property.cpp
+    src/meta/Logger.cpp
+    src/meta/SystemTime.cpp
+    src/meta/Event.cpp
+    src/meta/InputManager.cpp
+    src/meta/Timer.hpp
+    src/meta/Theme.cpp
+    src/meta/Font.hpp
+    src/meta/Component.cpp
+    src/2d/BaseWidget.cpp
+    src/2d/Control.hpp
+    src/2d/Canvas.hpp
+    src/2d/Panel.hpp
+    src/2d/Slider.hpp
+    src/2d/Button.hpp
+    src/2d/Label.hpp
+    src/2d/Sprite.cpp
+    src/2d/Layout.hpp
+    src/2d/ScrollArea.hpp
+    src/2d/Tree.cpp
     ${CUSTOM_SOURCES}
 )
 
-add_library(widgets3d STATIC
-    widgets/3d/Viewport.cpp
+add_library(ReyEngine3D STATIC
+    src/3d/Viewport.cpp
 )
 
 add_library(editor STATIC
-    editor/Editor.cpp
-    editor/WidgetTree.cpp
-    editor/SceneTree.cpp
-    editor/Workspace.cpp
-    editor/Inspector.cpp
-    editor/InspectorWidgetFactory.cpp
+    src/editor/Editor.cpp
+    src/editor/WidgetTree.cpp
+    src/editor/SceneTree.cpp
+    src/editor/Workspace.cpp
+    src/editor/Inspector.cpp
+    src/editor/InspectorWidgetFactory.cpp
 )
 
-target_include_directories(widgets PUBLIC
-    widgets
-    widgets/meta
-    widgets/test
+target_include_directories(ReyEngine2D PUBLIC
+    src
+    src/meta
+    src/2d
+    test
 )
 
-target_link_libraries(widgets raylib)
+target_link_libraries(ReyEngine2D raylib)
 
 if (UNIX)
-    target_link_libraries(widgets stdc++fs)
+    target_link_libraries(ReyEngine2D stdc++fs)
 endif (UNIX)
 
 
 target_include_directories(editor PUBLIC
-    editor
+    src/editor
 )
 
-target_link_libraries(editor PUBLIC widgets)
+target_link_libraries(editor PUBLIC ReyEngine2D ReyEngine3D)
 
 # Test Project
 set(TEST_PROJECT ReyTest)
 add_executable( ${TEST_PROJECT}
-        widgets/test/reyTestMain.cpp
+        test/reyTestMain.cpp
 )
 
 target_link_libraries(${TEST_PROJECT}
-    widgets
-    widgets3d
+    ReyEngine2D
+    ReyEngine3D
     editor
 )
 
-install_file(./widgets/test/test.scn ./test/test.scn)
-install_file(./widgets/test/posTest.scn ./test/posTest.scn)
-install_file(./widgets/test/posTest.scn ./test/serializeTest.scn)
-install_file(./widgets/test/characters.png ./test/characters.png)
+install_file(./test/test.scn ./test/test.scn)
+install_file(./test/posTest.scn ./test/posTest.scn)
+install_file(./test/posTest.scn ./test/serializeTest.scn)
+install_file(./test/characters.png ./test/characters.png)
