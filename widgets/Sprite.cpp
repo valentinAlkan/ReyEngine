@@ -17,12 +17,10 @@ void Sprite::registerProperties() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-bool Sprite::setTexture(const ReyEngine::FileSystem::File& path, const ReyEngine::Rect<int>& drawRegion) {
+bool Sprite::setTexture(const ReyEngine::FileSystem::File& path) {
    //try load
    if (path.exists()){
       texture = make_unique<ReyTexture>(path);
-      region = drawRegion;
-      //if region is undefined, set the region to the max size of the texture
       if (!region){
          region.value.setSize(texture->size);
       }

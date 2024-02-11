@@ -1,7 +1,6 @@
 #pragma once
 #include <vector>
 #include <functional>
-#include <Canvas.hpp>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -17,6 +16,7 @@ public:
    ReyEngine::Pos<int> startPos;
 };
 
+class Canvas;
 class Window : public EventPublisher {
 public:
    struct WindowResizeEvent : public Event<WindowResizeEvent> {

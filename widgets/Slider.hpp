@@ -21,8 +21,8 @@ public:
    };
 
    REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(Slider)
-   Slider(const std::string &name, const ReyEngine::Rect<float>& r, SliderType sliderDir)
-         : Control(name, _get_static_constexpr_typename(), r)
+   Slider(const std::string &name, SliderType sliderDir)
+         : Control(name, _get_static_constexpr_typename())
          , sliderValue("sliderValue", 0.0)
          , minSliderValue("minSliderValue", 0.0)
          , maxSlidervalue("maxSliderValue", 100.0)
@@ -32,9 +32,8 @@ public:
    }
 
    static std::shared_ptr<BaseWidget> deserialize(const std::string &instanceName, PropertyPrototypeMap &properties) {
-      const ReyEngine::Rect<float> &r = {0, 0, 0, 0};
       SliderTypeProperty temp("temp");
-      auto retval = std::make_shared<Slider>(instanceName, r, temp.fromString(properties["sliderType"].data));
+      auto retval = std::make_shared<Slider>(instanceName, temp.fromString(properties["sliderType"].data));
       retval->BaseWidget::_deserialize(properties);
       return retval;
    }

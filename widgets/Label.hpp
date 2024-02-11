@@ -1,7 +1,6 @@
 #pragma once
 #include "Control.hpp"
 #include "StringTools.h"
-#include "Theme.h"
 #include <iomanip>
 #include <sstream>
 
@@ -17,9 +16,9 @@ class Label : public Control {
 public:
    void render() const override{
       //todo: scissor text
-      auto& outline = getThemeReadOnly().outline;
-      auto& background = getThemeReadOnly().background;
-      auto& foreground = getThemeReadOnly().foreground;
+      auto& outline = theme->outline;
+      auto& background = theme->background;
+      auto& foreground = theme->foreground;
       switch (background.value){
          case Style::Fill::SOLID:
             _drawRectangle(_rect.value.toSizeRect(), background.colorPrimary.value);
@@ -35,7 +34,7 @@ public:
          default:
             break;
       }
-       _drawText(text.value, {0, 0}, getThemeReadOnly().font.value);
+       _drawText(text.value, {0, 0}, theme->font.value);
    };
    void registerProperties() override{
       registerProperty(text);
@@ -79,6 +78,6 @@ protected:
       }
       return std::nullopt;
    };
-   inline ReyEngine::Size<int> measureText() const {return getThemeReadOnly().font.value.measure(text.value);}
+   inline ReyEngine::Size<int> measureText() const {return theme->font.value.measure(text.value);}
    StringProperty text;
 };

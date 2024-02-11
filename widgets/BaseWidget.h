@@ -6,7 +6,7 @@
 #include "InputManager.h"
 #include "EventManager.h"
 #include "Theme.h"
-#include "Property.h"
+#include "Component.h"
 #include <iostream>
 #include <stack>
 #include <utility>
@@ -20,49 +20,13 @@
 
 using Handled = bool;
 
-#define CTOR_RECT const ReyEngine::Rect<float>& r
-/////////////////////////////////////////////////////////////////////////////////////////
-#define REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(TYPENAME) \
-static constexpr char TYPE_NAME[] = #TYPENAME;               \
-std::string _get_static_constexpr_typename() override {return TYPE_NAME;}
-/////////////////////////////////////////////////////////////////////////////////////////
-#define REYENGINE_SERIALIZER(CLASSNAME, PARENT_CLASSNAME) \
-   public:                                           \
-   static std::shared_ptr<BaseWidget> deserialize(const std::string& instanceName, PropertyPrototypeMap& properties) { \
-   CTOR_RECT = {0,0,0,0}; \
-   auto retval = std::make_shared<CLASSNAME>(instanceName, r); \
-   retval->BaseWidget::_deserialize(properties);        \
-   return retval;}                                       \
-/////////////////////////////////////////////////////////////////////////////////////////
-#define REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME) \
-   CLASSNAME(const std::string& name, const std::string& typeName, CTOR_RECT): PARENT_CLASSNAME(name, typeName, r)
-/////////////////////////////////////////////////////////////////////////////////////////
-#define REYENGINE_DEFAULT_CTOR(CLASSNAME) \
-   CLASSNAME(const std::string& name, CTOR_RECT): CLASSNAME(name, _get_static_constexpr_typename(), r){}
-/////////////////////////////////////////////////////////////////////////////////////////
-#define REYENGINE_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME) \
-protected:                                                \
-   void _register_parent_properties() override{           \
-      PARENT_CLASSNAME::_register_parent_properties();    \
-      PARENT_CLASSNAME::registerProperties();             \
-   }
-
-#define REYENGINE_OBJECT(CLASSNAME, PARENT_CLASSNAME)  \
-public:                                                   \
-   REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(CLASSNAME)  \
-   REYENGINE_SERIALIZER(CLASSNAME, PARENT_CLASSNAME)       \
-   REYENGINE_DEFAULT_CTOR(CLASSNAME)                       \
-   REYENGINE_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME)  \
-   REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME)
-
-
 class Scene;
 class Draggable;
 class  BaseWidget
 : public inheritable_enable_shared_from_this<BaseWidget>
 , public EventSubscriber
 , public EventPublisher
-, public Style::Themeable
+, public Component
 {
    using ChildIndex = unsigned long;
    using WidgetPtr = std::shared_ptr<BaseWidget>;
@@ -103,10 +67,8 @@ public:
    };
 
    static constexpr char TYPE_NAME[] = "BaseWidget";
-   BaseWidget(const std::string& name, std::string  typeName, ReyEngine::Rect<float> rect);
+   BaseWidget(const std::string& name, std::string  typeName);
    ~BaseWidget();
-   uint64_t getRid() const {return _rid;}
-   std::string getName() const {return _name;}
 
    //rect stuff
    ReyEngine::Rect<int> getRect() const {return _rect.value;}
@@ -173,12 +135,11 @@ public:
    std::optional<WidgetPtr> removeChild(const std::string& name, bool quiet = false); //quiet silences the output if child is not found.
    void removeAllChildren(); //removes all children and DOES NOT RETURN THEM!
 
-   bool operator==(const WidgetPtr& other) const {if (other){return other->getRid()==_rid;}return false;}
-   bool operator==(const BaseWidget& other) const{return other._rid == _rid;}
 
    template <typename T> bool is_base_of(){return std::is_base_of_v<BaseWidget, T>;}
    static void registerType(const std::string& typeName, const std::string& parentType, bool isVirtual, Deserializer fx){TypeManager::registerType(typeName, parentType, isVirtual, fx);}
    std::string serialize();
+   std::shared_ptr<Style::Theme>& getTheme(){return theme;}
 protected:
    std::shared_ptr<BaseWidget> toBaseWidget(){return inheritable_enable_shared_from_this<BaseWidget>::downcasted_shared_from_this<BaseWidget>();}
    virtual void _on_application_ready(){}; //called when the main loop is starting, or immediately if that's already happened
@@ -246,13 +207,14 @@ protected:
    static constexpr int GRAB_HANDLE_SIZE = 10;
    ReyEngine::Rect<int> _getGrabHandle(int index);// 0-3 clockwise starting in top left (TL,TR,BR,BL)
    int _editor_grab_handles_dragging = -1; //which grab handle is being drug around
-private:
+   ChildMap _children;
+   ChildOrder _childrenOrdered;
+   std::vector<std::shared_ptr<Component>> _components;
+
    AnchorProperty _anchor;
    void rename(WidgetPtr& child, const std::string& newName);
-   uint64_t _rid; //unique identifier
    const std::string _typeName; //can't just use static constexpr TYPE_NAME since we need to know what the type is if using type-erasure
-   std::string _name;
-   BoolProperty _isProcessed;
+
    std::weak_ptr<BaseWidget> _parent;
    ///If this widget is the root of a scene, then the rest of the scene data is here.
    std::optional<std::shared_ptr<Scene>> _scene;
@@ -266,9 +228,8 @@ private:
    Handled _process_unhandled_input(InputEvent&); //pass input to children if they want it and then process it for ourselves if necessary
    Handled _process_unhandled_editor_input(InputEvent&); //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)
    InputFilter inputFilter = InputFilter::INPUT_FILTER_PASS_AND_PROCESS;
+   std::shared_ptr<Style::Theme> theme;
 
-   ChildMap _children;
-   ChildOrder _childrenOrdered;
    friend class Window;
    friend class Application;
 };

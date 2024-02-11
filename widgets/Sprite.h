@@ -14,7 +14,7 @@ public:
    void render() const override;
    void registerProperties() override;
    void _init() override;
-   bool setTexture(const ReyEngine::FileSystem::File&, const ReyEngine::Rect<int>& drawRegion);
+   bool setTexture(const ReyEngine::FileSystem::File&);
    void fitTexture(); //makes the sprite the same size as the texture REGION (not necessarily the texture SIZE!)
 
 protected:

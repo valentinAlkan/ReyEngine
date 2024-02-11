@@ -6,6 +6,7 @@
 #include <memory>
 #include <unordered_map>
 #include "DrawInterface.h"
+#include "SharedFromThis.h"
 
 #define PROP_TYPE(propName) static constexpr char propName[] = #propName;
 #define PROPERTY_DECLARE(PROPERTYNAME, ...) PROPERTYNAME(#PROPERTYNAME, ##__VA_ARGS__)
@@ -44,7 +45,7 @@ struct PropertyPrototype{
 };
 
 ///Something that can have properties (and therefore subproperties
-struct PropertyContainer{
+struct PropertyContainer : public inheritable_enable_shared_from_this<PropertyContainer> {
    ///make sure ALL register property functions are called
    virtual void registerProperties() = 0;
    void registerProperty(BaseProperty& property);

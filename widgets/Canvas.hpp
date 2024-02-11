@@ -5,7 +5,7 @@ class Canvas : public BaseWidget {
 
 public:
 REYENGINE_OBJECT(Canvas, BaseWidget)
-, target(r.size())
+, target()
 {}
 public:
    void renderBegin(ReyEngine::Pos<double>& textureOffset) override {
@@ -17,7 +17,7 @@ public:
       target.render(getGlobalRect().pos());
    }
    void _on_rect_changed() override {
-      target.resize(_rect.value.size());
+      target.setSize(_rect.value.size());
    }
    void _process(float dt) override {}
    void registerProperties() override{

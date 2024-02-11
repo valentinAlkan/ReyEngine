@@ -3,6 +3,8 @@
 #include <utility>
 #include <array>
 #include "Application.h"
+#include "Scene.h"
+#include "Canvas.hpp"
 
 using namespace std;
 using namespace ReyEngine;
@@ -27,6 +29,9 @@ Window::Window(const std::string &title, int width, int height, const std::vecto
    InitWindow(width, height, title.c_str());
    SetTargetFPS(targetFPS);
    Application::ready();
+   //Create canvas
+   _root = make_shared<Canvas>("root");
+   _root->setSize(getSize());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

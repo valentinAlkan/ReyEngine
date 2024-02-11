@@ -8,11 +8,11 @@ using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Editor::_init() {
-   auto mainPanel = make_shared<Panel>("MainPanel", Rect<int>());
+   auto mainPanel = make_shared<Panel>("MainPanel");
    mainPanel->setLayout<VLayout>();
    addChild(mainPanel);
 
-   auto menuBarPanel= make_shared<Panel>("menuBarPanel", Rect<int>());
+   auto menuBarPanel= make_shared<Panel>("menuBarPanel");
    menuBarPanel->setLayout<HLayout>();
    mainPanel->addToLayout(menuBarPanel);
    //set blue background (you gotta color it hard...so they can *see* it)
@@ -20,23 +20,23 @@ void Editor::_init() {
    //set menubar size
    menuBarPanel->setMaxSize({0,25});
    //add some buttons to the menu bar
-   auto fileButton  = std::make_shared<PushButton>("fileBtn", Rect<int>());
+   auto fileButton  = std::make_shared<PushButton>("fileBtn");
    fileButton->setMaxSize({100,99999});
    menuBarPanel->addToLayout(fileButton);
 
    //create the workspace
-   auto mainHLayout = make_shared<HLayout>("mainHLayout", Rect<int>());
+   auto mainHLayout = make_shared<HLayout>("mainHLayout");
    mainHLayout->getTheme()->background.colorPrimary.set(ReyEngine::Colors::lightGray);
    mainPanel->addToLayout(mainHLayout);
 
    //create left panel
-   auto mainHLayoutLeftPanel = make_shared<VLayout>("mainHLayoutLeftPanel", Rect<int>());
+   auto mainHLayoutLeftPanel = make_shared<VLayout>("mainHLayoutLeftPanel");
    mainHLayout->addChild(mainHLayoutLeftPanel);
 
    //create scene tree panel
    {
       auto treeRoot = make_shared<TreeItem>("SceneRoot");
-      sceneTree = make_shared<SceneTree>("sceneTree", Rect<int>());
+      sceneTree = make_shared<SceneTree>("sceneTree");
       sceneTree->setRoot(treeRoot);
       mainHLayoutLeftPanel->addChild(sceneTree);
       sceneTree->getTheme()->background.colorPrimary.set(ReyEngine::Colors::yellow);
@@ -44,18 +44,18 @@ void Editor::_init() {
 
    //create widget tree panel
    {
-      widgetTree = make_shared<WidgetTree>("widgetTree", Rect<int>());
+      widgetTree = make_shared<WidgetTree>("widgetTree");
       mainHLayoutLeftPanel->addChild(widgetTree);
       widgetTree->getTheme()->background.colorPrimary.set(ReyEngine::Colors::green);
    }
 
    //create the (blank) workspace
-   auto workspace = make_shared<Workspace>("Workspace", Rect<int>());
+   auto workspace = make_shared<Workspace>("Workspace");
    workspace->getTheme()->background.colorPrimary.set(COLORS::gray);
    mainHLayout->addChild(workspace);
 
    //create the right panel inspector
-   inspector = make_shared<Inspector>("Inspector", Rect<int>());
+   inspector = make_shared<Inspector>("Inspector");
    mainHLayout->addChild(inspector);
    //connect events
    auto onWidgetAdded = [&](const Workspace::EventWidgetAdded& event){

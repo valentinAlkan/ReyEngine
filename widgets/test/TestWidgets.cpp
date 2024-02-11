@@ -15,7 +15,7 @@ stringstream text;
    text << getRect().toString() << "\n";
    text << "someString = " << someString.value << "\n";
    text << "subProp = " << someString.subProp.value << "\n";
-   _drawText(text.str(), {0,0}, getThemeReadOnly().font.value);
+   _drawText(text.str(), {0,0}, theme->font.value);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -25,5 +25,5 @@ void PosTestWidget::_process(float dt) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void PosTestWidget::registerProperties() {
-   registerProperty(someString);
+   Component::registerProperty(someString);
 }

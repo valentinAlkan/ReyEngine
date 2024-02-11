@@ -56,9 +56,9 @@ class PushButton : public BaseButton{
    REYENGINE_OBJECT(PushButton, BaseButton)
    , PROPERTY_DECLARE(text){
       text.value = getName();
-      getTheme()->background.colorPrimary.set(COLORS::gray);
-      getTheme()->background.colorSecondary.set(COLORS::lightGray);
-      getTheme()->background.colorTertiary.set(COLORS::blue);
+      theme->background.colorPrimary.set(COLORS::gray);
+      theme->background.colorSecondary.set(COLORS::lightGray);
+      theme->background.colorTertiary.set(COLORS::blue);
    }
    void registerProperties() override {
       registerProperty(text);
@@ -66,12 +66,12 @@ class PushButton : public BaseButton{
    void render() const override {
       static constexpr int SEGMENTS = 10;
       static constexpr int THICKNESS = 2;
-      auto color = getThemeReadOnly().background.colorPrimary.value;
-      if (isHovered()) color = getThemeReadOnly().background.colorSecondary.value;
-      if (down.value) color = getThemeReadOnly().background.colorTertiary.value;
-      _drawRectangleRounded(getRect().toSizeRect(), getThemeReadOnly().roundness.value, SEGMENTS, color);
-      _drawRectangleRoundedLines(getRect().toSizeRect(), getThemeReadOnly().roundness.value, SEGMENTS, THICKNESS, COLORS::black);
-      _drawTextCentered(text.value, getRect().toSizeRect().center(), getThemeReadOnly().font.value);
+      auto color = theme->background.colorPrimary.value;
+      if (isHovered()) color = theme->background.colorSecondary.value;
+      if (down.value) color = theme->background.colorTertiary.value;
+      _drawRectangleRounded(getRect().toSizeRect(), theme->roundness.value, SEGMENTS, color);
+      _drawRectangleRoundedLines(getRect().toSizeRect(), theme->roundness.value, SEGMENTS, THICKNESS, COLORS::black);
+      _drawTextCentered(text.value, getRect().toSizeRect().center(), theme->font.value);
    }
    StringProperty text;
 public:
