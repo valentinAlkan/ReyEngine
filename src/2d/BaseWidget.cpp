@@ -489,7 +489,7 @@ void BaseWidget::setRect(const ReyEngine::Rect<int>& r){
    // enum class Anchor{NONE, LEFT, RIGHT, TOP, BOTTOM, FILL, TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, CENTER};
    switch (_anchor.value) {
       case Anchor::NONE:
-         _rect.set(r);
+          newRect = r;
          break;
       case Anchor::FILL: {
          //take up as much space as parent has to offer
@@ -510,12 +510,36 @@ void BaseWidget::setRect(const ReyEngine::Rect<int>& r){
           newRect = {{parentWidth / 2 - getWidth() / 2, 0}, getSize()};
           break;
       }
-      case Anchor::BOTTOM: {}
-      case Anchor::TOP_LEFT: {}
-      case Anchor::TOP_RIGHT: {}
-      case Anchor::BOTTOM_RIGHT: {}
-      case Anchor::BOTTOM_LEFT: {}
-      case Anchor::CENTER: {}
+      case Anchor::BOTTOM: {
+          //Place at the center bottom of the parent
+          newRect = {{parentWidth / 2 - getWidth() / 2, parentHeight - getHeight()}, getSize()};
+          break;
+      }
+      case Anchor::TOP_LEFT: {
+          //Place at the top left of the parent
+          newRect = {{0, 0}, getSize()};
+          break;
+      }
+      case Anchor::TOP_RIGHT: {
+          //Place at the top right of the parent
+          newRect = {{parentWidth - getWidth(), 0}, getSize()};
+          break;
+      }
+      case Anchor::BOTTOM_RIGHT: {
+          //Place at the bottom right of the parent
+          newRect = {{parentWidth - getWidth(), parentHeight - getHeight()}, getSize()};
+          break;
+      }
+      case Anchor::BOTTOM_LEFT: {
+          //Place at the bottom left of the parent
+          newRect = {{0, parentHeight - getHeight()}, getSize()};
+          break;
+      }
+      case Anchor::CENTER: {
+          //Place at the center of the parent
+          newRect = {{parentWidth / 2 - getWidth() / 2, parentHeight / 2 - getHeight() / 2}, getSize()};
+          break;
+      }
 
       default:
          break;
