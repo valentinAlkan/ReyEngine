@@ -69,9 +69,9 @@ class PushButton : public BaseButton{
       auto color = theme->background.colorPrimary.value;
       if (isHovered()) color = theme->background.colorSecondary.value;
       if (down.value) color = theme->background.colorTertiary.value;
-      _drawRectangleRounded(getRect().toSizeRect(), theme->roundness.value, SEGMENTS, color);
-      _drawRectangleRoundedLines(getRect().toSizeRect(), theme->roundness.value, SEGMENTS, THICKNESS, COLORS::black);
-      _drawTextCentered(text.value, getRect().toSizeRect().center(), theme->font.value);
+      _drawRectangleRounded(_rect.value.toSizeRect(), theme->roundness.value, SEGMENTS, color);
+      _drawRectangleRoundedLines(_rect.value.toSizeRect(), theme->roundness.value, SEGMENTS, THICKNESS, COLORS::black);
+      _drawTextCentered(text.value, _rect.value.toSizeRect().center(), theme->font.value);
    }
    StringProperty text;
 public:

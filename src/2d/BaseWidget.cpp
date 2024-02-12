@@ -23,6 +23,21 @@ BaseWidget::~BaseWidget() {
 //   EventManager::unsubscribe(thiz);
 };
 
+///////////////////////////////////////////////////////////////////////////////////////////
+ReyEngine::ComponentPath BaseWidget::getPath() {
+   //return the lookup path to the widget by backtracking to the root
+   std::vector<ComponentPath> reversePath;
+   reversePath.push_back(getName());
+   auto parent = getParent().lock();
+   while (parent){
+      reversePath.push_back(parent->getName());
+      parent = parent->getParent().lock();
+   }
+   //reverse the reverse path, then join it by the name separator
+   std::reverse(reversePath.begin(), reversePath.end());
+   return string_tools::join(COMPONENT_PATH_SEP, reversePath);
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////
 bool BaseWidget::setName(const std::string& newName, bool append_index) {
    auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
@@ -142,7 +157,7 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::addChild(WidgetPtr widget){
    auto me = toBaseWidget();
    Application::printDebug() << "Registering child " << widget->getName() << " to parent " << getName() << endl;
    Application::registerForEnterTree(widget, me);
-   widget->isInLayout = isLayout;
+
    return widget;
 }
 
@@ -213,8 +228,8 @@ void BaseWidget::renderChain(ReyEngine::Pos<double>& parentOffset) {
    _renderOffset += (localOffset + parentOffset);
    render();
    //renderChildren
-   for (const auto& [name, childIter] : _children){
-      childIter.second->renderChain(_renderOffset);
+   for (const auto& child : _childrenOrdered){
+      child->renderChain(_renderOffset);
    }
    _renderOffset -= (localOffset + parentOffset); //subtract local offset when we are done
    renderEnd();
@@ -331,12 +346,8 @@ void BaseWidget::setProcess(bool process) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-bool BaseWidget::isRoot() {
-   auto root = Application::instance().getWindow()->getCanvas();
-   if (root) {
-      return Application::instance().getWindow()->getCanvas()->getRid() == getRid();
-   }
-   return false;
+bool BaseWidget::isRoot() const {
+   return _isRoot;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -468,36 +479,82 @@ std::optional<std::shared_ptr<BaseWidget>> BaseWidget::getWidgetAt(ReyEngine::Po
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setRect(const ReyEngine::Rect<int>& r){
    ReyEngine::Rect<int> newRect(r);
-   auto parent = getParent();
-   if(getAnchoring() != Anchor::NONE) {
-      if (!parent.expired()) {
-         newRect = {{0, 0}, getSize()};
-      } else if (isRoot()) {
-         newRect = {{0, 0}, Application::instance().getWindow()->getSize()};
-      } else {
-         _rect.set(r);
-         _on_rect_changed();
-         _publishSize();
-         return;
-         //todo: this is weird, find a way to make this flow better
-      }
+   auto parent = getParent().lock();
+   int parentHeight, parentWidth;
+   if(parent && getAnchoring() != Anchor::NONE) {
+      parentHeight = parent->getHeight();
+      parentWidth = parent->getWidth();
+      newRect = {{0, 0}, parent->getSize()};
+   } else if (isRoot()) {
+      newRect = {{0, 0}, Application::instance().getWindow()->getSize()};
+   } else {
+      _rect.set(r);
+      __on_rect_changed();
+      _publishSize();
+      return;
+      //todo: this is weird, find a way to make this flow better
    }
+
+   // enum class Anchor{NONE, LEFT, RIGHT, TOP, BOTTOM, FILL, TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, CENTER};
    switch (_anchor.value) {
       case Anchor::NONE:
-         _rect.set(r);
+          newRect = r;
          break;
       case Anchor::FILL: {
          //take up as much space as parent has to offer
-         _rect.set(newRect);
          break;
-//         case Anchor::BOTTOM:
-//            //bottom of this widget aligns with bottom of parent
-//            _rect.set()
       }
+      case Anchor::LEFT: {
+          //Place on the center left of the parent
+          newRect = {{0, parentHeight / 2 - getHeight() / 2}, getSize()};
+          break;
+      }
+      case Anchor::RIGHT: {
+          //Place on the center right of the parent
+          newRect = {{parentWidth - getWidth(), parentHeight / 2 - getHeight() / 2}, getSize()};
+          break;
+      }
+      case Anchor::TOP: {
+          //Place at the center top of the parent
+          newRect = {{parentWidth / 2 - getWidth() / 2, 0}, getSize()};
+          break;
+      }
+      case Anchor::BOTTOM: {
+          //Place at the center bottom of the parent
+          newRect = {{parentWidth / 2 - getWidth() / 2, parentHeight - getHeight()}, getSize()};
+          break;
+      }
+      case Anchor::TOP_LEFT: {
+          //Place at the top left of the parent
+          newRect = {{0, 0}, getSize()};
+          break;
+      }
+      case Anchor::TOP_RIGHT: {
+          //Place at the top right of the parent
+          newRect = {{parentWidth - getWidth(), 0}, getSize()};
+          break;
+      }
+      case Anchor::BOTTOM_RIGHT: {
+          //Place at the bottom right of the parent
+          newRect = {{parentWidth - getWidth(), parentHeight - getHeight()}, getSize()};
+          break;
+      }
+      case Anchor::BOTTOM_LEFT: {
+          //Place at the bottom left of the parent
+          newRect = {{0, parentHeight - getHeight()}, getSize()};
+          break;
+      }
+      case Anchor::CENTER: {
+          //Place at the center of the parent
+          newRect = {{parentWidth / 2 - getWidth() / 2, parentHeight / 2 - getHeight() / 2}, getSize()};
+          break;
+      }
+
       default:
          break;
    }
-   _on_rect_changed();
+   _rect.set(newRect);
+   __on_rect_changed();
    _publishSize();
 }
 
@@ -511,10 +568,23 @@ void BaseWidget::setPos(const ReyEngine::Pos<int>& pos) {
    ReyEngine::Rect<int> r(pos, _rect.value.size());
    setRect(r);
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setSize(const ReyEngine::Size<int>& size){
    ReyEngine::Rect<int> r(_rect.value.pos(), size);
    setRect(r);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::setAnchoring(Anchor newAnchor) {
+   if (isInLayout){
+      Application::printError() << getPath() << ": Children of layouts cannot have anchoring!";
+      return;
+   }
+   _anchor.value = newAnchor;
+   if (!getParent().expired()){
+      setRect(_rect.value);
+   }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -528,8 +598,33 @@ void BaseWidget::setWidth(int width){
    ReyEngine::Rect<int> r(_rect.value.pos(), {width, _rect.value.height});
    setRect(r);
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setHeight(int height){
    ReyEngine::Rect<int> r(_rect.value.pos(), {_rect.value.width, height});
    setRect(r);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::__on_child_added(WidgetPtr widget){
+   if (!isLayout){
+      for (auto& child : _childrenOrdered){
+         if (child->isAnchored()){
+            child->setRect(child->_rect);
+         }
+      }
+   }
+   _on_child_added(widget);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::__on_rect_changed(){
+   if (!isLayout) {
+      for (auto &child: _childrenOrdered) {
+         if (child->isAnchored()) {
+            child->setRect(child->_rect);
+         }
+      }
+   }
+   _on_rect_changed();
 }
