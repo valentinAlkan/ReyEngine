@@ -10,6 +10,7 @@ REYENGINE_OBJECT(Canvas, BaseWidget)
 public:
    void renderBegin(ReyEngine::Pos<double>& textureOffset) override {
       target.beginRenderMode();
+      ClearBackground(ReyEngine::Colors::none);
    }
    void render() const override {}
    void renderEnd() override{
