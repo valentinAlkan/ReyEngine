@@ -179,27 +179,27 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--childBoundingBoxTest")){
-      auto rootControl = make_shared<Control>("RootControl");
-      rootControl->setRect({0,0,2000,2000});
-      root->addChild(rootControl);
+      auto boxBounder = make_shared<Control>("BoxBounder");
+      boxBounder->setRect({0, 0, 2000, 2000});
+      root->addChild(boxBounder);
       //add some children
       auto label1 = make_shared<Label>("Label1");
-      label1->setRect(Rect<int>(40,40,0,0));
-      root->addChild(label1);
+      label1->setPos(Pos<int>(40,40));
+      boxBounder->addChild(label1);
       auto label2 = make_shared<Label>("Label2");
-      label2->setRect(Rect<int>(40,300,0,0));
-      root->addChild(label2);
+      label2->setPos(Pos<int>(40,300));
+      boxBounder->addChild(label2);
 
       //draw the child bounding box
       auto drawBoundingBox = [&](){
-         auto size = rootControl->getChildBoundingBox();
+         auto size = boxBounder->getChildBoundingBox();
          auto mousePos = InputManager::getMousePos();
          ReyEngine::drawRectangle({{0,0},size}, ReyEngine::Colors::yellow);
          ReyEngine::drawRectangle(label1->getRect(), ReyEngine::Colors::green);
          ReyEngine::drawRectangle(label2->getRect(), ReyEngine::Colors::green);
-         ReyEngine::drawLine({label1->localToGlobal({0, 0}), mousePos}, COLORS::red);
+         ReyEngine::drawLine({{0,0}, mousePos}, COLORS::red);
       };
-      rootControl->setRenderCallback(drawBoundingBox);
+      boxBounder->setRenderCallback(drawBoundingBox);
 
       auto process = [&](){
          auto globalPos = InputManager::getMousePos();
@@ -207,7 +207,7 @@ int main(int argc, char** argv)
          auto newPos = label1->getParent().lock()->globalToLocal(globalPos);
          label1->setRect({newPos, label1->getSize()});
       };
-      rootControl->setProcessCallback(process);
+      boxBounder->setProcessCallback(process);
 
    }
 
