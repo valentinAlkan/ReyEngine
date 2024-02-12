@@ -69,13 +69,15 @@ public:
    static constexpr char TYPE_NAME[] = "BaseWidget";
    BaseWidget(const std::string& name, std::string  typeName);
    ~BaseWidget();
+   //this will eventually move to component
+   ReyEngine::ComponentPath getPath();
 
    //rect stuff
    ReyEngine::Rect<int> getRect() const {return _rect.value;}
    ReyEngine::Rect<int> getGlobalRect() const {auto globalPos = getGlobalPos(); return {globalPos.x, globalPos.y, getSize().x, getSize().y};}
    ReyEngine::Pos<int> getGlobalPos() const;
    ReyEngine::Size<int> getChildBoundingBox() const; //get the smallest rectangle that contains all children, starting from 0,0. Does not include grandchildren.
-   ReyEngine::Pos<int> getPos() const {return {getRect().x, getRect().y};}
+   ReyEngine::Pos<int> getPos() const {return {_rect.value.x, _rect.value.y};}
    ReyEngine::Size<int> getSize() const {return getRect().size();}
    int getWidth() const {return _rect.value.width;}
    int getHeight() const {return _rect.value.height;}
@@ -88,8 +90,9 @@ public:
    void setVisible(bool visible){_visible = visible;}
    bool getVisible() const {return _visible;}
    //sizing
-   void setAnchoring(Anchor newAnchor){_anchor.set(newAnchor);setRect(getRect());}
+   void setAnchoring(Anchor newAnchor);
    Anchor getAnchoring(){return _anchor.value;}
+   bool isAnchored(){return _anchor.value != Anchor::NONE;}
    void setMaxSize(const ReyEngine::Size<int>& size){maxSize = size;}
    void setMinSize(const ReyEngine::Size<int>& size){minSize = size;}
    void setRect(const ReyEngine::Rect<int>& r);
@@ -129,7 +132,7 @@ public:
    WidgetPtr setFreeImmediately(); // Pauses other threads and immediately removes objects from the tree.
 
    virtual void render() const = 0; //draw the widget
-   bool isRoot();
+   bool isRoot() const;
 
    std::optional<WidgetPtr> addChild(WidgetPtr);
    std::optional<WidgetPtr> removeChild(const std::string& name, bool quiet = false); //quiet silences the output if child is not found.
@@ -141,13 +144,16 @@ public:
    std::string serialize();
    std::shared_ptr<Style::Theme>& getTheme(){return theme;}
 protected:
+//   void recalculateRect();
    std::shared_ptr<BaseWidget> toBaseWidget(){return inheritable_enable_shared_from_this<BaseWidget>::downcasted_shared_from_this<BaseWidget>();}
    virtual void _on_application_ready(){}; //called when the main loop is starting, or immediately if that's already happened
    virtual void _init(){}; //run ONCE PER OBJECt when it enters tree for first time.
+   void __on_rect_changed(); //internal. Trigger resize for anchored widgets.
    virtual void _on_rect_changed(){} //called when the rect is manipulated
    virtual void _on_mouse_enter(){};
    virtual void _on_mouse_exit(){};
    virtual void _on_child_added_immediate(WidgetPtr&){} //Called immediately upon a call to addChild - DANGER: widget is not actually a child yet! It is (probably) a very bad idea to do much at all here. Make sure you know what you're doing.
+   void __on_child_added(WidgetPtr); //internal. Trigger resize for anchored widgets.
    virtual void _on_child_added(WidgetPtr&){} // called at the beginning of the next frame after a child is added. Child is now owned by us. Safe to manipulate child.
    virtual void _on_enter_tree(){} //called every time a widget enters the tree
    virtual void _on_exit_tree(){}
@@ -230,6 +236,7 @@ protected:
    InputFilter inputFilter = InputFilter::INPUT_FILTER_PASS_AND_PROCESS;
    std::shared_ptr<Style::Theme> theme;
 
+   bool _isRoot = false;
    friend class Window;
    friend class Application;
 };

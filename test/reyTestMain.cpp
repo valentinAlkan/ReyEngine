@@ -10,7 +10,7 @@
 #include "TextureTestWidget.hpp"
 #include "Slider.hpp"
 #include "Timer.hpp"
-#include "Layout.hpp"
+#include "Layout.h"
 #include "Panel.hpp"
 #include "Editor.h"
 #include "Tree.h"
@@ -68,13 +68,14 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--inspector", "InspectorTest", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--spriteTest", "SpriteTest", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--buttonTest", "PushButton usage example", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--anchorTest", "Anchoring options test", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    //create window (or don't idk)
    auto window = Application::instance().createWindow("MainWindow", screenWidth, screenHeight, {Window::RESIZE});
    if (!window){throw std::runtime_error("Something went horribly wrong! Please make a note of it.");}
 
-   auto root = make_shared<Canvas>("Root");
+   auto root = window->getCanvas();
    root->setAnchoring(BaseWidget::Anchor::FILL);
    auto argLoadScene = args.getArg("--loadScene");
    if (argLoadScene){
@@ -485,6 +486,90 @@ int main(int argc, char** argv)
 
    }
 
+   else if (args.getArg("--anchorTest")){
+      auto vLayout = make_shared<VLayout>("VLayout");
+      vLayout->setAnchoring(BaseWidget::Anchor::FILL);
+      
+      //create the 4 Controls
+      auto controlTop = make_shared<Control>("TopControl");
+      auto controlMiddle = make_shared<Control>("MiddleControl");
+      auto controlBottom = make_shared<Control>("BottomControl");
+      auto controlFill = make_shared<Control>("FillControl");
+
+      vLayout->addChild(controlTop);
+      vLayout->addChild(controlMiddle);
+      vLayout->addChild(controlBottom);
+      vLayout->addChild(controlFill);
+
+      for (auto& control : {controlTop, controlMiddle, controlMiddle, controlFill}) {
+         control->getTheme()->background.set(Style::Fill::SOLID);
+         control->getTheme()->background.colorPrimary.set(Colors::randColor());
+      }
+
+      //create test labels for all anchoring
+      auto noneLabel = make_shared<Label>("NoneLabel");
+      noneLabel->setText("None");
+      noneLabel->setAnchoring(BaseWidget::Anchor::NONE);
+      controlTop->addChild(noneLabel);
+
+      auto leftLabel = make_shared<Label>("LeftLabel");
+      leftLabel->setText("Left");
+      leftLabel->setAnchoring(BaseWidget::Anchor::LEFT);
+      controlTop->addChild(leftLabel);
+
+      auto rightLabel = make_shared<Label>("RightLabel");
+      rightLabel->setText("Right");
+      rightLabel->setAnchoring(BaseWidget::Anchor::RIGHT);
+      controlTop->addChild(rightLabel);
+
+      auto topLabel = make_shared<Label>("TopLabel");
+      topLabel->setText("Top");
+      topLabel->setAnchoring(BaseWidget::Anchor::TOP);
+      controlTop->addChild(topLabel);
+
+      auto bottomLabel = make_shared<Label>("BottomLabel");
+      bottomLabel->setText("Bottom");
+      bottomLabel->setAnchoring(BaseWidget::Anchor::BOTTOM);
+      controlMiddle->addChild(bottomLabel);
+
+      auto bottomLeftLabel = make_shared<Label>("BottomLeftLabel");
+      bottomLeftLabel->setText("Bottom Left");
+      bottomLeftLabel->setAnchoring(BaseWidget::Anchor::BOTTOM_LEFT);
+      controlMiddle->addChild(bottomLeftLabel);
+
+      auto bottomRightLabel = make_shared<Label>("BottomRightLabel");
+      bottomRightLabel->setText("Bottom Right");
+      bottomRightLabel->setAnchoring(BaseWidget::Anchor::BOTTOM_RIGHT);
+      controlMiddle->addChild(bottomRightLabel);
+
+      auto topLeftLabel = make_shared<Label>("TopLeftLabel");
+      topLeftLabel->setText("Top Left");
+      topLeftLabel->setAnchoring(BaseWidget::Anchor::TOP_LEFT);
+      controlMiddle->addChild(topLeftLabel);
+
+      auto topRightLabel = make_shared<Label>("TopRightLabel");
+      topRightLabel->setText("Top Right");
+      topRightLabel->setAnchoring(BaseWidget::Anchor::TOP_RIGHT);
+      controlBottom->addChild(topLabel);
+
+      auto fillButton = make_shared<PushButton>("FillLabel");
+      fillButton->setText("Fill");
+      fillButton->setAnchoring(BaseWidget::Anchor::FILL);
+      controlFill->addChild(fillButton);
+
+      auto centerLabel = make_shared<Label>("CenterLabel");
+      centerLabel->setText("Center");
+      centerLabel->setAnchoring(BaseWidget::Anchor::CENTER);
+      controlBottom->addChild(centerLabel);
+
+      for (auto& label : {noneLabel, leftLabel, rightLabel, topLabel, bottomLabel, bottomLeftLabel, bottomRightLabel, topLeftLabel, topRightLabel, centerLabel}) {
+         label->getTheme().get()->background.set(Style::Fill::SOLID);
+         label->getTheme().get()->background.colorPrimary.set(Colors::green);
+      }
+      
+      root->addChild(vLayout);
+   }
+
    else if (args.getArg("--inspector")){
       //make a vlayout - put a widget at the top and the inspector below it
       root->addChild(make_shared<VLayout>("VLayout"));
@@ -502,7 +587,6 @@ int main(int argc, char** argv)
       return 0;
    }
 
-   window->setRoot(root);
    root->setAnchoring(BaseWidget::Anchor::FILL);
    window->exec();
    return 0;

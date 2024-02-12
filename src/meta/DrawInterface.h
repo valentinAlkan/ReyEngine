@@ -8,6 +8,8 @@
 #define NOT_IMPLEMENTED throw std::runtime_error("Not implemented!")
 
 namespace ReyEngine {
+   using ComponentPath = std::string;
+   static constexpr char COMPONENT_PATH_SEP = '/';
    namespace FileSystem {
       struct File;
       struct Directory;
@@ -328,6 +330,7 @@ namespace ReyEngine {
       static constexpr ColorRGBA white = {130, 130, 130, 255};
       static constexpr ColorRGBA transparent = {0, 0, 0, 0};
       static constexpr ColorRGBA none = {255, 255, 255, 255};
+      static inline ColorRGBA randColor(){return {std::rand() % 255, std::rand() % 255, std::rand() % 255, 255};}  //not very random
    }
 
    struct ReyEngineFont{

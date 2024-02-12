@@ -1,6 +1,6 @@
 #pragma once
 #include "ScrollArea.hpp"
-#include "Layout.hpp"
+#include "Layout.h"
 #include "Workspace.h"
 
 class Inspector : public ScrollArea {
