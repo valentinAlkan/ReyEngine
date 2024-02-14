@@ -31,6 +31,12 @@ public:
       processCallback = fx;
       setProcess(true);
    }
+
+   //Set the size of the font
+   void setFontSize(float size){
+      theme->font.value.size = size;
+   }
+
 protected:
    std::function<void()> renderCallback;
    std::function<void()> processCallback;
