@@ -245,7 +245,7 @@ void Window::exec(){
 
       //draw children on top of their parents
       BeginDrawing();
-      ClearBackground(RAYWHITE);
+      //ClearBackground(WHITE);
       ReyEngine::Pos<double> texOffset;
       _root->renderChain(texOffset);
 
