@@ -31,6 +31,7 @@ public:
       processCallback = fx;
       setProcess(true);
    }
+
 protected:
    std::function<void()> renderCallback;
    std::function<void()> processCallback;
