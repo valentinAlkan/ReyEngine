@@ -102,6 +102,12 @@ namespace Style {
          registerProperty(roundness);
          registerProperty(font);
       }
+
+      //Set the size of the font
+      void setFontSize(float size){
+         font.value.size = size;
+      }
+
    private:
       Empty value; //do not use - only exists to satisfy construction requirements
    };
