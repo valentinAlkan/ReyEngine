@@ -41,6 +41,7 @@ namespace Style {
 
    /////////////////////////////////////////////////////////////////////////////////////////
    struct FillProperty : public EnumProperty<Fill, 3>{
+      using Property<Fill>::operator=;
       FillProperty(const std::string& instanceName,  Fill defaultvalue)
       : EnumProperty<Fill, 3>(instanceName, defaultvalue)
       , PROPERTY_DECLARE(colorPrimary, ReyEngine::Colors::none)
@@ -82,7 +83,7 @@ namespace Style {
       : Property<Empty>(instanceName, PropertyTypes::Theme, Empty()),
       PROPERTY_DECLARE(outline, Outline::NONE),
       PROPERTY_DECLARE(background, Fill::NONE),
-      PROPERTY_DECLARE(foreground, ReyEngine::Colors::black),
+      PROPERTY_DECLARE(foreground, Fill::SOLID),
       PROPERTY_DECLARE(roundness, 0.01),
       PROPERTY_DECLARE(font)
       {}
@@ -90,7 +91,7 @@ namespace Style {
       Empty fromString(const std::string& data) override { return value;}
 
       FillProperty background;
-      ColorProperty foreground;
+      FillProperty foreground;
       OutlineProperty outline;
       FloatProperty roundness;
       FontProperty font;
