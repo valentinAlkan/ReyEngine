@@ -1,5 +1,5 @@
 #include "Inspector.h"
-#include "Button.hpp"
+#include "Button.h"
 #include "InspectorWidgetFactory.h"
 
 using namespace std;

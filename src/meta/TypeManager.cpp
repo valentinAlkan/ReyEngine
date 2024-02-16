@@ -2,7 +2,7 @@
 #include "TypeManager.h"
 #include "CustomTypes.h"
 #include "BaseWidget.h"
-#include "Button.hpp"
+#include "Button.h"
 #include "Label.hpp"
 #include "ScrollArea.hpp"
 #include "Slider.hpp"

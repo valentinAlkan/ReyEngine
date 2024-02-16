@@ -61,7 +61,7 @@ add_library(ReyEngine2D STATIC
     src/2d/Canvas.hpp
     src/2d/Panel.hpp
     src/2d/Slider.hpp
-    src/2d/Button.hpp
+    src/2d/Button.cpp
     src/2d/Label.hpp
     src/2d/Sprite.cpp
     src/2d/Layout.cpp

@@ -5,7 +5,7 @@
 #include "Logger.h"
 #include "ArgParse.h"
 #include "Label.hpp"
-#include "Button.hpp"
+#include "Button.h"
 #include "RootWidget.hpp"
 #include "TextureTestWidget.hpp"
 #include "Slider.hpp"
