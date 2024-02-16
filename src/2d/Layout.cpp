@@ -1,5 +1,8 @@
 #include "Layout.h"
 
+using namespace std;
+using namespace ReyEngine;
+
 /////////////////////////////////////////////////////////////////////////////////////////
 Layout::Layout(const std::string &name, const std::string &typeName, LayoutDir layoutDir)
 : Control(name, typeName)
@@ -40,7 +43,7 @@ void Layout::renderEnd() {
 void Layout::arrangeChildren() {
    //how much space we have to allocate
    auto totalSpace = dir == LayoutDir::HORIZONTAL ? getWidth() : getHeight();
-   auto pos = ReyEngine::Pos<int>(0, 0);
+   ReyEngine::Pos<int> pos;
    //how much space we will allocate to each child
    unsigned int childIndex = 0;
    auto calcRatio = [this](int startIndex) -> float{
@@ -55,18 +58,24 @@ void Layout::arrangeChildren() {
    for (auto& child: _childrenOrdered) {
       int allowedSpace = (int)(sizeLeft * calcRatio(childIndex));
       auto newRect = dir == LayoutDir::HORIZONTAL ? ReyEngine::Rect<int>(pos, {allowedSpace, _rect.value.height}) : ReyEngine::Rect<int>(pos, {_rect.value.width, allowedSpace});
-      auto minSize = dir == LayoutDir::HORIZONTAL ? child->getMinSize().x : child->getMinSize().y;
-      auto maxSize = dir == LayoutDir::HORIZONTAL ? child->getMaxSize().x : child->getMaxSize().y;
       //enforce min/max bounds
       int consumedSpace;
+      auto clampRect = [=](ReyEngine::Rect<int>& newRect){
+         auto minWidth = child->getMinSize().x;
+         auto maxWidth = child->getMaxSize().x;
+         auto minHeight = child->getMinSize().y;
+         auto maxHeight = child->getMaxSize().y;
+         newRect.width = math_tools::clamp(minWidth, maxWidth, newRect.width);
+         newRect.height = math_tools::clamp(minHeight, maxHeight, newRect.height);
+      };
       switch(dir) {
          case LayoutDir::HORIZONTAL:
-            newRect.width = math_tools::clamp(minSize, maxSize, newRect.width);
+            clampRect(newRect);
             pos.x += newRect.width;
             consumedSpace = newRect.width;
             break;
          case LayoutDir::VERTICAL:
-            newRect.height = math_tools::clamp(minSize, maxSize, newRect.height);
+            clampRect(newRect);
             pos.y += newRect.height;
             consumedSpace = newRect.height;
             break;
