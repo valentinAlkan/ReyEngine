@@ -422,7 +422,6 @@ int main(int argc, char** argv)
       //make sure you've installed any sprite resources in the CMake file or they will not be visible to the engine.
       // The executable runs out of the build directory and not the src directory.
       // use install_file() in the cmake
-      root->addChild(make_shared<Control>("Control"));
       auto spriteSheet = make_shared<Sprite>("SpriteSheet"); //either pass in a rect or do fit texture later
       spriteSheet->setTexture("test\\characters.png"); //if no rect passed in, region = texture size
       spriteSheet->fitTexture();

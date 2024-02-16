@@ -5,8 +5,7 @@ using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 bool ReyEngine::FileSystem::Path::exists() const {
- //todo
- return true;
+   return std::filesystem::exists(abs());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -32,6 +31,9 @@ string ReyEngine::FileSystem::Path::abs() const {
 ReyEngine::ReyTexture::ReyTexture(FileSystem::File file) {
    auto doReady = [&]() {
       auto path = file.abs();
+      if (!file.exists()){
+         Application::printError() << "LoadTexture failure: Texture file " << file.abs() << " does not exist!" << endl;
+      }
       _tex = LoadTexture(path.c_str());
       _texLoaded = true;
       size = {_tex.width, _tex.height};
