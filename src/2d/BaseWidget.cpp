@@ -138,18 +138,24 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::getChild(const std::string &chi
 
 /////////////////////////////////////////////////////////////////////////////////////////
 std::optional<BaseWidget::WidgetPtr> BaseWidget::addChild(WidgetPtr widget){
-   auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
+   if (widget == toBaseWidget()){
+       stringstream ss;
+       ss << "Cannot add widget " << widget->getName() << " to itself!" << endl;
+       Application::printError() << ss.str();
+       return nullopt;
+   }
+    auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
    auto found = getChild(widget->getName());
    if (found){
       stringstream ss;
       ss << "Widget " << getName() << " already has a child with name <" << widget->getName() << ">";
-      Application::printError() << ss.str() << endl;
+      Application::printError() << ss.str();
       return nullopt;
    }
    if (widget->getParent().lock()){
       stringstream ss;
       ss << "Widget " << widget->getName() << " already has a parent! It needs to be removed from its existing parent first!";
-      Application::printError() << ss.str() << endl;
+      Application::printError() << ss.str();
       return nullopt;
    }
    //call immediate callback
