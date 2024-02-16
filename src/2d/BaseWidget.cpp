@@ -186,6 +186,7 @@ void BaseWidget::removeAllChildren() {
       child.second.second->isInLayout = false;
    }
    _children.clear();
+   _childrenOrdered.clear();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
