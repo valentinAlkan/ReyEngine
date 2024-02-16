@@ -31,6 +31,7 @@ Window::Window(const std::string &title, int width, int height, const std::vecto
    Application::ready();
    //Create canvas
    _root = make_shared<Canvas>("root");
+   _root->setAnchoring(BaseWidget::Anchor::FILL); //canvas is filled by default
    _root->_isRoot = true;
    auto base = _root->toBaseWidget();
    //make sure we init the root\

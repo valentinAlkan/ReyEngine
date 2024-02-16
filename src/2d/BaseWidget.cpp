@@ -248,6 +248,20 @@ Handled BaseWidget::_process_unhandled_input(InputEvent& event) {
       return false;
    };
 
+    //if this is mouse input, make sure it is inside the bounding rect
+    switch (event.eventId){
+        case InputEventMouseMotion::getUniqueEventId():
+        case InputEventMouseButton::getUniqueEventId():
+        case InputEventMouseWheel::getUniqueEventId(): {
+            auto globalPos = event.toEventType<InputEventMouse>().globalPos;
+            auto localPos = globalToLocal(globalPos);
+            if (!isInside(localPos)) {
+                return false;
+            }
+        }
+        break;
+    }
+
    if (_isEditorWidget){
       if (_process_unhandled_editor_input(event) > 0) return true;
    }

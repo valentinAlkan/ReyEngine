@@ -1,6 +1,6 @@
 #include "Editor.h"
 #include "Panel.hpp"
-#include "Button.hpp"
+#include "Button.h"
 #include "Workspace.h"
 
 using namespace ReyEngine;
