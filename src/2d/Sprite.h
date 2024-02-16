@@ -21,6 +21,9 @@ protected:
    ReyEngine::FileSystem::File texPath;
    std::unique_ptr<ReyEngine::ReyTexture> texture;
    RectProperty<int> region;
+
+private:
+   bool _fitNextTexture = false; //if we dont' yet have a texture (because window isn't loaded), then fit the texture when we do have one
 };
 
 
