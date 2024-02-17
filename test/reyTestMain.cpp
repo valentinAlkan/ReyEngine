@@ -572,22 +572,25 @@ int main(int argc, char** argv)
        auto mainvlayout = make_shared<VLayout>("MainVLayout");
        mainvlayout->setAnchoring(BaseWidget::Anchor::FILL);
        root->addChild(mainvlayout);
-       static constexpr int ROWS = 20;
-       static constexpr int COLUMNS = 20;
+       static constexpr int ROWS = 10;
+       static constexpr int COLUMNS = 10;
        for (int i=0; i<ROWS; i++){
-           auto row = make_shared<VLayout>("Row" + to_string(i));
+           auto row = make_shared<HLayout>("Row" + to_string(i));
            mainvlayout->addChild(row);
+           mainvlayout->getTheme()->layoutMargins.setAll(20);
            //add column to row
-//           for (int j=0; j<COLUMNS; j++){
-//               auto column = make_shared<VLayout>("Row" + to_string(i) + "Column" + to_string(j));
-//               //set the margins
-//               column->getTheme()->layoutMargins.setAll(i+j);
-//               //add a control
-//               auto control = make_shared<Control>("Control " + to_string(i+j));
-//               column->addChild(control);
-//               //give it a color
-//               control->getTheme()->background.colorPrimary = Colors::randColor();
-//           }
+           for (int j=0; j<COLUMNS; j++){
+               auto column = make_shared<VLayout>("Row" + to_string(i) + "Column" + to_string(j));
+               row->addChild(column);
+               //set the margins
+               column->getTheme()->layoutMargins.setAll(i+j);
+               //add a control
+               auto control = make_shared<Control>("Control " + to_string(i+j));
+               column->addChild(control);
+               //give it a color
+               control->getTheme()->background = Style::Fill::SOLID;
+               control->getTheme()->background.colorPrimary = Colors::randColor();
+           }
        }
    }
 
