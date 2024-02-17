@@ -46,7 +46,7 @@ namespace SceneFileParser{
    struct ParseStruct {
       enum class ParseState{NOT_FOUND, OPEN, CLOSED, ERROR};
       enum class StructType {TREE, DESC, META};
-      enum class ParseError{NO_DATA, BLANK_LINE, ROOT_LEADING_WHITESPACE, INVALID_CONTENTS, INVALID_INDENT_TYPE, INVALID_INDENT_LEVEL};
+      enum class ParseError{MISSING_DATA, BLANK_LINE, ROOT_LEADING_WHITESPACE, INVALID_CONTENTS, INVALID_INDENT_TYPE, INVALID_INDENT_LEVEL};
       ParseError error;
 
       ParseStruct(StructType type): type(type){}

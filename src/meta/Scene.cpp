@@ -120,7 +120,7 @@ std::shared_ptr<Scene> SceneFileParser::Parser::parse() {
 std::shared_ptr<TreeObject> SceneFileParser::TreeStruct::parse(){
    //make sure there is actual data to parse (first line will be "[Tree]")
    if (_lines.size() < 2){
-      setError(ParseStruct::ParseError::NO_DATA, "NO_DATA");
+      setError(ParseStruct::ParseError::MISSING_DATA, "NO_DATA");
    }
    //convert lines to struct type
    // baseIndentCharCount * currentIndentLevel = leading spaces for each element (or child element). It is an error if
@@ -214,7 +214,7 @@ std::shared_ptr<Scene> SceneFileParser::DescStruct::parse(std::shared_ptr<TreeOb
    //convert desc lines to descriptions
    //drop first line ([Desc])
    if (_lines.size() < 2){
-      setError(ParseStruct::ParseError::NO_DATA, "NO_DATA");
+      setError(ParseStruct::ParseError::MISSING_DATA, "NO_DATA");
    }
    map<string, DescObject> objects;
    std::string currentObjectName;

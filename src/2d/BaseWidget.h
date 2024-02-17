@@ -198,8 +198,8 @@ protected:
    bool isLayout = false;
    bool isInLayout = false;
    bool acceptsHover = false;
-   ReyEngine::Size<int> maxSize = {INT_MAX, INT_MAX};
-   ReyEngine::Size<int> minSize = {0,0};
+   ReyEngine::Size<int> maxSize = {ReyEngine::MaxInt, ReyEngine::MaxInt};
+   ReyEngine::Size<int> minSize = {ReyEngine::MinInt, ReyEngine::MinInt};
 
    //editor stuff
 public:
