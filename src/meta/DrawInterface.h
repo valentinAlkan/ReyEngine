@@ -5,11 +5,18 @@
 #include <string>
 #include <array>
 #include <iostream>
+#ifdef linux
+#include <limits.h>
+#endif
+
+
 #define NOT_IMPLEMENTED throw std::runtime_error("Not implemented!")
 
 namespace ReyEngine {
    using ComponentPath = std::string;
    static constexpr char COMPONENT_PATH_SEP = '/';
+   static constexpr long long MaxInt = INT_MAX;
+    static constexpr long long MinInt = INT_MIN;
    namespace FileSystem {
       struct File;
       struct Directory;
