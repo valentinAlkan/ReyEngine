@@ -59,10 +59,10 @@ void Layout::arrangeChildren() {
       int allowedSpace = (int)(sizeLeft * calcRatio(childIndex));
       auto newRect = dir == LayoutDir::HORIZONTAL ? ReyEngine::Rect<int>(pos, {allowedSpace, _rect.value.height}) : ReyEngine::Rect<int>(pos, {_rect.value.width, allowedSpace});
       //apply margins
-//      newRect.x += theme->layoutMargins.left();
-//      newRect.y += theme->layoutMargins.top();
-//      newRect.width -= (theme->layoutMargins.right() + newRect.x);
-//      newRect.height -= (theme->layoutMargins.bottom() + newRect.y);
+      newRect.x += theme->layoutMargins.left();
+      newRect.y += theme->layoutMargins.top();
+      newRect.width -= (theme->layoutMargins.right() + theme->layoutMargins.left());
+      newRect.height -= (theme->layoutMargins.bottom() + theme->layoutMargins.top());
       //enforce min/max bounds
       int consumedSpace;
       auto clampRect = [=](ReyEngine::Rect<int>& newRect){
