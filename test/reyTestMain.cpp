@@ -69,6 +69,7 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--spriteTest", "SpriteTest", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--buttonTest", "PushButton usage example", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--anchorTest", "Anchoring options test", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--marginsTest", "Layout margins test", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    //create window (or don't idk)
@@ -256,54 +257,51 @@ int main(int argc, char** argv)
 
    else if (args.getArg("--layoutTestBasic")){
       Application::printDebug() << "Layout test basic!" << endl;
-      auto rootLayout = make_shared<VLayout>("Root");
-      rootLayout->setRect(Rect<float>({0,0}, window->getSize()));
-      root->addChild(rootLayout);
-      auto mainPanel = make_shared<Panel>("MainPanel");
-      mainPanel->getTheme()->background.colorPrimary.set(ReyEngine::Colors::red);
-      root->addChild(mainPanel);
-      mainPanel->setLayout<HLayout>();
+      auto mainVLayout = make_shared<VLayout>("MainVLayout");
+      mainVLayout->setAnchoring(BaseWidget::Anchor::FILL);
+      root->addChild(mainVLayout);
 
-      auto child1 = make_shared<Panel>("Child1");
-      auto child2 = make_shared<Panel>("Child2");
-//      child1->getTheme()->background.colorPrimary.set(ReyEngine::Colors::blue);
-//      child2->getTheme()->background.colorPrimary.set(ReyEngine::Colors::green);
-      mainPanel->addToLayout(child1);
-      mainPanel->addToLayout(child2);
+      auto control1 = make_shared<Control>("Control1");
+      auto control2 = make_shared<Control>("Control2");
+      auto layout3 = make_shared<HLayout>("Layout3");
+      control1->getTheme()->background = Style::Fill::SOLID;
+      control1->getTheme()->background.colorPrimary.set(ReyEngine::Colors::red);
+      control2->getTheme()->background = Style::Fill::SOLID;
+      control2->getTheme()->background.colorPrimary.set(ReyEngine::Colors::green);
+      mainVLayout->addChild(control1);
+      mainVLayout->addChild(control2);
+      mainVLayout->addChild(layout3);
 
+      //split layout 3
+      for (int i=0; i<4; i++) {
+          auto subcontrol = make_shared<Control>("SubControl" + to_string(i));
+          subcontrol->getTheme()->background = Style::Fill::SOLID;
+          subcontrol->getTheme()->background.colorPrimary.set(ReyEngine::Colors::randColor());
+          layout3->addChild(subcontrol);
+      }
    }
 
    else if (args.getArg("--layoutTest")){
       Application::printDebug() << "Layout test!" << endl;
-      auto rootChild = make_shared<VLayout>("RootChild");
-      rootChild->setRect(Rect<float>({0,0}, window->getSize()));
-      root->addChild(rootChild);
+      auto mainVLayout = make_shared<VLayout>("MainVLayout");
+      mainVLayout->setAnchoring(BaseWidget::Anchor::FILL);
+      root->addChild(mainVLayout);
+      bool flipFlop = false;
+      std::shared_ptr<Layout> prevlayout = mainVLayout;
       for (int i=0;i<50;i++){
-         std::shared_ptr<Layout> layout;
-         if (i & 1){
-            layout = make_shared<VLayout>("layout" + to_string(i));
+         std::shared_ptr<Layout> newlayout;
+         if (flipFlop){
+             newlayout = make_shared<VLayout>("Vlayout" + to_string(i));
          } else {
-            layout = make_shared<HLayout>("layout" + to_string(i));
+             newlayout = make_shared<HLayout>("Hlayout" + to_string(i));
          }
-         auto label1 = make_shared<Label>("label" + to_string(i) + "_1");
-         label1->setText("");
-//         auto label2 = make_shared<Label>("label" + to_string(i) + "_2", Rect<float>());
-         label1->getTheme()->background.set(Style::Fill::SOLID);
-//         label2->getTheme()->background.set(Style::Fill::SOLID);
-         label1->getTheme()->background.colorPrimary.set(ColorRGBA::random(254));
-//         label2->getTheme()->background.colorPrimary.set(ColorRGBA::random(100));
-         root->addChild(layout);
-         layout->addChild(label1);
-//         layout->addChild(label2);
-         root->addChild(layout);
-
-         //connect to resize
-//         auto resizeCB = [](const BaseWidget::WidgetResizeEvent& event){
-//            auto label = event.subscriber->toBaseWidget()->toType<Label>();
-//            label->setText(event.size);
-//         };
-//         label1->subscribe<BaseWidget::WidgetResizeEvent>(parent, resizeCB);
-//         label2->subscribe<BaseWidget::WidgetResizeEvent>(parent, resizeCB);
+         flipFlop = !flipFlop;
+         auto control = make_shared<Control>("control" + to_string(i));
+         control->getTheme()->background.set(Style::Fill::SOLID);
+         control->getTheme()->background.colorPrimary.set(ColorRGBA::random(254));
+         newlayout->addChild(control);
+         prevlayout->addChild(newlayout);
+         prevlayout = newlayout;
       }
    }
 
@@ -567,6 +565,30 @@ int main(int argc, char** argv)
       }
       
       root->addChild(vLayout);
+   }
+
+   else if (args.getArg("--marginsTest")){
+       //make a grid of layouts
+       auto mainvlayout = make_shared<VLayout>("MainVLayout");
+       mainvlayout->setAnchoring(BaseWidget::Anchor::FILL);
+       root->addChild(mainvlayout);
+       static constexpr int ROWS = 20;
+       static constexpr int COLUMNS = 20;
+       for (int i=0; i<ROWS; i++){
+           auto row = make_shared<VLayout>("Row" + to_string(i));
+           mainvlayout->addChild(row);
+           //add column to row
+//           for (int j=0; j<COLUMNS; j++){
+//               auto column = make_shared<VLayout>("Row" + to_string(i) + "Column" + to_string(j));
+//               //set the margins
+//               column->getTheme()->layoutMargins.setAll(i+j);
+//               //add a control
+//               auto control = make_shared<Control>("Control " + to_string(i+j));
+//               column->addChild(control);
+//               //give it a color
+//               control->getTheme()->background.colorPrimary = Colors::randColor();
+//           }
+       }
    }
 
    else if (args.getArg("--inspector")){

@@ -63,6 +63,19 @@ namespace Style {
       ColorProperty colorSecondary; //for gradient
       ColorProperty colorTertiary; //for whatever
    };
+   
+   struct MarginsProperty : public Vec4Property<int>{
+       MarginsProperty(const std::string& instanceName): Vec4Property<int>(instanceName){}
+       int left(){return value.w;}
+       int right(){return value.x;}
+       int top(){return value.y;}
+       int bottom(){return value.z;}
+       void setLeft(int l){value.w = l;}
+       void setRight(int r){value.x = r;}
+       void setTop(int t){value.y = t;}
+       void setBottom(int b){value.z = b;}
+       void setAll(int a){value.w=a;value.x=a;value.y=a;value.z=a;}
+   };
 
    /////////////////////////////////////////////////////////////////////////////////////////
    /////////////////////////////////////////////////////////////////////////////////////////
@@ -85,7 +98,8 @@ namespace Style {
       PROPERTY_DECLARE(background, Fill::NONE),
       PROPERTY_DECLARE(foreground, Fill::SOLID),
       PROPERTY_DECLARE(roundness, 0.01),
-      PROPERTY_DECLARE(font)
+      PROPERTY_DECLARE(font),
+      PROPERTY_DECLARE(layoutMargins)
       {}
       std::string toString() const override {return "not impelenmeted";}
       Empty fromString(const std::string& data) override { return value;}
@@ -95,6 +109,7 @@ namespace Style {
       OutlineProperty outline;
       FloatProperty roundness;
       FontProperty font;
+      MarginsProperty layoutMargins;
 
       void registerProperties() override {
          registerProperty(background);

@@ -16,7 +16,7 @@ namespace ReyEngine {
    using ComponentPath = std::string;
    static constexpr char COMPONENT_PATH_SEP = '/';
    static constexpr long long MaxInt = INT_MAX;
-    static constexpr long long MinInt = INT_MIN;
+   static constexpr long long MinInt = INT_MIN;
    namespace FileSystem {
       struct File;
       struct Directory;
@@ -68,7 +68,7 @@ namespace ReyEngine {
                sanitized += c;
             }
          }
-         std::vector<double> retval;
+         std::vector<T> retval;
          auto split = string_tools::split(sanitized, ",");
          if (split.size() != size) {
             return retval;
@@ -124,7 +124,7 @@ namespace ReyEngine {
       inline double lerp(double lerpVal){return lerpVal * (y - x) + x;} //given a value from 0 to 1, what is the value of the range that corresponds to it?
       inline Vec2 lerp(Vec2 otherPoint, double xprm){return {xprm, y + (((xprm - x) * (otherPoint.y - y)) / (otherPoint.x - x))};}
       inline T clamp(T value){if (value < x) return x; if (value > y) return y; return value;}
-      inline static void fromString(const std::string& s){return Vec<T>::fromString(2, s);};
+      inline static std::vector<T> fromString(const std::string& s){return Vec<T>::fromString(2, s);};
       std::ostream& operator<<(std::ostream& os) const {os << Vec<T>::toString(); return os;}
       friend std::ostream& operator<<(std::ostream& os, Vec2<T> v) {os << v.toString(); return os;}
       T x;
@@ -135,21 +135,48 @@ namespace ReyEngine {
 
    template <typename T>
    struct Vec3 : protected Vec<T> {
-      inline Vec3(): Vec<T>(3), x(0), y(0){}
+      inline Vec3(): Vec<T>(3), x(0), y(0), z(0){}
        inline Vec3(const T& _x, const T& y, const T& _z) : Vec<T>(3), x(_x), y(y),z(_z) {}
       inline explicit Vec3(const Vector3& v)     : Vec<T>(3), x((T)v.x), y((T)v.y), z((T)v.z){}
       inline explicit Vec3(const Vec3<int>& v)   : Vec<T>(3), x((T)v.x), y((T)v.y), z((T)v.z){}
-      inline explicit Vec3(const Vec3<float>& v) : Vec<T>(3),  x((T)v.x), y((T)v.y), z((T)v.z){}
-      inline explicit Vec3(const Vec3<double>& v): Vec<T>(3),  x((T)v.x), y((T)v.y), z((T)v.z){}
+      inline explicit Vec3(const Vec3<float>& v) : Vec<T>(3), x((T)v.x), y((T)v.y), z((T)v.z){}
+      inline explicit Vec3(const Vec3<double>& v): Vec<T>(3), x((T)v.x), y((T)v.y), z((T)v.z){}
       inline Vec3& operator=(const Vec3& rhs){x = rhs.x; y=rhs.y; z=rhs.z; return *this;}
       inline Vec3& operator-(){x = -x; y =-y; z = -z; return *this;}
-      inline static void fromString(const std::string& s){return Vec<T>::fromString(3, s);};
+      inline static std::vector<T> fromString(const std::string& s){return Vec<T>::fromString(3, s);};
       [[nodiscard]] inline std::vector<T> getElements() const override {return {x,y,z};}
       friend std::ostream& operator<<(std::ostream& os, Vec3<T> v) {os << v.toString(); return os;}
       T x;
       T y;
       T z;
    };
+
+    template <typename T>
+    struct Vec4 : protected Vec<T> {
+        inline Vec4(): Vec<T>(4), w(0), x(0), y(0), z(0){}
+        inline Vec4(const std::vector<T>& stdvec): Vec<T>(4){
+            if (stdvec.size() != 4) throw std::runtime_error("Invalid element count for Vec4! Expected 4, got " + stdvec.size());
+            w = stdvec[0];
+            x = stdvec[1];
+            y = stdvec[2];
+            z = stdvec[3];
+        }
+        inline Vec4(const T& _w, const T& _x, const T& y, const T& _z) : Vec<T>(4), w(_w), x(_x), y(y),z(_z) {}
+        inline explicit Vec4(const Vector4& v) : Vec<T>(4), w((T)v.w), x((T)v.x), y((T)v.y), z((T)v.z){}
+        inline Vec4(const Vec4<int>& v)        : Vec<T>(4), w((T)v.w), x((T)v.x), y((T)v.y), z((T)v.z){}
+        inline Vec4(const Vec4<float>& v)      : Vec<T>(4), w((T)v.w), x((T)v.x), y((T)v.y), z((T)v.z){}
+        inline Vec4(const Vec4<double>& v)     : Vec<T>(4), w((T)v.w), x((T)v.x), y((T)v.y), z((T)v.z){}
+        inline Vec4& operator=(const Vec4& rhs){w = rhs.w, x = rhs.x; y=rhs.y; z=rhs.z; return *this;}
+        inline Vec4& operator-(){w = -w; x = -x; y =-y; z = -z; return *this;}
+        inline static std::vector<T> fromString(const std::string& s){return Vec<T>::fromString(4, s);};
+        [[nodiscard]] inline std::vector<T> getElements() const override {return {w,x,y,z};}
+        friend std::ostream& operator<<(std::ostream& os, Vec4 v) {os << v.toString(); return os;}
+        using ReyEngine::Vec<T>::toString;
+        T w;
+        T x;
+        T y;
+        T z;
+    };
 
    template <typename T>
    class Range : private Vec3<T> {

@@ -23,6 +23,8 @@ namespace PropertyTypes{
    PROP_TYPE(Float)
    PROP_TYPE(Bool)
    PROP_TYPE(Vec2)
+   PROP_TYPE(Vec3)
+   PROP_TYPE(Vec4)
    PROP_TYPE(Rect)
    PROP_TYPE(Timer)
    PROP_TYPE(Enum)
@@ -149,6 +151,28 @@ struct Vec2Property : public Property<ReyEngine::Vec2<T>>{
    {}
    std::string toString() const override {return Property<ReyEngine::Vec2<T>>::value.toString();}
    ReyEngine::Vec2<T> fromString(const std::string& str) override {return ReyEngine::Vec2<T>::fromString(str);}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////
+template <typename T>
+struct Vec3Property : public Property<ReyEngine::Vec3<T>>{
+    using Property<ReyEngine::Vec3<T>>::operator=;
+    Vec3Property(const std::string& instanceName, ReyEngine::Vec3<T> defaultvalue = 0)
+            : Property<ReyEngine::Vec3<T>>(instanceName, PropertyTypes::Vec3, defaultvalue)
+    {}
+    std::string toString() const override {return Property<ReyEngine::Vec3<T>>::value.toString();}
+    ReyEngine::Vec3<T> fromString(const std::string& str) override {return ReyEngine::Vec3<T>::fromString(str);}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////
+template <typename T>
+struct Vec4Property : public Property<ReyEngine::Vec4<T>>{
+    using Property<ReyEngine::Vec4<T>>::operator=;
+    Vec4Property(const std::string& instanceName, ReyEngine::Vec4<T> defaultvalue = ReyEngine::Vec4<T>())
+            : Property<ReyEngine::Vec4<T>>(instanceName, PropertyTypes::Vec4, defaultvalue)
+    {}
+    std::string toString() const override {return Property<ReyEngine::Vec4<T>>::value.toString();}
+    ReyEngine::Vec4<T> fromString(const std::string& str) override {return ReyEngine::Vec4<T>::fromString(str);}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
