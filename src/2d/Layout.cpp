@@ -9,7 +9,7 @@ Layout::Layout(const std::string &name, const std::string &typeName, LayoutDir l
 , childScales("layoutRatios")
 , dir(layoutDir)
 {
-      isLayout = true;
+   isLayout = true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -58,6 +58,11 @@ void Layout::arrangeChildren() {
    for (auto& child: _childrenOrdered) {
       int allowedSpace = (int)(sizeLeft * calcRatio(childIndex));
       auto newRect = dir == LayoutDir::HORIZONTAL ? ReyEngine::Rect<int>(pos, {allowedSpace, _rect.value.height}) : ReyEngine::Rect<int>(pos, {_rect.value.width, allowedSpace});
+      //apply margins
+//      newRect.x += theme->layoutMargins.left();
+//      newRect.y += theme->layoutMargins.top();
+//      newRect.width -= (theme->layoutMargins.right() + newRect.x);
+//      newRect.height -= (theme->layoutMargins.bottom() + newRect.y);
       //enforce min/max bounds
       int consumedSpace;
       auto clampRect = [=](ReyEngine::Rect<int>& newRect){
@@ -80,6 +85,7 @@ void Layout::arrangeChildren() {
             consumedSpace = newRect.height;
             break;
       }
+       std::cout << child->getName() << " rect = " << newRect << endl;
       //apply transformations
       child->setRect(newRect);
       childIndex++;
