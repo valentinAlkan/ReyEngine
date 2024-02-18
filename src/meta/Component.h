@@ -27,10 +27,19 @@ protected:                                                \
       PARENT_CLASSNAME::registerProperties();             \
    }
 
+//to instantiate a deserializable object
 #define REYENGINE_OBJECT(CLASSNAME, PARENT_CLASSNAME)  \
 public:                                                   \
    REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(CLASSNAME)  \
    REYENGINE_SERIALIZER(CLASSNAME, PARENT_CLASSNAME)       \
+   REYENGINE_DEFAULT_CTOR(CLASSNAME)                       \
+   REYENGINE_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME)  \
+   REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME)
+
+//to instantiate a virtual object with no deserializer
+#define REYENGINE_VIRTUAL_OBJECT(CLASSNAME, PARENT_CLASSNAME)  \
+public:                                                   \
+   REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(CLASSNAME)  \
    REYENGINE_DEFAULT_CTOR(CLASSNAME)                       \
    REYENGINE_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME)  \
    REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME)

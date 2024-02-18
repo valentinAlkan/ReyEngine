@@ -1,14 +1,14 @@
 #pragma once
-#include "Control.h"
+#include "BaseWidget.h"
 
-class BaseButton : public Control {
+class BaseButton : public BaseWidget {
 public:
    struct ButtonPressEvent : public Event<ButtonPressEvent>{
       EVENT_CTOR_SIMPLE(ButtonPressEvent, Event<ButtonPressEvent>, bool down), down(down){}
       bool down;
    };
 protected:
-   REYENGINE_OBJECT(BaseButton, Control)
+   REYENGINE_VIRTUAL_OBJECT(BaseButton, BaseWidget)
    , PROPERTY_DECLARE(down){
       _rect.value = ReyEngine::Rect<double>(0,0,200,50);
       acceptsHover = true;

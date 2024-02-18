@@ -5,7 +5,7 @@ using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Layout::Layout(const std::string &name, const std::string &typeName, LayoutDir layoutDir)
-: Control(name, typeName)
+: BaseWidget(name, typeName)
 , childScales("layoutRatios")
 , dir(layoutDir)
 {
@@ -14,8 +14,8 @@ Layout::Layout(const std::string &name, const std::string &typeName, LayoutDir l
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Layout::_register_parent_properties() {
-   Control::_register_parent_properties();
-   Control::registerProperties();
+   BaseWidget::_register_parent_properties();
+   BaseWidget::registerProperties();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

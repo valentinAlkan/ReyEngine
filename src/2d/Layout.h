@@ -2,7 +2,7 @@
 #include "Control.h"
 #include "MathTools.h"
 
-class Layout : public Control {
+class Layout : public BaseWidget {
 public:
    /////////////////////////////////////////////////////////////////////////////////////////
    enum class LayoutDir{HORIZONTAL, VERTICAL};
@@ -26,6 +26,7 @@ protected:
    void _on_rect_changed() override;
    void renderEnd() override;
    void arrangeChildren();
+   void render() const override {};
 public:
    FloatListProperty childScales;
 protected:

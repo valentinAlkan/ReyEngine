@@ -1,8 +1,8 @@
 #include "Control.h"
 //#include "Application.h"
 
-class TextureTestWidget : public Control{
-   REYENGINE_OBJECT(TextureTestWidget, Control){}
+class TextureTestWidget : public BaseWidget{
+   REYENGINE_OBJECT(TextureTestWidget, BaseWidget){}
 public:
    void renderBegin(ReyEngine::Pos<double>& textureOffset) override {
 //      _render

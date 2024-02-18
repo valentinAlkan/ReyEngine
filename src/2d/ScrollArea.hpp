@@ -2,8 +2,8 @@
 #include "Control.h"
 #include "Slider.hpp"
 
-class ScrollArea : public Control {
-   REYENGINE_OBJECT(ScrollArea, Control)
+class ScrollArea : public BaseWidget {
+   REYENGINE_OBJECT(ScrollArea, BaseWidget)
    , scrollOffsetX(0, 0, 0)
    , scrollOffsetY(0, 0, 0)
    {}
@@ -19,6 +19,7 @@ protected:
       textureOffset -= getScrollOffset();
       scissorTarget.start(getGlobalRect());
    }
+   void render() const {}
    void renderEnd() override {
       scissorTarget.stop();
    }
