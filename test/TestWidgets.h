@@ -16,9 +16,9 @@ struct TestProperty : StringProperty{
    StringProperty subProp;
 };
 
-class PosTestWidget : public Control {
+class PosTestWidget : public BaseWidget {
 public:
-   REYENGINE_OBJECT(PosTestWidget, Control), someString("someString"){}
+   REYENGINE_OBJECT(PosTestWidget, BaseWidget), someString("someString"){}
    void render() const override;
    void _process(float dt) override;
    void registerProperties() override;

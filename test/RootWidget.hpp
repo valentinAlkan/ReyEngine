@@ -1,8 +1,8 @@
 #pragma once
 #include "Control.h"
 
-class RootWidget : public Control{
-   REYENGINE_OBJECT(RootWidget, Control){}
+class RootWidget : public BaseWidget{
+   REYENGINE_OBJECT(RootWidget, BaseWidget){}
 public:
 //   void renderBegin(ReyEngine::Vec2<float>& textureOffset) override {}
    void render() const override {

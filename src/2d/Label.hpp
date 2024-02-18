@@ -4,8 +4,8 @@
 #include <iomanip>
 #include <sstream>
 
-class Label : public Control {
-   REYENGINE_OBJECT(Label, Control)
+class Label : public BaseWidget {
+   REYENGINE_OBJECT(Label, BaseWidget)
    , PROPERTY_DECLARE(text, getName())
    {
       auto expandOpt = needsExpand();

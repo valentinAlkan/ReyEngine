@@ -2,7 +2,7 @@
 
 #include "Control.h"
 
-class Slider : public Control {
+class Slider : public BaseWidget {
 public:
    class SliderValueChangedEvent : public Event<SliderValueChangedEvent> {
    public:
@@ -22,7 +22,7 @@ public:
 
    REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(Slider)
    Slider(const std::string &name, SliderType sliderDir)
-         : Control(name, _get_static_constexpr_typename())
+         : BaseWidget(name, _get_static_constexpr_typename())
          , sliderValue("sliderValue", 0.0)
          , minSliderValue("minSliderValue", 0.0)
          , maxSlidervalue("maxSliderValue", 100.0)
@@ -48,7 +48,7 @@ public:
    inline double getSliderPct(){return _range.pct(sliderValue.value);}
    inline void setSliderPct(double pct){setSliderValue(_range.lerp(pct));}
 protected:
-   void _register_parent_properties() override{ Control::_register_parent_properties(); Control::registerProperties();}
+   void _register_parent_properties() override{ BaseWidget::_register_parent_properties(); BaseWidget::registerProperties();}
    virtual Handled _unhandled_input(InputEvent& e){
       auto& mouseEvent = (InputEventMouseMotion&)(e);
       auto localPos = globalToLocal(mouseEvent.globalPos);

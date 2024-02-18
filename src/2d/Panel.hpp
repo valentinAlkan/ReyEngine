@@ -5,11 +5,11 @@
 #include "Layout.h"
 
 // A simple visual panel that just gives us something to look at. No other functionality.
-class Panel : public Control {
+class Panel : public BaseWidget {
 public:
    static constexpr std::string_view LAYOUT_NAME = "layout";
    static constexpr Layout::LayoutDir defaultLayout = Layout::LayoutDir::VERTICAL;
-   REYENGINE_OBJECT(Panel, Control)
+   REYENGINE_OBJECT(Panel, BaseWidget)
    , PROPERTY_DECLARE(_layoutDir, Layout::LayoutDir::HORIZONTAL)
    {
       theme->background.colorPrimary.set(ReyEngine::ColorRGBA(94, 142, 181, 255));
