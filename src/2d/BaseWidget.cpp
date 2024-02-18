@@ -415,6 +415,13 @@ void BaseWidget::_drawRectangleGradientV(const ReyEngine::Rect<int>& rect, ReyEn
    ReyEngine::drawRectangleGradientV(newRect, color1, color2);
 }
 
+///////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::_drawCircleSectorLines(const ReyEngine::CircleSector& sector, ReyEngine::ColorRGBA color, int segments) {
+   CircleSector newSector = sector;
+   newSector.center += getGlobalPos() + _renderOffset;
+   ReyEngine::drawCircleSectorLines(newSector, color, segments);
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////
 std::string BaseWidget::serialize() {
    stringstream data;
