@@ -17,6 +17,7 @@
 #include "Inspector.h"
 #include "Sprite.h"
 #include "Canvas.hpp"
+#include "TabContainer.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -71,6 +72,8 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--anchorTest", "Anchoring options test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--marginsTest", "Layout margins test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--hoverTest", "Hovering test", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--tabContainerTest", "Tab container test", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--drawTest", "Test various drawing functions", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    //create window (or don't idk)
@@ -88,6 +91,21 @@ int main(int argc, char** argv)
          Application::printDebug() << "Got loaded file!" << endl;
          root->addChild(loadedScene.value()->getRoot());
       }
+   }
+
+   else if (args.getArg("--drawTest")){
+      auto control = make_shared<Control>("Drawbox");
+      control->setAnchoring(BaseWidget::Anchor::FILL);
+      root->addChild(control);
+
+      auto drawcb = [control](){
+         ReyEngine::drawRectangle({10,10,50,50}, Colors::red);
+         float startang = 0;
+         static int endang = 0;
+         ReyEngine::drawCircleSectorLines({{100, 100}, 50, startang, (float) (endang++ % 360)}, Colors::blue, 20);
+      };
+
+      control->setRenderCallback(drawcb);
    }
 
    else if (args.getArg("--inputPositionTest")){
@@ -630,6 +648,29 @@ int main(int argc, char** argv)
          control->getTheme()->background.colorPrimary = ReyEngine::ColorRGBA::random();
          mainVLayout->addChild(control);
       }
+   }
+
+   else if (args.getArg("--tabContainerTest")){
+      Application::printDebug() << "Starting tab container test!" << endl;
+      auto mainVLayout = make_shared<VLayout>("MainVLayout");
+      auto tabContainer = make_shared<TabContainer>("TabContainer");
+      mainVLayout->setAnchoring(BaseWidget::Anchor::FILL);
+      mainVLayout->addChild(tabContainer);
+      mainVLayout->getTheme()->layoutMargins.setAll(5);
+      root->addChild(mainVLayout);
+
+      //create some widgets to dislpay in the tabcontainer
+      static constexpr int TAB_COUNT = 4;
+      for (int i=0; i<TAB_COUNT; i++){
+         auto control = make_shared<Control>("Control" + to_string(i));
+         auto color = Colors::randColor();
+         auto renderCB = [control, color](){
+            ReyEngine::drawRectangle(control->getGlobalRect(), color);
+         };
+         control->setRenderCallback(renderCB);
+         tabContainer->addChild(control);
+      }
+
    }
 
    else if (args.getArg("--inspector")){

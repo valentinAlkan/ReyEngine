@@ -85,6 +85,16 @@ void ReyEngine::drawRectangleGradientV(const ReyEngine::Rect<int>& rect, ReyEngi
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawCircleSector(const CircleSector& sector, const ReyEngine::ColorRGBA &color, int segments) {
+   DrawCircleSector(sector.center, sector.radius, sector.startAngle, sector.endAngle, segments, color);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawCircleSectorLines(const CircleSector& sector, const ReyEngine::ColorRGBA &color, int segments) {
+   DrawCircleSectorLines(sector.center, sector.radius, sector.startAngle, sector.endAngle, segments, color);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::drawLine(const Line<int>& line, const ReyEngine::ColorRGBA& color) {
    DrawLine(line.a.x, line.a.y, line.b.x, line.b.y, color);
 }

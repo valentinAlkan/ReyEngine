@@ -117,6 +117,7 @@ namespace ReyEngine {
       inline Vec2& operator-(){x = -x; y =-y; return *this;}
       inline void operator=(Size<T>&) = delete;
       inline void operator=(Pos<T>&) = delete;
+      inline operator Vector2() const {return {(float)x,(float)y};}
       inline Vec2 midpoint(){return {x/2, y / 2};}
       inline void min(Vec2<T> other){if (this->x > other.x) this->x = other.x; if (this->y > other.y) this->y = other.y;}
       inline void max(Vec2<T> other){if (this->x < other.x) this->x = other.x; if (this->y < other.y) this->y = other.y;}
@@ -334,6 +335,29 @@ namespace ReyEngine {
       T height;
    };
 
+   struct Circle{
+      inline Circle(Pos<int> center, double radius): center(center), radius(radius){}
+      inline Circle(const Circle& rhs): center(rhs.center), radius(rhs.radius){}
+      Pos<int> center;
+      double radius;
+   };
+
+   struct CircleSector : public Circle {
+      static constexpr double FIRST_QUADRANT_ANGLE = 0;
+      static constexpr double SECOND_QUADRANT_ANGLE = 90;
+      static constexpr double THIRD_QUADRANT_ANGLE = 180;
+      static constexpr double FOURTH_QUADRANT_ANGLE = 270;
+      static CircleSector firstQuadrant(Pos<int> center, double radius){return CircleSector(center, radius, FIRST_QUADRANT_ANGLE, FIRST_QUADRANT_ANGLE+90);}
+      static CircleSector secondQuadrant(Pos<int> center, double radius){return CircleSector(center, radius, SECOND_QUADRANT_ANGLE, SECOND_QUADRANT_ANGLE+90);}
+      static CircleSector thirdQuadrant(Pos<int> center, double radius){return CircleSector(center, radius, THIRD_QUADRANT_ANGLE, THIRD_QUADRANT_ANGLE+90);}
+      static CircleSector fourthQuadrant(Pos<int> center, double radius){return CircleSector(center, radius, FOURTH_QUADRANT_ANGLE, FOURTH_QUADRANT_ANGLE+90);}
+      inline CircleSector(const Pos<int>& center, double radius, double startAngle, double endAngle): Circle(center, radius), startAngle(startAngle), endAngle(endAngle){}
+      inline CircleSector(const Circle& c, double startAngle, double endAngle): Circle(c), startAngle(startAngle), endAngle(endAngle){}
+      inline CircleSector(const CircleSector& rhs): Circle(rhs), startAngle(rhs.startAngle), endAngle(rhs.endAngle){}
+      double startAngle;
+      double endAngle;
+   };
+
    struct ColorRGBA {
       ColorRGBA(): r(0), g(0), b(0), a(255){}
       constexpr ColorRGBA(int r, int g, int b, int a): r(r), g(g), b(b), a(a){}
@@ -415,6 +439,8 @@ namespace ReyEngine {
    void drawRectangleLines(const Rect<float>&, float lineThick, const ReyEngine::ColorRGBA& color);
    void drawRectangleRoundedLines(const Rect<float>&, float roundness, int segments, float lineThick, const ReyEngine::ColorRGBA& color);
    void drawRectangleGradientV(const Rect<int>&, ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2);
+   void drawCircleSector(const CircleSector&, const ReyEngine::ColorRGBA&  color, int segments);
+   void drawCircleSectorLines(const CircleSector&, const ReyEngine::ColorRGBA&  color, int segments);
    void drawLine(const Line<int>&, const ReyEngine::ColorRGBA& color);
    void drawTexture(const ReyTexture& texture, const Rect<int>& source, const Rect<int>& dest, float rotation, const ReyEngine::ColorRGBA& tint);
    inline float getFrameDelta() {return GetFrameTime();}
