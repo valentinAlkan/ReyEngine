@@ -1,5 +1,5 @@
 #pragma once
-#include "Control.hpp"
+#include "Control.h"
 
 class RootWidget : public Control{
    REYENGINE_OBJECT(RootWidget, Control){}

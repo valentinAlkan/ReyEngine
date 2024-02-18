@@ -1,5 +1,5 @@
 #pragma once
-#include "Control.hpp"
+#include "Control.h"
 #include "Slider.hpp"
 
 class ScrollArea : public Control {

@@ -2,7 +2,7 @@
 #include "BaseWidget.h"
 #include <string>
 #include <utility>
-#include "Control.hpp"
+#include "Control.h"
 
 struct TestProperty : StringProperty{
    TestProperty(const std::string& instanceName): StringProperty(instanceName)

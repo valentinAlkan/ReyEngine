@@ -229,7 +229,11 @@ void Window::exec(){
             }
          } else {
             auto hovered = askHover(_root);
-            if (hovered) Application::setHover(hovered.value()); else Application::clearHover();
+            if (hovered) {
+               setHover(hovered.value());
+            } else {
+               clearHover();
+            }
 //            if (_isEditor) continue;
             _root->_process_unhandled_input(event);
          }
@@ -326,4 +330,37 @@ void Window::setRoot(std::shared_ptr<Canvas>& newRoot) {
       newRoot->_init();
    }
    _root = newRoot;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Window::clearHover() {
+   auto locked =  _hovered.lock();
+   if (locked) {
+      locked->_hovered = false;
+      locked->_on_mouse_exit();
+   }
+   _hovered.reset();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Window::setHover(std::shared_ptr<BaseWidget>& widget) {
+   auto locked =  _hovered.lock();
+   if (locked) {
+      if (locked !=  widget){
+         locked->_hovered = false;
+         locked->_on_mouse_exit();
+         _hovered.reset();
+      } else {
+         return;
+      }
+   }
+   _hovered = widget;
+   widget->_hovered = true;
+   widget->_on_mouse_enter();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<std::weak_ptr<BaseWidget>> Window::getHovered() {
+   if (_hovered.expired()) return nullopt;
+   return _hovered;
 }
