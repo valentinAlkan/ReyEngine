@@ -36,7 +36,7 @@ void Layout::_on_rect_changed() {
 
 void Layout::renderEnd() {
    //debug
-   _drawRectangleLines({0, 0, _rect.value.width, _rect.value.height}, 2.0, COLORS::black);
+   _drawRectangleLines({0, 0, _rect.value.width, _rect.value.height}, 1.0, COLORS::black);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -57,14 +57,9 @@ void Layout::arrangeChildren() {
    auto sizeLeft = totalSpace;
    for (auto& child: _childrenOrdered) {
       int allowedSpace = (int)(sizeLeft * calcRatio(childIndex));
-      auto newRect = dir == LayoutDir::HORIZONTAL ? ReyEngine::Rect<int>(pos, {allowedSpace, _rect.value.height}) : ReyEngine::Rect<int>(pos, {_rect.value.width, allowedSpace});
-      //apply margins
-      newRect.x += theme->layoutMargins.left();
-      newRect.y += theme->layoutMargins.top();
-      newRect.width -= (theme->layoutMargins.right() + theme->layoutMargins.left());
-      newRect.height -= (theme->layoutMargins.bottom() + theme->layoutMargins.top());
+      auto actualRect = dir == LayoutDir::HORIZONTAL ? ReyEngine::Rect<int>(pos, {allowedSpace, _rect.value.height}) : ReyEngine::Rect<int>(pos, {_rect.value.width, allowedSpace});
+
       //enforce min/max bounds
-      int consumedSpace;
       auto clampRect = [=](ReyEngine::Rect<int>& newRect){
          auto minWidth = child->getMinSize().x;
          auto maxWidth = child->getMaxSize().x;
@@ -73,21 +68,29 @@ void Layout::arrangeChildren() {
          newRect.width = math_tools::clamp(minWidth, maxWidth, newRect.width);
          newRect.height = math_tools::clamp(minHeight, maxHeight, newRect.height);
       };
+
+      clampRect(actualRect);
+      auto virtualRect = actualRect; //the space the widget _would_ take up if margins didnt exist
+      //apply margins
+      actualRect.x += theme->layoutMargins.left();
+      actualRect.y += theme->layoutMargins.top();
+      actualRect.width -= (theme->layoutMargins.right() + theme->layoutMargins.left());
+      actualRect.height -= (theme->layoutMargins.bottom() + theme->layoutMargins.top());
+
+      int consumedSpace;
       switch(dir) {
          case LayoutDir::HORIZONTAL:
-            clampRect(newRect);
-            pos.x += newRect.width;
-            consumedSpace = newRect.width;
+            pos.x += virtualRect.width;
+            consumedSpace = virtualRect.width;
             break;
          case LayoutDir::VERTICAL:
-            clampRect(newRect);
-            pos.y += newRect.height;
-            consumedSpace = newRect.height;
+            pos.y += virtualRect.height;
+            consumedSpace = virtualRect.height;
             break;
       }
-       std::cout << child->getName() << " rect = " << newRect << endl;
+       std::cout << child->getName() << " rect = " << actualRect << endl;
       //apply transformations
-      child->setRect(newRect);
+      child->setRect(actualRect);
       childIndex++;
       //recalculate size each if we didn't use all available space
       sizeLeft -= consumedSpace;

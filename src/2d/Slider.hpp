@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Control.hpp"
+#include "Control.h"
 
 class Slider : public Control {
 public:

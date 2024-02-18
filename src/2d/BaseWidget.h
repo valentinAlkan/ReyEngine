@@ -126,6 +126,8 @@ public:
       return std::static_pointer_cast<T>(me);
    }
 
+   void setAcceptsHover(bool accepts){acceptsHover = accepts;} //only way to get mouse_enter and mouse_exit
+   bool getAcceptsHover() const {return acceptsHover;}
    void setProcess(bool process);
    WidgetPtr setFree(); //request to remove this widget from the tree at next available opportunity. Does not immediately delete it
                    // if you need your object to stop being processed immediately, use setFreeImmediately(), which could pause to syncrhonize threads.

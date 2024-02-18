@@ -1,7 +1,7 @@
 #pragma once
 #include <utility>
 
-#include "Control.hpp"
+#include "Control.h"
 #include "Layout.h"
 
 // A simple visual panel that just gives us something to look at. No other functionality.

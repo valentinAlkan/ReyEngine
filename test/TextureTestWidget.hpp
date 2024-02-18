@@ -1,4 +1,4 @@
-#include "Control.hpp"
+#include "Control.h"
 //#include "Application.h"
 
 class TextureTestWidget : public Control{

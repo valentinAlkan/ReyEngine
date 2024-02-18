@@ -46,9 +46,6 @@ public:
    static void exitError(std::string msg, ExitReason rsn){printError() << msg << std::endl; ::exit((int)rsn);}
    static void exit(ExitReason rsn){::exit((int)rsn);}
 
-   static void clearHover();
-   static void setHover(std::shared_ptr<BaseWidget>&);
-   static std::optional<std::weak_ptr<BaseWidget>> getHovered();
    static void registerForApplicationReady(std::shared_ptr<BaseWidget>&); //somethings require initwindow to have been called - so we can let the application know we want to be called when application is ready.
    static void registerForApplicationReady(std::function<void()>); //somethings require initwindow to have been called - so we can let the application know we want to be called when application is ready.
    static void registerForEnterTree(std::shared_ptr<BaseWidget>&, std::shared_ptr<BaseWidget>&); //widgets can't use shared_from_this in ctor so we need a place that gets called once on tree enter that can do it.
@@ -63,7 +60,6 @@ private:
    ReyEngine::FileSystem::Directory _workingDirectory;
    bool _is_ready = false;
    std::shared_ptr<Window> _window;
-   std::weak_ptr<BaseWidget> _hovered; //the currently hovered widget
    uint64_t newRid;
    Logger _debug_logger;
    Logger _info_logger;

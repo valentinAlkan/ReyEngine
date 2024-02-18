@@ -88,31 +88,3 @@ void Application::processEnterTree() {
       queue.pop();
    }
 }
-/////////////////////////////////////////////////////////////////////////////////////////
-void Application::clearHover() {
-   if (!instance()._hovered.expired()) {
-      auto oldHover = instance()._hovered.lock();
-      oldHover->_hovered = false;
-      oldHover->_on_mouse_exit();
-   }
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void Application::setHover(std::shared_ptr<BaseWidget>& widget) {
-   if (!instance()._hovered.expired()){
-      auto oldHover = instance()._hovered.lock();
-      if (oldHover !=  widget){
-         oldHover->_hovered = false;
-         oldHover->_on_mouse_exit();
-      }
-   }
-   instance()._hovered = widget;
-   widget->_hovered = true;
-   widget->_on_mouse_enter();
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-std::optional<std::weak_ptr<BaseWidget>> Application::getHovered() {
-   if (instance()._hovered.expired()) return nullopt;
-   return instance()._hovered;
-}

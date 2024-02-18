@@ -48,11 +48,15 @@ public:
    void maximize(){ReyEngine::maximizeWindow();}
    void minimize(){ReyEngine::minimizeWindow();}
    std::optional<std::shared_ptr<Draggable>>getDragNDrop(){if (_dragNDrop) return _dragNDrop; return std::nullopt;}
+   void clearHover();
+   void setHover(std::shared_ptr<BaseWidget>&);
+   std::optional<std::weak_ptr<BaseWidget>> getHovered();
 protected:
    Window(const std::string& title, int width, int height, const std::vector<Flags>& flags, int targetFPS=60);
    static constexpr size_t INPUT_COUNT_LIMIT = 256;
 private:
    std::shared_ptr<Canvas> _root; //the scene to draw
+   std::weak_ptr<BaseWidget> _hovered; //the currently hovered widget
    bool _isEditor = false; //enables other features
    std::optional<std::shared_ptr<Draggable>> _dragNDrop; //the widget currently being drag n dropped
    bool _isDragging = false; //true when we start a dragndrop

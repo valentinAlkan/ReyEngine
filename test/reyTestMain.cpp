@@ -70,6 +70,7 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--buttonTest", "PushButton usage example", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--anchorTest", "Anchoring options test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--marginsTest", "Layout margins test", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--hoverTest", "Hovering test", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    //create window (or don't idk)
@@ -574,10 +575,11 @@ int main(int argc, char** argv)
        root->addChild(mainvlayout);
        static constexpr int ROWS = 10;
        static constexpr int COLUMNS = 10;
+       mainvlayout->getTheme()->layoutMargins.setAll(5);
        for (int i=0; i<ROWS; i++){
            auto row = make_shared<HLayout>("Row" + to_string(i));
+           row->getTheme()->layoutMargins.setAll(5);
            mainvlayout->addChild(row);
-           mainvlayout->getTheme()->layoutMargins.setAll(20);
            //add column to row
            for (int j=0; j<COLUMNS; j++){
                auto column = make_shared<VLayout>("Row" + to_string(i) + "Column" + to_string(j));
@@ -590,8 +592,44 @@ int main(int argc, char** argv)
                //give it a color
                control->getTheme()->background = Style::Fill::SOLID;
                control->getTheme()->background.colorPrimary = Colors::randColor();
+
+              //add a label
+              auto label = make_shared<Label>("Label");
+              auto onEnter = [label, control](){
+                  label->setVisible(true);
+                  label->setText(control->localToGlobal(label->getPos()));
+               };
+              auto onExit = [label, control](){
+                 label->setVisible(false);
+              };
+              control->setMouseEnterCallback(onEnter);
+              control->setMouseExitCallback(onExit);
+              control->setAcceptsHover(true); //get mouse enter and mouse exit events
+              label->setPos(2,2);
+              label->setVisible(false);
+              control->addChild(label);
            }
        }
+   }
+
+   else if (args.getArg("--hoverTest")){
+      auto mainVLayout = make_shared<VLayout>("VLayout");
+      mainVLayout->setAnchoring(BaseWidget::Anchor::FILL);
+      root->addChild(mainVLayout);
+      for (int i=0; i<5; i++){
+         auto control = make_shared<Control>("Control" + to_string(i));
+         auto onHover = [control](){
+            std::cout << control->getName() << " got hover!" << endl;
+            control->setVisible(true);
+         };
+         auto offHover = [control](){control->setVisible(false);std::cout << control->getName() << " got hover!" << endl;};
+         control->setMouseEnterCallback(onHover);
+         control->setMouseExitCallback(offHover);
+         control->setVisible(false);
+         control->getTheme()->background = Style::Fill::SOLID;
+         control->getTheme()->background.colorPrimary = ReyEngine::ColorRGBA::random();
+         mainVLayout->addChild(control);
+      }
    }
 
    else if (args.getArg("--inspector")){

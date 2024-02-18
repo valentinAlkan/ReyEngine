@@ -232,7 +232,7 @@ namespace ReyEngine {
       inline Pos& operator+=(const Pos& rhs){this->x += rhs.x; this->y += rhs.y; return *this;}
       inline Pos& operator-=(const Pos& rhs){this->x -= rhs.x; this->y -= rhs.y; return *this;}
       inline bool operator!=(const Pos& rhs){return this->x != rhs.x || this->y != rhs.y;}
-      inline operator std::string() const {return (Vec2<T>(*this).toString());}
+      inline operator std::string() const {return Vec2<T>::toString();}
       inline void operator=(Size<T>&) = delete;
       inline void operator=(Pos<T>& other){Pos::x = other.x; Pos::y = other.y;};
       inline void operator=(Vec2<T>& other){Pos::x = other.x; Pos::y = other.y;};
