@@ -97,10 +97,18 @@ namespace Style {
       PROPERTY_DECLARE(outline, Outline::NONE),
       PROPERTY_DECLARE(background, Fill::NONE),
       PROPERTY_DECLARE(foreground, Fill::SOLID),
-      PROPERTY_DECLARE(roundness, 0.01),
+      PROPERTY_DECLARE(roundness, 0.02),
+      PROPERTY_DECLARE(roundnessSegments, 10),
       PROPERTY_DECLARE(font),
-      PROPERTY_DECLARE(layoutMargins)
-      {}
+      PROPERTY_DECLARE(layoutMargins),
+      PROPERTY_DECLARE(lineThick)
+      {
+         //apply defaults
+         background = Fill::SOLID;
+         background.colorPrimary = ReyEngine::Colors::lightGray;
+         background.colorSecondary = ReyEngine::Colors::black;
+         background.colorTertiary = ReyEngine::Colors::white;
+      }
       std::string toString() const override {return "not impelenmeted";}
       Empty fromString(const std::string& data) override { return value;}
 
@@ -108,8 +116,10 @@ namespace Style {
       FillProperty foreground;
       OutlineProperty outline;
       FloatProperty roundness;
+      IntProperty roundnessSegments;
       FontProperty font;
       MarginsProperty layoutMargins;
+      FloatProperty lineThick;
 
       void registerProperties() override {
          registerProperty(background);
@@ -117,6 +127,7 @@ namespace Style {
          registerProperty(outline);
          registerProperty(roundness);
          registerProperty(font);
+         registerProperty(layoutMargins);
       }
 
       //Set the size of the font
@@ -127,22 +138,4 @@ namespace Style {
    private:
       Empty value; //do not use - only exists to satisfy construction requirements
    };
-
-//   class Themeable : public PropertyContainer {
-//   public:
-//      Themeable(){
-//         theme = std::make_unique<Theme>();
-//      };
-//      void registerProperties() override {
-//         registerProperty(*theme);
-//      }
-//      const Theme& theme-> const {return *theme;}
-//      std::unique_ptr<Theme>& getTheme() {return theme;}
-//      void setTheme(std::unique_ptr<Theme> newTheme){
-//         theme = std::move(newTheme);
-//         updateProperty(*theme);
-//      }
-//   private:
-//      std::unique_ptr<Theme> theme;
-//   };
 }

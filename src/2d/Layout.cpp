@@ -29,14 +29,9 @@ void Layout::_on_child_added_immediate(std::shared_ptr<BaseWidget> &child) {
    childScales.value.push_back(1.0);
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
-void Layout::_on_rect_changed() {
-   arrangeChildren();
-}
-
 void Layout::renderEnd() {
    //debug
-   _drawRectangleLines({0, 0, _rect.value.width, _rect.value.height}, 1.0, COLORS::black);
+//   _drawRectangleLines({0, 0, _rect.value.width, _rect.value.height}, 1.0, COLORS::black);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
