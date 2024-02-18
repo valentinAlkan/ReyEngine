@@ -5,7 +5,7 @@
 class Layout : public BaseWidget {
 public:
    /////////////////////////////////////////////////////////////////////////////////////////
-   enum class LayoutDir{HORIZONTAL, VERTICAL};
+   enum class LayoutDir{HORIZONTAL, VERTICAL, OTHER};
    /////////////////////////////////////////////////////////////////////////////////////////
    struct LayoutProperty : public EnumProperty<LayoutDir, 2>{
       LayoutProperty(const std::string& instanceName,  LayoutDir defaultvalue)
@@ -23,9 +23,9 @@ protected:
    void _register_parent_properties() override;
    void _on_child_added(std::shared_ptr<BaseWidget>& child) override;
    void _on_child_added_immediate(std::shared_ptr<BaseWidget>& child) override;
-   void _on_rect_changed() override;
+   void _on_rect_changed() override {arrangeChildren();}
    void renderEnd() override;
-   void arrangeChildren();
+   virtual void arrangeChildren();
    void render() const override {};
 public:
    FloatListProperty childScales;
@@ -39,14 +39,10 @@ public:
    VLayout(const std::string& instanceName)
    : Layout(instanceName, _get_static_constexpr_typename(), LayoutDir::VERTICAL)
    {}
-   static constexpr char TYPE_NAME[] = "VLayout";
-   static std::shared_ptr<BaseWidget> deserialize(const std::string &instanceName, PropertyPrototypeMap &properties) {
-      auto retval = std::make_shared<VLayout>(instanceName);
-      retval->BaseWidget::_deserialize(properties);
-   return retval;
-}
+   REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(VLayout);
+   REYENGINE_SERIALIZER(VLayout, Layout)
+
 protected:
-   std::string _get_static_constexpr_typename() override{ return TYPE_NAME;}
    VLayout(const std::string& name, const std::string& typeName): Layout(name, typeName, LayoutDir::VERTICAL){}
 };
 
@@ -56,13 +52,8 @@ public:
    HLayout(const std::string& instanceName)
    : Layout(instanceName, _get_static_constexpr_typename(), Layout::LayoutDir::HORIZONTAL)
    {}
-   static std::shared_ptr<BaseWidget> deserialize(const std::string &instanceName, PropertyPrototypeMap &properties) {
-      auto retval = std::make_shared<HLayout>(instanceName);
-      retval->BaseWidget::_deserialize(properties);
-   return retval;
-}
-   static constexpr char TYPE_NAME[] = "HLayout";
+   REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(HLayout);
+   REYENGINE_SERIALIZER(HLayout, Layout)
 protected:
-   std::string _get_static_constexpr_typename() override{ return TYPE_NAME;}
    HLayout(const std::string& name, const std::string& typeName): Layout(name, typeName, LayoutDir::VERTICAL){}
 };
