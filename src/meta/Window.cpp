@@ -90,7 +90,7 @@ void Window::exec(){
             InputEventKey event(nullptr);
             event.key = keyUp;
             event.isDown = false;
-            _root->_process_unhandled_input(event);
+            _root->_process_unhandled_input(event, nullopt);
          } else {
             break;
          }
@@ -103,7 +103,7 @@ void Window::exec(){
             InputEventKey event(nullptr);
             event.key = keyDown;
             event.isDown = true;
-            _root->_process_unhandled_input(event);
+            _root->_process_unhandled_input(event, nullopt);
          } else {
             break;
          }
@@ -134,7 +134,10 @@ void Window::exec(){
             event.button = btnUp;
             event.isDown = false;
             event.globalPos = pos;
-            _root->_process_unhandled_input(event);
+            UnhandledMouseInput mouse;
+            mouse.localPos = _root->globalToLocal(pos);
+            mouse.isInside = _root->isInside(mouse.localPos);
+            _root->_process_unhandled_input(event, mouse);
          }
       }
 
@@ -161,7 +164,10 @@ void Window::exec(){
             event.button = btnDown;
             event.isDown = true;
             event.globalPos = pos;
-            _root->_process_unhandled_input(event);
+            UnhandledMouseInput mouse;
+            mouse.localPos = _root->globalToLocal(pos);
+            mouse.isInside = _root->isInside(mouse.localPos);
+            _root->_process_unhandled_input(event, mouse);
          } else {
             break;
          }
@@ -235,7 +241,10 @@ void Window::exec(){
                clearHover();
             }
 //            if (_isEditor) continue;
-            _root->_process_unhandled_input(event);
+            UnhandledMouseInput mouse;
+            mouse.localPos = _root->globalToLocal(event.globalPos);
+            mouse.isInside = _root->isInside(mouse.localPos);
+            _root->_process_unhandled_input(event, mouse);
          }
       }
 

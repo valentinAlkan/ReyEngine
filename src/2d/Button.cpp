@@ -1,13 +1,17 @@
 #include "Button.h"
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled BaseButton::_unhandled_input(InputEvent& event) {
+Handled BaseButton::_unhandled_input(InputEvent& event, std::optional<UnhandledMouseInput> mouse) {
     if (_isEditorWidget) return false;
     switch (event.eventId) {
         case InputEventMouseButton::getUniqueEventId(): {
             auto mouseEvent = event.toEventType<InputEventMouseButton>();
             if (mouseEvent.button == InputInterface::MouseButton::MOUSE_BUTTON_LEFT) {
-                setDown(mouseEvent.isDown);
-                return true;
+               if (mouse->isInside && mouseEvent.isDown) {
+                  setDown(true);
+                  return true;
+               } else if (!mouseEvent.isDown){
+                  setDown(false);
+               }
             }
         }
         break;

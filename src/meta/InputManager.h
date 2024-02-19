@@ -14,7 +14,7 @@ struct InputEventKey : public InputEvent {
 
 struct InputEventMouse : public InputEvent{
    EVENT_CTOR_SIMPLE_OVERRIDABLE(InputEventMouse, InputEvent){}
-   ReyEngine::Vec2<int> globalPos;
+   ReyEngine::Pos<int> globalPos;
 };
 
 struct InputEventMouseButton : public InputEventMouse{
@@ -41,6 +41,10 @@ enum class InputFilter {
    INPUT_FILTER_IGNORE_AND_STOP //ignores input and does not pass or handle it
 };
 
+struct UnhandledMouseInput{
+   bool isInside = false;
+   ReyEngine::Pos<int> localPos;
+};
 
 class InputManager
 {
@@ -60,7 +64,7 @@ public:
    static inline bool isKeyReleased(InputInterface::KeyCode key){return InputInterface::isKeyReleased(key);}
    static inline bool isKeyUp(InputInterface::KeyCode key){return InputInterface::isKeyUp(key);}
    static inline void setExitKey(InputInterface::KeyCode key){return InputInterface::setExitKey(key);}
-   static inline ReyEngine::Vec2<int> getMousePos(){return InputInterface::getMousePos();}
+   static inline ReyEngine::Pos<int> getMousePos(){return InputInterface::getMousePos();}
    static inline ReyEngine::Vec2<int> getMouseDelta(){return InputInterface::getMouseDelta();}
 protected:
    InputInterface::KeyCode getKeyPressed();

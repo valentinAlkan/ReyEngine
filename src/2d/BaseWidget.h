@@ -98,6 +98,8 @@ public:
    void setRect(const ReyEngine::Rect<int>& r);
    void setPos(int x, int y);
    void setPos(const ReyEngine::Pos<int>& pos);
+   void setPosRelative(const ReyEngine::Pos<int>& pos, const ReyEngine::Pos<int>& offset); //sets a new position relative to its current position
+   void move(const ReyEngine::Pos<int>& amt);
    void setSize(const ReyEngine::Size<int>& size);
    void scale(const ReyEngine::Vec2<float>& scale);
    void setWidth(int width);
@@ -188,7 +190,7 @@ protected:
    RectProperty<int> _rect;
 
    //input
-   virtual Handled _unhandled_input(InputEvent&){return false;}
+   virtual Handled _unhandled_input(InputEvent&, std::optional<UnhandledMouseInput>){return false;}
    virtual void _register_parent_properties(){};
 
    void _is_extendable(){static_assert(true);}
@@ -234,8 +236,8 @@ protected:
    bool _scheduled_for_deletion = false; // true when the widget has been scheduled for deletion but is not yet deleted.
    ReyEngine::Pos<double> _renderOffset; //used for different rendering modes. does not offset position.
 
-   Handled _process_unhandled_input(InputEvent&); //pass input to children if they want it and then process it for ourselves if necessary
-   Handled _process_unhandled_editor_input(InputEvent&); //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)
+   Handled _process_unhandled_input(InputEvent&, std::optional<UnhandledMouseInput>); //pass input to children if they want it and then process it for ourselves if necessary
+   Handled _process_unhandled_editor_input(InputEvent&, std::optional<UnhandledMouseInput>); //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)
    InputFilter inputFilter = InputFilter::INPUT_FILTER_PASS_AND_PROCESS;
    std::shared_ptr<Style::Theme> theme;
 

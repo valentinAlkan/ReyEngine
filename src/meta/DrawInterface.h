@@ -215,6 +215,7 @@ namespace ReyEngine {
       inline Line midpoint(){return {(a.x+b.x)/2, (a.y + b.y) / 2};}
       inline Pos<T> lerp(double xprm){return a.lerp(b, xprm);}
       inline double distance(){NOT_IMPLEMENTED;}
+      inline std::string toString() const {return "{" + a.toString() + ", " + b.toString() + "}";}
       Pos<T> a;
       Pos<T> b;
    };
@@ -234,9 +235,10 @@ namespace ReyEngine {
       inline Pos& operator-=(const Pos& rhs){this->x -= rhs.x; this->y -= rhs.y; return *this;}
       inline bool operator!=(const Pos& rhs){return this->x != rhs.x || this->y != rhs.y;}
       inline operator std::string() const {return Vec2<T>::toString();}
-      inline void operator=(Size<T>&) = delete;
-      inline void operator=(Pos<T>& other){Pos::x = other.x; Pos::y = other.y;};
-      inline void operator=(Vec2<T>& other){Pos::x = other.x; Pos::y = other.y;};
+      inline void operator=(const Size<T>&) = delete;
+      inline Pos& operator=(const Pos<T>& other){Pos::x = other.x; Pos::y = other.y; return *this;}
+      inline Pos& operator=(const Vec2<T>& other){Pos::x = other.x; Pos::y = other.y; return *this;}
+      inline std::string toString() const {return Vec2<T>::toString();}
    };
 
    template <typename T>
@@ -327,7 +329,8 @@ namespace ReyEngine {
       [[nodiscard]] inline const Pos<T> pos() const {return {x, y};}
       [[nodiscard]] inline const Size<T> size() const {return {width, height};}
       [[nodiscard]] inline const Rect<T> toSizeRect() const {return {0,0,width, height};}
-      inline void setSize(ReyEngine::Size<T> size){width = size.x; height = size.y;}
+      inline void setSize(const ReyEngine::Size<T>& size){width = size.x; height = size.y;}
+      inline void setPos(const ReyEngine::Pos<T>& pos){x = pos.x; y = pos.y;}
 
       T x;
       T y;

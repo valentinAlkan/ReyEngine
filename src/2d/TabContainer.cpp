@@ -63,24 +63,26 @@ void TabContainer::arrangeChildren() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled TabContainer::_unhandled_input(InputEvent &event) {
-   switch (event.eventId){
-      case InputEventMouseButton::getUniqueEventId(): {
-         auto mouseEvent = event.toEventType<InputEventMouseButton>();
-         if (mouseEvent.isDown) return false; //only want uppies
-         auto localPos = globalToLocal(mouseEvent.globalPos);
-         for (int i = 0; i < _tabRects.size(); i++) {
-            auto &tabRect = _tabRects[i];
-            if (tabRect.isInside(localPos)) {
-               //clicked on the tab - set current index
-               setCurrentTab(i);
-               return true;
+Handled TabContainer::_unhandled_input(InputEvent &event,std::optional<UnhandledMouseInput> mouse) {
+   if (mouse && mouse.value().isInside) {
+      switch (event.eventId) {
+         case InputEventMouseButton::getUniqueEventId(): {
+            auto mouseEvent = event.toEventType<InputEventMouseButton>();
+            if (mouseEvent.isDown) return false; //only want uppies
+            auto localPos = globalToLocal(mouseEvent.globalPos);
+            for (int i = 0; i < _tabRects.size(); i++) {
+               auto &tabRect = _tabRects[i];
+               if (tabRect.isInside(localPos)) {
+                  //clicked on the tab - set current index
+                  setCurrentTab(i);
+                  return true;
+               }
             }
          }
+            break;
+         default:
+            return false;
       }
-      break;
-      default:
-         return false;
    }
    return false;
 }

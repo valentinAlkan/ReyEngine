@@ -149,9 +149,9 @@ protected:
    void determineOrdering();
    void determineVisible();
    void render() const override;
-   virtual Handled _unhandled_input(InputEvent&);
-   virtual void _on_mouse_enter(){};
-   virtual void _on_mouse_exit(){ _hoveredMeta.reset();/*_hoveredRowNum = -1;*/}
+   Handled _unhandled_input(InputEvent&, std::optional<UnhandledMouseInput>) override;
+   void _on_mouse_enter() override {};
+   void _on_mouse_exit() override { _hoveredMeta.reset();/*_hoveredRowNum = -1;*/}
    std::optional<std::shared_ptr<TreeItemMeta>> getMetaAt(const ReyEngine::Pos<int>& localPos);
 private:
 

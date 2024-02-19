@@ -73,6 +73,7 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--marginsTest", "Layout margins test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--hoverTest", "Hovering test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--tabContainerTest", "Tab container test", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--relativeMotionTest", "Relative location movement test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--drawTest", "Test various drawing functions", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
@@ -233,7 +234,9 @@ int main(int argc, char** argv)
 
 
    else if (args.getArg("--sliderTest")){
-      root->addChild(make_shared<Control>("Root"));
+      auto inputFilter = make_shared<Control>("InputFilter");
+      inputFilter->setAnchoring(BaseWidget::Anchor::FILL);
+      root->addChild(inputFilter);
       auto label = make_shared<Label>("Label");
 
       auto vslider = make_shared<Slider>("Vslider", Slider::SliderType::VERTICAL);
@@ -241,32 +244,41 @@ int main(int argc, char** argv)
       auto hslider = make_shared<Slider>("Hslider", Slider::SliderType::HORIZONTAL);
       hslider->setRect({250,100,100,20});
 
-      root->addChild(label);
-      root->addChild(vslider);
-      root->addChild(hslider);
+      inputFilter->addChild(label);
+      inputFilter->addChild(vslider);
+      inputFilter->addChild(hslider);
 
-      auto labelMoveX = [&](const Slider::SliderValueChangedEvent& event){
-         auto slider = event.publisher->toBaseWidget()->toType<Slider>();
-         label->setPos(Vec2<int>(0,screenWidth-label->getRect().width).lerp(slider->getSliderPct()), label->getPos().y);
-      };
+      bool down = false;
+      Pos<int> startPos;
 
-      auto labelMoveY = [&](const Slider::SliderValueChangedEvent& event){
-         auto slider = event.publisher->toBaseWidget()->toType<Slider>();
-         label->setPos(label->getPos().x, Vec2<int>(0,screenHeight-label->getRect().height).lerp(slider->getSliderPct()));
+      auto cbInput = [&](InputEvent& event, std::optional<UnhandledMouseInput> mouse) -> Handled {
+         switch(event.eventId){
+            case InputEventMouseButton::getUniqueEventId(): {
+               auto mbEvent = event.toEventType<InputEventMouseButton>();
+               if (mbEvent.isDown && label->isInside(label->globalToLocal(mbEvent.globalPos))) {
+                  down = true;
+               } else if (!mbEvent.isDown){
+                  down = false;
+               }
+               return true;
+            }
+            case InputEventMouseMotion::getUniqueEventId(): {
+               auto mmEvent = event.toEventType<InputEventMouseMotion>();
+               auto mouseLocal = label->globalToLocal(mmEvent.globalPos);
+               if (down) {
+//                  label->setPosRelative(mouseLocal, startPos);
+                  label->setPos(mouseLocal - startPos);
+                  return true;
+               } else {
+                  startPos = label->getPos();
+                  return true;
+               }
+               break;
+            }
+         }
+         return false;
       };
-      label->subscribe<Slider::SliderValueChangedEvent>(hslider, labelMoveX);
-      label->subscribe<Slider::SliderValueChangedEvent>(vslider, labelMoveY);
-
-      //move timer
-      auto timerCb = [&](const Timer::TimeoutEvent& e){
-         auto pct = window->getMousePct();
-         hslider->setSliderPct(pct.x);
-         vslider->setSliderPct(pct.y);
-      };
-      auto timer = SystemTime::newTimer(std::chrono::milliseconds(1000));
-      label->subscribe<Timer::TimeoutEvent>(timer, timerCb);
-      auto timerProperty = make_shared<TimerProperty>("timer", timer);
-      label->moveProperty(timerProperty);
+      inputFilter->setUnhandledInputCallback(cbInput);
 
    }
 
@@ -671,6 +683,52 @@ int main(int argc, char** argv)
          tabContainer->addChild(control);
       }
 
+   }
+
+   else if (args.getArg("--relativeMotionTest")){
+      //make something we can draw on
+      auto canvasControl = make_shared<Control>("Control");
+      root->addChild(canvasControl);
+      canvasControl->setAnchoring(BaseWidget::Anchor::FILL);
+      Rect<int> rect(0,0,50,50);
+      ReyEngineFont font;
+      bool down = false;
+      Pos<int> mousePos;
+      Pos<int> offset;
+
+      auto cbDrawCanvas = [&](){
+         ReyEngine::drawRectangle(canvasControl->getRect(), Colors::lightGray);
+         ReyEngine::drawRectangle(rect, down ? Colors:: red : Colors::green);
+
+         //rect delta line
+         if (down) {
+            ReyEngine::drawLine({mousePos, mousePos - offset}, Colors::blue);
+            ReyEngine::drawText("offset = " + offset.toString(), mousePos + Pos<int>(15, 15), font);
+         }
+      };
+
+      auto cbInput = [&](InputEvent& event, std::optional<UnhandledMouseInput> mouse) -> bool {
+         switch (event.eventId) {
+            case InputEventMouseButton::getUniqueEventId(): {
+               auto &mbEvent = event.toEventType<InputEventMouseButton>();
+               down = mbEvent.isDown && rect.isInside(mbEvent.globalPos);
+               return true;
+            }
+            case InputEventMouseMotion::getUniqueEventId():
+               mousePos = InputManager::getMousePos();
+               if (down) {
+                  rect.setPos(mousePos - offset);
+               } else {
+                  offset = mousePos - rect.pos();
+               }
+
+               return true;
+         }
+         return false;
+      };
+
+      canvasControl->setRenderCallback(cbDrawCanvas);
+      canvasControl->setUnhandledInputCallback(cbInput);
    }
 
    else if (args.getArg("--inspector")){
