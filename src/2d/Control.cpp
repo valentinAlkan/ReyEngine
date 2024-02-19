@@ -19,7 +19,7 @@ void Control::_process(float dt) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled Control::_unhandled_input(InputEvent& event, std::optional<UnhandledMouseInput> mouse) {
+Handled Control::_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
    if (unhandledInputCallback) return unhandledInputCallback(event, mouse);
    return false;
 }

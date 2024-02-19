@@ -48,14 +48,14 @@ public:
 //      std::cout << "Event has typeid " << getTy
    }
    template <typename Other>
-   bool isEvent(){
+   bool isEvent() const {
       static_assert(std::is_base_of_v<T, Other>);
       return eventId == Other::getUniqueEventId();
    }
    template <typename Other>
-   const Other& toEventType(){
+   const Other& toEventType() const {
       static_assert(std::is_base_of_v<T, Other>);
-      return static_cast<Other&>(*this);
+      return static_cast<const Other&>(*this);
    }
 };
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -34,7 +34,7 @@ public:
    void setCurrentTab(int index);
    int getCurrentTab(){return currentTab;}
 protected:
-   Handled _unhandled_input(InputEvent&, std::optional<UnhandledMouseInput>) override;
+   Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
    void arrangeChildren() override;
    IntProperty currentTab;
 private:

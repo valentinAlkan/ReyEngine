@@ -1,6 +1,6 @@
 #include "Button.h"
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled BaseButton::_unhandled_input(InputEvent& event, std::optional<UnhandledMouseInput> mouse) {
+Handled BaseButton::_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
     if (_isEditorWidget) return false;
     switch (event.eventId) {
         case InputEventMouseButton::getUniqueEventId(): {

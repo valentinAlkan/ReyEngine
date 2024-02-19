@@ -244,7 +244,7 @@ void BaseWidget::renderChain(ReyEngine::Pos<double>& parentOffset) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled BaseWidget::_process_unhandled_input(InputEvent& event, std::optional<UnhandledMouseInput> mouse) {
+Handled BaseWidget::_process_unhandled_input(InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
    auto passInput = [&](InputEvent& _event, std::optional<UnhandledMouseInput> _mouse) {
       for (auto& [name, childIter] : _children) {
          if (childIter.second->_process_unhandled_input(_event, _mouse)) {
@@ -291,7 +291,7 @@ Handled BaseWidget::_process_unhandled_input(InputEvent& event, std::optional<Un
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled BaseWidget::_process_unhandled_editor_input(InputEvent& event, std::optional<UnhandledMouseInput> mouse) {
+Handled BaseWidget::_process_unhandled_editor_input(InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
    if (!_editor_selected) return false;
    switch(event.eventId){
       case InputEventMouseButton::getUniqueEventId():

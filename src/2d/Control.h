@@ -9,13 +9,13 @@ public:
 public:
     void render() const override;
     void _process(float dt) override;
-    Handled _unhandled_input(InputEvent&, std::optional<UnhandledMouseInput>) override;
+    Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
     void _on_mouse_enter() override;
     void _on_mouse_exit() override;
     void registerProperties() override {};
     void setRenderCallback(std::function<const void()> fx){renderCallback = fx;}
     void setProcessCallback(std::function<void()> fx){processCallback = fx;setProcess(true);}
-    void setUnhandledInputCallback(std::function<Handled(InputEvent&, std::optional<UnhandledMouseInput>)> fx){unhandledInputCallback = fx;}
+    void setUnhandledInputCallback(std::function<Handled(const InputEvent&, const std::optional<UnhandledMouseInput>&)> fx){unhandledInputCallback = fx;}
     void setMouseEnterCallback(std::function<void()> fx){mouseEnterCallback=fx; acceptsHover=true;}
     void setMouseExitCallback(std::function<void()> fx){mouseExitCallback=fx; acceptsHover=true;}
 protected:
@@ -23,5 +23,5 @@ protected:
     std::function<void()> mouseExitCallback;
     std::function<void()> renderCallback;
     std::function<void()> processCallback;
-    std::function<Handled(InputEvent&, std::optional<UnhandledMouseInput>)> unhandledInputCallback;
+    std::function<Handled(const InputEvent&, const std::optional<UnhandledMouseInput>&)> unhandledInputCallback;
 };
