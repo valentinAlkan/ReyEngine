@@ -601,8 +601,8 @@ void BaseWidget::setPos(const ReyEngine::Pos<int>& pos) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::setPosRelative(const ReyEngine::Pos<int>& pos, const ReyEngine::Pos<int>& offset) {
-   setPos(pos - offset);
+void BaseWidget::setPosRelative(const ReyEngine::Pos<int>& pos, const ReyEngine::Pos<int>& basis) {
+   setPos(pos - basis);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

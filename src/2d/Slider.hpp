@@ -44,9 +44,9 @@ public:
       _range = {minSliderValue.value, maxSlidervalue.value};
    }
    inline double getSliderValue(){return sliderValue.value;}
-   inline void setSliderValue(double value){sliderValue.set(value);_publish_slider_val();_compute_appearance();}
+   inline void setSliderValue(double value, bool noPublish=false){sliderValue.set(value);if (!noPublish)_publish_slider_val();_compute_appearance();}
    inline double getSliderPct(){return _range.pct(sliderValue.value);}
-   inline void setSliderPct(double pct){setSliderValue(_range.lerp(pct));}
+   inline void setSliderPct(double pct, bool noPublish=false){setSliderValue(_range.lerp(pct), noPublish);}
 protected:
    void _register_parent_properties() override{ BaseWidget::_register_parent_properties(); BaseWidget::registerProperties();}
    Handled _unhandled_input(const InputEvent& e, const std::optional<UnhandledMouseInput>& mouse) override {

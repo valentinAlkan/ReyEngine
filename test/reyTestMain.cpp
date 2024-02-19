@@ -237,19 +237,21 @@ int main(int argc, char** argv)
       auto inputFilter = make_shared<Control>("InputFilter");
       inputFilter->setAnchoring(BaseWidget::Anchor::FILL);
       root->addChild(inputFilter);
-      auto label = make_shared<Label>("Label");
+      auto control = make_shared<Control>("Control");
+      control->setSize({100, 100});
+      control->getTheme()->background.colorPrimary = Colors::red;
 
       auto vslider = make_shared<Slider>("Vslider", Slider::SliderType::VERTICAL);
       vslider->setRect({200,100,20,100});
       auto hslider = make_shared<Slider>("Hslider", Slider::SliderType::HORIZONTAL);
       hslider->setRect({250,100,100,20});
 
-      inputFilter->addChild(label);
+      inputFilter->addChild(control);
       inputFilter->addChild(vslider);
       inputFilter->addChild(hslider);
 
       bool down = false;
-      Pos<int> startPos;
+      Pos<int> offset;
 
       auto cbInput = [&](const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) -> Handled {
          switch(event.eventId){
@@ -263,18 +265,22 @@ int main(int argc, char** argv)
                return true;
             }
             case InputEventMouseMotion::getUniqueEventId(): {
-               auto mmEvent = event.toEventType<InputEventMouseMotion>();
-               auto mouseLocal = label->globalToLocal(mmEvent.globalPos);
+               auto& mmEvent = event.toEventType<InputEventMouseMotion>();
+               auto mouseLocal = mouse->localPos;
                if (down) {
-//                  label->setPosRelative(mouseLocal, startPos);
-                  label->setPos(mouseLocal - startPos);
-                  auto totalWidth = inputFilter->getRect().width;
-                  auto x = label->getPos().x;
-                  double pct = (totalWidth - x) / totalWidth;
-                  hslider->setSliderPct(pct);
+                  auto xpct = 1-(((double)inputFilter->getRect().width - (double)control->getPos().x) / (double)inputFilter->getRect().width);
+                  auto ypct = 1-(((double)inputFilter->getRect().height - (double)control->getPos().y) / (double)inputFilter->getRect().height);
+                  if (xpct < 0) xpct = 0;
+                  if (xpct > 1) xpct = 1;
+                  if (ypct < 0) ypct = 0;
+                  if (ypct > 1) ypct = 1;
+                  mouseLocal = mouseLocal.clamp(Vec2<int>(0,0), inputFilter->getSize());
+                  control->setPosRelative(mouseLocal, offset);
+                  hslider->setSliderPct(xpct, true);
+                  vslider->setSliderPct(ypct, true);
                   return true;
                } else {
-                  startPos = label->getPos();
+                  offset = mouseLocal - control->getPos();
                   return true;
                }
                break;
@@ -283,6 +289,17 @@ int main(int argc, char** argv)
          return false;
       };
       inputFilter->setUnhandledInputCallback(cbInput);
+
+      //connect to slider events
+      auto hSlidercb = [&](const Slider::SliderValueChangedEvent& event){
+         control->setPos({(int)((double) inputFilter->getWidth() * event.pct), control->getPos().y});
+      };
+      inputFilter->subscribe<Slider::SliderValueChangedEvent>(hslider, hSlidercb);
+
+      auto vSlidercb = [&](const Slider::SliderValueChangedEvent& event){
+         control->setPos({control->getPos().x, (int)((double) inputFilter->getHeight() * event.pct)});
+      };
+      inputFilter->subscribe<Slider::SliderValueChangedEvent>(vslider, vSlidercb);
 
    }
 
