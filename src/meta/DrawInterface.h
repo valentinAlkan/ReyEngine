@@ -125,6 +125,14 @@ namespace ReyEngine {
       inline double lerp(double lerpVal){return lerpVal * (y - x) + x;} //given a value from 0 to 1, what is the value of the range that corresponds to it?
       inline Vec2 lerp(Vec2 otherPoint, double xprm){return {xprm, y + (((xprm - x) * (otherPoint.y - y)) / (otherPoint.x - x))};}
       inline T clamp(T value){if (value < x) return x; if (value > y) return y; return value;}
+      inline Vec2 clamp(Vec2 clampA, Vec2 clampB){
+         Vec2 retval = {x, y};
+         if (x < clampA.x) retval.x = clampA.x;
+         if (x > clampB.x) retval.x = clampB.x;
+         if (y < clampA.x) retval.y = clampA.y;
+         if (y > clampB.y) retval.y = clampB.y;
+         return retval;
+      }
       inline static std::vector<T> fromString(const std::string& s){return Vec<T>::fromString(2, s);};
       std::ostream& operator<<(std::ostream& os) const {os << Vec<T>::toString(); return os;}
       friend std::ostream& operator<<(std::ostream& os, Vec2<T> v) {os << v.toString(); return os;}

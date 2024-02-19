@@ -98,7 +98,7 @@ public:
    void setRect(const ReyEngine::Rect<int>& r);
    void setPos(int x, int y);
    void setPos(const ReyEngine::Pos<int>& pos);
-   void setPosRelative(const ReyEngine::Pos<int>& pos, const ReyEngine::Pos<int>& offset); //sets a new position relative to its current position
+   void setPosRelative(const ReyEngine::Pos<int>& pos, const ReyEngine::Pos<int>& basis); //sets a new position relative to its current position
    void move(const ReyEngine::Pos<int>& amt);
    void setSize(const ReyEngine::Size<int>& size);
    void scale(const ReyEngine::Vec2<float>& scale);
