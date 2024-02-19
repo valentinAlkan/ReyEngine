@@ -20,7 +20,7 @@ public:
    BoolProperty down;
    bool wasDown;
 protected:
-   Handled _unhandled_input(InputEvent&, std::optional<UnhandledMouseInput>) override;
+   Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
    void setDown(bool newDown);
 };
 

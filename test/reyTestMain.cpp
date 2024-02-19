@@ -251,11 +251,11 @@ int main(int argc, char** argv)
       bool down = false;
       Pos<int> startPos;
 
-      auto cbInput = [&](InputEvent& event, std::optional<UnhandledMouseInput> mouse) -> Handled {
+      auto cbInput = [&](const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) -> Handled {
          switch(event.eventId){
             case InputEventMouseButton::getUniqueEventId(): {
                auto mbEvent = event.toEventType<InputEventMouseButton>();
-               if (mbEvent.isDown && label->isInside(label->globalToLocal(mbEvent.globalPos))) {
+               if (mbEvent.isDown && mouse->isInside) {
                   down = true;
                } else if (!mbEvent.isDown){
                   down = false;
@@ -268,6 +268,10 @@ int main(int argc, char** argv)
                if (down) {
 //                  label->setPosRelative(mouseLocal, startPos);
                   label->setPos(mouseLocal - startPos);
+                  auto totalWidth = inputFilter->getRect().width;
+                  auto x = label->getPos().x;
+                  double pct = (totalWidth - x) / totalWidth;
+                  hslider->setSliderPct(pct);
                   return true;
                } else {
                   startPos = label->getPos();
@@ -707,7 +711,7 @@ int main(int argc, char** argv)
          }
       };
 
-      auto cbInput = [&](InputEvent& event, std::optional<UnhandledMouseInput> mouse) -> bool {
+      auto cbInput = [&](const InputEvent& event, std::optional<UnhandledMouseInput> mouse) -> bool {
          switch (event.eventId) {
             case InputEventMouseButton::getUniqueEventId(): {
                auto &mbEvent = event.toEventType<InputEventMouseButton>();

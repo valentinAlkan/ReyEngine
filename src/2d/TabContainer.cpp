@@ -63,7 +63,7 @@ void TabContainer::arrangeChildren() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled TabContainer::_unhandled_input(InputEvent &event,std::optional<UnhandledMouseInput> mouse) {
+Handled TabContainer::_unhandled_input(const InputEvent &event, const std::optional<UnhandledMouseInput>& mouse) {
    if (mouse && mouse.value().isInside) {
       switch (event.eventId) {
          case InputEventMouseButton::getUniqueEventId(): {
