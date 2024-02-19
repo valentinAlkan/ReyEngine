@@ -96,7 +96,7 @@ void Tree::render() const{
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled Tree::_unhandled_input(InputEvent& event) {
+Handled Tree::_unhandled_input(InputEvent& event, std::optional<UnhandledMouseInput> mouse) {
     switch (event.eventId){
        case InputEventMouseMotion::getUniqueEventId():
        case InputEventMouseButton::getUniqueEventId():

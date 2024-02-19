@@ -49,7 +49,7 @@ public:
    inline void setSliderPct(double pct){setSliderValue(_range.lerp(pct));}
 protected:
    void _register_parent_properties() override{ BaseWidget::_register_parent_properties(); BaseWidget::registerProperties();}
-   virtual Handled _unhandled_input(InputEvent& e){
+   Handled _unhandled_input(InputEvent& e, std::optional<UnhandledMouseInput> mouse) override {
       auto& mouseEvent = (InputEventMouseMotion&)(e);
       auto localPos = globalToLocal(mouseEvent.globalPos);
       if (mouseEvent.isEvent<InputEventMouseMotion>()){

@@ -244,43 +244,45 @@ void BaseWidget::renderChain(ReyEngine::Pos<double>& parentOffset) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled BaseWidget::_process_unhandled_input(InputEvent& event) {
-   auto passInput = [&](InputEvent& event) {
+Handled BaseWidget::_process_unhandled_input(InputEvent& event, std::optional<UnhandledMouseInput> mouse) {
+   auto passInput = [&](InputEvent& _event, std::optional<UnhandledMouseInput> _mouse) {
       for (auto& [name, childIter] : _children) {
-         if (childIter.second->_process_unhandled_input(event)) {
+         if (childIter.second->_process_unhandled_input(_event, _mouse)) {
             return true;
          }
       }
       return false;
    };
 
+   std::optional<UnhandledMouseInput> childMouseInput;
     //if this is mouse input, make sure it is inside the bounding rect
     switch (event.eventId){
         case InputEventMouseMotion::getUniqueEventId():
         case InputEventMouseButton::getUniqueEventId():
         case InputEventMouseWheel::getUniqueEventId(): {
-            auto globalPos = event.toEventType<InputEventMouse>().globalPos;
-            auto localPos = globalToLocal(globalPos);
-            if (!isInside(localPos)) {
-                return false;
-            }
+           auto globalPos = event.toEventType<InputEventMouse>().globalPos;
+           auto localPos = globalToLocal(globalPos);
+           UnhandledMouseInput  _mouse;
+           _mouse.localPos = localPos;
+           _mouse.isInside = isInside(localPos);
+           childMouseInput = _mouse;
         }
         break;
     }
 
    if (_isEditorWidget){
-      if (_process_unhandled_editor_input(event) > 0) return true;
+      if (_process_unhandled_editor_input(event, mouse) > 0) return true;
    }
 
    switch (inputFilter){
       case InputFilter::INPUT_FILTER_PASS_AND_PROCESS:
-         return passInput(event) || _unhandled_input(event);
+         return passInput(event, childMouseInput) || _unhandled_input(event, mouse);
       case InputFilter::INPUT_FILTER_PROCESS_AND_PASS:
-         return _unhandled_input(event) || passInput(event);
+         return _unhandled_input(event, mouse) || passInput(event, childMouseInput);
       case InputFilter::INPUT_FILTER_IGNORE_AND_PASS:
-         return passInput(event);
+         return passInput(event, childMouseInput);
       case InputFilter::INPUT_FILTER_PROCESS_AND_STOP:
-         return _unhandled_input(event);
+         return _unhandled_input(event, mouse);
       case InputFilter::INPUT_FILTER_IGNORE_AND_STOP:
          return false;
       default:
@@ -289,7 +291,7 @@ Handled BaseWidget::_process_unhandled_input(InputEvent& event) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled BaseWidget::_process_unhandled_editor_input(InputEvent& event) {
+Handled BaseWidget::_process_unhandled_editor_input(InputEvent& event, std::optional<UnhandledMouseInput> mouse) {
    if (!_editor_selected) return false;
    switch(event.eventId){
       case InputEventMouseButton::getUniqueEventId():
@@ -591,10 +593,21 @@ void BaseWidget::setPos(int x, int y){
    ReyEngine::Rect<int> r(x, y, _rect.value.width, _rect.value.height);
    setRect(r);
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setPos(const ReyEngine::Pos<int>& pos) {
    ReyEngine::Rect<int> r(pos, _rect.value.size());
    setRect(r);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::setPosRelative(const ReyEngine::Pos<int>& pos, const ReyEngine::Pos<int>& offset) {
+   setPos(pos - offset);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::move(const ReyEngine::Pos<int> &amt) {
+   setPos(_rect.value.pos() + amt);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
