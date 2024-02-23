@@ -4,7 +4,7 @@
 #include "EventManager.h"
 #include <iostream>
 #include <utility>
-#include "Canvas.hpp"
+#include "Canvas.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -244,31 +244,33 @@ void BaseWidget::renderChain(ReyEngine::Pos<double>& parentOffset) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled BaseWidget::_process_unhandled_input(InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
-   auto passInput = [&](InputEvent& _event, std::optional<UnhandledMouseInput> _mouse) {
-      for (auto& [name, childIter] : _children) {
-         if (childIter.second->_process_unhandled_input(_event, _mouse)) {
+Handled BaseWidget::_process_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
+   auto passInput = [&](const InputEvent& _event, std::optional<UnhandledMouseInput> _mouse) {
+      for (auto& child : _childrenOrdered) {
+
+         if (_mouse) {
+            //if this is mouse input, make sure it is inside the bounding rect
+            switch (event.eventId) {
+               case InputEventMouseMotion::getUniqueEventId():
+               case InputEventMouseButton::getUniqueEventId():
+               case InputEventMouseWheel::getUniqueEventId(): {
+                  auto globalPos = event.toEventType<InputEventMouse>().globalPos;
+                  auto localPos = child->globalToLocal(globalPos);
+                  UnhandledMouseInput childmouse;
+                  childmouse.localPos = localPos;
+                  childmouse.isInside = child->isInside(localPos);
+                  _mouse = childmouse;
+               }
+                  break;
+            }
+         }
+
+         if (child->_process_unhandled_input(_event, _mouse)) {
             return true;
          }
       }
       return false;
    };
-
-   std::optional<UnhandledMouseInput> childMouseInput;
-    //if this is mouse input, make sure it is inside the bounding rect
-    switch (event.eventId){
-        case InputEventMouseMotion::getUniqueEventId():
-        case InputEventMouseButton::getUniqueEventId():
-        case InputEventMouseWheel::getUniqueEventId(): {
-           auto globalPos = event.toEventType<InputEventMouse>().globalPos;
-           auto localPos = globalToLocal(globalPos);
-           UnhandledMouseInput  _mouse;
-           _mouse.localPos = localPos;
-           _mouse.isInside = isInside(localPos);
-           childMouseInput = _mouse;
-        }
-        break;
-    }
 
    if (_isEditorWidget){
       if (_process_unhandled_editor_input(event, mouse) > 0) return true;
@@ -276,11 +278,11 @@ Handled BaseWidget::_process_unhandled_input(InputEvent& event, const std::optio
 
    switch (inputFilter){
       case InputFilter::INPUT_FILTER_PASS_AND_PROCESS:
-         return passInput(event, childMouseInput) || _unhandled_input(event, mouse);
+         return passInput(event, mouse) || _unhandled_input(event, mouse);
       case InputFilter::INPUT_FILTER_PROCESS_AND_PASS:
-         return _unhandled_input(event, mouse) || passInput(event, childMouseInput);
+         return _unhandled_input(event, mouse) || passInput(event, mouse);
       case InputFilter::INPUT_FILTER_IGNORE_AND_PASS:
-         return passInput(event, childMouseInput);
+         return passInput(event, mouse);
       case InputFilter::INPUT_FILTER_PROCESS_AND_STOP:
          return _unhandled_input(event, mouse);
       case InputFilter::INPUT_FILTER_IGNORE_AND_STOP:
@@ -291,7 +293,7 @@ Handled BaseWidget::_process_unhandled_input(InputEvent& event, const std::optio
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled BaseWidget::_process_unhandled_editor_input(InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
+Handled BaseWidget::_process_unhandled_editor_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
    if (!_editor_selected) return false;
    switch(event.eventId){
       case InputEventMouseButton::getUniqueEventId():
@@ -428,7 +430,7 @@ void BaseWidget::_drawCircleSectorLines(const ReyEngine::CircleSector& sector, R
 std::string BaseWidget::serialize() {
    stringstream data;
    data << _name << " - " << _typeName << ":\n";
-   for (const auto& [anme, property] : _properties){
+   for (const auto& [name, property] : _properties){
       auto value = property->toString();
       data << PropertyMeta::INDENT << property->instanceName();
       data << PropertyMeta::SEP << property->typeName(); //todo: ? pretty sure this isn't actually necesary
@@ -668,4 +670,47 @@ void BaseWidget::__on_rect_changed(){
       }
    }
    _on_rect_changed();
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::setModal(bool isModal) {
+   auto canvas = getCanvas();
+   if (!canvas){
+      std::runtime_error("Error: BaseWidget " + getName() + " does not belong to a canvas!");
+   }
+   if (isModal) {
+      auto thiz = inheritable_enable_shared_from_this<BaseWidget>::shared_from_this();
+      canvas.value()->setModal(thiz);
+   } else {
+      canvas.value()->clearModal();
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+bool BaseWidget::isModal() {
+   auto canvas = getCanvas();
+   if (canvas && canvas.value()){
+      auto optModal = canvas.value()->getModal();
+      if (optModal) {
+         auto modal = optModal->lock();
+         return modal && modal.get() == this;
+      }
+   }
+   return false;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+std::optional<std::shared_ptr<ReyEngine::Canvas>> BaseWidget::getCanvas() {
+   auto weakPrt = getParent();
+   while (!weakPrt.expired()) {
+      auto parent = weakPrt.lock();
+      if (!parent) {
+         return nullopt;
+      }
+      if (parent->_get_static_constexpr_typename() == ReyEngine::Canvas::TYPE_NAME) {
+         return parent->toType<ReyEngine::Canvas>();
+      }
+      weakPrt = parent->getParent();
+   }
+   return nullopt;
 }

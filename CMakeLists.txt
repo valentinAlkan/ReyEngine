@@ -57,8 +57,9 @@ add_library(ReyEngine2D STATIC
     src/meta/Font.hpp
     src/meta/Component.cpp
     src/2d/BaseWidget.cpp
+    src/2d/ComboBox.cpp
     src/2d/Control.cpp
-    src/2d/Canvas.hpp
+    src/2d/Canvas.cpp
     src/2d/Panel.hpp
     src/2d/TabContainer.cpp
     src/2d/Slider.hpp

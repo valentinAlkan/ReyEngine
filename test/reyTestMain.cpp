@@ -16,8 +16,9 @@
 #include "Tree.h"
 #include "Inspector.h"
 #include "Sprite.h"
-#include "Canvas.hpp"
+#include "Canvas.h"
 #include "TabContainer.h"
+#include "ComboBox.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -75,6 +76,7 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--tabContainerTest", "Tab container test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--relativeMotionTest", "Relative location movement test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--drawTest", "Test various drawing functions", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--comboBoxTest", "Combo box test", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    //create window (or don't idk)
@@ -750,6 +752,31 @@ int main(int argc, char** argv)
 
       canvasControl->setRenderCallback(cbDrawCanvas);
       canvasControl->setUnhandledInputCallback(cbInput);
+   }
+
+   else if (args.getArg("--comboBoxTest")){
+      Size<int> maxSize = {200, 30};
+      auto mainvlayout = make_shared<VLayout>("MainVLayout");
+      mainvlayout->getTheme()->layoutMargins.setAll(2);
+      mainvlayout->setAnchoring(BaseWidget::Anchor::FILL);
+      root->addChild(mainvlayout);
+
+      auto updateItems = [&](const BaseWidget::WidgetResizeEvent& event){
+         auto combobox = static_pointer_cast<ComboBox>(event.publisher);
+         combobox->clear();
+         for (int j=0; j<5; j++) {
+            combobox->addItem(combobox->getGlobalPos());
+         }
+      };
+
+      for (int i=0;i<20;i++){
+         auto combobox = make_shared<ComboBox>("Combobox" + to_string(i));
+         combobox->setMaxSize(maxSize);
+         combobox->subscribe<BaseWidget::WidgetResizeEvent>(combobox, updateItems);
+         mainvlayout->addChild(combobox);
+      }
+
+
    }
 
    else if (args.getArg("--inspector")){

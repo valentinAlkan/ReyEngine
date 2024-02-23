@@ -20,6 +20,9 @@
 
 using Handled = bool;
 
+namespace ReyEngine{
+   class Canvas;
+}
 class Scene;
 class Draggable;
 class  BaseWidget
@@ -172,6 +175,7 @@ protected:
    virtual void renderBegin(ReyEngine::Pos<double>& textureOffset){}
    void renderEditorFeatures();
    void renderChain(ReyEngine::Pos<double>& textureOffset);
+
    virtual void renderEnd(){}
    ReyEngine::Vec2<float> getRenderOffset() const {return _renderOffset;}
    void setRenderOffset(ReyEngine::Pos<double> offset){_renderOffset = offset;}
@@ -206,12 +210,18 @@ protected:
    ReyEngine::Size<int> maxSize = {ReyEngine::MaxInt, ReyEngine::MaxInt};
    ReyEngine::Size<int> minSize = {ReyEngine::MinInt, ReyEngine::MinInt};
 
+public:
+   //modality
+   void setModal(bool isModal);
+   bool isModal();
+   std::optional<std::shared_ptr<ReyEngine::Canvas>> getCanvas(); //get the most closely-related parent canvas this widget belongs to
+
    //editor stuff
 public:
-   void setInEditor(bool state){_isEditorWidget = state;}
-   bool isInEditor(){return _isEditorWidget;}
-   void setEditorSelected(bool selected){_editor_selected = selected;}
-   bool isEditorSelected(){return _editor_selected;}
+   inline void setInEditor(bool state){_isEditorWidget = state;}
+   inline bool isInEditor(){return _isEditorWidget;}
+   inline void setEditorSelected(bool selected){_editor_selected = selected;}
+   inline bool isEditorSelected(){return _editor_selected;}
 protected:
    bool _isEditorWidget = false; //true if this is a widget THE USER HAS PLACED IN THE EDITOR WORKSPACE (not a widget that the editor uses for normal stuff)
    bool _editor_selected = false; // true when the object is *selected* in the editor
@@ -236,12 +246,13 @@ protected:
    bool _scheduled_for_deletion = false; // true when the widget has been scheduled for deletion but is not yet deleted.
    ReyEngine::Pos<double> _renderOffset; //used for different rendering modes. does not offset position.
 
-   Handled _process_unhandled_input(InputEvent&, const std::optional<UnhandledMouseInput>&); //pass input to children if they want it and then process it for ourselves if necessary
-   Handled _process_unhandled_editor_input(InputEvent&, const std::optional<UnhandledMouseInput>&); //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)
+   Handled _process_unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&); //pass input to children if they want it and then process it for ourselves if necessary
+   Handled _process_unhandled_editor_input(const InputEvent&, const std::optional<UnhandledMouseInput>&); //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)
    InputFilter inputFilter = InputFilter::INPUT_FILTER_PASS_AND_PROCESS;
    std::shared_ptr<Style::Theme> theme;
 
    bool _isRoot = false;
    friend class Window;
+   friend class ReyEngine::Canvas;
    friend class Application;
 };

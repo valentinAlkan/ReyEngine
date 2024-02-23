@@ -16,7 +16,9 @@ public:
    ReyEngine::Pos<int> startPos;
 };
 
-class Canvas;
+namespace ReyEngine{
+   class Canvas;
+};
 class Window : public EventPublisher {
 public:
    struct WindowResizeEvent : public Event<WindowResizeEvent> {
@@ -37,10 +39,10 @@ public:
    bool isProcessed(const std::shared_ptr<BaseWidget>&) const;
    bool isEditor(){return _isEditor;}
    bool setProcess(bool, std::shared_ptr<BaseWidget>); //returns whether operation was successful. Returns false if widget already being processed or is not found.
-   void setRoot(std::shared_ptr<Canvas>&);
+   void setRoot(std::shared_ptr<ReyEngine::Canvas>&);
    static ReyEngine::Pos<int> getMousePos(); //returns global mouse position
    static ReyEngine::Vec2<double> getMousePct(); //returns global mouse position as a percentage of the window size from 0 to 1
-   const std::shared_ptr<Canvas>& getCanvas() const {return _root;}
+   const std::shared_ptr<ReyEngine::Canvas>& getCanvas() const {return _root;}
    ReyEngine::Size<int> getSize(){return ReyEngine::getWindowSize();}
    void setSize(ReyEngine::Size<int> newSize){ReyEngine::setWindowSize(newSize);}
    ReyEngine::Pos<int> getPosition(){return ReyEngine::getWindowPosition();}
@@ -48,14 +50,17 @@ public:
    void maximize(){ReyEngine::maximizeWindow();}
    void minimize(){ReyEngine::minimizeWindow();}
    std::optional<std::shared_ptr<Draggable>>getDragNDrop(){if (_dragNDrop) return _dragNDrop; return std::nullopt;}
+   //hover
    void clearHover();
    void setHover(std::shared_ptr<BaseWidget>&);
+
    std::optional<std::weak_ptr<BaseWidget>> getHovered();
 protected:
    Window(const std::string& title, int width, int height, const std::vector<Flags>& flags, int targetFPS=60);
    static constexpr size_t INPUT_COUNT_LIMIT = 256;
 private:
-   std::shared_ptr<Canvas> _root; //the scene to draw
+   void processUnhandledInput(InputEvent&, std::optional<UnhandledMouseInput>);
+   std::shared_ptr<ReyEngine::Canvas> _root; //the scene to draw
    std::weak_ptr<BaseWidget> _hovered; //the currently hovered widget
    bool _isEditor = false; //enables other features
    std::optional<std::shared_ptr<Draggable>> _dragNDrop; //the widget currently being drag n dropped
