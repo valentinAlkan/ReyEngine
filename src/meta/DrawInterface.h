@@ -402,12 +402,21 @@ namespace ReyEngine {
       static inline ColorRGBA randColor(){return {std::rand() % 255, std::rand() % 255, std::rand() % 255, 255};}  //not very random
    }
 
+   enum class FontAlignmentHorizontal{LEFT, CENTER, RIGHT, /*JUSTIFIED*/};
+   enum class FontAlignmentVertical{TOP, CENTER, BOTTOM};
+
+   struct FontAlignment{
+      FontAlignmentHorizontal horizontal = FontAlignmentHorizontal::LEFT;
+      FontAlignmentVertical vertical = FontAlignmentVertical::TOP;
+   };
+
    struct ReyEngineFont{
       ReyEngineFont(const std::string& fontFile="");
       Font font;
       float size = 20;
       float spacing = 1;
       bool isDefault = false;
+      FontAlignment fontAlignment;
       ReyEngine::ColorRGBA color = COLORS::black;
       std::string fileName;
       Size<int> measure(const std::string& text) const;
@@ -481,7 +490,7 @@ namespace ReyEngine {
          Size<int> _size;
       };
 
-   //Everything drawn to a scissor target will be invisible
+   //Everything drawn duiring scissor mode will be invisible if outside the area
    class ScissorTarget {
    public:
       void start(Rect<double> scissorArea){BeginScissorMode((int)scissorArea.x, (int)scissorArea.y, (int)scissorArea.width, (int)scissorArea.height);}

@@ -46,7 +46,7 @@ struct PropertyPrototype{
    std::map<std::string, PropertyPrototype> subproperties;
 };
 
-///Something that can have properties (and therefore subproperties
+///Something that can have properties (and therefore subproperties)
 struct PropertyContainer : public inheritable_enable_shared_from_this<PropertyContainer> {
    ///make sure ALL register property functions are called
    virtual void registerProperties() = 0;
@@ -263,17 +263,48 @@ struct ListProperty : public Property<std::vector<T>>{
       }
       Property<std::vector<T>>::value.at(index) = newValue;
    }
-   T get(int index){
-      return Property<std::vector<T>>::value.at(index);
-   }
-   virtual T stringToElement(const std::string& s) = 0;
-   virtual std::string elementToString(const T& t) const {return std::to_string(t);}
-   size_t size(){return Property<std::vector<T>>::value.size();}
+   T& get(int index) {return Property<std::vector<T>>::value.at(index);}
+   size_t size() const {return Property<std::vector<T>>::value.size();}
+   ListProperty<T>& operator=(const std::vector<T>& other){Property<std::vector<T>>::value = other; return *this;}
+   void append(const T& t){Property<std::vector<T>>::value.push_back(t);}
+   T& append(){Property<std::vector<T>>::value.emplace_back(); return Property<std::vector<T>>::value.back();} //create a new element at the end of the list
+   void clear(){Property<std::vector<T>>::value.clear();}
+   void erase(int index){auto it=Property<std::vector<T>>::value.begin() + index; Property<std::vector<T>>::value.erase(it);}
+   /**/
+   virtual T stringToElement(const std::string&) const = 0;
+   virtual std::string elementToString(const T&) const = 0;
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////
+struct BoolListProperty : public ListProperty<bool>{
+   using ListProperty<bool>::operator=;
+   BoolListProperty(const std::string& instanceName): ListProperty<bool>(instanceName){}
+   bool stringToElement(const std::string& element) const override {return element == "true";}
+   std::string elementToString(const bool& t)       const override {return t ? "true" : "false";}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////
 struct FloatListProperty : public ListProperty<float>{
+   using ListProperty<float>::operator=;
    FloatListProperty(const std::string& instanceName): ListProperty<float>(instanceName){}
-   float stringToElement(const std::string& element) override {return (float)stod(element);}
+   float stringToElement(const std::string& element) const override {return (float)stod(element);}
+   std::string elementToString(const float& t)       const override {return std::to_string(t);}
    float sum() const {float total=0;for (const auto& v : value){total += v;}return total;}
-   FloatListProperty& operator=(const std::vector<float>& other){value = other; return *this;}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////
+struct IntListProperty : public ListProperty<int>{
+   using ListProperty<int>::operator=;
+   IntListProperty(const std::string& instanceName): ListProperty<int>(instanceName){}
+   int stringToElement(const std::string& element) const override {return (int)stoi(element);}
+   std::string elementToString(const int& t)       const override {return std::to_string(t);}
+   int sum() const {int total=0;for (const auto& v : value){total += v;}return total;}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////
+struct StringListProperty : public ListProperty<std::string>{
+   using ListProperty<std::string>::operator=;
+   StringListProperty(const std::string& instanceName): ListProperty<std::string>(instanceName){}
+   std::string stringToElement(const std::string& element) const override {return element;}
+   std::string elementToString(const std::string& t)       const override {return t;}
 };

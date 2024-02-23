@@ -26,7 +26,7 @@ void Layout::_on_child_added(std::shared_ptr<BaseWidget> &child) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Layout::_on_child_added_immediate(std::shared_ptr<BaseWidget> &child) {
-   childScales.value.push_back(1.0);
+   childScales.append(1.0);
 }
 
 void Layout::renderEnd() {

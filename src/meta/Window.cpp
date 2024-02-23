@@ -4,7 +4,7 @@
 #include <array>
 #include "Application.h"
 #include "Scene.h"
-#include "Canvas.hpp"
+#include "Canvas.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -90,7 +90,7 @@ void Window::exec(){
             InputEventKey event(nullptr);
             event.key = keyUp;
             event.isDown = false;
-            _root->_process_unhandled_input(event, nullopt);
+            processUnhandledInput(event, nullopt);
          } else {
             break;
          }
@@ -103,7 +103,7 @@ void Window::exec(){
             InputEventKey event(nullptr);
             event.key = keyDown;
             event.isDown = true;
-            _root->_process_unhandled_input(event, nullopt);
+            processUnhandledInput(event, nullopt);
          } else {
             break;
          }
@@ -137,7 +137,7 @@ void Window::exec(){
             UnhandledMouseInput mouse;
             mouse.localPos = _root->globalToLocal(pos);
             mouse.isInside = _root->isInside(mouse.localPos);
-            _root->_process_unhandled_input(event, mouse);
+            processUnhandledInput(event, mouse);
          }
       }
 
@@ -167,7 +167,7 @@ void Window::exec(){
             UnhandledMouseInput mouse;
             mouse.localPos = _root->globalToLocal(pos);
             mouse.isInside = _root->isInside(mouse.localPos);
-            _root->_process_unhandled_input(event, mouse);
+            processUnhandledInput(event, mouse);
          } else {
             break;
          }
@@ -372,4 +372,10 @@ void Window::setHover(std::shared_ptr<BaseWidget>& widget) {
 std::optional<std::weak_ptr<BaseWidget>> Window::getHovered() {
    if (_hovered.expired()) return nullopt;
    return _hovered;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Window::processUnhandledInput(InputEvent& inputEvent, std::optional<UnhandledMouseInput> mouseInput){
+   //first offer up input to modal widget (if any)
+   _root->_process_unhandled_input(inputEvent, mouseInput);
 }

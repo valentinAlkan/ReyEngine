@@ -47,16 +47,17 @@ public:                                                   \
 
 
 // A thing which does stuff.
+class Window;
 class Component
 : public PropertyContainer
       {
 public:
    Component(const std::string& name);
-   uint64_t getRid() const {return _resourceId;}
-   std::string getName() const {return _name;}
+   inline uint64_t getRid() const {return _resourceId;}
+   inline std::string getName() const {return _name;}
 
-   bool operator==(const std::shared_ptr<Component>& other) const {if (other){return other->getRid()==_resourceId;}return false;}
-   bool operator==(const Component& other) const{return other._resourceId == _resourceId;}
+   inline bool operator==(const std::shared_ptr<Component>& other) const {if (other){return other->getRid()==_resourceId;}return false;}
+   inline bool operator==(const Component& other) const{return other._resourceId == _resourceId;}
    void registerProperties() override {}
 protected:
    std::string _name;
