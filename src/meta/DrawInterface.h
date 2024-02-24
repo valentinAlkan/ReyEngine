@@ -396,7 +396,7 @@ namespace ReyEngine {
       static constexpr ColorRGBA blue = { 0, 121, 241, 255};
       static constexpr ColorRGBA black = { 0, 0, 0, 255};
       static constexpr ColorRGBA yellow = {253, 249, 0, 255};
-      static constexpr ColorRGBA white = {130, 130, 130, 255};
+      static constexpr ColorRGBA white = {255, 255, 255, 255};
       static constexpr ColorRGBA transparent = {0, 0, 0, 0};
       static constexpr ColorRGBA none = {255, 255, 255, 255};
       static inline ColorRGBA randColor(){return {std::rand() % 255, std::rand() % 255, std::rand() % 255, 255};}  //not very random

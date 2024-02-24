@@ -165,6 +165,8 @@ protected:
    virtual void _on_enter_tree(){} //called every time a widget enters the tree
    virtual void _on_exit_tree(){}
    virtual void _on_child_removed(){}
+   virtual void _on_modality_gained(){}
+   virtual void _on_modality_lost(){}
    virtual std::optional<std::shared_ptr<Draggable>> _on_drag_start(ReyEngine::Pos<int> globalPos){return std::nullopt;} //override and return something to implement drag and drop
    virtual Handled _on_drag_drop(std::shared_ptr<Draggable>){return false;}
 

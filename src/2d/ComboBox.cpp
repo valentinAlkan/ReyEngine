@@ -16,16 +16,20 @@ void ComboBox::render() const {
    auto textPosV = (int)((availableHeight - textheight) / 2);
 
    //draw current item
-   if (data.size()){
-      _drawText(data.value.at(currentIndex).text, {0,textPosV}, font);
+   if (fields.size()){
+      _drawText(fields.value.at(currentIndex).text, {0, textPosV}, font);
    }
 
    //draw if the menu is open
    if (_isOpen){
-      _drawRectangle(_selectionMenuRect, Colors::blue);
-      for (int i=0; i<data.size(); i++){
-         auto& field = data.value.at(i);
-         _drawText(field.text, {0,textPosV + (i*font.value.size)}, font);
+      _drawRectangle(_selectionMenuRect, Colors::gray);
+      for (int i=0; i < fields.size(); i++){
+         auto& field = fields.value.at(i);
+         auto& rect = _selectionMenuItemRects.at(i);
+         if (field.highlighted){
+            _drawRectangle(rect, theme->highlight);
+         }
+         _drawText(field.text, rect.pos(), font);
       }
    }
 }
@@ -35,16 +39,26 @@ Handled ComboBox::_unhandled_input(const InputEvent& event, const std::optional<
    auto closeMenu = [this]() {
       setModal(false);
       _isOpen = false;
+      publish<EventComboBoxMenuClosed>(EventComboBoxMenuClosed(toEventPublisher()));
    };
 
    auto openMenu = [this]() {
       setModal(true);
       auto textSize = theme->font.value.size;
-      _selectionMenuRect = Rect<int>(0, textSize, _rect.value.width, textSize * data.size());
+      //build the menu rect
+      _selectionMenuRect = Rect<int>(0, _rect.value.height, _rect.value.width, textSize * fields.size());
+      //build the item rects
+      _selectionMenuItemRects.clear();
+      for (int i=0; i < fields.size(); i++) {
+         fieldSelectionRectHeight = theme->font.value.size;
+         auto itemWidth = _rect.value.width;
+         auto itemY = _rect.value.height + (i * fieldSelectionRectHeight);
+         _selectionMenuItemRects.emplace_back(0, itemY, itemWidth, fieldSelectionRectHeight);
+      }
    };
 
+   //only accept inputs that are inside the main rect unless we are modal
    if (!mouse->isInside && !isModal()) return false;
-   cout << "Hello from " << getName() << "@" << mouse->localPos << endl;
    //open the menu
    if (mouse){
       switch (event.eventId){
@@ -54,9 +68,15 @@ Handled ComboBox::_unhandled_input(const InputEvent& event, const std::optional<
                //highlight the field
                auto indexAt = getIndexAt(mouse.value().localPos);
                if (indexAt) {
-                  cout << getField(indexAt.value()).text.value << endl;
-                  for (auto &field: data.value) {
-                     field.highlighted = indexAt.value() == currentIndex.value;
+                  for (int i=0; i<fields.size();i++) {
+                     auto& field = fields.get(i);
+                     if (indexAt) {
+                        field.highlighted = indexAt.value() == i;
+                        if (field.highlighted){
+                           EventComboBoxItemHovered hoverEvent(toEventPublisher(), i, field);
+                           publish(hoverEvent);
+                        }
+                     }
                   }
                   return true;
                }
@@ -71,29 +91,26 @@ Handled ComboBox::_unhandled_input(const InputEvent& event, const std::optional<
                if (_isOpen){
                   //declare widget modal
                   openMenu();
+                  publish<EventComboBoxMenuOpened>(EventComboBoxMenuOpened(toEventPublisher()));
                } else {
                   closeMenu();
                }
                return true;
             } else {
                //if the mouse was outside the widget's own rect, but the widget is receiving modal input
-               if (_selectionMenuRect.isInside(mouse.value().localPos)){
-                  //highlight the item at the mouse position
+               if (_selectionMenuRect.isInside(mouse.value().localPos)) {
+                  //the mouse is inside the selectionmenu rect - treat it as item selection input
                   auto indexAt = getIndexAt(mouse.value().localPos);
                   if (indexAt) {
-
+                     //select the item at hte mouse position
                      currentIndex = indexAt.value();
-                     return true;
-                  } else {
-                     //close menu
-                     closeMenu();
-                     return true;
+                     EventComboBoxItemSelected selectEvent(toEventPublisher(), indexAt.value(), getField(indexAt.value()));
+                     publish(selectEvent);
                   }
-               } else {
-                  //close the menu
-                  closeMenu();
-                  return true;
                }
+               //close the menu
+               closeMenu();
+               return true;
             }
             break;}
       }
@@ -103,7 +120,7 @@ return false;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ComboBoxDataField& ComboBox::addItem(const std::string &s) {
-   auto& field = data.append();
+   auto& field = fields.append();
    field.text = s;
 
    //recalculate selection menu
@@ -118,40 +135,58 @@ void ComboBox::setItems(const std::vector<std::string>& v) {
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 void ComboBox::clear() {
-   data.clear();
+   fields.clear();
    _selectionMenuRect = Rect<int>(0, theme->font.value.size, _rect.value.width, 5);
+   _selectionMenuItemRects.clear();
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 void ComboBox::eraseItem(int index) {
-   data.erase(index);
+   fields.erase(index);
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 void ComboBox::setCurrentIndex(int index) {
    currentIndex = index;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+ComboBoxDataField &ComboBox::getLastField() {
+   return fields.value.at(fields.value.size() - 1);
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////
 int ComboBox::getCurrentIndex() const {
    return currentIndex;
 }
+
 /////////////////////////////////////////////////////////////////////////////////////////
 std::string ComboBox::text() const {
-   return data.value.at(currentIndex).text;
+   return fields.value.at(currentIndex).text;
 }
+
 /////////////////////////////////////////////////////////////////////////////////////////
 ComboBoxDataField& ComboBox::getCurrentField() {
-   return data.value.at((int)currentIndex);
+   return fields.value.at((int)currentIndex);
 }
+
+
 /////////////////////////////////////////////////////////////////////////////////////////
 ComboBoxDataField &ComboBox::getField(int index) {
-   return data.value.at(index);
+   return fields.value.at(index);
 }
+
 /////////////////////////////////////////////////////////////////////////////////////////
 std::optional<int> ComboBox::getIndexAt(Pos<int> pos) {
    //get the item in the dropdown list at the specified location
-   int itemIndex = pos.y / theme->font.value.size - 1;
-   if (itemIndex < 0 || itemIndex >= data.size()){
-      //selected the combobox itself
-      return nullopt;
+   for (int i=0; i<fields.size();i++){
+      auto& selectionRect = _selectionMenuItemRects.at(i);
+      if (selectionRect.isInside(pos)){
+         return i;
+      }
    }
-   return itemIndex;
+   return nullopt;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ComboBox::_on_modality_lost() {
+   _isOpen = false;
 }
