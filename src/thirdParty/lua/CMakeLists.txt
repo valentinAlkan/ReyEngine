@@ -7,10 +7,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # enable -std=c++17
 set (CMAKE_CXX_STANDARD 17)
 
-function(install_file SOURCE DEST)
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${DEST} COPYONLY)
-endfunction()
-
 # Dependencies
 add_library(lua STATIC
     lapi.c
@@ -47,3 +43,5 @@ add_library(lua STATIC
     lvm.c
     lzio.c
 )
+
+target_include_directories(lua PUBLIC .)

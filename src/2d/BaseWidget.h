@@ -17,6 +17,7 @@
 #include <optional>
 #include <unordered_set>
 #include <unordered_map>
+#include "FileSystem.h"
 
 using Handled = bool;
 
@@ -73,7 +74,7 @@ public:
    BaseWidget(const std::string& name, std::string  typeName);
    ~BaseWidget();
    //this will eventually move to component
-   ReyEngine::ComponentPath getPath();
+   ReyEngine::FileSystem::ComponentPath getPath();
 
    //rect stuff
    ReyEngine::Rect<int> getRect() const {return _rect.value;}
