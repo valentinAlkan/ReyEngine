@@ -2,9 +2,14 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
+#include <filesystem>
+#include "Application.h"
+
+using namespace std;
+using namespace ReyEngine::FileSystem;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::vector<char> FileSystem::loadFile(const std::string &filePath) {
+std::vector<char> ReyEngine::FileSystem::loadFile(const std::string &filePath) {
    std::ifstream ifs(filePath, std::ios::binary | std::ios::ate);
    if (!ifs)
       throw std::runtime_error(filePath + ": " + std::strerror(errno));
@@ -21,4 +26,27 @@ std::vector<char> FileSystem::loadFile(const std::string &filePath) {
    if (!ifs.read((char *) buffer.data(), buffer.size()))
       throw std::runtime_error(filePath + ": " + std::strerror(errno));
    return buffer;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
+bool ReyEngine::FileSystem::Path::exists() const {
+   return std::filesystem::exists(abs());
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<ReyEngine::FileSystem::Path> ReyEngine::FileSystem::Path::head() const {
+   //todo:
+   return nullopt;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<ReyEngine::FileSystem::Path> ReyEngine::FileSystem::Path::tail() const {
+   //todo:
+   return nullopt;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+string ReyEngine::FileSystem::Path::abs() const {
+   return Application::getWorkingDirectory() + "\\" + path;
 }

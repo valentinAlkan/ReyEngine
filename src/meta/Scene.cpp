@@ -9,7 +9,7 @@
 
 using namespace std;
 using namespace SceneFileParser;
-using namespace FileSystem;
+using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Scene::Scene(std::shared_ptr<BaseWidget> root)
