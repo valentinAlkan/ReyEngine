@@ -761,19 +761,56 @@ int main(int argc, char** argv)
       mainvlayout->setAnchoring(BaseWidget::Anchor::FILL);
       root->addChild(mainvlayout);
 
-      auto updateItems = [&](const BaseWidget::WidgetResizeEvent& event){
-         auto combobox = static_pointer_cast<ComboBox>(event.publisher);
-         combobox->clear();
-         for (int j=0; j<5; j++) {
-            combobox->addItem(combobox->getGlobalPos());
-         }
-      };
-
       for (int i=0;i<20;i++){
          auto combobox = make_shared<ComboBox>("Combobox" + to_string(i));
          combobox->setMaxSize(maxSize);
-         combobox->subscribe<BaseWidget::WidgetResizeEvent>(combobox, updateItems);
          mainvlayout->addChild(combobox);
+
+         //create a struct to hold data
+         struct ColorData : public ComboBoxData{
+            ColorData(const std::string& name, const ColorRGBA& color): name(name), color(color){}
+            std::string name;
+            ColorRGBA color;
+         };
+
+         //instantiate some data
+         std::vector<std::shared_ptr<ColorData>> colors = {
+            make_shared<ColorData>("red", Colors::red),
+            make_shared<ColorData>("green", Colors::green),
+            make_shared<ColorData>("blue", Colors::blue)
+         };
+
+         auto hoverCB = [&](const ComboBox::EventComboBoxItemHovered& event){
+            auto combobox = event.publisher->toBaseWidget()->toType<ComboBox>();
+            auto data = static_pointer_cast<ColorData>(event.field.data);
+            combobox->getTheme()->background.colorPrimary = data->color;
+         };
+
+         auto selectCB = [&](const ComboBox::EventComboBoxItemSelected& event){
+            auto combobox = event.publisher->toBaseWidget()->toType<ComboBox>();
+            auto data = static_pointer_cast<ColorData>(event.field.data);
+            combobox->getTheme()->background.colorPrimary = data->color;
+         };
+
+         auto menuOpenCB = [&](const ComboBox::EventComboBoxMenuOpened& event){
+            /**/
+         };
+
+         auto menuCloseCB = [&](const ComboBox::EventComboBoxMenuClosed& event){
+            auto combobox = event.publisher->toBaseWidget()->toType<ComboBox>();
+            auto data = static_pointer_cast<ColorData>(combobox->getCurrentField().data);
+            combobox->getTheme()->background.colorPrimary = data->color;
+         };
+
+         //pack the comboboxes with the data
+         for (auto& color : colors) {
+            combobox->addItem(color->name);
+            combobox->getLastField().data = color;
+            combobox->subscribe<ComboBox::EventComboBoxItemHovered>(combobox, hoverCB);
+            combobox->subscribe<ComboBox::EventComboBoxMenuOpened>(combobox, menuOpenCB);
+            combobox->subscribe<ComboBox::EventComboBoxMenuClosed>(combobox, menuCloseCB);
+            combobox->subscribe<ComboBox::EventComboBoxItemSelected>(combobox, selectCB);
+         }
       }
 
 

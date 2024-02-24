@@ -101,7 +101,8 @@ namespace Style {
       PROPERTY_DECLARE(roundnessSegments, 10),
       PROPERTY_DECLARE(font),
       PROPERTY_DECLARE(layoutMargins),
-      PROPERTY_DECLARE(lineThick)
+      PROPERTY_DECLARE(lineThick),
+      PROPERTY_DECLARE(highlight, ReyEngine::Colors::blue)
       {
          //apply defaults
          background = Fill::SOLID;
@@ -114,6 +115,7 @@ namespace Style {
 
       FillProperty background;
       FillProperty foreground;
+      ColorProperty highlight;
       OutlineProperty outline;
       FloatProperty roundness;
       IntProperty roundnessSegments;

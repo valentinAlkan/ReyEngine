@@ -9,8 +9,8 @@ namespace ReyEngine{
       {}
    public:
       //modality
-      inline void setModal(std::shared_ptr<BaseWidget>& newModal){_modal = newModal;}
-      inline void clearModal(){_modal.reset();}
+      void setModal(std::shared_ptr<BaseWidget>&);
+      void clearModal();
       inline std::optional<std::weak_ptr<BaseWidget>> getModal() { if (_modal) { return _modal;} return std::nullopt;}
    protected:
       void renderBegin(ReyEngine::Pos<double>& textureOffset) override;

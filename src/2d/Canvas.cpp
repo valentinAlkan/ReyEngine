@@ -39,3 +39,26 @@ Handled ReyEngine::Canvas::_unhandled_input(const InputEvent& inputEvent, const 
    }
    return false;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::setModal(std::shared_ptr<BaseWidget>& newModal) {
+   if (_modal){
+      auto modal = _modal->lock();
+      if (modal){
+         modal->_on_modality_lost();
+      }
+   }
+   _modal = newModal;
+   newModal->_on_modality_gained();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::clearModal() {
+   if (_modal){
+      auto modal = _modal->lock();
+      if (modal){
+         modal->_on_modality_lost();
+      }
+   }
+   _modal.reset();
+}
