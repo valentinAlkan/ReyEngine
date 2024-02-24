@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.11) # FetchContent is available in 3.11+
 project(ReyEngine)
 
+# add lua
+add_subdirectory(src/thirdParty/lua)
+
 # Generate compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -92,7 +95,7 @@ target_include_directories(ReyEngine2D PUBLIC
     test
 )
 
-target_link_libraries(ReyEngine2D raylib)
+target_link_libraries(ReyEngine2D raylib lua)
 
 if (UNIX)
     target_link_libraries(ReyEngine2D stdc++fs)

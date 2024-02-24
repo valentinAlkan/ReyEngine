@@ -812,8 +812,6 @@ int main(int argc, char** argv)
             combobox->subscribe<ComboBox::EventComboBoxItemSelected>(combobox, selectCB);
          }
       }
-
-
    }
 
    else if (args.getArg("--inspector")){
