@@ -68,21 +68,18 @@
 #define MAXHSIZE	luaM_limitN(1u << MAXHBITS, Node)
 
 
-/*
-** When the original hash value is good, hashing by a power of 2
-** avoids the cost of '%'.
-*/
 #define hashpow2(t,n)		(gnode(t, lmod((n), sizenode(t))))
-
-/*
-** for other types, it is better to avoid modulo by power of 2, as
-** they can have many 2 factors.
-*/
-#define hashmod(t,n)	(gnode(t, ((n) % ((sizenode(t)-1)|1))))
-
 
 #define hashstr(t,str)		hashpow2(t, (str)->hash)
 #define hashboolean(t,p)	hashpow2(t, p)
+#define hashint(t,i)		hashpow2(t, i)
+
+
+/*
+** for some types, it is better to avoid modulus by power of 2, as
+** they tend to have many 2 factors.
+*/
+#define hashmod(t,n)	(gnode(t, ((n) % ((sizenode(t)-1)|1))))
 
 
 #define hashpointer(t,p)	hashmod(t, point2uint(p))
@@ -98,20 +95,6 @@ static const Node dummynode_ = {
 
 static const TValue absentkey = {ABSTKEYCONSTANT};
 
-
-/*
-** Hash for integers. To allow a good hash, use the remainder operator
-** ('%'). If integer fits as a non-negative int, compute an int
-** remainder, which is faster. Otherwise, use an unsigned-integer
-** remainder, which uses all bits and ensures a non-negative result.
-*/
-static Node *hashint (const Table *t, lua_Integer i) {
-  lua_Unsigned ui = l_castS2U(i);
-  if (ui <= cast_uint(INT_MAX))
-    return hashmod(t, cast_int(ui));
-  else
-    return hashmod(t, ui);
-}
 
 
 /*
@@ -146,50 +129,39 @@ static int l_hashfloat (lua_Number n) {
 
 /*
 ** returns the 'main' position of an element in a table (that is,
-** the index of its hash value).
+** the index of its hash value). The key comes broken (tag in 'ktt'
+** and value in 'vkl') so that we can call it on keys inserted into
+** nodes.
 */
-static Node *mainpositionTV (const Table *t, const TValue *key) {
-  switch (ttypetag(key)) {
-    case LUA_VNUMINT: {
-      lua_Integer i = ivalue(key);
-      return hashint(t, i);
-    }
-    case LUA_VNUMFLT: {
-      lua_Number n = fltvalue(key);
-      return hashmod(t, l_hashfloat(n));
-    }
-    case LUA_VSHRSTR: {
-      TString *ts = tsvalue(key);
-      return hashstr(t, ts);
-    }
-    case LUA_VLNGSTR: {
-      TString *ts = tsvalue(key);
-      return hashpow2(t, luaS_hashlongstr(ts));
-    }
+static Node *mainposition (const Table *t, int ktt, const Value *kvl) {
+  switch (withvariant(ktt)) {
+    case LUA_VNUMINT:
+      return hashint(t, ivalueraw(*kvl));
+    case LUA_VNUMFLT:
+      return hashmod(t, l_hashfloat(fltvalueraw(*kvl)));
+    case LUA_VSHRSTR:
+      return hashstr(t, tsvalueraw(*kvl));
+    case LUA_VLNGSTR:
+      return hashpow2(t, luaS_hashlongstr(tsvalueraw(*kvl)));
     case LUA_VFALSE:
       return hashboolean(t, 0);
     case LUA_VTRUE:
       return hashboolean(t, 1);
-    case LUA_VLIGHTUSERDATA: {
-      void *p = pvalue(key);
-      return hashpointer(t, p);
-    }
-    case LUA_VLCF: {
-      lua_CFunction f = fvalue(key);
-      return hashpointer(t, f);
-    }
-    default: {
-      GCObject *o = gcvalue(key);
-      return hashpointer(t, o);
-    }
+    case LUA_VLIGHTUSERDATA:
+      return hashpointer(t, pvalueraw(*kvl));
+    case LUA_VLCF:
+      return hashpointer(t, fvalueraw(*kvl));
+    default:
+      return hashpointer(t, gcvalueraw(*kvl));
   }
 }
 
 
-l_sinline Node *mainpositionfromnode (const Table *t, Node *nd) {
-  TValue key;
-  getnodekey(cast(lua_State *, NULL), &key, nd);
-  return mainpositionTV(t, &key);
+/*
+** Returns the main position of an element given as a 'TValue'
+*/
+static Node *mainpositionTV (const Table *t, const TValue *key) {
+  return mainposition(t, rawtt(key), valraw(key));
 }
 
 
@@ -257,11 +229,9 @@ LUAI_FUNC unsigned int luaH_realasize (const Table *t) {
     size |= (size >> 2);
     size |= (size >> 4);
     size |= (size >> 8);
-#if (UINT_MAX >> 14) > 3  /* unsigned int has more than 16 bits */
     size |= (size >> 16);
 #if (UINT_MAX >> 30) > 3
     size |= (size >> 32);  /* unsigned int has more than 32 bits */
-#endif
 #endif
     size++;
     lua_assert(ispow2(size) && size/2 < t->alimit && t->alimit < size);
@@ -337,7 +307,7 @@ static unsigned int findindex (lua_State *L, Table *t, TValue *key,
     return i;  /* yes; that's the index */
   else {
     const TValue *n = getgeneric(t, key, 1);
-    if (l_unlikely(isabstkey(n)))
+    if (unlikely(isabstkey(n)))
       luaG_runerror(L, "invalid key to 'next'");  /* key not found */
     i = cast_int(nodefromval(n) - gnode(t, 0));  /* key index in hash table */
     /* hash elements are numbered after array ones */
@@ -490,7 +460,7 @@ static void setnodevector (lua_State *L, Table *t, unsigned int size) {
       luaG_runerror(L, "table overflow");
     size = twoto(lsize);
     t->node = luaM_newvector(L, size, Node);
-    for (i = 0; i < cast_int(size); i++) {
+    for (i = 0; i < (int)size; i++) {
       Node *n = gnode(t, i);
       gnext(n) = 0;
       setnilkey(n);
@@ -515,7 +485,7 @@ static void reinsert (lua_State *L, Table *ot, Table *t) {
          already present in the table */
       TValue k;
       getnodekey(L, &k, old);
-      luaH_set(L, t, &k, gval(old));
+      setobjt2t(L, luaH_set(L, t, &k), gval(old));
     }
   }
 }
@@ -571,7 +541,7 @@ void luaH_resize (lua_State *L, Table *t, unsigned int newasize,
   }
   /* allocate new array */
   newarray = luaM_reallocvector(L, t->array, oldasize, newasize, TValue);
-  if (l_unlikely(newarray == NULL && newasize > 0)) {  /* allocation failed? */
+  if (unlikely(newarray == NULL && newasize > 0)) {  /* allocation failed? */
     freehash(L, &newt);  /* release new hash part */
     luaM_error(L);  /* raise error (with array unchanged) */
   }
@@ -662,10 +632,10 @@ static Node *getfreepos (Table *t) {
 ** put new key in its main position; otherwise (colliding node is in its main
 ** position), new key goes to an empty position.
 */
-void luaH_newkey (lua_State *L, Table *t, const TValue *key, TValue *value) {
+TValue *luaH_newkey (lua_State *L, Table *t, const TValue *key) {
   Node *mp;
   TValue aux;
-  if (l_unlikely(ttisnil(key)))
+  if (unlikely(ttisnil(key)))
     luaG_runerror(L, "table index is nil");
   else if (ttisfloat(key)) {
     lua_Number f = fltvalue(key);
@@ -674,11 +644,9 @@ void luaH_newkey (lua_State *L, Table *t, const TValue *key, TValue *value) {
       setivalue(&aux, k);
       key = &aux;  /* insert it as an integer */
     }
-    else if (l_unlikely(luai_numisnan(f)))
+    else if (unlikely(luai_numisnan(f)))
       luaG_runerror(L, "table index is NaN");
   }
-  if (ttisnil(value))
-    return;  /* do not insert nil values */
   mp = mainpositionTV(t, key);
   if (!isempty(gval(mp)) || isdummy(t)) {  /* main position is taken? */
     Node *othern;
@@ -686,11 +654,10 @@ void luaH_newkey (lua_State *L, Table *t, const TValue *key, TValue *value) {
     if (f == NULL) {  /* cannot find a free place? */
       rehash(L, t, key);  /* grow table */
       /* whatever called 'newkey' takes care of TM cache */
-      luaH_set(L, t, key, value);  /* insert key into grown table */
-      return;
+      return luaH_set(L, t, key);  /* insert key into grown table */
     }
     lua_assert(!isdummy(t));
-    othern = mainpositionfromnode(t, mp);
+    othern = mainposition(t, keytt(mp), &keyval(mp));
     if (othern != mp) {  /* is colliding node out of its main position? */
       /* yes; move colliding node into free position */
       while (othern + gnext(othern) != mp)  /* find previous */
@@ -715,7 +682,7 @@ void luaH_newkey (lua_State *L, Table *t, const TValue *key, TValue *value) {
   setnodekey(L, mp, key);
   luaC_barrierback(L, obj2gco(t), key);
   lua_assert(isempty(gval(mp)));
-  setobj2t(L, gval(mp), value);
+  return gval(mp);
 }
 
 
@@ -803,39 +770,28 @@ const TValue *luaH_get (Table *t, const TValue *key) {
 
 
 /*
-** Finish a raw "set table" operation, where 'slot' is where the value
-** should have been (the result of a previous "get table").
-** Beware: when using this function you probably need to check a GC
-** barrier and invalidate the TM cache.
-*/
-void luaH_finishset (lua_State *L, Table *t, const TValue *key,
-                                   const TValue *slot, TValue *value) {
-  if (isabstkey(slot))
-    luaH_newkey(L, t, key, value);
-  else
-    setobj2t(L, cast(TValue *, slot), value);
-}
-
-
-/*
 ** beware: when using this function you probably need to check a GC
 ** barrier and invalidate the TM cache.
 */
-void luaH_set (lua_State *L, Table *t, const TValue *key, TValue *value) {
-  const TValue *slot = luaH_get(t, key);
-  luaH_finishset(L, t, key, slot, value);
+TValue *luaH_set (lua_State *L, Table *t, const TValue *key) {
+  const TValue *p = luaH_get(t, key);
+  if (!isabstkey(p))
+    return cast(TValue *, p);
+  else return luaH_newkey(L, t, key);
 }
 
 
 void luaH_setint (lua_State *L, Table *t, lua_Integer key, TValue *value) {
   const TValue *p = luaH_getint(t, key);
-  if (isabstkey(p)) {
+  TValue *cell;
+  if (!isabstkey(p))
+    cell = cast(TValue *, p);
+  else {
     TValue k;
     setivalue(&k, key);
-    luaH_newkey(L, t, &k, value);
+    cell = luaH_newkey(L, t, &k);
   }
-  else
-    setobj2t(L, cast(TValue *, p), value);
+  setobj2t(L, cell, value);
 }
 
 
@@ -976,5 +932,7 @@ lua_Unsigned luaH_getn (Table *t) {
 Node *luaH_mainposition (const Table *t, const TValue *key) {
   return mainpositionTV(t, key);
 }
+
+int luaH_isdummy (const Table *t) { return isdummy(t); }
 
 #endif

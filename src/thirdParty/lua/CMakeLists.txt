@@ -9,13 +9,15 @@ set (CMAKE_CXX_STANDARD 17)
 
 # Dependencies
 add_library(lua STATIC
+#    lmain.cpp
     lapi.c
     lauxlib.c
-    lcode.c
-    lctype.c
     lbaselib.c
+    lcode.c
     lcorolib.c
+    lctype.c
     ldblib.c
+    ldebug.c
     ldo.c
     ldump.c
     lfunc.c
@@ -28,6 +30,7 @@ add_library(lua STATIC
     loadlib.c
     lobject.c
     lopcodes.c
+    lopnames.h
     loslib.c
     lparser.c
     lstate.c
@@ -36,12 +39,11 @@ add_library(lua STATIC
     ltable.c
     ltablib.c
     ltm.c
-    lua.c
-    luac.c
     lundump.c
     lutf8lib.c
     lvm.c
     lzio.c
+    wmain.c
 )
 
 target_include_directories(lua PUBLIC .)

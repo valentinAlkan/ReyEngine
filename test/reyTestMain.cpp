@@ -19,6 +19,7 @@
 #include "Canvas.h"
 #include "TabContainer.h"
 #include "ComboBox.h"
+#include "Config.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -77,6 +78,7 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--relativeMotionTest", "Relative location movement test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--drawTest", "Test various drawing functions", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--comboBoxTest", "Combo box test", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--configTest", "Config file test", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    //create window (or don't idk)
@@ -812,6 +814,23 @@ int main(int argc, char** argv)
             combobox->subscribe<ComboBox::EventComboBoxItemSelected>(combobox, selectCB);
          }
       }
+   }
+
+   else if(args.getArg("--configTest")){
+      Config::loadConfig("test/test.lua");
+      auto vlayout = make_shared<VLayout>("Layout");
+      vlayout->setAnchoring(BaseWidget::Anchor::FILL);
+      root->addChild(vlayout);
+      for (auto& label : {
+            make_shared<Label>(Config::getString("testmsg")),
+            make_shared<Label>(Config::getString("testtable", "value")),
+            make_shared<Label>("an integer = " + to_string(Config::getInt("an_integer"))),
+      })
+      {
+         label->setMaxSize({9999, 30});
+         vlayout->addChild(label);
+      }
+
    }
 
    else if (args.getArg("--inspector")){

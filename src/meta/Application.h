@@ -14,17 +14,7 @@ public:
       return instance;
    }
 private:
-   Application()
-   : _debug_logger(std::cout, "debug")
-   , _info_logger(std::cout, "info")
-   , _warn_logger(std::cout, "WARNING")
-   , _error_logger(std::cout, "ERROR")
-   {
-      //initialize time and log current time
-//      _info_logger << "Application start!" << std::endl;
-      //initialize built-in types
-      TypeManager::instance()._registerTypes();
-   }
+   Application();
 public:
    enum class ExitReason{
       CLEAN = 0,
