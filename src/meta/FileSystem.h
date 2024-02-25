@@ -24,6 +24,7 @@ namespace ReyEngine::FileSystem {
       inline std::string operator+(const Path& rhs) const {return path + rhs.str();}
       inline std::string operator+(const char* rhs) const {return path + std::string(rhs);}
       inline operator std::string() const {return path;}
+      inline operator const char*() {return path.c_str();}
       inline Path& operator=(const char* rhs){path = rhs; return *this;}
       inline Path& operator=(const std::string& rhs){path = rhs; return *this;}
       inline operator bool() const {return !path.empty();}
