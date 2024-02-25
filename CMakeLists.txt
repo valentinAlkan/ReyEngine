@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.11) # FetchContent is available in 3.11+
 project(ReyEngine)
 
+# add lua
+add_subdirectory(src/thirdParty/lua)
+
 # Generate compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -56,6 +59,7 @@ add_library(ReyEngine2D STATIC
     src/meta/Theme.cpp
     src/meta/Font.hpp
     src/meta/Component.cpp
+    src/meta/Config.cpp
     src/2d/BaseWidget.cpp
     src/2d/ComboBox.cpp
     src/2d/Control.cpp
@@ -92,7 +96,7 @@ target_include_directories(ReyEngine2D PUBLIC
     test
 )
 
-target_link_libraries(ReyEngine2D raylib)
+target_link_libraries(ReyEngine2D raylib lua)
 
 if (UNIX)
     target_link_libraries(ReyEngine2D stdc++fs)
@@ -121,3 +125,4 @@ install_file(./test/test.scn ./test/test.scn)
 install_file(./test/posTest.scn ./test/posTest.scn)
 install_file(./test/posTest.scn ./test/serializeTest.scn)
 install_file(./test/characters.png ./test/characters.png)
+install_file(./test/test.lua ./test/test.lua)
