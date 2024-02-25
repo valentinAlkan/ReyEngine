@@ -8,6 +8,7 @@
 
 using namespace std;
 using namespace ReyEngine;
+using namespace ReyEngine::FileSystem;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 BaseWidget::BaseWidget(const std::string& name, std::string  typeName)
@@ -24,7 +25,7 @@ BaseWidget::~BaseWidget() {
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-ReyEngine::ComponentPath BaseWidget::getPath() {
+ReyEngine::FileSystem::ComponentPath BaseWidget::getPath() {
    //return the lookup path to the widget by backtracking to the root
    std::vector<ComponentPath> reversePath;
    reversePath.push_back(getName());
