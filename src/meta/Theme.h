@@ -77,6 +77,10 @@ namespace Style {
        void setAll(int a){value.w=a;value.x=a;value.y=a;value.z=a;}
    };
 
+   struct Cursor {
+
+   };
+
    /////////////////////////////////////////////////////////////////////////////////////////
    /////////////////////////////////////////////////////////////////////////////////////////
    /////////////////////////////////////////////////////////////////////////////////////////
@@ -122,6 +126,7 @@ namespace Style {
       FontProperty font;
       MarginsProperty layoutMargins;
       FloatProperty lineThick;
+      CursorProperty cursor;
 
       void registerProperties() override {
          registerProperty(background);

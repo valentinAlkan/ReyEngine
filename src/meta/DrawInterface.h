@@ -482,6 +482,21 @@ namespace InputInterface{
          MouseButton::MOUSE_BUTTON_EXTRA,
    };
 
+   enum class MouseCursor{
+      MOUSE_CURSOR_DEFAULT,
+      MOUSE_CURSOR_ARROW,
+      MOUSE_CURSOR_IBEAM,
+      MOUSE_CURSOR_CROSSHAIR,
+      MOUSE_CURSOR_POINTING_HAND,
+      MOUSE_CURSOR_RESIZE_EW,
+      MOUSE_CURSOR_RESIZE_NS,
+      MOUSE_CURSOR_RESIZE_NWSE,
+      MOUSE_CURSOR_RESIZE_NESW,
+      MOUSE_CURSOR_RESIZE_ALL,
+      MOUSE_CURSOR_NOT_ALLOWED
+   };
+
+
    inline float getMouseWheelMove(){return GetMouseWheelMove();} //returns largest of x or y
    inline ReyEngine::Vec2<float> getMouseWheelMoveV(){return GetMouseWheelMoveV();} //returns both x and y
 
