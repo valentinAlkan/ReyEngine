@@ -19,6 +19,7 @@
 #include "Canvas.h"
 #include "TabContainer.h"
 #include "ComboBox.h"
+#include "LineEdit.h"
 #include "Config.h"
 #include "XML.h"
 
@@ -81,6 +82,7 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--drawTest", "Test various drawing functions", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--comboBoxTest", "Combo box test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--configTest", "Config file test", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--lineEditTest", "Config file test", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    //create window (or don't idk)
@@ -893,7 +895,45 @@ int main(int argc, char** argv)
          label->setMaxSize({9999, 30});
          vlayout->addChild(label);
       }
+   }
 
+   else if(args.getArg("--lineEditTest")){
+      Size<int> maxSize = {200, 30};
+      auto vlayout = make_shared<VLayout>("Layout");
+      vlayout->setAnchoring(BaseWidget::Anchor::FILL);
+      vlayout->getTheme()->layoutMargins.setAll(2);
+      root->addChild(vlayout);
+
+      for (int i=0;i<20;i++){
+         auto linedit = make_shared<LineEdit>("LineEdit" + to_string(i));
+         linedit->setDefaultText("DefaultText");
+         linedit->setMaxSize(maxSize);
+         vlayout->addChild(linedit);
+
+//         auto hoverCB = [&](const ComboBox::EventComboBoxItemHovered& event){
+//            auto combobox = event.publisher->toBaseWidget()->toType<ComboBox>();
+//            auto data = static_pointer_cast<ColorData>(event.field.data);
+//            combobox->getTheme()->background.colorPrimary = data->color;
+//         };
+//
+//         auto selectCB = [&](const ComboBox::EventComboBoxItemSelected& event){
+//            auto combobox = event.publisher->toBaseWidget()->toType<ComboBox>();
+//            auto data = static_pointer_cast<ColorData>(event.field.data);
+//            combobox->getTheme()->background.colorPrimary = data->color;
+//         };
+//
+//         auto menuOpenCB = [&](const ComboBox::EventComboBoxMenuOpened& event){
+//            /**/
+//         };
+//
+//         auto menuCloseCB = [&](const ComboBox::EventComboBoxMenuClosed& event){
+//            auto combobox = event.publisher->toBaseWidget()->toType<ComboBox>();
+//            auto data = static_pointer_cast<ColorData>(combobox->getCurrentField().data);
+//            combobox->getTheme()->background.colorPrimary = data->color;
+//         };
+
+
+      }
    }
 
    else if (args.getArg("--inspector")){
