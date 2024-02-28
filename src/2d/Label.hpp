@@ -48,6 +48,15 @@ public:
          }
       }
    }
+   void appendText(const std::string& newText){
+      text.value += newText;
+      if (!isInLayout) {
+         auto expandOpt = needsExpand();
+         if (expandOpt) {
+            setSize(expandOpt.value());
+         }
+      }
+   }
    //precision refers to how many decimal places should appear
    void setText(double newText, int precision){
       auto textRepr = std::to_string(newText);

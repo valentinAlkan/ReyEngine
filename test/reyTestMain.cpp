@@ -20,6 +20,7 @@
 #include "TabContainer.h"
 #include "ComboBox.h"
 #include "Config.h"
+#include "XML.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -61,6 +62,7 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--sliderTest", "help", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--labelTest", "help", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--saveLoadSceneTest", "Filename to save/load to", 1, RuntimeArg::ArgType::POSITIONAL));
+   args.defineArg(RuntimeArg("--xmlTest", "XML test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--layoutTest", "Test layouts", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--layoutTestBasic", "Basic Test layouts", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--panelTest", "Test panel", 0, RuntimeArg::ArgType::FLAG));
@@ -708,6 +710,67 @@ int main(int argc, char** argv)
          tabContainer->addChild(control);
       }
 
+   }
+
+   else if (args.getArg("--xmlTest")){
+      //parse xml file
+      FileSystem::File xmlFile("test/xmltest.xml");
+      auto vlayout = make_shared<VLayout>("mainvlayout");
+      vlayout->setAnchoring(BaseWidget::Anchor::FILL);
+      root->addChild(vlayout);
+
+      auto document = XML::Parser::loadFile(xmlFile);
+      auto xmlRoot = document->getRoot();
+      auto rootLabel = make_shared<Label>("rootLabel");
+      rootLabel->setText(xmlRoot->name() + " =" + xmlRoot->value());
+      rootLabel->setMinSize({999, 30});
+      rootLabel->setMaxSize({999, 30});
+      vlayout->addChild(rootLabel);
+
+      int i=0;
+      int indentLevel=0;
+      std::function<void(const std::shared_ptr<XML::Element>&)> catElement = [&](const std::shared_ptr<XML::Element>& element){
+         auto label = make_shared<Label>(to_string(i++));
+         std::string indent(4 * indentLevel, ' ');
+         label->setText(indent + "<" + element->name());
+         label->setMinSize({999, 30});
+         label->setMaxSize({999, 30});
+         vlayout->addChild(label);
+         std::optional<std::shared_ptr<XML::Attribute>> optAttr = element->firstAttr();
+         while (optAttr){
+            auto attr = optAttr.value();
+            auto name = attr->name();
+            auto value = attr->value();
+            label->appendText(" " + name + "=""" + value + """");
+            optAttr = attr->next();
+         }
+         label->appendText(">");
+         auto value = element->value();
+         if (!value.empty()){
+            label->appendText(value);
+         }
+
+         auto optChild = element->firstChild();
+         std::shared_ptr<Label> retval;
+         if (optChild){
+            indentLevel++;
+            catElement(optChild.value());
+            indentLevel--;
+         }
+
+         if (optChild) {
+            label->appendText("\n");
+         }
+         label->appendText("</" + element->name() + ">");
+
+         auto sibling = element->nextSibling();
+         if (sibling){
+            catElement(sibling.value());
+         }
+         return label;
+      };
+      //rebuild tree
+      catElement(xmlRoot);
    }
 
    else if (args.getArg("--relativeMotionTest")){

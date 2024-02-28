@@ -52,6 +52,7 @@ add_library(ReyEngine2D STATIC
     src/meta/Scene.cpp
     src/meta/Property.cpp
     src/meta/Logger.cpp
+    src/meta/XML.cpp
     src/meta/SystemTime.cpp
     src/meta/Event.cpp
     src/meta/InputManager.cpp
@@ -94,6 +95,7 @@ target_include_directories(ReyEngine2D PUBLIC
     src/meta
     src/2d
     test
+    src/thirdParty/xml
 )
 
 target_link_libraries(ReyEngine2D raylib lua)
@@ -126,3 +128,4 @@ install_file(./test/posTest.scn ./test/posTest.scn)
 install_file(./test/posTest.scn ./test/serializeTest.scn)
 install_file(./test/characters.png ./test/characters.png)
 install_file(./test/test.lua ./test/test.lua)
+install_file(./test/xmltest.xml ./test/xmltest.xml)
