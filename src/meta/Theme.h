@@ -65,7 +65,8 @@ namespace Style {
    };
    
    struct MarginsProperty : public Vec4Property<int>{
-       MarginsProperty(const std::string& instanceName): Vec4Property<int>(instanceName){}
+       using Property<ReyEngine::Vec4<int>>::operator=;
+       MarginsProperty(const std::string& instanceName): Vec4Property<int>(instanceName, PropertyTypes::LayoutMargin){}
        int left(){return value.w;}
        int right(){return value.x;}
        int top(){return value.y;}
@@ -75,6 +76,13 @@ namespace Style {
        void setTop(int t){value.y = t;}
        void setBottom(int b){value.z = b;}
        void setAll(int a){value.w=a;value.x=a;value.y=a;value.z=a;}
+   };
+
+   struct CursorProperty : public Property<InputInterface::MouseCursor>{
+      using Property<InputInterface::MouseCursor>::operator=;
+      CursorProperty(const std::string& instanceName): Property<InputInterface::MouseCursor>(instanceName, PropertyTypes::Cursor, InputInterface::MouseCursor::DEFAULT){}
+      std::string toString() const override {return std::to_string((int)value);}
+      InputInterface::MouseCursor fromString(const std::string& data) override {return (InputInterface::MouseCursor)stoi(data);}
    };
 
    /////////////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +110,8 @@ namespace Style {
       PROPERTY_DECLARE(font),
       PROPERTY_DECLARE(layoutMargins),
       PROPERTY_DECLARE(lineThick),
-      PROPERTY_DECLARE(highlight, ReyEngine::Colors::blue)
+      PROPERTY_DECLARE(highlight, ReyEngine::Colors::blue),
+      PROPERTY_DECLARE(cursor)
       {
          //apply defaults
          background = Fill::SOLID;
@@ -122,6 +131,7 @@ namespace Style {
       FontProperty font;
       MarginsProperty layoutMargins;
       FloatProperty lineThick;
+      CursorProperty cursor;
 
       void registerProperties() override {
          registerProperty(background);

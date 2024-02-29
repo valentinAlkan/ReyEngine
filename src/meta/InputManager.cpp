@@ -5,25 +5,34 @@ using namespace InputInterface;
 /////////////////////////////////////////////////////////////////////////////////////////
 KeyCode InputManager::getKeyPressed() {
    auto key = InputInterface::getKeyPressed();
-   if (key){
+   if ((int)key){
       keyQueue.push_back(key);
+      _lastKey = key;
    }
    return key;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 KeyCode InputManager::getKeyReleased() {
-
    for (auto it=keyQueue.begin(); it!=keyQueue.end(); it++){
       KeyCode key = *it;
       if (InputInterface::isKeyUp(key)){
          keyQueue.erase(it);
+         if (keyQueue.empty()) {
+            _lastKey = KeyCode::KEY_NULL;
+         } else {
+            _lastKey = keyQueue.front();
+         }
          return key;
       }
    }
-   return 0;
+   return KeyCode::KEY_NULL;
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
+char InputManager::getCharPressed() {
+   return InputInterface::getCharPressed();
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 InputInterface::MouseButton InputManager::getMouseButtonPressed() {
@@ -33,7 +42,7 @@ InputInterface::MouseButton InputManager::getMouseButtonPressed() {
          return btn;
       }
    }
-   return InputInterface::MouseButton::MOUSE_BUTTON_NONE;
+   return InputInterface::MouseButton::NONE;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -46,5 +55,5 @@ InputInterface::MouseButton InputManager::getMouseButtonReleased() {
          return btn;
       }
    }
-   return InputInterface::MouseButton::MOUSE_BUTTON_NONE;
+   return InputInterface::MouseButton::NONE;
 }

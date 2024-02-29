@@ -82,27 +82,63 @@ void Window::exec(){
          publish(event);
       }
 
-      //collect key input (up to limit)
-      //do ups first so we don't process up and down on same frame
+      //collect char input (up to limit)
+      // only downs for chars - no ups. Use keys for uppies.
       for (size_t i=0; i<Window::INPUT_COUNT_LIMIT; i++){
-         auto keyUp = InputManager::instance().getKeyReleased();
-         if (keyUp){
-            InputEventKey event(nullptr);
-            event.key = keyUp;
-            event.isDown = false;
+         auto charDown = InputManager::instance().getCharPressed();
+         if (charDown){
+            InputEventChar event(nullptr);
+            event.ch = charDown;
             processUnhandledInput(event, nullopt);
          } else {
             break;
          }
       }
 
+      //collect key input (up to limit)
+      //do ups first so we don't process up and down on same frame
+      for (size_t i=0; i<Window::INPUT_COUNT_LIMIT; i++){
+         auto keyUp = InputManager::instance().getKeyReleased();
+         if ((int)keyUp){
+            InputEventKey event(nullptr);
+            event.key = keyUp;
+            event.isDown = false;
+            event.isRepeat = false;
+            processUnhandledInput(event, nullopt);
+         } else {
+            break;
+         }
+      }
+
+      //REPEATS
+      auto now = chrono::steady_clock::now();
+      static chrono::time_point<chrono::steady_clock> keyDownTimestamp = now;
+      auto lastKey = InputManager::getLastKeyPressed();
+      if (InputManager::isKeyDown(lastKey)) {
+         static chrono::time_point<chrono::steady_clock> keyRepeatTimestamp = now;
+         if (now - keyDownTimestamp > _keyDownRepeatDelay) {
+            //start sending repeats
+            if (now - keyRepeatTimestamp > _keyDownRepeatRate) {
+               keyRepeatTimestamp = chrono::steady_clock::now();
+               InputEventKey event(nullptr);
+               event.key = lastKey;
+               event.isDown = true;
+               event.isRepeat = true;
+               processUnhandledInput(event, nullopt);
+            }
+         }
+      }
+
+
       //DOWNS
       for (size_t i=0; i<Window::INPUT_COUNT_LIMIT; i++){
          auto keyDown = InputManager::instance().getKeyPressed();
-         if (keyDown){
+         if ((int)keyDown){
+            keyDownTimestamp = chrono::steady_clock::now();
             InputEventKey event(nullptr);
             event.key = keyDown;
             event.isDown = true;
+            event.isRepeat = false;
             processUnhandledInput(event, nullopt);
          } else {
             break;
@@ -114,8 +150,8 @@ void Window::exec(){
       for (size_t i=0; i<Window::INPUT_COUNT_LIMIT; i++){
          auto btnUp = InputManager::instance().getMouseButtonReleased();
          auto pos = InputManager::getMousePos();
-         if (btnUp != InputInterface::MouseButton::MOUSE_BUTTON_NONE){
-            if (btnUp == InputInterface::MouseButton::MOUSE_BUTTON_LEFT){
+         if (btnUp != InputInterface::MouseButton::NONE){
+            if (btnUp == InputInterface::MouseButton::LEFT){
                //check for drag n drop
                if (_dragNDrop.has_value() && _isDragging){
                   //we have a widget being dragged, lets try to drop it
@@ -144,10 +180,10 @@ void Window::exec(){
       //DOWNS
       for (size_t i=0; i<Window::INPUT_COUNT_LIMIT; i++){
          auto btnDown = InputManager::instance().getMouseButtonPressed();
-         if (btnDown != InputInterface::MouseButton::MOUSE_BUTTON_NONE){
+         if (btnDown != InputInterface::MouseButton::NONE){
             auto pos = InputManager::getMousePos();
             //check for dragndrops
-            if (btnDown == InputInterface::MouseButton::MOUSE_BUTTON_LEFT){
+            if (btnDown == InputInterface::MouseButton::LEFT){
                auto widgetAt = _root->getWidgetAt(pos);
                if (widgetAt){
                   auto willDrag = widgetAt.value()->_on_drag_start(pos);
@@ -270,6 +306,7 @@ void Window::exec(){
       }
 
       EndDrawing();
+      _frameCounter++;
    }
 }
 

@@ -184,6 +184,7 @@ protected:
    void setRenderOffset(ReyEngine::Pos<double> offset){_renderOffset = offset;}
 //   void renderTextureOffsetApply(ReyEngine::Pos<float>& textureOffset){}
 //   void renderTextureOffsetReset(ReyEngine::Pos<float>& textureOffset){}
+   void _drawLine(const ReyEngine::Line<int>&, float lineThick, const ReyEngine::ColorRGBA&) const;
    void _drawText(const std::string& text, const ReyEngine::Pos<int>& pos, const ReyEngine::ReyEngineFont& font) const;
    void _drawTextCentered(const std::string& text, const ReyEngine::Pos<int>& pos, const ReyEngine::ReyEngineFont& font) const;
    void _drawRectangle(const ReyEngine::Rect<int>& rect, ReyEngine::ColorRGBA color) const;
@@ -216,7 +217,7 @@ protected:
 public:
    //modality
    void setModal(bool isModal);
-   bool isModal();
+   bool isModal(){return _isModal;};
    std::optional<std::shared_ptr<ReyEngine::Canvas>> getCanvas(); //get the most closely-related parent canvas this widget belongs to
 
    //editor stuff
@@ -246,6 +247,7 @@ protected:
    bool _hovered = false; //true when hovered, set by application
    bool _visible = true; //whether to show the widget (and its children)
    std::recursive_mutex _childLock;
+   bool _isModal = false;
    bool _scheduled_for_deletion = false; // true when the widget has been scheduled for deletion but is not yet deleted.
    ReyEngine::Pos<double> _renderOffset; //used for different rendering modes. does not offset position.
 

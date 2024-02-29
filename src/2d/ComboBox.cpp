@@ -17,7 +17,7 @@ void ComboBox::render() const {
 
    //draw current item
    if (fields.size()){
-      _drawText(fields.value.at(currentIndex).text, {0, textPosV}, font);
+      _drawText(fields.value.at(currentIndex).text, {1, textPosV}, font);
    }
 
    //draw if the menu is open

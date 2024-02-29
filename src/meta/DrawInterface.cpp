@@ -1,5 +1,6 @@
 #include "DrawInterface.h"
 #include "Application.h"
+
 using namespace ReyEngine;
 using namespace std;
 
@@ -73,8 +74,8 @@ void ReyEngine::drawCircleSectorLines(const CircleSector& sector, const ReyEngin
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawLine(const Line<int>& line, const ReyEngine::ColorRGBA& color) {
-   DrawLine(line.a.x, line.a.y, line.b.x, line.b.y, color);
+void ReyEngine::drawLine(const Line<int>& line, float lineThick, const ReyEngine::ColorRGBA& color) {
+   DrawLineEx(line.a, line.b, lineThick, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -1,0 +1,42 @@
+#pragma once
+#include "BaseWidget.h"
+
+namespace ReyEngine {
+   class LineEdit : public BaseWidget {
+   public:
+      struct EventLineEditDefaultTextChanged : public Event<EventLineEditDefaultTextChanged>{
+         EVENT_CTOR_SIMPLE(EventLineEditDefaultTextChanged, Event<EventLineEditDefaultTextChanged>, const std::string& newText), newText(newText){}
+         const std::string newText;
+      };
+      struct EventLineEditTextChanged : public Event<EventLineEditTextChanged>{
+         EVENT_CTOR_SIMPLE(EventLineEditTextChanged, Event<EventLineEditTextChanged>, const std::string& newText), newText(newText){}
+         const std::string newText;
+      };
+
+   REYENGINE_OBJECT(LineEdit, BaseWidget)
+   , PROPERTY_DECLARE(_defaultText)
+   , PROPERTY_DECLARE(_text)
+   {}
+   public:
+      inline void clear(){ setText("");}
+      void setText(const std::string&, bool noPublish=false);
+      void setDefaultText(const std::string&, bool noPublish=false);
+      void render() const override;
+      void registerProperties() override;
+   protected:
+      void _on_modality_gained();
+      void _on_modality_lost();
+      Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
+      virtual void _on_default_text_changed(const std::string &){};
+      virtual void _on_text_changed(const std::string &){};
+   private:
+      void publishText();
+      StringProperty _defaultText;
+      StringProperty _text;
+      ScissorTarget scissorTarget;
+      int _highlight_start = 0;
+      int _highlight_end = 0;
+      bool _isEditing = false; //the user is editing - blink the cursor
+      int _caretPos = 0; //the char BEFORE which the cursor should be drawn; -1 if end
+   };
+}
