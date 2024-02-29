@@ -19,6 +19,7 @@
 #include "Canvas.h"
 #include "TabContainer.h"
 #include "ComboBox.h"
+#include "LineEdit.h"
 #include "Config.h"
 #include "XML.h"
 
@@ -81,6 +82,7 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--drawTest", "Test various drawing functions", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--comboBoxTest", "Combo box test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--configTest", "Config file test", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--lineEditTest", "Config file test", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    //create window (or don't idk)
@@ -224,7 +226,7 @@ int main(int argc, char** argv)
          ReyEngine::drawRectangle({{0,0},size}, ReyEngine::Colors::yellow);
          ReyEngine::drawRectangle(label1->getRect(), ReyEngine::Colors::green);
          ReyEngine::drawRectangle(label2->getRect(), ReyEngine::Colors::green);
-         ReyEngine::drawLine({{0,0}, mousePos}, COLORS::red);
+         ReyEngine::drawLine({{0,0}, mousePos}, 1, COLORS::red);
       };
       boxBounder->setRenderCallback(drawBoundingBox);
 
@@ -790,7 +792,7 @@ int main(int argc, char** argv)
 
          //rect delta line
          if (down) {
-            ReyEngine::drawLine({mousePos, mousePos - offset}, Colors::blue);
+            ReyEngine::drawLine({mousePos, mousePos - offset}, 1, Colors::blue);
             ReyEngine::drawText("offset = " + offset.toString(), mousePos + Pos<int>(15, 15), font);
          }
       };
@@ -893,7 +895,36 @@ int main(int argc, char** argv)
          label->setMaxSize({9999, 30});
          vlayout->addChild(label);
       }
+   }
 
+   else if(args.getArg("--lineEditTest")){
+      static constexpr int ROW_HEIGHT = 30;
+      Size<int> maxSize = {200, ROW_HEIGHT};
+      auto vlayout = make_shared<VLayout>("Layout");
+      vlayout->setAnchoring(BaseWidget::Anchor::FILL);
+      vlayout->getTheme()->layoutMargins.setAll(2);
+      root->addChild(vlayout);
+
+      for (int i=0;i<20;i++){
+         auto hlayout = make_shared<HLayout>("HLayout" + to_string(i));
+         hlayout->getTheme()->layoutMargins.setAll(2);
+         hlayout->setMaxSize({9999,ROW_HEIGHT});
+         vlayout->addChild(hlayout);
+         auto linedit = make_shared<LineEdit>("LineEdit" + to_string(i));
+         linedit->setDefaultText("DefaultText");
+         linedit->setMaxSize(maxSize);
+         hlayout->addChild(linedit);
+
+         //make a label to echo the contents of the linedit
+         auto label = make_shared<Label>("Label" + to_string(i));
+         label->clear();
+         //create callback
+         auto cbTextChanged = [label](const LineEdit::EventLineEditTextChanged& event){
+            label->setText(event.newText);
+         };
+         label->subscribe<LineEdit::EventLineEditTextChanged>(linedit, cbTextChanged);
+         hlayout->addChild(label);
+      }
    }
 
    else if (args.getArg("--inspector")){

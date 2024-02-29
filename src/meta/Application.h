@@ -6,9 +6,16 @@
 #include "Logger.h"
 #include "DrawInterface.h"
 
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+   #define REYENGINE_PLATFORM_WINDOWS
+#else
+   #define REYENGINE_PLATFORM_LINUX
+#endif
+
 class Application
 {
 public:
+   enum class Platform{WINDOWS, LINUX};
    static Application& instance(){
       static Application instance;
       return instance;
@@ -41,12 +48,18 @@ public:
    static void registerForEnterTree(std::shared_ptr<BaseWidget>&, std::shared_ptr<BaseWidget>&); //widgets can't use shared_from_this in ctor so we need a place that gets called once on tree enter that can do it.
    static bool isReady(){return instance()._is_ready;}
    static ReyEngine::FileSystem::Directory getWorkingDirectory(){return instance()._workingDirectory;}
+   static constexpr Platform getPlatform(){return PLATFORM;}
 protected:
    uint64_t getNewRid(){return ++newRid;}
    static void processEnterTree();
    static void ready();
 
 private:
+   #ifdef REYENGINE_PLATFORM_WINDOWS
+      static constexpr Platform PLATFORM = Platform::WINDOWS;
+   #elif defined(REYENGINE_PLATFORM_LINUX)
+      static constexpr Platform PLATFORM = Platform::LINUX;
+   #endif
    ReyEngine::FileSystem::Directory _workingDirectory;
    bool _is_ready = false;
    std::shared_ptr<Window> _window;

@@ -74,6 +74,7 @@ add_library(ReyEngine2D STATIC
     src/2d/Layout.cpp
     src/2d/ScrollArea.hpp
     src/2d/Tree.cpp
+    src/2d/LineEdit.cpp
     ${CUSTOM_SOURCES}
 )
 

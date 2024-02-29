@@ -39,6 +39,7 @@ public:
    void registerProperties() override{
       registerProperty(text);
    };
+   void clear(){text.value.clear();}
    void setText(const std::string& newText){
       text.set(newText);
       if (!isInLayout) {
