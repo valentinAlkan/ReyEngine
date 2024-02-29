@@ -377,6 +377,11 @@ bool BaseWidget::isRoot() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::_drawLine(const ReyEngine::Line<int>& line, float lineThick, const ReyEngine::ColorRGBA& color) const {
+   ReyEngine::drawLine(line + getGlobalPos(), lineThick, color);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::_drawText(const std::string &text, const ReyEngine::Pos<int> &pos, const ReyEngine::ReyEngineFont& font) const{
    ReyEngine::drawText(text, pos + getGlobalPos() + _renderOffset, font);
 }
@@ -685,19 +690,6 @@ void BaseWidget::setModal(bool isModal) {
    } else {
       canvas.value()->clearModal();
    }
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
-bool BaseWidget::isModal() {
-   auto canvas = getCanvas();
-   if (canvas && canvas.value()){
-      auto optModal = canvas.value()->getModal();
-      if (optModal) {
-         auto modal = optModal->lock();
-         return modal && modal.get() == this;
-      }
-   }
-   return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

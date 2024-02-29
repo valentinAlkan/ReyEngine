@@ -59,6 +59,7 @@ public:
    inline bool operator==(const std::shared_ptr<Component>& other) const {if (other){return other->getRid()==_resourceId;}return false;}
    inline bool operator==(const Component& other) const{return other._resourceId == _resourceId;}
    void registerProperties() override {}
+   uint64_t getFrameCounter() const;
 protected:
    std::string _name;
    BoolProperty _isProcessed;

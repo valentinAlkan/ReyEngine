@@ -5,7 +5,7 @@ Handled BaseButton::_unhandled_input(const InputEvent& event, const std::optiona
     switch (event.eventId) {
         case InputEventMouseButton::getUniqueEventId(): {
             auto mouseEvent = event.toEventType<InputEventMouseButton>();
-            if (mouseEvent.button == InputInterface::MouseButton::MOUSE_BUTTON_LEFT) {
+            if (mouseEvent.button == InputInterface::MouseButton::LEFT) {
                if (mouse->isInside && mouseEvent.isDown) {
                   setDown(true);
                   return true;

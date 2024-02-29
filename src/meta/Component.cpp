@@ -7,3 +7,8 @@ Component::Component(const std::string &name)
 , _isProcessed("isProcessed")
 , _name(name)
 {}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+uint64_t Component::getFrameCounter() const {
+   return Application::instance().getWindow()->getFrameCounter();
+}

@@ -226,7 +226,7 @@ int main(int argc, char** argv)
          ReyEngine::drawRectangle({{0,0},size}, ReyEngine::Colors::yellow);
          ReyEngine::drawRectangle(label1->getRect(), ReyEngine::Colors::green);
          ReyEngine::drawRectangle(label2->getRect(), ReyEngine::Colors::green);
-         ReyEngine::drawLine({{0,0}, mousePos}, COLORS::red);
+         ReyEngine::drawLine({{0,0}, mousePos}, 1, COLORS::red);
       };
       boxBounder->setRenderCallback(drawBoundingBox);
 
@@ -792,7 +792,7 @@ int main(int argc, char** argv)
 
          //rect delta line
          if (down) {
-            ReyEngine::drawLine({mousePos, mousePos - offset}, Colors::blue);
+            ReyEngine::drawLine({mousePos, mousePos - offset}, 1, Colors::blue);
             ReyEngine::drawText("offset = " + offset.toString(), mousePos + Pos<int>(15, 15), font);
          }
       };
@@ -898,41 +898,32 @@ int main(int argc, char** argv)
    }
 
    else if(args.getArg("--lineEditTest")){
-      Size<int> maxSize = {200, 30};
+      static constexpr int ROW_HEIGHT = 30;
+      Size<int> maxSize = {200, ROW_HEIGHT};
       auto vlayout = make_shared<VLayout>("Layout");
       vlayout->setAnchoring(BaseWidget::Anchor::FILL);
       vlayout->getTheme()->layoutMargins.setAll(2);
       root->addChild(vlayout);
 
       for (int i=0;i<20;i++){
+         auto hlayout = make_shared<HLayout>("HLayout" + to_string(i));
+         hlayout->getTheme()->layoutMargins.setAll(2);
+         hlayout->setMaxSize({9999,ROW_HEIGHT});
+         vlayout->addChild(hlayout);
          auto linedit = make_shared<LineEdit>("LineEdit" + to_string(i));
          linedit->setDefaultText("DefaultText");
          linedit->setMaxSize(maxSize);
-         vlayout->addChild(linedit);
+         hlayout->addChild(linedit);
 
-//         auto hoverCB = [&](const ComboBox::EventComboBoxItemHovered& event){
-//            auto combobox = event.publisher->toBaseWidget()->toType<ComboBox>();
-//            auto data = static_pointer_cast<ColorData>(event.field.data);
-//            combobox->getTheme()->background.colorPrimary = data->color;
-//         };
-//
-//         auto selectCB = [&](const ComboBox::EventComboBoxItemSelected& event){
-//            auto combobox = event.publisher->toBaseWidget()->toType<ComboBox>();
-//            auto data = static_pointer_cast<ColorData>(event.field.data);
-//            combobox->getTheme()->background.colorPrimary = data->color;
-//         };
-//
-//         auto menuOpenCB = [&](const ComboBox::EventComboBoxMenuOpened& event){
-//            /**/
-//         };
-//
-//         auto menuCloseCB = [&](const ComboBox::EventComboBoxMenuClosed& event){
-//            auto combobox = event.publisher->toBaseWidget()->toType<ComboBox>();
-//            auto data = static_pointer_cast<ColorData>(combobox->getCurrentField().data);
-//            combobox->getTheme()->background.colorPrimary = data->color;
-//         };
-
-
+         //make a label to echo the contents of the linedit
+         auto label = make_shared<Label>("Label" + to_string(i));
+         label->clear();
+         //create callback
+         auto cbTextChanged = [label](const LineEdit::EventLineEditTextChanged& event){
+            label->setText(event.newText);
+         };
+         label->subscribe<LineEdit::EventLineEditTextChanged>(linedit, cbTextChanged);
+         hlayout->addChild(label);
       }
    }
 

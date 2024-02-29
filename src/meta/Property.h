@@ -32,6 +32,8 @@ namespace PropertyTypes{
    PROP_TYPE(Theme)
    PROP_TYPE(List)
    PROP_TYPE(Font)
+   PROP_TYPE(Cursor)
+   PROP_TYPE(LayoutMargin)
 }
 
 namespace PropertyMeta{
@@ -169,7 +171,10 @@ template <typename T>
 struct Vec4Property : public Property<ReyEngine::Vec4<T>>{
     using Property<ReyEngine::Vec4<T>>::operator=;
     Vec4Property(const std::string& instanceName, ReyEngine::Vec4<T> defaultvalue = ReyEngine::Vec4<T>())
-            : Property<ReyEngine::Vec4<T>>(instanceName, PropertyTypes::Vec4, defaultvalue)
+    : Property<ReyEngine::Vec4<T>>(instanceName, PropertyTypes::Vec4, defaultvalue)
+    {}
+    Vec4Property(const std::string& instanceName, const std::string& typeName, ReyEngine::Vec4<T> defaultvalue = ReyEngine::Vec4<T>())
+    : Property<ReyEngine::Vec4<T>>(instanceName, typeName, defaultvalue)
     {}
     std::string toString() const override {return Property<ReyEngine::Vec4<T>>::value.toString();}
     ReyEngine::Vec4<T> fromString(const std::string& str) override {return ReyEngine::Vec4<T>::fromString(str);}
