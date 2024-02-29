@@ -116,7 +116,7 @@ public:
    bool isInside(const iVec& point){return _rect.value.toSizeRect().isInside(point);}
    bool setName(const std::string& name, bool append_index=false);
    bool setIndex(unsigned int newIndex);
-   std::string getTypeName(){return _typeName;}
+   std::string getTypeName() const {return _typeName;}
 
    std::optional<std::shared_ptr<BaseWidget>> getWidgetAt(ReyEngine::Pos<int> pos);
    std::weak_ptr<BaseWidget> getParent(){return _parent;}
