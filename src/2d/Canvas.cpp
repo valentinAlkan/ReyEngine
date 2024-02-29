@@ -45,10 +45,12 @@ void Canvas::setModal(std::shared_ptr<BaseWidget>& newModal) {
    if (_modal){
       auto modal = _modal->lock();
       if (modal){
+         modal->_isModal = false;
          modal->_on_modality_lost();
       }
    }
    _modal = newModal;
+   newModal->_isModal = true;
    newModal->_on_modality_gained();
 }
 
@@ -57,6 +59,7 @@ void Canvas::clearModal() {
    if (_modal){
       auto modal = _modal->lock();
       if (modal){
+         modal->_isModal = false;
          modal->_on_modality_lost();
       }
    }

@@ -8,9 +8,16 @@ struct InputEvent : public Event<InputEvent> {
 
 struct InputEventKey : public InputEvent {
    EVENT_CTOR_SIMPLE(InputEventKey, InputEvent){}
-   int key;
+   InputInterface::KeyCode key;
    bool isDown;
+   bool isRepeat;
 };
+
+struct InputEventChar : public InputEvent {
+   EVENT_CTOR_SIMPLE(InputEventChar, InputEvent){}
+   char ch;
+};
+
 
 struct InputEventMouse : public InputEvent{
    EVENT_CTOR_SIMPLE_OVERRIDABLE(InputEventMouse, InputEvent){}
@@ -64,15 +71,19 @@ public:
    static inline bool isKeyReleased(InputInterface::KeyCode key){return InputInterface::isKeyReleased(key);}
    static inline bool isKeyUp(InputInterface::KeyCode key){return InputInterface::isKeyUp(key);}
    static inline void setExitKey(InputInterface::KeyCode key){return InputInterface::setExitKey(key);}
+   static inline bool isShiftKeyDown(){return InputInterface::isKeyDown(InputInterface::KeyCodes::KEY_LEFT_SHIFT) || InputInterface::isKeyDown(InputInterface::KeyCodes::KEY_RIGHT_SHIFT);}
+   static inline InputInterface::KeyCode getLastKeyPressed(){return instance()._lastKey;}
    static inline ReyEngine::Pos<int> getMousePos(){return InputInterface::getMousePos();}
    static inline ReyEngine::Vec2<int> getMouseDelta(){return InputInterface::getMouseDelta();}
 protected:
    InputInterface::KeyCode getKeyPressed();
    InputInterface::KeyCode getKeyReleased();
+   char getCharPressed();
    InputInterface::MouseButton getMouseButtonPressed();
    InputInterface::MouseButton getMouseButtonReleased();
 
    std::vector<InputInterface::KeyCode> keyQueue; //holds keys that were pressed so we can check if they're still down
+   InputInterface::KeyCode _lastKey = InputInterface::KeyCodes::KEY_NULL;
    std::vector<InputInterface::MouseButton> mouseButtonQueue; //holds mousebuttons that were pressed so we can check if they're still down
    template <typename T, typename R>
    bool isInQueue(std::vector<T> queue, R button){

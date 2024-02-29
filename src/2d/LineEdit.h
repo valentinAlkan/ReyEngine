@@ -18,19 +18,25 @@ namespace ReyEngine {
    , PROPERTY_DECLARE(_text)
    {}
    public:
-      void setText(const std::string&);
-      void setDefaultText(const std::string&);
+      inline void clear(){ setText("");}
+      void setText(const std::string&, bool noPublish=false);
+      void setDefaultText(const std::string&, bool noPublish=false);
       void render() const override;
       void registerProperties() override;
    protected:
+      void _on_modality_gained();
+      void _on_modality_lost();
       Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
       virtual void _on_default_text_changed(const std::string &){};
       virtual void _on_text_changed(const std::string &){};
    private:
+      void publishText();
       StringProperty _defaultText;
       StringProperty _text;
-      bool _cursorBlinkOn = false; //true when the cursor should be displayed (like, actually drawn)
-      bool _highlight = false; //draw the highlight
-      bool _isEditing = false; //the user is editing
+      ScissorTarget scissorTarget;
+      int _highlight_start = 0;
+      int _highlight_end = 0;
+      bool _isEditing = false; //the user is editing - blink the cursor
+      int _caretPos = 0; //the char BEFORE which the cursor should be drawn; -1 if end
    };
 }

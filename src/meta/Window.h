@@ -49,6 +49,7 @@ public:
    void setPosition(ReyEngine::Pos<int> newPos){ReyEngine::setWindowPosition(newPos);}
    void maximize(){ReyEngine::maximizeWindow();}
    void minimize(){ReyEngine::minimizeWindow();}
+   inline uint64_t getFrameCounter(){return _frameCounter;}
    std::optional<std::shared_ptr<Draggable>>getDragNDrop(){if (_dragNDrop) return _dragNDrop; return std::nullopt;}
    //hover
    void clearHover();
@@ -65,6 +66,9 @@ private:
    bool _isEditor = false; //enables other features
    std::optional<std::shared_ptr<Draggable>> _dragNDrop; //the widget currently being drag n dropped
    bool _isDragging = false; //true when we start a dragndrop
+   uint64_t _frameCounter=0;
+   std::chrono::milliseconds _keyDownRepeatDelay = std::chrono::milliseconds(500); //how long a key must be held down before it counts as a repeat
+   std::chrono::milliseconds _keyDownRepeatRate = std::chrono::milliseconds(25); //how long must pass before each key repeat event is sent
    class ProcessList {
    public:
       std::optional<std::shared_ptr<BaseWidget>> add(std::shared_ptr<BaseWidget> widget);
