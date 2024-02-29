@@ -200,7 +200,7 @@ void BaseWidget::removeAllChildren() {
 Pos<int> BaseWidget::getGlobalPos() const {
    //sum up all our ancestors' positions and add our own to it
    auto offset = getPos();
-   if (!_parent.expired()){ //todo: Race conditions?
+   if (getTypeName() != Canvas::TYPE_NAME && !_parent.expired()){ //todo: Race conditions?
       offset += _parent.lock()->getGlobalPos();
    }
    return offset;

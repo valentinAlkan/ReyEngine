@@ -22,6 +22,7 @@
 #include "LineEdit.h"
 #include "Config.h"
 #include "XML.h"
+#include "TileMap.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -65,6 +66,7 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--saveLoadSceneTest", "Filename to save/load to", 1, RuntimeArg::ArgType::POSITIONAL));
    args.defineArg(RuntimeArg("--xmlTest", "XML test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--layoutTest", "Test layouts", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--configTest", "Config file test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--layoutTestBasic", "Basic Test layouts", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--panelTest", "Test panel", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--editor", "Editor", 0, RuntimeArg::ArgType::FLAG));
@@ -491,7 +493,23 @@ int main(int argc, char** argv)
       animatedSprite->fitTexture();
       animatedSprite->scale(Vec2<float>(5,5));
       root->addChild(animatedSprite);
+   }
 
+   else if (args.getArg("--tilemapTest")){
+      //make sure you've installed any sprite resources in the CMake file or they will not be visible to the engine.
+      // The executable runs out of the build directory and not the src directory.
+      // use install_file() in the cmake
+      auto spriteSheet = make_shared<Sprite>("SpriteSheet"); //either pass in a rect or do fit texture later
+      spriteSheet->setTexture("test\\characters.png"); //if no rect passed in, region = texture size
+      spriteSheet->fitTexture();
+      root->addChild(spriteSheet);
+
+      auto animatedSprite = make_shared<Sprite>("AnimatedSpriteSheet");
+      animatedSprite->setRect(Rect<int>(550,0,0,0));
+      animatedSprite->setTexture("test\\characters.png");
+      animatedSprite->fitTexture();
+      animatedSprite->scale(Vec2<float>(5,5));
+      root->addChild(animatedSprite);
    }
 
    else if (args.getArg("--buttonTest")) {
