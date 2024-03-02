@@ -408,6 +408,13 @@ namespace ReyEngine {
       ReyTexture(){};
       void loadTexture(const FileSystem::File& file);
       ReyTexture(const FileSystem::File& file);
+      ReyTexture(ReyTexture&& other) noexcept
+      : _tex(other._tex)
+      , _texLoaded(other._texLoaded)
+      , size(other.size)
+      {
+         other._texLoaded = false;
+      }
       ~ReyTexture(){
          if (_texLoaded) {
             UnloadTexture(_tex);
