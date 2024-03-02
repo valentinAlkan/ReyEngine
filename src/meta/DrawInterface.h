@@ -6,6 +6,7 @@
 #include <array>
 #include <iostream>
 #include "FileSystem.h"
+#include "Property.h"
 #ifdef linux
 #include <limits.h>
 #endif
@@ -349,7 +350,20 @@ namespace ReyEngine {
       unsigned char a;
    };
 
-   #define COLORS ReyEngine::Colors
+   struct ColorProperty : public Property<ReyEngine::ColorRGBA>{
+      using Property<ReyEngine::ColorRGBA>::operator=;
+      ColorProperty(const std::string& instanceName,  ReyEngine::ColorRGBA defaultvalue)
+            : Property<ReyEngine::ColorRGBA>(instanceName, PropertyTypes::Color, defaultvalue)
+      {}
+      std::string toString() const override {return "{" + std::to_string(value.r) + ", " + std::to_string(value.g) + ", " + std::to_string(value.b) + ", "  + std::to_string(value.a) + "}";}
+      ReyEngine::ColorRGBA fromString(const std::string& str) override {
+         auto split = string_tools::fromList(str);
+         return {std::stoi(split[0]), std::stoi(split[1]), std::stoi(split[2]), std::stoi(split[3])};
+      }
+   };
+
+
+#define COLORS ReyEngine::Colors
    namespace Colors{
       static constexpr ColorRGBA gray = {130, 130, 130, 255};
       static constexpr ColorRGBA lightGray = {200, 200, 200, 255};
@@ -391,7 +405,9 @@ namespace ReyEngine {
    ReyEngineFont getFont(const std::string& fileName);
 
    struct ReyTexture{
-      ReyTexture(FileSystem::File file);
+      ReyTexture(){};
+      void loadTexture(const FileSystem::File& file);
+      ReyTexture(const FileSystem::File& file);
       ~ReyTexture(){
          if (_texLoaded) {
             UnloadTexture(_tex);

@@ -50,10 +50,11 @@ public:                                                   \
 class Window;
 class Component
 : public PropertyContainer
-      {
+{
 public:
+   using RID = uint64_t;
    Component(const std::string& name);
-   inline uint64_t getRid() const {return _resourceId;}
+   inline RID getRid() const {return _resourceId;}
    inline std::string getName() const {return _name;}
 
    inline bool operator==(const std::shared_ptr<Component>& other) const {if (other){return other->getRid()==_resourceId;}return false;}
