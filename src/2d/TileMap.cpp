@@ -40,10 +40,11 @@ std::optional<TileMap::LayerIndex> TileMap::addTexture(const FileSystem::File& f
       return nullopt;
    }
    //load the texture
-   pair<LayerIndex , TileMapLayer> pair = std::make_pair(getNextLayerIndex(), file);
-   _layers[getNextLayerIndex()] = TileMapLayer(file);
-   newLayer.atlas.
-
+   TileMapLayer newLayer(file);
+   //store it
+   auto newIndex = getNextLayerIndex();
+   _layers.insert(std::pair<LayerIndex, TileMapLayer>(getNextLayerIndex(), std::move(newLayer)));
+   return newIndex;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

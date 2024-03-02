@@ -3,24 +3,27 @@
 #include <map>
 namespace ReyEngine {
    class TileMap : public BaseWidget {
+      using TileCoord = Vec2<int>;
+      using TileIndex = uint64_t;
+      using LayerIndex = uint64_t;
 
       struct SpriteAtlas {
          SpriteAtlas(const FileSystem::File& file): texture(file){}
-         SpriteAtlas(SpriteAtlas&& other): texture(other.texture), filePath(other.filePath){}
+         SpriteAtlas(SpriteAtlas&& other)
+         : texture(std::move(other.texture))
+         , filePath(std::move(other.filePath))
+         {}
          FileSystem::File filePath;
          ReyTexture texture;
       };
 
-      using TileCoord = Vec2<int>;
-      using TileIndex = uint64_t;
-      using LayerIndex = uint64_t;
       struct TileMapLayer{
          std::map<TileCoord, TileIndex> tiles;
          SpriteAtlas atlas;
+         TileMapLayer(const FileSystem::File& file): atlas(file){}
          TileMapLayer(TileMapLayer&& other) noexcept
-         : atlas(other)
-         {
-         };
+         : atlas(std::move(other.atlas))
+         {}
       };
 
 //   struct CellDataProperty : public Property<std::map<Vec2<int>, CellData>>{
