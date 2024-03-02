@@ -1,6 +1,7 @@
 #pragma once
-#include "Property.h"
 #include "Font.hpp"
+#include "DrawInterface.h"
+
 namespace Style {
    /////////////////////////////////////////////////////////////////////////////////////////
    /////////////////////////////////////////////////////////////////////////////////////////
@@ -26,7 +27,7 @@ namespace Style {
          registerProperty(color);
          registerProperty(thickness);
       }
-      ColorProperty color;
+      ReyEngine::ColorProperty color;
       FloatProperty thickness;
    };
 
@@ -59,9 +60,9 @@ namespace Style {
          registerProperty(colorSecondary);
          registerProperty(colorTertiary);
       }
-      ColorProperty colorPrimary;
-      ColorProperty colorSecondary; //for gradient
-      ColorProperty colorTertiary; //for whatever
+      ReyEngine::ColorProperty colorPrimary;
+      ReyEngine::ColorProperty colorSecondary; //for gradient
+      ReyEngine::ColorProperty colorTertiary; //for whatever
    };
    
    struct MarginsProperty : public Vec4Property<int>{
@@ -124,7 +125,7 @@ namespace Style {
 
       FillProperty background;
       FillProperty foreground;
-      ColorProperty highlight;
+      ReyEngine::ColorProperty highlight;
       OutlineProperty outline;
       FloatProperty roundness;
       IntProperty roundnessSegments;

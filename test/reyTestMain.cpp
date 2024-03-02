@@ -83,8 +83,8 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--relativeMotionTest", "Relative location movement test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--drawTest", "Test various drawing functions", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--comboBoxTest", "Combo box test", 0, RuntimeArg::ArgType::FLAG));
-   args.defineArg(RuntimeArg("--configTest", "Config file test", 0, RuntimeArg::ArgType::FLAG));
-   args.defineArg(RuntimeArg("--lineEditTest", "Config file test", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--tileMapTest", "Config file test", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--lineEditTest", "Line edit test", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    //create window (or don't idk)
@@ -495,21 +495,11 @@ int main(int argc, char** argv)
       root->addChild(animatedSprite);
    }
 
-   else if (args.getArg("--tilemapTest")){
-      //make sure you've installed any sprite resources in the CMake file or they will not be visible to the engine.
-      // The executable runs out of the build directory and not the src directory.
-      // use install_file() in the cmake
-      auto spriteSheet = make_shared<Sprite>("SpriteSheet"); //either pass in a rect or do fit texture later
-      spriteSheet->setTexture("test\\characters.png"); //if no rect passed in, region = texture size
-      spriteSheet->fitTexture();
+   else if (args.getArg("--tileMapTest")){
+      auto spriteSheet = make_shared<TileMap>("TileMap"); //either pass in a rect or do fit texture later
+//      spriteSheet->setTexture("test\\characters.png"); //if no rect passed in, region = texture size
+//      spriteSheet->fitTexture();
       root->addChild(spriteSheet);
-
-      auto animatedSprite = make_shared<Sprite>("AnimatedSpriteSheet");
-      animatedSprite->setRect(Rect<int>(550,0,0,0));
-      animatedSprite->setTexture("test\\characters.png");
-      animatedSprite->fitTexture();
-      animatedSprite->scale(Vec2<float>(5,5));
-      root->addChild(animatedSprite);
    }
 
    else if (args.getArg("--buttonTest")) {

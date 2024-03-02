@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <optional>
+#include "Property.h"
 
 namespace ReyEngine::FileSystem {
    std::vector<char> loadFile(const std::string& filePath);
@@ -45,5 +46,4 @@ namespace ReyEngine::FileSystem {
       Directory(const char* path): Path(path){}
       operator File() = delete;
    };
-
 }

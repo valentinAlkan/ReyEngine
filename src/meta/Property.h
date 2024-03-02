@@ -5,7 +5,9 @@
 #include <map>
 #include <memory>
 #include <unordered_map>
-#include "DrawInterface.h"
+#include <stdexcept>
+#include <vector>
+#include "StringTools.h"
 #include "SharedFromThis.h"
 
 #define PROP_TYPE(propName) static constexpr char propName[] = #propName;
@@ -34,6 +36,22 @@ namespace PropertyTypes{
    PROP_TYPE(Font)
    PROP_TYPE(Cursor)
    PROP_TYPE(LayoutMargin)
+   PROP_TYPE(TileMapGridType)
+   PROP_TYPE(TileMapCellData)
+   PROP_TYPE(TileMapLayer)
+   PROP_TYPE(FilePath)
+}
+namespace ReyEngine{
+
+   template<typename T>
+   class Vec2;
+   template<typename T>
+   class Vec3;
+   template<typename T>
+   class Vec4;
+   template<typename T>
+   class Rect;
+   class ColorRGBA;
 }
 
 namespace PropertyMeta{
@@ -192,19 +210,6 @@ struct RectProperty : public Property<ReyEngine::Rect<T>>{
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
-struct ColorProperty : public Property<ReyEngine::ColorRGBA>{
-   using Property<ReyEngine::ColorRGBA>::operator=;
-   ColorProperty(const std::string& instanceName,  ReyEngine::ColorRGBA defaultvalue)
-   : Property<ReyEngine::ColorRGBA>(instanceName, PropertyTypes::Color, defaultvalue)
-   {}
-   std::string toString() const override {return "{" + std::to_string(value.r) + ", " + std::to_string(value.g) + ", " + std::to_string(value.b) + ", "  + std::to_string(value.a) + "}";}
-   ReyEngine::ColorRGBA fromString(const std::string& str) override {
-      auto split = string_tools::fromList(str);
-      return {std::stoi(split[0]), std::stoi(split[1]), std::stoi(split[2]), std::stoi(split[3])};
-   }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////
 template <typename T, auto C>
 using EnumPair = std::array<std::pair<T, std::string_view>, C>;
 #define ENUM_PAIR_DECLARE(ENUM_NAME, MEMBER_NAME) std::pair<ENUM_NAME, std::string_view>(ENUM_NAME::MEMBER_NAME, #MEMBER_NAME)
@@ -313,3 +318,45 @@ struct StringListProperty : public ListProperty<std::string>{
    std::string stringToElement(const std::string& element) const override {return element;}
    std::string elementToString(const std::string& t)       const override {return t;}
 };
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+//template <typename T, typename R>
+//struct MapProperty : public Property<std::map<T, R>>{
+//   using Property<std::map<T, R>>::operator=;
+//   MapProperty(const std::string& instanceName) :
+//      Property<std::map<T, R>>(instanceName, PropertyTypes::List, {}){
+//   }
+//   std::string toString() const override {
+//      auto vec = Property<std::map<T, R>>::value;
+//      std::vector<std::string> stringVec;
+//      for (const auto& t : vec){
+//         stringVec.push_back(elementToString(t));
+//      }
+//      return string_tools::listJoin(stringVec);
+//   }
+//   std::map<T, R> fromString(const std::string& str) override {
+//      auto strList = string_tools::fromList(str);
+//      for (const auto& s : strList){
+//         Property<std::map<T, R>>::value.push_back(stringToElement(s));
+//      }
+//      return Property<std::map<T, R>>::value;
+//   }
+//   void set(int index, T newValue){
+//      if(Property<std::map<T, R>>::value.size()<=index){
+//         throw std::runtime_error("List " + BaseProperty::instanceName() + " index " + std::to_string(index) + " out of range!");
+//      }
+//      Property<std::map<T, R>>::value.at(index) = newValue;
+//   }
+//   T& get(int index) {return Property<std::map<T, R>>::value.at(index);}
+//   size_t size() const {return Property<std::map<T, R>>::value.size();}
+//   ListProperty<T>& operator=(const std::map<T, R>& other){Property<std::map<T, R>>::value = other; return *this;}
+//   void append(const T& t){Property<std::map<T, R>>::value.push_back(t);}
+//   T& append(){Property<std::map<T, R>>::value.emplace_back(); return Property<std::map<T, R>>::value.back();} //create a new element at the end of the list
+//   void clear(){Property<std::map<T, R>>::value.clear();}
+//   void erase(int index){auto it=Property<std::map<T, R>>::value.begin() + index; Property<std::map<T, R>>::value.erase(it);}
+//   /**/
+//   virtual T stringToElement(const std::string&) const = 0;
+//   virtual std::string elementToString(const T&) const = 0;
+//};
