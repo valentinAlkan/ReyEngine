@@ -29,6 +29,7 @@ namespace ReyEngine::FileSystem {
       inline Path& operator=(const char* rhs){path = rhs; return *this;}
       inline Path& operator=(const std::string& rhs){path = rhs; return *this;}
       inline operator bool() const {return !path.empty();}
+      std::ostream& operator<<(std::ostream& os) const {os << path; return os;}
    protected:
       std::string path;
    };
@@ -38,6 +39,7 @@ namespace ReyEngine::FileSystem {
       File(const std::string& path): Path(path){}
       File(const char* path): Path(path){}
       operator Directory() = delete;
+      using Path::operator<<;
    };
 
    struct Directory : public Path {
@@ -45,5 +47,6 @@ namespace ReyEngine::FileSystem {
       Directory(const std::string& path): Path(path){}
       Directory(const char* path): Path(path){}
       operator File() = delete;
+      using Path::operator<<;
    };
 }

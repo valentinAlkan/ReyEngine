@@ -140,6 +140,7 @@ public:
    WidgetPtr setFreeImmediately(); // Pauses other threads and immediately removes objects from the tree.
 
    virtual void render() const = 0; //draw the widget
+   void setBackRender(bool);
    bool isRoot() const;
 
    std::optional<WidgetPtr> addChild(WidgetPtr);
@@ -193,6 +194,7 @@ protected:
    void _drawRectangleRoundedLines(const ReyEngine::Rect<int>& rect, float roundness, int segments, float lineThick, ReyEngine::ColorRGBA color) const;
    void _drawRectangleGradientV(const ReyEngine::Rect<int>& rect, ReyEngine::ColorRGBA color1, ReyEngine::ColorRGBA color2) const;
    void _drawCircleSectorLines(const ReyEngine::CircleSector&, ReyEngine::ColorRGBA, int segments);
+   void _drawTextureRect(const ReyEngine::ReyTexture& tex, const ReyEngine::Rect<int>& src, const ReyEngine::Pos<int>& dst) const;
    void registerProperties() override;
    void _deserialize(PropertyPrototypeMap&);
    RectProperty<int> _rect;
@@ -213,6 +215,7 @@ protected:
    bool acceptsHover = false;
    ReyEngine::Size<int> maxSize = {ReyEngine::MaxInt, ReyEngine::MaxInt};
    ReyEngine::Size<int> minSize = {ReyEngine::MinInt, ReyEngine::MinInt};
+   BoolProperty isBackRender;
 
 public:
    //modality
@@ -221,7 +224,6 @@ public:
    std::optional<std::shared_ptr<ReyEngine::Canvas>> getCanvas(); //get the most closely-related parent canvas this widget belongs to
 
    //editor stuff
-public:
    inline void setInEditor(bool state){_isEditorWidget = state;}
    inline bool isInEditor(){return _isEditorWidget;}
    inline void setEditorSelected(bool selected){_editor_selected = selected;}
@@ -234,6 +236,8 @@ protected:
    int _editor_grab_handles_dragging = -1; //which grab handle is being drug around
    ChildMap _children;
    ChildOrder _childrenOrdered;
+   ChildOrder _frontRenderList; //children to be rendered IN FRONT of this widget (normal behavior)
+   ChildOrder _backRenderList; //children to be rendered BEHIND this widget
    std::vector<std::shared_ptr<Component>> _components;
 
    AnchorProperty _anchor;

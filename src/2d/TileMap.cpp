@@ -4,36 +4,77 @@
 
 using namespace ReyEngine;
 using namespace std;
+/////////////////////////////////////////////////////////////////////////////////////////
+void TileMap::_init() {
+   if (!_renderTarget.ready()) {
+      _renderTarget.setSize(getSize());
+   }
+   _ready = true;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void TileMap::_on_rect_changed() {
+   if (_ready) {
+      _renderTarget.setSize(getSize());
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void TileMap::renderBegin(ReyEngine::Pos<double> &) {
+   Application::instance().getWindow()->pushRenderTarget(_renderTarget);
+   ClearBackground(ReyEngine::Colors::none);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void TileMap::renderEnd() {
+   Application::instance().getWindow()->popRenderTarget();
+
+   auto gpos = getGlobalPos();
+   _renderTarget.render(gpos);
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void TileMap::render() const {
    //draw grid
+   _drawRectangle(_rect.value.toSizeRect(), Colors::blue);
    if (_showGrid){
       switch (_gridType.value){
-         case GridType::SQUARE:
-            static constexpr int LINE_COUNT = 20;
-            static constexpr int CELL_SIZE = 64;
-            for (int x=0; x<LINE_COUNT; x++) {
-               auto _x = x*CELL_SIZE;
-               auto linex = Line<int>({_x, 0}, {_x, getScreenSize().y});
+         case GridType::SQUARE:{
+            auto xLineCount = getWidth() / _gridWidth + 1;
+            auto yLineCount = getHeight() / _gridHeight;
+            for (int x=0; x<xLineCount; x++) {
+               auto _x = x*_gridWidth;
+               auto linex = Line<int>({_x, 0}, {_x, getHeight()});
                _drawLine(linex, 1, theme->background.colorPrimary);
-               for (int y = 0; y < LINE_COUNT; y++){
-                  auto _y = y*CELL_SIZE;
-                  auto liney = Line<int>({0, _y}, {getScreenSize().x, _y});
+               for (int y = 0; y < yLineCount; y++){
+                  auto _y = y*_gridHeight;
+                  auto liney = Line<int>({0, _y}, {getWidth(), _y});
                   _drawLine(liney, 1, theme->background.colorPrimary);
                }
             }
-            break;
+            break;}
          case GridType::HEX:
             break;
          case GridType::SQUARE_OFFSET:
             break;
       }
    }
+
+   //draw all tiles in the layer
+   for (auto& layer : _layers){
+      for (auto& [x, yMap] : layer.second.tiles){
+         for (auto& [y, index] : yMap){
+            auto pos = getPos({x,y});
+            _drawText("a", pos, theme->font);
+            auto& tex = layer.second.atlas.texture;
+            _drawTextureRect(tex, {_gridWidth * (int)index,_gridHeight,_gridWidth,_gridHeight}, pos);
+         }
+      }
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::optional<TileMap::LayerIndex> TileMap::addTexture(const FileSystem::File& file) {
+std::optional<TileMap::LayerIndex> TileMap::addLayer(const FileSystem::File& file) {
    //try to add the texture
    if (!file.exists()) {
       Application::printError() << "TileMap::addTexture - file " + file.abs() + " does not exist!" << endl;
@@ -61,7 +102,52 @@ TileMap::LayerIndex TileMap::getNextLayerIndex() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+TileMap::TileMapLayer& TileMap::getLayer(ReyEngine::TileMap::LayerIndex idx) {
+   auto found = _layers.find(idx);
+   if (found == _layers.end()){
+      throw runtime_error("TileMap layer index " + to_string(idx) + " not found!");
+   }
+   return found->second;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+TileMap::TileCoord TileMap::getCoord(Pos<int> localPos) const {
+   auto x = localPos.x / _gridWidth.value;
+   auto y = localPos.y / _gridHeight.value;
+   return {x,y};
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Pos<int> TileMap::getPos(TileCoord coord) const {
+   auto x = coord.x * _gridWidth.value;
+   auto y = coord.y * _gridHeight.value;
+   return {x,y};
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<TileMap::TileIndex> TileMap::TileMapLayer::getTileIndex(const TileCoord &pos) {
+   try {
+      return tiles.at(pos.x).at(pos.y);
+   } catch (const out_of_range& e) {
+      Application::printDebug() << "Tile layer " << atlas.filePath.str() << " has no index at coordinates " << pos << endl;
+   }
+   return nullopt;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void TileMap::TileMapLayer::setTileIndex(const TileCoord& coords, TileIndex index) {
+   tiles[coords.x][coords.y] = index;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void TileMap::registerProperties() {
    registerProperty(_showGrid);
    registerProperty(_gridType);
+   registerProperty(_gridHeight);
+   registerProperty(_gridWidth);
 }

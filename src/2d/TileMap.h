@@ -3,12 +3,17 @@
 #include <map>
 namespace ReyEngine {
    class TileMap : public BaseWidget {
-      using TileCoord = Vec2<int>;
+      struct TileCoord : public Vec2<int>{
+         TileCoord(int x, int y): Vec2<int>(x,y){}
+      };
       using TileIndex = uint64_t;
       using LayerIndex = uint64_t;
 
       struct SpriteAtlas {
-         SpriteAtlas(const FileSystem::File& file): texture(file){}
+         SpriteAtlas(const FileSystem::File& file)
+         : texture(file)
+         , filePath(file)
+         {}
          SpriteAtlas(SpriteAtlas&& other)
          : texture(std::move(other.texture))
          , filePath(std::move(other.filePath))
@@ -18,12 +23,16 @@ namespace ReyEngine {
       };
 
       struct TileMapLayer{
-         std::map<TileCoord, TileIndex> tiles;
-         SpriteAtlas atlas;
          TileMapLayer(const FileSystem::File& file): atlas(file){}
-         TileMapLayer(TileMapLayer&& other) noexcept
-         : atlas(std::move(other.atlas))
-         {}
+         TileMapLayer(TileMapLayer&& other) noexcept: atlas(std::move(other.atlas)){}
+         void setTileIndex(const TileCoord&, TileIndex);
+         std::optional<TileIndex> getTileIndex(const TileCoord& pos); //slow
+         inline SpriteAtlas& getAtlas(){return atlas;}
+      protected:
+         //x, y
+         std::map<int, std::map<int, TileIndex>> tiles;
+         SpriteAtlas atlas;
+         friend class TileMap;
       };
 
 //   struct CellDataProperty : public Property<std::map<Vec2<int>, CellData>>{
@@ -71,16 +80,29 @@ namespace ReyEngine {
       REYENGINE_OBJECT(TileMap, BaseWidget)
       , PROPERTY_DECLARE(_showGrid, true)
       , PROPERTY_DECLARE(_gridType, GridType::SQUARE)
+      , PROPERTY_DECLARE(_gridHeight, 32)
+      , PROPERTY_DECLARE(_gridWidth, 32)
       {}
    public:
-      std::optional<LayerIndex> addTexture(const FileSystem::File&);
+      std::optional<LayerIndex> addLayer(const FileSystem::File&);
+      TileMapLayer& getLayer(LayerIndex);
+      TileCoord getCoord(Pos<int>) const;
+      Pos<int> getPos(TileCoord) const;
    protected:
       void render() const override;
+      inline void renderBegin(ReyEngine::Pos<double>&) override;
+      inline void renderEnd() override;
       void registerProperties() override;
+      void _init() override;
+      void _on_rect_changed() override;
    private:
+      bool _ready = false;
       BoolProperty _showGrid;
       GridTypeProperty _gridType;
+      IntProperty _gridHeight;
+      IntProperty _gridWidth;
       std::map<LayerIndex, TileMapLayer> _layers;
       LayerIndex getNextLayerIndex();
+      RenderTarget _renderTarget;
    };
 }

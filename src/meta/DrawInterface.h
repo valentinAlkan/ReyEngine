@@ -454,19 +454,18 @@ namespace ReyEngine {
    class RenderTarget{
       public:
          explicit RenderTarget();
-         ~RenderTarget(){
-            if (_texLoaded) {
-               UnloadRenderTexture(_tex);
-            }
-         }
+         ~RenderTarget();
          void setSize(const Size<int>& newSize);
-         void beginRenderMode(){BeginTextureMode(_tex);}
-         void endRenderMode(){EndTextureMode();}
-         void clear(Color color=WHITE){ClearBackground(color);}
-         void render(Vec2<float> pos) const{
+         inline Size<int> getSize(){return _size;}
+         inline void beginRenderMode(){BeginTextureMode(_tex);}
+         inline void endRenderMode(){EndTextureMode();}
+         inline void clear(Color color=WHITE){ClearBackground(color);}
+         inline bool ready(){return _texLoaded;}
+         inline void render(Vec2<float> pos) const{
             // NOTE: Render texture must be y-flipped due to default OpenGL coordinates (left-bottom)
             if (_texLoaded) {
-               DrawTextureRec(_tex.texture, {pos.x, pos.y, (float) _size.x, (float) -_size.y}, {0, 0}, Colors::none);
+//               DrawTextureRec(_tex.texture, {pos.x, pos.y, (float) _size.x, (float) -_size.y}, {0, 0}, Colors::none);
+               DrawTextureRec(_tex.texture, {0,0, (float) _size.x, (float) -_size.y}, {pos.x, pos.y}, Colors::none);
             }
          }
       protected:
@@ -475,7 +474,7 @@ namespace ReyEngine {
          Size<int> _size;
       };
 
-   //Everything drawn duiring scissor mode will be invisible if outside the area
+   //Everything drawn during scissor mode will be invisible if outside the area
    class ScissorTarget {
    public:
       void start(Rect<double> scissorArea) const {BeginScissorMode((int)scissorArea.x, (int)scissorArea.y, (int)scissorArea.width, (int)scissorArea.height);}

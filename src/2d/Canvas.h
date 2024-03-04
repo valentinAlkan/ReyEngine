@@ -5,7 +5,7 @@ namespace ReyEngine{
    class Canvas : public BaseWidget {
    public:
       REYENGINE_OBJECT(Canvas, BaseWidget)
-      , target()
+      , _renderTarget()
       {}
    public:
       //modality
@@ -16,13 +16,14 @@ namespace ReyEngine{
       void renderBegin(ReyEngine::Pos<double>& textureOffset) override;
       void render() const override {}
       void renderEnd() override;
-      inline void _on_rect_changed() override {target.setSize(_rect.value.size());}
+      inline void _on_rect_changed() override {_renderTarget.setSize(_rect.value.size());}
       void _process(float dt) override {}
       void registerProperties() override{
          //register properties specific to your type here.
       }
       Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
-      ReyEngine::RenderTarget target;
+      ReyEngine::RenderTarget _renderTarget;
       std::optional<std::weak_ptr<BaseWidget>> _modal; //if a widget wishes to collect all input, it can be modal. Only one allowed at a time.
+      friend class Window;
    };
 }

@@ -496,10 +496,45 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--tileMapTest")){
-      auto spriteSheet = make_shared<TileMap>("TileMap"); //either pass in a rect or do fit texture later
-//      spriteSheet->setTexture("test\\characters.png"); //if no rect passed in, region = texture size
-//      spriteSheet->fitTexture();
-      root->addChild(spriteSheet);
+      auto tilemap = make_shared<TileMap>("TileMap"); //either pass in a rect or do fit texture later
+      FileSystem::File file = "test/spritesheet.png";
+      auto layerOpt = tilemap->addLayer(file);
+      if (layerOpt) {
+         Application::printDebug() << "Tilemap added layer " << layerOpt.value() << " using sprite sheet " << tilemap->getLayer(layerOpt.value()).getAtlas().filePath.abs() << endl;
+      } else {
+         Application::printError() << "Tilemap " << file.abs() << " not found" << endl;
+         return 1;
+      }
+
+      auto clickLayer = make_shared<Control>("ClickLayer");
+      root->addChild(tilemap);
+      tilemap->addChild(clickLayer);
+      tilemap->setRect({10,10, 500,500});
+      clickLayer->getTheme()->background.value = Style::Fill::NONE;
+      clickLayer->setAnchoring(BaseWidget::Anchor::FILL);
+//      tilemap->setAnchoring(BaseWidget::Anchor::FILL);
+      clickLayer->setBackRender(true);
+
+      auto render = [&](){
+         drawRectangle(clickLayer->getGlobalRect(), Colors::red);
+      };
+      clickLayer->setRenderCallback(render);
+
+      auto unhandledInput = [tilemap](const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) -> Handled {
+         switch (event.eventId){
+            case InputEventMouseButton::getUniqueEventId():
+               const auto& mbEvent = event.toEventType<InputEventMouseButton>();
+               if (mbEvent.isDown) return false; //only uppies
+               auto coords = tilemap->getCoord(mouse.value().localPos);
+               auto indexOpt = tilemap->getLayer(0).getTileIndex(coords);
+               auto index = indexOpt ? indexOpt.value()+1 : 0;
+               tilemap->getLayer(0).setTileIndex(coords, index);
+               return true;
+         }
+         return false;
+      };
+      clickLayer->setUnhandledInputCallback(unhandledInput);
+
    }
 
    else if (args.getArg("--buttonTest")) {

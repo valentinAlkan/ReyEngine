@@ -13,9 +13,10 @@ using namespace ReyEngine::FileSystem;
 /////////////////////////////////////////////////////////////////////////////////////////
 BaseWidget::BaseWidget(const std::string& name, std::string  typeName)
 : Component(name)
+, PROPERTY_DECLARE(isBackRender, false)
+, PROPERTY_DECLARE(_rect)
+, PROPERTY_DECLARE(_anchor, Anchor::NONE)
 , _typeName(std::move(typeName))
-, _rect("_rect")
-, _anchor("Anchor", Anchor::NONE)
 , theme(make_shared<Style::Theme>())
 {}
 
@@ -180,6 +181,16 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::removeChild(const std::string& 
       }
       return nullopt;
    }
+   //remove from renderlist
+   auto frontRenderFound = std::find(_frontRenderList.begin(), _frontRenderList.end(), inheritable_enable_shared_from_this<BaseWidget>::shared_from_this());
+   auto backRenderFound = std::find(_backRenderList.begin(), _backRenderList.end(), inheritable_enable_shared_from_this<BaseWidget>::shared_from_this());
+   if (frontRenderFound != _frontRenderList.end()){
+      _frontRenderList.erase(frontRenderFound);
+   }
+   if (backRenderFound != _backRenderList.end()){
+      _backRenderList.erase(backRenderFound);
+   }
+
    auto child = found->second.second;
    _children.erase(found);
    child->isInLayout = false;
@@ -234,9 +245,13 @@ void BaseWidget::renderChain(ReyEngine::Pos<double>& parentOffset) {
    ReyEngine::Pos<double> localOffset;
    renderBegin(localOffset);
    _renderOffset += (localOffset + parentOffset);
+   //backrender
+   for (const auto& child : _backRenderList){
+      child->renderChain(_renderOffset);
+   }
    render();
-   //renderChildren
-   for (const auto& child : _childrenOrdered){
+   //front render
+   for (const auto& child : _frontRenderList){
       child->renderChain(_renderOffset);
    }
    _renderOffset -= (localOffset + parentOffset); //subtract local offset when we are done
@@ -377,6 +392,33 @@ bool BaseWidget::isRoot() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::setBackRender(bool _isBackrender) {
+   //see if we're in the front render list
+   if (_isBackrender) {
+      auto found = std::find(_frontRenderList.begin(), _frontRenderList.end(), toBaseWidget());
+      if (found != _frontRenderList.end()) {
+         //remove from front render list
+         _frontRenderList.erase(found);
+         //add to backrender list
+         //TODO: respect sibling order
+         _backRenderList.push_back(toBaseWidget());
+      }
+   } else {
+      auto found = std::find(_backRenderList.begin(), _backRenderList.end(), toBaseWidget());
+      if (found != _backRenderList.end()) {
+         //remove from front render list
+         _backRenderList.erase(found);
+         //add to backrender list
+         //TODO: respect sibling order
+         _frontRenderList.push_back(toBaseWidget());
+      }
+   }
+   //nothing to do
+   isBackRender = _isBackrender;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::_drawLine(const ReyEngine::Line<int>& line, float lineThick, const ReyEngine::ColorRGBA& color) const {
    ReyEngine::drawLine(line + getGlobalPos(), lineThick, color);
 }
@@ -431,6 +473,12 @@ void BaseWidget::_drawCircleSectorLines(const ReyEngine::CircleSector& sector, R
    newSector.center += getGlobalPos() + _renderOffset;
    ReyEngine::drawCircleSectorLines(newSector, color, segments);
 }
+
+///////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::_drawTextureRect(const ReyEngine::ReyTexture &tex, const ReyEngine::Rect<int> &src, const ReyEngine::Pos<int> &dst) const {
+   DrawTextureRec(tex.getTexture(), {(float)src.x, (float)src.y, (float) src.width, (float) src.height}, {(float)dst.x, (float)dst.y}, Colors::none);
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////
 std::string BaseWidget::serialize() {
@@ -685,7 +733,7 @@ void BaseWidget::setModal(bool isModal) {
       std::runtime_error("Error: BaseWidget " + getName() + " does not belong to a canvas!");
    }
    if (isModal) {
-      auto thiz = inheritable_enable_shared_from_this<BaseWidget>::shared_from_this();
+      auto thiz = toBaseWidget();
       canvas.value()->setModal(thiz);
    } else {
       canvas.value()->clearModal();
