@@ -416,3 +416,21 @@ void Window::processUnhandledInput(InputEvent& inputEvent, std::optional<Unhandl
    //first offer up input to modal widget (if any)
    _root->_process_unhandled_input(inputEvent, mouseInput);
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Window::pushRenderTarget(ReyEngine::RenderTarget& newTarget) {
+   if (!renderStack.empty()) {
+      renderStack.top()->endRenderMode();
+   }
+   renderStack.push(&newTarget);
+   renderStack.top()->beginRenderMode();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Window::popRenderTarget() {
+   renderStack.top()->endRenderMode();
+   renderStack.pop();
+   if (!renderStack.empty()) {
+      renderStack.top()->beginRenderMode();
+   }
+}

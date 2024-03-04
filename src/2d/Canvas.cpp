@@ -1,10 +1,11 @@
 #include "Canvas.h"
+#include "Application.h"
 
 using namespace std;
 using namespace ReyEngine;
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::Canvas::renderBegin(ReyEngine::Pos<double>& textureOffset) {
-   target.beginRenderMode();
+   Application::instance().getWindow()->pushRenderTarget(_renderTarget);
    ClearBackground(ReyEngine::Colors::none);
 }
 
@@ -15,8 +16,8 @@ void ReyEngine::Canvas::renderEnd() {
    if (modal){
       modal.value().lock()->render();
    }
-   target.endRenderMode();
-   target.render(getGlobalRect().pos());
+   Application::instance().getWindow()->popRenderTarget();
+   _renderTarget.render(getGlobalRect().pos());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

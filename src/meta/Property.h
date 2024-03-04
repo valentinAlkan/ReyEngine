@@ -114,8 +114,8 @@ struct Property : public BaseProperty {
    }
    virtual T fromString(const std::string& str) = 0;
    void load(const PropertyPrototype& data) override {value = fromString(data.data);}
-   operator const T&() const {return value;}
-   operator T&(){return value;}
+   inline operator const T&() const {return value;}
+   inline operator T&(){return value;}
    void set(const T& newValue){
       value = newValue;
    }

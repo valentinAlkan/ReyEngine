@@ -18,7 +18,7 @@ public:
 
 namespace ReyEngine{
    class Canvas;
-};
+}
 class Window : public EventPublisher {
 public:
    struct WindowResizeEvent : public Event<WindowResizeEvent> {
@@ -55,6 +55,8 @@ public:
    void clearHover();
    void setHover(std::shared_ptr<BaseWidget>&);
 
+   void pushRenderTarget(ReyEngine::RenderTarget&);
+   void popRenderTarget();
    std::optional<std::weak_ptr<BaseWidget>> getHovered();
 protected:
    Window(const std::string& title, int width, int height, const std::vector<Flags>& flags, int targetFPS=60);
@@ -69,6 +71,8 @@ private:
    uint64_t _frameCounter=0;
    std::chrono::milliseconds _keyDownRepeatDelay = std::chrono::milliseconds(500); //how long a key must be held down before it counts as a repeat
    std::chrono::milliseconds _keyDownRepeatRate = std::chrono::milliseconds(25); //how long must pass before each key repeat event is sent
+
+   std::stack<ReyEngine::RenderTarget*> renderStack;
    class ProcessList {
    public:
       std::optional<std::shared_ptr<BaseWidget>> add(std::shared_ptr<BaseWidget> widget);

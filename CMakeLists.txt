@@ -114,9 +114,9 @@ target_include_directories(editor PUBLIC
 target_link_libraries(editor PUBLIC ReyEngine2D ReyEngine3D)
 
 # Test Project
-set(TEST_PROJECT ReyTest)
+set(TEST_PROJECT ReyEngineTest)
 add_executable( ${TEST_PROJECT}
-        test/reyTestMain.cpp
+    test/reyTestMain.cpp
 )
 
 target_link_libraries(${TEST_PROJECT}
@@ -125,9 +125,20 @@ target_link_libraries(${TEST_PROJECT}
     editor
 )
 
+# for testing basic raylib stuff
+add_executable( raylibTest
+    test/raylibTest.cpp
+)
+
+target_link_libraries(raylibTest
+    ReyEngine2D
+)
+
+
 install_file(./test/test.scn ./test/test.scn)
 install_file(./test/posTest.scn ./test/posTest.scn)
 install_file(./test/posTest.scn ./test/serializeTest.scn)
 install_file(./test/characters.png ./test/characters.png)
 install_file(./test/test.lua ./test/test.lua)
 install_file(./test/xmltest.xml ./test/xmltest.xml)
+install_file(./test/spritesheet.png ./test/spritesheet.png)

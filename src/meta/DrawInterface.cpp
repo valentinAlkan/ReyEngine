@@ -110,6 +110,11 @@ void ReyEngine::drawTextRelative(const std::string& text, const Pos<int>& relPos
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::RenderTarget::RenderTarget(){}
+ReyEngine::RenderTarget::~RenderTarget() {
+   if (_texLoaded) {
+      UnloadRenderTexture(_tex);
+   }
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::RenderTarget::setSize(const Size<int> &newSize) {
