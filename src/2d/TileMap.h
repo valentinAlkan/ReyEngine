@@ -91,8 +91,8 @@ namespace ReyEngine {
       Pos<int> getPos(TileCoord) const;
    protected:
       void render() const override;
-      inline void renderBegin(ReyEngine::Pos<double>&) override;
-      inline void renderEnd() override;
+//      inline void renderBegin(ReyEngine::Pos<double>&) override;
+//      inline void renderEnd() override;
       void registerProperties() override;
       void _init() override;
       void _on_rect_changed() override;
