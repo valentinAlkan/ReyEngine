@@ -194,7 +194,8 @@ protected:
    void _drawRectangleRoundedLines(const ReyEngine::Rect<int>& rect, float roundness, int segments, float lineThick, ReyEngine::ColorRGBA color) const;
    void _drawRectangleGradientV(const ReyEngine::Rect<int>& rect, ReyEngine::ColorRGBA color1, ReyEngine::ColorRGBA color2) const;
    void _drawCircleSectorLines(const ReyEngine::CircleSector&, ReyEngine::ColorRGBA, int segments);
-   void _drawTextureRect(const ReyEngine::ReyTexture& tex, const ReyEngine::Rect<int>& src, const ReyEngine::Pos<int>& dst) const;
+   void _drawRenderTarget(const ReyEngine::RenderTarget&, const ReyEngine::Pos<int>&) const;
+   void _drawRenderTargetRect(const ReyEngine::RenderTarget&, const ReyEngine::Rect<int>&, const ReyEngine::Pos<int>&) const;
    void registerProperties() override;
    void _deserialize(PropertyPrototypeMap&);
    RectProperty<int> _rect;

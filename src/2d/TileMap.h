@@ -1,8 +1,9 @@
 #pragma once
-#include "BaseWidget.h"
+#include "Canvas.h"
 #include <map>
 namespace ReyEngine {
-   class TileMap : public BaseWidget {
+   class TileMap : public Canvas {
+   public:
       struct TileCoord : public Vec2<int>{
          TileCoord(int x, int y): Vec2<int>(x,y){}
       };
@@ -77,7 +78,7 @@ namespace ReyEngine {
          void registerProperties() override {}
       };
 
-      REYENGINE_OBJECT(TileMap, BaseWidget)
+      REYENGINE_OBJECT(TileMap, Canvas)
       , PROPERTY_DECLARE(_showGrid, true)
       , PROPERTY_DECLARE(_gridType, GridType::SQUARE)
       , PROPERTY_DECLARE(_gridHeight, 32)
@@ -103,6 +104,6 @@ namespace ReyEngine {
       IntProperty _gridWidth;
       std::map<LayerIndex, TileMapLayer> _layers;
       LayerIndex getNextLayerIndex();
-      RenderTarget _renderTarget;
+//      RenderTarget _renderTarget;
    };
 }

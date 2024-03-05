@@ -6,7 +6,6 @@ using namespace ReyEngine;
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::Canvas::renderBegin(ReyEngine::Pos<double>& textureOffset) {
    Application::instance().getWindow()->pushRenderTarget(_renderTarget);
-   ClearBackground(ReyEngine::Colors::none);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -17,7 +16,7 @@ void ReyEngine::Canvas::renderEnd() {
       modal.value().lock()->render();
    }
    Application::instance().getWindow()->popRenderTarget();
-   _renderTarget.render(getGlobalRect().pos());
+   _drawRenderTargetRect(_renderTarget, Rect<int>(_renderTarget.getSize()), {0,0});
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

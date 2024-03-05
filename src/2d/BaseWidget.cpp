@@ -420,7 +420,7 @@ void BaseWidget::setBackRender(bool _isBackrender) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::_drawLine(const ReyEngine::Line<int>& line, float lineThick, const ReyEngine::ColorRGBA& color) const {
-   ReyEngine::drawLine(line + getGlobalPos(), lineThick, color);
+   ReyEngine::drawLine(line + getGlobalPos() + _renderOffset, lineThick, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -475,9 +475,14 @@ void BaseWidget::_drawCircleSectorLines(const ReyEngine::CircleSector& sector, R
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::_drawTextureRect(const ReyEngine::ReyTexture &tex, const ReyEngine::Rect<int> &src, const ReyEngine::Pos<int> &dst) const {
-   DrawTextureRec(tex.getTexture(), {(float)src.x, (float)src.y, (float) src.width, (float) src.height}, {(float)dst.x, (float)dst.y}, Colors::none);
+void BaseWidget::_drawRenderTargetRect(const ReyEngine::RenderTarget& target, const ReyEngine::Rect<int>& src, const ReyEngine::Pos<int>& dst) const {
+   DrawTextureRec(target.getRenderTexture(), {(float)src.x, (float)src.y, (float) src.width, (float) src.height}, {(float)dst.x + (float)_renderOffset.x, (float)dst.y + (float)_renderOffset.y}, Colors::none);
 }
+///////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::_drawRenderTarget(const ReyEngine::RenderTarget& target, const ReyEngine::Pos<int>& dst) const {
+   DrawTextureRec(target.getRenderTexture(), {0,0, (float)target.getSize().x, (float)target.getSize().y}, {(float)dst.x + (float)_renderOffset.x, (float)dst.y + (float)_renderOffset.y}, Colors::none);
+}
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
