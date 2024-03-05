@@ -9,6 +9,11 @@ void ReyEngine::Canvas::renderBegin(ReyEngine::Pos<double>& textureOffset) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::Canvas::render() const{
+   _renderTarget.clear();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::Canvas::renderEnd() {
    //redraw the modal widget, if any
    auto modal = getModal();

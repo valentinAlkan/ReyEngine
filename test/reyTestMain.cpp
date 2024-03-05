@@ -132,7 +132,7 @@ int main(int argc, char** argv)
          ReyEngine::drawRectangle(rect, COLORS::blue);
       };
 
-      auto process = [&](){
+      auto process = [&](float dt){
          subcontrol->setRect({{control->globalToLocal(InputManager::getMousePos())},{50,50}});
       };
 
@@ -232,7 +232,7 @@ int main(int argc, char** argv)
       };
       boxBounder->setRenderCallback(drawBoundingBox);
 
-      auto process = [&](){
+      auto process = [&](float dt){
          auto globalPos = InputManager::getMousePos();
          // reposition label
          auto newPos = label1->getParent().lock()->globalToLocal(globalPos);
