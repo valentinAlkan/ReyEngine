@@ -338,6 +338,10 @@ namespace ReyEngine {
       explicit ColorRGBA(Color color): r(color.r), g(color.g), b(color.b), a(color.a){}
       inline ColorRGBA& operator=(const Color& rhs){r = rhs.r; g=rhs.g; b=rhs.b; a=rhs.a; return *this;}
       inline operator Color() const {return {r, g, b, a};}
+//      inline void setR(unsigned char _r){r = _r;}
+//      inline void setG(unsigned char _g){g = _g;}
+//      inline void setB(unsigned char _b){b = _b;}
+//      inline void setA(unsigned char _a){a = _a;}
       inline static ColorRGBA random(int alpha = -1){
          auto retval = ColorRGBA(std::rand() % 255, std::rand() % 256, std::rand() % 256, alpha >= 0 ? alpha % 256 : std::rand() % 256);
          return retval;
@@ -456,18 +460,19 @@ namespace ReyEngine {
          explicit RenderTarget();
          ~RenderTarget();
          void setSize(const Size<int>& newSize);
-         inline Size<int> getSize(){return _size;}
+         inline Size<int> getSize() const {return _size;}
          inline void beginRenderMode(){BeginTextureMode(_tex);}
          inline void endRenderMode(){EndTextureMode();}
          inline void clear(Color color=WHITE){ClearBackground(color);}
          inline bool ready(){return _texLoaded;}
-         inline void render(Vec2<float> pos) const{
+         inline const Texture2D& getRenderTexture() const {return _tex.texture;}
+//         inline void render(Vec2<float> pos) const{
             // NOTE: Render texture must be y-flipped due to default OpenGL coordinates (left-bottom)
-            if (_texLoaded) {
-//               DrawTextureRec(_tex.texture, {pos.x, pos.y, (float) _size.x, (float) -_size.y}, {0, 0}, Colors::none);
-               DrawTextureRec(_tex.texture, {0,0, (float) _size.x, (float) -_size.y}, {pos.x, pos.y}, Colors::none);
-            }
-         }
+//            if (_texLoaded) {
+////               DrawTextureRec(_tex.texture, {pos.x, pos.y, (float) _size.x, (float) -_size.y}, {0, 0}, Colors::none);
+//               DrawTextureRec(_tex.texture, {0,0, (float) _size.x, (float) -_size.y}, {pos.x, pos.y}, Colors::none);
+//            }
+//         }
       protected:
          bool _texLoaded = false;
          RenderTexture2D _tex;

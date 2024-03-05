@@ -20,23 +20,22 @@ void TileMap::_on_rect_changed() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void TileMap::renderBegin(ReyEngine::Pos<double> &) {
+void TileMap::renderBegin(ReyEngine::Pos<double>& renderOffset) {
    Application::instance().getWindow()->pushRenderTarget(_renderTarget);
    ClearBackground(ReyEngine::Colors::none);
+   renderOffset -= getGlobalPos();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void TileMap::renderEnd() {
    Application::instance().getWindow()->popRenderTarget();
-
-   auto gpos = getGlobalPos();
-   _renderTarget.render(gpos);
+   _drawRenderTargetRect(_renderTarget, Rect<int>(_renderTarget.getSize()), {0,0});
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void TileMap::render() const {
    //draw grid
-   _drawRectangle(_rect.value.toSizeRect(), Colors::blue);
+//   _drawRectangle(_rect.value.toSizeRect(), Colors::blue);
    if (_showGrid){
       switch (_gridType.value){
          case GridType::SQUARE:{
@@ -67,7 +66,7 @@ void TileMap::render() const {
             auto pos = getPos({x,y});
             _drawText("a", pos, theme->font);
             auto& tex = layer.second.atlas.texture;
-            _drawTextureRect(tex, {_gridWidth * (int)index,_gridHeight,_gridWidth,_gridHeight}, pos);
+            _drawRenderTargetRect(_renderTarget, {_gridWidth * (int)index, _gridHeight,_gridWidth,_gridHeight}, pos);
          }
       }
    }

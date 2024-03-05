@@ -508,32 +508,56 @@ int main(int argc, char** argv)
 
       auto clickLayer = make_shared<Control>("ClickLayer");
       root->addChild(tilemap);
+      auto knownShape = make_shared<Control>("knownShape");
+      auto drawer = make_shared<Control>("drawer");
+      root->addChild(drawer);
+      auto knownShapeLabel = make_shared<Label>("label");
+      knownShape->addChild(knownShapeLabel);
+      knownShape->getTheme()->background.colorPrimary.value.a = 127;
+      root->addChild(knownShape);
       tilemap->addChild(clickLayer);
-      tilemap->setRect({10,10, 500,500});
+      tilemap->setRect({100,100, 500,500});
       clickLayer->getTheme()->background.value = Style::Fill::NONE;
       clickLayer->setAnchoring(BaseWidget::Anchor::FILL);
 //      tilemap->setAnchoring(BaseWidget::Anchor::FILL);
       clickLayer->setBackRender(true);
 
       auto render = [&](){
-         drawRectangle(clickLayer->getGlobalRect(), Colors::red);
+//         cout << "rect = " << clickLayer->getRect() << endl;
+//         cout << "globalrect = " << clickLayer->getGlobalRect() << endl;
+         drawRectangle(clickLayer->getRect(), Colors::red);
       };
       clickLayer->setRenderCallback(render);
 
-      auto unhandledInput = [tilemap](const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) -> Handled {
+      auto drawRender = [&](){
+         DrawLine(0,0,100,100, BLUE);
+      };
+      drawer->setRenderCallback(drawRender);
+
+      auto unhandledInput = [tilemap, clickLayer](const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) -> Handled {
+         auto coords = mouse ? tilemap->getCoord(mouse.value().localPos) : TileMap::TileCoord(-1,-1);
          switch (event.eventId){
-            case InputEventMouseButton::getUniqueEventId():
+            case InputEventMouseButton::getUniqueEventId():{
                const auto& mbEvent = event.toEventType<InputEventMouseButton>();
                if (mbEvent.isDown) return false; //only uppies
-               auto coords = tilemap->getCoord(mouse.value().localPos);
                auto indexOpt = tilemap->getLayer(0).getTileIndex(coords);
                auto index = indexOpt ? indexOpt.value()+1 : 0;
                tilemap->getLayer(0).setTileIndex(coords, index);
-               return true;
+               return true;}
+            case InputEventMouseMotion::getUniqueEventId():
+               const auto& mmEvent = event.toEventType<InputEventMouseMotion>();
+               Application::printDebug() << "Mouse pos " << mouse.value().localPos << " = " << coords << endl;
+               break;
          }
          return false;
       };
       clickLayer->setUnhandledInputCallback(unhandledInput);
+
+      auto knownShapeRectCallback = [knownShape, knownShapeLabel](){
+         knownShapeLabel->setText(knownShape->getGlobalPos());
+      };
+      knownShape->setRectChangedCallback(knownShapeRectCallback);
+      knownShape->setRect(tilemap->getRect());
 
    }
 

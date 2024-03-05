@@ -33,3 +33,8 @@ void Control::_on_mouse_enter() {
 void Control::_on_mouse_exit() {
    if (mouseExitCallback) mouseExitCallback();
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Control::_on_rect_changed() {
+   if (rectChangedCallback) rectChangedCallback();
+}
