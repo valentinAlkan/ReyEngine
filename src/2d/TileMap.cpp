@@ -18,19 +18,19 @@ void TileMap::_on_rect_changed() {
       _renderTarget.setSize(getSize());
    }
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void TileMap::renderBegin(ReyEngine::Pos<double>& renderOffset) {
-   Application::instance().getWindow()->pushRenderTarget(_renderTarget);
-   ClearBackground(ReyEngine::Colors::none);
-   renderOffset -= getGlobalPos();
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void TileMap::renderEnd() {
-   Application::instance().getWindow()->popRenderTarget();
-   _drawRenderTargetRect(_renderTarget, Rect<int>(_renderTarget.getSize()), {0,0});
-}
+//
+///////////////////////////////////////////////////////////////////////////////////////////
+//void TileMap::renderBegin(ReyEngine::Pos<double>& renderOffset) {
+////   Application::instance().getWindow()->pushRenderTarget(_renderTarget);
+////   ClearBackground(ReyEngine::Colors::none);
+////   renderOffset += _rect.value.pos();
+//}
+//
+///////////////////////////////////////////////////////////////////////////////////////////
+//void TileMap::renderEnd() {
+//   Application::instance().getWindow()->popRenderTarget();
+//   _drawRenderTargetRect(_renderTarget, Rect<int>(_renderTarget.getSize()), {0,0});
+//}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void TileMap::render() const {
@@ -40,15 +40,15 @@ void TileMap::render() const {
       switch (_gridType.value){
          case GridType::SQUARE:{
             auto xLineCount = getWidth() / _gridWidth + 1;
-            auto yLineCount = getHeight() / _gridHeight;
+            auto yLineCount = getHeight() / _gridHeight + 1;
             for (int x=0; x<xLineCount; x++) {
                auto _x = x*_gridWidth;
                auto linex = Line<int>({_x, 0}, {_x, getHeight()});
-               _drawLine(linex, 1, theme->background.colorPrimary);
+               _drawLine(linex, 1, theme->background.colorSecondary);
                for (int y = 0; y < yLineCount; y++){
                   auto _y = y*_gridHeight;
                   auto liney = Line<int>({0, _y}, {getWidth(), _y});
-                  _drawLine(liney, 1, theme->background.colorPrimary);
+                  _drawLine(liney, 1, theme->background.colorSecondary);
                }
             }
             break;}
@@ -66,7 +66,7 @@ void TileMap::render() const {
             auto pos = getPos({x,y});
             _drawText("a", pos, theme->font);
             auto& tex = layer.second.atlas.texture;
-            _drawRenderTargetRect(_renderTarget, {_gridWidth * (int)index, _gridHeight,_gridWidth,_gridHeight}, pos);
+            _drawTextureRect(tex, {_gridWidth * (int)index, _gridHeight, _gridWidth, _gridHeight}, pos);
          }
       }
    }

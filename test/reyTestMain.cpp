@@ -522,12 +522,12 @@ int main(int argc, char** argv)
 //      tilemap->setAnchoring(BaseWidget::Anchor::FILL);
       clickLayer->setBackRender(true);
 
-      auto render = [&](){
+      auto clickLayerRender = [&](){
 //         cout << "rect = " << clickLayer->getRect() << endl;
 //         cout << "globalrect = " << clickLayer->getGlobalRect() << endl;
-         drawRectangle(clickLayer->getRect(), Colors::red);
+         drawRectangle(clickLayer->getRect().toSizeRect(), Colors::red);
       };
-      clickLayer->setRenderCallback(render);
+      clickLayer->setRenderCallback(clickLayerRender);
 
       auto drawRender = [&](){
          DrawLine(0,0,100,100, BLUE);

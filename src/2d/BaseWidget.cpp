@@ -476,13 +476,20 @@ void BaseWidget::_drawCircleSectorLines(const ReyEngine::CircleSector& sector, R
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::_drawRenderTargetRect(const ReyEngine::RenderTarget& target, const ReyEngine::Rect<int>& src, const ReyEngine::Pos<int>& dst) const {
-   DrawTextureRec(target.getRenderTexture(), {(float)src.x, (float)src.y, (float) src.width, -(float)src.height}, {(float)dst.x + (float)_renderOffset.x, (float)dst.y + (float)_renderOffset.y}, Colors::none);
+   auto _dst = dst + getGlobalPos();
+   DrawTextureRec(target.getRenderTexture(), {(float)src.x, (float)src.y, (float) src.width, -(float)src.height}, {(float)_dst.x + (float)_renderOffset.x, (float)_dst.y + (float)_renderOffset.y}, Colors::none);
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::_drawRenderTarget(const ReyEngine::RenderTarget& target, const ReyEngine::Pos<int>& dst) const {
    DrawTextureRec(target.getRenderTexture(), {0,0, (float)target.getSize().x, -(float)target.getSize().y}, {(float)dst.x + (float)_renderOffset.x, (float)dst.y + (float)_renderOffset.y}, Colors::none);
 }
 
+///////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::_drawTextureRect(const ReyEngine::ReyTexture& rtex, const ReyEngine::Rect<int>& src, const ReyEngine::Pos<int>& dst) const {
+   auto _dst = dst + getGlobalPos();
+   DrawTextureRec(rtex.getTexture(), {(float)src.x, (float)src.y, (float)src.width, -(float)src.height}, {(float)_dst.x + (float)_renderOffset.x, (float)_dst.y + (float)_renderOffset.y}, Colors::none);
+}
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
