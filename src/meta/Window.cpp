@@ -295,7 +295,7 @@ void Window::exec(){
 
       //draw children on top of their parents
       BeginDrawing();
-      ClearBackground(ReyEngine::Colors::none);
+//      ClearBackground(ReyEngine::Colors::none);
       ReyEngine::Pos<double> texOffset;
       _root->renderChain(texOffset);
 

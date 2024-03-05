@@ -240,8 +240,8 @@ namespace ReyEngine {
       inline Rect(const Rect<float>& r): x((T)r.x), y((T)r.y), width((T)r.width), height((T)r.height){}
       inline Rect(const Rect<double>& r): x((T)r.x), y((T)r.y), width((T)r.width), height((T)r.height){}
       inline explicit Rect(const Vec2<T>&) = delete;
-      inline explicit Rect(const Pos<T>& v): x((T)v.x), y((T)v.y){}
-      inline explicit Rect(const Size<T>& v): width((T)v.x), height((T)v.y){}
+      inline explicit Rect(const Pos<T>& v): x((T)v.x), y((T)v.y), width(0), height(0){}
+      inline explicit Rect(const Size<T>& v): x(0), y(0), width((T)v.x), height((T)v.y){}
       inline operator bool(){return x || y || width || height;}
       inline Rect(const Pos<T>& pos, const Size<T>& size): x((T)pos.x), y((T)pos.y), width((T)size.x), height((T)size.y){}
       inline bool operator!=(const Rect<T>& rhs) const {return rhs.x != x || rhs.y != y || rhs.width != width || rhs.height != height;}
@@ -463,9 +463,9 @@ namespace ReyEngine {
          inline Size<int> getSize() const {return _size;}
          inline void beginRenderMode(){BeginTextureMode(_tex);}
          inline void endRenderMode(){EndTextureMode();}
-         inline void clear(Color color=WHITE){ClearBackground(color);}
-         inline bool ready(){return _texLoaded;}
-         inline const Texture2D& getRenderTexture() const {return _tex.texture;}
+         inline void clear(Color color=WHITE) const {ClearBackground(color);}
+         inline bool ready() const {return _texLoaded;}
+         [[nodiscard]] inline const Texture2D& getRenderTexture() const {return _tex.texture;}
 //         inline void render(Vec2<float> pos) const{
             // NOTE: Render texture must be y-flipped due to default OpenGL coordinates (left-bottom)
 //            if (_texLoaded) {
