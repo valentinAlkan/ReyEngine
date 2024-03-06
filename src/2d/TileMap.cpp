@@ -64,9 +64,13 @@ void TileMap::render() const {
       for (auto& [x, yMap] : layer.second.tiles){
          for (auto& [y, index] : yMap){
             auto pos = getPos({x,y});
-            _drawText("a", pos, theme->font);
+            const auto& srcSize = layer.second.atlas.tileSize;
+            float tileX = srcSize.x * index;
+            float tileY = 0;
+            auto srcRect = Rect<int>(tileX, tileY, srcSize.x, srcSize.y);
+            auto dstRect = Rect<int>(pos, {_gridWidth, _gridHeight});
             auto& tex = layer.second.atlas.texture;
-            _drawTextureRect(tex, {_gridWidth * (int)index, _gridHeight, _gridWidth, _gridHeight}, pos);
+            _drawTextureRect(tex, srcRect, dstRect, 0.0, Colors::none);
          }
       }
    }
@@ -124,7 +128,10 @@ Pos<int> TileMap::getPos(TileCoord coord) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
-
+void TileMap::setGridSize(Size<int> size) {
+   _gridWidth = size.x;
+   _gridHeight = size.y;
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////

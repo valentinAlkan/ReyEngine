@@ -486,9 +486,11 @@ void BaseWidget::_drawRenderTarget(const ReyEngine::RenderTarget& target, const 
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::_drawTextureRect(const ReyEngine::ReyTexture& rtex, const ReyEngine::Rect<int>& src, const ReyEngine::Pos<int>& dst) const {
-   auto _dst = dst + getGlobalPos();
-   DrawTextureRec(rtex.getTexture(), {(float)src.x, (float)src.y, (float)src.width, -(float)src.height}, {(float)_dst.x + (float)_renderOffset.x, (float)_dst.y + (float)_renderOffset.y}, Colors::none);
+void BaseWidget::_drawTextureRect(const ReyEngine::ReyTexture& rtex, const ReyEngine::Rect<int> &src, const ReyEngine::Rect<int> &dst, float rotation, Color tint) const {
+   auto gpos = getGlobalPos();
+   Rectangle _src  = {(float)src.x, (float)src.y, (float)src.width, (float)src.height};
+   Rectangle _dst = {(float)dst.x + (float)_renderOffset.x + gpos.x, (float)dst.y + (float)_renderOffset.y + gpos.y, (float)dst.width, (float)dst.height};
+   DrawTexturePro(rtex.getTexture(), _src, _dst, {0,0}, rotation, Colors::none);
 }
 
 

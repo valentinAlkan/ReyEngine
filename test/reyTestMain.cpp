@@ -496,6 +496,7 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--tileMapTest")){
+      //load tilemap
       auto tilemap = make_shared<TileMap>("TileMap"); //either pass in a rect or do fit texture later
       FileSystem::File file = "test/spritesheet.png";
       auto layerOpt = tilemap->addLayer(file);
@@ -505,6 +506,14 @@ int main(int argc, char** argv)
          Application::printError() << "Tilemap " << file.abs() << " not found" << endl;
          return 1;
       }
+      auto& layer = tilemap->getLayer(layerOpt.value());
+      //set atlas tile size (src tile size)
+      layer.getAtlas().tileSize = {16,16};
+
+      //set tilemap tile size (dest tile size)
+      auto squareEdge = 32;
+      Size<int> gridSize = {squareEdge, squareEdge};
+      tilemap->setGridSize(gridSize);
 
       auto clickLayer = make_shared<Control>("ClickLayer");
       root->addChild(tilemap);
@@ -516,7 +525,7 @@ int main(int argc, char** argv)
       knownShape->getTheme()->background.colorPrimary.value.a = 127;
       root->addChild(knownShape);
       tilemap->addChild(clickLayer);
-      tilemap->setRect({100,100, 500,500});
+      tilemap->setRect({100,100, gridSize.x * 20, gridSize.y * 20});
       clickLayer->getTheme()->background.value = Style::Fill::NONE;
       clickLayer->setAnchoring(BaseWidget::Anchor::FILL);
 //      tilemap->setAnchoring(BaseWidget::Anchor::FILL);
@@ -538,12 +547,18 @@ int main(int argc, char** argv)
          auto coords = mouse ? tilemap->getCoord(mouse.value().localPos) : TileMap::TileCoord(-1,-1);
          switch (event.eventId){
             case InputEventMouseButton::getUniqueEventId():{
+               if (!mouse->isInside) return false;
                const auto& mbEvent = event.toEventType<InputEventMouseButton>();
                if (mbEvent.isDown) return false; //only uppies
                auto indexOpt = tilemap->getLayer(0).getTileIndex(coords);
-               auto index = indexOpt ? indexOpt.value()+1 : 0;
-               tilemap->getLayer(0).setTileIndex(coords, index);
-               return true;}
+               auto isLeft = mbEvent.button == InputInterface::MouseButton::LEFT;
+               auto isRight = mbEvent.button == InputInterface::MouseButton::RIGHT;
+               if (isLeft || isRight) {
+                  auto index = indexOpt ? indexOpt.value() + (isLeft ? 1 : -1) : 0;
+                  tilemap->getLayer(0).setTileIndex(coords, index);
+                  return true;
+               }
+               }
             case InputEventMouseMotion::getUniqueEventId():
                const auto& mmEvent = event.toEventType<InputEventMouseMotion>();
                Application::printDebug() << "Mouse pos " << mouse.value().localPos << " = " << coords << endl;
