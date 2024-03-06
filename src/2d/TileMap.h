@@ -19,8 +19,10 @@ namespace ReyEngine {
          : texture(std::move(other.texture))
          , filePath(std::move(other.filePath))
          {}
+         inline void setTileSize(Size<int> size){tileSize = size;}
          FileSystem::File filePath;
          ReyTexture texture;
+         Size<int> tileSize = {32,32};
       };
 
       struct TileMapLayer{
@@ -89,6 +91,7 @@ namespace ReyEngine {
       TileMapLayer& getLayer(LayerIndex);
       TileCoord getCoord(Pos<int>) const;
       Pos<int> getPos(TileCoord) const;
+      void setGridSize(Size<int>);
    protected:
       void render() const override;
 //      inline void renderBegin(ReyEngine::Pos<double>&) override;

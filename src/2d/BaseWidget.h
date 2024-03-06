@@ -196,7 +196,8 @@ protected:
    void _drawCircleSectorLines(const ReyEngine::CircleSector&, ReyEngine::ColorRGBA, int segments);
    void _drawRenderTarget(const ReyEngine::RenderTarget&, const ReyEngine::Pos<int>&) const;
    void _drawRenderTargetRect(const ReyEngine::RenderTarget&, const ReyEngine::Rect<int>&, const ReyEngine::Pos<int>&) const;
-   void _drawTextureRect(const ReyEngine::ReyTexture&, const ReyEngine::Rect<int>&, const ReyEngine::Pos<int>&) const;
+//   void _drawTextureRect(const ReyEngine::ReyTexture&, const ReyEngine::Rect<int>&, const ReyEngine::Pos<int>&) const;
+   void _drawTextureRect(const ReyEngine::ReyTexture&, const ReyEngine::Rect<int>& src, const ReyEngine::Rect<int>& dst, float rotation, Color tint) const;
    void registerProperties() override;
    void _deserialize(PropertyPrototypeMap&);
    RectProperty<int> _rect;
