@@ -134,6 +134,34 @@ void TileMap::setGridSize(Size<int> size) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+Handled TileMap::_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
+   if (mouse) {
+      switch (event.eventId) {
+         case InputEventMouseMotion::getUniqueEventId(): {
+            auto mmEvent = event.toEventType<InputEventMouseMotion>();
+            auto cellPos = getCoord(mmEvent.globalPos);
+            if (cellPos != currentHover) {
+               currentHover = cellPos;
+               EventTileMapCellHovered event(toEventPublisher(), currentHover, mouse.value().localPos);
+               publish(event);
+               return true;
+            }
+         break;
+         }
+         case InputEventMouseButton::getUniqueEventId():
+            auto mbEvent = event.toEventType<InputEventMouseButton>();
+            if (mbEvent.isDown && mbEvent.button == InputInterface::MouseButton::LEFT){
+               EventTileMapCellHovered event(toEventPublisher(), currentHover, mouse.value().localPos);
+               publish(event);
+               return true;
+            }
+         break;
+      }
+   }
+   return false;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 std::optional<TileMap::TileIndex> TileMap::TileMapLayer::getTileIndex(const TileCoord &pos) {

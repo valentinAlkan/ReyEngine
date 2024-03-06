@@ -75,6 +75,7 @@ namespace ReyEngine {
       inline Vec2& operator/=(const Vec2& rhs){x /= rhs.x; y /= rhs.y; return *this;}
       inline Vec2& operator=(const Vec2& rhs){x = rhs.x; y=rhs.y; return *this;}
       inline bool operator==(const Vec2& rhs){return x==rhs.x && y==rhs.y;}
+      inline bool operator!=(const Vec2& rhs){return x!=rhs.x || y!=rhs.y;}
       inline Vec2& operator-(){x = -x; y =-y; return *this;}
       inline void operator=(Size<T>&) = delete;
       inline void operator=(Pos<T>&) = delete;
