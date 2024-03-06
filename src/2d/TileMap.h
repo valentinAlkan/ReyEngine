@@ -80,11 +80,25 @@ namespace ReyEngine {
          void registerProperties() override {}
       };
 
+      struct EventTileMapCellClicked : public Event<EventTileMapCellClicked>{
+         EVENT_CTOR_SIMPLE(EventTileMapCellClicked, Event<EventTileMapCellClicked>, const TileCoord& cellPos, const Pos<int>& localPos), cellPos(cellPos), localPos(localPos){
+         }
+         const TileCoord cellPos;
+         const Pos<int> localPos;
+      };
+
+      struct EventTileMapCellHovered : public Event<EventTileMapCellHovered>{
+         EVENT_CTOR_SIMPLE(EventTileMapCellHovered, Event<EventTileMapCellHovered>, const TileCoord& cellPos, const Pos<int>& localPos), cellPos(cellPos), localPos(localPos){}
+         const TileCoord cellPos;
+         const Pos<int> localPos;
+      };
+
       REYENGINE_OBJECT(TileMap, Canvas)
       , PROPERTY_DECLARE(_showGrid, true)
       , PROPERTY_DECLARE(_gridType, GridType::SQUARE)
       , PROPERTY_DECLARE(_gridHeight, 32)
       , PROPERTY_DECLARE(_gridWidth, 32)
+      , currentHover(-1,-1)
       {}
    public:
       std::optional<LayerIndex> addLayer(const FileSystem::File&);
@@ -96,6 +110,7 @@ namespace ReyEngine {
       void render() const override;
 //      inline void renderBegin(ReyEngine::Pos<double>&) override;
 //      inline void renderEnd() override;
+      virtual Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
       void registerProperties() override;
       void _init() override;
       void _on_rect_changed() override;
@@ -107,6 +122,7 @@ namespace ReyEngine {
       IntProperty _gridWidth;
       std::map<LayerIndex, TileMapLayer> _layers;
       LayerIndex getNextLayerIndex();
+      TileCoord currentHover;
 //      RenderTarget _renderTarget;
    };
 }
