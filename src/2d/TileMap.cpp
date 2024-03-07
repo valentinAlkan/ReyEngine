@@ -18,34 +18,38 @@ void TileMap::_on_rect_changed() {
       _renderTarget.setSize(getSize());
    }
 }
-//
-///////////////////////////////////////////////////////////////////////////////////////////
-//void TileMap::renderBegin(ReyEngine::Pos<double>& renderOffset) {
-////   Application::instance().getWindow()->pushRenderTarget(_renderTarget);
-////   ClearBackground(ReyEngine::Colors::none);
-////   renderOffset += _rect.value.pos();
-//}
-//
-///////////////////////////////////////////////////////////////////////////////////////////
-//void TileMap::renderEnd() {
-//   Application::instance().getWindow()->popRenderTarget();
-//   _drawRenderTargetRect(_renderTarget, Rect<int>(_renderTarget.getSize()), {0,0});
-//}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void TileMap::render() const {
-   //draw grid
-//   _drawRectangle(_rect.value.toSizeRect(), Colors::blue);
+   //draw all tiles in the layer
+   for (auto& layer : _layers){
+      for (auto& [x, yMap] : layer.second.tiles){
+         for (auto& [y, index] : yMap){
+            auto pos = getCellPos({x,y});
+            const auto& srcSize = layer.second.atlas.tileSize;
+            auto srcRectOpt = layer.second.atlas.getTile(index);
+            if (srcRectOpt) {
+               auto& srcRect = srcRectOpt.value();
+               auto dstRect = Rect<int>(pos, {_gridWidth, _gridHeight});
+               auto &tex = layer.second.atlas.texture;
+               _drawTextureRect(tex, srcRect, dstRect, 0.0, Colors::none);
+            }
+         }
+      }
+   }
+
+   //draw grid on top of tiles
    if (_showGrid){
+      _drawRectangleLines(_rect.value.toSizeRect(), 1.0, theme->background.colorSecondary);
       switch (_gridType.value){
          case GridType::SQUARE:{
-            auto xLineCount = getWidth() / _gridWidth + 1;
-            auto yLineCount = getHeight() / _gridHeight + 1;
-            for (int x=0; x<xLineCount; x++) {
+            auto xLineCount = getWidth() / _gridWidth;
+            auto yLineCount = getHeight() / _gridHeight;
+            for (int x=1; x<xLineCount; x++) {
                auto _x = x*_gridWidth;
                auto linex = Line<int>({_x, 0}, {_x, getHeight()});
                _drawLine(linex, 1, theme->background.colorSecondary);
-               for (int y = 0; y < yLineCount; y++){
+               for (int y = 1; y < yLineCount +1; y++){
                   auto _y = y*_gridHeight;
                   auto liney = Line<int>({0, _y}, {getWidth(), _y});
                   _drawLine(liney, 1, theme->background.colorSecondary);
@@ -56,22 +60,6 @@ void TileMap::render() const {
             break;
          case GridType::SQUARE_OFFSET:
             break;
-      }
-   }
-
-   //draw all tiles in the layer
-   for (auto& layer : _layers){
-      for (auto& [x, yMap] : layer.second.tiles){
-         for (auto& [y, index] : yMap){
-            auto pos = getPos({x,y});
-            const auto& srcSize = layer.second.atlas.tileSize;
-            float tileX = srcSize.x * index;
-            float tileY = 0;
-            auto srcRect = Rect<int>(tileX, tileY, srcSize.x, srcSize.y);
-            auto dstRect = Rect<int>(pos, {_gridWidth, _gridHeight});
-            auto& tex = layer.second.atlas.texture;
-            _drawTextureRect(tex, srcRect, dstRect, 0.0, Colors::none);
-         }
       }
    }
 }
@@ -114,14 +102,14 @@ TileMap::TileMapLayer& TileMap::getLayer(ReyEngine::TileMap::LayerIndex idx) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-TileMap::TileCoord TileMap::getCoord(Pos<int> localPos) const {
+TileMap::TileCoord TileMap::getCell(Pos<int> localPos) const {
    auto x = localPos.x / _gridWidth.value;
    auto y = localPos.y / _gridHeight.value;
    return {x,y};
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Pos<int> TileMap::getPos(TileCoord coord) const {
+Pos<int> TileMap::getCellPos(TileCoord coord) const {
    auto x = coord.x * _gridWidth.value;
    auto y = coord.y * _gridHeight.value;
    return {x,y};
@@ -135,14 +123,14 @@ void TileMap::setGridSize(Size<int> size) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Handled TileMap::_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
-   if (mouse) {
+   if (mouse && mouse->isInside) {
       switch (event.eventId) {
          case InputEventMouseMotion::getUniqueEventId(): {
             auto mmEvent = event.toEventType<InputEventMouseMotion>();
-            auto cellPos = getCoord(mmEvent.globalPos);
+            auto cellPos = getCell(mmEvent.globalPos);
             if (cellPos != currentHover) {
                currentHover = cellPos;
-               EventTileMapCellHovered event(toEventPublisher(), currentHover, mouse.value().localPos);
+               EventTileMapCellHovered event(toEventPublisher(), currentHover, {getCellPos(currentHover), {_gridWidth, _gridHeight}});
                publish(event);
                return true;
             }
@@ -151,7 +139,7 @@ Handled TileMap::_unhandled_input(const InputEvent& event, const std::optional<U
          case InputEventMouseButton::getUniqueEventId():
             auto mbEvent = event.toEventType<InputEventMouseButton>();
             if (mbEvent.isDown && mbEvent.button == InputInterface::MouseButton::LEFT){
-               EventTileMapCellHovered event(toEventPublisher(), currentHover, mouse.value().localPos);
+               EventTileMapCellClicked event(toEventPublisher(), currentHover, {getCellPos(currentHover), {_gridWidth, _gridHeight}});
                publish(event);
                return true;
             }
@@ -172,6 +160,21 @@ std::optional<TileMap::TileIndex> TileMap::TileMapLayer::getTileIndex(const Tile
    }
    return nullopt;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void TileMap::TileMapLayer::removeTileIndex(const TileCoord &pos) {
+   auto xFound = tiles.find(pos.x);
+   if (xFound == tiles.end()) return;
+   auto& ymap = xFound->second;
+   auto yFound = ymap.find(pos.y);
+   if (yFound == ymap.end()) return;
+   ymap.erase(yFound);
+   //if the ymap is now empty, delete it
+   if (xFound->second.empty()){
+      tiles.erase(xFound);
+   }
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void TileMap::TileMapLayer::setTileIndex(const TileCoord& coords, TileIndex index) {

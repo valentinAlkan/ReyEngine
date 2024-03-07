@@ -23,6 +23,7 @@
 #include "Config.h"
 #include "XML.h"
 #include "TileMap.h"
+#include "TextureRect.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -495,85 +496,131 @@ int main(int argc, char** argv)
       root->addChild(animatedSprite);
    }
 
-   else if (args.getArg("--tileMapTest")){
-      //load tilemap
-      auto tilemap = make_shared<TileMap>("TileMap"); //either pass in a rect or do fit texture later
-      FileSystem::File file = "test/spritesheet.png";
-      auto layerOpt = tilemap->addLayer(file);
+   else if (args.getArg("--tileMapTest")) {
+      //load destination tilemap
+      auto tileMap = make_shared<TileMap>("destMap");
+      FileSystem::File spriteSheet = "test/spritesheet.png";
+      auto layerOpt = tileMap->addLayer(spriteSheet);
       if (layerOpt) {
-         Application::printDebug() << "Tilemap added layer " << layerOpt.value() << " using sprite sheet " << tilemap->getLayer(layerOpt.value()).getAtlas().filePath.abs() << endl;
+         Application::printDebug() << "Tilemap added layer " << layerOpt.value() << " using sprite sheet "
+                                   << tileMap->getLayer(layerOpt.value()).getAtlas().filePath.abs() << endl;
       } else {
-         Application::printError() << "Tilemap " << file.abs() << " not found" << endl;
+         Application::printError() << "Tilemap " << spriteSheet.abs() << " not found" << endl;
          return 1;
       }
-      auto& layer = tilemap->getLayer(layerOpt.value());
+      layerOpt = tileMap->addLayer(spriteSheet);
+      if (layerOpt) {
+         Application::printDebug() << "Tilemap added layer " << layerOpt.value() << " using sprite sheet "
+                                   << tileMap->getLayer(layerOpt.value()).getAtlas().filePath.abs() << endl;
+      } else {
+         Application::printError() << "Tilemap " << spriteSheet.abs() << " not found" << endl;
+         return 1;
+      }
+
+      auto& cursorLayer = tileMap->getLayer(1);
+      auto& paintLayer = tileMap->getLayer(0);
       //set atlas tile size (src tile size)
-      layer.getAtlas().tileSize = {16,16};
+      cursorLayer.getAtlas().tileSize = {16, 16};
+      paintLayer.getAtlas().tileSize = {16, 16};
 
       //set tilemap tile size (dest tile size)
       auto squareEdge = 32;
       Size<int> gridSize = {squareEdge, squareEdge};
-      tilemap->setGridSize(gridSize);
+      tileMap->setGridSize(gridSize);
 
-      auto clickLayer = make_shared<Control>("ClickLayer");
-      root->addChild(tilemap);
-      auto knownShape = make_shared<Control>("knownShape");
-      auto drawer = make_shared<Control>("drawer");
-      root->addChild(drawer);
-      auto knownShapeLabel = make_shared<Label>("label");
-      knownShape->addChild(knownShapeLabel);
-      knownShape->getTheme()->background.colorPrimary.value.a = 127;
-      root->addChild(knownShape);
-      tilemap->addChild(clickLayer);
-      tilemap->setRect({100,100, gridSize.x * 20, gridSize.y * 20});
-      clickLayer->getTheme()->background.value = Style::Fill::NONE;
-      clickLayer->setAnchoring(BaseWidget::Anchor::FILL);
-//      tilemap->setAnchoring(BaseWidget::Anchor::FILL);
-      clickLayer->setBackRender(true);
+      root->addChild(tileMap);
+      tileMap->setRect({5, 5, gridSize.x * 20, gridSize.y * 20});
 
-      auto clickLayerRender = [&](){
-//         cout << "rect = " << clickLayer->getRect() << endl;
-//         cout << "globalrect = " << clickLayer->getGlobalRect() << endl;
-         drawRectangle(clickLayer->getRect().toSizeRect(), Colors::red);
-      };
-      clickLayer->setRenderCallback(clickLayerRender);
+      //source texture
+      auto srcTexRect = make_shared<TextureRect>("sourceTexRect");
+      srcTexRect->setRect({tileMap->getPos().x + tileMap->getWidth() + 30,5,100,100});
+      srcTexRect->setTexture(spriteSheet);
+      srcTexRect->fitTexture();
+      //input forwarderers
+      auto srcInputFwd = make_shared<Control>("srcInputFwd");
+      auto dstInputFwd = make_shared<Control>("dstInputFwd");
+      srcTexRect->addChild(srcInputFwd);
+      srcInputFwd->setAnchoring(BaseWidget::Anchor::FILL);
+      tileMap->addChild(dstInputFwd);
+      dstInputFwd->setAnchoring(BaseWidget::Anchor::FILL);
+      dstInputFwd->getTheme()->background = Style::Fill::NONE;
 
-      auto drawRender = [&](){
-         DrawLine(0,0,100,100, BLUE);
-      };
-      drawer->setRenderCallback(drawRender);
 
-      auto unhandledInput = [tilemap, clickLayer](const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) -> Handled {
-         auto coords = mouse ? tilemap->getCoord(mouse.value().localPos) : TileMap::TileCoord(-1,-1);
-         switch (event.eventId){
-            case InputEventMouseButton::getUniqueEventId():{
-               if (!mouse->isInside) return false;
-               const auto& mbEvent = event.toEventType<InputEventMouseButton>();
-               if (mbEvent.isDown) return false; //only uppies
-               auto indexOpt = tilemap->getLayer(0).getTileIndex(coords);
-               auto isLeft = mbEvent.button == InputInterface::MouseButton::LEFT;
-               auto isRight = mbEvent.button == InputInterface::MouseButton::RIGHT;
-               if (isLeft || isRight) {
-                  auto index = indexOpt ? indexOpt.value() + (isLeft ? 1 : -1) : 0;
-                  tilemap->getLayer(0).setTileIndex(coords, index);
-                  return true;
-               }
-               }
-            case InputEventMouseMotion::getUniqueEventId():
-               const auto& mmEvent = event.toEventType<InputEventMouseMotion>();
-               Application::printDebug() << "Mouse pos " << mouse.value().localPos << " = " << coords << endl;
-               break;
+      //set tilemap tile size (dest tile size)
+      root->addChild(srcTexRect);
+
+      //some globals
+      Rect<int> hoverRect;
+      Rect<int> selectRect;
+      static constexpr int SRC_TILE_SIZE = 16;
+      TileMap::TileIndex selectedIndex = -1;
+
+      //source texture input callback
+      auto cbSrcInput = [&](const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) -> bool {
+         if (mouse && mouse->isInside) {
+            auto subrect = srcTexRect->getRect().getSubRect({SRC_TILE_SIZE, SRC_TILE_SIZE}, mouse->localPos);
+            switch (event.eventId){
+               case InputEventMouseMotion::getUniqueEventId():{
+                  hoverRect = subrect;
+                  break;}
+               case InputEventMouseButton::getUniqueEventId():
+                  auto mbEvent = event.toEventType<InputEventMouseButton>();
+                  if (!mbEvent.isDown){
+                     selectRect = subrect;
+                     auto optIndex = tileMap->getLayer(0).getAtlas().getTileIndex(selectRect.pos());
+                     if (optIndex){
+                        selectedIndex = optIndex.value();
+                     }
+                     return true;
+                  }
+                  break;
+            }
          }
          return false;
       };
-      clickLayer->setUnhandledInputCallback(unhandledInput);
+      srcInputFwd->setUnhandledInputCallback(cbSrcInput);
+      srcInputFwd->setMouseExitCallback([&](){hoverRect.clear();});
 
-      auto knownShapeRectCallback = [knownShape, knownShapeLabel](){
-         knownShapeLabel->setText(knownShape->getGlobalPos());
+      //make a simple control that can draw stuff on our texture rect
+      auto renderCB = [&](){
+         if (hoverRect){
+            ReyEngine::drawRectangleLines(hoverRect + srcTexRect->getGlobalRect().pos(), 2.0, Colors::yellow);
+         }
+         if (selectRect) {
+            ReyEngine::drawRectangleLines(selectRect + srcTexRect->getGlobalRect().pos(), 2.0, Colors::red);
+         }
       };
-      knownShape->setRectChangedCallback(knownShapeRectCallback);
-      knownShape->setRect(tilemap->getRect());
+      srcInputFwd->setRenderCallback(renderCB);
 
+      //add a callback to paint the tile into the tilemap
+      TileMap::TileCoord cursorTile(-1, -1);
+      auto cbTileMapHover = [&](const TileMap::EventTileMapCellHovered& event){
+         if (selectedIndex != -1){
+            if (InputManager::isMouseButtonDown(InputInterface::MouseButton::LEFT)){
+               //paint
+               paintLayer.setTileIndex(event.cellCoord, selectedIndex);
+            } else {
+               //erase old tile
+               cursorLayer.removeTileIndex(cursorTile);
+               //paint the tile temporarily
+               cursorLayer.setTileIndex(event.cellCoord, selectedIndex);
+               cursorTile = event.cellCoord;
+            }
+         }
+      };
+      auto cbTileMapClick = [&](const TileMap::EventTileMapCellClicked& event) {
+         if (selectedIndex != -1) {
+            //paint the tile on the paint layer
+            paintLayer.setTileIndex(event.cellCoord, selectedIndex);
+         }
+      };
+      dstInputFwd->subscribe<TileMap::EventTileMapCellHovered>(tileMap, cbTileMapHover);
+      dstInputFwd->subscribe<TileMap::EventTileMapCellClicked>(tileMap, cbTileMapClick);
+      //delete cursor tile
+      auto cbDstMouseExit = [&](){
+         cursorLayer.removeTileIndex(cursorTile);
+      };
+      dstInputFwd->setMouseExitCallback(cbDstMouseExit);
    }
 
    else if (args.getArg("--buttonTest")) {
@@ -879,7 +926,7 @@ int main(int argc, char** argv)
          }
       };
 
-      auto cbInput = [&](const InputEvent& event, std::optional<UnhandledMouseInput> mouse) -> bool {
+      auto cbInput = [&](const InputEvent& event, const std::optional<UnhandledMouseInput> mouse) -> bool {
          switch (event.eventId) {
             case InputEventMouseButton::getUniqueEventId(): {
                auto &mbEvent = event.toEventType<InputEventMouseButton>();

@@ -76,6 +76,7 @@ add_library(ReyEngine2D STATIC
     src/2d/Tree.cpp
     src/2d/TileMap.cpp
     src/2d/LineEdit.cpp
+    src/2d/TextureRect.cpp
     ${CUSTOM_SOURCES}
 )
 

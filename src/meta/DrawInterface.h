@@ -217,6 +217,7 @@ namespace ReyEngine {
    struct Size : public Vec2<T>{
       inline Size(): Vec2<T>(){}
       inline Size(const T& x, const T& y) : Vec2<T>(x, y){}
+      inline Size(const T edge): Size(edge, edge){}
       inline Size(const Vector2& v)     : Vec2<T>(v.x,v.y){}
       inline Size(const Vec2<int>& v)   : Vec2<T>(v.x,v.y){}
       inline Size(const Size<int>& v)   : Vec2<T>(v){}
@@ -303,7 +304,33 @@ namespace ReyEngine {
       [[nodiscard]] inline const Rect<T> toSizeRect() const {return {0,0,width, height};}
       inline void setSize(const ReyEngine::Size<T>& size){width = size.x; height = size.y;}
       inline void setPos(const ReyEngine::Pos<T>& pos){x = pos.x; y = pos.y;}
-
+      //Get the sub-rectangle (of size Size) that contains pos Pos. Think tilemaps.
+      inline Rect getSubRect(const Size<int>& size, const Pos<int>& pos){
+         auto subx = pos.x / size.x;
+         auto suby = pos.y / size.y;
+         return {subx * size.x, suby*size.y, size.x, size.y};
+      }
+      //returns the coordinates of the above subrect in grid-form (ie the 3rd subrect from the left would be {3,0}
+      inline Vec2<T> getSubRectCoord(const Size<int>& size, const Pos<int>& pos) const {
+         auto subx = pos.x / size.x;
+         auto suby = pos.y / size.y;
+         return {subx, suby};
+      }
+      //returns the 'index' of a subrect, as if it were read left-to-right, top-to-bottom
+      inline int getSubRectIndex(const Size<int>& size, const Pos<int>& pos) const {
+         auto coord = getSubRectCoord(size, pos);
+         auto columnCount = width / size.x;
+         return coord.y * columnCount + coord.x;
+      }
+      inline Rect getSubRect(const Size<int>& size, int index) const {
+         auto columnCount = width / size.x;
+         int coordY = index / columnCount;
+         int coordX = index % columnCount;
+         auto posX = coordX * size.x;
+         auto posY = coordY * size.y;
+         return {posX, posY, size.x, size.y};
+      }
+      inline void clear(){x=0,y=0,width=0;height=0;}
       T x;
       T y;
       T width;
@@ -430,7 +457,7 @@ namespace ReyEngine {
       Size<int> size;
    protected:
       Texture2D _tex;
-      bool _texLoaded;
+      bool _texLoaded = false;
    };
 
    Pos<double> getScreenCenter();
