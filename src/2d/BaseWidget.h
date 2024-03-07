@@ -81,7 +81,7 @@ public:
    ReyEngine::Rect<int> getGlobalRect() const {auto globalPos = getGlobalPos(); return {globalPos.x, globalPos.y, getSize().x, getSize().y};}
    ReyEngine::Pos<int> getGlobalPos() const;
    ReyEngine::Size<int> getChildBoundingBox() const; //get the smallest rectangle that contains all children, starting from 0,0. Does not include grandchildren.
-   ReyEngine::Pos<int> getPos() const {return {_rect.value.x, _rect.value.y};}
+   ReyEngine::Pos<int> getPos() const {return {_rect.value.x + _virtualInputOffset.x, _rect.value.y + _virtualInputOffset.y};}
    ReyEngine::Size<int> getSize() const {return getRect().size();}
    int getWidth() const {return _rect.value.width;}
    int getHeight() const {return _rect.value.height;}
@@ -261,6 +261,7 @@ protected:
    Handled _process_unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&); //pass input to children if they want it and then process it for ourselves if necessary
    Handled _process_unhandled_editor_input(const InputEvent&, const std::optional<UnhandledMouseInput>&); //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)
    InputFilter inputFilter = InputFilter::INPUT_FILTER_PASS_AND_PROCESS;
+   ReyEngine::Pos<int> _virtualInputOffset; //for things that aren't rendered in their actual positions (like canvases)
 
    //theme
    std::shared_ptr<Style::Theme> theme;

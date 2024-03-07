@@ -73,3 +73,10 @@ void Canvas::clearModal() {
    }
    _modal.reset();
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::_on_rect_changed() {
+   _renderTarget.setSize(_rect.value.size());
+   auto gpos = getGlobalPos();
+//   _virtualInputOffset = Pos<int>(gpos.x, gpos.y);
+}

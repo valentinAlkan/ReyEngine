@@ -14,6 +14,7 @@ void TileMap::_init() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void TileMap::_on_rect_changed() {
+   Canvas::_on_rect_changed();
    if (_ready) {
       _renderTarget.setSize(getSize());
    }
@@ -23,10 +24,13 @@ void TileMap::_on_rect_changed() {
 void TileMap::render() const {
    //draw all tiles in the layer
    for (auto& layer : _layers){
+//      if (!layer.second.needsUpdate()) continue;
+//      const_cast<bool&>(layer.second._needsUpdate) = false;
+//      const_cast<bool&>(layer.second.atlas._needsUpdate) = false;
       for (auto& [x, yMap] : layer.second.tiles){
          for (auto& [y, index] : yMap){
             auto pos = getCellPos({x,y});
-            const auto& srcSize = layer.second.atlas.tileSize;
+            const auto& srcSize = layer.second.atlas.getTileSize();
             auto srcRectOpt = layer.second.atlas.getTile(index);
             if (srcRectOpt) {
                auto& srcRect = srcRectOpt.value();
@@ -102,23 +106,24 @@ TileMap::TileMapLayer& TileMap::getLayer(ReyEngine::TileMap::LayerIndex idx) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-TileMap::TileCoord TileMap::getCell(Pos<int> localPos) const {
-   auto x = localPos.x / _gridWidth.value;
-   auto y = localPos.y / _gridHeight.value;
-   return {x,y};
+TileMap::TileCoord TileMap::getCell(const Pos<int>& localPos) const {
+   auto vec2 = _rect.value.toSizeRect().getSubRectCoord({_gridWidth.value, _gridHeight.value}, localPos);
+   return {vec2.x, vec2.y};
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Pos<int> TileMap::getCellPos(TileCoord coord) const {
+Pos<int> TileMap::getCellPos(const TileCoord& coord) const {
    auto x = coord.x * _gridWidth.value;
    auto y = coord.y * _gridHeight.value;
    return {x,y};
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
-void TileMap::setGridSize(Size<int> size) {
+void TileMap::setGridSize(const Size<int>& size) {
    _gridWidth = size.x;
    _gridHeight = size.y;
+   updateAllLayers();
+
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -128,6 +133,8 @@ Handled TileMap::_unhandled_input(const InputEvent& event, const std::optional<U
          case InputEventMouseMotion::getUniqueEventId(): {
             auto mmEvent = event.toEventType<InputEventMouseMotion>();
             auto cellPos = getCell(mmEvent.globalPos);
+            float dt = (float)cellPos.x - ((float)mouse->localPos.x / (float)_gridWidth.value);
+            cout << mouse->localPos << " = " << cellPos << " (dx: " << dt << endl;
             if (cellPos != currentHover) {
                currentHover = cellPos;
                EventTileMapCellHovered event(toEventPublisher(), currentHover, {getCellPos(currentHover), {_gridWidth, _gridHeight}});
@@ -148,6 +155,12 @@ Handled TileMap::_unhandled_input(const InputEvent& event, const std::optional<U
    }
    return false;
 }
+/////////////////////////////////////////////////////////////////////////////////////////
+void TileMap::updateAllLayers() {
+   for (auto& [layerIndex, layer] : _layers) {
+      layer._needsUpdate = true;
+   }
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -156,7 +169,7 @@ std::optional<TileMap::TileIndex> TileMap::TileMapLayer::getTileIndex(const Tile
    try {
       return tiles.at(pos.x).at(pos.y);
    } catch (const out_of_range& e) {
-      Application::printDebug() << "Tile layer " << atlas.filePath.str() << " has no index at coordinates " << pos << endl;
+      Application::printDebug() << "Tile layer " << atlas._filePath.str() << " has no index at coordinates " << pos << endl;
    }
    return nullopt;
 }
@@ -173,12 +186,14 @@ void TileMap::TileMapLayer::removeTileIndex(const TileCoord &pos) {
    if (xFound->second.empty()){
       tiles.erase(xFound);
    }
+   _needsUpdate = true;
 }
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void TileMap::TileMapLayer::setTileIndex(const TileCoord& coords, TileIndex index) {
    tiles[coords.x][coords.y] = index;
+   _needsUpdate = true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

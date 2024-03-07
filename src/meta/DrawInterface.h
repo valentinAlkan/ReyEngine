@@ -494,13 +494,6 @@ namespace ReyEngine {
          inline void clear(Color color=WHITE) const {ClearBackground(color);}
          inline bool ready() const {return _texLoaded;}
          [[nodiscard]] inline const Texture2D& getRenderTexture() const {return _tex.texture;}
-//         inline void render(Vec2<float> pos) const{
-            // NOTE: Render texture must be y-flipped due to default OpenGL coordinates (left-bottom)
-//            if (_texLoaded) {
-////               DrawTextureRec(_tex.texture, {pos.x, pos.y, (float) _size.x, (float) -_size.y}, {0, 0}, Colors::none);
-//               DrawTextureRec(_tex.texture, {0,0, (float) _size.x, (float) -_size.y}, {pos.x, pos.y}, Colors::none);
-//            }
-//         }
       protected:
          bool _texLoaded = false;
          RenderTexture2D _tex;
