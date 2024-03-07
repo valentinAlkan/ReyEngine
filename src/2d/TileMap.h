@@ -4,8 +4,25 @@
 namespace ReyEngine {
    class TileMap : public Canvas {
    public:
-      struct TileCoord : public Vec2<int>{
-         TileCoord(int x, int y): Vec2<int>(x,y){}
+      struct TileCoord : public Vec2<int> {
+           TileCoord(int x, int y): Vec2(x,y){}
+//         TileCoord(int x, int y): x(x),y(y){}
+//         inline explicit operator bool() const {return x || y;}
+//         inline TileCoord operator+(const TileCoord& rhs) const {TileCoord val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
+//         inline TileCoord operator-(const TileCoord& rhs) const {TileCoord val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
+//         inline TileCoord& operator+=(const TileCoord& rhs){x += rhs.x; y += rhs.y; return *this;}
+//         inline TileCoord& operator-=(const TileCoord& rhs){x -= rhs.x; y -= rhs.y; return *this;}
+//         inline TileCoord& operator*=(const TileCoord& rhs){x *= rhs.x; y *= rhs.y; return *this;}
+//         inline TileCoord& operator/=(const TileCoord& rhs){x /= rhs.x; y /= rhs.y; return *this;}
+//         inline TileCoord& operator=(const TileCoord& rhs){x = rhs.x; y=rhs.y; return *this;}
+//         inline bool operator==(const TileCoord& rhs){return x==rhs.x && y==rhs.y;}
+//         inline bool operator!=(const TileCoord& rhs){return x!=rhs.x || y!=rhs.y;}
+//         inline TileCoord& operator-(){x = -x; y =-y; return *this;}
+////         inline static std::vector<T> fromString(const std::string& s){return Vec<T>::fromString(2, s);};
+////         std::ostream& operator<<(std::ostream& os) const {os << Vec<T>::toString(); return os;}
+//         friend std::ostream& operator<<(std::ostream& os, Vec2<T> v) {os << v.toString(); return os;}
+//         int x;
+//         int y;
       };
       using TileIndex = uint64_t;
       using LayerIndex = uint64_t;
@@ -14,15 +31,39 @@ namespace ReyEngine {
          SpriteAtlas(const FileSystem::File& file)
          : texture(file)
          , filePath(file)
-         {}
+         {
+            setTileSize(tileSize);
+         }
          SpriteAtlas(SpriteAtlas&& other)
          : texture(std::move(other.texture))
          , filePath(std::move(other.filePath))
+         , tileSize(std::move(other.tileSize))
+         , rowCount(std::move(other.rowCount))
+         , columnCount(std::move(other.columnCount))
          {}
-         inline void setTileSize(Size<int> size){tileSize = size;}
+         inline void setTileSize(Size<int> size){
+            tileSize = size;
+            rowCount = texture.size.x / tileSize.x;
+            columnCount = texture.size.y / tileSize.y;
+         }
          FileSystem::File filePath;
          ReyTexture texture;
          Size<int> tileSize = {32,32};
+         int rowCount = 0;
+         int columnCount = 0;
+         std::optional<TileIndex> getTileIndex(const Pos<int>& pos) const {
+            //find the index of the tile at the position
+            auto rect = Rect<int>(texture.size);
+            if (!rect.isInside(pos)) return std::nullopt;
+            return rect.getSubRectIndex(tileSize, pos);
+         }
+         std::optional<Rect<int>> getTile(const LayerIndex index) const {
+            //find the rect of the tile at the index
+            auto rect = Rect<int>(texture.size);
+//            if (!rect.isInside(pos)) return std::nullopt;
+            return rect.getSubRect(tileSize, index);
+         }
+
       };
 
       struct TileMapLayer{
@@ -30,6 +71,7 @@ namespace ReyEngine {
          TileMapLayer(TileMapLayer&& other) noexcept: atlas(std::move(other.atlas)){}
          void setTileIndex(const TileCoord&, TileIndex);
          std::optional<TileIndex> getTileIndex(const TileCoord& pos); //slow
+         void removeTileIndex(const TileCoord& pos);
          inline SpriteAtlas& getAtlas(){return atlas;}
       protected:
          //x, y
@@ -81,16 +123,15 @@ namespace ReyEngine {
       };
 
       struct EventTileMapCellClicked : public Event<EventTileMapCellClicked>{
-         EVENT_CTOR_SIMPLE(EventTileMapCellClicked, Event<EventTileMapCellClicked>, const TileCoord& cellPos, const Pos<int>& localPos), cellPos(cellPos), localPos(localPos){
-         }
-         const TileCoord cellPos;
-         const Pos<int> localPos;
+         EVENT_CTOR_SIMPLE(EventTileMapCellClicked, Event<EventTileMapCellClicked>, const TileCoord& cellCoord, const Rect<int>& cellRect), cellCoord(cellCoord), cellRect(cellRect){}
+         const TileCoord& cellCoord;
+         const Rect<int>& cellRect;
       };
 
       struct EventTileMapCellHovered : public Event<EventTileMapCellHovered>{
-         EVENT_CTOR_SIMPLE(EventTileMapCellHovered, Event<EventTileMapCellHovered>, const TileCoord& cellPos, const Pos<int>& localPos), cellPos(cellPos), localPos(localPos){}
-         const TileCoord cellPos;
-         const Pos<int> localPos;
+         EVENT_CTOR_SIMPLE(EventTileMapCellHovered, Event<EventTileMapCellHovered>, const TileCoord& cellCoord, const Rect<int>& cellRect), cellCoord(cellCoord), cellRect(cellRect){}
+         const TileCoord& cellCoord;
+         const Rect<int>& cellRect;
       };
 
       REYENGINE_OBJECT(TileMap, Canvas)
@@ -103,8 +144,8 @@ namespace ReyEngine {
    public:
       std::optional<LayerIndex> addLayer(const FileSystem::File&);
       TileMapLayer& getLayer(LayerIndex);
-      TileCoord getCoord(Pos<int>) const;
-      Pos<int> getPos(TileCoord) const;
+      TileCoord getCell(Pos<int>) const;
+      Pos<int> getCellPos(TileCoord) const;
       void setGridSize(Size<int>);
    protected:
       void render() const override;

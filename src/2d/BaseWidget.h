@@ -147,7 +147,6 @@ public:
    std::optional<WidgetPtr> removeChild(const std::string& name, bool quiet = false); //quiet silences the output if child is not found.
    void removeAllChildren(); //removes all children and DOES NOT RETURN THEM!
 
-
    template <typename T> bool is_base_of(){return std::is_base_of_v<BaseWidget, T>;}
    static void registerType(const std::string& typeName, const std::string& parentType, bool isVirtual, Deserializer fx){TypeManager::registerType(typeName, parentType, isVirtual, fx);}
    std::string serialize();
@@ -258,9 +257,12 @@ protected:
    bool _scheduled_for_deletion = false; // true when the widget has been scheduled for deletion but is not yet deleted.
    ReyEngine::Pos<double> _renderOffset; //used for different rendering modes. does not offset position.
 
+   //input
    Handled _process_unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&); //pass input to children if they want it and then process it for ourselves if necessary
    Handled _process_unhandled_editor_input(const InputEvent&, const std::optional<UnhandledMouseInput>&); //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)
    InputFilter inputFilter = InputFilter::INPUT_FILTER_PASS_AND_PROCESS;
+
+   //theme
    std::shared_ptr<Style::Theme> theme;
 
    bool _isRoot = false;
