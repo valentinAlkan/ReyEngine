@@ -17,7 +17,7 @@ namespace ReyEngine{
       void renderBegin(ReyEngine::Pos<double>& textureOffset) override;
       void render() const override;
       void renderEnd() override;
-      inline void _on_rect_changed() override {_renderTarget.setSize(_rect.value.size());}
+      void _on_rect_changed() override;
       void _process(float dt) override {}
       void registerProperties() override{}
       Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) override;

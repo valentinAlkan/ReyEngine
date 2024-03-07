@@ -503,7 +503,7 @@ int main(int argc, char** argv)
       auto layerOpt = tileMap->addLayer(spriteSheet);
       if (layerOpt) {
          Application::printDebug() << "Tilemap added layer " << layerOpt.value() << " using sprite sheet "
-                                   << tileMap->getLayer(layerOpt.value()).getAtlas().filePath.abs() << endl;
+                                   << tileMap->getLayer(layerOpt.value()).getAtlas().getFilePath().abs() << endl;
       } else {
          Application::printError() << "Tilemap " << spriteSheet.abs() << " not found" << endl;
          return 1;
@@ -511,7 +511,7 @@ int main(int argc, char** argv)
       layerOpt = tileMap->addLayer(spriteSheet);
       if (layerOpt) {
          Application::printDebug() << "Tilemap added layer " << layerOpt.value() << " using sprite sheet "
-                                   << tileMap->getLayer(layerOpt.value()).getAtlas().filePath.abs() << endl;
+                                   << tileMap->getLayer(layerOpt.value()).getAtlas().getFilePath().abs() << endl;
       } else {
          Application::printError() << "Tilemap " << spriteSheet.abs() << " not found" << endl;
          return 1;
@@ -520,8 +520,8 @@ int main(int argc, char** argv)
       auto& cursorLayer = tileMap->getLayer(1);
       auto& paintLayer = tileMap->getLayer(0);
       //set atlas tile size (src tile size)
-      cursorLayer.getAtlas().tileSize = {16, 16};
-      paintLayer.getAtlas().tileSize = {16, 16};
+      cursorLayer.getAtlas().setTileSize({16, 16});
+      paintLayer.getAtlas().setTileSize({16, 16});
 
       //set tilemap tile size (dest tile size)
       auto squareEdge = 32;
@@ -545,6 +545,10 @@ int main(int argc, char** argv)
       dstInputFwd->setAnchoring(BaseWidget::Anchor::FILL);
       dstInputFwd->getTheme()->background = Style::Fill::NONE;
 
+      auto cbDstRender = [&](){
+         ReyEngine::drawRectangleLines(dstInputFwd->getGlobalRect(), 2.0, Colors::green);
+      };
+      dstInputFwd->setRenderCallback(cbDstRender);
 
       //set tilemap tile size (dest tile size)
       root->addChild(srcTexRect);
@@ -567,7 +571,7 @@ int main(int argc, char** argv)
                   auto mbEvent = event.toEventType<InputEventMouseButton>();
                   if (!mbEvent.isDown){
                      selectRect = subrect;
-                     auto optIndex = tileMap->getLayer(0).getAtlas().getTileIndex(selectRect.pos());
+                     auto optIndex = cursorLayer.getAtlas().getTileIndex(selectRect.pos());
                      if (optIndex){
                         selectedIndex = optIndex.value();
                      }

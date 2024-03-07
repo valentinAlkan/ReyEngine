@@ -211,7 +211,8 @@ void BaseWidget::removeAllChildren() {
 Pos<int> BaseWidget::getGlobalPos() const {
    //sum up all our ancestors' positions and add our own to it
    auto offset = getPos();
-   if (getTypeName() != Canvas::TYPE_NAME && !_parent.expired()){ //todo: Race conditions?
+//   if (getTypeName() != Canvas::TYPE_NAME && !_parent.expired()){ //todo: Race conditions?
+   if (!_parent.expired()){ //todo: Race conditions?
       offset += _parent.lock()->getGlobalPos();
    }
    return offset;
@@ -263,7 +264,6 @@ void BaseWidget::renderChain(ReyEngine::Pos<double>& parentOffset) {
 Handled BaseWidget::_process_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
    auto passInput = [&](const InputEvent& _event, std::optional<UnhandledMouseInput> _mouse) {
       for (auto& child : _childrenOrdered) {
-
          if (_mouse) {
             //if this is mouse input, make sure it is inside the bounding rect
             switch (event.eventId) {

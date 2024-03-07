@@ -30,40 +30,45 @@ namespace ReyEngine {
       struct SpriteAtlas {
          SpriteAtlas(const FileSystem::File& file)
          : texture(file)
-         , filePath(file)
+         , _filePath(file)
          {
-            setTileSize(tileSize);
+            setTileSize(_tileSize);
          }
          SpriteAtlas(SpriteAtlas&& other)
          : texture(std::move(other.texture))
-         , filePath(std::move(other.filePath))
-         , tileSize(std::move(other.tileSize))
+         , _filePath(std::move(other._filePath))
+         , _tileSize(std::move(other._tileSize))
          , rowCount(std::move(other.rowCount))
          , columnCount(std::move(other.columnCount))
          {}
          inline void setTileSize(Size<int> size){
-            tileSize = size;
-            rowCount = texture.size.x / tileSize.x;
-            columnCount = texture.size.y / tileSize.y;
+            _tileSize = size;
+            rowCount = texture.size.x / _tileSize.x;
+            columnCount = texture.size.y / _tileSize.y;
+            _needsUpdate = true;
          }
-         FileSystem::File filePath;
-         ReyTexture texture;
-         Size<int> tileSize = {32,32};
-         int rowCount = 0;
-         int columnCount = 0;
-         std::optional<TileIndex> getTileIndex(const Pos<int>& pos) const {
+         inline std::optional<TileIndex> getTileIndex(const Pos<int>& pos) const {
             //find the index of the tile at the position
             auto rect = Rect<int>(texture.size);
             if (!rect.isInside(pos)) return std::nullopt;
-            return rect.getSubRectIndex(tileSize, pos);
+            return rect.getSubRectIndex(_tileSize, pos);
          }
-         std::optional<Rect<int>> getTile(const LayerIndex index) const {
+         inline std::optional<Rect<int>> getTile(const LayerIndex index) const {
             //find the rect of the tile at the index
             auto rect = Rect<int>(texture.size);
 //            if (!rect.isInside(pos)) return std::nullopt;
-            return rect.getSubRect(tileSize, index);
+            return rect.getSubRect(_tileSize, index);
          }
-
+         inline Size<int> getTileSize() const {return _tileSize;}
+         inline const FileSystem::File getFilePath() const {return _filePath;}
+      private:
+         ReyTexture texture;
+         FileSystem::File _filePath;
+         int rowCount = 0;
+         int columnCount = 0;
+         Size<int> _tileSize = {32, 32};
+         bool _needsUpdate = true;
+      friend class TileMap;
       };
 
       struct TileMapLayer{
@@ -73,10 +78,13 @@ namespace ReyEngine {
          std::optional<TileIndex> getTileIndex(const TileCoord& pos); //slow
          void removeTileIndex(const TileCoord& pos);
          inline SpriteAtlas& getAtlas(){return atlas;}
+         bool needsUpdate() const {return _needsUpdate || atlas._needsUpdate;}
       protected:
          //x, y
          std::map<int, std::map<int, TileIndex>> tiles;
          SpriteAtlas atlas;
+      private:
+         bool _needsUpdate = true;
          friend class TileMap;
       };
 
@@ -144,9 +152,9 @@ namespace ReyEngine {
    public:
       std::optional<LayerIndex> addLayer(const FileSystem::File&);
       TileMapLayer& getLayer(LayerIndex);
-      TileCoord getCell(Pos<int>) const;
-      Pos<int> getCellPos(TileCoord) const;
-      void setGridSize(Size<int>);
+      TileCoord getCell(const Pos<int>&) const;
+      Pos<int> getCellPos(const TileCoord&) const;
+      void setGridSize(const Size<int>&);
    protected:
       void render() const override;
 //      inline void renderBegin(ReyEngine::Pos<double>&) override;
@@ -156,6 +164,7 @@ namespace ReyEngine {
       void _init() override;
       void _on_rect_changed() override;
    private:
+      void updateAllLayers();
       bool _ready = false;
       BoolProperty _showGrid;
       GridTypeProperty _gridType;
