@@ -18,7 +18,7 @@ public:
    void render() const override {
       auto roundness = theme->roundness.value;
       auto color = theme->background.colorPrimary.value;
-      _drawRectangleRounded(_rect.value.toSizeRect(), roundness, 1, color);
+      drawRectangleRounded(_rect.value.toSizeRect(), roundness, 1, color);
    }
    void _init() override {}
    void _process(float dt) override {}

@@ -62,7 +62,7 @@ void Tree::determineVisible() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Tree::render() const{
-   _drawRectangle(getRect().toSizeRect(), theme->background.colorPrimary.value);
+   drawRectangle(getRect().toSizeRect(), theme->background.colorPrimary.value);
    // draw the items
    auto font = theme->font.value;
    auto pos = ReyEngine::Pos<int>(0,-20);
@@ -75,7 +75,7 @@ void Tree::render() const{
 
       //highlight the hovered row
       if (_hoveredMeta && _hoveredMeta.value()->visibleRowIndex == currentRow){
-         _drawRectangle({pos, {getWidth(), (int) theme->font.value.size}}, COLORS::gray);
+         drawRectangle({pos, {getWidth(), (int) theme->font.value.size}}, COLORS::gray);
       }
 
       char c = item->expanded ? '-' : '+';
@@ -86,7 +86,7 @@ void Tree::render() const{
       if (!item->_enabled) {
          font.color = disabledColor;
       }
-      _drawText(expansionRegionText + item->getText(), pos, font);
+      drawText(expansionRegionText + item->getText(), pos, font);
       if (!item->_enabled) {
          font.color = enabledColor;
       }

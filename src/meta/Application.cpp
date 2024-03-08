@@ -76,6 +76,12 @@ void Application::processEnterTree() {
       auto newIndex = parent->_childrenOrdered.size(); //index of new child's location in ordered vector
       parent->_children[widget->getName()] = std::pair<int, std::shared_ptr<BaseWidget>>(newIndex, widget);
       parent->_childrenOrdered.push_back(widget);
+      if (widget->isBackRender.value){
+         parent->_backRenderList.push_back(widget);
+      } else {
+         parent->_frontRenderList.push_back(widget);
+      }
+
       widget->_parent = parent->toBaseWidget();
       widget->isInLayout = parent->isLayout;
       //recalculate the size rect if need to

@@ -295,7 +295,7 @@ void Window::exec(){
 
       //draw children on top of their parents
       BeginDrawing();
-      //ClearBackground(WHITE);
+//      ClearBackground(ReyEngine::Colors::none);
       ReyEngine::Pos<double> texOffset;
       _root->renderChain(texOffset);
 
@@ -415,4 +415,22 @@ std::optional<std::weak_ptr<BaseWidget>> Window::getHovered() {
 void Window::processUnhandledInput(InputEvent& inputEvent, std::optional<UnhandledMouseInput> mouseInput){
    //first offer up input to modal widget (if any)
    _root->_process_unhandled_input(inputEvent, mouseInput);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Window::pushRenderTarget(ReyEngine::RenderTarget& newTarget) {
+   if (!renderStack.empty()) {
+      renderStack.top()->endRenderMode();
+   }
+   renderStack.push(&newTarget);
+   renderStack.top()->beginRenderMode();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Window::popRenderTarget() {
+   renderStack.top()->endRenderMode();
+   renderStack.pop();
+   if (!renderStack.empty()) {
+      renderStack.top()->beginRenderMode();
+   }
 }

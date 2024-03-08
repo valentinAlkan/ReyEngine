@@ -7,7 +7,12 @@ using namespace std;
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyEngine::ReyTexture::ReyTexture(FileSystem::File file) {
+ReyTexture::ReyTexture(const FileSystem::File& file) {
+   loadTexture(file);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyTexture::loadTexture(const FileSystem::File &file) {
    auto doReady = [&]() {
       auto path = file.abs();
       if (!file.exists()){
@@ -59,8 +64,13 @@ void ReyEngine::drawRectangleRoundedLines(const ReyEngine::Rect<float>& r, float
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawRectangleGradientV(const ReyEngine::Rect<int>& rect, ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2) {
+void ReyEngine::drawRectangleGradientV(const ReyEngine::Rect<int>& rect, const ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2) {
    DrawRectangleGradientV(rect.x, rect.y, rect.width, rect.height, color1, color2);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawCircle(const Circle& circle, const ReyEngine::ColorRGBA &color) {
+   DrawCircle(circle.center.x, circle.center.y, circle.radius, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -105,6 +115,11 @@ void ReyEngine::drawTextRelative(const std::string& text, const Pos<int>& relPos
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::RenderTarget::RenderTarget(){}
+ReyEngine::RenderTarget::~RenderTarget() {
+   if (_texLoaded) {
+      UnloadRenderTexture(_tex);
+   }
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::RenderTarget::setSize(const Size<int> &newSize) {

@@ -6,7 +6,7 @@ using namespace ReyEngine;
 /////////////////////////////////////////////////////////////////////////////////////////
 void ComboBox::render() const {
    //draw the background
-   _drawRectangle(_rect.value.toSizeRect(), theme->background.colorPrimary);
+   drawRectangle(_rect.value.toSizeRect(), theme->background.colorPrimary);
 
    auto& font = theme->font;
 
@@ -17,19 +17,19 @@ void ComboBox::render() const {
 
    //draw current item
    if (fields.size()){
-      _drawText(fields.value.at(currentIndex).text, {1, textPosV}, font);
+      drawText(fields.value.at(currentIndex).text, {1, textPosV}, font);
    }
 
    //draw if the menu is open
    if (_isOpen){
-      _drawRectangle(_selectionMenuRect, Colors::gray);
+      drawRectangle(_selectionMenuRect, Colors::gray);
       for (int i=0; i < fields.size(); i++){
          auto& field = fields.value.at(i);
          auto& rect = _selectionMenuItemRects.at(i);
          if (field.highlighted){
-            _drawRectangle(rect, theme->highlight);
+            drawRectangle(rect, theme->highlight);
          }
-         _drawText(field.text, rect.pos(), font);
+         drawText(field.text, rect.pos(), font);
       }
    }
 }
