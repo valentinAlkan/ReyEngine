@@ -86,6 +86,7 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--comboBoxTest", "Combo box test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--tileMapTest", "Config file test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--lineEditTest", "Line edit test", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--canvasTest", "Testing nested canvases to make sure they work right", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    //create window (or don't idk)
@@ -110,7 +111,7 @@ int main(int argc, char** argv)
       control->setAnchoring(BaseWidget::Anchor::FILL);
       root->addChild(control);
 
-      auto drawcb = [control](){
+      auto drawcb = [control](const Control&){
          ReyEngine::drawRectangle({10,10,50,50}, Colors::red);
          float startang = 0;
          static int endang = 0;
@@ -128,7 +129,7 @@ int main(int argc, char** argv)
       control->getTheme()->background.set(Style::Fill::SOLID);
       control->getTheme()->background.colorPrimary.set(COLORS::lightGray);
 
-      auto renderSubControl = [subcontrol](){
+      auto renderSubControl = [subcontrol](const Control&){
          auto rect = subcontrol->getGlobalRect();
          ReyEngine::drawRectangle(rect, COLORS::blue);
       };
@@ -223,7 +224,7 @@ int main(int argc, char** argv)
       boxBounder->addChild(label2);
 
       //draw the child bounding box
-      auto drawBoundingBox = [&](){
+      auto drawBoundingBox = [&](const Control&){
          auto size = boxBounder->getChildBoundingBox();
          auto mousePos = InputManager::getMousePos();
          ReyEngine::drawRectangle({{0,0},size}, ReyEngine::Colors::yellow);
@@ -545,7 +546,7 @@ int main(int argc, char** argv)
       dstInputFwd->setAnchoring(BaseWidget::Anchor::FILL);
       dstInputFwd->getTheme()->background = Style::Fill::NONE;
 
-      auto cbDstRender = [&](){
+      auto cbDstRender = [&](const Control&){
          ReyEngine::drawRectangleLines(dstInputFwd->getGlobalRect(), 2.0, Colors::green);
       };
       dstInputFwd->setRenderCallback(cbDstRender);
@@ -586,7 +587,7 @@ int main(int argc, char** argv)
       srcInputFwd->setMouseExitCallback([&](){hoverRect.clear();});
 
       //make a simple control that can draw stuff on our texture rect
-      auto renderCB = [&](){
+      auto renderCB = [&](const Control&){
          if (hoverRect){
             ReyEngine::drawRectangleLines(hoverRect + srcTexRect->getGlobalRect().pos(), 2.0, Colors::yellow);
          }
@@ -838,7 +839,7 @@ int main(int argc, char** argv)
       for (int i=0; i<TAB_COUNT; i++){
          auto control = make_shared<Control>("Control" + to_string(i));
          auto color = Colors::randColor();
-         auto renderCB = [control, color](){
+         auto renderCB = [control, color](const Control&){
             ReyEngine::drawRectangle(control->getGlobalRect(), color);
          };
          control->setRenderCallback(renderCB);
@@ -919,7 +920,7 @@ int main(int argc, char** argv)
       Pos<int> mousePos;
       Pos<int> offset;
 
-      auto cbDrawCanvas = [&](){
+      auto cbDrawCanvas = [&](const Control&){
          ReyEngine::drawRectangle(canvasControl->getRect(), Colors::lightGray);
          ReyEngine::drawRectangle(rect, down ? Colors:: red : Colors::green);
 
@@ -1058,6 +1059,30 @@ int main(int argc, char** argv)
          label->subscribe<LineEdit::EventLineEditTextChanged>(linedit, cbTextChanged);
          hlayout->addChild(label);
       }
+   }
+
+   else if(args.getArg("--canvasTest")){
+      auto subCanvas = make_shared<Canvas>("subCanvas");
+      root->addChild(subCanvas);
+      subCanvas->setRect({50, 50, 1000, 1000});
+
+      auto cursor = make_shared<Control>("Cursor");
+      auto cursorRender = [](const Control& thiz){
+         thiz.drawCircle({thiz.getLocalMousePos(), 5}, Colors::black);
+      };
+      cursor->setRenderCallback(cursorRender);
+
+      for (int i=0;i<3;i++) {
+         auto control = make_shared<Control>("Control" + to_string(i));
+         auto enterCB = [control](){control->getTheme()->background.colorPrimary = Colors::green;};
+         auto exitCB = [control](){control->getTheme()->background.colorPrimary = Colors::lightGray;};
+
+         control->setMouseEnterCallback(enterCB);
+         control->setMouseExitCallback(exitCB);
+         subCanvas->addChild(control);
+         control->setRect({i * 100, i * 100, 100, 100});
+      }
+      subCanvas->addChild(cursor);
    }
 
    else if (args.getArg("--inspector")){

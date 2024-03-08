@@ -21,20 +21,20 @@ public:
       auto& foreground = theme->foreground;
       switch (background.value){
          case Style::Fill::SOLID:
-            _drawRectangle(_rect.value.toSizeRect(), background.colorPrimary.value);
+            drawRectangle(_rect.value.toSizeRect(), background.colorPrimary.value);
          default:
             break;
       }
       switch(outline.value){
          case Style::Outline::LINE:
-            _drawRectangleLines(getRect(), outline.thickness.value, outline.color.value);
+            drawRectangleLines(getRect(), outline.thickness.value, outline.color.value);
             break;
 //         case Style::Outline::SHADOW:
 //            break;
          default:
             break;
       }
-       _drawText(text.value, {0, 0}, theme->font.value);
+       drawText(text.value, {0, 0}, theme->font.value);
    };
    void registerProperties() override{
       registerProperty(text);
