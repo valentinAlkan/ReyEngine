@@ -131,10 +131,8 @@ Handled TileMap::_unhandled_input(const InputEvent& event, const std::optional<U
    if (mouse && mouse->isInside) {
       switch (event.eventId) {
          case InputEventMouseMotion::getUniqueEventId(): {
-            auto mmEvent = event.toEventType<InputEventMouseMotion>();
-            auto cellPos = getCell(mmEvent.globalPos);
+            auto cellPos = getCell(mouse->localPos);
             float dt = (float)cellPos.x - ((float)mouse->localPos.x / (float)_gridWidth.value);
-            cout << mouse->localPos << " = " << cellPos << " (dx: " << dt << endl;
             if (cellPos != currentHover) {
                currentHover = cellPos;
                EventTileMapCellHovered event(toEventPublisher(), currentHover, {getCellPos(currentHover), {_gridWidth, _gridHeight}});
