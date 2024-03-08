@@ -340,6 +340,7 @@ namespace ReyEngine {
    struct Circle{
       inline Circle(Pos<int> center, double radius): center(center), radius(radius){}
       inline Circle(const Circle& rhs): center(rhs.center), radius(rhs.radius){}
+      inline Circle operator+(const Pos<int>& pos) const {Circle retval(*this); retval.center += pos; return retval;}
       Pos<int> center;
       double radius;
    };
@@ -475,7 +476,8 @@ namespace ReyEngine {
    void drawRectangleRounded(const Rect<float>&, float roundness, int segments, const ReyEngine::ColorRGBA& color);
    void drawRectangleLines(const Rect<float>&, float lineThick, const ReyEngine::ColorRGBA& color);
    void drawRectangleRoundedLines(const Rect<float>&, float roundness, int segments, float lineThick, const ReyEngine::ColorRGBA& color);
-   void drawRectangleGradientV(const Rect<int>&, ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2);
+   void drawRectangleGradientV(const Rect<int>&, const ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2);
+   void drawCircle(const Circle&, const ReyEngine::ColorRGBA&  color);
    void drawCircleSector(const CircleSector&, const ReyEngine::ColorRGBA&  color, int segments);
    void drawCircleSectorLines(const CircleSector&, const ReyEngine::ColorRGBA&  color, int segments);
    void drawLine(const Line<int>&, float lineThick, const ReyEngine::ColorRGBA& color);

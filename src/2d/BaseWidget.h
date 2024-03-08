@@ -81,7 +81,7 @@ public:
    ReyEngine::Rect<int> getGlobalRect() const {auto globalPos = getGlobalPos(); return {globalPos.x, globalPos.y, getSize().x, getSize().y};}
    ReyEngine::Pos<int> getGlobalPos() const;
    ReyEngine::Size<int> getChildBoundingBox() const; //get the smallest rectangle that contains all children, starting from 0,0. Does not include grandchildren.
-   ReyEngine::Pos<int> getPos() const {return {_rect.value.x + _virtualInputOffset.x, _rect.value.y + _virtualInputOffset.y};}
+   ReyEngine::Pos<int> getPos() const {return {_rect.value.x, _rect.value.y};}
    ReyEngine::Size<int> getSize() const {return getRect().size();}
    int getWidth() const {return _rect.value.width;}
    int getHeight() const {return _rect.value.height;}
@@ -109,11 +109,11 @@ public:
    void setWidth(int width);
    void setHeight(int height);
 
-   ReyEngine::Pos<int> getLocalMousePos(){return globalToLocal(InputManager::getMousePos());}
+   ReyEngine::Pos<int> getLocalMousePos() const {return globalToLocal(InputManager::getMousePos());}
    ReyEngine::Pos<int> globalToLocal(const ReyEngine::Pos<int>& global) const;
    ReyEngine::Pos<int> localToGlobal(const ReyEngine::Pos<int>& local) const;
    void setGlobalPos(const iVec&);
-   bool isInside(const iVec& point){return _rect.value.toSizeRect().isInside(point);}
+   bool isInside(const iVec& point) const {return _rect.value.toSizeRect().isInside(point);}
    bool setName(const std::string& name, bool append_index=false);
    bool setIndex(unsigned int newIndex);
    std::string getTypeName() const {return _typeName;}
@@ -122,8 +122,8 @@ public:
    std::weak_ptr<BaseWidget> getParent(){return _parent;}
    const ChildOrder& getChildren() const {return _childrenOrdered;}
    std::optional<WidgetPtr> getChild(const std::string& name);
-   bool hasChild(const std::string& name);
-   bool isHovered() const{return _hovered;}
+   bool hasChild(const std::string& name); //cant be const because it locks
+   bool isHovered() const {return _hovered;}
 
    template <typename T>
    std::shared_ptr<T> toType(){
@@ -151,7 +151,24 @@ public:
    static void registerType(const std::string& typeName, const std::string& parentType, bool isVirtual, Deserializer fx){TypeManager::registerType(typeName, parentType, isVirtual, fx);}
    std::string serialize();
    std::shared_ptr<Style::Theme>& getTheme(){return theme;}
+
+   //drawing functions
+   void drawLine(const ReyEngine::Line<int>&, float lineThick, const ReyEngine::ColorRGBA&) const;
+   void drawText(const std::string& text, const ReyEngine::Pos<int>& pos, const ReyEngine::ReyEngineFont& font) const;
+   void drawTextCentered(const std::string& text, const ReyEngine::Pos<int>& pos, const ReyEngine::ReyEngineFont& font) const;
+   void drawRectangle(const ReyEngine::Rect<int>& rect, const ReyEngine::ColorRGBA& color) const;
+   void drawRectangleLines(const ReyEngine::Rect<int>& rect, float lineThick, const ReyEngine::ColorRGBA& color) const;
+   void drawRectangleRounded(const ReyEngine::Rect<int>& rect,  float roundness, int segments, const ReyEngine::ColorRGBA& color) const;
+   void drawRectangleRoundedLines(const ReyEngine::Rect<int>& rect, float roundness, int segments, float lineThick, const ReyEngine::ColorRGBA& color) const;
+   void drawRectangleGradientV(const ReyEngine::Rect<int>& rect, const ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2) const;
+   void drawCircle(const ReyEngine::Circle&, const ReyEngine::ColorRGBA&) const;
+   void drawCircleSectorLines(const ReyEngine::CircleSector&, const ReyEngine::ColorRGBA&, int segments) const;
+   void drawRenderTarget(const ReyEngine::RenderTarget&, const ReyEngine::Pos<int>&) const;
+   void drawRenderTargetRect(const ReyEngine::RenderTarget&, const ReyEngine::Rect<int>&, const ReyEngine::Pos<int>&) const;
+   void drawTextureRect(const ReyEngine::ReyTexture&, const ReyEngine::Rect<int>& src, const ReyEngine::Rect<int>& dst, float rotation, const ReyEngine::ColorRGBA& tint) const;
 protected:
+//   void drawTextureRect(const ReyEngine::ReyTexture&, const ReyEngine::Rect<int>&, const ReyEngine::Pos<int>&) const;
+
 //   void recalculateRect();
    std::shared_ptr<BaseWidget> toBaseWidget(){return inheritable_enable_shared_from_this<BaseWidget>::downcasted_shared_from_this<BaseWidget>();}
    virtual void _on_application_ready(){}; //called when the main loop is starting, or immediately if that's already happened
@@ -184,19 +201,6 @@ protected:
    void setRenderOffset(ReyEngine::Pos<double> offset){_renderOffset = offset;}
 //   void renderTextureOffsetApply(ReyEngine::Pos<float>& textureOffset){}
 //   void renderTextureOffsetReset(ReyEngine::Pos<float>& textureOffset){}
-   void _drawLine(const ReyEngine::Line<int>&, float lineThick, const ReyEngine::ColorRGBA&) const;
-   void _drawText(const std::string& text, const ReyEngine::Pos<int>& pos, const ReyEngine::ReyEngineFont& font) const;
-   void _drawTextCentered(const std::string& text, const ReyEngine::Pos<int>& pos, const ReyEngine::ReyEngineFont& font) const;
-   void _drawRectangle(const ReyEngine::Rect<int>& rect, ReyEngine::ColorRGBA color) const;
-   void _drawRectangleLines(const ReyEngine::Rect<int>& rect, float lineThick, ReyEngine::ColorRGBA color) const;
-   void _drawRectangleRounded(const ReyEngine::Rect<int>& rect,  float roundness, int segments, ReyEngine::ColorRGBA color) const;
-   void _drawRectangleRoundedLines(const ReyEngine::Rect<int>& rect, float roundness, int segments, float lineThick, ReyEngine::ColorRGBA color) const;
-   void _drawRectangleGradientV(const ReyEngine::Rect<int>& rect, ReyEngine::ColorRGBA color1, ReyEngine::ColorRGBA color2) const;
-   void _drawCircleSectorLines(const ReyEngine::CircleSector&, ReyEngine::ColorRGBA, int segments);
-   void _drawRenderTarget(const ReyEngine::RenderTarget&, const ReyEngine::Pos<int>&) const;
-   void _drawRenderTargetRect(const ReyEngine::RenderTarget&, const ReyEngine::Rect<int>&, const ReyEngine::Pos<int>&) const;
-//   void _drawTextureRect(const ReyEngine::ReyTexture&, const ReyEngine::Rect<int>&, const ReyEngine::Pos<int>&) const;
-   void _drawTextureRect(const ReyEngine::ReyTexture&, const ReyEngine::Rect<int>& src, const ReyEngine::Rect<int>& dst, float rotation, Color tint) const;
    void registerProperties() override;
    void _deserialize(PropertyPrototypeMap&);
    RectProperty<int> _rect;
@@ -261,7 +265,6 @@ protected:
    Handled _process_unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&); //pass input to children if they want it and then process it for ourselves if necessary
    Handled _process_unhandled_editor_input(const InputEvent&, const std::optional<UnhandledMouseInput>&); //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)
    InputFilter inputFilter = InputFilter::INPUT_FILTER_PASS_AND_PROCESS;
-   ReyEngine::Pos<int> _virtualInputOffset; //for things that aren't rendered in their actual positions (like canvases)
 
    //theme
    std::shared_ptr<Style::Theme> theme;

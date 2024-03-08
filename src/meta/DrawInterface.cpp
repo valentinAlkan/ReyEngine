@@ -64,8 +64,13 @@ void ReyEngine::drawRectangleRoundedLines(const ReyEngine::Rect<float>& r, float
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawRectangleGradientV(const ReyEngine::Rect<int>& rect, ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2) {
+void ReyEngine::drawRectangleGradientV(const ReyEngine::Rect<int>& rect, const ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2) {
    DrawRectangleGradientV(rect.x, rect.y, rect.width, rect.height, color1, color2);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawCircle(const Circle& circle, const ReyEngine::ColorRGBA &color) {
+   DrawCircle(circle.center.x, circle.center.y, circle.radius, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

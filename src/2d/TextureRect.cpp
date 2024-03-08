@@ -7,7 +7,7 @@ using namespace ReyEngine;
 ///////////////////////////////////////////////////////////////////////////////////////
 void TextureRect::render() const {
    if (_texture) {
-      _drawTextureRect(_texture, _rect.value.toSizeRect(), _rect.value.toSizeRect(), 0.0, Colors::none);
+      drawTextureRect(_texture, _rect.value.toSizeRect(), _rect.value.toSizeRect(), 0.0, Colors::none);
    }
 }
 

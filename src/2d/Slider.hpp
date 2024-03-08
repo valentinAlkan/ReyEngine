@@ -97,9 +97,9 @@ protected:
    }
    void render() const override {
       //draw slider
-      _drawRectangle(_rect.value.toSizeRect(), _cursor_in_slider || _is_dragging? ReyEngine::Colors::green : ReyEngine::Colors::red);
+      drawRectangle(_rect.value.toSizeRect(), _cursor_in_slider || _is_dragging? ReyEngine::Colors::green : ReyEngine::Colors::red);
       //draw grabber
-      _drawRectangle(_grabber, _cursor_down && _cursor_in_grabber || _is_dragging ? ReyEngine::Colors::yellow : ReyEngine::Colors::blue);
+      drawRectangle(_grabber, _cursor_down && _cursor_in_grabber || _is_dragging ? ReyEngine::Colors::yellow : ReyEngine::Colors::blue);
    }
    void _on_rect_changed() override {
       _compute_appearance();

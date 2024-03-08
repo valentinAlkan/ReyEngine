@@ -3,6 +3,13 @@
 
 using namespace std;
 using namespace ReyEngine;
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::Canvas::_init() {
+   if (!_renderTarget.ready()) {
+      _renderTarget.setSize(getSize()); //todo: make protected
+   }
+}
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::Canvas::renderBegin(ReyEngine::Pos<double>& textureOffset) {
    Application::instance().getWindow()->pushRenderTarget(_renderTarget);
@@ -13,7 +20,7 @@ void ReyEngine::Canvas::renderBegin(ReyEngine::Pos<double>& textureOffset) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::Canvas::render() const{
-
+   drawRectangleLines(_rect.value.toSizeRect(), 2.0, Colors::red);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -24,7 +31,7 @@ void ReyEngine::Canvas::renderEnd() {
       modal.value().lock()->render();
    }
    Application::instance().getWindow()->popRenderTarget();
-   _drawRenderTargetRect(_renderTarget, Rect<int>(_renderTarget.getSize()), {0,0});
+   drawRenderTargetRect(_renderTarget, Rect<int>(_renderTarget.getSize()), {0,0});
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

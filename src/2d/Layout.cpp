@@ -31,7 +31,7 @@ void Layout::_on_child_added_immediate(std::shared_ptr<BaseWidget> &child) {
 
 void Layout::renderEnd() {
    //debug
-//   _drawRectangleLines({0, 0, _rect.value.width, _rect.value.height}, 1.0, COLORS::black);
+//   drawRectangleLines({0, 0, _rect.value.width, _rect.value.height}, 1.0, COLORS::black);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

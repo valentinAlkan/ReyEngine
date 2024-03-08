@@ -36,7 +36,7 @@ void TileMap::render() const {
                auto& srcRect = srcRectOpt.value();
                auto dstRect = Rect<int>(pos, {_gridWidth, _gridHeight});
                auto &tex = layer.second.atlas.texture;
-               _drawTextureRect(tex, srcRect, dstRect, 0.0, Colors::none);
+               drawTextureRect(tex, srcRect, dstRect, 0.0, Colors::none);
             }
          }
       }
@@ -44,7 +44,7 @@ void TileMap::render() const {
 
    //draw grid on top of tiles
    if (_showGrid){
-      _drawRectangleLines(_rect.value.toSizeRect(), 1.0, theme->background.colorSecondary);
+      drawRectangleLines(_rect.value.toSizeRect(), 1.0, theme->background.colorSecondary);
       switch (_gridType.value){
          case GridType::SQUARE:{
             auto xLineCount = getWidth() / _gridWidth;
@@ -52,11 +52,11 @@ void TileMap::render() const {
             for (int x=1; x<xLineCount; x++) {
                auto _x = x*_gridWidth;
                auto linex = Line<int>({_x, 0}, {_x, getHeight()});
-               _drawLine(linex, 1, theme->background.colorSecondary);
+               drawLine(linex, 1, theme->background.colorSecondary);
                for (int y = 1; y < yLineCount +1; y++){
                   auto _y = y*_gridHeight;
                   auto liney = Line<int>({0, _y}, {getWidth(), _y});
-                  _drawLine(liney, 1, theme->background.colorSecondary);
+                  drawLine(liney, 1, theme->background.colorSecondary);
                }
             }
             break;}

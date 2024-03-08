@@ -5,10 +5,10 @@ using namespace std;
 ///////////////////////////////////////////////////////////////////////////////////////
 void Control::render() const {
    if (renderCallback) {
-      renderCallback();
+      renderCallback(*this);
    } else {
       if (theme->background.value == Style::Fill::SOLID) {
-         _drawRectangle(getRect().toSizeRect(), theme->background.colorPrimary.value);
+         drawRectangle(getRect().toSizeRect(), theme->background.colorPrimary.value);
       }
    }
 }
