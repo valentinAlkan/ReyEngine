@@ -134,7 +134,7 @@ int main(int argc, char** argv)
          ReyEngine::drawRectangle(rect, COLORS::blue);
       };
 
-      auto process = [&](float dt){
+      auto process = [&](const Control&, float dt){
          subcontrol->setRect({{control->globalToLocal(InputManager::getMousePos())},{50,50}});
       };
 
@@ -234,7 +234,7 @@ int main(int argc, char** argv)
       };
       boxBounder->setRenderCallback(drawBoundingBox);
 
-      auto process = [&](float dt){
+      auto process = [&](const Control&, float dt){
          auto globalPos = InputManager::getMousePos();
          // reposition label
          auto newPos = label1->getParent().lock()->globalToLocal(globalPos);
@@ -265,7 +265,7 @@ int main(int argc, char** argv)
       bool down = false;
       Pos<int> offset;
 
-      auto cbInput = [&](const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) -> Handled {
+      auto cbInput = [&](const Control&, const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) -> Handled {
          switch(event.eventId){
             case InputEventMouseButton::getUniqueEventId(): {
                auto mbEvent = event.toEventType<InputEventMouseButton>();
@@ -546,8 +546,8 @@ int main(int argc, char** argv)
       dstInputFwd->setAnchoring(BaseWidget::Anchor::FILL);
       dstInputFwd->getTheme()->background = Style::Fill::NONE;
 
-      auto cbDstRender = [&](const Control&){
-         ReyEngine::drawRectangleLines(dstInputFwd->getGlobalRect(), 2.0, Colors::green);
+      auto cbDstRender = [&](const Control& thiz){
+         thiz.drawRectangleLines(dstInputFwd->getRect().toSizeRect(), 2.0, Colors::green);
       };
       dstInputFwd->setRenderCallback(cbDstRender);
 
@@ -561,7 +561,7 @@ int main(int argc, char** argv)
       TileMap::TileIndex selectedIndex = -1;
 
       //source texture input callback
-      auto cbSrcInput = [&](const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) -> bool {
+      auto cbSrcInput = [&](const Control&, const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) -> bool {
          if (mouse && mouse->isInside) {
             auto subrect = srcTexRect->getRect().getSubRect({SRC_TILE_SIZE, SRC_TILE_SIZE}, mouse->localPos);
             switch (event.eventId){
@@ -584,7 +584,7 @@ int main(int argc, char** argv)
          return false;
       };
       srcInputFwd->setUnhandledInputCallback(cbSrcInput);
-      srcInputFwd->setMouseExitCallback([&](){hoverRect.clear();});
+      srcInputFwd->setMouseExitCallback([&](const Control&){hoverRect.clear();});
 
       //make a simple control that can draw stuff on our texture rect
       auto renderCB = [&](const Control&){
@@ -622,7 +622,7 @@ int main(int argc, char** argv)
       dstInputFwd->subscribe<TileMap::EventTileMapCellHovered>(tileMap, cbTileMapHover);
       dstInputFwd->subscribe<TileMap::EventTileMapCellClicked>(tileMap, cbTileMapClick);
       //delete cursor tile
-      auto cbDstMouseExit = [&](){
+      auto cbDstMouseExit = [&](const Control&){
          cursorLayer.removeTileIndex(cursorTile);
       };
       dstInputFwd->setMouseExitCallback(cbDstMouseExit);
@@ -788,11 +788,11 @@ int main(int argc, char** argv)
 
               //add a label
               auto label = make_shared<Label>("Label");
-              auto onEnter = [label, control](){
+              auto onEnter = [label, control](const Control&){
                   label->setVisible(true);
                   label->setText(control->localToGlobal(label->getPos()));
                };
-              auto onExit = [label, control](){
+              auto onExit = [label, control](const Control&){
                  label->setVisible(false);
               };
               control->setMouseEnterCallback(onEnter);
@@ -811,11 +811,11 @@ int main(int argc, char** argv)
       root->addChild(mainVLayout);
       for (int i=0; i<5; i++){
          auto control = make_shared<Control>("Control" + to_string(i));
-         auto onHover = [control](){
+         auto onHover = [control](const Control&){
             std::cout << control->getName() << " got hover!" << endl;
             control->setVisible(true);
          };
-         auto offHover = [control](){control->setVisible(false);std::cout << control->getName() << " got hover!" << endl;};
+         auto offHover = [control](const Control&){control->setVisible(false);std::cout << control->getName() << " got hover!" << endl;};
          control->setMouseEnterCallback(onHover);
          control->setMouseExitCallback(offHover);
          control->setVisible(false);
@@ -931,7 +931,7 @@ int main(int argc, char** argv)
          }
       };
 
-      auto cbInput = [&](const InputEvent& event, const std::optional<UnhandledMouseInput> mouse) -> bool {
+      auto cbInput = [&](const Control&, const InputEvent& event, const std::optional<UnhandledMouseInput> mouse) -> bool {
          switch (event.eventId) {
             case InputEventMouseButton::getUniqueEventId(): {
                auto &mbEvent = event.toEventType<InputEventMouseButton>();
@@ -1072,17 +1072,24 @@ int main(int argc, char** argv)
       };
       cursor->setRenderCallback(cursorRender);
 
+      auto inputCB = [](const Control& control, const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) -> Handled {
+           cout << control.getName() << "->" << InputManager::getMousePos() << " : " << mouse->localPos << endl;
+           return false;
+      };
+
       for (int i=0;i<3;i++) {
          auto control = make_shared<Control>("Control" + to_string(i));
-         auto enterCB = [control](){control->getTheme()->background.colorPrimary = Colors::green;};
-         auto exitCB = [control](){control->getTheme()->background.colorPrimary = Colors::lightGray;};
+         auto enterCB = [control](const Control&){control->getTheme()->background.colorPrimary = Colors::green;};
+         auto exitCB = [control](const Control&){control->getTheme()->background.colorPrimary = Colors::lightGray;};
 
          control->setMouseEnterCallback(enterCB);
          control->setMouseExitCallback(exitCB);
          subCanvas->addChild(control);
          control->setRect({i * 100, i * 100, 100, 100});
+         control->setUnhandledInputCallback(inputCB);
       }
       subCanvas->addChild(cursor);
+
    }
 
    else if (args.getArg("--inspector")){

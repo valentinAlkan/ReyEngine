@@ -15,26 +15,26 @@ void Control::render() const {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Control::_process(float dt) {
-   if (processCallback) processCallback(dt);
+   if (processCallback) processCallback(*this, dt);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Handled Control::_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
-   if (unhandledInputCallback) return unhandledInputCallback(event, mouse);
+   if (unhandledInputCallback) return unhandledInputCallback(*this, event, mouse);
    return false;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Control::_on_mouse_enter() {
-   if (mouseEnterCallback) mouseEnterCallback();
+   if (mouseEnterCallback) mouseEnterCallback(*this);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Control::_on_mouse_exit() {
-   if (mouseExitCallback) mouseExitCallback();
+   if (mouseExitCallback) mouseExitCallback(*this);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Control::_on_rect_changed() {
-   if (rectChangedCallback) rectChangedCallback();
+   if (rectChangedCallback) rectChangedCallback(*this);
 }
