@@ -1,11 +1,26 @@
 #include "Canvas.h"
+#include "Application.h"
 
 using namespace std;
 using namespace ReyEngine;
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::Canvas::_init() {
+   if (!_renderTarget.ready()) {
+      _renderTarget.setSize(getSize()); //todo: make protected
+   }
+}
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::Canvas::renderBegin(ReyEngine::Pos<double>& textureOffset) {
-   target.beginRenderMode();
-   ClearBackground(ReyEngine::Colors::none);
+   Application::instance().getWindow()->pushRenderTarget(_renderTarget);
+   _renderTarget.clear();
+   textureOffset -= _rect.value.pos();
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::Canvas::render() const{
+   drawRectangleLines(_rect.value.toSizeRect(), 2.0, Colors::red);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -15,8 +30,8 @@ void ReyEngine::Canvas::renderEnd() {
    if (modal){
       modal.value().lock()->render();
    }
-   target.endRenderMode();
-   target.render(getGlobalRect().pos());
+   Application::instance().getWindow()->popRenderTarget();
+   drawRenderTargetRect(_renderTarget, Rect<int>(_renderTarget.getSize()), {0,0});
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -64,4 +79,11 @@ void Canvas::clearModal() {
       }
    }
    _modal.reset();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::_on_rect_changed() {
+   _renderTarget.setSize(_rect.value.size());
+   auto gpos = getGlobalPos();
+//   _virtualInputOffset = Pos<int>(gpos.x, gpos.y);
 }

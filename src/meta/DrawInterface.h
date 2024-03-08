@@ -6,6 +6,7 @@
 #include <array>
 #include <iostream>
 #include "FileSystem.h"
+#include "Property.h"
 #ifdef linux
 #include <limits.h>
 #endif
@@ -74,6 +75,7 @@ namespace ReyEngine {
       inline Vec2& operator/=(const Vec2& rhs){x /= rhs.x; y /= rhs.y; return *this;}
       inline Vec2& operator=(const Vec2& rhs){x = rhs.x; y=rhs.y; return *this;}
       inline bool operator==(const Vec2& rhs){return x==rhs.x && y==rhs.y;}
+      inline bool operator!=(const Vec2& rhs){return x!=rhs.x || y!=rhs.y;}
       inline Vec2& operator-(){x = -x; y =-y; return *this;}
       inline void operator=(Size<T>&) = delete;
       inline void operator=(Pos<T>&) = delete;
@@ -215,6 +217,7 @@ namespace ReyEngine {
    struct Size : public Vec2<T>{
       inline Size(): Vec2<T>(){}
       inline Size(const T& x, const T& y) : Vec2<T>(x, y){}
+      inline Size(const T edge): Size(edge, edge){}
       inline Size(const Vector2& v)     : Vec2<T>(v.x,v.y){}
       inline Size(const Vec2<int>& v)   : Vec2<T>(v.x,v.y){}
       inline Size(const Size<int>& v)   : Vec2<T>(v){}
@@ -239,8 +242,8 @@ namespace ReyEngine {
       inline Rect(const Rect<float>& r): x((T)r.x), y((T)r.y), width((T)r.width), height((T)r.height){}
       inline Rect(const Rect<double>& r): x((T)r.x), y((T)r.y), width((T)r.width), height((T)r.height){}
       inline explicit Rect(const Vec2<T>&) = delete;
-      inline explicit Rect(const Pos<T>& v): x((T)v.x), y((T)v.y){}
-      inline explicit Rect(const Size<T>& v): width((T)v.x), height((T)v.y){}
+      inline explicit Rect(const Pos<T>& v): x((T)v.x), y((T)v.y), width(0), height(0){}
+      inline explicit Rect(const Size<T>& v): x(0), y(0), width((T)v.x), height((T)v.y){}
       inline operator bool(){return x || y || width || height;}
       inline Rect(const Pos<T>& pos, const Size<T>& size): x((T)pos.x), y((T)pos.y), width((T)size.x), height((T)size.y){}
       inline bool operator!=(const Rect<T>& rhs) const {return rhs.x != x || rhs.y != y || rhs.width != width || rhs.height != height;}
@@ -301,7 +304,33 @@ namespace ReyEngine {
       [[nodiscard]] inline const Rect<T> toSizeRect() const {return {0,0,width, height};}
       inline void setSize(const ReyEngine::Size<T>& size){width = size.x; height = size.y;}
       inline void setPos(const ReyEngine::Pos<T>& pos){x = pos.x; y = pos.y;}
-
+      //Get the sub-rectangle (of size Size) that contains pos Pos. Think tilemaps.
+      inline Rect getSubRect(const Size<int>& size, const Pos<int>& pos){
+         auto subx = pos.x / size.x;
+         auto suby = pos.y / size.y;
+         return {subx * size.x, suby*size.y, size.x, size.y};
+      }
+      //returns the coordinates of the above subrect in grid-form (ie the 3rd subrect from the left would be {3,0}
+      inline Vec2<T> getSubRectCoord(const Size<int>& size, const Pos<int>& pos) const {
+         auto subx = pos.x / size.x;
+         auto suby = pos.y / size.y;
+         return {subx, suby};
+      }
+      //returns the 'index' of a subrect, as if it were read left-to-right, top-to-bottom
+      inline int getSubRectIndex(const Size<int>& size, const Pos<int>& pos) const {
+         auto coord = getSubRectCoord(size, pos);
+         auto columnCount = width / size.x;
+         return coord.y * columnCount + coord.x;
+      }
+      inline Rect getSubRect(const Size<int>& size, int index) const {
+         auto columnCount = width / size.x;
+         int coordY = index / columnCount;
+         int coordX = index % columnCount;
+         auto posX = coordX * size.x;
+         auto posY = coordY * size.y;
+         return {posX, posY, size.x, size.y};
+      }
+      inline void clear(){x=0,y=0,width=0;height=0;}
       T x;
       T y;
       T width;
@@ -311,6 +340,7 @@ namespace ReyEngine {
    struct Circle{
       inline Circle(Pos<int> center, double radius): center(center), radius(radius){}
       inline Circle(const Circle& rhs): center(rhs.center), radius(rhs.radius){}
+      inline Circle operator+(const Pos<int>& pos) const {Circle retval(*this); retval.center += pos; return retval;}
       Pos<int> center;
       double radius;
    };
@@ -337,6 +367,10 @@ namespace ReyEngine {
       explicit ColorRGBA(Color color): r(color.r), g(color.g), b(color.b), a(color.a){}
       inline ColorRGBA& operator=(const Color& rhs){r = rhs.r; g=rhs.g; b=rhs.b; a=rhs.a; return *this;}
       inline operator Color() const {return {r, g, b, a};}
+//      inline void setR(unsigned char _r){r = _r;}
+//      inline void setG(unsigned char _g){g = _g;}
+//      inline void setB(unsigned char _b){b = _b;}
+//      inline void setA(unsigned char _a){a = _a;}
       inline static ColorRGBA random(int alpha = -1){
          auto retval = ColorRGBA(std::rand() % 255, std::rand() % 256, std::rand() % 256, alpha >= 0 ? alpha % 256 : std::rand() % 256);
          return retval;
@@ -349,7 +383,20 @@ namespace ReyEngine {
       unsigned char a;
    };
 
-   #define COLORS ReyEngine::Colors
+   struct ColorProperty : public Property<ReyEngine::ColorRGBA>{
+      using Property<ReyEngine::ColorRGBA>::operator=;
+      ColorProperty(const std::string& instanceName,  ReyEngine::ColorRGBA defaultvalue)
+            : Property<ReyEngine::ColorRGBA>(instanceName, PropertyTypes::Color, defaultvalue)
+      {}
+      std::string toString() const override {return "{" + std::to_string(value.r) + ", " + std::to_string(value.g) + ", " + std::to_string(value.b) + ", "  + std::to_string(value.a) + "}";}
+      ReyEngine::ColorRGBA fromString(const std::string& str) override {
+         auto split = string_tools::fromList(str);
+         return {std::stoi(split[0]), std::stoi(split[1]), std::stoi(split[2]), std::stoi(split[3])};
+      }
+   };
+
+
+#define COLORS ReyEngine::Colors
    namespace Colors{
       static constexpr ColorRGBA gray = {130, 130, 130, 255};
       static constexpr ColorRGBA lightGray = {200, 200, 200, 255};
@@ -391,7 +438,16 @@ namespace ReyEngine {
    ReyEngineFont getFont(const std::string& fileName);
 
    struct ReyTexture{
-      ReyTexture(FileSystem::File file);
+      ReyTexture(){};
+      void loadTexture(const FileSystem::File& file);
+      ReyTexture(const FileSystem::File& file);
+      ReyTexture(ReyTexture&& other) noexcept
+      : _tex(other._tex)
+      , _texLoaded(other._texLoaded)
+      , size(other.size)
+      {
+         other._texLoaded = false;
+      }
       ~ReyTexture(){
          if (_texLoaded) {
             UnloadTexture(_tex);
@@ -402,7 +458,7 @@ namespace ReyEngine {
       Size<int> size;
    protected:
       Texture2D _tex;
-      bool _texLoaded;
+      bool _texLoaded = false;
    };
 
    Pos<double> getScreenCenter();
@@ -420,7 +476,8 @@ namespace ReyEngine {
    void drawRectangleRounded(const Rect<float>&, float roundness, int segments, const ReyEngine::ColorRGBA& color);
    void drawRectangleLines(const Rect<float>&, float lineThick, const ReyEngine::ColorRGBA& color);
    void drawRectangleRoundedLines(const Rect<float>&, float roundness, int segments, float lineThick, const ReyEngine::ColorRGBA& color);
-   void drawRectangleGradientV(const Rect<int>&, ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2);
+   void drawRectangleGradientV(const Rect<int>&, const ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2);
+   void drawCircle(const Circle&, const ReyEngine::ColorRGBA&  color);
    void drawCircleSector(const CircleSector&, const ReyEngine::ColorRGBA&  color, int segments);
    void drawCircleSectorLines(const CircleSector&, const ReyEngine::ColorRGBA&  color, int segments);
    void drawLine(const Line<int>&, float lineThick, const ReyEngine::ColorRGBA& color);
@@ -431,28 +488,21 @@ namespace ReyEngine {
    class RenderTarget{
       public:
          explicit RenderTarget();
-         ~RenderTarget(){
-            if (_texLoaded) {
-               UnloadRenderTexture(_tex);
-            }
-         }
+         ~RenderTarget();
          void setSize(const Size<int>& newSize);
-         void beginRenderMode(){BeginTextureMode(_tex);}
-         void endRenderMode(){EndTextureMode();}
-         void clear(Color color=WHITE){ClearBackground(color);}
-         void render(Vec2<float> pos) const{
-            // NOTE: Render texture must be y-flipped due to default OpenGL coordinates (left-bottom)
-            if (_texLoaded) {
-               DrawTextureRec(_tex.texture, {pos.x, pos.y, (float) _size.x, (float) -_size.y}, {0, 0}, Colors::none);
-            }
-         }
+         inline Size<int> getSize() const {return _size;}
+         inline void beginRenderMode(){BeginTextureMode(_tex);}
+         inline void endRenderMode(){EndTextureMode();}
+         inline void clear(Color color=WHITE) const {ClearBackground(color);}
+         inline bool ready() const {return _texLoaded;}
+         [[nodiscard]] inline const Texture2D& getRenderTexture() const {return _tex.texture;}
       protected:
          bool _texLoaded = false;
          RenderTexture2D _tex;
          Size<int> _size;
       };
 
-   //Everything drawn duiring scissor mode will be invisible if outside the area
+   //Everything drawn during scissor mode will be invisible if outside the area
    class ScissorTarget {
    public:
       void start(Rect<double> scissorArea) const {BeginScissorMode((int)scissorArea.x, (int)scissorArea.y, (int)scissorArea.width, (int)scissorArea.height);}

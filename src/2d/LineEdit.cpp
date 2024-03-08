@@ -6,7 +6,7 @@ using namespace ReyEngine;
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void LineEdit::render() const {
-   _drawRectangle(_rect.value.toSizeRect(), theme->background.colorPrimary);
+   drawRectangle(_rect.value.toSizeRect(), theme->background.colorPrimary);
 
    auto& font = theme->font;
    auto textheight = font.value.size;
@@ -21,7 +21,7 @@ void LineEdit::render() const {
       auto textStart = textWidth > ourWidth ? ourWidth - textWidth : 2;
 
       scissorTarget.start(getGlobalRect());
-      _drawText(text, {textStart, textPosV}, font);
+      drawText(text, {textStart, textPosV}, font);
       scissorTarget.stop();
    };
 
@@ -29,7 +29,7 @@ void LineEdit::render() const {
    if (_text.value.empty() && !_defaultText.value.empty()) {
       if (_highlight_start || _highlight_end) {
          auto highlightRect = _rect.value - Size<int>(2, 2) + Pos<int>(1, 1);
-         _drawRectangle(highlightRect, theme->highlight);
+         drawRectangle(highlightRect, theme->highlight);
       }
       renderText(_defaultText);
    } else {
@@ -50,7 +50,7 @@ void LineEdit::render() const {
                caretHPos = getWidth() - 2;
             }
          }
-         _drawLine({{caretHPos, 2}, {caretHPos, getHeight() - 2}}, 2, theme->font.value.color);
+         drawLine({{caretHPos, 2}, {caretHPos, getHeight() - 2}}, 2, theme->font.value.color);
       }
    }
 //   if (_isModal && getFrameCounter() % 60 == 0){

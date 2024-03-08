@@ -13,19 +13,19 @@ void TabContainer::render() const {
    auto& lineThick = tabTheme->lineThick;
 
    //draw the background
-   _drawRectangle(_childBoundingRect, backgroundPrimary);
+   drawRectangle(_childBoundingRect, backgroundPrimary);
 
    //draw the border
-   _drawRectangleLines(_childBoundingRect, lineThick, backgroundSecondary);
+   drawRectangleLines(_childBoundingRect, lineThick, backgroundSecondary);
 
    //render the tabs
    for (int i=0;i<_tabRects.size(); i++){
       auto& rect = _tabRects[i];
-      _drawRectangle(rect, currentTab == i ? backgroundTertiary : backgroundPrimary);
-      _drawRectangleLines(rect, 1.0, backgroundSecondary);
+      drawRectangle(rect, currentTab == i ? backgroundTertiary : backgroundPrimary);
+      drawRectangleLines(rect, 1.0, backgroundSecondary);
       //draw the tab child names
       auto child = _childrenOrdered.at(i);
-      _drawText(child->getName(), rect.pos() + Pos<int>(1,1), tabTheme->font);
+      drawText(child->getName(), rect.pos() + Pos<int>(1,1), tabTheme->font);
    }
 }
 
