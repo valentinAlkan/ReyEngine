@@ -7,8 +7,22 @@ using namespace std;
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::render() const {
    auto roundness = theme->roundness.value;
-   auto color = theme->background.colorPrimary.value;
-   drawRectangleRounded(_rect.value.toSizeRect(), roundness, 1, color);
+   auto color = theme->background.colorPrimary;
+   //draw the menu bar top half that peeks out
+   auto menuBarHeight = menuBar->getHeight();
+   drawRectangleRounded(_rect.value.toSizeRect().chopBottom(menuBarHeight), roundness, 1, theme->background.colorSecondary);
+
+   //draw the rounded bottom portion
+   drawRectangleRounded(_rect.value.toSizeRect().chopTop(menuBarHeight), roundness, 1, theme->background.colorPrimary);
+
+   //draw the non-rounded band
+   drawRectangle(_rect.value.toSizeRect().chopBottom(50) + Pos<int>(0,menuBarHeight), theme->background.colorPrimary);
+
+
+   //draw the grab bar
+   if (showHeader){
+//      drawRectangle()
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -27,23 +41,17 @@ void Panel::_init() {
    vlayout->addChild(window);
 
    //cap menu bar size
-   menuBar->setMaxSize({ReyEngine::MaxInt, theme->menuHeight.value});
+   menuBar->setMaxSize({ReyEngine::MaxInt, (int)theme->font.value.size});
    menuBar->getTheme()->background = Style::Fill::SOLID;
 
    //add a button cluster on the right side of the menu bar
    auto btnClusterRight = make_shared<HLayout>("__btnClusterRight");
    menuBar->addChild(btnClusterRight);
-   btnClusterRight->setAnchoring(BaseWidget::Anchor::RIGHT);
-
-   //debug - visualize menu bar
-   auto debugView = make_shared<Control>("debug");
-   addChild(debugView);
-   auto resizeCB = [debugView](const WidgetResizeEvent& event){
-      debugView->setRect(event.publisher->toBaseWidget()->getRect());
-   };
+   menuBar->childScales = {0.85,.15};
 
    //add some buttons
    auto closeButton = make_shared<PushButton>(BTN_CLOSE_NAME);
+   closeButton->setMaxSize({(int)theme->font.value.size, (int)theme->font.value.size});
    menuBar->addChild(closeButton);
 
    //connect to button close signal
@@ -52,9 +60,6 @@ void Panel::_init() {
       return true;
    };
    subscribe<PushButton::ButtonPressEvent>(closeButton, toggleShowCB);
-
-   debugView->subscribe<BaseWidget::WidgetResizeEvent>(menuBar, resizeCB);
-
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

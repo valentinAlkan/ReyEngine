@@ -43,6 +43,6 @@ void PushButton::render() const {
     if (isHovered()) color = theme->background.colorSecondary.value;
     if (down.value) color = theme->background.colorTertiary.value;
     drawRectangleRounded(_rect.value.toSizeRect(), theme->roundness.value, SEGMENTS, color);
-    drawRectangleRoundedLines(_rect.value.toSizeRect(), theme->roundness.value, SEGMENTS, THICKNESS, COLORS::black);
+    drawRectangleRoundedLines(_rect.value.toSizeRect().embiggen(-THICKNESS), theme->roundness.value, SEGMENTS, THICKNESS, COLORS::black);
     drawTextCentered(text.value, _rect.value.toSizeRect().center(), theme->font.value);
 }

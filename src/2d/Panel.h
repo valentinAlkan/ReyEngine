@@ -12,7 +12,9 @@ public:
    static constexpr char MENU_NAME[] = "__menu";
    static constexpr char WINDOW_NAME[] = "__window";
    static constexpr char BTN_CLOSE_NAME[] = "__btn_close";
-REYENGINE_OBJECT(Panel, BaseWidget)
+   REYENGINE_OBJECT(Panel, BaseWidget)
+   , PROPERTY_DECLARE(panelTitle)
+   , PROPERTY_DECLARE(showHeader, true)
    {
       theme->background = Style::Fill::SOLID;
       theme->background.colorPrimary = ReyEngine::ColorRGBA(94, 142, 181, 255);
@@ -24,6 +26,8 @@ public:
    void registerProperties() override;
 
 protected:
+   StringProperty panelTitle;
+   BoolProperty showHeader;
    std::shared_ptr<VLayout> vlayout;
    std::shared_ptr<HLayout> menuBar;
    std::shared_ptr<Control> window;
