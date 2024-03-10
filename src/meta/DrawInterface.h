@@ -235,6 +235,7 @@ namespace ReyEngine {
 
    template <typename T>
    struct Rect {
+      enum class Corner{TOP_LEFT=1, TOP_RIGHT=2, BOTTOM_RIGHT=4, BOTTOM_LEFT=8};
       inline Rect(): x(0), y(0), width(0), height(0){}
       inline Rect(const T x, const T y, const T width, const T height) : x(x), y(y), width(width), height(height){}
       inline explicit Rect(const Rectangle& r): x((T)r.x), y((T)r.y), width((T)r.width), height((T)r.height){}
@@ -266,6 +267,14 @@ namespace ReyEngine {
       inline Rect& operator*=(const Rect<T>& rhs){x *= rhs.x; y *= rhs.y; width *= rhs.width; height *= rhs.height; return *this;}
       inline Rect& operator/=(const Rect<T>& rhs){x /= rhs.x; y /= rhs.y; width /= rhs.width; height /= rhs.height; return *this;}
       inline operator Rectangle() {return {x,y,width,height};}
+      inline Rect embiggen(T amt) const {return *this + Rect<T>(-amt, -amt, 2*amt, 2*amt);} //shrink/expand borders evenly
+      inline Rect emtallen(T amt) const {return  *this + Rect<T>(0, -amt, 0, 2*amt);}//embiggen tallness
+      inline Rect emwiden(T amt) const {return  *this + Rect<T>(-amt, 0, 2*amt, 0);}//embiggen wideness
+      inline Rect chopTop(T amt) const {auto retval = *this; retval.y+= amt; retval.height-=amt; return retval;} //remove the topmost amt of the rectangle and return the remainder (moves y, cuts height)
+      inline Rect chopBottom(T amt) const {auto retval = *this; retval.height-=amt; return retval;} //remove the bottommost amt of the rectangle and return the remainder (cuts height)
+      inline Rect chopRight(T amt) const {auto retval = *this; retval.width-=amt; return retval;} //remove the rightmost amt of the rectangle and return the remainder (cuts width)
+      inline Rect chopLeft(T amt) const {auto retval = *this; retval.x+=amt; retval.width-=amt; return retval;} //remove the leftmost amt of the rectangle and return the remainder (moves x, cuts width)
+
       inline bool isInside(const Vec2<T>& point) const {
          return (point.x > x && point.x < x + width) &&
                (point.y > y && point.y < y + height);
