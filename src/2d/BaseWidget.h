@@ -150,7 +150,8 @@ public:
    template <typename T> bool is_base_of(){return std::is_base_of_v<BaseWidget, T>;}
    static void registerType(const std::string& typeName, const std::string& parentType, bool isVirtual, Deserializer fx){TypeManager::registerType(typeName, parentType, isVirtual, fx);}
    std::string serialize();
-   std::shared_ptr<Style::Theme>& getTheme(){return theme;}
+   inline std::shared_ptr<Style::Theme>& getTheme(){return theme;}
+   inline void setTheme(std::shared_ptr<Style::Theme>& newTheme){theme = newTheme;}
 
    //drawing functions
    void drawLine(const ReyEngine::Line<int>&, float lineThick, const ReyEngine::ColorRGBA&) const;

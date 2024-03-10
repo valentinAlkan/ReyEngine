@@ -112,7 +112,8 @@ namespace Style {
       PROPERTY_DECLARE(layoutMargins),
       PROPERTY_DECLARE(lineThick),
       PROPERTY_DECLARE(highlight, ReyEngine::Colors::blue),
-      PROPERTY_DECLARE(cursor)
+      PROPERTY_DECLARE(cursor),
+      PROPERTY_DECLARE(menuHeight, 30)
       {
          //apply defaults
          background = Fill::SOLID;
@@ -133,6 +134,7 @@ namespace Style {
       MarginsProperty layoutMargins;
       FloatProperty lineThick;
       CursorProperty cursor;
+      IntProperty menuHeight;
 
       void registerProperties() override {
          registerProperty(background);
@@ -141,6 +143,8 @@ namespace Style {
          registerProperty(roundness);
          registerProperty(font);
          registerProperty(layoutMargins);
+         registerProperty(cursor);
+         registerProperty(menuHeight);
       }
 
       //Set the size of the font
