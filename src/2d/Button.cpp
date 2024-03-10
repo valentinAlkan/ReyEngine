@@ -2,6 +2,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 Handled BaseButton::_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
     if (_isEditorWidget) return false;
+    if (!mouse->isInside) return false;
     switch (event.eventId) {
         case InputEventMouseButton::getUniqueEventId(): {
             auto mouseEvent = event.toEventType<InputEventMouseButton>();
@@ -37,7 +38,7 @@ void BaseButton::setDown(bool newDown){
 /////////////////////////////////////////////////////////////////////////////////////////
 void PushButton::render() const {
     static constexpr int SEGMENTS = 10;
-    static constexpr int THICKNESS = 2;
+    static constexpr int THICKNESS = 1;
     auto color = theme->background.colorPrimary.value;
     if (isHovered()) color = theme->background.colorSecondary.value;
     if (down.value) color = theme->background.colorTertiary.value;

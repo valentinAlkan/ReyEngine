@@ -11,7 +11,7 @@
 #include "Slider.hpp"
 #include "Timer.hpp"
 #include "Layout.h"
-#include "Panel.hpp"
+#include "Panel.h"
 #include "Editor.h"
 #include "Tree.h"
 #include "Inspector.h"
@@ -81,7 +81,7 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--marginsTest", "Layout margins test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--hoverTest", "Hovering test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--tabContainerTest", "Tab container test", 0, RuntimeArg::ArgType::FLAG));
-   args.defineArg(RuntimeArg("--relativeMotionTest", "Relative location movement test", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--dragTest", "Dragging and relative movement test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--drawTest", "Test various drawing functions", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--comboBoxTest", "Combo box test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--tileMapTest", "Config file test", 0, RuntimeArg::ArgType::FLAG));
@@ -370,15 +370,16 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--panelTest")){
-      root->addChild(make_shared<VLayout>("MainLayout"));
+//      auto mainVLayout = make_shared<VLayout>("MainLayout");
+//      root->addChild(mainVLayout);
 
       //add a panel to the layout
       auto panel = make_shared<Panel>("Panel");
-
+      panel->setRect({20, 20, 500, 500});
       //add a slider so we can adjust the roundness dynamically
       auto slider = make_shared<Slider>("Slider", Slider::SliderType::HORIZONTAL);
-      slider->setRect(Rect<int>(40, 20, 100, 20));
-      panel->addChild(slider);
+      slider->setRect(Rect<int>(40, 600, 100, 20));
+      root->addChild(slider);
       //add an hlayout to fill the slider
       auto sliderHLayout = make_shared<HLayout>("sliderLayout");
       sliderHLayout->setRect(slider->getRect().toSizeRect());
@@ -387,9 +388,12 @@ int main(int argc, char** argv)
       //add a name label to the slider
       auto fieldLabel = make_shared<Label>("FieldNameRoundness");
       fieldLabel->setText("Roundness: ");
+      //set alpha channel transparency so we can see the slider handle
+      fieldLabel->getTheme()->background.colorPrimary.value.a = 127;
       //add a value label to the slider
       auto valueLabel = make_shared<Label>("roundnessLabel");
       valueLabel->setText(0, 3);
+      valueLabel->setTheme(fieldLabel->getTheme());
 
       sliderHLayout->addChild(fieldLabel);
       sliderHLayout->addChild(valueLabel);
@@ -909,7 +913,7 @@ int main(int argc, char** argv)
       catElement(xmlRoot);
    }
 
-   else if (args.getArg("--relativeMotionTest")){
+   else if (args.getArg("--dragTest")){
       //make something we can draw on
       auto canvasControl = make_shared<Control>("Control");
       root->addChild(canvasControl);

@@ -1,5 +1,5 @@
 #pragma once
-#include "Panel.hpp"
+#include "Panel.h"
 
 //template <typename T>
 //class WorkspaceWidget{
