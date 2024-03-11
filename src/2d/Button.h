@@ -3,9 +3,19 @@
 
 class BaseButton : public BaseWidget {
 public:
+   //emitted when button is "pressed" (ie released on the button itself)
    struct ButtonPressEvent : public Event<ButtonPressEvent>{
       EVENT_CTOR_SIMPLE(ButtonPressEvent, Event<ButtonPressEvent>, bool down), down(down){}
       bool down;
+   };
+   //emitted everytime the state of the button is changed, regardless of where the mouse is
+   struct ButtonToggleEvent : public Event<ButtonToggleEvent>{
+      EVENT_CTOR_SIMPLE(ButtonToggleEvent, Event<ButtonToggleEvent>, bool down, bool mouseCapture), down(down){}
+      bool down;
+      //whether or not the mouse was actually in the button's rect.
+      // useful for ignoring an up event if the user dragged the mouse away (which is typical
+      // when the user wants that input ignored)
+      bool mouseCapture;
    };
 protected:
    REYENGINE_VIRTUAL_OBJECT(BaseButton, BaseWidget)
@@ -18,7 +28,7 @@ public:
       registerProperty(down);
    };
    BoolProperty down;
-   bool wasDown;
+//   bool wasDown;
 protected:
    Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
    void setDown(bool newDown);

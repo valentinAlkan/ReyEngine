@@ -7,6 +7,7 @@
 #include "EventManager.h"
 #include "Theme.h"
 #include "Component.h"
+#include "FileSystem.h"
 #include <iostream>
 #include <stack>
 #include <utility>
@@ -17,7 +18,7 @@
 #include <optional>
 #include <unordered_set>
 #include <unordered_map>
-#include "FileSystem.h"
+#include <variant>
 
 using Handled = bool;
 
@@ -68,6 +69,15 @@ public:
             ENUM_PAIR_DECLARE(Anchor, FILL),
             ENUM_PAIR_DECLARE(Anchor, CENTER)
       };
+   };
+
+   struct WidgetProperty : public Property<WidgetPtr>{
+      using Property<WidgetPtr>::operator=;
+      WidgetProperty(const std::string& instanceName, WidgetPtr defaultvalue = nullptr)
+      : Property(instanceName, PropertyTypes::BaseWidget, defaultvalue)
+      {}
+      std::string toString() const override {return value->serialize();}
+      WidgetPtr fromString(const std::string& data) override { throw std::runtime_error("not implemented"); return {};}
    };
 
    static constexpr char TYPE_NAME[] = "BaseWidget";
@@ -143,7 +153,7 @@ public:
    void setBackRender(bool);
    bool isRoot() const;
 
-   std::optional<WidgetPtr> addChild(WidgetPtr);
+   virtual std::optional<WidgetPtr> addChild(WidgetPtr);
    std::optional<WidgetPtr> removeChild(const std::string& name, bool quiet = false); //quiet silences the output if child is not found.
    void removeAllChildren(); //removes all children and DOES NOT RETURN THEM!
 
@@ -183,7 +193,7 @@ protected:
    virtual void _on_child_added(WidgetPtr&){} // called at the beginning of the next frame after a child is added. Child is now owned by us. Safe to manipulate child.
    virtual void _on_enter_tree(){} //called every time a widget enters the tree
    virtual void _on_exit_tree(){}
-   virtual void _on_child_removed(){}
+   virtual void _on_child_removed(WidgetPtr&){}
    virtual void _on_modality_gained(){}
    virtual void _on_modality_lost(){}
    virtual std::optional<std::shared_ptr<Draggable>> _on_drag_start(ReyEngine::Pos<int> globalPos){return std::nullopt;} //override and return something to implement drag and drop

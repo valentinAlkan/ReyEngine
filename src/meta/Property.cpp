@@ -25,6 +25,10 @@ void PropertyContainer::registerProperty(BaseProperty& property) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void PropertyContainer::moveProperty(std::shared_ptr<BaseProperty> property){
+   auto found = _ownedProperties.find(property->instanceName());
+   if (found != _ownedProperties.end()){
+      throw std::runtime_error("Property " + property->instanceName() + " already exists!");
+   }
    _ownedProperties[property->instanceName()] = property;
    registerProperty(*property);
 

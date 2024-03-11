@@ -40,6 +40,7 @@ namespace PropertyTypes{
    PROP_TYPE(TileMapCellData)
    PROP_TYPE(TileMapLayer)
    PROP_TYPE(FilePath)
+   PROP_TYPE(BaseWidget)
 }
 namespace ReyEngine{
 
@@ -74,6 +75,21 @@ struct PropertyContainer : public inheritable_enable_shared_from_this<PropertyCo
    void moveProperty(std::shared_ptr<BaseProperty>);
    void updateProperty(BaseProperty&);
    PropertyMap& getProperties(){return _properties;}
+   template <typename T>
+   T& getProperty(const std::string& instanceName){
+      auto found = _properties.find(instanceName);
+      if (found == _properties.end()){
+         //check owned properties
+         auto foundOwned = _ownedProperties.find(instanceName);
+         if (foundOwned == _ownedProperties.end()) {
+            throw std::runtime_error("Property " + instanceName + " not found");
+         }
+//         return (T&)(*foundOwned->second);
+            return static_cast<T&>(*foundOwned->second);
+      }
+//      return (T&)*found->second;
+      return static_cast<T&>(*found->second);
+   }
 protected:
    void _initProperties(){};
    PropertyMap _properties;
@@ -107,7 +123,7 @@ struct Property : public BaseProperty {
       value = newValue;
       return *this;
    }
-   operator bool(){return bool(value);}
+   bool operator!(){return !bool(value);}
    Property& operator=(const Property& other){
       value = other.value;
       return *this;
@@ -280,6 +296,7 @@ struct ListProperty : public Property<std::vector<T>>{
    T& append(){Property<std::vector<T>>::value.emplace_back(); return Property<std::vector<T>>::value.back();} //create a new element at the end of the list
    void clear(){Property<std::vector<T>>::value.clear();}
    void erase(int index){auto it=Property<std::vector<T>>::value.begin() + index; Property<std::vector<T>>::value.erase(it);}
+   void pop_back(){auto it=Property<std::vector<T>>::value.end() - 1; Property<std::vector<T>>::value.erase(it);}
    /**/
    virtual T stringToElement(const std::string&) const = 0;
    virtual std::string elementToString(const T&) const = 0;

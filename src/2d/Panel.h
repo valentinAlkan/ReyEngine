@@ -24,8 +24,11 @@ public:
    Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
    void render() const override;
    void registerProperties() override;
+   std::optional<std::shared_ptr<BaseWidget>> addChildInternal(std::shared_ptr<BaseWidget> child){return BaseWidget::addChild(child);}
+   std::optional<std::shared_ptr<BaseWidget>> addChildToPanel(std::shared_ptr<BaseWidget> child);
 
 protected:
+   std::optional<std::shared_ptr<BaseWidget>> addChild(std::shared_ptr<BaseWidget> child) override{return BaseWidget::addChild(child);}
    StringProperty panelTitle;
    BoolProperty showHeader;
    std::shared_ptr<VLayout> vlayout;

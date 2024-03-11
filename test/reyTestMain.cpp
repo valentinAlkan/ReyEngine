@@ -370,9 +370,6 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--panelTest")){
-//      auto mainVLayout = make_shared<VLayout>("MainLayout");
-//      root->addChild(mainVLayout);
-
       //add a panel to the layout
       auto panel = make_shared<Panel>("Panel");
       panel->setRect({20, 20, 500, 500});
@@ -412,6 +409,18 @@ int main(int argc, char** argv)
       };
       valueLabel->subscribe<Slider::SliderValueChangedEvent>(slider, updateLabel);
       root->addChild(panel);
+
+      //add a button to toggle the panel visibility
+      auto btnShowPanel = std::make_shared<PushButton>("btnShowPanel");
+      auto showPanel = [&](const PushButton::ButtonPressEvent& event){panel->setVisible(!panel->getVisible());};
+      panel->subscribe<PushButton::ButtonPressEvent>(btnShowPanel, showPanel);
+      btnShowPanel->setPos(800,100);
+      root->addChild(btnShowPanel);
+
+      //display some stuff in the panel
+      auto panelLabel = std::make_shared<Label>("panelLabel");
+      panelLabel->setText("This label is a child of the panel");
+      panel->addChildToPanel(panelLabel);
    }
 
    else if (args.getArg("--editor")){
@@ -635,49 +644,74 @@ int main(int argc, char** argv)
    else if (args.getArg("--buttonTest")) {
       root->addChild(make_shared<Control>("root"));
       auto label = make_shared<Label>("Label");
+      auto explainerLabel = make_shared<Label>("Explainer");
+      explainerLabel->setText("This will turn green when the button is PRESSED (as opposed to when it is toggled up or down)");
       label->setRect(Rect<int>(50,650,1000,50));
       root->addChild(label);
       auto vlayout = make_shared<VLayout>("VLayout");
-      vlayout->setRect({100, 100, 200, 250});
+      vlayout->setRect({100, 100, 200, 300});
       root->addChild(vlayout);
 
       //callback lambda(s)
-      auto cb = [&](const Event<BaseButton::ButtonPressEvent>& event){
+      auto cb = [&](const BaseButton::ButtonToggleEvent& event){
          auto senderName = event.publisher->toBaseWidget()->getName();
-         label->setText(senderName);
+         label->setText(senderName + " : " + (event.down ? "down" : "up"));
          //you can do whatever else here
       };
 
-      auto cbSecret = [&](const Event<BaseButton::ButtonPressEvent>& event){
+      auto cbSecret = [&](const BaseButton::ButtonToggleEvent& event){
          auto senderName = event.publisher->toBaseWidget()->getName();
          label->setText(senderName + " is the secret button! You win it all!");
          //you can do whatever else here
       };
 
+      auto cbPress = [&](const BaseButton::ButtonPressEvent& event) {
+         auto pushButton = event.publisher->toBaseWidget()->toType<PushButton>();
+         //get the control property
+         auto& control = pushButton->getProperty<BaseWidget::WidgetProperty>("control");
+         auto& pressCount = control.value->getProperty<IntProperty>("pressCount");
+         control.value->getTheme()->background.colorPrimary = pressCount % 2 == 0 ? Colors::green : Colors::red;
+         pressCount++;
+      };
+
       for (int i=0; i<5; i++) {
          static constexpr int secret = 2;
-         auto button = make_shared<PushButton>("PushButton" + to_string(i));
-         vlayout->addChild(button);
+         string istr =  to_string(i);
+         auto hlayout = make_shared<HLayout>("hlayout" + istr);
+         auto button = make_shared<PushButton>("PushButton" + istr);
+         auto control = make_shared<Control>("Control" + istr);
+         //add the control as a property of the button
+         auto widgetProperty = make_shared<BaseWidget::WidgetProperty>("control", control);
+         auto pressCount = make_shared<IntProperty>("pressCount", 0);
+         control->moveProperty(pressCount);
+         button->moveProperty(widgetProperty);
+         button->subscribe<PushButton::ButtonPressEvent>(button, cbPress);
+         hlayout->childScales.value = {0.85, 0.15};
+         hlayout->addChild(button);
+         hlayout->addChild(control);
+         vlayout->addChild(hlayout);
          //Subscribers don't have to have any relationship with the callbacks they call. In this example,
          // the vlayout is subscribing to the buttons' pushbutton events. However, the callback has nothing
          // to do with the vlayout itself. It's just a lambda. That's just a cool feature of this engine!
          //Callbacks are also typed - every event emits an event, and any handlers that wish to intercept it
          // must have the same signature.
          if (button->getName() == "PushButton" + to_string(secret)) {
-            vlayout->subscribe<BaseButton::ButtonPressEvent>(button, cbSecret);
+            vlayout->subscribe<BaseButton::ButtonToggleEvent>(button, cbSecret);
          } else {
-            vlayout->subscribe<BaseButton::ButtonPressEvent>(button, cb);
+            vlayout->subscribe<BaseButton::ButtonToggleEvent>(button, cb);
          }
       }
 
-      auto cbExit = [&](const Event<BaseButton::ButtonPressEvent>& event){
-         //quit (crashes atm but w/e)
-         Application::exit(Application::ExitReason::CLEAN);
+      auto cbExit = [&](const BaseButton::ButtonToggleEvent& event){
+         //quit
+         if (event.down) {
+            Application::exit(Application::ExitReason::CLEAN);
+         }
       };
 
       auto exitButton = make_shared<PushButton>("Exit");
       vlayout->addChild(exitButton);
-      exitButton->subscribe<BaseButton::ButtonPressEvent>(exitButton, cbExit);
+      exitButton->subscribe<BaseButton::ButtonToggleEvent>(exitButton, cbExit);
 
    }
 

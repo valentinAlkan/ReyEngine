@@ -22,7 +22,8 @@ protected:
    Layout(const std::string &name, const std::string &typeName, LayoutDir layoutDir);
    void _register_parent_properties() override;
    void _on_child_added(std::shared_ptr<BaseWidget>& child) override;
-   void _on_child_added_immediate(std::shared_ptr<BaseWidget>& child) override;
+//   void _on_child_added_immediate(std::shared_ptr<BaseWidget>& child) override;
+   void _on_child_removed(std::shared_ptr<BaseWidget>& child) override;
    void _on_rect_changed() override {arrangeChildren();}
    void renderEnd() override;
    virtual void arrangeChildren();
