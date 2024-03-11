@@ -397,7 +397,7 @@ int main(int argc, char** argv)
       sliderHLayout->setWidth(fieldLabel->getWidth() + valueLabel->getWidth());
 
       //set the layout ratio so everything can be displayed nicely
-      sliderHLayout->childScales.set(0, 1.5);
+      sliderHLayout->childScales = {1.5};
 
       //resize slider so it fits all our text
       slider->setWidth(sliderHLayout->getWidth());

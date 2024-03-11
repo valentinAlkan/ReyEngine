@@ -73,18 +73,21 @@ Handled Panel::_unhandled_input(const InputEvent& event, const std::optional<Unh
    switch (event.eventId) {
       case InputEventMouseButton::getUniqueEventId(): {
          auto &mbEvent = event.toEventType<InputEventMouseButton>();
-         _isDragging = mbEvent.isDown && menuBar->isInside(mouse->localPos);
-         return true;
+         if (menuBar->isInside(mouse->localPos) && mbEvent.isDown) {
+            _isDragging = true;
+            offset = mousePos - getPos();
+            return true;
+         } else if (_isDragging && !mbEvent.isDown){
+            _isDragging = false;
+            return true;
+         }
       }
       case InputEventMouseMotion::getUniqueEventId():
          mousePos = InputManager::getMousePos();
          if (_isDragging) {
             setPos(mousePos - offset);
-         } else {
-            offset = mousePos - getPos();
+            return true;
          }
-
-         return true;
    }
    return false;
 }
