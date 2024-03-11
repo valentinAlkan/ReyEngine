@@ -192,8 +192,11 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::removeChild(const std::string& 
    }
 
    auto child = found->second.second;
+   auto orderIndex = found->second.first;
    _children.erase(found);
+   _childrenOrdered.erase(_childrenOrdered.begin() + orderIndex);
    child->isInLayout = false;
+   _on_child_removed(child);
    return child;
 }
 

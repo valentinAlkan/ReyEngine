@@ -29,7 +29,7 @@ void Panel::render() const {
 void Panel::_init() {
    //create subwidgets
    vlayout = make_shared<VLayout>(VLAYOUT_NAME);
-   window = make_shared<Control>(WINDOW_NAME);
+   if (!window) window = make_shared<Control>(WINDOW_NAME);
    menuBar = make_shared<HLayout>(MENU_NAME);
 
    //get rid of control backgrounds so we only see panel background
@@ -44,15 +44,21 @@ void Panel::_init() {
    menuBar->setMaxSize({ReyEngine::MaxInt, (int)theme->font.value.size});
    menuBar->getTheme()->background = Style::Fill::SOLID;
 
+   //add a spacer
+   auto spacer = make_shared<Control>("__spacer");
+   spacer->setVisible(false);
+   menuBar->addChild(spacer);
+
    //add a button cluster on the right side of the menu bar
    auto btnClusterRight = make_shared<HLayout>("__btnClusterRight");
    menuBar->addChild(btnClusterRight);
-   menuBar->childScales = {0.85,.15};
+   menuBar->childScales = {0.95, .05};
 
    //add some buttons
    auto closeButton = make_shared<PushButton>(BTN_CLOSE_NAME);
-   closeButton->setMaxSize({(int)theme->font.value.size, (int)theme->font.value.size});
-   menuBar->addChild(closeButton);
+   closeButton->setText("x");
+//   closeButton->setMaxSize({(int)theme->font.value.size, (int)theme->font.value.size});
+   btnClusterRight->addChild(closeButton);
 
    //connect to button close signal
    auto toggleShowCB = [this](const PushButton::ButtonPressEvent& event){
@@ -83,6 +89,11 @@ Handled Panel::_unhandled_input(const InputEvent& event, const std::optional<Unh
    return false;
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<std::shared_ptr<BaseWidget>> Panel::addChildToPanel(std::shared_ptr<BaseWidget> child){
+   if (!window) window = make_shared<Control>(WINDOW_NAME);
+   return window->addChild(child);
+}
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::registerProperties(){
    //register properties specific to your type here.

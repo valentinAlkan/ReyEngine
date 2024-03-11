@@ -2,35 +2,42 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 Handled BaseButton::_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
     if (_isEditorWidget) return false;
-    if (!mouse->isInside) return false;
+//    if (!mouse->isInside) return false;
     switch (event.eventId) {
         case InputEventMouseButton::getUniqueEventId(): {
-            auto mouseEvent = event.toEventType<InputEventMouseButton>();
-            if (mouseEvent.button == InputInterface::MouseButton::LEFT) {
-               if (mouse->isInside && mouseEvent.isDown) {
-                  setDown(true);
+            auto mbEvent = event.toEventType<InputEventMouseButton>();
+            if (mbEvent.button == InputInterface::MouseButton::LEFT) {
+               if (down && !mbEvent.isDown){
+                  //button is down and it was just released *somewhere*
+                  auto toggle = ButtonToggleEvent(toEventPublisher(), mbEvent.isDown, mouse->isInside);
+                  publish<ButtonToggleEvent>(toggle);
+                  if (mouse->isInside){
+                     //if it was released on the button, it is a press
+                     auto press = ButtonPressEvent(toEventPublisher(), mbEvent.isDown);
+                     publish<ButtonPressEvent>(press);
+                  }
+                  down = mbEvent.isDown;
                   return true;
-               } else if (!mouseEvent.isDown){
-                  setDown(false);
+               } else if (mbEvent.isDown && mouse->isInside) {
+                  //normal inside-click
+                  auto toggle = ButtonToggleEvent(toEventPublisher(), mbEvent.isDown, mouse->isInside);
+                  publish<ButtonToggleEvent>(toggle);
+                  down = mbEvent.isDown;
+                  return true;
+               }
                }
             }
         }
-        break;
-        case InputEventMouseMotion::getUniqueEventId():
-            auto mouseEvent = event.toEventType<InputEventMouseMotion>();
-            /**/
-            break;
-    }
     return false;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseButton::setDown(bool newDown){
-    if (wasDown != newDown){
-        down.set(newDown);
-        auto e = ButtonPressEvent(toEventPublisher(), newDown);
-        publish<ButtonPressEvent>(e);
-    }
+   down = newDown;
+   auto toggle = ButtonToggleEvent(toEventPublisher(), newDown, false);
+   publish<ButtonToggleEvent>(toggle);
+   auto press = ButtonPressEvent(toEventPublisher(), newDown);
+   publish<ButtonPressEvent>(press);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -41,7 +48,7 @@ void PushButton::render() const {
     static constexpr int THICKNESS = 1;
     auto color = theme->background.colorPrimary.value;
     if (isHovered()) color = theme->background.colorSecondary.value;
-    if (down.value) color = theme->background.colorTertiary.value;
+    if (down) color = theme->background.colorTertiary.value;
     drawRectangleRounded(_rect.value.toSizeRect(), theme->roundness.value, SEGMENTS, color);
     drawRectangleRoundedLines(_rect.value.toSizeRect().embiggen(-THICKNESS), theme->roundness.value, SEGMENTS, THICKNESS, COLORS::black);
     drawTextCentered(text.value, _rect.value.toSizeRect().center(), theme->font.value);

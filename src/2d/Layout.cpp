@@ -21,12 +21,23 @@ void Layout::_register_parent_properties() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void Layout::_on_child_added(std::shared_ptr<BaseWidget> &child) {
    Application::printDebug() << child->getName() << " added to layout " << getName() << std::endl;
+   if (childScales.size() < _childrenOrdered.size()){
+      childScales.append(1.0);
+   }
    arrangeChildren();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Layout::_on_child_added_immediate(std::shared_ptr<BaseWidget> &child) {
-   childScales.append(1.0);
+//void Layout::_on_child_added_immediate(std::shared_ptr <BaseWidget> &child) {
+//   //ensure we have the correct number of values for the amount of children we have
+//   rectifyScales();
+//}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Layout::_on_child_removed(std::shared_ptr<BaseWidget>& child){
+   if (childScales.size() > _childrenOrdered.size()){
+      childScales.pop_back();
+   }
 }
 
 void Layout::renderEnd() {
@@ -46,6 +57,7 @@ void Layout::arrangeChildren() {
       for (int i=startIndex;i<childScales.size();i++){
          sum += this->childScales.get(i);
       }
+      if (!childScales.size()) childScales.append(1.0); //always ensure we have a child scale
       return childScales.value[startIndex] / sum;
    };
 
