@@ -291,6 +291,7 @@ Handled BaseWidget::_process_unhandled_input(const InputEvent& event, const std:
       return false;
    };
 
+   if (!_visible) return false;
    if (_isEditorWidget){
       if (_process_unhandled_editor_input(event, mouse) > 0) return true;
    }

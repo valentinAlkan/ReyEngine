@@ -95,7 +95,7 @@ void Layout::arrangeChildren() {
             consumedSpace = virtualRect.height;
             break;
       }
-       std::cout << child->getName() << " rect = " << actualRect << endl;
+//       std::cout << child->getName() << " rect = " << actualRect << endl;
       //apply transformations
       child->setRect(actualRect);
       childIndex++;

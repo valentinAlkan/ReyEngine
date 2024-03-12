@@ -389,7 +389,7 @@ int main(int argc, char** argv)
       fieldLabel->getTheme()->background.colorPrimary.value.a = 127;
       //add a value label to the slider
       auto valueLabel = make_shared<Label>("roundnessLabel");
-      valueLabel->setText(0, 3);
+      valueLabel->setText(panel->getTheme()->roundness, 3);
       valueLabel->setTheme(fieldLabel->getTheme());
 
       sliderHLayout->addChild(fieldLabel);
@@ -421,6 +421,7 @@ int main(int argc, char** argv)
       auto panelLabel = std::make_shared<Label>("panelLabel");
       panelLabel->setText("This label is a child of the panel");
       panel->addChildToPanel(panelLabel);
+      panel->setResizable(true);
    }
 
    else if (args.getArg("--editor")){

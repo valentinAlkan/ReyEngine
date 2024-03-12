@@ -271,6 +271,7 @@ protected:
    bool _isModal = false;
    bool _scheduled_for_deletion = false; // true when the widget has been scheduled for deletion but is not yet deleted.
    ReyEngine::Pos<double> _renderOffset; //used for different rendering modes. does not offset position.
+   InputInterface::MouseCursor cursor = InputInterface::MouseCursor::DEFAULT;
 
    //input
    Handled _process_unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&); //pass input to children if they want it and then process it for ourselves if necessary
