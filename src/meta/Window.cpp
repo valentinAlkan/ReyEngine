@@ -225,7 +225,7 @@ void Window::exec(){
 
             auto process = [&](const std::shared_ptr<BaseWidget>& widget) -> std::optional<std::shared_ptr<BaseWidget>> {
                bool _isInside = isInside(widget);
-               if (widget->acceptsHover && _isInside) {
+               if (widget->acceptsHover && _isInside && widget->_visible) {
                   return widget;
                }
                return nullopt;
@@ -402,6 +402,7 @@ void Window::setHover(std::shared_ptr<BaseWidget>& widget) {
    }
    _hovered = widget;
    widget->_hovered = true;
+   InputInterface::setCursor(widget->cursor);
    widget->_on_mouse_enter();
 }
 
