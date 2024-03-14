@@ -17,11 +17,11 @@ protected:
    static constexpr std::string_view HSLIDER_NAME = "__hslider";
    void renderBegin(ReyEngine::Pos<double>& textureOffset) override {
       textureOffset -= getScrollOffset();
-      scissorTarget.start(getGlobalRect());
+      scissorTarget.begin();
    }
    void render() const {}
    void renderEnd() override {
-      scissorTarget.stop();
+      scissorTarget.end();
    }
    void _process(float dt) override {}
    void registerProperties() override{
@@ -45,6 +45,7 @@ protected:
          hslider->setRect(hsliderNewRect);
          vslider->setVisible(!_hideVSlider && _childBoundingBox.y > getHeight());
       }
+      scissorTarget.setScissorArea(getGlobalRect());
    }
    void _on_child_added(std::shared_ptr<BaseWidget>& child) override {
       //expand scroll size to fit children
@@ -101,7 +102,7 @@ protected:
    }
 
 
-   ReyEngine::ScissorTarget scissorTarget;
+   ReyEngine::ScissorTarget<int> scissorTarget;
    ReyEngine::Range<double> scrollOffsetX;
    ReyEngine::Range<double> scrollOffsetY;
    std::shared_ptr<Slider> vslider;

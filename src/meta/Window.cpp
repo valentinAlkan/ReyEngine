@@ -34,8 +34,7 @@ Window::Window(const std::string &title, int width, int height, const std::vecto
    _root->setAnchoring(BaseWidget::Anchor::FILL); //canvas is filled by default
    _root->_isRoot = true;
    auto base = _root->toBaseWidget();
-   //make sure we init the root\
-   widget->_init();
+   //make sure we init the root
    _root->_has_inited = true;
    _root->setRect(Rect<int>(0,0,width, height)); //initialize to be the same size as the window
    _root->_on_enter_tree();

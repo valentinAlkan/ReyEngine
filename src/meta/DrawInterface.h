@@ -512,10 +512,16 @@ namespace ReyEngine {
       };
 
    //Everything drawn during scissor mode will be invisible if outside the area
+   template <typename T>
    class ScissorTarget {
    public:
-      void start(Rect<double> scissorArea) const {BeginScissorMode((int)scissorArea.x, (int)scissorArea.y, (int)scissorArea.width, (int)scissorArea.height);}
-      void stop() const {EndScissorMode();}
+      void begin() const {BeginScissorMode((int)_area.x, (int)_area.y, (int)_area.width, (int)_area.height);}
+      void end() const {EndScissorMode();}
+      void setScissorArea(const Rect<T>& area){_area = area;}
+      ReyEngine::Rect<int> getScissorArea() const {return _area;}
+   private:
+      Rect<int> _area;
+
    };
 }
 

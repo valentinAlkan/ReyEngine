@@ -1,5 +1,7 @@
 #include "Panel.h"
 #include "Button.h"
+#include "Canvas.h"
+#include "Label.hpp"
 
 using namespace ReyEngine;
 using namespace std;
@@ -11,29 +13,36 @@ void Panel::render() const {
    //draw the menu bar top half that peeks out
    auto menuBarHeight = menuBar->getHeight();
    drawRectangleRounded(_rect.value.toSizeRect().chopBottom(menuBarHeight), roundness, 1, theme->background.colorSecondary);
+//   drawRectangleRoundedLines(_rect.value.toSizeRect().chopBottom(menuBarHeight), roundness, 1, 1.0, Colors::black);
 
-   //draw the rounded bottom portion
-   drawRectangleRounded(_rect.value.toSizeRect().chopTop(menuBarHeight), roundness, 1, theme->background.colorPrimary);
+   if (!_isMinimized) {
+      //dont need to draw these if we're minimized
 
-   //draw the non-rounded band
-   drawRectangle(_rect.value.toSizeRect().chopBottom(50) + Pos<int>(0,menuBarHeight), theme->background.colorPrimary);
+      //draw the rounded bottom portion
+      drawRectangleRounded(_rect.value.toSizeRect().chopTop(menuBarHeight), roundness, 1, theme->background.colorPrimary);
+//      drawRectangleRoundedLines(_rect.value.toSizeRect().chopBottom(menuBarHeight), roundness, 1, 1.0, Colors::black);
 
-   //debug:
-   //draw the stretch regions
-   for (const auto& region : stretchRegion){
-      drawRectangle(region, ColorRGBA(255,0,0,128));
+      //draw the non-rounded band
+      drawRectangle(_rect.value.toSizeRect().chopBottom(50) + Pos<int>(0, menuBarHeight), theme->background.colorPrimary);
+//      drawRectangleRoundedLines(_rect.value.toSizeRect().chopBottom(menuBarHeight), roundness, 1, 1.0, Colors::black);
+
+      //debug:
+      //draw the stretch regions
+//      for (const auto &region: stretchRegion) {
+//         drawRectangle(region, ColorRGBA(255, 0, 0, 128));
+//      }
    }
 
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::renderBegin(ReyEngine::Pos<double> &textureOffset) {
-   _scissorTarget.start(getGlobalRect());
+   _scissorTarget.begin();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::renderEnd() {
-   _scissorTarget.stop();
+   _scissorTarget.end();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -42,6 +51,7 @@ void Panel::_init() {
    vlayout = make_shared<VLayout>(VLAYOUT_NAME);
    if (!window) window = make_shared<Control>(WINDOW_NAME);
    menuBar = make_shared<HLayout>(MENU_NAME);
+   menuBar->getTheme()->layoutMargins.setAll(5);
 
    //get rid of control backgrounds so we only see panel background
    window->getTheme()->background = Style::Fill::NONE;
@@ -56,27 +66,62 @@ void Panel::_init() {
    menuBar->getTheme()->background = Style::Fill::SOLID;
 
    //add a spacer
-   auto spacer = make_shared<Control>("__spacer");
-   spacer->setVisible(false);
-   menuBar->addChild(spacer);
+   auto lspacer = make_shared<Control>("__lspacer");
+//   lspacer->setVisible(false);
+   menuBar->addChild(lspacer);
+
+   auto titleLabel = make_shared<Label>(TITLE_LABEL_NAME);
+   titleLabel->setTheme(theme);
+   menuBar->addChild(titleLabel);
+   titleLabel->setText(getName());
+
+   //add another spacer
+   auto rspacer = make_shared<Control>("__rspacer");
+   lspacer->setVisible(false);
+   menuBar->addChild(rspacer);
 
    //add a button cluster on the right side of the menu bar
    auto btnClusterRight = make_shared<HLayout>("__btnClusterRight");
    menuBar->addChild(btnClusterRight);
-   menuBar->childScales = {0.95, .05};
+   menuBar->childScales = {1,1,1,.5};
 
    //add some buttons
-   auto closeButton = make_shared<PushButton>(BTN_CLOSE_NAME);
-   closeButton->setText("x");
-//   closeButton->setMaxSize({(int)theme->font.value.size, (int)theme->font.value.size});
-   btnClusterRight->addChild(closeButton);
+   auto btnMin = make_shared<PushButton>(BTN_MIN_NAME); btnMin->setText("_");
+   auto btnMax = make_shared<PushButton>(BTN_MAX_NAME); btnMax->setText("o");
+   auto btnClose = make_shared<PushButton>(BTN_CLOSE_NAME);
+   btnClose->setText("x");
+   btnClusterRight->addChild(btnMin);
+   btnClusterRight->addChild(btnMax);
+   btnClusterRight->addChild(btnClose);
 
-   //connect to button close signal
-   auto toggleShowCB = [this](const PushButton::ButtonPressEvent& event){
-      setVisible(false);
+   //connect to button signals
+   auto setScissor = [this](){_scissorTarget.setScissorArea(getScissorArea());};
+   auto toggleShowCB = [this](const PushButton::ButtonPressEvent& event){setVisible(false); return true;};
+   auto toggleMinCB = [this, setScissor](const PushButton::ButtonPressEvent& event){_isMinimized = !_isMinimized; setScissor(); return true;};
+   auto toggleMaxCB = [this, toggleMinCB](const PushButton::ButtonPressEvent& event){
+      if (_isMinimized){
+         //deminimize
+         return toggleMinCB(event);
+      }
+
+      _isMaximized = !_isMaximized;
+      if (_isMaximized){
+         //maximize
+         cacheRect = _rect;
+         auto canvasOpt = getCanvas();
+         if (canvasOpt) {
+            setRect({{0, 0}, canvasOpt.value()->getSize()});
+         }
+      } else {
+         //demaximize
+         setRect(cacheRect);
+      }
       return true;
    };
-   subscribe<PushButton::ButtonPressEvent>(closeButton, toggleShowCB);
+   subscribe<PushButton::ButtonPressEvent>(btnClose, toggleShowCB);
+   subscribe<PushButton::ButtonPressEvent>(btnMin, toggleMinCB);
+   subscribe<PushButton::ButtonPressEvent>(btnMax, toggleMaxCB);
+
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -87,6 +132,7 @@ void Panel::_on_rect_changed(){
    stretchRegion.at(1) = _rect.value.toSizeRect().chopLeft(getWidth() - STRETCH_REGION_SIZE);
    stretchRegion.at(2) = _rect.value.toSizeRect().chopTop(getHeight() - STRETCH_REGION_SIZE);
    stretchRegion.at(3) = _rect.value.toSizeRect().chopRight(getWidth() - STRETCH_REGION_SIZE);
+   _scissorTarget.setScissorArea(getScissorArea());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -138,7 +184,7 @@ Handled Panel::_unhandled_input(const InputEvent& event, const std::optional<Unh
          if (mbEvent.button != InputInterface::MouseButton::LEFT) return false;
          if (mbEvent.isDown && !mouse->isInside) return false; //ingore downs that occur outside the rect
          dragStart = InputManager::getMousePos();
-         startRect = _rect.value;
+         resizeStartRect = _rect.value;
          offset = mousePos - getPos(); //record position
 
          if (_isResizable && _resizeDir == ResizeDir::NONE){
@@ -147,7 +193,7 @@ Handled Panel::_unhandled_input(const InputEvent& event, const std::optional<Unh
             _resizeDir = getStretchDir();
          }
 
-         if (_resizeDir == ResizeDir::NONE && menuBar->isInside(mouse->localPos) && mbEvent.isDown) {
+         if (!_isMaximized && _resizeDir == ResizeDir::NONE && menuBar->isInside(mouse->localPos) && mbEvent.isDown) {
             _isDragging = true;
             return true;
          } else if ((_isDragging || _resizeDir != ResizeDir::NONE) && !mbEvent.isDown){
@@ -159,6 +205,8 @@ Handled Panel::_unhandled_input(const InputEvent& event, const std::optional<Unh
       }
       break;
       case InputEventMouseMotion::getUniqueEventId():
+         //no dragging or resizing if we're maximized
+         if (_isMaximized) return false;
          mousePos = InputManager::getMousePos();
          auto delta = mousePos - dragStart;
          //stretching overrides dragging
@@ -169,43 +217,41 @@ Handled Panel::_unhandled_input(const InputEvent& event, const std::optional<Unh
 
          if (_resizeDir != ResizeDir::NONE) {
             switch (_resizeDir){
-               case ResizeDir::N: setRect(stretchN(startRect));break;
-               case ResizeDir::E: setRect(stretchE(startRect)); break;
-               case ResizeDir::W: setRect(stretchW(startRect)); break;
-               case ResizeDir::S: setRect(stretchS(startRect)); break;
-               case ResizeDir::NW: setRect(stretchW(stretchN(startRect))); break;
-               case ResizeDir::NE: setRect(stretchN(stretchE(startRect))); break;
-               case ResizeDir::SE: setRect(stretchS(stretchE(startRect))); break;
-               case ResizeDir::SW: setRect(stretchS(stretchW(startRect))); break;
+               case ResizeDir::N: setRect(stretchN(resizeStartRect));break;
+               case ResizeDir::E: setRect(stretchE(resizeStartRect)); break;
+               case ResizeDir::W: setRect(stretchW(resizeStartRect)); break;
+               case ResizeDir::S: setRect(stretchS(resizeStartRect)); break;
+               case ResizeDir::NW: setRect(stretchW(stretchN(resizeStartRect))); break;
+               case ResizeDir::NE: setRect(stretchN(stretchE(resizeStartRect))); break;
+               case ResizeDir::SE: setRect(stretchS(stretchE(resizeStartRect))); break;
+               case ResizeDir::SW: setRect(stretchS(stretchW(resizeStartRect))); break;
             }
          } else if (_isDragging) {
             setPos(mousePos - offset);
             return true;
          } else {
             //update cursor
-//            if (mouse->isInside) {
-               auto cursorDir = getStretchDir();
-               switch (cursorDir) {
-                  case ResizeDir::N:
-                  case ResizeDir::S:
-                     InputInterface::setCursor(InputInterface::MouseCursor::RESIZE_NS);
-                     break;
-                  case ResizeDir::E:
-                  case ResizeDir::W:
-                     InputInterface::setCursor(InputInterface::MouseCursor::RESIZE_EW);
-                     break;
-                  case ResizeDir::NW:
-                  case ResizeDir::SE:
-                     InputInterface::setCursor(InputInterface::MouseCursor::RESIZE_NWSE);
-                     break;
-                  case ResizeDir::NE:
-                  case ResizeDir::SW:
-                     InputInterface::setCursor(InputInterface::MouseCursor::RESIZE_NESW);
-                     break;
-                  default:
-                     InputInterface::setCursor(cursor);
-               }
-//            }
+            auto cursorDir = getStretchDir();
+            switch (cursorDir) {
+               case ResizeDir::N:
+               case ResizeDir::S:
+                  InputInterface::setCursor(InputInterface::MouseCursor::RESIZE_NS);
+                  break;
+               case ResizeDir::E:
+               case ResizeDir::W:
+                  InputInterface::setCursor(InputInterface::MouseCursor::RESIZE_EW);
+                  break;
+               case ResizeDir::NW:
+               case ResizeDir::SE:
+                  InputInterface::setCursor(InputInterface::MouseCursor::RESIZE_NWSE);
+                  break;
+               case ResizeDir::NE:
+               case ResizeDir::SW:
+                  InputInterface::setCursor(InputInterface::MouseCursor::RESIZE_NESW);
+                  break;
+               default:
+                  InputInterface::setCursor(cursor);
+            }
             return true;
          }
          break;
@@ -221,5 +267,12 @@ std::optional<std::shared_ptr<BaseWidget>> Panel::addChildToPanel(std::shared_pt
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::registerProperties(){
    //register properties specific to your type here.
+}
 
+/////////////////////////////////////////////////////////////////////////////////////////
+ReyEngine::Rect<int> Panel::getScissorArea() {
+   if (_isMinimized){
+      return menuBar->getGlobalRect();
+   }
+   return getGlobalRect();
 }
