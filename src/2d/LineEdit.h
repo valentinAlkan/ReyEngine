@@ -26,6 +26,7 @@ namespace ReyEngine {
    protected:
       void _on_modality_gained();
       void _on_modality_lost();
+      void _on_rect_changed() override;
       Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
       virtual void _on_default_text_changed(const std::string &){};
       virtual void _on_text_changed(const std::string &){};
@@ -33,7 +34,7 @@ namespace ReyEngine {
       void publishText();
       StringProperty _defaultText;
       StringProperty _text;
-      ScissorTarget scissorTarget;
+      ScissorTarget<int> scissorTarget;
       int _highlight_start = 0;
       int _highlight_end = 0;
       bool _isEditing = false; //the user is editing - blink the cursor
