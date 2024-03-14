@@ -231,7 +231,8 @@ void Window::exec(){
             };
 
             auto pass = [&](const std::shared_ptr<BaseWidget>& widget) -> std::optional<std::shared_ptr<BaseWidget>>{
-               for (const auto& child : widget->getChildren()){
+               for(auto it = widget->getChildren().rbegin(); it != widget->getChildren().rend(); ++it){
+                  const auto& child = *it;
                   auto handled = askHover(child);
                   if (handled) return handled;
                }

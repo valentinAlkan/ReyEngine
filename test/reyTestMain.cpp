@@ -422,6 +422,17 @@ int main(int argc, char** argv)
       panelLabel->setText("This label is a child of the panel");
       panel->addChildToPanel(panelLabel);
       panel->setResizable(true);
+
+      auto somebutton = make_shared<PushButton>("someButton");
+      panel->addChildToPanel(somebutton);
+      somebutton->setRect({300,300,100,40});
+
+      auto internalPanel = make_shared<Panel>("InternalPanel");
+      panel->addChildToPanel(internalPanel);
+      internalPanel->setResizable(true);
+      internalPanel->setRect({5,50,100,100});
+
+
    }
 
    else if (args.getArg("--editor")){

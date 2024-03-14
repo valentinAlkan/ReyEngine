@@ -266,7 +266,9 @@ void BaseWidget::renderChain(ReyEngine::Pos<double>& parentOffset) {
 /////////////////////////////////////////////////////////////////////////////////////////
 Handled BaseWidget::_process_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
    auto passInput = [&](const InputEvent& _event, std::optional<UnhandledMouseInput> _mouse) {
-      for (auto& child : _childrenOrdered) {
+      //iterate backwards since siblings that are towards the end of the orderered child vector are drawn ON TOP of ones prior to them
+      for(auto it = _childrenOrdered.rbegin(); it != _childrenOrdered.rend(); ++it){
+         auto& child = *it;
          if (_mouse) {
             //if this is mouse input, make sure it is inside the bounding rect
             switch (event.eventId) {

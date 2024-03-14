@@ -16,13 +16,13 @@ Handled BaseButton::_unhandled_input(const InputEvent& event, const std::optiona
                      auto press = ButtonPressEvent(toEventPublisher(), mbEvent.isDown);
                      publish<ButtonPressEvent>(press);
                   }
-                  down = mbEvent.isDown;
+                  down = false;
                   return true;
                } else if (mbEvent.isDown && mouse->isInside) {
                   //normal inside-click
                   auto toggle = ButtonToggleEvent(toEventPublisher(), mbEvent.isDown, mouse->isInside);
                   publish<ButtonToggleEvent>(toggle);
-                  down = mbEvent.isDown;
+                  down = true;
                   return true;
                }
                }
