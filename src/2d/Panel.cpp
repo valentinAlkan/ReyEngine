@@ -1,7 +1,6 @@
 #include "Panel.h"
 #include "Button.h"
 #include "Canvas.h"
-#include "Label.hpp"
 
 using namespace ReyEngine;
 using namespace std;
@@ -12,18 +11,20 @@ void Panel::render() const {
    auto color = theme->background.colorPrimary;
    //draw the menu bar top half that peeks out
    auto menuBarHeight = menuBar->getHeight();
-   drawRectangleRounded(_rect.value.toSizeRect().chopBottom(menuBarHeight), roundness, 1, theme->background.colorSecondary);
-//   drawRectangleRoundedLines(_rect.value.toSizeRect().chopBottom(menuBarHeight), roundness, 1, 1.0, Colors::black);
+   drawRectangle(menuBar->getRect(), theme->background.colorSecondary);
+
 
    if (!_isMinimized) {
       //dont need to draw these if we're minimized
 
       //draw the rounded bottom portion
-      drawRectangleRounded(_rect.value.toSizeRect().chopTop(menuBarHeight), roundness, 1, theme->background.colorPrimary);
+      drawRectangle(_rect.value.toSizeRect().chopTop(menuBarHeight), theme->background.colorPrimary);
+      drawRectangleLines(_rect.value.toSizeRect().chopTop(menuBarHeight), 1.0, theme->background.colorSecondary);
+//      drawRectangleRounded(_rect.value.toSizeRect().chopTop(menuBarHeight), roundness, 1, theme->background.colorPrimary);
 //      drawRectangleRoundedLines(_rect.value.toSizeRect().chopBottom(menuBarHeight), roundness, 1, 1.0, Colors::black);
 
       //draw the non-rounded band
-      drawRectangle(_rect.value.toSizeRect().chopBottom(50) + Pos<int>(0, menuBarHeight), theme->background.colorPrimary);
+//      drawRectangle(_rect.value.toSizeRect().chopBottom(50) + Pos<int>(0, menuBarHeight), theme->background.colorPrimary);
 //      drawRectangleRoundedLines(_rect.value.toSizeRect().chopBottom(menuBarHeight), roundness, 1, 1.0, Colors::black);
 
       //debug:
@@ -51,7 +52,7 @@ void Panel::_init() {
    vlayout = make_shared<VLayout>(VLAYOUT_NAME);
    if (!window) window = make_shared<Control>(WINDOW_NAME);
    menuBar = make_shared<HLayout>(MENU_NAME);
-   menuBar->getTheme()->layoutMargins.setAll(5);
+   menuBar->getTheme()->layoutMargins.setAll(2);
 
    //get rid of control backgrounds so we only see panel background
    window->getTheme()->background = Style::Fill::NONE;
@@ -67,17 +68,17 @@ void Panel::_init() {
 
    //add a spacer
    auto lspacer = make_shared<Control>("__lspacer");
-//   lspacer->setVisible(false);
+   lspacer->setVisible(false);
    menuBar->addChild(lspacer);
 
-   auto titleLabel = make_shared<Label>(TITLE_LABEL_NAME);
+   titleLabel = make_shared<Label>(TITLE_LABEL_NAME);
    titleLabel->setTheme(theme);
    menuBar->addChild(titleLabel);
    titleLabel->setText(getName());
 
    //add another spacer
    auto rspacer = make_shared<Control>("__rspacer");
-   lspacer->setVisible(false);
+   rspacer->setVisible(false);
    menuBar->addChild(rspacer);
 
    //add a button cluster on the right side of the menu bar
@@ -93,6 +94,7 @@ void Panel::_init() {
    btnClusterRight->addChild(btnMin);
    btnClusterRight->addChild(btnMax);
    btnClusterRight->addChild(btnClose);
+   btnClusterRight->getTheme()->layoutMargins.setAll(2);
 
    //connect to button signals
    auto setScissor = [this](){_scissorTarget.setScissorArea(getScissorArea());};
@@ -122,6 +124,11 @@ void Panel::_init() {
    subscribe<PushButton::ButtonPressEvent>(btnMin, toggleMinCB);
    subscribe<PushButton::ButtonPressEvent>(btnMax, toggleMaxCB);
 
+   //window rect change callback
+   auto windowRectChangeCB = [&](Control& window){
+      window.setScissorArea(window.getGlobalRect().embiggen(-1));
+   };
+   window->setRectChangedCallback(windowRectChangeCB);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
