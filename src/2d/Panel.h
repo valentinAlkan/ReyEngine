@@ -1,8 +1,8 @@
 #pragma once
 #include <utility>
-
 #include "Control.h"
 #include "Layout.h"
+#include "Label.hpp"
 
 // A simple visual panel that just gives us something to look at. No other functionality.
 class Panel : public BaseWidget {
@@ -33,7 +33,7 @@ public:
    void render() const override;
    void registerProperties() override;
    std::optional<std::shared_ptr<BaseWidget>> addChildInternal(std::shared_ptr<BaseWidget> child){return BaseWidget::addChild(child);}
-   void setTitle(const std::string& newtitle){panelTitle = newtitle;}
+   void setTitle(const std::string& newtitle){panelTitle = newtitle; titleLabel->setText(newtitle);}
    std::optional<std::shared_ptr<BaseWidget>> addChildToPanel(std::shared_ptr<BaseWidget> child);
    inline void setResizable(bool resizeable){_isResizable = resizeable;}
    inline bool getResizable(){return _isResizable;}
@@ -48,6 +48,7 @@ protected:
    std::shared_ptr<VLayout> vlayout;
    std::shared_ptr<HLayout> menuBar;
    std::shared_ptr<Control> window;
+   std::shared_ptr<Label> titleLabel;
    ReyEngine::Pos<int> offset;
    ReyEngine::Pos<int> mousePos;
    ReyEngine::Pos<int> dragStart;
