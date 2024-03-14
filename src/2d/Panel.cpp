@@ -7,7 +7,6 @@ using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::render() const {
-   auto roundness = theme->roundness.value;
    auto color = theme->background.colorPrimary;
    //draw the menu bar top half that peeks out
    auto menuBarHeight = menuBar->getHeight();
@@ -38,16 +37,17 @@ void Panel::render() const {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::renderBegin(ReyEngine::Pos<double> &textureOffset) {
-   _scissorTarget.begin();
+//   _scissorTarget.begin();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::renderEnd() {
-   _scissorTarget.end();
+//   _scissorTarget.end();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::_init() {
+   setAcceptsHover(true);
    //create subwidgets
    vlayout = make_shared<VLayout>(VLAYOUT_NAME);
    if (!window) window = make_shared<Control>(WINDOW_NAME);
@@ -95,6 +95,8 @@ void Panel::_init() {
    btnClusterRight->addChild(btnMax);
    btnClusterRight->addChild(btnClose);
    btnClusterRight->getTheme()->layoutMargins.setAll(2);
+   btnClusterRight->setMaxSize({100, 999999});
+//   btnClusterRight->setMinSize({100, 999999});
 
    //connect to button signals
    auto setScissor = [this](){_scissorTarget.setScissorArea(getScissorArea());};
@@ -110,9 +112,9 @@ void Panel::_init() {
       if (_isMaximized){
          //maximize
          cacheRect = _rect;
-         auto canvasOpt = getCanvas();
-         if (canvasOpt) {
-            setRect({{0, 0}, canvasOpt.value()->getSize()});
+         auto parent = getParent().lock();
+         if (parent) {
+            setRect({{0, 0}, parent->getSize()});
          }
       } else {
          //demaximize
@@ -188,8 +190,8 @@ Handled Panel::_unhandled_input(const InputEvent& event, const std::optional<Unh
    switch (event.eventId) {
       case InputEventMouseButton::getUniqueEventId(): {
          auto &mbEvent = event.toEventType<InputEventMouseButton>();
-         if (mbEvent.button != InputInterface::MouseButton::LEFT) return false;
-         if (mbEvent.isDown && !mouse->isInside) return false; //ingore downs that occur outside the rect
+         if (mbEvent.button != InputInterface::MouseButton::LEFT) break;
+         if (mbEvent.isDown && !mouse->isInside) break; //ingore downs that occur outside the rect
          dragStart = InputManager::getMousePos();
          resizeStartRect = _rect.value;
          offset = mousePos - getPos(); //record position
@@ -213,7 +215,7 @@ Handled Panel::_unhandled_input(const InputEvent& event, const std::optional<Unh
       break;
       case InputEventMouseMotion::getUniqueEventId():
          //no dragging or resizing if we're maximized
-         if (_isMaximized) return false;
+         if (_isMaximized) break;
          mousePos = InputManager::getMousePos();
          auto delta = mousePos - dragStart;
          //stretching overrides dragging
@@ -237,6 +239,7 @@ Handled Panel::_unhandled_input(const InputEvent& event, const std::optional<Unh
             setPos(mousePos - offset);
             return true;
          } else {
+            if (!mouse->isInside) break;
             //update cursor
             auto cursorDir = getStretchDir();
             switch (cursorDir) {
@@ -263,6 +266,9 @@ Handled Panel::_unhandled_input(const InputEvent& event, const std::optional<Unh
          }
          break;
    }
+   if (mouse->isInside){
+      return true; //eat all input that occurs in our rect
+   }
    return false;
 }
 
@@ -282,4 +288,9 @@ ReyEngine::Rect<int> Panel::getScissorArea() {
       return menuBar->getGlobalRect();
    }
    return getGlobalRect();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Panel::_on_mouse_exit() {
+   InputInterface::setCursor(InputInterface::MouseCursor::DEFAULT);
 }

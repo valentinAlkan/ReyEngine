@@ -39,6 +39,7 @@ public:
    inline bool getResizable(){return _isResizable;}
 
 protected:
+   void _on_mouse_exit() override;
    ReyEngine::Rect<int> getScissorArea();
    enum class ResizeDir{NONE, N, E, S, W, NE, SE, SW, NW};
 
