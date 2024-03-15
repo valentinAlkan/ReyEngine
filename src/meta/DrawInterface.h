@@ -274,6 +274,22 @@ namespace ReyEngine {
       inline Rect chopBottom(T amt) const {auto retval = *this; retval.height-=amt; return retval;} //remove the bottommost amt of the rectangle and return the remainder (cuts height)
       inline Rect chopRight(T amt) const {auto retval = *this; retval.width-=amt; return retval;} //remove the rightmost amt of the rectangle and return the remainder (cuts width)
       inline Rect chopLeft(T amt) const {auto retval = *this; retval.x+=amt; retval.width-=amt; return retval;} //remove the leftmost amt of the rectangle and return the remainder (moves x, cuts width)
+      inline std::optional<Rect> getOverlap(const Rect& rect2) const {
+         // Calculate the leftmost x coordinate of the overlap
+         int leftX = std::max(x, rect2.x);
+         // Calculate the rightmost x coordinate of the overlap
+         int rightX = std::min(x + width, rect2.x + rect2.width);
+         // Calculate the topmost y coordinate of the overlap
+         int topY = std::min(y, rect2.y);
+         // Calculate the bottommost y coordinate of the overlap
+         int bottomY = std::max(y - height, rect2.y - rect2.height);
+         // Check if the overlap has a positive width and height (i.e., they actually overlap)
+         if (leftX >= rightX || topY <= bottomY) {
+            return {};
+         }
+         // Return the rectangle representing the overlap
+         return Rect{leftX, topY, rightX - leftX, topY - bottomY};
+      }
 
       inline bool isInside(const Vec2<T>& point) const {
          return (point.x > x && point.x < x + width) &&
@@ -510,19 +526,6 @@ namespace ReyEngine {
          RenderTexture2D _tex;
          Size<int> _size;
       };
-
-   //Everything drawn during scissor mode will be invisible if outside the area
-   template <typename T>
-   class ScissorTarget {
-   public:
-      void begin() const {BeginScissorMode((int)_area.x, (int)_area.y, (int)_area.width, (int)_area.height);}
-      void end() const {EndScissorMode();}
-      void setScissorArea(const Rect<T>& area){_area = area;}
-      ReyEngine::Rect<int> getScissorArea() const {return _area;}
-   private:
-      Rect<int> _area;
-
-   };
 }
 
 namespace InputInterface{

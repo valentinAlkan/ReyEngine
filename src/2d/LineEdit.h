@@ -34,7 +34,7 @@ namespace ReyEngine {
       void publishText();
       StringProperty _defaultText;
       StringProperty _text;
-      ScissorTarget<int> scissorTarget;
+      Rect<int> _scissorArea;
       int _highlight_start = 0;
       int _highlight_end = 0;
       bool _isEditing = false; //the user is editing - blink the cursor
