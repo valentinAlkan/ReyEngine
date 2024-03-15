@@ -49,7 +49,7 @@ public:
    static bool isReady(){return instance()._is_ready;}
    static ReyEngine::FileSystem::Directory getWorkingDirectory(){return instance()._workingDirectory;}
    static constexpr Platform getPlatform(){return PLATFORM;}
-   UniqueValue generateUniqueValue(){return _nextUniqueValue++;}
+   static UniqueValue generateUniqueValue(){return instance()._nextUniqueValue++;}
 protected:
    uint64_t getNewRid(){return ++newRid;}
    static void processEnterTree();
