@@ -177,6 +177,8 @@ public:
    void drawRenderTarget(const ReyEngine::RenderTarget&, const ReyEngine::Pos<int>&) const;
    void drawRenderTargetRect(const ReyEngine::RenderTarget&, const ReyEngine::Rect<int>&, const ReyEngine::Pos<int>&) const;
    void drawTextureRect(const ReyEngine::ReyTexture&, const ReyEngine::Rect<int>& src, const ReyEngine::Rect<int>& dst, float rotation, const ReyEngine::ColorRGBA& tint) const;
+   void startScissor(const ReyEngine::Rect<int>&) const;
+   void stopScissor() const;
 protected:
 //   void drawTextureRect(const ReyEngine::ReyTexture&, const ReyEngine::Rect<int>&, const ReyEngine::Pos<int>&) const;
 

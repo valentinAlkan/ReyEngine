@@ -140,10 +140,11 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::getChild(const std::string &chi
 
 /////////////////////////////////////////////////////////////////////////////////////////
 std::optional<BaseWidget::WidgetPtr> BaseWidget::addChild(WidgetPtr widget){
-   if (widget == toBaseWidget()){
+   if (*widget == *this){
        stringstream ss;
        ss << "Cannot add widget " << widget->getName() << " to itself!" << endl;
        Application::printError() << ss.str();
+       throw std::runtime_error(ss.str());
        return nullopt;
    }
     auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
@@ -152,12 +153,14 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::addChild(WidgetPtr widget){
       stringstream ss;
       ss << "Widget " << getName() << " already has a child with name <" << widget->getName() << ">";
       Application::printError() << ss.str();
+      throw std::runtime_error(ss.str());
       return nullopt;
    }
    if (widget->getParent().lock()){
       stringstream ss;
       ss << "Widget " << widget->getName() << " already has a parent! It needs to be removed from its existing parent first!";
       Application::printError() << ss.str();
+      throw std::runtime_error(ss.str());
       return nullopt;
    }
    //call immediate callback
@@ -779,4 +782,24 @@ std::optional<std::shared_ptr<ReyEngine::Canvas>> BaseWidget::getCanvas() {
       weakPrt = parent->getParent();
    }
    return nullopt;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::startScissor(const ReyEngine::Rect<int>& area) const {
+   auto& thiz = const_cast<BaseWidget&>(*this);
+   auto canvasOpt = thiz.getCanvas();
+   if (canvasOpt){
+      auto globalRect = area;
+      globalRect.setPos(localToGlobal(globalRect.pos()));
+      canvasOpt.value()->pushScissor(globalRect);
+   }
+
+}
+///////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::stopScissor() const {
+   auto& thiz = const_cast<BaseWidget&>(*this);
+   auto canvasOpt = thiz.getCanvas();
+   if (canvasOpt){
+      canvasOpt.value()->popScissor();
+   }
 }

@@ -87,6 +87,8 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--tileMapTest", "Config file test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--lineEditTest", "Line edit test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--canvasTest", "Testing nested canvases to make sure they work right", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--scissorTest", "scissoring test", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--uniqueValueTest", "unique value test", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    //create window (or don't idk)
@@ -159,6 +161,26 @@ int main(int argc, char** argv)
       root->addChild(testLabel);
 //      testLabel->setOutlineType(Style::Outline::LINE);
 //      testLabel->setBackgroundType(Theme::Outline::LINE);
+   }
+
+   else if (args.getArg("--scissorTest")){
+      auto c1 = make_shared<Control>("C1");
+      auto c2 = make_shared<Control>("C2");
+      auto c3 = make_shared<Control>("C3");
+      c1->setAnchoring(BaseWidget::Anchor::FILL);
+      c2->setAnchoring(BaseWidget::Anchor::FILL);
+      c3->setAnchoring(BaseWidget::Anchor::FILL);
+      root->addChild(c1);
+      c1->addChild(c2);
+//      c3->addChild(c3);
+
+      c1->getTheme()->background.colorPrimary = Colors::blue;
+      c2->getTheme()->background.colorPrimary = Colors::green;
+      c3->getTheme()->background.colorPrimary = Colors::red;
+
+      c1->setScissorArea({50,50,600,600});
+      c2->setScissorArea({100,100,1000,1000});
+      c3->setScissorArea({200,200,1000,1000});
    }
 
 
@@ -1139,6 +1161,17 @@ int main(int argc, char** argv)
          control->setUnhandledInputCallback(inputCB);
       }
       subCanvas->addChild(cursor);
+
+   }
+
+   else if (args.getArg("--uniqueValueTest")){
+      Application::printInfo() << "Generating some unique values...you don't need to do anything" << endl;
+      Application::printInfo() << Application::instance().generateUniqueValue() << endl;
+      Application::printInfo() << Application::instance().generateUniqueValue() << endl;
+      Application::printInfo() << Application::instance().generateUniqueValue() << endl;
+      Application::printInfo() << Application::instance().generateUniqueValue() << endl;
+      Application::printInfo() << Application::instance().generateUniqueValue() << endl;
+      Application::printInfo() << Application::instance().generateUniqueValue() << endl;
 
    }
 

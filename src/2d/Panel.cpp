@@ -37,12 +37,12 @@ void Panel::render() const {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::renderBegin(ReyEngine::Pos<double> &textureOffset) {
-//   _scissorTarget.begin();
+   startScissor(_scissorArea);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::renderEnd() {
-//   _scissorTarget.end();
+   stopScissor();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -99,7 +99,7 @@ void Panel::_init() {
 //   btnClusterRight->setMinSize({100, 999999});
 
    //connect to button signals
-   auto setScissor = [this](){_scissorTarget.setScissorArea(getScissorArea());};
+   auto setScissor = [this](){_scissorArea = getScissorArea();};
    auto toggleShowCB = [this](const PushButton::ButtonPressEvent& event){setVisible(false); return true;};
    auto toggleMinCB = [this, setScissor](const PushButton::ButtonPressEvent& event){_isMinimized = !_isMinimized; setScissor(); return true;};
    auto toggleMaxCB = [this, toggleMinCB](const PushButton::ButtonPressEvent& event){
@@ -128,7 +128,7 @@ void Panel::_init() {
 
    //window rect change callback
    auto windowRectChangeCB = [&](Control& window){
-      window.setScissorArea(window.getGlobalRect().embiggen(-1));
+      window.setScissorArea(window.getRect().embiggen(-1));
    };
    window->setRectChangedCallback(windowRectChangeCB);
 }
@@ -141,7 +141,7 @@ void Panel::_on_rect_changed(){
    stretchRegion.at(1) = _rect.value.toSizeRect().chopLeft(getWidth() - STRETCH_REGION_SIZE);
    stretchRegion.at(2) = _rect.value.toSizeRect().chopTop(getHeight() - STRETCH_REGION_SIZE);
    stretchRegion.at(3) = _rect.value.toSizeRect().chopRight(getWidth() - STRETCH_REGION_SIZE);
-   _scissorTarget.setScissorArea(getScissorArea());
+   _scissorArea = getScissorArea();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -285,9 +285,9 @@ void Panel::registerProperties(){
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::Rect<int> Panel::getScissorArea() {
    if (_isMinimized){
-      return menuBar->getGlobalRect();
+      return menuBar->getRect();
    }
-   return getGlobalRect();
+   return getRect().toSizeRect();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

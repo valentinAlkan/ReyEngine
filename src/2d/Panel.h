@@ -62,5 +62,5 @@ protected:
 
    ResizeDir _resizeDir = ResizeDir::NONE;
    std::array<ReyEngine::Rect<int>, 4> stretchRegion; //top/right/bottom/left
-   ReyEngine::ScissorTarget<int> _scissorTarget;
+   ReyEngine::Rect<int> _scissorArea;
 };

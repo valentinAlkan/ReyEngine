@@ -32,5 +32,5 @@ protected:
     std::function<void(Control&, float dt)> processCallback;
     std::function<void(Control&)> rectChangedCallback;
     std::function<Handled(Control&, const InputEvent&, const std::optional<UnhandledMouseInput>&)> unhandledInputCallback;
-    ReyEngine::ScissorTarget<int> scissorTarget;
+    ReyEngine::Rect<int> scissorArea;
 };

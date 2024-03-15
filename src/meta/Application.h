@@ -28,7 +28,7 @@ public:
       INVALID_ARGS = 1,
       INVALID_SCENE_FILE_FORMAT,
    };
-
+   using UniqueValue = uint64_t;
    Application(Application const&)    = delete;
    void operator=(Application const&) = delete;
 
@@ -49,12 +49,14 @@ public:
    static bool isReady(){return instance()._is_ready;}
    static ReyEngine::FileSystem::Directory getWorkingDirectory(){return instance()._workingDirectory;}
    static constexpr Platform getPlatform(){return PLATFORM;}
+   UniqueValue generateUniqueValue(){return _nextUniqueValue++;}
 protected:
    uint64_t getNewRid(){return ++newRid;}
    static void processEnterTree();
    static void ready();
 
 private:
+   UniqueValue _nextUniqueValue = 0;
    #ifdef REYENGINE_PLATFORM_WINDOWS
       static constexpr Platform PLATFORM = Platform::WINDOWS;
    #elif defined(REYENGINE_PLATFORM_LINUX)

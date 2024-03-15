@@ -20,9 +20,9 @@ void LineEdit::render() const {
       auto ourWidth = getWidth();
       auto textStart = textWidth > ourWidth ? ourWidth - textWidth : 2;
 
-      scissorTarget.begin();
+      startScissor(_scissorArea);
       drawText(text, {textStart, textPosV}, font);
-      scissorTarget.end();
+      stopScissor();
    };
 
    //draw default text
@@ -151,5 +151,5 @@ void LineEdit::publishText() {
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void LineEdit::_on_rect_changed() {
-   scissorTarget.setScissorArea(getGlobalRect());
+   startScissor(getRect().toSizeRect());
 }
