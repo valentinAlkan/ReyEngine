@@ -84,7 +84,7 @@ void Canvas::clearModal() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::_on_rect_changed() {
    _renderTarget.setSize(_rect.value.size());
-   auto gpos = getGlobalPos();
+//   auto gpos = getGlobalPos();
 //   _virtualInputOffset = Pos<int>(gpos.x, gpos.y);
 }
 
@@ -93,7 +93,7 @@ void Canvas::_on_rect_changed() {
 void Canvas::pushScissor(const ReyEngine::Rect<int>& newArea) {
    bool hastop = !_scissorStack.empty();
    if (hastop) {
-      _scissorStack.push(_scissorStack.top().getOverlap(newArea).value_or(Rect<int>(0,0,0,0)));
+      _scissorStack.push(_scissorStack.top().getOverlap(newArea));
    } else {
       _scissorStack.push(newArea);
    }

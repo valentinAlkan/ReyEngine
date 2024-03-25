@@ -113,11 +113,113 @@ int main(int argc, char** argv)
       control->setAnchoring(BaseWidget::Anchor::FILL);
       root->addChild(control);
 
+      static constexpr int GRID_SIZE = 50;
       auto drawcb = [control](const Control&){
-         ReyEngine::drawRectangle({10,10,50,50}, Colors::red);
-         float startang = 0;
-         static int endang = 0;
-         ReyEngine::drawCircleSectorLines({{100, 100}, 50, startang, (float) (endang++ % 360)}, Colors::blue, 20);
+         auto getDrawCell = [](int index){
+            return Rect<int>(getScreenSize()).getSubRect(Size<int>(GRID_SIZE), index);
+         };
+         auto getDrawCellRange = [](int indexstart, int indexstop){
+            return Rect<int>(getScreenSize()).getSubRect(Size<int>(GRID_SIZE), indexstart, indexstop);
+         };
+
+         ReyEngine::drawRectangle(getDrawCell(0), Colors::red);
+         {
+            float startang = 0;
+            static int endang = 0;
+            auto cell = getDrawCell(1);
+            auto circle = cell.inscribe();
+            auto sector = CircleSector(circle, startang, endang++ % 360);
+            ReyEngine::drawCircleSectorLines(sector, Colors::blue, 20);
+         }
+         {
+            //draw diagonal overlapping rectangles
+            auto rect0 = getDrawCellRange(2, 33);
+            auto rect1 = getDrawCellRange(5, 36);
+            auto rect2 = getDrawCellRange(92, 123);
+            auto rect3 = getDrawCellRange(95, 126);
+            auto rectMiddle = getDrawCellRange(33, 95);
+            ReyEngine::drawRectangle(rect0, Colors::yellow);
+            ReyEngine::drawRectangle(rect1, Colors::yellow);
+            ReyEngine::drawRectangle(rect2, Colors::yellow);
+            ReyEngine::drawRectangle(rect3, Colors::yellow);
+            //draw a central rectangle
+            ReyEngine::drawRectangle(rectMiddle, Colors::blue);
+
+            //now draw the overlaps
+            ReyEngine::drawRectangle(rect0.getOverlap(rectMiddle), Colors::green);
+            ReyEngine::drawRectangle(rect1.getOverlap(rectMiddle), Colors::green);
+            ReyEngine::drawRectangle(rect2.getOverlap(rectMiddle), Colors::green);
+            ReyEngine::drawRectangle(rect3.getOverlap(rectMiddle), Colors::green);
+         }
+
+         {
+            //draw orthogonal overlaps
+            {
+               // 2
+               auto rect0 = getDrawCellRange(100, 161);
+               auto rect1 = getDrawCellRange(131, 132);
+               ReyEngine::drawRectangle(rect0, Colors::blue);
+               ReyEngine::drawRectangle(rect1, Colors::yellow);
+               ReyEngine::drawRectangle(rect0.getOverlap(rect1), Colors::green);
+            }
+            {
+               //form 3
+               auto rect0 = getDrawCellRange(98, 159);
+               auto rect1 = getDrawCellRange(127, 128);
+               ReyEngine::drawRectangle(rect0, Colors::yellow);
+               ReyEngine::drawRectangle(rect1, Colors::blue);
+               ReyEngine::drawRectangle(rect0.getOverlap(rect1), Colors::green);
+            }
+            {
+               auto rect0 = getDrawCellRange(13, 45);
+               auto rect1 = getDrawCellRange(44, 74);
+               ReyEngine::drawRectangle(rect0, Colors::blue);
+               ReyEngine::drawRectangle(rect1, Colors::yellow);
+               ReyEngine::drawRectangle(rect0.getOverlap(rect1), Colors::green);
+            }
+            {
+               auto rect0 = getDrawCellRange(133, 165);
+               auto rect1 = getDrawCellRange(104, 134);
+               ReyEngine::drawRectangle(rect0, Colors::blue);
+               ReyEngine::drawRectangle(rect1, Colors::yellow);
+               ReyEngine::drawRectangle(rect0.getOverlap(rect1), Colors::green);
+            }
+         }
+
+         {
+            {
+               //draw entirely overlapping rectangles
+               auto rect1 = getDrawCellRange(7, 69);
+               auto rect2 = getDrawCell(38);
+               //draw overlap
+               ReyEngine::drawRectangle(rect1, Colors::red);
+               ReyEngine::drawRectangle(rect2, Colors::blue);
+               ReyEngine::drawRectangle(rect1.getOverlap(rect2), Colors::purple);
+            }
+            {
+               //and the opposite way
+               auto rect1 = getDrawCellRange(10, 72);
+               auto rect2 = getDrawCell(41);
+               //draw overlap
+               ReyEngine::drawRectangle(rect1, Colors::yellow);
+               ReyEngine::drawRectangle(rect2, Colors::red);
+               ReyEngine::drawRectangle(rect2.getOverlap(rect1), Colors::orange);
+            }
+         }
+
+         //draw a grid
+         int index = 0;
+         auto screenSize = getScreenSize();
+         for (int x=0; x<screenSize.x / GRID_SIZE; x++) {
+            auto _x = x * GRID_SIZE;
+            ReyEngine::drawLine(Line<int>(_x, 0, _x, screenSize.y), 1.0, Colors::black);
+            for (int y=0; y<screenSize.y / GRID_SIZE; y++) {
+               auto _y = y * GRID_SIZE;
+               ReyEngine::drawLine(Line<int>(0, _y, screenSize.x, _y), 1.0, Colors::black);
+               ReyEngine::drawText(to_string(index), getDrawCell(index).pos(), getDefaultFont(10));
+               index++;
+            }
+         }
       };
 
       control->setRenderCallback(drawcb);
@@ -157,30 +259,31 @@ int main(int argc, char** argv)
    else if (args.getArg("--labelTest")){
       root->addChild(make_shared<RootWidget>("Root"));
       auto testLabel = make_shared<Label>("Label");
-      testLabel->setRect({0,0,50,50});  
+      testLabel->setRect({0,0,50,50});
       root->addChild(testLabel);
 //      testLabel->setOutlineType(Style::Outline::LINE);
 //      testLabel->setBackgroundType(Theme::Outline::LINE);
    }
 
    else if (args.getArg("--scissorTest")){
-      auto c1 = make_shared<Control>("C1");
-      auto c2 = make_shared<Control>("C2");
-      auto c3 = make_shared<Control>("C3");
-      c1->setAnchoring(BaseWidget::Anchor::FILL);
-      c2->setAnchoring(BaseWidget::Anchor::FILL);
-      c3->setAnchoring(BaseWidget::Anchor::FILL);
-      root->addChild(c1);
-      c1->addChild(c2);
-//      c3->addChild(c3);
+      auto background = make_shared<Control>("background");
+      auto foreground = make_shared<Control>("foreground");
+      root->addChild(background);
+      background->addChild(foreground);
+      background->setAnchoring(BaseWidget::Anchor::FILL);
+      foreground->setAnchoring(BaseWidget::Anchor::FILL);
+      background->getTheme()->background.colorPrimary = ColorRGBA(0,0,255,50);
+      foreground->getTheme()->background.colorPrimary = ColorRGBA(0,255,0,50);
 
-      c1->getTheme()->background.colorPrimary = Colors::blue;
-      c2->getTheme()->background.colorPrimary = Colors::green;
-      c3->getTheme()->background.colorPrimary = Colors::red;
-
-      c1->setScissorArea({50,50,600,600});
-      c2->setScissorArea({100,100,1000,1000});
-      c3->setScissorArea({200,200,1000,1000});
+      static constexpr int CURSOR_SIZE = 100;
+      auto cursor = Rect<int>(Size<int>(CURSOR_SIZE));
+      //set a moving scissor area
+      auto foreproc = [&](Control& foreground, double dt){
+         background->setScissorArea(background->getRect().toSizeRect().embiggen(-50));
+         cursor.setPos(background->getLocalMousePos());
+         foreground.setScissorArea(cursor);
+      };
+      foreground->setProcessCallback(foreproc);
    }
 
 
@@ -454,7 +557,12 @@ int main(int argc, char** argv)
       internalPanel->setResizable(true);
       internalPanel->setRect({5,50,100,100});
 
+      auto internalPanelLabel = make_shared<Label>("InternalPanelLabel");
+      internalPanel->addChildToPanel(internalPanelLabel);
 
+      auto internalMoveCB = [](Control& internalpanel){
+
+      };
    }
 
    else if (args.getArg("--editor")){

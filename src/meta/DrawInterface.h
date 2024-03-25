@@ -233,6 +233,7 @@ namespace ReyEngine {
       inline operator std::string() const {return Vec2<T>::toString();}
    };
 
+   struct Circle;
    template <typename T>
    struct Rect {
       enum class Corner{TOP_LEFT=1, TOP_RIGHT=2, BOTTOM_RIGHT=4, BOTTOM_LEFT=8};
@@ -274,26 +275,78 @@ namespace ReyEngine {
       inline Rect chopBottom(T amt) const {auto retval = *this; retval.height-=amt; return retval;} //remove the bottommost amt of the rectangle and return the remainder (cuts height)
       inline Rect chopRight(T amt) const {auto retval = *this; retval.width-=amt; return retval;} //remove the rightmost amt of the rectangle and return the remainder (cuts width)
       inline Rect chopLeft(T amt) const {auto retval = *this; retval.x+=amt; retval.width-=amt; return retval;} //remove the leftmost amt of the rectangle and return the remainder (moves x, cuts width)
-      inline std::optional<Rect> getOverlap(const Rect& rect2) const {
-         // Calculate the leftmost x coordinate of the overlap
-         int leftX = std::max(x, rect2.x);
-         // Calculate the rightmost x coordinate of the overlap
-         int rightX = std::min(x + width, rect2.x + rect2.width);
-         // Calculate the topmost y coordinate of the overlap
-         int topY = std::min(y, rect2.y);
-         // Calculate the bottommost y coordinate of the overlap
-         int bottomY = std::max(y - height, rect2.y - rect2.height);
-         // Check if the overlap has a positive width and height (i.e., they actually overlap)
-         if (leftX >= rightX || topY <= bottomY) {
-            return {};
-         }
-         // Return the rectangle representing the overlap
-         return Rect{leftX, topY, rightX - leftX, topY - bottomY};
+      inline bool isInside(const Vec2<T>& point) const {return (point.x > x && point.x < x + width) && (point.y > y && point.y < y + height);}
+      inline bool isInside(const Rect& other) const {return other.x+other.width < x+width && other.x > x && other.y > y && other.y+other.height < y+height;}
+      inline Pos<T> topLeft() const {return {x, y};}
+      inline Pos<T> topRight() const {return {x+width, y};}
+      inline Pos<T> bottomRight() const {return {x+width, y+height};}
+      inline Pos<T> bottomLeft() const {return {x, y+height};}
+      inline bool collides(const Rect& other){return (x < other.x + other.width) && (x+width > other.x) && (y > other.y + other.height) && (other.y + other.height < y);}
+      inline int getCollisionType(const Rect& other) const {
+         int pointCount = 0;
+         if (isInside(other.topLeft())) pointCount++;
+         if (isInside(other.topRight())) pointCount++;
+         if (isInside(other.bottomRight())) pointCount++;
+         if (pointCount == 3) return 3;
+         if (isInside(other.bottomLeft())) pointCount++;
+         return pointCount;
       }
+      inline Rect getOverlap(const Rect& other) const {
+         //this is pretty naive, but whatever
+         //tag the coordinates
+         auto& xl = x < other.x ? x : other.x;
+         auto& xr = x > other.x ? x : other.x;
+         auto& yt = y < other.y ? y : other.y;
+         auto& yb = y > other.y ? y : other.y;
+         auto& xlw = x < other.x ? width : other.width;
+         auto& xrw = x > other.x ? width : other.width;
+         auto& yth = y < other.y ? height : other.height;
+         auto& ybh = y > other.y ? height : other.height;
 
-      inline bool isInside(const Vec2<T>& point) const {
-         return (point.x > x && point.x < x + width) &&
-               (point.y > y && point.y < y + height);
+
+         //a primary collision is when other bisects us (in a 2 point collision)
+         int collisionType = getCollisionType(other);
+         bool isSecondaryCollision = false;
+         if (!collisionType){
+            collisionType = other.getCollisionType(*this);
+            isSecondaryCollision = true;
+         }
+         auto& primaryRect = isSecondaryCollision ? other : *this;
+         auto& secondaryRect = isSecondaryCollision ? *this : other;
+         switch (collisionType){
+            case 0:
+               //potentially a collision or not
+               if (xr > xl+xlw || yb > yt+yth) return {}; //no collision
+               //cross collision
+               return {xr, yb, xrw, ybh};
+            case 2:
+               //2 point collision
+               //determine if its a full width/height collision and should therefore take 1 point form
+               if (primaryRect.x != secondaryRect.x && primaryRect.y != secondaryRect.y) {
+                  //determine if its horizontal or vertical form
+                  auto xprime = secondaryRect.x > primaryRect.x;
+                  auto yprime = secondaryRect.y > primaryRect.y;
+                  bool horizontalForm = true;
+                  if (xprime && yprime){
+                     //need to distinguish between forms 1 and 2 which both have the top left prime point inside the rect
+                     if (isInside(secondaryRect.bottomLeft())){
+                        //form 2
+                        horizontalForm = false;
+                     }
+                  } else if ((!xprime && yprime) || (!xprime && !yprime)){
+                     horizontalForm = false;
+                  }
+                  if (horizontalForm) return {xr, yb, xrw, yt+yth-yb};
+                  return {xr, yb, xl+xlw-xr, ybh};
+               }
+               //otherwise fall through to 1 point form
+            case 1:
+               //corner collision, full width/height 2 point collisions
+               return {xr, yb, xl+xlw-xr, yt+yth-yb};
+            default:
+               //fully inside, 3 or 4 point collisions (we won't actually get 4 point but its handled here just in case
+               return secondaryRect;
+         }
       }
       [[nodiscard]] inline Vec2<T> center() const {return {(x+width)/2, (y+height)/2};}
       inline void setCenter(const Vec2<T>& center) {x = center.x-width/2; y= center.y - height / 2;}
@@ -329,12 +382,37 @@ namespace ReyEngine {
       [[nodiscard]] inline const Rect<T> toSizeRect() const {return {0,0,width, height};}
       inline void setSize(const ReyEngine::Size<T>& size){width = size.x; height = size.y;}
       inline void setPos(const ReyEngine::Pos<T>& pos){x = pos.x; y = pos.y;}
+
+      //return the smallest rect that contains both rects a and b
+      inline Rect getBoundingRect(const Rect& other) const {
+         // Find the bottom-right corner coordinates for both rectangles
+         int _right1 = x + width;
+         int _bottom1 = y + height;
+         int _right2 = other.x + other.width;
+         int _bottom2 = other.y + other.height;
+         // Find the top-left corner coordinates of the bounding rectangle
+         int _left = std::min(x, other.x);
+         int _top = std::min(y, other.y);
+         // Find the bottom-right corner coordinates of the bounding rectangle
+         int _right = std::max(_right1, _right2);
+         int _bottom = std::max(_bottom1, _bottom2);
+         // Ensure width and height are non-negative (handles cases where rectangles don't intersect)
+         int _width = std::max(0, _right - _left);
+         int _height = std::max(0, _bottom - _top);
+         // Return a new Rect with top-left corner and dimensions
+         return Rect{_left, _top, _width, _height};
+      }
+      static inline Rect getBoundingRect(const Rect& a, const Rect& b){
+         return a.getBoundingRect(b);
+      }
+
       //Get the sub-rectangle (of size Size) that contains pos Pos. Think tilemaps.
       inline Rect getSubRect(const Size<int>& size, const Pos<int>& pos){
          auto subx = pos.x / size.x;
          auto suby = pos.y / size.y;
          return {subx * size.x, suby*size.y, size.x, size.y};
       }
+
       //returns the coordinates of the above subrect in grid-form (ie the 3rd subrect from the left would be {3,0}
       inline Vec2<T> getSubRectCoord(const Size<int>& size, const Pos<int>& pos) const {
          auto subx = pos.x / size.x;
@@ -347,6 +425,7 @@ namespace ReyEngine {
          auto columnCount = width / size.x;
          return coord.y * columnCount + coord.x;
       }
+      //get an actual subrect given a subrect size and an index
       inline Rect getSubRect(const Size<int>& size, int index) const {
          auto columnCount = width / size.x;
          int coordY = index / columnCount;
@@ -355,6 +434,15 @@ namespace ReyEngine {
          auto posY = coordY * size.y;
          return {posX, posY, size.x, size.y};
       }
+      //get the rectangle that contains the subrects at start and stop indices (as topleft and bottom right respectively)
+      inline Rect getSubRect(const Size<int>& size, int indexStart, int indexStop) const {
+         auto a = getSubRect(size, indexStart);
+         auto b = getSubRect(size, indexStop);
+         return getBoundingRect(a,b);
+      }
+      Circle circumscribe();
+      Circle inscribe();
+
       inline void clear(){x=0,y=0,width=0;height=0;}
       T x;
       T y;
@@ -366,6 +454,7 @@ namespace ReyEngine {
       inline Circle(Pos<int> center, double radius): center(center), radius(radius){}
       inline Circle(const Circle& rhs): center(rhs.center), radius(rhs.radius){}
       inline Circle operator+(const Pos<int>& pos) const {Circle retval(*this); retval.center += pos; return retval;}
+      Rect<double> circumscribe(){return {center.x-radius, center.y-radius, radius, radius};}
       Pos<int> center;
       double radius;
    };
@@ -430,6 +519,8 @@ namespace ReyEngine {
       static constexpr ColorRGBA blue = { 0, 121, 241, 255};
       static constexpr ColorRGBA black = { 0, 0, 0, 255};
       static constexpr ColorRGBA yellow = {253, 249, 0, 255};
+      static constexpr ColorRGBA orange = {255, 165, 0, 255};
+      static constexpr ColorRGBA purple = {127, 0, 127, 255};
       static constexpr ColorRGBA white = {255, 255, 255, 255};
       static constexpr ColorRGBA transparent = {0, 0, 0, 0};
       static constexpr ColorRGBA none = {255, 255, 255, 255};
@@ -459,7 +550,7 @@ namespace ReyEngine {
 //      std::string toString();
 //      static ReyEngineFont fromString(const std::string& str);
    };
-   ReyEngineFont getDefaultFont();
+   ReyEngineFont getDefaultFont(std::optional<float> fontSize = std::nullopt);
    ReyEngineFont getFont(const std::string& fileName);
 
    struct ReyTexture{
