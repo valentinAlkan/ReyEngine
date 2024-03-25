@@ -405,7 +405,7 @@ Handled BaseWidget::_process_unhandled_editor_input(const InputEvent& event, con
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setProcess(bool process) {
-   Application::instance().getWindow()->setProcess(process, toBaseWidget());
+   Application::instance().getWindow(0)->setProcess(process, toBaseWidget());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -613,7 +613,8 @@ void BaseWidget::setRect(const ReyEngine::Rect<int>& r){
       parentWidth = parent->getWidth();
       newRect = {{0, 0}, parent->getSize()};
    } else if (isRoot()) {
-      newRect = {{0, 0}, Application::instance().getWindow()->getSize()};
+      auto windowSize = Application::instance().windowCount() ? Application::instance().getWindow(0)->getSize() : Size<int>(0,0);
+      newRect = {{0, 0}, windowSize};
    } else {
       _rect.set(r);
       __on_rect_changed();

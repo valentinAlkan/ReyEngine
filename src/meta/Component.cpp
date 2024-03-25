@@ -10,5 +10,5 @@ Component::Component(const std::string &name)
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 uint64_t Component::getFrameCounter() const {
-   return Application::instance().getWindow()->getFrameCounter();
+   return Application::instance().getWindow(0)->getFrameCounter();
 }

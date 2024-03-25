@@ -33,7 +33,8 @@ public:
    void operator=(Application const&) = delete;
 
    std::shared_ptr<Window> createWindow(const std::string& title, int width, int height, const std::vector<Window::Flags>& flags, int targetFPS=60);
-   const std::shared_ptr<Window>& getWindow(){return _window;}
+   const std::shared_ptr<Window>& getWindow(int windowIndex){return _windows.at(windowIndex);}
+   size_t windowCount(){return _windows.size();}
 
    static Logger& printDebug(){return Application::instance()._debug_logger;}
    static Logger& printInfo(){return Application::instance()._info_logger;}
@@ -64,7 +65,7 @@ private:
    #endif
    ReyEngine::FileSystem::Directory _workingDirectory;
    bool _is_ready = false;
-   std::shared_ptr<Window> _window;
+   std::vector<std::shared_ptr<Window>> _windows;
    uint64_t newRid;
    Logger _debug_logger;
    Logger _info_logger;

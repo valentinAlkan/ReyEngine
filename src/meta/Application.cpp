@@ -1,6 +1,7 @@
 #include "Application.h"
 #include "BaseWidget.h"
 #include <utility>
+#include "Canvas.h"
 
 using namespace std;
 
@@ -15,13 +16,12 @@ Application::Application()
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<Window> Application::createWindow(const std::string &title, int width, int height, const std::vector<Window::Flags> &flags, int targetFPS){
-   if (_window){
-      return nullptr;
-   }
-   _window = std::shared_ptr<Window>(new Window(title, width, height, flags, targetFPS));
+   _windows.push_back(std::shared_ptr<Window>(new Window(title, width, height, flags, targetFPS)));
+   _windows.back()->getCanvas()->setRect({}); //will auto fill
    //set working directory
+   //todo: should this be done here?
    _workingDirectory = std::filesystem::current_path().string();
-   return _window;
+   return _windows.back();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

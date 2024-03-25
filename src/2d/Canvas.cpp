@@ -12,7 +12,7 @@ void ReyEngine::Canvas::_init() {
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::Canvas::renderBegin(ReyEngine::Pos<double>& textureOffset) {
-   Application::instance().getWindow()->pushRenderTarget(_renderTarget);
+   Application::instance().getWindow(0)->pushRenderTarget(_renderTarget);
    _renderTarget.clear();
    textureOffset -= _rect.value.pos();
 
@@ -30,7 +30,7 @@ void ReyEngine::Canvas::renderEnd() {
    if (modal){
       modal.value().lock()->render();
    }
-   Application::instance().getWindow()->popRenderTarget();
+   Application::instance().getWindow(0)->popRenderTarget();
    drawRenderTargetRect(_renderTarget, Rect<int>(_renderTarget.getSize()), {0,0});
 }
 
