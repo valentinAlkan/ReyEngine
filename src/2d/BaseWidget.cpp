@@ -107,7 +107,8 @@ bool BaseWidget::setIndex(unsigned int newIndex){
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setGlobalPos(const Vec2<int>& newPos) {
-   setPos(newPos - getGlobalPos());
+   auto newLocalPos = globalToLocal(newPos);
+   setPos(newLocalPos);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -136,6 +137,18 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::getChild(const std::string &chi
       return nullopt;
    }
    return {found->second.second};
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+vector<BaseWidget::WidgetPtr> BaseWidget::findChild(const std::string &name) {
+   auto retval = vector<BaseWidget::WidgetPtr>();
+   return retval;
+//   auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
+//   auto found = _children.find(childName);
+//   if (found == _children.end()) {
+//      return nullopt;
+//   }
+//   return {found->second.second};
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -789,9 +802,9 @@ void BaseWidget::startScissor(const ReyEngine::Rect<int>& area) const {
    auto& thiz = const_cast<BaseWidget&>(*this);
    auto canvasOpt = thiz.getCanvas();
    if (canvasOpt){
-      auto globalRect = area;
-      globalRect.setPos(localToGlobal(globalRect.pos()));
-      canvasOpt.value()->pushScissor(globalRect);
+      auto scissorRect = area;
+      scissorRect.setPos(localToGlobal(area.pos()));
+      canvasOpt.value()->pushScissor(scissorRect);
    }
 
 }

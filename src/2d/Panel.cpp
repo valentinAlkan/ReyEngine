@@ -128,7 +128,7 @@ void Panel::_init() {
 
    //window rect change callback
    auto windowRectChangeCB = [&](Control& window){
-      window.setScissorArea(window.getRect().embiggen(-1));
+      window.setScissorArea(window.getRect().toSizeRect().embiggen(-1));
    };
    window->setRectChangedCallback(windowRectChangeCB);
 }

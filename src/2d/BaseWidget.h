@@ -132,6 +132,7 @@ public:
    std::weak_ptr<BaseWidget> getParent(){return _parent;}
    const ChildOrder& getChildren() const {return _childrenOrdered;}
    std::optional<WidgetPtr> getChild(const std::string& name);
+   std::vector<WidgetPtr> findChild(const std::string& name);
    bool hasChild(const std::string& name); //cant be const because it locks
    bool isHovered() const {return _hovered;}
 

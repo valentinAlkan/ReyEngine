@@ -163,6 +163,14 @@ void ReyEngine::minimizeWindow() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+template<> Circle ReyEngine::Rect<double>::circumscribe() {return {{x + width / 2, y+height/2}, height/0.70710678118/2};}
+template<> Circle ReyEngine::Rect<int>::circumscribe() {return {{x + width / 2, y+height/2}, height/0.70710678118/2};}
+template<> Circle ReyEngine::Rect<float>::circumscribe() {return {{x + width / 2, y+height/2}, height/0.70710678118/2};}
+template<> Circle ReyEngine::Rect<double>::inscribe() {return {{x + width / 2, y+height/2}, (double)height/2};}
+template<> Circle ReyEngine::Rect<int>::inscribe() {return {{x + width / 2, y+height/2}, (double)height/2};}
+template<> Circle ReyEngine::Rect<float>::inscribe() {return {{x + width / 2, y+height/2}, (double)height/2};}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::ReyEngineFont::ReyEngineFont(const std::string& fontFile){
@@ -174,8 +182,12 @@ ReyEngine::ReyEngineFont::ReyEngineFont(const std::string& fontFile){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyEngineFont ReyEngine::getDefaultFont() {
-   return ReyEngineFont();
+ReyEngineFont ReyEngine::getDefaultFont(std::optional<float> fontSize) {
+   auto retval = ReyEngineFont();
+   if (fontSize){
+      retval.size = fontSize.value();
+   }
+   return retval;
 }
 
 ReyEngineFont &ReyEngineFont::operator=(const ReyEngineFont &rhs)
