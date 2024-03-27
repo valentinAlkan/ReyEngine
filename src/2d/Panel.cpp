@@ -101,7 +101,17 @@ void Panel::_init() {
    //connect to button signals
    auto setScissor = [this](){_scissorArea = getScissorArea();};
    auto toggleShowCB = [this](const PushButton::ButtonPressEvent& event){setVisible(false); return true;};
-   auto toggleMinCB = [this, setScissor](const PushButton::ButtonPressEvent& event){_isMinimized = !_isMinimized; setScissor(); return true;};
+   auto toggleMinCB = [this, setScissor](const PushButton::ButtonPressEvent& event){
+      _isMinimized = !_isMinimized;
+      setScissor();
+      window->setVisible(!_isMinimized);
+      _isResizable = !_isMinimized;
+      static InputFilter filterCache;
+      filterCache = window->getInputFilter();
+      setAcceptsHover(!_isMinimized);
+      window->setInputFilter(_isMinimized ? InputFilter::INPUT_FILTER_IGNORE_AND_STOP : filterCache);
+      return true;
+   };
    auto toggleMaxCB = [this, toggleMinCB](const PushButton::ButtonPressEvent& event){
       if (_isMinimized){
          //deminimize
@@ -196,12 +206,13 @@ Handled Panel::_unhandled_input(const InputEvent& event, const std::optional<Unh
          resizeStartRect = _rect.value;
          offset = mousePos - getPos(); //record position
 
-         if (_isResizable && _resizeDir == ResizeDir::NONE){
+         if (!_isMinimized && _isResizable && _resizeDir == ResizeDir::NONE){
             //if we're resizing, stop here and return
             //see if we clicked in a resize region
             _resizeDir = getStretchDir();
          }
 
+         //start dragging
          if (!_isMaximized && _resizeDir == ResizeDir::NONE && menuBar->isInside(mouse->localPos) && mbEvent.isDown) {
             _isDragging = true;
             return true;
@@ -265,9 +276,6 @@ Handled Panel::_unhandled_input(const InputEvent& event, const std::optional<Unh
             return true;
          }
          break;
-   }
-   if (mouse->isInside){
-      return true; //eat all input that occurs in our rect
    }
    return false;
 }
