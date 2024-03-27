@@ -135,6 +135,8 @@ public:
    std::vector<WidgetPtr> findChild(const std::string& name);
    bool hasChild(const std::string& name); //cant be const because it locks
    bool isHovered() const {return _hovered;}
+   void setInputFilter(InputFilter newFilter){ _inputFilter = newFilter;}
+   InputFilter getInputFilter(){return _inputFilter;}
 
    template <typename T>
    std::shared_ptr<T> toType(){
@@ -279,7 +281,7 @@ protected:
    //input
    Handled _process_unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&); //pass input to children if they want it and then process it for ourselves if necessary
    Handled _process_unhandled_editor_input(const InputEvent&, const std::optional<UnhandledMouseInput>&); //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)
-   InputFilter inputFilter = InputFilter::INPUT_FILTER_PASS_AND_PROCESS;
+   InputFilter _inputFilter = InputFilter::INPUT_FILTER_PASS_AND_PROCESS;
 
    //theme
    std::shared_ptr<Style::Theme> theme;

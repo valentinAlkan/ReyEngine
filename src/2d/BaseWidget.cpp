@@ -314,7 +314,7 @@ Handled BaseWidget::_process_unhandled_input(const InputEvent& event, const std:
       if (_process_unhandled_editor_input(event, mouse) > 0) return true;
    }
 
-   switch (inputFilter){
+   switch (_inputFilter){
       case InputFilter::INPUT_FILTER_PASS_AND_PROCESS:
          return passInput(event, mouse) || _unhandled_input(event, mouse);
       case InputFilter::INPUT_FILTER_PROCESS_AND_PASS:

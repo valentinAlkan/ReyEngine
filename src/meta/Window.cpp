@@ -224,7 +224,7 @@ void Window::exec(){
 
             auto process = [&](const std::shared_ptr<BaseWidget>& widget) -> std::optional<std::shared_ptr<BaseWidget>> {
                bool _isInside = isInside(widget);
-               if (widget->acceptsHover && _isInside && widget->_visible) {
+               if (widget->_visible && widget->acceptsHover && _isInside){
                   return widget;
                }
                return nullopt;
@@ -240,7 +240,7 @@ void Window::exec(){
             };
 //            Application::printDebug() << "Asking widget " << widget->getName() << " to accept hover " << endl;
             std::optional<std::shared_ptr<BaseWidget>> handled;
-            switch (widget->inputFilter) {
+            switch (widget->_inputFilter) {
                case InputFilter::INPUT_FILTER_PROCESS_AND_STOP:
                   return process(widget);
                case InputFilter::INPUT_FILTER_PROCESS_AND_PASS:
