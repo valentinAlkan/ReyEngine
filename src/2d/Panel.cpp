@@ -250,7 +250,7 @@ Handled Panel::_unhandled_input(const InputEvent& event, const std::optional<Unh
             setPos(mousePos - offset);
             return true;
          } else {
-            if (!mouse->isInside) break;
+            if (!mouse->isInside || _isMinimized) break;
             //update cursor
             auto cursorDir = getStretchDir();
             switch (cursorDir) {
