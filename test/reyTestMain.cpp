@@ -572,6 +572,7 @@ int main(int argc, char** argv)
    else if (args.getArg("--treeTest")){
       auto treeRoot = std::make_shared<TreeItem>("Root");
       auto tree = make_shared<Tree>("Tree");
+      tree->setAnchoring(BaseWidget::Anchor::FILL);
       tree->setRoot(treeRoot);
       root->addChild(tree);
       

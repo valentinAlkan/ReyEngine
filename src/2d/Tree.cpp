@@ -100,14 +100,13 @@ Handled Tree::_unhandled_input(const InputEvent& event, const std::optional<Unha
     switch (event.eventId){
        case InputEventMouseMotion::getUniqueEventId():
        case InputEventMouseButton::getUniqueEventId():
-          auto mouseEvent = event.toEventType<InputEventMouse>();
-          auto localPos = globalToLocal(mouseEvent.globalPos);
-          if (!_rect.value.toSizeRect().isInside(localPos)){
+          auto& mouseEvent = event.toEventType<InputEventMouse>();
+          if (!mouse->isInside){
              return false;
           }
 
           //figure out which row the cursor is in
-          auto meta = getMetaAt(localPos);
+          auto meta = getMetaAt(mouse->localPos);
           if (meta){
              _hoveredMeta = meta;
              //item hover event
@@ -125,7 +124,7 @@ Handled Tree::_unhandled_input(const InputEvent& event, const std::optional<Unha
              if (!btnEvent.isDown) {
 //                Application::printDebug() << "click at = " << itemAt->_text << endl;
                 if (!itemAt->children.empty() && itemAt->getExpandable()){
-                   if (meta.value()->expansionIconClickRegion.isInside(localPos)) {
+                   if (meta.value()->expansionIconClickRegion.isInside(mouse->localPos)) {
                       itemAt->setExpanded(!itemAt->getExpanded());
                       determineVisible();
                       return true;

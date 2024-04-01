@@ -158,7 +158,10 @@ private:
    std::shared_ptr<TreeItem> root;
    std::vector<std::shared_ptr<TreeItem>> order;
    std::vector<std::shared_ptr<TreeItemMeta>> visible;
-   bool _hideRoot = false; //if true, the root is hidden and we can appear as a "flat" tree.
+   using ColumnWidth = int;
+   using RowHeight = int;
+   std::vector<ColumnWidth> _columns;
+   bool _hideRoot = false; //if true, the root is hidden and we can appear as a "flat" tree or table.
 //   size_t _hoveredRowNum = -1; //the row number currently being hovered
    std::optional<std::shared_ptr<TreeItemMeta>>_hoveredMeta;
 
