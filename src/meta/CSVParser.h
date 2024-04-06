@@ -27,9 +27,24 @@ public:
     */
    optional<vector<string>> getHeader();
 
+   /**
+    * Gets the header value of the given column
+    * @param index : the column number of interest
+    * @return : the header value of the column; nullopt if the index is greater then the number of columns, or the file has no header
+    */
+   optional<string> getColumnName(int index);
+
+   /**
+    * gets the column number of the given header
+    * @param name : the header string of interest
+    * @return : the index of the given header string; nullopt if the header doesn't exist, or the file has no header
+    */
+   optional<int> getHeaderIndex(string name);
+
 private:
    string _filename;
    vector<vector<string>> _csvRows;
    int _index;
    bool _hasHeader;
+   vector<string> _header;
 };
