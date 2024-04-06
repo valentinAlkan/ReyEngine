@@ -9,7 +9,7 @@ public:
    /////////////////////////////////////////////////////////////////////////////////////////
    struct LayoutProperty : public EnumProperty<LayoutDir, 2>{
       LayoutProperty(const std::string& instanceName,  LayoutDir defaultvalue)
-            : EnumProperty<LayoutDir, 2>(instanceName, defaultvalue){}
+            : EnumProperty<LayoutDir, 2>(instanceName, std::move(defaultvalue)){}
       const EnumPair<LayoutDir, 2>& getDict() const override {return dict;}
       static constexpr EnumPair<LayoutDir, 2> dict = {
             ENUM_PAIR_DECLARE(LayoutDir, VERTICAL),

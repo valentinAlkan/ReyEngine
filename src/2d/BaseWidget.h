@@ -53,7 +53,7 @@ public:
    /////////////////////////////////////////////////////////////////////////////////////////
    struct AnchorProperty : public EnumProperty<Anchor, 11>{
       AnchorProperty(const std::string& instanceName,  Anchor defaultvalue)
-      : EnumProperty<Anchor, 11>(instanceName, defaultvalue)
+      : EnumProperty<Anchor, 11>(instanceName, std::move(defaultvalue))
       {}
       const EnumPair<Anchor, 11>& getDict() const  override {return dict;}
       static constexpr EnumPair<Anchor, 11> dict = {
@@ -74,7 +74,7 @@ public:
    struct WidgetProperty : public Property<WidgetPtr>{
       using Property<WidgetPtr>::operator=;
       WidgetProperty(const std::string& instanceName, WidgetPtr defaultvalue = nullptr)
-      : Property(instanceName, PropertyTypes::BaseWidget, defaultvalue)
+      : Property(instanceName, PropertyTypes::BaseWidget, std::move(defaultvalue))
       {}
       std::string toString() const override {return value->serialize();}
       WidgetPtr fromString(const std::string& data) override { throw std::runtime_error("not implemented"); return {};}

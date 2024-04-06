@@ -9,6 +9,7 @@
 #include <vector>
 #include "StringTools.h"
 #include "SharedFromThis.h"
+#include <iostream>
 
 #define PROP_TYPE(propName) static constexpr char propName[] = #propName;
 #define PROPERTY_DECLARE(PROPERTYNAME, ...) PROPERTYNAME(#PROPERTYNAME, ##__VA_ARGS__)
@@ -101,6 +102,7 @@ struct BaseProperty : PropertyContainer {
    BaseProperty(const std::string instanceName, const std::string& typeName)
    : _instanceName(instanceName)
    , _typeName(typeName){}
+//   ~BaseProperty(){std::cout << "property dtor " << _instanceName << std::endl;}
    void _load(const PropertyPrototype& data);
    virtual void load(const PropertyPrototype& data) = 0;
    virtual std::string toString() const = 0;
@@ -115,9 +117,11 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////
 template <typename T>
 struct Property : public BaseProperty {
-   Property(const std::string instanceName, const std::string& typeName, T defaultvalue)
+//   Property(const std::string instanceName, const std::string& typeName): BaseProperty(instanceName, typeName){}
+   Property(const std::string instanceName, const std::string& typeName, T&& defaultvalue)
    : BaseProperty(instanceName, typeName)
    , value(std::move(defaultvalue)){}
+
    void registerProperties() override {}
    Property& operator=(const T& newValue){
       value = newValue;
@@ -129,7 +133,7 @@ struct Property : public BaseProperty {
       return *this;
    }
    virtual T fromString(const std::string& str) = 0;
-   void load(const PropertyPrototype& data) override {value = fromString(data.data);}
+   void load(const PropertyPrototype& data) override {value = std::move(fromString(data.data));}
    inline operator const T&() const {return value;}
    inline operator T&(){return value;}
    void set(const T& newValue){
@@ -139,10 +143,33 @@ struct Property : public BaseProperty {
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
+template <typename T>
+struct LambdaProperty : public Property<T>{
+   using Property<T>::operator=;
+   using fxSerializer = std::function<std::string(const T&)>;
+   LambdaProperty(
+      const std::string& instanceName,
+      const std::string& propertyType,
+      T&& defaultValue,
+      fxSerializer serializer,
+      std::function<T(const std::string&)> deserializer
+      )
+   : Property<T>(instanceName, propertyType, std::move(defaultValue))
+   , _fxSerializer(serializer)
+   , _fxDeserializer(deserializer)
+   {}
+   std::string toString() const override {return _fxSerializer(Property<T>::value);}
+   T fromString(const std::string& data) override {return _fxDeserializer(data);}
+private:
+   fxSerializer _fxSerializer;
+   std::function<T(const std::string&)> _fxDeserializer;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////
 struct StringProperty : public Property<std::string>{
    using Property<std::string>::operator=;
-   StringProperty(const std::string& instanceName, const std::string& defaultvalue = "")
-   : Property(instanceName, PropertyTypes::String, defaultvalue)
+   StringProperty(const std::string& instanceName, std::string&& defaultvalue = "")
+   : Property(instanceName, PropertyTypes::String, std::move(defaultvalue))
    {}
    std::string toString() const override {return value;}
    std::string fromString(const std::string& data) override { return data;}
@@ -151,8 +178,8 @@ struct StringProperty : public Property<std::string>{
 /////////////////////////////////////////////////////////////////////////////////////////
 struct BoolProperty : public Property<bool>{
    using Property<bool>::operator=;
-   BoolProperty(const std::string& instanceName, bool defaultvalue = false)
-   : Property(instanceName, PropertyTypes::Bool, defaultvalue)
+   BoolProperty(const std::string& instanceName, bool&& defaultvalue = false)
+   : Property(instanceName, PropertyTypes::Bool, std::move(defaultvalue))
    {}
    std::string toString() const override {return std::to_string(value);}
    bool fromString(const std::string& str) override { return std::stoi(str);}
@@ -161,8 +188,8 @@ struct BoolProperty : public Property<bool>{
 /////////////////////////////////////////////////////////////////////////////////////////
 struct IntProperty : public Property<int>{
    using Property<int>::operator=;
-   IntProperty(const std::string& instanceName, int defaultvalue = 0)
-   : Property(instanceName, PropertyTypes::Int, defaultvalue)
+   IntProperty(const std::string& instanceName, int&& defaultvalue = 0)
+   : Property(instanceName, PropertyTypes::Int, std::move(defaultvalue))
    {}
    std::string toString() const override {return std::to_string(value);}
    int fromString(const std::string& str) override { return std::stoi(str);}
@@ -171,8 +198,8 @@ struct IntProperty : public Property<int>{
 /////////////////////////////////////////////////////////////////////////////////////////
 struct FloatProperty : public Property<float>{
    using Property<float>::operator=;
-   FloatProperty(const std::string& instanceName, float defaultvalue = 0)
-   : Property(instanceName, PropertyTypes::Int, defaultvalue)
+   FloatProperty(const std::string& instanceName, float&& defaultvalue = 0)
+   : Property(instanceName, PropertyTypes::Int, std::move(defaultvalue))
    {}
    std::string toString() const override {return std::to_string(value);}
    float fromString(const std::string& str) override { return (float)std::stod(str);}
@@ -207,8 +234,8 @@ struct Vec4Property : public Property<ReyEngine::Vec4<T>>{
     Vec4Property(const std::string& instanceName, ReyEngine::Vec4<T> defaultvalue = ReyEngine::Vec4<T>())
     : Property<ReyEngine::Vec4<T>>(instanceName, PropertyTypes::Vec4, defaultvalue)
     {}
-    Vec4Property(const std::string& instanceName, const std::string& typeName, ReyEngine::Vec4<T> defaultvalue = ReyEngine::Vec4<T>())
-    : Property<ReyEngine::Vec4<T>>(instanceName, typeName, defaultvalue)
+    Vec4Property(const std::string& instanceName, const std::string& typeName, ReyEngine::Vec4<T>&& defaultvalue = ReyEngine::Vec4<T>())
+    : Property<ReyEngine::Vec4<T>>(instanceName, typeName, std::move(defaultvalue))
     {}
     std::string toString() const override {return Property<ReyEngine::Vec4<T>>::value.toString();}
     ReyEngine::Vec4<T> fromString(const std::string& str) override {return ReyEngine::Vec4<T>::fromString(str);}
@@ -218,8 +245,8 @@ struct Vec4Property : public Property<ReyEngine::Vec4<T>>{
 template <typename T>
 struct RectProperty : public Property<ReyEngine::Rect<T>>{
    using Property<ReyEngine::Rect<T>>::operator=;
-   RectProperty(const std::string& instanceName, ReyEngine::Rect<T> defaultvalue=ReyEngine::Rect<T>())
-   : Property<ReyEngine::Rect<T>>(instanceName, PropertyTypes::Rect, defaultvalue)
+   RectProperty(const std::string& instanceName, ReyEngine::Rect<T>&& defaultvalue=ReyEngine::Rect<T>())
+   : Property<ReyEngine::Rect<T>>(instanceName, PropertyTypes::Rect, std::move(defaultvalue))
    {}
    std::string toString() const override {return Property<ReyEngine::Rect<T>>::value.toString();}
    ReyEngine::Rect<T> fromString(const std::string& str) override {return ReyEngine::Rect<T>::fromString(str);}
@@ -232,8 +259,8 @@ using EnumPair = std::array<std::pair<T, std::string_view>, C>;
 template <typename T, auto C>
 struct EnumProperty : public Property<T>{
    using Property<T>::operator=;
-   EnumProperty(const std::string& instanceName, T defaultvalue)
-   : Property<T>(instanceName, PropertyTypes::Enum, defaultvalue)
+   EnumProperty(const std::string& instanceName, T&& defaultvalue)
+   : Property<T>(instanceName, PropertyTypes::Enum, std::move(defaultvalue))
    {}
    std::string toString() const override {
       for(int i=0;i<getDict().size();i++){

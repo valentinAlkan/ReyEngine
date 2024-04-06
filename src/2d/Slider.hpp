@@ -14,7 +14,7 @@ public:
    enum class SliderType{VERTICAL, HORIZONTAL};
    struct SliderTypeProperty : public Property<SliderType>{
       SliderTypeProperty(const std::string& instanceName, SliderType defaultvalue = SliderType::VERTICAL)
-            : Property(instanceName, PropertyTypes::Float, defaultvalue)
+      : Property(instanceName, PropertyTypes::Float, std::move(defaultvalue))
       {}
       std::string toString() const override {return value == SliderType::VERTICAL ? "VERTICAL" : "HORIZONTAL";}
       SliderType fromString(const std::string& str) override {return (str == "VERTICAL" ? SliderType::VERTICAL : SliderType::HORIZONTAL);}

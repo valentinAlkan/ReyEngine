@@ -12,8 +12,8 @@ namespace Style {
 
    /////////////////////////////////////////////////////////////////////////////////////////
    struct OutlineProperty : public EnumProperty<Outline, 3>{
-      OutlineProperty(const std::string& instanceName,  Outline defaultvalue)
-      : EnumProperty<Outline, 3>(instanceName, defaultvalue),
+      OutlineProperty(const std::string& instanceName,  Outline&& defaultvalue)
+      : EnumProperty<Outline, 3>(instanceName, std::move(defaultvalue)),
       PROPERTY_DECLARE(color, ReyEngine::Colors::black),
       PROPERTY_DECLARE(thickness, 1.0)
       {}
@@ -43,8 +43,8 @@ namespace Style {
    /////////////////////////////////////////////////////////////////////////////////////////
    struct FillProperty : public EnumProperty<Fill, 3>{
       using Property<Fill>::operator=;
-      FillProperty(const std::string& instanceName,  Fill defaultvalue)
-      : EnumProperty<Fill, 3>(instanceName, defaultvalue)
+      FillProperty(const std::string& instanceName,  Fill&& defaultvalue)
+      : EnumProperty<Fill, 3>(instanceName, std::move(defaultvalue))
       , PROPERTY_DECLARE(colorPrimary, ReyEngine::Colors::none)
       , PROPERTY_DECLARE(colorSecondary, ReyEngine::Colors::none)
       , PROPERTY_DECLARE(colorTertiary, ReyEngine::Colors::none)
