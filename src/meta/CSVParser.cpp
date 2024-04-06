@@ -13,6 +13,7 @@ CSVParser::CSVParser(string filename, bool hasHeader) {
       cerr << "Couldn't read file: " << filename << "\n";
    }
 
+   bool gotHeader = false;
    for (string line; getline(input, line);) {
       istringstream ss(move(line));
       vector<string> row;
@@ -24,7 +25,12 @@ CSVParser::CSVParser(string filename, bool hasHeader) {
       for (string value; getline(ss, value, ',');) {
          row.push_back(move(value));
       }
-      _csvRows.push_back(move(row));
+      if(hasHeader && !gotHeader){
+         _header = row;
+         gotHeader = true;
+      } else {
+         _csvRows.push_back(move(row));
+      }
    }
 }
 
@@ -43,5 +49,24 @@ optional<vector<string>> CSVParser::getHeader() {
    if(!_hasHeader){
       return nullopt;
    }
-   return _csvRows[0];
+   return _header;
+}
+
+optional<string> CSVParser::getColumnName(int index){
+   if(!_hasHeader || index >= _header.size()){
+      return nullopt;
+   }
+   return _header[index];
+}
+
+optional<int> CSVParser::getHeaderIndex(string name) {
+   if(!_hasHeader){
+      return nullopt;
+   }
+   for(int i = 0; i < _header.size(); i++){
+      if(_header[i].compare(name) == 0){
+         return i;
+      }
+   }
+   return nullopt;
 }
