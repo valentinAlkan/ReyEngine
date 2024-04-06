@@ -120,7 +120,7 @@ namespace ReyEngine {
       enum class GridType {SQUARE, SQUARE_OFFSET, HEX};
       struct GridTypeProperty : public EnumProperty<GridType, 3>{
          GridTypeProperty(const std::string& instanceName,  GridType defaultvalue)
-         : EnumProperty<GridType, 3>(instanceName, defaultvalue){}
+         : EnumProperty<GridType, 3>(instanceName, std::move(defaultvalue)){}
          const EnumPair<GridType, 3>& getDict() const override {return dict;}
          static constexpr EnumPair<GridType, 3> dict = {
          ENUM_PAIR_DECLARE(GridType, SQUARE),

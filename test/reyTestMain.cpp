@@ -25,6 +25,7 @@
 #include "XML.h"
 #include "TileMap.h"
 #include "TextureRect.h"
+#include "AStar.h"
 #include "CSVParser.h"
 
 using namespace std;
@@ -93,6 +94,7 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--scissorTest", "scissoring test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--uniqueValueTest", "unique value test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--readFileTest", "char reading test", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--astarTest", "unique value test", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    //create window (or don't idk)
@@ -1316,6 +1318,33 @@ int main(int argc, char** argv)
       Application::printInfo() << Application::instance().generateUniqueValue() << endl;
       Application::printInfo() << Application::instance().generateUniqueValue() << endl;
       Application::printInfo() << Application::instance().generateUniqueValue() << endl;
+   }
+
+   else if (args.getArg("--astarTest")) {
+      //generate a tilemap
+      auto tileMap = make_shared<TileMap>("tileMap");
+      root->addChild(tileMap);
+      tileMap->setAnchoring(BaseWidget::Anchor::FILL);
+      FileSystem::File spriteSheet = "test/spritesheet.png";
+      auto layerOpt = tileMap->addLayer(spriteSheet);
+      if (layerOpt) {
+         Application::printDebug() << "Tilemap added layer " << layerOpt.value() << " using sprite sheet " << tileMap->getLayer(layerOpt.value()).getAtlas().getFilePath().abs() << endl;
+      } else {
+         exit(1);
+      }
+      auto layerIndex = layerOpt.value();
+      auto &layer = tileMap->getLayer(layerIndex);
+      //set all the visible tiles to some value
+      static constexpr int TILES_WIDTH = 200;
+      for (auto x = 0; x < TILES_WIDTH; x++) {
+         for (auto y = 0; y < TILES_WIDTH; y++) {
+            layer.setTileIndex({x, y}, 1);
+         }
+      }
+      auto serializer = [](const AStar<2, 256> &instance) -> string { return "testDataThisISJunk"; };
+      auto deserializer = [](const std::string &data) -> AStar<2, 256> {/*this is just a test*/ return {"AStar"}; };
+      auto aStarProperty = make_shared<LambdaProperty<AStar<2, 256>>>("AStar", "AStar", AStar<2, 256>("AStar"), serializer, deserializer);
+      tileMap->moveProperty(aStarProperty);
    }
 
    else if (args.getArg("--readFileTest")){

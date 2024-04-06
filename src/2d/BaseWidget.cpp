@@ -23,6 +23,7 @@ BaseWidget::BaseWidget(const std::string& name, std::string  typeName)
 BaseWidget::~BaseWidget() {
 //   auto thiz = shared_from_this();
 //   EventManager::unsubscribe(thiz);
+   std::cout << "goodbye from " << getPath() << std::endl;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -546,6 +547,8 @@ void BaseWidget::_deserialize(PropertyPrototypeMap& propertyData){
       auto found = _properties.find(name);
       if (found == _properties.end()){
          throw std::runtime_error("Property " + name + " of type " + data.typeName + " not registered to type " + _typeName + ". Did you remember to call ParentType::registerProperties() for each parent type?");
+         //dynamic property - throw it in the data struct
+
       }
       found->second->_load(data);
    }

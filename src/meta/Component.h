@@ -57,7 +57,7 @@ public:
    inline RID getRid() const {return _resourceId;}
    inline std::string getName() const {return _name;}
 
-   inline bool operator==(const std::shared_ptr<Component>& other) const {if (other){return other->getRid()==_resourceId;}return false;}
+   inline bool operator==(const std::shared_ptr<Component>& other) const {return other ? other->getRid() == _resourceId : false;}
    inline bool operator==(const Component& other) const{return other._resourceId == _resourceId;}
    void registerProperties() override {}
    uint64_t getFrameCounter() const;

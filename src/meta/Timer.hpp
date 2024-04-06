@@ -56,8 +56,8 @@ private:
 };
 
 struct TimerProperty : public Property<std::shared_ptr<Timer>>{
-   TimerProperty(const std::string& instanceName, std::shared_ptr<Timer> defaultvalue)
-   : Property<std::shared_ptr<Timer>>(instanceName, PropertyTypes::Timer, defaultvalue)
+   TimerProperty(const std::string& instanceName, std::shared_ptr<Timer>&& defaultvalue)
+   : Property<std::shared_ptr<Timer>>(instanceName, PropertyTypes::Timer, std::move(defaultvalue))
    {}
    std::string toString() const override {return std::to_string(value->getInterval().count());}
    std::shared_ptr<Timer> fromString(const std::string& str) {return SystemTime::newTimer(std::chrono::milliseconds(std::stoi(str)));}

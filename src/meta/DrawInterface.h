@@ -477,7 +477,9 @@ namespace ReyEngine {
    struct ColorRGBA {
       ColorRGBA(): r(0), g(0), b(0), a(255){}
       constexpr ColorRGBA(int r, int g, int b, int a): r(r), g(g), b(b), a(a){}
-      explicit ColorRGBA(Color color): r(color.r), g(color.g), b(color.b), a(color.a){}
+      ColorRGBA(Color color): r(color.r), g(color.g), b(color.b), a(color.a){}
+      ColorRGBA(Color& color): r(color.r), g(color.g), b(color.b), a(color.a){}
+      ColorRGBA(Color&& color): r(color.r), g(color.g), b(color.b), a(color.a){}
       inline ColorRGBA& operator=(const Color& rhs){r = rhs.r; g=rhs.g; b=rhs.b; a=rhs.a; return *this;}
       inline operator Color() const {return {r, g, b, a};}
 //      inline void setR(unsigned char _r){r = _r;}
@@ -498,8 +500,8 @@ namespace ReyEngine {
 
    struct ColorProperty : public Property<ReyEngine::ColorRGBA>{
       using Property<ReyEngine::ColorRGBA>::operator=;
-      ColorProperty(const std::string& instanceName,  ReyEngine::ColorRGBA defaultvalue)
-            : Property<ReyEngine::ColorRGBA>(instanceName, PropertyTypes::Color, defaultvalue)
+      ColorProperty(const std::string& instanceName,  ReyEngine::ColorRGBA defaultvalue)//pass color by copy
+      : Property<ReyEngine::ColorRGBA>(instanceName, PropertyTypes::Color, std::move(defaultvalue))
       {}
       std::string toString() const override {return "{" + std::to_string(value.r) + ", " + std::to_string(value.g) + ", " + std::to_string(value.b) + ", "  + std::to_string(value.a) + "}";}
       ReyEngine::ColorRGBA fromString(const std::string& str) override {
