@@ -1,12 +1,35 @@
 #pragma once
 #include <string>
 #include <iostream>
+#include <optional>
 
+using namespace std;
 
 class CSVParser {
 public:
-   CSVParser(std::string filename);
+   CSVParser(string filename, bool hasHeader = false);
+
+   /**
+    * Returns a vector with all of the rows parsed from the file
+    * @return : all rows from the file
+    */
+   vector<vector<string>> getAllRows();
+
+   /**
+    * Returns the next row and increments the index
+    * @return : the next row in the file; nullopt if the end of file exists
+    */
+   optional<vector<string>> getNextRow();
+
+   /**
+    * Returns the header row of the file
+    * @return : the header row of the file; nullopt if the file has no header row
+    */
+   optional<vector<string>> getHeader();
 
 private:
-   std::string _filename;
+   string _filename;
+   vector<vector<string>> _csvRows;
+   int _index;
+   bool _hasHeader;
 };

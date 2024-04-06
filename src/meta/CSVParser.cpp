@@ -4,34 +4,44 @@
 #include <iomanip>
 #include "CSVParser.h"
 
-CSVParser::CSVParser(std::string filename) {
+CSVParser::CSVParser(string filename, bool hasHeader) {
    _filename = filename;
-   std::ifstream input(filename);
+   _hasHeader = hasHeader;
+   ifstream input(filename);
+   _index = 1;
    if (!input.is_open()) {
-      std::cerr << "Couldn't read file: " << filename << "\n";
+      cerr << "Couldn't read file: " << filename << "\n";
    }
 
-   std::vector<std::vector<std::string>> csvRows;
-
-   for (std::string line; std::getline(input, line);) {
-      std::istringstream ss(std::move(line));
-      std::vector<std::string> row;
-      if (!csvRows.empty()) {
+   for (string line; getline(input, line);) {
+      istringstream ss(move(line));
+      vector<string> row;
+      if (!_csvRows.empty()) {
          // We expect each row to be as big as the first row
-         row.reserve(csvRows.front().size());
+         row.reserve(_csvRows.front().size());
       }
       // std::getline can split on other characters, here we use ','
-      for (std::string value; std::getline(ss, value, ',');) {
-         row.push_back(std::move(value));
+      for (string value; getline(ss, value, ',');) {
+         row.push_back(move(value));
       }
-      csvRows.push_back(std::move(row));
+      _csvRows.push_back(move(row));
    }
+}
 
-   // Print out our table
-   for (const std::vector<std::string>& row : csvRows) {
-      for (const std::string& value : row) {
-         std::cout << std::setw(10) << value;
-      }
-      std::cout << "\n";
+vector<vector<string>> CSVParser::getAllRows() {
+   return _csvRows;
+}
+
+optional<vector<string>> CSVParser::getNextRow() {
+   if(_index >= _csvRows.size()){
+      return nullopt;
    }
+   return _csvRows[_index++];
+}
+
+optional<vector<string>> CSVParser::getHeader() {
+   if(!_hasHeader){
+      return nullopt;
+   }
+   return _csvRows[0];
 }
