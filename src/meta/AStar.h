@@ -5,14 +5,33 @@
 #include <chrono>
 #include "Application.h"
 
-template <size_t dimensionCount, unsigned int dimensionSize>
+//GraphOrder represents how many dimensions we will be working.
+// A 2D map is secnd order, a 3D map is third order, and so on.
+template <size_t GraphOrder, typename CoordinateType, typename WeightType>
 class AStar : public Component {
+   using Coordinates = std::array<CoordinateType, GraphOrder>;
+private:
+   struct Connection;
+   struct Cell{
+      Coordinates address;
+      WeightType weight;
+      std::vector<Connection*> connections; //might have any number of connections
+   };
+   struct Connection{
+      Cell a;
+      Cell b;
+   };
+   using Path = std::vector<Cell*>;
+   struct Graph {
+      std::array<CoordinateType, GraphOrder> data;
+   };
+
 public:
    AStar(const std::string& name = "Default")
    : Component(name)
    {
       _requestShutdown = std::make_unique<bool>();
-      _data = std::make_unique<std::array<std::array<int, dimensionSize>, dimensionCount>>();
+      _data = std::make_unique<Graph>();
       _t = std::thread(&AStar::run, this, std::ref(*_requestShutdown), std::ref(*_data));
    }
    AStar(AStar&& other)
@@ -36,7 +55,7 @@ public:
       *_requestShutdown = true;
    }
 private:
-   void run(bool& requestShutdown, std::array<std::array<int, dimensionSize>, dimensionCount>& data) {
+   void run(bool& requestShutdown, Graph& data) {
       using namespace std::chrono;
       std::this_thread::sleep_for(1000ms);
       std::cout << "AStar::run::start" << std::endl;
@@ -49,5 +68,5 @@ private:
    }
    std::thread _t;
    std::unique_ptr<bool> _requestShutdown;
-   std::unique_ptr<std::array<std::array<int, dimensionSize>, dimensionCount>> _data;
+   std::unique_ptr<Graph> _data;
 };
