@@ -12,15 +12,17 @@ public:
    : Component(name)
    {
       _requestShutdown = std::make_unique<bool>();
-      _t = std::thread(&AStar::run, this, std::ref(_requestShutdown));
+      _data = std::make_unique<std::array<std::array<int, dimensionSize>, dimensionCount>>();
+      _t = std::thread(&AStar::run, this, std::ref(*_requestShutdown), std::ref(*_data));
    }
    AStar(AStar&& other)
    : Component(other._name){
-      _t = std::move(other._t);
-      _requestShutdown = std::move(other._requestShutdown);
+      (*this) = std::move(other);
    }
-   AStar& operator=(const AStar& other){
-//   todo: finish - actually copy stuff
+   AStar& operator=(AStar&& other){
+      _requestShutdown = std::move(other._requestShutdown);
+      _data = std::move(other._data);
+      _t = std::move(other._t);
       return *this;
    }
 
@@ -34,17 +36,18 @@ public:
       *_requestShutdown = true;
    }
 private:
-   void run(std::unique_ptr<bool>& requestShutdown){
+   void run(bool& requestShutdown, std::array<std::array<int, dimensionSize>, dimensionCount>& data) {
       using namespace std::chrono;
+      std::this_thread::sleep_for(1000ms);
       std::cout << "AStar::run::start" << std::endl;
       while (!requestShutdown){
          static int i=0;
-         std::this_thread::sleep_for(1000ms);
+         std::this_thread::sleep_for(100ms);
          std::cout << "AStar::run::" << i++ << std::endl;
       }
       std::cout << "AStar::run::end " << std::endl;
    }
    std::thread _t;
    std::unique_ptr<bool> _requestShutdown;
-   std::array<std::array<int, dimensionSize>, dimensionCount> _data;
+   std::unique_ptr<std::array<std::array<int, dimensionSize>, dimensionCount>> _data;
 };
