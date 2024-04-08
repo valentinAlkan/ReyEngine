@@ -19,7 +19,7 @@ Scene::Scene(std::shared_ptr<BaseWidget> root)
 
 /////////////////////////////////////////////////////////////////////////////////////////
 optional<shared_ptr<Scene>> Scene::fromFile(const std::string& filePath) {
-   auto bytes = FileSystem::loadFile(filePath);
+   auto bytes = FileSystem::readFile(filePath);
    if (bytes.empty()){
       return nullptr;
    }
