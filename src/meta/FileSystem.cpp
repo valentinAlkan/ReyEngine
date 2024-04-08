@@ -9,7 +9,7 @@ using namespace std;
 using namespace ReyEngine::FileSystem;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::vector<char> ReyEngine::FileSystem::loadFile(const std::string &filePath) {
+std::vector<char> ReyEngine::FileSystem::readFile(const std::string &filePath) {
    std::ifstream ifs(filePath, std::ios::binary | std::ios::ate);
    if (!ifs)
       throw std::runtime_error(filePath + ": " + std::strerror(errno));
@@ -26,6 +26,11 @@ std::vector<char> ReyEngine::FileSystem::loadFile(const std::string &filePath) {
    if (!ifs.read((char *) buffer.data(), buffer.size()))
       throw std::runtime_error(filePath + ": " + std::strerror(errno));
    return buffer;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::FileSystem::writeFile(const std::string& filePath, const std::vector<char>&){
+   //todo: write file
 }
 
 

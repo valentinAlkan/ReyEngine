@@ -5,7 +5,8 @@
 #include "Property.h"
 
 namespace ReyEngine::FileSystem {
-   std::vector<char> loadFile(const std::string& filePath);
+   std::vector<char> readFile(const std::string& filePath);
+   void writeFile(const std::string& filePath, const std::vector<char>&);
 
    using ComponentPath = std::string;
    static constexpr char COMPONENT_PATH_SEP = '/';
@@ -35,11 +36,16 @@ namespace ReyEngine::FileSystem {
    };
 
    struct File : public Path {
-      File(){}
       File(const std::string& path): Path(path){}
       File(const char* path): Path(path){}
       operator Directory() = delete;
       using Path::operator<<;
+      bool loaded = false;
+      void load(){data = readFile(path); loaded = true;}
+      void save(){}
+      std::vector<char>& getData(){return data;}
+   private:
+      std::vector<char> data;
    };
 
    struct Directory : public Path {
