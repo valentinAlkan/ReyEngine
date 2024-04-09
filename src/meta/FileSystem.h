@@ -3,9 +3,11 @@
 #include <string>
 #include <optional>
 #include "Property.h"
+#include <fstream>
 
 namespace ReyEngine::FileSystem {
-   std::vector<char> loadFile(const std::string& filePath);
+   std::vector<char> readFile(const std::string& filePath);
+   void writeFile(const std::string& filePath, const std::vector<char>&);
 
    using ComponentPath = std::string;
    static constexpr char COMPONENT_PATH_SEP = '/';
@@ -38,8 +40,32 @@ namespace ReyEngine::FileSystem {
       File(){}
       File(const std::string& path): Path(path){}
       File(const char* path): Path(path){}
+      File(File& other) = delete;
+      File& operator=(File& other) = delete;
+      File(File&& other){
+         (*this) = std::move(other);
+      }
+      File& operator=(File&& other){
+         _ptr = other._ptr;
+         _ifs = std::move(other._ifs);
+         _open = other._open;
+         return *this;
+      }
       operator Directory() = delete;
       using Path::operator<<;
+      std::vector<char> readFile(){return FileSystem::readFile(path);}
+      std::vector<char> readBytes(long long count);
+      std::vector<char> readLine();
+      void open();
+      void close(){_ifs.close(); _open = false;}
+      void seek(uint64_t i){ _ptr = i;}
+      void save(){/*todo*/}
+      bool eof(){return _ptr == _end;}
+   private:
+      bool _open=false;
+      std::ifstream _ifs;
+      std::fpos<std::mbstate_t> _ptr = 0;
+      std::fpos<std::mbstate_t> _end;
    };
 
    struct Directory : public Path {
