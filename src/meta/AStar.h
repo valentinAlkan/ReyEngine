@@ -21,74 +21,46 @@
 
 //GraphOrder represents how many dimensions we will be working.
 // A 2D map is secnd order, a 3D map is third order, and so on.
-template <size_t GraphOrder, typename CoordinateType, typename WeightType>
-class AStar : public Component {
-private:
+class AStar2D : public Component {
+public:
    /////////////////////////////////////////////////////////////////////////////////////////
-   using Coordinates = std::array<CoordinateType, GraphOrder>;
+   using CoordinateType = int;
    struct Connection;
    struct Cell{
-      Coordinates address;
-      WeightType weight;
+      Cell(const ReyEngine::Vec2<CoordinateType>& coordinates, double weight)
+      : coordinates(coordinates)
+      , weight(weight)
+      {}
+      ReyEngine::Vec2<CoordinateType> coordinates;
+      double weight;
       std::vector<std::unique_ptr<Connection>> connections; //might have any number of connections
    };
-   using Path = std::vector<Cell*>;
+   using Path = std::vector<Cell&>;
    /////////////////////////////////////////////////////////////////////////////////////////
    struct Connection{
-      Cell a;
-      Cell b;
+//      double weight;
+      Connection(Cell& a, Cell& b): a(a), b(b){}
+      Cell& a;
+      Cell& b;
+   };
+   struct Graph{
+      Cell& getCell(const ReyEngine::Vec2<CoordinateType>&);
+      void setCell(Cell&&);
+   private:
+      std::map<CoordinateType, std::map<CoordinateType, Cell>> _data;
    };
    /////////////////////////////////////////////////////////////////////////////////////////
+   AStar2D(const std::string& name = "Default");
+   AStar2D(AStar2D&& other);
+   AStar2D& operator=(AStar2D& other) = delete;
+   AStar2D& operator=(AStar2D&& other) noexcept;
+   std::unique_ptr<Graph>& getGraph(){return _graph;}
 
-   using Graph = MultiDimensionalArray<Cell, GraphOrder>;
-
-public:
-   AStar(const std::string& name = "Default")
-   : Component(name)
-   {
-      _requestShutdown = std::make_unique<bool>();
-      _data = std::make_unique<Graph>();
-      _t = std::thread(&AStar::run, this, std::ref(*_requestShutdown), std::ref(*_data));
-   }
-   /////////////////////////////////////////////////////////////////////////////////////////
-   AStar(AStar&& other)
-   : Component(other._name){
-      (*this) = std::move(other);
-   }
-   /////////////////////////////////////////////////////////////////////////////////////////
-   AStar& operator=(AStar& other) = delete;
-   AStar& operator=(AStar&& other) noexcept {
-      _requestShutdown = std::move(other._requestShutdown);
-      _data = std::move(other._data);
-      _t = std::move(other._t);
-      return *this;
-   }
-    /////////////////////////////////////////////////////////////////////////////////////////
-   ~AStar(){
-      if (_t.joinable()){
-         shutdown();
-         _t.join();
-      }
-   }
-   /////////////////////////////////////////////////////////////////////////////////////////
-   void shutdown(){
-      *_requestShutdown = true;
-   }
-
-
+   ~AStar2D();
+   void shutdown();
 private:
-   void run(bool& requestShutdown, Graph& data) {
-      using namespace std::chrono;
-      std::this_thread::sleep_for(1000ms);
-      std::cout << "AStar::run::start" << std::endl;
-      while (!requestShutdown){
-         static int i=0;
-         std::this_thread::sleep_for(100ms);
-         std::cout << "AStar::run::" << i++ << std::endl;
-      }
-      std::cout << "AStar::run::end " << std::endl;
-   }
+   void run(bool& requestShutdown, Graph& data);
    std::thread _t;
    std::unique_ptr<bool> _requestShutdown;
-   std::unique_ptr<Graph> _data;
+   std::unique_ptr<Graph> _graph;
 };
