@@ -688,7 +688,7 @@ int main(int argc, char** argv)
       //set tilemap tile size (dest tile size)
       auto squareEdge = 32;
       Size<int> gridSize = {squareEdge, squareEdge};
-      tileMap->setGridSize(gridSize);
+      tileMap->setTileSize(gridSize);
 
       root->addChild(tileMap);
       tileMap->setRect({5, 5, gridSize.x * 20, gridSize.y * 20});
@@ -1332,19 +1332,82 @@ int main(int argc, char** argv)
       } else {
          exit(1);
       }
+
+      auto serializer = [](const AStar2D& instance) -> string {return "testDataThisISJunk";};
+      auto deserializer = [](const std::string& data) -> AStar2D {/*this is just a test*/ return {"AStar"};};
+      auto aStarProperty = make_shared<LambdaProperty<AStar2D>>("AStar", "AStar", AStar2D("AStar"), serializer, deserializer);
+      tileMap->moveProperty(aStarProperty);
+
       auto layerIndex = layerOpt.value();
-      auto &layer = tileMap->getLayer(layerIndex);
-      //set all the visible tiles to some value
+      auto& layer = tileMap->getLayer(layerIndex);
+      //set all the visible tiles to some value, also populate astar map
       static constexpr int TILES_WIDTH = 200;
-      for (auto x = 0; x < TILES_WIDTH; x++) {
-         for (auto y = 0; y < TILES_WIDTH; y++) {
-            layer.setTileIndex({x, y}, 1);
+      for (auto x=0; x < TILES_WIDTH; x++){
+         for (auto y=0; y < TILES_WIDTH; y++){
+            layer.setTileIndex({x,y}, 1);
+//            AStar2D::Cell cell({x, y}, 1.0);
+//            aStarProperty->value.getGraph()->setCell(std::move(cell));
          }
       }
-      auto serializer = [](const AStar<2, 256> &instance) -> string { return "testDataThisISJunk"; };
-      auto deserializer = [](const std::string &data) -> AStar<2, 256> {/*this is just a test*/ return {"AStar"}; };
-      auto aStarProperty = make_shared<LambdaProperty<AStar<2, 256>>>("AStar", "AStar", AStar<2, 256>("AStar"), serializer, deserializer);
-      tileMap->moveProperty(aStarProperty);
+
+      auto clickLayer = make_shared<Control>("ClickLayer");
+      tileMap->addChild(clickLayer);
+      clickLayer->setAnchoring(BaseWidget::Anchor::FILL);
+      clickLayer->getTheme()->background.colorPrimary = Colors::blue;
+
+      optional<Vec2<int>> hover;
+      optional<Vec2<int>> start;
+      optional<Vec2<int>> stop;
+
+      auto cbClickRender = [&](const Control& ctl){
+         if (start) {
+            auto pos = tileMap->getCellPos(start.value());
+            auto rect = Rect<int>(pos, tileMap->getTileSize());
+            ctl.drawRectangleLines(rect, 2.0, Colors::red);
+         }
+         if (stop) {
+            auto pos = tileMap->getCellPos(stop.value());
+            auto rect = Rect<int>(pos, tileMap->getTileSize());
+            ctl.drawRectangleLines(rect, 2.0, Colors::blue);
+         }
+         if (hover) {
+            auto pos = tileMap->getCellPos(hover.value());
+            auto rect = Rect<int>(pos, tileMap->getTileSize());
+            ctl.drawRectangleLines(rect, 2.0, Colors::yellow);
+         }
+      };
+
+      auto cbClickInput = [&](Control& clicklayer, const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) -> Handled{
+            if (mouse){
+               auto cellCoords = tileMap->getCell(mouse->localPos);
+               cout << cellCoords << endl;
+               switch(event.eventId){
+                  case InputEventMouseButton::getUniqueEventId():{
+                     auto& mbEvent = event.toEventType<InputEventMouseButton>();
+                     if (!mbEvent.isDown) {
+                        switch (mbEvent.button) {
+                           case InputInterface::MouseButton::LEFT:
+                              start = cellCoords;
+                              hover = nullopt;
+                              return true;
+                           case InputInterface::MouseButton::RIGHT:
+                              stop = cellCoords;
+                              hover = nullopt;
+                              return true;
+                        }
+                     }
+                     break;}
+                  case InputEventMouseMotion::getUniqueEventId():
+                     hover = cellCoords;
+                     return true;
+
+               }
+            }
+         return false;
+      };
+      clickLayer->setUnhandledInputCallback(cbClickInput);
+      clickLayer->setRenderCallback(cbClickRender);
+
    }
 
    else if (args.getArg("--readFileTest")){

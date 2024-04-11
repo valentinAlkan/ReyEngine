@@ -119,7 +119,7 @@ Pos<int> TileMap::getCellPos(const TileCoord& coord) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
-void TileMap::setGridSize(const Size<int>& size) {
+void TileMap::setTileSize(const Size<int>& size) {
    _gridWidth = size.x;
    _gridHeight = size.y;
    updateAllLayers();

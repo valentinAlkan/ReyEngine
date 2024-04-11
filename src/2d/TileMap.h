@@ -6,6 +6,7 @@ namespace ReyEngine {
    public:
       struct TileCoord : public Vec2<int> {
            TileCoord(int x, int y): Vec2(x,y){}
+           TileCoord(const Vec2<int>& other): Vec2(other){}
 //         TileCoord(int x, int y): x(x),y(y){}
 //         inline explicit operator bool() const {return x || y;}
 //         inline TileCoord operator+(const TileCoord& rhs) const {TileCoord val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
@@ -20,7 +21,7 @@ namespace ReyEngine {
 //         inline TileCoord& operator-(){x = -x; y =-y; return *this;}
 ////         inline static std::vector<T> fromString(const std::string& s){return Vec<T>::fromString(2, s);};
 ////         std::ostream& operator<<(std::ostream& os) const {os << Vec<T>::toString(); return os;}
-//         friend std::ostream& operator<<(std::ostream& os, Vec2<T> v) {os << v.toString(); return os;}
+////         friend std::ostream& operator<<(std::ostream& os, Vec2<int> v) {os << v.toString(); return os;}
 //         int x;
 //         int y;
       };
@@ -154,7 +155,9 @@ namespace ReyEngine {
       TileMapLayer& getLayer(LayerIndex);
       TileCoord getCell(const Pos<int>&) const;
       Pos<int> getCellPos(const TileCoord&) const;
-      void setGridSize(const Size<int>&);
+      ///Set the size of each tile
+      void setTileSize(const Size<int>&);
+      Size<int> getTileSize(){return {_gridWidth, _gridHeight};}
    protected:
       void render() const override;
 //      inline void renderBegin(ReyEngine::Pos<double>&) override;
