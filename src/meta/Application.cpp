@@ -2,7 +2,10 @@
 #include "BaseWidget.h"
 #include <utility>
 #include "Canvas.h"
-
+#ifdef REYENGINE_PLATFORM_WINDOWS
+#include "libloaderapi.h"
+#include "winsvc.h"
+#endif
 using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -13,6 +16,15 @@ Application::Application()
 , _error_logger(std::cout, "ERROR")
 {
    TypeManager::instance()._registerTypes();
+
+   if constexpr (PLATFORM == Platform::WINDOWS) {
+      SC_HANDLE schSCManager;
+      SC_HANDLE schService;
+      TCHAR szPath[MAX_PATH];
+      if (!GetModuleFileNameA(NULL, szPath, MAX_PATH)){
+         
+      }
+   }
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<Window> Application::createWindow(const std::string &title, int width, int height, const std::vector<Window::Flags> &flags, int targetFPS){
