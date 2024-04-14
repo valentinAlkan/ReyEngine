@@ -2,7 +2,7 @@
 #include <string>
 #include <iostream>
 #include <optional>
-
+#include <vector>
 using namespace std;
 
 class CSVParser {
@@ -40,6 +40,8 @@ public:
     * @return : the index of the given header string; nullopt if the header doesn't exist, or the file has no header
     */
    optional<int> getHeaderIndex(string name);
+
+   bool hasNext();
 
 private:
    string _filename;

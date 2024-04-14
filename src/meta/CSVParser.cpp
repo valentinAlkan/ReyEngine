@@ -70,3 +70,10 @@ optional<int> CSVParser::getHeaderIndex(string name) {
    }
    return nullopt;
 }
+
+bool CSVParser::hasNext() {
+   if (_index >= _csvRows.size()){
+      return false;
+   }
+   return true;
+}
