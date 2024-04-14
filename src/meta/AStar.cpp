@@ -1,4 +1,6 @@
 #include "AStar.h"
+#include "math.h"
+#include <algorithm>
 
 using namespace std;
 using namespace ReyEngine;
@@ -40,7 +42,7 @@ AStar2D& AStar2D::operator=(AStar2D&& other) noexcept {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-AStar2D::Cell& AStar2D::Graph::getCell(const Vec2<CoordinateType>& coords) {
+std::optional<std::reference_wrapper<AStar2D::Cell>> AStar2D::Graph::getCell(const Vec2<CoordinateType>& coords) {
    return _data.at(coords.x).at(coords.y);
 }
 
@@ -50,14 +52,63 @@ void AStar2D::Graph::setCell(Cell&& cell) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+std::optional<std::reference_wrapper<AStar2D::Cell>> AStar2D::getCell(ReyEngine::Vec2<CoordinateType> coords) {
+   return _graph->getCell(coords);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void AStar2D::setStart(Cell& start) {_start = start;}
+void AStar2D::setGoal(Cell& goal) {_goal = goal;}
+void AStar2D::addConnection(Cell& a, Cell& b) {
+   a.addConnection(b);
+}
+void AStar2D::removeConnection(Connection &) {}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void AStar2D::run(bool &requestShutdown, Graph &data){
-   using namespace std::chrono;
-   std::this_thread::sleep_for(1000ms);
    std::cout << "AStar::run::start" << std::endl;
+   std::vector<std::reference_wrapper<Cell>> openList;
+   std::vector<std::reference_wrapper<Cell>> closedList;
+
+   auto generateHeuristic = [](Cell& start, Cell& goal){
+      //use euclidian distance
+      double x = start.coordinates.x - goal.coordinates.x;
+      double y = start.coordinates.y - goal.coordinates.y;
+      return sqrt(pow(x, 2) + pow(y, 2));
+   };
+
    while (!requestShutdown){
-      static int i=0;
-      std::this_thread::sleep_for(100ms);
-      std::cout << "AStar::run::" << i++ << std::endl;
+      switch (_state){
+         case SearchState::NO_SOLUTION:
+            //todo: condtion variable?
+            std::this_thread::sleep_for(100ms);
+            break;
+         case SearchState::READY:
+            //start a new search
+            openList.clear();
+            closedList.clear();
+         case SearchState::SEARCHING:
+            if (!_start || !_goal) _state = SearchState::NO_SOLUTION;
+            //start with the first opencell
+            openList.push_back(_start.value());
+
+            break;
+         case SearchState::FOUND:
+            break;
+      }
    }
    std::cout << "AStar::run::end " << std::endl;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void AStar2D::Cell::addConnection(std::reference_wrapper<Cell> neighbor) {
+   _connections.insert(neighbor);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void AStar2D::Cell::removeConnection(std::reference_wrapper<Cell> neighbor) {
+   auto found = _connections.find(neighbor);
+   if (found != _connections.end()){
+      _connections.erase(found);
+   }
 }
