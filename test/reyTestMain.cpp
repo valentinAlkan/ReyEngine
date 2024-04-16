@@ -89,6 +89,7 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--canvasTest", "Testing nested canvases to make sure they work right", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--scissorTest", "scissoring test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--uniqueValueTest", "unique value test", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--readFileTest", "char reading test", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    //create window (or don't idk)
@@ -1280,7 +1281,29 @@ int main(int argc, char** argv)
       Application::printInfo() << Application::instance().generateUniqueValue() << endl;
       Application::printInfo() << Application::instance().generateUniqueValue() << endl;
       Application::printInfo() << Application::instance().generateUniqueValue() << endl;
+   }
 
+   else if (args.getArg("--readFileTest")){
+      auto file = FileSystem::File("test/test.scn");
+      //cat out the contents of the file as a whole
+      Application::printInfo() << "Catting out contents of " << file.abs() << " using readfile" << endl;
+      stringstream ss;
+      for (auto c : file.readFile()){
+         ss << c;
+      }
+      std::cout << ss.str() << endl;
+
+      //cat out the contents of the file byte by byte
+      Application::printInfo() << "Catting out contents of " << file.abs() << " using getByte" << endl;
+      bool done = false;
+      file.open();
+      while (!file.eof()){
+         static constexpr int strsize = 10;
+         for (auto c :file.readBytes(strsize)){
+            std::cout << c;
+         }
+      }
+      std::cout << endl;
    }
 
    else if (args.getArg("--inspector")){
