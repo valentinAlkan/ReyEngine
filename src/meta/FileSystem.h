@@ -26,7 +26,7 @@ namespace ReyEngine::FileSystem {
       Path() = default;
       Path(const std::string& path): paths(string_tools::pathSplit(path)){}
       Path(const std::vector<std::string>& paths): paths(paths){}
-//      Path(const char* path): paths(string_tools::pathSplit(path)){}
+      Path(const Path& other): paths(other.paths){}
       bool exists() const;
       Path head() const;
       std::optional<Path> tail() const;
@@ -59,8 +59,8 @@ namespace ReyEngine::FileSystem {
       File(){}
       File(const std::string& path): Path(path){}
       File(const char* path): Path(path){}
-      File(const File& other){*this = other;}
-      File& operator=(const File& other){(Path)*this = (Path&)other; return *this;}
+      File(const File& other){(Path&)*this = (Path&)other;}
+      using Path::operator=;
       Directory dir();
       File(File&& other){
          (*this) = std::move(other);
@@ -74,7 +74,7 @@ namespace ReyEngine::FileSystem {
       operator Directory() = delete;
       std::vector<char> readFile(){return FileSystem::readFile(str());}
       std::vector<char> readBytes(long long count);
-      std::vector<char> readLine();
+      std::string readLine(); //read until we get to a new line (treats cr/nl as single newline).
       void open();
       void close(){_ifs.close(); _open = false;}
       void seek(uint64_t i){ _ptr = i;}
