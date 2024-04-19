@@ -1106,19 +1106,23 @@ int main(int argc, char** argv)
       }
       auto& rows = parser.getAllRows();
       int rowCount = 0;
+      auto it = parser.begin();
+      //compare the two methods of data retrieval to ensure they agree
       for (auto& row : rows){
          stringstream ss;
+         auto _it = (*it).begin();
          for (auto& cell : row){
+            assert(cell == *_it);
             ss << cell << ",";
+            _it++;
          }
          cout << ss.str() << endl;
          if(rowCount == 3){
             assert(row == parser.getRow(3).value().get());
          }
-
+         ++it;
          rowCount++;
       }
-
    }
 
    else if (args.getArg("--dragTest")){

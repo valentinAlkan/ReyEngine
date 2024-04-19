@@ -15,10 +15,10 @@ public:
     * Returns a std::vector with all of the rows parsed from the file
     * @return : all rows from the file
     */
-   const std::vector<Row>& getAllRows(){return _data;}
-   const std::optional<std::reference_wrapper<Row>> getRow(size_t rowIndex) {
+   const std::vector<Row>& getAllRows() const {return _data;}
+   std::optional<std::reference_wrapper<Row>> getRow(size_t rowIndex) {
       if (rowIndex >= _data.size()) return std::nullopt;
-      return _data[rowIndex];
+      return std::ref(_data[rowIndex]);
    }
 
    /**
@@ -41,4 +41,38 @@ private:
    ReyEngine::FileSystem::File _file;
    std::vector<Row> _data;
    Row _header;
+
+public:
+   // Iterator class for rows of csv data
+   class iterator : public std::iterator<std::forward_iterator_tag, std::string> {
+   public:
+      iterator(std::optional<std::reference_wrapper<CSVParser>> parser = std::nullopt)
+      : _parser(parser)
+      {}
+      const Row& operator*() const {
+         auto& r = _parser.value().get()._data.at(rowNo);
+         return r;
+      }
+      iterator& operator++() {
+         rowNo++;
+         return *this;
+      }
+
+      bool operator!=(const iterator& other) const {
+         if (!_parser) return false;
+         if (!other._parser) {return rowNo < _parser.value().get().getAllRows().size();}
+         return _parser.value().get()._data[rowNo] != other._parser.value().get()._data[rowNo];
+      }
+
+      size_t getCurrentRowNo(){return rowNo;}
+   private:
+      size_t rowNo = 0;
+      std::optional<std::reference_wrapper<CSVParser>> _parser;
+   };
+
+   iterator begin() {
+      auto it = iterator(std::ref(*this));
+      return it;
+   }
+   iterator end() const { return {};}
 };

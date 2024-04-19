@@ -37,6 +37,19 @@ CSVParser::CSVParser(const ReyEngine::FileSystem::File& file, bool header)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+std::optional<size_t> CSVParser::getHeaderIndex(const std::string &name) {
+   if (!hasHeader()) return nullopt;
+   size_t i = 0;
+   for (const auto& cell : _header){
+      if (name == cell){
+         return i;
+      }
+      i++;
+   }
+   return nullopt;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 optional<string> CSVParser::getColumnName(int index){
    if(!hasHeader() || index >= _header.size()){
       return nullopt;
