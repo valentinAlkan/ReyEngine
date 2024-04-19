@@ -1097,6 +1097,13 @@ int main(int argc, char** argv)
       FileSystem::File csvFile("test/csvTest.csv");
       auto parser = CSVParser(csvFile, true);
       //cat out all the data
+      if (auto hdr = parser.getHeader()){
+         stringstream ss;
+         for (auto& cell : hdr.value().get()) {
+            ss << cell << ",";
+         }
+         cout << ss.str() << endl;
+      }
       auto& rows = parser.getAllRows();
       int rowCount = 0;
       for (auto& row : rows){
