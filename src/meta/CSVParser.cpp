@@ -4,17 +4,17 @@
 #include <iomanip>
 #include "CSVParser.h"
 
-CSVParser::CSVParser(string filename, bool hasHeader) {
-   _filename = filename;
-   _hasHeader = hasHeader;
-   ifstream input(filename);
-   _index = 1;
-   if (!input.is_open()) {
-      cerr << "Couldn't read file: " << filename << "\n";
-   }
+using namespace std;
+using namespace ReyEngine;
 
+CSVParser::CSVParser(const ReyEngine::FileSystem::File& file, bool hasHeader)
+: _file(file)
+, _hasHeader(hasHeader)
+{
    bool gotHeader = false;
-   for (string line; getline(input, line);) {
+   _file.open();
+
+   for (string line; line.empty(); line = _file.readLine()) {
       istringstream ss(move(line));
       vector<string> row;
       if (!_csvRows.empty()) {

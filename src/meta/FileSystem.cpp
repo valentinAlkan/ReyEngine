@@ -28,9 +28,10 @@ std::vector<char> ReyEngine::FileSystem::readFile(const std::string &filePath) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::FileSystem::File::open() {
-   _ifs = std::ifstream(str(), std::ios::binary | std::ios::ate);
+   
+   _ifs = std::ifstream(abs(), std::ios::binary | std::ios::ate);
    if (!_ifs){
-      throw std::runtime_error(str() + ": " + std::strerror(errno));
+      throw std::runtime_error(abs() + ": " + std::strerror(errno));
    }
    _end = _ifs.tellg();
    _ptr = 0;
@@ -50,6 +51,38 @@ std::vector<char> ReyEngine::FileSystem::File::readBytes(long long count) {
       throw std::runtime_error(str() + ": " + std::strerror(errno));
    _ptr += count;
    return buffer;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+string ReyEngine::FileSystem::File::readLine() {
+   if (!_open) throw std::runtime_error("File " + abs() + " is not open!");
+   auto size = std::size_t(_end - _ptr);
+   if (size == 0) return {};
+   bool carriageReturn = false;
+   string retval;
+   char c;
+   bool done = false;
+   while (!done){
+      _ifs.seekg(_ptr, std::ios::beg);
+      if (!_ifs.read((char *) &c, 1))
+         throw std::runtime_error(str() + ": " + std::strerror(errno));
+      _ptr += 1;
+      if (c == '\n'){
+         done = true;
+         continue;
+      }
+      if (c == '\r'){
+         //steal the carriage return for now
+         carriageReturn = true;
+         continue;
+      } else if (carriageReturn){
+         //add back in the carriage return we stole since it didn't precede a lf char
+         c = '\r';
+         carriageReturn = false;
+      }
+      retval += c;
+   }
+   return retval;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

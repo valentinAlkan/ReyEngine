@@ -24,6 +24,7 @@
 #include "XML.h"
 #include "TileMap.h"
 #include "TextureRect.h"
+#include "CSVParser.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -66,6 +67,7 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--labelTest", "help", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--saveLoadSceneTest", "Filename to save/load to", 1, RuntimeArg::ArgType::POSITIONAL));
    args.defineArg(RuntimeArg("--xmlTest", "XML test", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--csvTest", "CSV test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--layoutTest", "Test layouts", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--configTest", "Config file test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--layoutTestBasic", "Basic Test layouts", 0, RuntimeArg::ArgType::FLAG));
@@ -1088,6 +1090,11 @@ int main(int argc, char** argv)
       };
       //rebuild tree
       catElement(xmlRoot);
+   }
+
+   else if (args.getArg("--csvTest")){
+      FileSystem::File csvFile("test/csvTest.csv");
+      auto parser = CSVParser(csvFile);
    }
 
    else if (args.getArg("--dragTest")){
