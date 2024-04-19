@@ -3,6 +3,7 @@
 #include <cstring>
 #include <filesystem>
 #include "Application.h"
+#include "StringTools.h"
 
 using namespace std;
 using namespace ReyEngine::FileSystem;
@@ -27,9 +28,9 @@ std::vector<char> ReyEngine::FileSystem::readFile(const std::string &filePath) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::FileSystem::File::open() {
-   _ifs = std::ifstream(path, std::ios::binary | std::ios::ate);
+   _ifs = std::ifstream(str(), std::ios::binary | std::ios::ate);
    if (!_ifs){
-      throw std::runtime_error(path + ": " + std::strerror(errno));
+      throw std::runtime_error(str() + ": " + std::strerror(errno));
    }
    _end = _ifs.tellg();
    _ptr = 0;
@@ -46,7 +47,7 @@ std::vector<char> ReyEngine::FileSystem::File::readBytes(long long count) {
    std::vector<char> buffer(count);
    _ifs.seekg(_ptr, std::ios::beg);
    if (!_ifs.read((char *) buffer.data(), buffer.size()))
-      throw std::runtime_error(path + ": " + std::strerror(errno));
+      throw std::runtime_error(str() + ": " + std::strerror(errno));
    _ptr += count;
    return buffer;
 }
@@ -63,9 +64,9 @@ bool ReyEngine::FileSystem::Path::exists() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::optional<ReyEngine::FileSystem::Path> ReyEngine::FileSystem::Path::head() const {
-   //todo:
-   return nullopt;
+ReyEngine::FileSystem::Path ReyEngine::FileSystem::Path::head() const {
+   auto retval = vector<string>(paths.begin(), paths.end()-1);
+   return retval;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -75,6 +76,8 @@ std::optional<ReyEngine::FileSystem::Path> ReyEngine::FileSystem::Path::tail() c
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-string ReyEngine::FileSystem::Path::abs() const {
-   return Application::getWorkingDirectory() + "\\" + path;
+std::string ReyEngine::FileSystem::Path::abs() const {
+   Path retval = CrossPlatform::getExePath();
+   auto fullPath = retval.head() + paths;
+   return string_tools::pathJoin(fullPath.paths);
 }

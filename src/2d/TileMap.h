@@ -30,7 +30,7 @@ namespace ReyEngine {
       struct SpriteAtlas {
          SpriteAtlas(const FileSystem::File& file)
          : texture(file)
-         , _filePath(file)
+         , _filePath(file.str())
          {
             setTileSize(_tileSize);
          }

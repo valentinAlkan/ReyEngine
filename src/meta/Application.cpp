@@ -2,11 +2,10 @@
 #include "BaseWidget.h"
 #include <utility>
 #include "Canvas.h"
-#ifdef REYENGINE_PLATFORM_WINDOWS
-#include "libloaderapi.h"
-#include "winsvc.h"
-#endif
+#include "Platform.h"
+
 using namespace std;
+using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Application::Application()
@@ -16,23 +15,12 @@ Application::Application()
 , _error_logger(std::cout, "ERROR")
 {
    TypeManager::instance()._registerTypes();
-
-   if constexpr (PLATFORM == Platform::WINDOWS) {
-      SC_HANDLE schSCManager;
-      SC_HANDLE schService;
-      TCHAR szPath[MAX_PATH];
-      if (!GetModuleFileNameA(NULL, szPath, MAX_PATH)){
-         
-      }
-   }
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<Window> Application::createWindow(const std::string &title, int width, int height, const std::vector<Window::Flags> &flags, int targetFPS){
    _windows.push_back(std::shared_ptr<Window>(new Window(title, width, height, flags, targetFPS)));
    _windows.back()->getCanvas()->setRect({}); //will auto fill
-   //set working directory
-   //todo: should this be done here?
-   _workingDirectory = std::filesystem::current_path().string();
+
    return _windows.back();
 }
 

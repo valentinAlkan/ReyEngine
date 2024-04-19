@@ -63,6 +63,7 @@ add_library(ReyEngine2D STATIC
     src/meta/Component.cpp
     src/meta/Config.cpp
     src/meta/CSVParser.cpp
+    src/meta/Platform.cpp
     src/2d/BaseWidget.cpp
     src/2d/ComboBox.cpp
     src/2d/Control.cpp
