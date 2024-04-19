@@ -1,4 +1,5 @@
 #include "DrawInterface.h"
+#include <cassert>
 #include "ScrollArea.hpp"
 #include "Application.h"
 #include <iostream>
@@ -1094,7 +1095,23 @@ int main(int argc, char** argv)
 
    else if (args.getArg("--csvTest")){
       FileSystem::File csvFile("test/csvTest.csv");
-      auto parser = CSVParser(csvFile);
+      auto parser = CSVParser(csvFile, true);
+      //cat out all the data
+      auto& rows = parser.getAllRows();
+      int rowCount = 0;
+      for (auto& row : rows){
+         stringstream ss;
+         for (auto& cell : row){
+            ss << cell << ",";
+         }
+         cout << ss.str() << endl;
+         if(rowCount == 3){
+            assert(row == parser.getRow(3).value().get());
+         }
+
+         rowCount++;
+      }
+
    }
 
    else if (args.getArg("--dragTest")){

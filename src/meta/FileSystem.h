@@ -5,6 +5,8 @@
 #include "Property.h"
 #include <fstream>
 #include <iostream>
+#include <filesystem>
+#include <functional>
 
 namespace ReyEngine::FileSystem {
    std::vector<char> readFile(const std::string& filePath);
@@ -24,27 +26,22 @@ namespace ReyEngine::FileSystem {
    struct Directory;
    struct Path {
       Path() = default;
-      Path(const std::string& path): paths(string_tools::pathSplit(path)){}
-      Path(const std::vector<std::string>& paths): paths(paths){}
-      Path(const Path& other): paths(other.paths){}
-      bool exists() const;
-      Path head() const;
-      std::optional<Path> tail() const;
+      Path(const std::string& path): _path(path){}
+      Path(const Path& other): _path(other._path){}
+      bool exists() const {return std::filesystem::exists(_path);};
+      Path head() const {return _path.filename().string();}
+      std::optional<Path> tail() const {if (_path.has_parent_path())return _path.parent_path().string(); return std::nullopt;}
       std::optional<File> toFile() const;
-//      Path& join(const std::string&);
-//      Path& join(const Path&);
-      [[nodiscard]] std::string abs() const;
-      const std::string str() const {return string_tools::join(FILESYSTEM_PATH_SEP, paths);}
-      inline Path& operator+=(const std::vector<std::string>& rhs) {paths.insert(paths.end(), rhs.begin(), rhs.end()); return *this;}
-      inline Path operator+(const std::vector<std::string>& rhs) const {Path newPath(*this); newPath += rhs; return newPath;}
-      inline Path& operator+=(const Path& rhs) {*this += rhs.paths; return *this;}
-      inline Path operator+(const Path& rhs) const {return *this + rhs.paths;}
-      inline Path& operator+=(const std::string& rhs) {return *this += string_tools::pathSplit(rhs);}
-      inline Path operator+(const std::string& rhs) const {return *this + string_tools::pathSplit(rhs);}
-      explicit inline operator bool() const {return !paths.empty();}
-      inline Path& operator=(const std::string& rhs){paths = string_tools::pathSplit(rhs); return *this;}
-      inline bool operator==(const std::string& rhs) const {return paths == string_tools::pathSplit(rhs);}
-      inline bool operator==(const Path& rhs) const {return paths == rhs.paths;}
+      [[nodiscard]] std::string abs() const {return std::filesystem::absolute(_path).string();}
+      [[nodiscard]] std::string str() const {return abs();}
+      inline Path& operator+=(const Path& rhs) {_path /= rhs._path; return *this;}
+      inline Path operator+(const Path& rhs) const {return (_path / rhs._path).string();}
+//      inline Path& operator+=(const std::string& rhs) {return *this += string_tools::_pathplit(rhs);}
+//      inline Path operator+(const std::string& rhs) const {return *this + string_tools::_pathplit(rhs);}
+      explicit inline operator bool() const {return !_path.empty();}
+      inline Path& operator=(const std::string& rhs){_path = rhs; return *this;}
+      inline bool operator==(const std::string& rhs) const {return _path == rhs;}
+      inline bool operator==(const Path& rhs) const {return _path == rhs._path;}
       explicit inline operator std::string() const {return str();}
 
 //      inline Path& operator=(const char* rhs){path = rhs; return *this;}
@@ -52,13 +49,14 @@ namespace ReyEngine::FileSystem {
 //      inline Path& operator+=(const char* rhs) {path += std::string(rhs); return *this;}
       friend std::ostream& operator<<(std::ostream& os, const Path& _path) {os << _path.str(); return os;}
    protected:
-      std::vector<std::string> paths;
+      std::filesystem::path _path;
    };
 
    struct File : public Path {
       File(){}
       File(const std::string& path): Path(path){}
       File(const char* path): Path(path){}
+      File(File& other){(Path&)*this = (Path&)other;}
       File(const File& other){(Path&)*this = (Path&)other;}
       using Path::operator=;
       Directory dir();
@@ -85,6 +83,46 @@ namespace ReyEngine::FileSystem {
       std::ifstream _ifs;
       std::fpos<std::mbstate_t> _ptr = 0;
       std::fpos<std::mbstate_t> _end;
+
+   public:
+      // Iterator class for lines of text
+      class LineIterator : public std::iterator<std::forward_iterator_tag, std::string> {
+      public:
+         LineIterator(std::optional<std::reference_wrapper<FileSystem::File>> file) : _file(file){
+            if (_file) {
+               _file.value().get().open();
+               operator++(); //load first line
+            }
+         }
+         ~LineIterator(){
+            if(_file) {
+               _file.value().get().close();
+            }
+         }
+         std::string operator*() const {return currentLine;}
+         LineIterator& operator++() {
+            currentLine = _file.value().get().readLine();
+            lineNo++;
+            return *this;
+         }
+
+         bool operator!=(const LineIterator& other) const {
+            return currentLine != other.currentLine;
+         }
+
+         size_t getCurrentLineNo(){return lineNo;}
+      private:
+         size_t lineNo = 0;
+         std::string currentLine;
+         std::optional<std::reference_wrapper<FileSystem::File>> _file;
+      };
+
+      LineIterator begin() {
+         auto it = LineIterator(std::ref(*this));
+         return it;
+      }
+      LineIterator end() const { return {{}};}
+
    };
 
    struct Directory : public Path {

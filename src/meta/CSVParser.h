@@ -7,25 +7,19 @@
 
 class CSVParser {
 public:
+   using Row = std::vector<std::string>;
+   static constexpr char CSV_SEP = ',';
    CSVParser(const ReyEngine::FileSystem::File& file, bool hasHeader = false);
 
    /**
     * Returns a std::vector with all of the rows parsed from the file
     * @return : all rows from the file
     */
-   std::vector<std::vector<std::string>> getAllRows();
-
-   /**
-    * Returns the next row and increments the index
-    * @return : the next row in the file; nullopt if the end of file exists
-    */
-   std::optional<std::vector<std::string>> getNextRow();
-
-   /**
-    * Returns the header row of the file
-    * @return : the header row of the file; nullopt if the file has no header row
-    */
-   std::optional<std::vector<std::string>> getHeader();
+   const std::vector<Row>& getAllRows(){return _data;}
+   const std::optional<std::reference_wrapper<Row>> getRow(size_t rowIndex) {
+      if (rowIndex >= _data.size()) return std::nullopt;
+      return _data[rowIndex];
+   }
 
    /**
     * Gets the header value of the given column
@@ -39,14 +33,12 @@ public:
     * @param name : the header std::string of interest
     * @return : the index of the given header std::string; nullopt if the header doesn't exist, or the file has no header
     */
-   std::optional<int> getHeaderIndex(std::string name);
-
-   bool hasNext();
+   std::optional<size_t> getHeaderIndex(const std::string& name);
+   std::optional<const std::reference_wrapper<Row>> getHeader(){return _header;}
+   bool hasHeader(){return !_header.empty();}
 
 private:
    ReyEngine::FileSystem::File _file;
-   std::vector<std::vector<std::string>> _csvRows;
-   int _index;
-   bool _hasHeader;
-   std::vector<std::string> _header;
+   std::vector<Row> _data;
+   Row _header;
 };
