@@ -1297,13 +1297,14 @@ int main(int argc, char** argv)
       Application::printInfo() << "Catting out contents of " << file.abs() << " using getByte" << endl;
       bool done = false;
       file.open();
+      ss.clear();
       while (!file.eof()){
          static constexpr int strsize = 10;
          for (auto c :file.readBytes(strsize)){
-            std::cout << c;
+            ss << c;
          }
       }
-      std::cout << endl;
+      std::cout << ss.str() << endl;
    }
 
    else if (args.getArg("--inspector")){

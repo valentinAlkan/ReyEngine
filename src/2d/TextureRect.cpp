@@ -24,7 +24,7 @@ void TextureRect::_init() {
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void TextureRect::setTexture(const FileSystem::File& _newPath) {
-   _texturePath = _newPath;
+   _texturePath = _newPath.str();
    if (Application::isReady()) {
       _texture.loadTexture(_newPath);
    }

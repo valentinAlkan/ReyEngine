@@ -96,7 +96,6 @@ namespace ReyEngine {
          return retval;
       }
       inline static std::vector<T> fromString(const std::string& s){return Vec<T>::fromString(2, s);};
-      std::ostream& operator<<(std::ostream& os) const {os << Vec<T>::toString(); return os;}
       friend std::ostream& operator<<(std::ostream& os, Vec2<T> v) {os << v.toString(); return os;}
       T x;
       T y;
