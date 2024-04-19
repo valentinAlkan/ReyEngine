@@ -86,27 +86,27 @@ namespace ReyEngine::FileSystem {
 
    public:
       // Iterator class for lines of text
-      class LineIterator : public std::iterator<std::forward_iterator_tag, std::string> {
+      class iterator : public std::iterator<std::forward_iterator_tag, std::string> {
       public:
-         LineIterator(std::optional<std::reference_wrapper<FileSystem::File>> file) : _file(file){
+         iterator(std::optional<std::reference_wrapper<FileSystem::File>> file) : _file(file){
             if (_file) {
                _file.value().get().open();
                operator++(); //load first line
             }
          }
-         ~LineIterator(){
+         ~iterator(){
             if(_file) {
                _file.value().get().close();
             }
          }
          std::string operator*() const {return currentLine;}
-         LineIterator& operator++() {
+         iterator& operator++() {
             currentLine = _file.value().get().readLine();
             lineNo++;
             return *this;
          }
 
-         bool operator!=(const LineIterator& other) const {
+         bool operator!=(const iterator& other) const {
             return currentLine != other.currentLine;
          }
 
@@ -117,11 +117,11 @@ namespace ReyEngine::FileSystem {
          std::optional<std::reference_wrapper<FileSystem::File>> _file;
       };
 
-      LineIterator begin() {
-         auto it = LineIterator(std::ref(*this));
+      iterator begin() {
+         auto it = iterator(std::ref(*this));
          return it;
       }
-      LineIterator end() const { return {{}};}
+      iterator end() const { return {{}};}
 
    };
 
