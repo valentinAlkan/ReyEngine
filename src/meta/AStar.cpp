@@ -82,16 +82,16 @@ void AStar2D::run(bool &requestShutdown, Graph &data){
          case SearchState::NO_SOLUTION:
             //todo: condtion variable?
             std::this_thread::sleep_for(100ms);
+            if (_start && _goal) _state = SearchState::READY;
             break;
          case SearchState::READY:
             //start a new search
             openList.clear();
             closedList.clear();
          case SearchState::SEARCHING:
-            if (!_start || !_goal) _state = SearchState::NO_SOLUTION;
+            if (!_start || !_goal) {_state = SearchState::NO_SOLUTION; continue;}
             //start with the first opencell
             openList.push_back(_start.value());
-
             break;
          case SearchState::FOUND:
             break;

@@ -31,18 +31,19 @@ namespace ReyEngine {
       struct SpriteAtlas {
          SpriteAtlas(const FileSystem::File& file)
          : texture(file)
-         , _filePath(file.str())
+         , _file(file)
          {
             setTileSize(_tileSize);
+            std::cout << _file.abs() << std::endl;
          }
          SpriteAtlas(SpriteAtlas&& other)
          : texture(std::move(other.texture))
-         , _filePath(std::move(other._filePath))
-         , _tileSize(std::move(other._tileSize))
-         , rowCount(std::move(other.rowCount))
-         , columnCount(std::move(other.columnCount))
+         , _file(other._file)
+         , _tileSize(other._tileSize)
+         , rowCount(other.rowCount)
+         , columnCount(other.columnCount)
          {}
-         inline void setTileSize(Size<int> size){
+         inline void setTileSize(const Size<int>& size){
             _tileSize = size;
             rowCount = texture.size.x / _tileSize.x;
             columnCount = texture.size.y / _tileSize.y;
@@ -61,10 +62,10 @@ namespace ReyEngine {
             return rect.getSubRect(_tileSize, index);
          }
          inline Size<int> getTileSize() const {return _tileSize;}
-         inline const FileSystem::File getFilePath() const {return _filePath;}
+         inline const FileSystem::File getFile() const {return _file;}
       private:
          ReyTexture texture;
-         FileSystem::File _filePath;
+         FileSystem::File _file;
          int rowCount = 0;
          int columnCount = 0;
          Size<int> _tileSize = {32, 32};

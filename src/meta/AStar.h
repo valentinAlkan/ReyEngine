@@ -88,7 +88,7 @@ private:
    std::thread _t;
    std::unique_ptr<bool> _requestShutdown;
    std::unique_ptr<Graph> _graph;
-   SearchState _state = SearchState::READY;
+   SearchState _state = SearchState::NO_SOLUTION;
    std::vector<std::reference_wrapper<Cell>> _path;
    std::optional<std::reference_wrapper<Cell>> _start;
    std::optional<std::reference_wrapper<Cell>> _goal;
