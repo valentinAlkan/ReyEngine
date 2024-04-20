@@ -167,7 +167,7 @@ std::optional<TileMap::TileIndex> TileMap::TileMapLayer::getTileIndex(const Tile
    try {
       return tiles.at(pos.x).at(pos.y);
    } catch (const out_of_range& e) {
-      Application::printDebug() << "Tile layer " << atlas._filePath.str() << " has no index at coordinates " << pos << endl;
+      Application::printDebug() << "Tile layer " << atlas._file.str() << " has no index at coordinates " << pos << endl;
    }
    return nullopt;
 }

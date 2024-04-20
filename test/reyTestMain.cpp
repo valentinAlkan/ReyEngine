@@ -664,16 +664,14 @@ int main(int argc, char** argv)
       FileSystem::File spriteSheet = "test/spritesheet.png";
       auto layerOpt = tileMap->addLayer(spriteSheet);
       if (layerOpt) {
-         Application::printDebug() << "Tilemap added layer " << layerOpt.value() << " using sprite sheet "
-                                   << tileMap->getLayer(layerOpt.value()).getAtlas().getFilePath().abs() << endl;
+         Application::printDebug() << "Tilemap added layer " << layerOpt.value() << " using sprite sheet " << tileMap->getLayer(layerOpt.value()).getAtlas().getFile().abs() << endl;
       } else {
          Application::printError() << "Tilemap " << spriteSheet.abs() << " not found" << endl;
          return 1;
       }
       layerOpt = tileMap->addLayer(spriteSheet);
       if (layerOpt) {
-         Application::printDebug() << "Tilemap added layer " << layerOpt.value() << " using sprite sheet "
-                                   << tileMap->getLayer(layerOpt.value()).getAtlas().getFilePath().abs() << endl;
+         Application::printDebug() << "Tilemap added layer " << layerOpt.value() << " using sprite sheet " << tileMap->getLayer(layerOpt.value()).getAtlas().getFile().abs() << endl;
       } else {
          Application::printError() << "Tilemap " << spriteSheet.abs() << " not found" << endl;
          return 1;
@@ -1328,7 +1326,7 @@ int main(int argc, char** argv)
       FileSystem::File spriteSheet = "test/spritesheet.png";
       auto layerOpt = tileMap->addLayer(spriteSheet);
       if (layerOpt) {
-         Application::printDebug() << "Tilemap added layer " << layerOpt.value() << " using sprite sheet " << tileMap->getLayer(layerOpt.value()).getAtlas().getFilePath().abs() << endl;
+         Application::printDebug() << "Tilemap added layer " << layerOpt.value() << " using sprite sheet " << tileMap->getLayer(layerOpt.value()).getAtlas().getFile().abs() << endl;
       } else {
          exit(1);
       }
@@ -1412,6 +1410,7 @@ int main(int argc, char** argv)
 
    else if (args.getArg("--readFileTest")){
       auto file = FileSystem::File("test/test.scn");
+      auto fileCopy = file;
       //cat out the contents of the file as a whole
       Application::printInfo() << "Catting out contents of " << file.abs() << " using readfile" << endl;
       stringstream ss;
@@ -1421,13 +1420,13 @@ int main(int argc, char** argv)
       std::cout << ss.str() << endl;
 
       //cat out the contents of the file byte by byte
-      Application::printInfo() << "Catting out contents of " << file.abs() << " using getByte" << endl;
+      Application::printInfo() << "Catting out contents of " << fileCopy.abs() << " using getByte" << endl;
       bool done = false;
-      file.open();
+      fileCopy.open();
       ss.clear();
-      while (!file.eof()){
+      while (!fileCopy.eof()){
          static constexpr int strsize = 10;
-         for (auto c :file.readBytes(strsize)){
+         for (auto c :fileCopy.readBytes(strsize)){
             ss << c;
          }
       }
