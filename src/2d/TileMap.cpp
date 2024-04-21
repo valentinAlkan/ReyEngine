@@ -118,6 +118,12 @@ Pos<int> TileMap::getCellPos(const TileCoord& coord) const {
    return {x,y};
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
+Pos<int> TileMap::getCellPosCenter(const TileCoord& coord) const {
+   auto pos = getCellPos(coord);
+   return pos + getTileSize()/2;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////
 void TileMap::setTileSize(const Size<int>& size) {
    _gridWidth = size.x;

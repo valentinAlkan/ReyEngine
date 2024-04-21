@@ -1339,12 +1339,26 @@ int main(int argc, char** argv)
       auto layerIndex = layerOpt.value();
       auto& layer = tileMap->getLayer(layerIndex);
       //set all the visible tiles to some value, also populate astar map
-      static constexpr int TILES_WIDTH = 200;
-      for (auto x=0; x < TILES_WIDTH; x++){
-         for (auto y=0; y < TILES_WIDTH; y++){
+      static constexpr int TILES_WIDTH = 100;
+      for (auto y=0; y < TILES_WIDTH; y++){
+         for (auto x=0; x < TILES_WIDTH; x++){
             layer.setTileIndex({x,y}, 1);
-//            AStar2D::Cell cell({x, y}, 1.0);
-//            aStarProperty->value.getGraph()->setCell(std::move(cell));
+            //create a cell
+            std::cout << "=====Generating cell " << Vec2<int>(x, y) << endl;
+            auto& newCell = aStarProperty->value.getGraph()->createCell({x, y}, 1.0);
+            //create connections to neighbors (manhattan distance for now)
+            for (auto optNeighbor :{
+                  aStarProperty->value.getGraph()->getCell({x - 1, y}),
+                  aStarProperty->value.getGraph()->getCell({x, y - 1}),
+            }){
+               if (optNeighbor){
+                  auto& neighbor = optNeighbor.value().get();
+                  //connect both ways
+                  std::cout << "creating connection between cells " << neighbor.coordinates << " <==> " << newCell.coordinates << endl;
+                  newCell.connect(neighbor);
+                  neighbor.connect(newCell);
+               }
+            }
          }
       }
 
@@ -1373,24 +1387,83 @@ int main(int argc, char** argv)
             auto rect = Rect<int>(pos, tileMap->getTileSize());
             ctl.drawRectangleLines(rect, 2.0, Colors::yellow);
          }
+
+         //render neighbors
+         if (start){
+            //get the neighbor connections
+            auto cell = aStarProperty->value.getGraph().get()->getCell(start.value());
+            if (cell) {
+               const auto& neighbors = cell.value().get().getConnections();
+               for (const auto& neighbor : neighbors){
+                  //get the tilemap cell
+                  auto coords = neighbor.get().coordinates;
+                  auto center = tileMap->getCellPosCenter(coords);
+                  //draw something on the neigbors
+                  Circle c(center, 5.0);
+                  drawCircle(c, Colors::blue);
+               }
+            }
+         }
+
+         //render the connections
+//         for (auto x=0; x < TILES_WIDTH; x++){
+//            for (auto y=0; y < TILES_WIDTH; y++){
+//               Vec2<int> coords = {x,y};
+//               auto cellOpt = aStarProperty->value.getGraph().get()->getCell(coords);
+//               if (cellOpt){
+//                  auto& cell = cellOpt.value().get();
+//                  auto neighbors = cell.getConnections();
+//                  for (const auto& neighbor : neighbors){
+//                     auto ncoords = neighbor.get().coordinates;
+//                     //get a reference to the cell in the drawing plane
+//                     auto drawStart = tileMap->getCellPosCenter(coords);
+//                     auto drawEnd = tileMap->getCellPosCenter(ncoords);
+//                     //draw a line
+//                     auto tileSize = tileMap->getTileSize();
+//                     auto tweakincr = tileSize / 4;
+//                     if (coords.x > ncoords.x){
+//                        drawStart.y -= tweakincr.y;
+//                     } else if (coords.x < ncoords.x){
+//                        drawStart.y += tweakincr.y;
+//                     } else if (coords.y > ncoords.y){
+//                        drawStart.x -= tweakincr.x;
+//                     } else if (coords.y < ncoords.y){
+//                        drawStart.x += tweakincr.x;
+//                     } else {
+//                        //self-connection - invalid
+//                        assert(false);
+//                     }
+//                     ctl.drawLine({drawStart, drawEnd}, 2.0, Colors::purple);
+//                  }
+//               }
+//            }
+//         }
+
       };
 
       auto cbClickInput = [&](Control& clicklayer, const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) -> Handled{
             if (mouse){
                auto cellCoords = tileMap->getCell(mouse->localPos);
-               cout << cellCoords << endl;
                switch(event.eventId){
                   case InputEventMouseButton::getUniqueEventId():{
                      auto& mbEvent = event.toEventType<InputEventMouseButton>();
                      if (!mbEvent.isDown) {
                         switch (mbEvent.button) {
-                           case InputInterface::MouseButton::LEFT:
+                           case InputInterface::MouseButton::LEFT:{
                               start = cellCoords;
+                              auto cell = aStarProperty->value.getGraph()->getCell(start.value());
+                              if (cell) {
+                                 aStarProperty->value.setStart(cell.value());
+                              }
                               hover = nullopt;
-                              return true;
+                              return true;}
                            case InputInterface::MouseButton::RIGHT:
                               stop = cellCoords;
                               hover = nullopt;
+                              auto cell = aStarProperty->value.getGraph()->getCell(stop.value());
+                              if (cell) {
+                                 aStarProperty->value.setGoal(cell.value());
+                              }
                               return true;
                         }
                      }

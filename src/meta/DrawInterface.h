@@ -71,7 +71,9 @@ namespace ReyEngine {
       inline Vec2 operator-(const Vec2& rhs) const {Vec2<T> val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
       inline Vec2& operator+=(const Vec2& rhs){x += rhs.x; y += rhs.y; return *this;}
       inline Vec2& operator-=(const Vec2& rhs){x -= rhs.x; y -= rhs.y; return *this;}
+      inline Vec2 operator*(const T rhs){Vec2 retval(*this); retval *= rhs.x; retval.y *= rhs; return retval;}
       inline Vec2& operator*=(const Vec2& rhs){x *= rhs.x; y *= rhs.y; return *this;}
+      inline Vec2 operator/(const T rhs){Vec2 retval(*this); retval.x /= rhs; retval.y /= rhs; return retval;}
       inline Vec2& operator/=(const Vec2& rhs){x /= rhs.x; y /= rhs.y; return *this;}
       inline Vec2& operator=(const Vec2& rhs){x = rhs.x; y=rhs.y; return *this;}
       inline bool operator==(const Vec2& rhs){return x==rhs.x && y==rhs.y;}
@@ -199,7 +201,7 @@ namespace ReyEngine {
       inline Pos(const Vec2<int>& v)   : Vec2<T>(v){}
       inline Pos(const Vec2<double>& v): Vec2<T>(v){}
       inline Pos(const Vec2<float>& v) : Vec2<T>(v){}
-
+      inline void operator=(Size<T>&) = delete;
       inline Pos operator+(const Pos& rhs) const {auto val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
       inline Pos operator-(const Pos& rhs) const {auto val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
       inline Pos& operator+=(const Pos& rhs){this->x += rhs.x; this->y += rhs.y; return *this;}
