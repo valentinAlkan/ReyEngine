@@ -43,70 +43,104 @@ AStar2D& AStar2D::operator=(AStar2D&& other) noexcept {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 std::optional<std::reference_wrapper<AStar2D::Cell>> AStar2D::Graph::getCell(const Vec2<CoordinateType>& coords) {
-   return _data.at(coords.x).at(coords.y);
+   try{
+      return _data.at(coords.x).at(coords.y);
+   } catch (...){}
+   return nullopt;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
-void AStar2D::Graph::setCell(Cell&& cell) {
-   _data[cell.coordinates.x].emplace(std::pair<CoordinateType, Cell>(cell.coordinates.y, std::move(cell)));
+///////////////////////////////////////////////////////////////////////////////////////////
+AStar2D::Cell& AStar2D::Graph::createCell(const ReyEngine::Vec2<int>& coordinates, double weight) {
+   _data[coordinates.x].emplace(std::pair<CoordinateType, Cell>(coordinates.y, Cell(coordinates, weight)));
+   auto ref = getCell(coordinates); //gauranteed to exist
+   return ref.value();
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
-std::optional<std::reference_wrapper<AStar2D::Cell>> AStar2D::getCell(ReyEngine::Vec2<CoordinateType> coords) {
-   return _graph->getCell(coords);
-}
+///////////////////////////////////////////////////////////////////////////////////////////
+//void AStar2D::Graph::setCell(Cell&& cell) {
+//   _data[cell.coordinates.x].emplace(std::pair<CoordinateType, Cell>(cell.coordinates.y, std::move(cell)));
+//}
 
-/////////////////////////////////////////////////////////////////////////////////////////
-void AStar2D::setStart(Cell& start) {_start = start;}
-void AStar2D::setGoal(Cell& goal) {_goal = goal;}
-void AStar2D::addConnection(Cell& a, Cell& b) {
-   a.addConnection(b);
-}
-void AStar2D::removeConnection(Connection &) {}
+///////////////////////////////////////////////////////////////////////////////////////////
+//std::optional<std::reference_wrapper<AStar2D::Cell>> AStar2D::getCell(ReyEngine::Vec2<CoordinateType> coords) {
+//
+//}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+//void AStar2D::Graph::addConnection(Cell& a, Cell& b) {
+//   a.addConnection(b);
+//}
+//void AStar2D::Graph::removeConnection(Connection &) {
+//   //todo:
+//   assert(false);
+//}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void AStar2D::run(bool &requestShutdown, Graph &data){
-   std::cout << "AStar::run::start" << std::endl;
-   std::vector<std::reference_wrapper<Cell>> openList;
    std::vector<std::reference_wrapper<Cell>> closedList;
 
-   auto generateHeuristic = [](Cell& start, Cell& goal){
+   auto generateHeuristic = [](Cell& start, Cell& goal) -> double{
       //use euclidian distance
       double x = start.coordinates.x - goal.coordinates.x;
       double y = start.coordinates.y - goal.coordinates.y;
-      return sqrt(pow(x, 2) + pow(y, 2));
+      auto exp = pow(x, 2) + pow(y, 2);
+      auto squirt = sqrt(exp);
+      return squirt;
    };
 
+   auto& start = data.start;
+   auto& goal = data.goal;
+   auto& cancel = data.cancel;
    while (!requestShutdown){
       switch (_state){
          case SearchState::NO_SOLUTION:
             //todo: condtion variable?
             std::this_thread::sleep_for(100ms);
-            if (_start && _goal) _state = SearchState::READY;
+            if (start && goal) _state = SearchState::READY;
             break;
          case SearchState::READY:
             //start a new search
-            openList.clear();
             closedList.clear();
-         case SearchState::SEARCHING:
-            if (!_start || !_goal) {_state = SearchState::NO_SOLUTION; continue;}
-            //start with the first opencell
-            openList.push_back(_start.value());
-            break;
+         case SearchState::SEARCHING:{
+            //start with the first open cell
+            auto& _goal = goal.value().get();
+            auto openCell = start.value();
+            //generate the heuristic
+            while(!cancel || openCell.get() != _goal) {
+               auto heuristic = generateHeuristic(openCell, goal->get());
+               //see if any of the connected cells have better heuristics
+               for (const auto &connectedCell: openCell.get().getConnections()) {
+                  cout << "checking connection between " << connectedCell.get().coordinates << " & " << _goal.coordinates << endl;
+                  auto newHeuristic = generateHeuristic(connectedCell.get(), _goal);
+                  if (newHeuristic < heuristic) {
+                     //this is a better option than what we currently have - close the cell and make a new open cell
+                     closedList.emplace_back(openCell);
+                     openCell = connectedCell;
+                     heuristic = newHeuristic;
+                     break;
+                  }
+               }
+            }
+            //if we make it this far, we are next to the goal
+            closedList.emplace_back(openCell);
+            closedList.emplace_back(_goal);
+            _state = SearchState::FOUND;
+            if (cancel) _state = SearchState::NO_SOLUTION;
+            /* valid path in closed list */
+            break;}
          case SearchState::FOUND:
             break;
       }
    }
-   std::cout << "AStar::run::end " << std::endl;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void AStar2D::Cell::addConnection(std::reference_wrapper<Cell> neighbor) {
+void AStar2D::Cell::connect(std::reference_wrapper<Cell> neighbor) {
    _connections.insert(neighbor);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void AStar2D::Cell::removeConnection(std::reference_wrapper<Cell> neighbor) {
+void AStar2D::Cell::disconnect(std::reference_wrapper<Cell> neighbor) {
    auto found = _connections.find(neighbor);
    if (found != _connections.end()){
       _connections.erase(found);

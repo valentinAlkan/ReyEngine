@@ -156,9 +156,10 @@ namespace ReyEngine {
       TileMapLayer& getLayer(LayerIndex);
       TileCoord getCell(const Pos<int>&) const;
       Pos<int> getCellPos(const TileCoord&) const;
+      Pos<int> getCellPosCenter(const TileCoord&) const;
       ///Set the size of each tile
       void setTileSize(const Size<int>&);
-      Size<int> getTileSize(){return {_gridWidth, _gridHeight};}
+      Size<int> getTileSize() const {return {_gridWidth, _gridHeight};}
    protected:
       void render() const override;
 //      inline void renderBegin(ReyEngine::Pos<double>&) override;
