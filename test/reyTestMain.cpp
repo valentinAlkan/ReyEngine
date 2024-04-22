@@ -1423,14 +1423,18 @@ int main(int argc, char** argv)
          }
 
          //render the open and closed set
-         auto& openSet = aStarProperty->value.getOpenSet();
-         if (!openSet.empty()){
-            //draw a rectangle
-            for (auto& frontier : openSet){
-               auto coords = frontier.cell.get().coordinates;
-               auto pos = tileMap->getCellPos(coords);
-               Rect<int> r(pos, {tileMap->getTileSize()});
-               ctl.drawRectangle(r, Colors::orange);
+         {
+            auto pair = aStarProperty->value.getOpenSet();
+            auto& openSet = pair.first;
+            if (!openSet.empty()) {
+               //draw a rectangle
+               cout << "reading from open set. size is : " << openSet.size() << endl;
+               for (auto &frontier: openSet) {
+                  auto coords = frontier->cell.get().coordinates;
+                  auto pos = tileMap->getCellPos(coords);
+                  Rect<int> r(pos, {tileMap->getTileSize()});
+                  ctl.drawRectangle(r, Colors::orange);
+               }
             }
          }
 

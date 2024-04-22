@@ -98,14 +98,17 @@ public:
       std::optional<Cell::CellRef> getCell(const ReyEngine::Vec2<CoordinateType>&);
 //      void setCell(Cell&&);
       AStar2D::Cell& createCell(const ReyEngine::Vec2<int>&, double weight);
+      size_t size(){return _graphSize;}
    private:
       std::map<CoordinateType, std::map<CoordinateType, Cell>> _data;
+      size_t _graphSize = 0;
    };
    /////////////////////////////////////////////////////////////////////////////////////////
    enum class SearchState {
       NO_SOLUTION = 0,
       READY,
       SEARCHING,
+      CANCELLED,
       FOUND
    };
    AStar2D(const std::string& name = "Default");
@@ -118,12 +121,13 @@ public:
    SearchState getSearchState(){return data->state;}
    void setStart(Cell& start){data->start = start;}
    void setGoal(Cell& goal){data->goal = goal;}
+   void cancel(){data->state = SearchState::CANCELLED;}
    void clearStart(){data->start = std::nullopt;}
    void clearGoal(){data->goal = std::nullopt;}
    Path& getPath();
 
    void setNextStep() {
-      data->next_step++;
+      data->doNext = true;
       data->cv.notify_all();
 
    }
@@ -131,13 +135,13 @@ private:
 
 
    struct SearchNode {
-      SearchNode(const Cell::CellRef& cell, std::optional<std::reference_wrapper<SearchNode>> parent, double pathWeight, double heuristic)
+      SearchNode(const Cell::CellRef& cell, std::optional<std::reference_wrapper<std::unique_ptr<SearchNode>>> parent, double pathWeight, double heuristic)
       : cell(cell)
       , parent(parent)
       , pathWeight(pathWeight)
       , heuristic(heuristic){}
       Cell::CellRef cell;
-      std::optional<std::reference_wrapper<SearchNode>> parent;
+      std::optional<std::reference_wrapper<std::unique_ptr<SearchNode>>> parent;
       double pathWeight;
       double heuristic;
 
@@ -147,18 +151,18 @@ private:
          }
       };
       struct NodeHash {
-         inline std::size_t operator()(const std::reference_wrapper<SearchNode> &n) const noexcept {
-            return Cell::CellHash()(n.get().cell.get());
+         inline std::size_t operator()(const std::unique_ptr<SearchNode> &n) const noexcept {
+            return Cell::CellHash()(n->cell);
          }
       };
       struct NodeLess{
-         inline std::size_t operator()(const std::reference_wrapper<SearchNode>& lhs, const std::reference_wrapper<SearchNode>& rhs) const noexcept {
-            return Cell::CellLess()(lhs.get().cell, rhs.get().cell);
+         inline std::size_t operator()(const std::unique_ptr<SearchNode>& lhs, const std::unique_ptr<SearchNode>& rhs) const noexcept {
+            return Cell::CellLess()(lhs->cell, rhs->cell);
          }
       };
       struct NodeEqual{
-         bool operator()(const std::reference_wrapper<SearchNode>& lhs, const std::reference_wrapper<SearchNode>& rhs) const{
-            return lhs.get().cell.get() == rhs.get().cell.get();
+         bool operator()(const std::unique_ptr<SearchNode>& lhs, const std::unique_ptr<SearchNode>& rhs) const{
+            return lhs->cell.get() == rhs->cell.get();
          }
       };
    };
@@ -172,10 +176,10 @@ private:
 
 
 
-   using ClosedSet = std::unordered_set<NodeRef, SearchNode::NodeHash, SearchNode::NodeEqual>;
+   using OpenSet = std::vector<std::unique_ptr<SearchNode>>;
+   using ClosedSet = std::unordered_set<std::unique_ptr<SearchNode>, SearchNode::NodeHash, SearchNode::NodeEqual>;
 //   using OpenSet = std::priority_queue<NodeRef, std::vector<NodeRef>, SearchNode::WeightComp>;
 //   using ClosedSet = std::vector<NodeRef>;
-   using OpenSet = std::vector<SearchNode>;
 
 
 
@@ -183,8 +187,15 @@ private:
    std::thread _t;
 
 public:
-   ClosedSet& getClosedSet(){return data->closedSet;}
-   OpenSet& getOpenSet(){return data->openSet;}
+   using SetLock = std::unique_ptr<std::scoped_lock<std::mutex>>;
+   std::pair<ClosedSet&, SetLock> getClosedSet(){
+      std::pair<ClosedSet&, SetLock> p(data->closedSet, std::make_unique<std::scoped_lock<std::mutex>>(data->closedSetMtx));
+      return p;
+   }
+   std::pair<OpenSet&, SetLock> getOpenSet(){
+      std::pair<OpenSet&, SetLock> p(data->openSet, std::make_unique<std::scoped_lock<std::mutex>>(data->closedSetMtx));
+      return p;
+   }
 
 private:
    struct AStarData{
@@ -192,14 +203,14 @@ private:
       bool requestShutdown = false;
       std::optional<CellRef> start;
       std::optional<CellRef> goal;
-      bool cancel = false;
-      int our_step = 0;
-      int next_step = 0;
+      bool doNext = false;
       std::condition_variable cv;
       SearchState state = SearchState::NO_SOLUTION;
       std::vector<Cell::CellRef> path;
       std::mutex pathMtx;
       std::mutex searchMtx;
+      std::mutex openSetMtx;
+      std::mutex closedSetMtx;
       ClosedSet closedSet;
       OpenSet openSet;
    };
