@@ -1320,9 +1320,19 @@ int main(int argc, char** argv)
 
    else if (args.getArg("--astarTest")) {
       //generate a tilemap
+      auto vlayout = make_shared<VLayout>("VLayout");
+      root->addChild(vlayout);
+      vlayout->setAnchoring(BaseWidget::Anchor::FILL);
       auto tileMap = make_shared<TileMap>("tileMap");
-      root->addChild(tileMap);
-      tileMap->setAnchoring(BaseWidget::Anchor::FILL);
+      vlayout->addChild(tileMap);
+
+      vlayout->childScales = {100,5};
+      auto hlayout = make_shared<HLayout>("HLayout");
+      auto btnNextStep = make_shared<PushButton>("btnNextStep");
+      btnNextStep->setText("NextStep");
+      hlayout->addChild(btnNextStep);
+      vlayout->addChild(hlayout);
+
       FileSystem::File spriteSheet = "test/spritesheet.png";
       auto layerOpt = tileMap->addLayer(spriteSheet);
       if (layerOpt) {
@@ -1339,17 +1349,17 @@ int main(int argc, char** argv)
       auto layerIndex = layerOpt.value();
       auto& layer = tileMap->getLayer(layerIndex);
       //set all the visible tiles to some value, also populate astar map
-      static constexpr int TILES_WIDTH = 100;
+      static constexpr int TILES_WIDTH = 10;
       for (auto y=0; y < TILES_WIDTH; y++){
          for (auto x=0; x < TILES_WIDTH; x++){
             layer.setTileIndex({x,y}, 1);
             //create a cell
             std::cout << "=====Generating cell " << Vec2<int>(x, y) << endl;
-            auto& newCell = aStarProperty->value.getGraph()->createCell({x, y}, 1.0);
+            auto& newCell = aStarProperty->value.getGraph().createCell({x, y}, 1.0);
             //create connections to neighbors (manhattan distance for now)
             for (auto optNeighbor :{
-                  aStarProperty->value.getGraph()->getCell({x - 1, y}),
-                  aStarProperty->value.getGraph()->getCell({x, y - 1}),
+                  aStarProperty->value.getGraph().getCell({x - 1, y}),
+                  aStarProperty->value.getGraph().getCell({x, y - 1}),
             }){
                if (optNeighbor){
                   auto& neighbor = optNeighbor.value().get();
@@ -1361,6 +1371,13 @@ int main(int argc, char** argv)
             }
          }
       }
+
+      //connect stepper button
+      auto doNextStep = [&](const PushButton::ButtonPressEvent& event){
+         aStarProperty->value.setNextStep();
+      };
+
+      btnNextStep->subscribe<PushButton::ButtonPressEvent>(btnNextStep, doNextStep);
 
       auto clickLayer = make_shared<Control>("ClickLayer");
       tileMap->addChild(clickLayer);
@@ -1391,7 +1408,7 @@ int main(int argc, char** argv)
          //render neighbors
          if (start){
             //get the neighbor connections
-            auto cell = aStarProperty->value.getGraph().get()->getCell(start.value());
+            auto cell = aStarProperty->value.getGraph().getCell(start.value());
             if (cell) {
                const auto& neighbors = cell.value().get().getConnections();
                for (const auto& neighbor : neighbors){
@@ -1404,6 +1421,19 @@ int main(int argc, char** argv)
                }
             }
          }
+
+         //render the open and closed set
+         auto& openSet = aStarProperty->value.getOpenSet();
+         if (!openSet.empty()){
+            //draw a rectangle
+            for (auto& frontier : openSet){
+               auto coords = frontier.cell.get().coordinates;
+               auto pos = tileMap->getCellPos(coords);
+               Rect<int> r(pos, {tileMap->getTileSize()});
+               ctl.drawRectangle(r, Colors::orange);
+            }
+         }
+
 
          //render the connections
 //         for (auto x=0; x < TILES_WIDTH; x++){
@@ -1451,7 +1481,7 @@ int main(int argc, char** argv)
                         switch (mbEvent.button) {
                            case InputInterface::MouseButton::LEFT:{
                               start = cellCoords;
-                              auto cell = aStarProperty->value.getGraph()->getCell(start.value());
+                              auto cell = aStarProperty->value.getGraph().getCell(start.value());
                               if (cell) {
                                  aStarProperty->value.setStart(cell.value());
                               }
@@ -1460,7 +1490,7 @@ int main(int argc, char** argv)
                            case InputInterface::MouseButton::RIGHT:
                               stop = cellCoords;
                               hover = nullopt;
-                              auto cell = aStarProperty->value.getGraph()->getCell(stop.value());
+                              auto cell = aStarProperty->value.getGraph().getCell(stop.value());
                               if (cell) {
                                  aStarProperty->value.setGoal(cell.value());
                               }

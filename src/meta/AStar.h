@@ -6,6 +6,8 @@
 #include "Application.h"
 #include "MultiDimensionalArray.h"
 #include <set>
+#include <condition_variable>
+
 //int main()
 //{
 //   array<int, 2, 3>::type a4 = { { 1, 2, 3}, { 1, 2, 3} };
@@ -25,19 +27,41 @@ class AStar2D : public Component {
 public:
    /////////////////////////////////////////////////////////////////////////////////////////
    using CoordinateType = int;
-   using Heuristic = float;
+   using Heuristic = double;
    class Graph;
    struct Cell{
-   private:
+      //adapter structs for different containers
       using CellRef = std::reference_wrapper<Cell>;
-      struct CellCmp{
-         bool operator()(const CellRef& lhs, const CellRef& rhs) const{
-//            If comp(a, b) == true then comp(b, a) == false.
-//            if comp(a, b) == true and comp(b, c) == true then comp(a, c) == true.
+      using CostPair = std::pair<CellRef, double>;
+      struct CellLess {
+         inline bool operator()(const CellRef lhs, const CellRef rhs) const {
             return lhs.get().coordinates.x < rhs.get().coordinates.x || lhs.get().coordinates.y < rhs.get().coordinates.y;
          }
       };
-      using CellSet = std::set<std::reference_wrapper<Cell>, CellCmp>;
+      struct CellHash{
+         inline std::size_t operator()(const CellRef& c) const noexcept {
+            size_t bigboy = c.get().coordinates.x;
+            bigboy <<= (sizeof(int));
+            bigboy &= c.get().coordinates.y;
+            return std::hash<size_t>{}(bigboy);
+         }
+      };
+      struct CellEqual {
+         inline bool operator()(const CellRef& lhs, const CellRef& rhs) const noexcept {
+            return lhs.get() == rhs.get();
+         }
+      };
+      struct WeightCompare {
+         inline bool operator()(const CostPair lhs, const CostPair rhs) const {
+            auto lhsTotal = lhs.first.get().weight + lhs.second;
+            auto rhsTotal = rhs.first.get().weight + rhs.second;
+            return lhsTotal < rhsTotal;
+         }
+         inline bool operator()(const CellRef lhs, const CellRef rhs) const {
+            return lhs.get().weight < rhs.get().weight;
+         }
+      };
+      using CellSet = std::set<CellRef, CellLess>;
       CellSet _connections; //might have any number of (unique) connections (no repeats!!!)
    protected:
       Cell(const ReyEngine::Vec2<CoordinateType>& coordinates, double weight)
@@ -53,10 +77,14 @@ public:
       ReyEngine::Vec2<CoordinateType> coordinates;
       double weight;
       [[nodiscard]] const CellSet& getConnections() const {return _connections;}
-      void connect(std::reference_wrapper<Cell>);
-      void disconnect(std::reference_wrapper<Cell>);
+      void connect(CellRef);
+      void disconnect(CellRef);
       inline bool operator==(const Cell& other){return coordinates == other.coordinates;}
       inline bool operator!=(const Cell& other){return coordinates != other.coordinates;}
+      inline bool operator<(const Cell& other) {
+         return coordinates.x < other.coordinates.x;
+      }
+      friend std::ostream& operator<<(std::ostream& os, const Cell& c) {os << c.coordinates; return os;}
       friend class Graph;
    };
    using Path = std::vector<Cell&>;
@@ -67,53 +95,11 @@ public:
       Cell& b;
    };
    struct Graph{
-      std::optional<std::reference_wrapper<Cell>> getCell(const ReyEngine::Vec2<CoordinateType>&);
+      std::optional<Cell::CellRef> getCell(const ReyEngine::Vec2<CoordinateType>&);
 //      void setCell(Cell&&);
       AStar2D::Cell& createCell(const ReyEngine::Vec2<int>&, double weight);
-      std::optional<std::reference_wrapper<Cell>> start;
-      std::optional<std::reference_wrapper<Cell>> goal;
-      bool cancel = false;
-
    private:
       std::map<CoordinateType, std::map<CoordinateType, Cell>> _data;
-
-
-
-      // Iterator class for rows of csv data
-//      class iterator : public std::iterator<std::forward_iterator_tag, std::string> {
-//      public:
-//         iterator(std::optional<std::reference_wrapper<Graph>> graph = std::nullopt)
-//         : _parser(parser)
-//         {}
-//         const Row& operator*() const {
-//            auto& r = _parser.value().get()._data.at(rowNo);
-//            return r;
-//         }
-//         iterator& operator++() {
-//            rowNo++;
-//            return *this;
-//         }
-//
-//         bool operator!=(const iterator& other) const {
-//            if (!_parser) return false;
-//            if (!other._parser) {return rowNo < _parser.value().get().getAllRows().size();}
-//            return _parser.value().get()._data[rowNo] != other._parser.value().get()._data[rowNo];
-//         }
-//
-//         size_t getCurrentRowNo(){return rowNo;}
-//      private:
-//         size_t rowNo = 0;
-//         std::optional<std::reference_wrapper<CSVParser>> _parser;
-//      };
-//
-//
-//      iterator begin() {
-//         auto it = iterator(std::ref(*this));
-//         return it;
-//      }
-//      iterator end() const { return {};}
-
-
    };
    /////////////////////////////////////////////////////////////////////////////////////////
    enum class SearchState {
@@ -126,20 +112,115 @@ public:
    AStar2D(AStar2D&& other);
    AStar2D& operator=(AStar2D& other) = delete;
    AStar2D& operator=(AStar2D&& other) noexcept;
-   std::unique_ptr<Graph>& getGraph(){return _graph;}
+   Graph& getGraph(){return data->graph;}
    ~AStar2D();
    void shutdown();
-   SearchState getSearchState(){return _state;}
-   void setStart(Cell& start){_graph->start = start;}
-   void setGoal(Cell& goal){_graph->goal = goal;}
-//   std::optional<std::reference_wrapper<Cell>> getCell(ReyEngine::Vec2<CoordinateType>);
+   SearchState getSearchState(){return data->state;}
+   void setStart(Cell& start){data->start = start;}
+   void setGoal(Cell& goal){data->goal = goal;}
+   void clearStart(){data->start = std::nullopt;}
+   void clearGoal(){data->goal = std::nullopt;}
    Path& getPath();
+
+   void setNextStep() {
+      data->next_step++;
+      data->cv.notify_all();
+
+   }
 private:
+
+
+   struct SearchNode {
+      SearchNode(const Cell::CellRef& cell, std::optional<std::reference_wrapper<SearchNode>> parent, double pathWeight, double heuristic)
+      : cell(cell)
+      , parent(parent)
+      , pathWeight(pathWeight)
+      , heuristic(heuristic){}
+      Cell::CellRef cell;
+      std::optional<std::reference_wrapper<SearchNode>> parent;
+      double pathWeight;
+      double heuristic;
+
+      struct WeightComp {
+         inline bool operator()(const std::reference_wrapper<SearchNode> &lhs, const std::reference_wrapper<SearchNode> &rhs) const {
+            return lhs.get().pathWeight < rhs.get().pathWeight;
+         }
+      };
+      struct NodeHash {
+         inline std::size_t operator()(const std::reference_wrapper<SearchNode> &n) const noexcept {
+            return Cell::CellHash()(n.get().cell.get());
+         }
+      };
+      struct NodeLess{
+         inline std::size_t operator()(const std::reference_wrapper<SearchNode>& lhs, const std::reference_wrapper<SearchNode>& rhs) const noexcept {
+            return Cell::CellLess()(lhs.get().cell, rhs.get().cell);
+         }
+      };
+      struct NodeEqual{
+         bool operator()(const std::reference_wrapper<SearchNode>& lhs, const std::reference_wrapper<SearchNode>& rhs) const{
+            return lhs.get().cell.get() == rhs.get().cell.get();
+         }
+      };
+   };
+
+
+
+
+   using CellRef = Cell::CellRef;
+   using CostPair = Cell::CostPair;
+   using NodeRef = std::reference_wrapper<SearchNode>;
+
+
+
+   using ClosedSet = std::unordered_set<NodeRef, SearchNode::NodeHash, SearchNode::NodeEqual>;
+//   using OpenSet = std::priority_queue<NodeRef, std::vector<NodeRef>, SearchNode::WeightComp>;
+//   using ClosedSet = std::vector<NodeRef>;
+   using OpenSet = std::vector<SearchNode>;
+
+
+
    static Cell NULL_CELL;
-   void run(bool& requestShutdown, Graph& data);
    std::thread _t;
-   std::unique_ptr<bool> _requestShutdown;
-   std::unique_ptr<Graph> _graph;
-   SearchState _state = SearchState::NO_SOLUTION;
-   std::vector<std::reference_wrapper<Cell>> _path;
+
+public:
+   ClosedSet& getClosedSet(){return data->closedSet;}
+   OpenSet& getOpenSet(){return data->openSet;}
+
+private:
+   struct AStarData{
+      Graph graph;
+      bool requestShutdown = false;
+      std::optional<CellRef> start;
+      std::optional<CellRef> goal;
+      bool cancel = false;
+      int our_step = 0;
+      int next_step = 0;
+      std::condition_variable cv;
+      SearchState state = SearchState::NO_SOLUTION;
+      std::vector<Cell::CellRef> path;
+      std::mutex pathMtx;
+      std::mutex searchMtx;
+      ClosedSet closedSet;
+      OpenSet openSet;
+   };
+
+   std::unique_ptr<AStarData> data;
+
+public:
+   void run(AStarData& data);
 };
+
+
+
+//for hashing
+//namespace std {
+//   template<>
+//   struct hash<AStar2D::Cell::CellRef> {
+//      size_t operator()(const AStar2D::Cell::CellRef& c) const {
+//         size_t bigboy = c.get().coordinates.x;
+//         bigboy <<= (sizeof(int));
+//         bigboy &= c.get().coordinates.y;
+//         return std::hash<size_t>{}(bigboy);
+//      }
+//   };
+//}
