@@ -52,27 +52,32 @@ std::optional<std::reference_wrapper<AStar2D::Cell>> AStar2D::Graph::getCell(con
 AStar2D::Cell& AStar2D::Graph::createCell(const ReyEngine::Vec2<int>& coordinates, double weight) {
    _data[coordinates.x].emplace(std::pair<CoordinateType, Cell>(coordinates.y, Cell(coordinates, weight)));
    auto ref = getCell(coordinates); //gauranteed to exist
+   _graphSize++;
    return ref.value();
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////
 inline double heuristic(const AStar2D::Cell& a, const AStar2D::Cell b) {
    return sqrt(pow(a.coordinates.x - b.coordinates.x, 2) + pow(a.coordinates.y - b.coordinates.y, 2));
 }
+inline double heuristicManhattan(const AStar2D::Cell& a, const AStar2D::Cell b) {
+   return abs(a.coordinates.x - b.coordinates.x) + abs(a.coordinates.y - b.coordinates.y);
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void AStar2D::run(AStarData& _data){
 
    auto& start = _data.start;
    auto& goal = _data.goal;
-   auto& cancel = _data.cancel;
    auto& state = _data.state;
    auto& requestShutdown = _data.requestShutdown;
    auto& openSet = _data.openSet;
    auto& closedSet = _data.closedSet;
    auto& searchMtx = _data.searchMtx;
-   auto& our_step = _data.our_step;
-   auto& next_step = _data.next_step;
+   auto& doNext = _data.doNext;
    auto& cv = _data.cv;
+   openSet.reserve(_data.graph.size()); //prereserve enough cells so we don't invalidate our iterators
    while (!requestShutdown){
       switch (state){
          case SearchState::NO_SOLUTION:
@@ -80,36 +85,53 @@ void AStar2D::run(AStarData& _data){
             std::this_thread::sleep_for(100ms);
             if (start && goal) state = SearchState::READY;
             break;
-         case SearchState::READY:
+         case SearchState::READY:{
             //start a new search
             closedSet.clear();
             openSet.clear();
-         case SearchState::SEARCHING:{
             //start with the first open cell
             auto& _goal = goal.value().get();
             cout << "Checking route between " << start->get() << " and " << _goal << endl;
-            SearchNode startNode(start.value(), nullopt, 0, heuristic(start.value().get(), _goal));
-            openSet.emplace_back(startNode);
-            while (!openSet.empty() && !cancel) {
+            auto startNode = make_unique<SearchNode> (start.value(), nullopt, 0, heuristic(start.value().get(), _goal));
+            openSet.emplace_back(std::move(startNode));
+            state = SearchState::SEARCHING;
+            break;}
+         case SearchState::SEARCHING:{
+            auto& _goal = goal.value().get();
+            bool found = false;
+            while (!openSet.empty() && state != SearchState::CANCELLED) {
                std::unique_lock<std::mutex> lk(searchMtx);
-               cv.wait(lk, [&]{return our_step == next_step; });
-               auto currentNode = openSet.back();
-               if (currentNode.cell.get() == _goal) break;
-               auto currentHeuristic = currentNode.heuristic;
-               for (auto& _neighbor : currentNode.cell.get()._connections){
+               cv.wait(lk, [&]{return doNext; });
+               scoped_lock<mutex> sl1(_data.openSetMtx);
+               scoped_lock<mutex> sl2(_data.closedSetMtx);
+               if ((*openSet.begin())->cell.get() == _goal) break;
+               auto currentHeuristic = (*openSet.begin())->heuristic;
+               for (auto& _neighbor : (*openSet.begin())->cell.get()._connections){
+                  auto& currentNode = *openSet.begin();
+                  if (_goal == _neighbor){
+                     found = true;
+                     break;
+                  };
                   auto nextHeuristic = heuristic(_neighbor.get(), _goal);
-                  SearchNode node(_neighbor, currentNode, currentNode.pathWeight + _neighbor.get().weight, nextHeuristic);
+                  auto node = make_unique<SearchNode>(_neighbor, currentNode, currentNode->pathWeight + _neighbor.get().weight, nextHeuristic);
                   //skip if this is in the closed set
                   auto it = closedSet.find(node);
-                  if (it != closedSet.end()) continue;
+                  if (it != closedSet.end()){
+                     //we already searched this node. remove it from the open set
+//                     openSet.erase(openSet.begin());
+                     continue;
+                  };
                   if (nextHeuristic < currentHeuristic){
                      //the next path is more promising
-
-                     openSet.emplace_back(node);
+                     openSet.emplace_back(std::move(node));
+                     cout << "adding to open set. Size is now " << openSet.size() << endl;
                   }
                }
-               closedSet.emplace(currentNode);
-               our_step++;
+               if (found) break;
+               closedSet.emplace(std::move(*openSet.begin()));
+               openSet.erase(openSet.begin());
+//               openSet.erase(openSet.begin());
+               doNext = false;
             }
             cout << " done ! " << endl;
             state = SearchState::FOUND;
@@ -118,6 +140,8 @@ void AStar2D::run(AStarData& _data){
             //set path here
             start.reset();
             goal.reset();
+            openSet.clear();
+            closedSet.clear();
             state = SearchState::NO_SOLUTION;
             break;
       }
