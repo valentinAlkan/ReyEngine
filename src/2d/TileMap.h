@@ -1,29 +1,13 @@
 #pragma once
 #include "Canvas.h"
 #include <map>
+#include "Iterator.hpp"
 namespace ReyEngine {
    class TileMap : public Canvas {
    public:
       struct TileCoord : public Vec2<int> {
            TileCoord(int x, int y): Vec2(x,y){}
            TileCoord(const Vec2<int>& other): Vec2(other){}
-//         TileCoord(int x, int y): x(x),y(y){}
-//         inline explicit operator bool() const {return x || y;}
-//         inline TileCoord operator+(const TileCoord& rhs) const {TileCoord val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
-//         inline TileCoord operator-(const TileCoord& rhs) const {TileCoord val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
-//         inline TileCoord& operator+=(const TileCoord& rhs){x += rhs.x; y += rhs.y; return *this;}
-//         inline TileCoord& operator-=(const TileCoord& rhs){x -= rhs.x; y -= rhs.y; return *this;}
-//         inline TileCoord& operator*=(const TileCoord& rhs){x *= rhs.x; y *= rhs.y; return *this;}
-//         inline TileCoord& operator/=(const TileCoord& rhs){x /= rhs.x; y /= rhs.y; return *this;}
-//         inline TileCoord& operator=(const TileCoord& rhs){x = rhs.x; y=rhs.y; return *this;}
-//         inline bool operator==(const TileCoord& rhs){return x==rhs.x && y==rhs.y;}
-//         inline bool operator!=(const TileCoord& rhs){return x!=rhs.x || y!=rhs.y;}
-//         inline TileCoord& operator-(){x = -x; y =-y; return *this;}
-////         inline static std::vector<T> fromString(const std::string& s){return Vec<T>::fromString(2, s);};
-////         std::ostream& operator<<(std::ostream& os) const {os << Vec<T>::toString(); return os;}
-////         friend std::ostream& operator<<(std::ostream& os, Vec2<int> v) {os << v.toString(); return os;}
-//         int x;
-//         int y;
       };
       using TileIndex = uint64_t;
       using LayerIndex = uint64_t;
@@ -90,35 +74,6 @@ namespace ReyEngine {
          friend class TileMap;
       };
 
-//   struct CellDataProperty : public Property<std::map<Vec2<int>, CellData>>{
-//         using Property<std::map<Vec2<int>, CellData>>::operator=;
-//      CellDataProperty(const std::string& instanceName)
-//         : Property(instanceName, PropertyTypes::TileMapData, std::map<Vec2<int>, CellData>())
-//         {}
-//         std::string toString() const override {throw std::runtime_error("not implemented"); return "";}
-//         std::map<Vec2<int>, CellData> fromString(const std::string& str) override { }
-//      };
-//
-//      struct TileMapLayerProperty : public Property<TileMapLayer>{
-//         using Property<TileMapLayer>::operator=;
-//         TileMapLayerProperty(const std::string& instanceName)
-//         : Property(instanceName, PropertyTypes::TileMapLayer, TileMapLayer())
-//         {}
-//         std::string toString() const override {throw std::runtime_error("not implemented"); return "";}
-//         std::map<Vec2<int>, CellData> fromString(const std::string& str) override { }
-//      };
-
-//      using TileMapData = std::map<uint64_t, ReyTexture>;
-//      struct TileMapDataProperty : public Property<>{
-//         using Property<std::map<Vec2<int>, TileMapData>>::operator=;
-//         TileMapDataProperty(const std::string& instanceName)
-//               : Property(instanceName, PropertyTypes::TileMapLayer, std::map<Vec2<int>, TileMapData>())
-//         {}
-//         std::string toString() const override {throw std::runtime_error("not implemented"); return "";}
-//         std::map<Vec2<int>, TileMapData> fromString(const std::string& str) override { }
-//      };
-
-
       enum class GridType {SQUARE, SQUARE_OFFSET, HEX};
       struct GridTypeProperty : public EnumProperty<GridType, 3>{
          GridTypeProperty(const std::string& instanceName,  GridType defaultvalue)
@@ -168,6 +123,8 @@ namespace ReyEngine {
       void registerProperties() override;
       void _init() override;
       void _on_rect_changed() override;
+   protected:
+      std::map<LayerIndex, TileMapLayer> _layers;
    private:
       void updateAllLayers();
       bool _ready = false;
@@ -175,9 +132,39 @@ namespace ReyEngine {
       GridTypeProperty _gridType;
       IntProperty _gridHeight;
       IntProperty _gridWidth;
-      std::map<LayerIndex, TileMapLayer> _layers;
-      LayerIndex getNextLayerIndex();
+      LayerIndex getFirstEmptyLayerIndex();
       TileCoord currentHover;
-//      RenderTarget _renderTarget;
+
+      // Iterator class for rows of csv data
+      class iterator : public std::iterator<std::forward_iterator_tag, std::string> {
+      public:
+         iterator(std::optional<std::reference_wrapper<TileMap>> tileMap = std::nullopt): _tileMap(tileMap){}
+         const TileMapLayer& operator*() const {
+            return _tileMap.value().get().getLayer(layerNo);
+         }
+         iterator& operator++() {
+            layerNo++;
+            return *this;
+         }
+
+         bool operator!=(const iterator& other) const {
+            if (!_tileMap) return false;
+            if (!other._tileMap) return false;
+            return layerNo != other.layerNo;
+         }
+
+         size_t getCurrentRowNo(){return layerNo;}
+      private:
+         std::map<LayerIndex, TileMapLayer>::iterator it;
+         size_t layerNo = -1;
+         std::optional<std::reference_wrapper<TileMap>> _tileMap;
+      };
+
+      iterator begin() {
+         auto it = iterator(std::ref(*this));
+         return it;
+      }
+      iterator end() const { return {};}
+      friend class iterator;
    };
 }

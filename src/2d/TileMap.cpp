@@ -78,13 +78,13 @@ std::optional<TileMap::LayerIndex> TileMap::addLayer(const FileSystem::File& fil
    //load the texture
    TileMapLayer newLayer(file);
    //store it
-   auto newIndex = getNextLayerIndex();
-   _layers.insert(std::pair<LayerIndex, TileMapLayer>(getNextLayerIndex(), std::move(newLayer)));
+   auto newIndex = getFirstEmptyLayerIndex();
+   _layers.insert(std::pair<LayerIndex, TileMapLayer>(getFirstEmptyLayerIndex(), std::move(newLayer)));
    return newIndex;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-TileMap::LayerIndex TileMap::getNextLayerIndex() {
+TileMap::LayerIndex TileMap::getFirstEmptyLayerIndex() {
    //find the first available tilemap index
    LayerIndex available = 0;
    for (const auto& [k,v] : _layers){
