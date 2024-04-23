@@ -1324,6 +1324,7 @@ int main(int argc, char** argv)
       root->addChild(vlayout);
       vlayout->setAnchoring(BaseWidget::Anchor::FILL);
       auto tileMap = make_shared<TileMap>("tileMap");
+      tileMap->setTileSize({100, 100});
       vlayout->addChild(tileMap);
 
       vlayout->childScales = {100,5};
@@ -1428,7 +1429,6 @@ int main(int argc, char** argv)
             auto& openSet = pair.first;
             if (!openSet.empty()) {
                //draw a rectangle
-               cout << "reading from open set. size is : " << openSet.size() << endl;
                for (auto &frontier: openSet) {
                   auto coords = frontier->cell.get().coordinates;
                   auto pos = tileMap->getCellPos(coords);
@@ -1438,40 +1438,8 @@ int main(int argc, char** argv)
             }
          }
 
+         //draw the cell info
 
-         //render the connections
-//         for (auto x=0; x < TILES_WIDTH; x++){
-//            for (auto y=0; y < TILES_WIDTH; y++){
-//               Vec2<int> coords = {x,y};
-//               auto cellOpt = aStarProperty->value.getGraph().get()->getCell(coords);
-//               if (cellOpt){
-//                  auto& cell = cellOpt.value().get();
-//                  auto neighbors = cell.getConnections();
-//                  for (const auto& neighbor : neighbors){
-//                     auto ncoords = neighbor.get().coordinates;
-//                     //get a reference to the cell in the drawing plane
-//                     auto drawStart = tileMap->getCellPosCenter(coords);
-//                     auto drawEnd = tileMap->getCellPosCenter(ncoords);
-//                     //draw a line
-//                     auto tileSize = tileMap->getTileSize();
-//                     auto tweakincr = tileSize / 4;
-//                     if (coords.x > ncoords.x){
-//                        drawStart.y -= tweakincr.y;
-//                     } else if (coords.x < ncoords.x){
-//                        drawStart.y += tweakincr.y;
-//                     } else if (coords.y > ncoords.y){
-//                        drawStart.x -= tweakincr.x;
-//                     } else if (coords.y < ncoords.y){
-//                        drawStart.x += tweakincr.x;
-//                     } else {
-//                        //self-connection - invalid
-//                        assert(false);
-//                     }
-//                     ctl.drawLine({drawStart, drawEnd}, 2.0, Colors::purple);
-//                  }
-//               }
-//            }
-//         }
 
       };
 

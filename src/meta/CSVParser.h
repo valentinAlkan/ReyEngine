@@ -60,7 +60,7 @@ public:
 
       bool operator!=(const iterator& other) const {
          if (!_parser) return false;
-         if (!other._parser) {return rowNo < _parser.value().get().getAllRows().size();}
+         if (!other._parser) {return rowNo < _parser.value().get().getAllRows().size();} //the end() case
          return _parser.value().get()._data[rowNo] != other._parser.value().get()._data[rowNo];
       }
 
