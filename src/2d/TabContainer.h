@@ -5,7 +5,7 @@ class TabTheme : public Style::Theme {
 public:
    TabTheme()
    : Style::Theme("DefaultTabTheme")
-   , PROPERTY_DECLARE(tabMargin, 10)
+   , PROPERTY_DECLARE(tabMargin, 0)
    , PROPERTY_DECLARE(tabHeight, 20)
    , PROPERTY_DECLARE(tabWidth, 100)
    {}
