@@ -1,8 +1,6 @@
 #include "FileSystem.h"
 #include <iostream>
 #include <cstring>
-#include <filesystem>
-#include "Application.h"
 #include "StringTools.h"
 
 using namespace std;
