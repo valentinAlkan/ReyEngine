@@ -1,7 +1,7 @@
 #pragma once
 #include "Canvas.h"
 #include <map>
-#include "Iterator.hpp"
+
 namespace ReyEngine {
    class TileMap : public Canvas {
    public:
