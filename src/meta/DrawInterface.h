@@ -282,6 +282,10 @@ namespace ReyEngine {
       inline Pos<T> topRight() const {return {x+width, y};}
       inline Pos<T> bottomRight() const {return {x+width, y+height};}
       inline Pos<T> bottomLeft() const {return {x, y+height};}
+      inline Line<T> leftSide() const {return {topLeft(), bottomLeft()};}
+      inline Line<T> rightSide() const {return {topRight(), bottomRight()};}
+      inline Line<T> top() const {return {topLeft(), topRight()};}
+      inline Line<T> bottom() const {return {bottomLeft(), bottomRight()};}
       inline bool collides(const Rect& other){return (x < other.x + other.width) && (x+width > other.x) && (y > other.y + other.height) && (other.y + other.height < y);}
       inline int getCollisionType(const Rect& other) const {
          int pointCount = 0;
