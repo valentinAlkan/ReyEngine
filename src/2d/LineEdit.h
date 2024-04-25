@@ -23,6 +23,7 @@ namespace ReyEngine {
       void setDefaultText(const std::string&, bool noPublish=false);
       void render() const override;
       void registerProperties() override;
+      std::string getText(){return _text;}
    protected:
       void _on_modality_gained();
       void _on_modality_lost();

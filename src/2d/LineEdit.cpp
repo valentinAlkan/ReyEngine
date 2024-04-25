@@ -6,7 +6,7 @@ using namespace ReyEngine;
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void LineEdit::render() const {
-   drawRectangle(_rect.value.toSizeRect(), theme->background.colorPrimary);
+   drawRectangle(_rect.value.toSizeRect(), theme->background.colorTertiary);
 
    auto& font = theme->font;
    auto textheight = font.value.size;
@@ -17,6 +17,7 @@ void LineEdit::render() const {
    static constexpr int textStartHPos = 1;
    auto renderText = [&](const std::string& text){
       auto textWidth = measureText(text, font).x;
+      if (textWidth <= 0) return;
       auto ourWidth = getWidth();
       auto textStart = textWidth > ourWidth ? ourWidth - textWidth : 2;
 
@@ -151,5 +152,5 @@ void LineEdit::publishText() {
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void LineEdit::_on_rect_changed() {
-   startScissor(getRect().toSizeRect());
+   _scissorArea = getRect().toSizeRect();
 }
