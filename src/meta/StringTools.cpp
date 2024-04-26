@@ -2,6 +2,7 @@
 #include "FileSystem.h"
 
 using namespace string_tools;
+using namespace AnsiColor;
 using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -321,3 +322,12 @@ std::optional<int> string_tools::isInteger(const std::string &s) {
         return nullopt;
     }
 }
+
+std::string AnsiColor::EscapeBlack(std::string_view str){return std::string(EscapeCodes::Black) + std::string(str) + std::string(EscapeCodes::Black);}
+std::string AnsiColor::EscapeRed(std::string_view str){return std::string(EscapeCodes::Red) + std::string(str) + std::string(EscapeCodes::Black);}
+std::string AnsiColor::EscapeGreen(std::string_view str){return std::string(EscapeCodes::Green) + std::string(str) + std::string(EscapeCodes::Black);}
+std::string AnsiColor::EscapeYellow(std::string_view str){return std::string(EscapeCodes::Yellow) + std::string(str) + std::string(EscapeCodes::Black);}
+std::string AnsiColor::EscapeBlue(std::string_view str){return std::string(EscapeCodes::Blue) + std::string(str) + std::string(EscapeCodes::Black);}
+std::string AnsiColor::EscapeMagenta(std::string_view str){return std::string(EscapeCodes::Magenta) + std::string(str) + std::string(EscapeCodes::Black);}
+std::string AnsiColor::EscapeCyan(std::string_view str){return std::string(EscapeCodes::Cyan) + std::string(str) + std::string(EscapeCodes::Black);}
+std::string AnsiColor::EscapeWhite(std::string_view str){return std::string(EscapeCodes::White) + std::string(str) + std::string(EscapeCodes::Black);}
