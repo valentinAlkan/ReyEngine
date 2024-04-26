@@ -32,4 +32,25 @@ namespace string_tools{
    std::vector<std::string> fromList(const std::string& s); //converts "{ARRAYS, OF, STRINGS} to vec<string>("ARRAYS", "OF", "STRINGS"). Strips leading and trailing whitespace on all elements.
    std::optional<float> isNumeric(const std::string& s); //true if the value can be represented as a float
    std::optional<int> isInteger(const std::string& s); //true if the value can be represented as an int
+
+    namespace AnsiColor{
+        namespace EscapeCodes {
+            static constexpr char Black[] = "\u001b[30m";
+            static constexpr char Red[] = " \u001b[31m";
+            static constexpr char Green[] = " \u001b[32m";
+            static constexpr char Yellow[] = " \u001b[33m";
+            static constexpr char Blue[] = " \u001b[34m";
+            static constexpr char Magenta[] = " \u001b[35m";
+            static constexpr char Cyan[] = " \u001b[36m";
+            static constexpr char White[] = " \u001b[37m";
+        }
+        std::string EscapeBlack(std::string_view str);
+        std::string EscapeRed(std::string_view str);
+        std::string EscapeGreen(std::string_view str);
+        std::string EscapeYellow(std::string_view str);
+        std::string EscapeBlue(std::string_view str);
+        std::string EscapeMagenta(std::string_view str);
+        std::string EscapeCyan(std::string_view str);
+        std::string EscapeWhite(std::string_view str);
+    }
 }
