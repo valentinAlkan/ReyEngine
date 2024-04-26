@@ -32,6 +32,8 @@ namespace string_tools{
    std::vector<std::string> fromList(const std::string& s); //converts "{ARRAYS, OF, STRINGS} to vec<string>("ARRAYS", "OF", "STRINGS"). Strips leading and trailing whitespace on all elements.
    std::optional<float> isNumeric(const std::string& s); //true if the value can be represented as a float
    std::optional<int> isInteger(const std::string& s); //true if the value can be represented as an int
+   std::string toUpper(const std::string& s);
+   std::string toLower(const std::string& s);
 
     namespace AnsiColor{
         namespace Foreground {

@@ -323,6 +323,18 @@ std::optional<int> string_tools::isInteger(const std::string &s) {
     }
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
+std::string string_tools::toUpper(const std::string &s) {
+    string retval;
+    for (auto& c: s) retval += std::toupper(c);
+}
+/////////////////////////////////////////////////////////////////////////////////////////
+std::string string_tools::toLower(const std::string &s) {
+    string retval;
+    for (auto& c: s) retval += std::tolower(c);
+}
+
+
 std::string AnsiColor::Foreground::EscapeBlack(std::string_view str){return std::string(EscapeCodes::Black) + std::string(str) + std::string(EscapeCodes::White);}
 std::string AnsiColor::Foreground::EscapeRed(std::string_view str){return std::string(EscapeCodes::Red) + std::string(str) + std::string(EscapeCodes::White);}
 std::string AnsiColor::Foreground::EscapeGreen(std::string_view str){return std::string(EscapeCodes::Green) + std::string(str) + std::string(EscapeCodes::White);}
