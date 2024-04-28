@@ -47,60 +47,81 @@ void Layout::renderEnd() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Layout::arrangeChildren() {
-   //how much space we have to allocate
-   auto totalSpace = dir == LayoutDir::HORIZONTAL ? getWidth() : getHeight();
-   ReyEngine::Pos<int> pos;
-   //how much space we will allocate to each child
-   unsigned int childIndex = 0;
-   auto calcRatio = [this](int startIndex) -> float{
-      float sum = 0;
-      for (int i=startIndex;i<childScales.size();i++){
-         sum += this->childScales.get(i);
+   if (dir == LayoutDir::GRID){
+      //divide the space into boxes, each box being large enough to exactly contain the largest child (in either dimension)
+      // Center each child inside it's respective box.
+
+      //determine box size
+      Size<int> boundingBox;
+      for (const auto& child : getChildren()){
+         child->setMaxSize({15,15});
+         boundingBox.max(child->getMaxSize());
       }
-      if (!childScales.size()) childScales.append(1.0); //always ensure we have a child scale
-      return childScales.value[startIndex] / sum;
-   };
-
-   auto sizeLeft = totalSpace;
-   for (auto& child: _childrenOrdered) {
-      int allowedSpace = (int)(sizeLeft * calcRatio(childIndex));
-      auto actualRect = dir == LayoutDir::HORIZONTAL ? ReyEngine::Rect<int>(pos, {allowedSpace, _rect.value.height}) : ReyEngine::Rect<int>(pos, {_rect.value.width, allowedSpace});
-
-      //enforce min/max bounds
-      auto clampRect = [=](ReyEngine::Rect<int>& newRect){
-         auto minWidth = child->getMinSize().x;
-         auto maxWidth = child->getMaxSize().x;
-         auto minHeight = child->getMinSize().y;
-         auto maxHeight = child->getMaxSize().y;
-         newRect.width = math_tools::clamp(minWidth, maxWidth, newRect.width);
-         newRect.height = math_tools::clamp(minHeight, maxHeight, newRect.height);
+      //create subrects to lay out the children
+      if (_rect.value.size().x && _rect.value.size().y) {
+         for (int i = 0; i < getChildren().size(); i++) {
+            auto &child = getChildren().at(i);
+            auto subrect = _rect.value.toSizeRect().getSubRect(boundingBox, i);
+            child->setRect(subrect);
+         }
+      }
+   } else {
+      //how much space we have to allocate
+      auto totalSpace = dir == LayoutDir::HORIZONTAL ? getWidth() : getHeight();
+      ReyEngine::Pos<int> pos;
+      //how much space we will allocate to each child
+      unsigned int childIndex = 0;
+      auto calcRatio = [this](int startIndex) -> float {
+          float sum = 0;
+          for (int i = startIndex; i < childScales.size(); i++) {
+             sum += this->childScales.get(i);
+          }
+          if (!childScales.size()) childScales.append(1.0); //always ensure we have a child scale
+          return childScales.value[startIndex] / sum;
       };
 
-      clampRect(actualRect);
-      auto virtualRect = actualRect; //the space the widget _would_ take up if margins didnt exist
-      //apply margins
-      actualRect.x += theme->layoutMargins.left();
-      actualRect.y += theme->layoutMargins.top();
-      actualRect.width -= (theme->layoutMargins.right() + theme->layoutMargins.left());
-      actualRect.height -= (theme->layoutMargins.bottom() + theme->layoutMargins.top());
+      auto sizeLeft = totalSpace;
+      for (auto &child: _childrenOrdered) {
+         int allowedSpace = (int) (sizeLeft * calcRatio(childIndex));
+         auto actualRect = dir == LayoutDir::HORIZONTAL ? ReyEngine::Rect<int>(pos, {allowedSpace, _rect.value.height})
+                                                        : ReyEngine::Rect<int>(pos, {_rect.value.width, allowedSpace});
 
-      int consumedSpace;
-      switch(dir) {
-         case LayoutDir::HORIZONTAL:
-            pos.x += virtualRect.width;
-            consumedSpace = virtualRect.width;
-            break;
-         case LayoutDir::VERTICAL:
-            pos.y += virtualRect.height;
-            consumedSpace = virtualRect.height;
-            break;
-      }
+         //enforce min/max bounds
+         auto clampRect = [=](ReyEngine::Rect<int> &newRect) {
+             auto minWidth = child->getMinSize().x;
+             auto maxWidth = child->getMaxSize().x;
+             auto minHeight = child->getMinSize().y;
+             auto maxHeight = child->getMaxSize().y;
+             newRect.width = math_tools::clamp(minWidth, maxWidth, newRect.width);
+             newRect.height = math_tools::clamp(minHeight, maxHeight, newRect.height);
+         };
+
+         clampRect(actualRect);
+         auto virtualRect = actualRect; //the space the widget _would_ take up if margins didnt exist
+         //apply margins
+         actualRect.x += theme->layoutMargins.left();
+         actualRect.y += theme->layoutMargins.top();
+         actualRect.width -= (theme->layoutMargins.right() + theme->layoutMargins.left());
+         actualRect.height -= (theme->layoutMargins.bottom() + theme->layoutMargins.top());
+
+         int consumedSpace;
+         switch (dir) {
+            case LayoutDir::HORIZONTAL:
+               pos.x += virtualRect.width;
+                 consumedSpace = virtualRect.width;
+                 break;
+            case LayoutDir::VERTICAL:
+               pos.y += virtualRect.height;
+                 consumedSpace = virtualRect.height;
+                 break;
+         }
 //       std::cout << child->getName() << " rect = " << actualRect << endl;
-      //apply transformations
-      child->setRect(actualRect);
-      childIndex++;
-      //recalculate size each if we didn't use all available space
-      sizeLeft -= consumedSpace;
+         //apply transformations
+         child->setRect(actualRect);
+         childIndex++;
+         //recalculate size each if we didn't use all available space
+         sizeLeft -= consumedSpace;
 //         childrenLeft--;
+      }
    }
 }

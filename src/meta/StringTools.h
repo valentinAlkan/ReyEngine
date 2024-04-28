@@ -9,6 +9,7 @@ namespace string_tools{
    std::vector<std::string> pathSplit(const std::string& s);
    std::vector<std::string> split(const std::string& s, const std::string& delimString);
    std::vector<std::string> split(const std::string& s, char delimChar);
+   std::vector<std::string> split(const std::string& s); //split all whitespace
    std::string lstrip(const std::string& s, char c);
    std::string lstrip(const std::string& s);
    std::string rstrip(const std::string& s, char c);
@@ -47,6 +48,7 @@ namespace string_tools{
             std::string EscapeWhite(std::string_view str);
         }
         namespace EscapeCodes {
+            static constexpr char Reset[] = "\033[0m";
             static constexpr char Black[] = "\u001b[30m";
             static constexpr char Red[] = " \u001b[31m";
             static constexpr char Green[] = " \u001b[32m";

@@ -48,6 +48,24 @@ public:
       }
       ReyEngine::Size<float> size;
    };
+    struct ChildAddedEvent : public Event<ChildAddedEvent> {
+        EVENT_GENERATE_UNIQUE_ID(ChildAddedEvent)
+        EVENT_GET_NAME(ChildAddedEvent)
+        explicit ChildAddedEvent(std::shared_ptr<EventPublisher> publisher, WidgetPtr& child)
+        : Event<ChildAddedEvent>(ChildAddedEvent_UNIQUE_ID, publisher)
+        , child(child)
+        {}
+        WidgetPtr& child;
+    };
+    struct DescendentAddedEvent : public Event<DescendentAddedEvent> {
+        EVENT_GENERATE_UNIQUE_ID(DescendentAddedEvent)
+        EVENT_GET_NAME(DescendentAddedEvent)
+        explicit DescendentAddedEvent(std::shared_ptr<EventPublisher> publisher, WidgetPtr& descendent)
+        : Event<DescendentAddedEvent>(DescendentAddedEvent_UNIQUE_ID, publisher)
+        , descendent(descendent)
+        {}
+        WidgetPtr& descendent;
+    };
 
    enum class Anchor{NONE, LEFT, RIGHT, TOP, BOTTOM, FILL, TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, CENTER};
    /////////////////////////////////////////////////////////////////////////////////////////
@@ -195,7 +213,9 @@ protected:
    virtual void _on_mouse_exit(){};
    virtual void _on_child_added_immediate(WidgetPtr&){} //Called immediately upon a call to addChild - DANGER: widget is not actually a child yet! It is (probably) a very bad idea to do much at all here. Make sure you know what you're doing.
    void __on_child_added(WidgetPtr); //internal. Trigger resize for anchored widgets.
-   virtual void _on_child_added(WidgetPtr&){} // called at the beginning of the next frame after a child is added. Child is now owned by us. Safe to manipulate child.
+   void __on_descendent_added(WidgetPtr&); // Internal. see below.
+   virtual void _on_descendent_added(WidgetPtr&){} // See below. All parents up the chain will emit this signal. Emits along with _on_child_added when this node is the parent.
+   virtual void _on_child_added(WidgetPtr&){} // called at the beginning of the next frame after a child is added. Child is now owned by us. Safe to manipulate child. Called after all events are emitted.
    virtual void _on_enter_tree(){} //called every time a widget enters the tree
    virtual void _on_exit_tree(){}
    virtual void _on_child_removed(WidgetPtr&){}

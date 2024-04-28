@@ -15,6 +15,8 @@ static constexpr int getUniqueEventId(){return CLASSNAME##_UNIQUE_ID;}
 EVENT_GENERATE_UNIQUE_ID(CLASSNAME)               \
 EVENT_GET_NAME(CLASSNAME)                                     \
 explicit CLASSNAME(const std::shared_ptr<EventPublisher> publisher, ##__VA_ARGS__): PARENTCLASS(CLASSNAME##_UNIQUE_ID, publisher)
+//NOTE: event publisher is a pointer copy and not a reference because toEventPublisher expects an lvalue, which toEventPublisher is not;
+
 
 #define EVENT_CTOR_SIMPLE_OVERRIDABLE(CLASSNAME, PARENTCLASS) \
 EVENT_GENERATE_UNIQUE_ID(CLASSNAME)                           \

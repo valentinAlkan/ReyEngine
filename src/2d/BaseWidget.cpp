@@ -748,6 +748,17 @@ void BaseWidget::setHeight(int height){
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::__on_descendent_added(WidgetPtr& widget) {
+    DescendentAddedEvent event(toEventPublisher(), widget);
+    publish(event);
+    _on_descendent_added(widget);
+    auto parent = _parent.lock();
+    if (parent){
+        parent->__on_descendent_added(widget);
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::__on_child_added(WidgetPtr widget){
    if (!isLayout){
       for (auto& child : _childrenOrdered){
@@ -756,6 +767,10 @@ void BaseWidget::__on_child_added(WidgetPtr widget){
          }
       }
    }
+   ChildAddedEvent event(toEventPublisher(), widget);
+   publish(event);
+
+   __on_descendent_added(widget);
    _on_child_added(widget);
 }
 

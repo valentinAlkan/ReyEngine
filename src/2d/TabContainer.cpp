@@ -34,6 +34,14 @@ void TabContainer::render() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void TabContainer::_on_child_added(std::shared_ptr<BaseWidget>& child) {
+    // if we already have a tab widget, immediately hide any subsequent children
+    if (getChildren().size() > 1){
+        child->setVisible(false);
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void TabContainer::setCurrentTab(int index) {
    currentTab = index;
    cout << "Set current tab to " << index << endl;

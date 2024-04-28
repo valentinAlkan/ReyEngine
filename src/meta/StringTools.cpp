@@ -59,6 +59,32 @@ vector<string> string_tools::split(const std::string &s, char delimChar) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+vector<string> string_tools::split(const std::string &s) {
+    vector<string> retval;
+    size_t start = 0;
+    string substr = s;
+    size_t found;
+    auto find = [&](const string& s){
+        size_t i = 0;
+        for (const auto& c : s){
+            if (isspace(c)) return i;
+            i++;
+        }
+        return string::npos;
+    };
+    while(find(s) != string::npos){
+        retval.emplace_back(s, start, found);
+        start += found + 1;
+        if (start >= s.size()){
+            break;
+        }
+        substr = string(s, start, s.size() - start);
+    }
+    retval.push_back(substr);
+    return retval;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 std::string string_tools::lstrip(const std::string &s, char c) {
    auto charMatch = [c](char _c){
       return _c == c;
@@ -335,11 +361,11 @@ std::string string_tools::toLower(const std::string &s) {
 }
 
 
-std::string AnsiColor::Foreground::EscapeBlack(std::string_view str){return std::string(EscapeCodes::Black) + std::string(str) + std::string(EscapeCodes::White);}
-std::string AnsiColor::Foreground::EscapeRed(std::string_view str){return std::string(EscapeCodes::Red) + std::string(str) + std::string(EscapeCodes::White);}
-std::string AnsiColor::Foreground::EscapeGreen(std::string_view str){return std::string(EscapeCodes::Green) + std::string(str) + std::string(EscapeCodes::White);}
-std::string AnsiColor::Foreground::EscapeYellow(std::string_view str){return std::string(EscapeCodes::Yellow) + std::string(str) + std::string(EscapeCodes::White);}
-std::string AnsiColor::Foreground::EscapeBlue(std::string_view str){return std::string(EscapeCodes::Blue) + std::string(str) + std::string(EscapeCodes::White);}
-std::string AnsiColor::Foreground::EscapeMagenta(std::string_view str){return std::string(EscapeCodes::Magenta) + std::string(str) + std::string(EscapeCodes::White);}
-std::string AnsiColor::Foreground::EscapeCyan(std::string_view str){return std::string(EscapeCodes::Cyan) + std::string(str) + std::string(EscapeCodes::White);}
-std::string AnsiColor::Foreground::EscapeWhite(std::string_view str){return std::string(EscapeCodes::White) + std::string(str) + std::string(EscapeCodes::White);}
+std::string AnsiColor::Foreground::EscapeBlack(std::string_view str){return std::string(EscapeCodes::Black) + std::string(str) + std::string(EscapeCodes::Reset);}
+std::string AnsiColor::Foreground::EscapeRed(std::string_view str){return std::string(EscapeCodes::Red) + std::string(str) + std::string(EscapeCodes::Reset);}
+std::string AnsiColor::Foreground::EscapeGreen(std::string_view str){return std::string(EscapeCodes::Green) + std::string(str) + std::string(EscapeCodes::Reset);}
+std::string AnsiColor::Foreground::EscapeYellow(std::string_view str){return std::string(EscapeCodes::Yellow) + std::string(str) + std::string(EscapeCodes::Reset);}
+std::string AnsiColor::Foreground::EscapeBlue(std::string_view str){return std::string(EscapeCodes::Blue) + std::string(str) + std::string(EscapeCodes::Reset);}
+std::string AnsiColor::Foreground::EscapeMagenta(std::string_view str){return std::string(EscapeCodes::Magenta) + std::string(str) + std::string(EscapeCodes::Reset);}
+std::string AnsiColor::Foreground::EscapeCyan(std::string_view str){return std::string(EscapeCodes::Cyan) + std::string(str) + std::string(EscapeCodes::Reset);}
+std::string AnsiColor::Foreground::EscapeWhite(std::string_view str){return std::string(EscapeCodes::White) + std::string(str) + std::string(EscapeCodes::Reset);}
