@@ -53,7 +53,6 @@ protected:
       auto& mouseEvent = (InputEventMouseMotion&)(e);
       auto localPos = globalToLocal(mouseEvent.globalPos);
       if (mouseEvent.isEvent<InputEventMouseMotion>()){
-         _cursor_in_slider = isInside(localPos);
          if (_is_dragging) {
             //drag grabber
             if (_is_dragging) {

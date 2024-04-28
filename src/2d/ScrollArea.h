@@ -4,7 +4,9 @@
 
 namespace ReyEngine {
     class ScrollArea : public BaseWidget {
-    REYENGINE_OBJECT(ScrollArea, BaseWidget), scrollOffsetX(0, 0, 0), scrollOffsetY(0, 0, 0) {}
+    REYENGINE_OBJECT(ScrollArea, BaseWidget), scrollOffsetX(0, 0, 0), scrollOffsetY(0, 0, 0) {
+        _inputFilter = InputFilter::INPUT_FILTER_PROCESS_AND_STOP; //catch all input so we can prioritize sliders
+    }
 
     public:
         inline ReyEngine::Size<double> getScrollAreaSize() const {
@@ -31,6 +33,8 @@ namespace ReyEngine {
         void _on_rect_changed() override;
         void _on_child_added(std::shared_ptr<BaseWidget> &child) override;
         void _init() override;
+        Handled _unhandled_input (const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
+//        Handled _unhandled_masked_input(const InputEventMouse&, const std::optional<UnhandledMouseInput>&) override;
         ///Ignores scroll bars, but adds their widths if they are visible
         ReyEngine::Size<int> getScrollAreaChildBoundingBox();
 
