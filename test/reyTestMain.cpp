@@ -1,6 +1,6 @@
 #include "DrawInterface.h"
 #include <cassert>
-#include "ScrollArea.hpp"
+#include "ScrollArea.h"
 #include "Application.h"
 #include <iostream>
 #include "Logger.h"
@@ -299,25 +299,43 @@ int main(int argc, char** argv)
 
       //add labels
       auto labelLayout = make_shared<HLayout>("labelLayout");
-      labelLayout->setRect(Rect<int>(50,20,150,20));
+      labelLayout->setRect(Rect<int>(50,20,350,20));
       root->addChild(labelLayout);
-      auto xlabel = make_shared<Label>("XLabel");
-      auto ylabel = make_shared<Label>("YLabel");
+      auto xlabel = make_shared<Label>("XLabel"); xlabel->setAnchoring(BaseWidget::Anchor::CENTER);
+      auto ylabel = make_shared<Label>("YLabel"); ylabel->setAnchoring(BaseWidget::Anchor::CENTER);
+      auto xslider = make_shared<Slider>("XSlider", Slider::SliderType::HORIZONTAL);
+      auto yslider = make_shared<Slider>("YSlider", Slider::SliderType::HORIZONTAL);
       auto spacer = make_shared<Control>("spacer");
-      labelLayout->addChild(xlabel);
-      labelLayout->addChild(ylabel);
+      labelLayout->addChild(xslider);
+      labelLayout->addChild(spacer);
+      labelLayout->addChild(yslider);
+      labelLayout->childScales = {1,.1,1};
+      xslider->addChild(xlabel);
+      yslider->addChild(ylabel);
 
       //add scroll area
       auto scrollArea = make_shared<ScrollArea>("ScrollArea");
       scrollArea->setRect(Rect<int>(50, 50, 500, 500));
       auto label1 = make_shared<Label>("ScrollAreaLabel1");
       auto label2 = make_shared<Label>("ScrollAreaLabel2");
+      label1->setRect({40,40,0,0});
       label2->setRect({300,300,0,0});
-      label1->setText("Hello from the upper left!");
+      label1->setText("Hello from somewhere nearish to the top left!");
       label2->setText("Hello from the bottom right!");
       scrollArea->addChild(label1);
       scrollArea->addChild(label2);
       scrollArea->getTheme()->background.colorPrimary.set(COLORS::red);
+
+      //callback to move other labels
+      auto moveLabels = [&](const Slider::EventSliderValueChanged& event){
+          const Vec2<int> range(300, 1000);
+          auto newX = range.lerp(xslider->getSliderPct());
+          auto newY = range.lerp(yslider->getSliderPct());
+          label2->setPos({(int)newX, (int)newY});
+      };
+
+      label2->subscribe<Slider::EventSliderValueChanged>(xslider, moveLabels);
+      label2->subscribe<Slider::EventSliderValueChanged>(yslider, moveLabels);
 
       //draw a box around the scroll area
       auto boxRect = scrollArea->getRect();
@@ -340,6 +358,7 @@ int main(int argc, char** argv)
       };
       labelLayout->subscribe<BaseWidget::WidgetResizeEvent>(scrollArea, displaySize);
       scrollArea->setInEditor(true);
+      scrollArea->setEditorSelected(true);
    }
 
    else if (args.getArg("--childBoundingBoxTest")){
@@ -434,15 +453,15 @@ int main(int argc, char** argv)
       inputFilter->setUnhandledInputCallback(cbInput);
 
       //connect to slider events
-      auto hSlidercb = [&](const Slider::SliderValueChangedEvent& event){
+      auto hSlidercb = [&](const Slider::EventSliderValueChanged& event){
          control->setPos({(int)((double) inputFilter->getWidth() * event.pct), control->getPos().y});
       };
-      inputFilter->subscribe<Slider::SliderValueChangedEvent>(hslider, hSlidercb);
+      inputFilter->subscribe<Slider::EventSliderValueChanged>(hslider, hSlidercb);
 
-      auto vSlidercb = [&](const Slider::SliderValueChangedEvent& event){
+      auto vSlidercb = [&](const Slider::EventSliderValueChanged& event){
          control->setPos({control->getPos().x, (int)((double) inputFilter->getHeight() * event.pct)});
       };
-      inputFilter->subscribe<Slider::SliderValueChangedEvent>(vslider, vSlidercb);
+      inputFilter->subscribe<Slider::EventSliderValueChanged>(vslider, vSlidercb);
 
    }
 
@@ -533,12 +552,12 @@ int main(int argc, char** argv)
       //resize slider so it fits all our text
       slider->setWidth(sliderHLayout->getWidth());
 
-      auto updateLabel = [panel, valueLabel](const Slider::SliderValueChangedEvent& event){
+      auto updateLabel = [panel, valueLabel](const Slider::EventSliderValueChanged& event){
          double newRound = (float)event.value/100.0;
          valueLabel->setText(newRound, 3);
          panel->getTheme()->roundness.set(newRound);
       };
-      valueLabel->subscribe<Slider::SliderValueChangedEvent>(slider, updateLabel);
+      valueLabel->subscribe<Slider::EventSliderValueChanged>(slider, updateLabel);
       root->addChild(panel);
 
       //add a button to toggle the panel visibility

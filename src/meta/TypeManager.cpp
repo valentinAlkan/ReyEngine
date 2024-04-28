@@ -4,10 +4,11 @@
 #include "BaseWidget.h"
 #include "Button.h"
 #include "Label.hpp"
-#include "ScrollArea.hpp"
+#include "ScrollArea.h"
 #include "Slider.hpp"
 
 using namespace std;
+using namespace ReyEngine;
 /////////////////////////////////////////////////////////////////////////////////////////
 void TypeManager::registerType(std::string typeName, string parentTypeName, bool isVirtual, Deserializer fx) {
    if (typeName.empty()){
