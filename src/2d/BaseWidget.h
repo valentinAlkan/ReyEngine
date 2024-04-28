@@ -24,6 +24,7 @@ using Handled = bool;
 
 namespace ReyEngine{
    class Canvas;
+   class ScrollArea;
 }
 class Scene;
 class Draggable;
@@ -67,6 +68,31 @@ public:
         WidgetPtr& descendent;
     };
 
+   //Input masking controls whether input inside the rect is masked (ignored)
+   enum InputMask {NONE, IGNORE_INSIDE, IGNORE_OUTSIDE};
+   template <typename T>
+   struct InputMaskProperty : public EnumProperty<InputMask, 3>{
+        InputMaskProperty(const std::string& instanceName,  InputMask defaultvalue)
+        : EnumProperty<InputMask, 3>(instanceName, std::move(defaultvalue))
+        {}
+        const EnumPair<InputMask, 3>& getDict() const  override {return dict;}
+        static constexpr EnumPair<InputMask, 3> dict = {
+                ENUM_PAIR_DECLARE(InputMask, NONE),
+                ENUM_PAIR_DECLARE(InputMask, IGNORE_INSIDE),
+                ENUM_PAIR_DECLARE(InputMask, IGNORE_OUTSIDE),
+        };
+       InputMaskProperty(const InputMaskProperty& other){EnumProperty::value = other.value; mask = other.mask;}
+       InputMaskProperty& operator=(const InputMaskProperty& other){EnumProperty::value = other.value; mask = other.mask; return *this;}
+       ReyEngine::Rect<T> mask;
+        std::string toString() const override {return  EnumProperty::toString() + "," + mask.toString();}
+        InputMask fromString(const std::string& str) override {
+            auto split = string_tools::split(",");
+            EnumProperty::fromString(split.at(0));
+            mask = ReyEngine::Rect<int>::fromString(split.at(1));
+            return *this;
+        }
+    };
+
    enum class Anchor{NONE, LEFT, RIGHT, TOP, BOTTOM, FILL, TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, CENTER};
    /////////////////////////////////////////////////////////////////////////////////////////
    struct AnchorProperty : public EnumProperty<Anchor, 11>{
@@ -97,6 +123,7 @@ public:
       std::string toString() const override {return value->serialize();}
       WidgetPtr fromString(const std::string& data) override { throw std::runtime_error("not implemented"); return {};}
    };
+    /////////////////////////////////////////////////////////////////////////////////////////
 
    static constexpr char TYPE_NAME[] = "BaseWidget";
    BaseWidget(const std::string& name, std::string  typeName);
@@ -240,6 +267,7 @@ protected:
    void registerProperties() override;
    void _deserialize(PropertyPrototypeMap&);
    RectProperty<int> _rect;
+   InputMaskProperty<int> _inputMask; //Only input inside this rectangle will be handled;
 
    //input
    virtual Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&){return false;}
@@ -310,4 +338,5 @@ protected:
    friend class Window;
    friend class ReyEngine::Canvas;
    friend class Application;
+   friend class ReyEngine::ScrollArea;
 };

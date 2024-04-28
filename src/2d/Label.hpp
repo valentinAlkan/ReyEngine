@@ -12,6 +12,7 @@ class Label : public BaseWidget {
       if (expandOpt){
          _rect.value = {_rect.value.pos(), expandOpt.value()};
       }
+      theme->background = Style::Fill::NONE;
    }
 public:
    void render() const override{

@@ -4,9 +4,9 @@
 
 class Slider : public BaseWidget {
 public:
-   class SliderValueChangedEvent : public Event<SliderValueChangedEvent> {
+   class EventSliderValueChanged : public Event<EventSliderValueChanged> {
    public:
-      EVENT_CTOR_SIMPLE(SliderValueChangedEvent, Event<SliderValueChangedEvent>){}
+      EVENT_CTOR_SIMPLE(EventSliderValueChanged, Event<EventSliderValueChanged>){}
       double value;
       double pct;
    };
@@ -113,10 +113,10 @@ protected:
    }
 private:
    void _publish_slider_val(){
-      auto event = SliderValueChangedEvent(EventPublisher::shared_from_this());
+      auto event = EventSliderValueChanged(EventPublisher::shared_from_this());
       event.value = getSliderValue();
       event.pct = getSliderPct();
-      publish<SliderValueChangedEvent>(event);
+      publish<EventSliderValueChanged>(event);
    }
    void _compute_appearance(){
       switch(sliderType.value){
@@ -147,5 +147,5 @@ private:
    bool _is_dragging = false;
    ReyEngine::Rect<double> _grabber = {0, 0, 0, 0};
    ReyEngine::Vec2<double> _range = {0,0};
-   friend class ScrollArea;
+   friend class ReyEngine::ScrollArea;
 };

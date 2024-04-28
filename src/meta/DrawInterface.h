@@ -82,14 +82,14 @@ namespace ReyEngine {
       inline void operator=(Size<T>&) = delete;
       inline void operator=(Pos<T>&) = delete;
       inline operator Vector2() const {return {(float)x,(float)y};}
-      inline Vec2 midpoint(){return {x/2, y / 2};}
+      inline Vec2 midpoint() const {return {x/2, y / 2};}
       inline void min(Vec2<T> other){if (this->x > other.x) this->x = other.x; if (this->y > other.y) this->y = other.y;}
       inline void max(Vec2<T> other){if (this->x < other.x) this->x = other.x; if (this->y < other.y) this->y = other.y;}
-      inline double pct(double input){return (input-x)/(y - x);} //given an input value, what percentage of the range is it from 0 to 1?
-      inline double lerp(double lerpVal){return lerpVal * (y - x) + x;} //given a value from 0 to 1, what is the value of the range that corresponds to it?
-      inline Vec2 lerp(Vec2 otherPoint, double xprm){return {xprm, y + (((xprm - x) * (otherPoint.y - y)) / (otherPoint.x - x))};}
-      inline T clamp(T value){if (value < x) return x; if (value > y) return y; return value;}
-      inline Vec2 clamp(Vec2 clampA, Vec2 clampB){
+      inline double pct(double input) const {return (input-x)/(y - x);} //given an input value, what percentage of the range is it from 0 to 1?
+      inline double lerp(double lerpVal) const {return lerpVal * (y - x) + x;} //given a value from 0 to 1, what is the value of the range that corresponds to it?
+      inline Vec2 lerp(Vec2 otherPoint, double xprm) const {return {xprm, y + (((xprm - x) * (otherPoint.y - y)) / (otherPoint.x - x))};}
+      inline T clamp(T value) const {if (value < x) return x; if (value > y) return y; return value;}
+      inline Vec2 clamp(Vec2 clampA, Vec2 clampB) const {
          Vec2 retval = {x, y};
          if (x < clampA.x) retval.x = clampA.x;
          if (x > clampB.x) retval.x = clampB.x;
@@ -153,7 +153,7 @@ namespace ReyEngine {
    template <typename T>
    class Range : private Vec3<T> {
    public:
-      //Vec3, but x represents min, z represents max, and y represents value; Can lerp and set pct.
+      //Vec3, but x represents min, y represents max, and z represents value; Can lerp and set pct.
       //When creating from Vec3, vec3 shall be considered x=min, y=max, z=default value.
       //Does not enforce limits (ie value is free to be more or less than min or max.
       inline Range(): Vec3<T>::Vec3(){}

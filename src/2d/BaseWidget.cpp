@@ -16,6 +16,7 @@ BaseWidget::BaseWidget(const std::string& name, std::string  typeName)
 , PROPERTY_DECLARE(isBackRender, false)
 , PROPERTY_DECLARE(_rect)
 , PROPERTY_DECLARE(_anchor, Anchor::NONE)
+, PROPERTY_DECLARE(_inputMask, InputMask::NONE)
 , _typeName(std::move(typeName))
 , theme(make_shared<Style::Theme>())
 {}
@@ -265,6 +266,7 @@ void BaseWidget::renderChain(ReyEngine::Pos<double>& parentOffset) {
    if (!_visible) return;
    ReyEngine::Pos<double> localOffset;
    renderBegin(localOffset);
+   auto prevOffset = _renderOffset;
    _renderOffset += (localOffset + parentOffset);
    //backrender
    for (const auto& child : _backRenderList){
@@ -275,7 +277,7 @@ void BaseWidget::renderChain(ReyEngine::Pos<double>& parentOffset) {
    for (const auto& child : _frontRenderList){
       child->renderChain(_renderOffset);
    }
-   _renderOffset -= (localOffset + parentOffset); //subtract local offset when we are done
+   _renderOffset = prevOffset; //reset to local offset when we are done
    renderEnd();
    renderEditorFeatures();
 }

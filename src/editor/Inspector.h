@@ -1,9 +1,9 @@
 #pragma once
-#include "ScrollArea.hpp"
+#include "ScrollArea.h"
 #include "Layout.h"
 #include "Workspace.h"
 
-class Inspector : public ScrollArea {
+class Inspector : public ReyEngine::ScrollArea {
 public:
    REYENGINE_OBJECT(Inspector, ScrollArea){}
 public:
