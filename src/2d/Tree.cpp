@@ -57,7 +57,7 @@ void Tree::determineVisible() {
          }
       }
    };
-   pushVisible(root);
+   if (root) pushVisible(root);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -30,6 +30,7 @@ class TabContainer : public Layout {
 public:
    void render() const override;
    void registerProperties() override{};
+   void _on_child_added(std::shared_ptr<BaseWidget>&) override;
    std::shared_ptr<TabTheme>& getTabTheme(){return tabTheme;}
    void setCurrentTab(int index);
    int getCurrentTab(){return currentTab;}

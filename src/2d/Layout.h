@@ -5,15 +5,16 @@
 class Layout : public BaseWidget {
 public:
    /////////////////////////////////////////////////////////////////////////////////////////
-   enum class LayoutDir{HORIZONTAL, VERTICAL, OTHER};
+   enum class LayoutDir{HORIZONTAL, VERTICAL, GRID, OTHER};
    /////////////////////////////////////////////////////////////////////////////////////////
-   struct LayoutProperty : public EnumProperty<LayoutDir, 2>{
+   struct LayoutProperty : public EnumProperty<LayoutDir, 3>{
       LayoutProperty(const std::string& instanceName,  LayoutDir defaultvalue)
-            : EnumProperty<LayoutDir, 2>(instanceName, std::move(defaultvalue)){}
-      const EnumPair<LayoutDir, 2>& getDict() const override {return dict;}
-      static constexpr EnumPair<LayoutDir, 2> dict = {
+            : EnumProperty<LayoutDir, 3>(instanceName, std::move(defaultvalue)){}
+      const EnumPair<LayoutDir, 3>& getDict() const override {return dict;}
+      static constexpr EnumPair<LayoutDir, 3> dict = {
             ENUM_PAIR_DECLARE(LayoutDir, VERTICAL),
             ENUM_PAIR_DECLARE(LayoutDir, HORIZONTAL),
+            ENUM_PAIR_DECLARE(LayoutDir, GRID),
       };
       void registerProperties() override {}
    };
@@ -56,5 +57,17 @@ public:
    REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(HLayout);
    REYENGINE_SERIALIZER(HLayout, Layout)
 protected:
-   HLayout(const std::string& name, const std::string& typeName): Layout(name, typeName, LayoutDir::VERTICAL){}
+   HLayout(const std::string& name, const std::string& typeName): Layout(name, typeName, LayoutDir::HORIZONTAL){}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////
+class GridLayout : public Layout {
+public:
+    GridLayout(const std::string& instanceName)
+    : Layout(instanceName, _get_static_constexpr_typename(), Layout::LayoutDir::GRID)
+    {}
+    REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(GridLayout);
+    REYENGINE_SERIALIZER(GridLayout, Layout)
+protected:
+    GridLayout(const std::string& name, const std::string& typeName): Layout(name, typeName, LayoutDir::GRID){}
 };
