@@ -37,7 +37,6 @@ void ScrollArea::_on_rect_changed(){
     _childBoundingBox = getScrollAreaChildBoundingBox();
     scrollOffsetX.setMax(_childBoundingBox.x - getWidth());
     scrollOffsetY.setMax(_childBoundingBox.y - getHeight());
-//    _inputMask.mask = ReyEngine::Rect<int>(0, 0, (ourSize.x - sliderSize), ourSize.y - sliderSize);
     auto vsliderNewRect = ReyEngine::Rect<int>((ourSize.x - sliderSize), 0, sliderSize, ourSize.y);
     auto hsliderNewRect = ReyEngine::Rect<int>(0,(ourSize.y - sliderSize), (ourSize.x - sliderSize), sliderSize);
     if (vslider) {
