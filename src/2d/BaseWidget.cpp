@@ -295,11 +295,7 @@ Handled BaseWidget::_process_unhandled_input(const InputEvent& event, const std:
                case InputEventMouseButton::getUniqueEventId():
                case InputEventMouseWheel::getUniqueEventId(): {
                   auto globalPos = event.toEventType<InputEventMouse>().globalPos;
-                  auto localPos = child->globalToLocal(globalPos);
-                  UnhandledMouseInput childmouse;
-                  childmouse.localPos = localPos;
-                  childmouse.isInside = child->isInside(localPos);
-                  _mouse = childmouse;
+                  _mouse = child->toMouseInput(globalPos);
                }
                   break;
             }
@@ -315,6 +311,22 @@ Handled BaseWidget::_process_unhandled_input(const InputEvent& event, const std:
    if (!_visible) return false;
    if (_isEditorWidget){
       if (_process_unhandled_editor_input(event, mouse) > 0) return true;
+   }
+
+   //apply input masking
+   switch(_inputMask.value){
+       case NONE:
+           break;
+       case IGNORE_INSIDE:
+           if (mouse && _inputMask.mask.isInside(mouse->localPos)){
+               if (_unhandled_masked_input(event.toEventType<InputEventMouse>(), mouse)) return true;
+           }
+           break;
+       case IGNORE_OUTSIDE:
+           if (mouse && !_inputMask.mask.isInside(mouse->localPos)) {
+               if (_unhandled_masked_input(event.toEventType<InputEventMouse>(), mouse)) return true;
+           }
+           break;
    }
 
    switch (_inputFilter){
@@ -404,6 +416,14 @@ Handled BaseWidget::_process_unhandled_editor_input(const InputEvent& event, con
          }
    }
    return false;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+UnhandledMouseInput BaseWidget::toMouseInput(const ReyEngine::Pos<int> &global) const {
+    UnhandledMouseInput childmouse;
+    childmouse.localPos = globalToLocal(global);
+    childmouse.isInside = isInside(childmouse.localPos);
+    return childmouse;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -829,6 +849,7 @@ void BaseWidget::startScissor(const ReyEngine::Rect<int>& area) const {
    }
 
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::stopScissor() const {
    auto& thiz = const_cast<BaseWidget&>(*this);
@@ -837,3 +858,44 @@ void BaseWidget::stopScissor() const {
       canvasOpt.value()->popScissor();
    }
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////
+std::optional<std::shared_ptr<BaseWidget>> BaseWidget::askHover(const Pos<int>& globalPos) {
+    //ask this widget to accept the hover
+
+    auto process = [&]() -> std::optional<std::shared_ptr<BaseWidget>> {
+        if (_visible && acceptsHover && isInside(globalToLocal(globalPos))){
+            return toBaseWidget();
+        }
+        return nullopt;
+    };
+
+    auto pass = [&]() -> std::optional<std::shared_ptr<BaseWidget>>{
+        for(auto it = getChildren().rbegin(); it != getChildren().rend(); ++it){
+            const auto& child = *it;
+            auto handled = child->askHover(globalPos);
+            if (handled) return handled;
+        }
+        return nullopt;
+    };
+//            Application::printDebug() << "Asking widget " << widget->getName() << " to accept hover " << endl;
+    std::optional<std::shared_ptr<BaseWidget>> handled;
+    switch (_inputFilter) {
+        case InputFilter::INPUT_FILTER_PROCESS_AND_STOP:
+            return process();
+        case InputFilter::INPUT_FILTER_PROCESS_AND_PASS:
+            handled = process();
+            if (handled) return handled;
+            return pass();
+        case InputFilter::INPUT_FILTER_PASS_AND_PROCESS:
+            handled = pass();
+            if (handled) return handled;
+            return process();
+        case InputFilter::INPUT_FILTER_IGNORE_AND_STOP:
+            return nullopt;
+        case InputFilter::INPUT_FILTER_IGNORE_AND_PASS:
+            return pass();
+        default:
+            return nullopt;
+    }
+};

@@ -32,11 +32,12 @@ void ScrollArea::_on_rect_changed(){
     scrollOffsetX.setValue(0);
     scrollOffsetY.setValue(0);
     auto ourSize = _rect.value.size();
-    auto sliderSize = 20;
+    static constexpr int sliderSize = 20;
     //get the box that contains all our children, except for the sliders
     _childBoundingBox = getScrollAreaChildBoundingBox();
     scrollOffsetX.setMax(_childBoundingBox.x - getWidth());
     scrollOffsetY.setMax(_childBoundingBox.y - getHeight());
+//    _inputMask.mask = ReyEngine::Rect<int>(0, 0, (ourSize.x - sliderSize), ourSize.y - sliderSize);
     auto vsliderNewRect = ReyEngine::Rect<int>((ourSize.x - sliderSize), 0, sliderSize, ourSize.y);
     auto hsliderNewRect = ReyEngine::Rect<int>(0,(ourSize.y - sliderSize), (ourSize.x - sliderSize), sliderSize);
     if (vslider) {
@@ -103,4 +104,20 @@ ReyEngine::Size<int> ScrollArea::getScrollAreaChildBoundingBox() {
         childRect.max(totalOffset);
     }
     return childRect;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Handled ScrollArea::_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
+    //we want to give priority to sliders, then pass input to everyone else
+    if (mouse) {
+        auto globalPos = localToGlobal(mouse->localPos);
+        if (vslider && vslider->_process_unhandled_input(event, vslider->toMouseInput(globalPos))) return true;
+        if (hslider && hslider->_process_unhandled_input(event, hslider->toMouseInput(globalPos))) return true;
+        for (auto &child: getChildren()) {
+            if (child != vslider && child != hslider) {
+                if (child->_process_unhandled_input(event, child->toMouseInput(globalPos))) return true;
+            }
+        }
+    }
+    return false;
 }

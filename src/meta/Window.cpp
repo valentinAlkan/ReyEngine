@@ -215,52 +215,6 @@ void Window::exec(){
          event.mouseDelta = mouseDelta;
          event.globalPos = InputManager::getMousePos();
 
-         //find out which widget will accept the mouse motion as focus
-         std::function<std::optional<std::shared_ptr<BaseWidget>>(const std::shared_ptr<BaseWidget>&)> askHover = [&](const std::shared_ptr<BaseWidget>& widget)->std::optional<std::shared_ptr<BaseWidget>>{
-            //ask this widget to accept the hover
-            auto isInside = [&](const std::shared_ptr<BaseWidget>& widget){
-               return widget->getGlobalRect().isInside(event.globalPos);
-            };
-
-            auto process = [&](const std::shared_ptr<BaseWidget>& widget) -> std::optional<std::shared_ptr<BaseWidget>> {
-               bool _isInside = isInside(widget);
-               if (widget->_visible && widget->acceptsHover && _isInside){
-                  return widget;
-               }
-               return nullopt;
-            };
-
-            auto pass = [&](const std::shared_ptr<BaseWidget>& widget) -> std::optional<std::shared_ptr<BaseWidget>>{
-               for(auto it = widget->getChildren().rbegin(); it != widget->getChildren().rend(); ++it){
-                  const auto& child = *it;
-                  auto handled = askHover(child);
-                  if (handled) return handled;
-               }
-               return nullopt;
-            };
-//            Application::printDebug() << "Asking widget " << widget->getName() << " to accept hover " << endl;
-            std::optional<std::shared_ptr<BaseWidget>> handled;
-            switch (widget->_inputFilter) {
-               case InputFilter::INPUT_FILTER_PROCESS_AND_STOP:
-                  return process(widget);
-               case InputFilter::INPUT_FILTER_PROCESS_AND_PASS:
-                  handled = process(widget);
-                  if (handled) return handled;
-                  return pass(widget);
-               case InputFilter::INPUT_FILTER_PASS_AND_PROCESS:
-                  handled = pass(widget);
-                  if (handled) return handled;
-                  return process(widget);
-               case InputFilter::INPUT_FILTER_IGNORE_AND_STOP:
-                  return nullopt;
-               case InputFilter::INPUT_FILTER_IGNORE_AND_PASS:
-                  return pass(widget);
-                default:
-                    return nullopt;
-            }
-
-         };
-
          //don't do hovering or mouse input if we're dragging and dropping
          static constexpr unsigned int DRAG_THRESHOLD = 20;
          if (_dragNDrop){
@@ -270,7 +224,8 @@ void Window::exec(){
                _isDragging = true;
             }
          } else {
-            auto hovered = askHover(_root);
+             //find out which widget will accept the mouse motion as focus
+            auto hovered = _root->askHover(event.globalPos);
             if (hovered) {
                setHover(hovered.value());
             } else {
