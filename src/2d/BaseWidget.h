@@ -270,7 +270,10 @@ protected:
    InputMaskProperty<int> _inputMask; //Only input inside this rectangle will be handled;
 
    //input
+public:
    virtual Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&){return false;}
+   virtual Handled _unhandled_masked_input(const InputEventMouse&, const std::optional<UnhandledMouseInput>&){return true;} //masked input is handled by default
+protected:
    virtual void _register_parent_properties(){};
 
    void _is_extendable(){static_assert(true);}
@@ -329,6 +332,8 @@ protected:
    //input
    Handled _process_unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&); //pass input to children if they want it and then process it for ourselves if necessary
    Handled _process_unhandled_editor_input(const InputEvent&, const std::optional<UnhandledMouseInput>&); //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)
+   UnhandledMouseInput toMouseInput(const ReyEngine::Pos<int>& global) const;
+   std::optional<std::shared_ptr<BaseWidget>> askHover(const ReyEngine::Pos<int>& globalPos);
    InputFilter _inputFilter = InputFilter::INPUT_FILTER_PASS_AND_PROCESS;
 
    //theme

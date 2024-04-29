@@ -276,8 +276,8 @@ namespace ReyEngine {
       inline Rect chopBottom(T amt) const {auto retval = *this; retval.height-=amt; return retval;} //remove the bottommost amt of the rectangle and return the remainder (cuts height)
       inline Rect chopRight(T amt) const {auto retval = *this; retval.width-=amt; return retval;} //remove the rightmost amt of the rectangle and return the remainder (cuts width)
       inline Rect chopLeft(T amt) const {auto retval = *this; retval.x+=amt; retval.width-=amt; return retval;} //remove the leftmost amt of the rectangle and return the remainder (moves x, cuts width)
-      inline bool isInside(const Vec2<T>& point) const {return (point.x > x && point.x < x + width) && (point.y > y && point.y < y + height);}
-      inline bool isInside(const Rect& other) const {return other.x+other.width < x+width && other.x > x && other.y > y && other.y+other.height < y+height;}
+      inline bool isInside(const Vec2<T>& point) const {return (point.x >= x && point.x <= x + width) && (point.y >= y && point.y <= y + height);}
+      inline bool isInside(const Rect& other) const {return other.x+other.width <= x+width && other.x >= x && other.y >= y && other.y+other.height <= y+height;}
       inline Pos<T> topLeft() const {return {x, y};}
       inline Pos<T> topRight() const {return {x+width, y};}
       inline Pos<T> bottomRight() const {return {x+width, y+height};}
