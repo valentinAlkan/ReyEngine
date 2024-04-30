@@ -54,7 +54,6 @@ void Layout::arrangeChildren() {
       //determine box size
       Size<int> boundingBox;
       for (const auto& child : getChildren()){
-         child->setMaxSize({15,15});
          boundingBox.max(child->getMaxSize());
       }
       //create subrects to lay out the children

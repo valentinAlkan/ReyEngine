@@ -19,6 +19,7 @@ namespace ReyEngine {
 
         void hideVSlider(bool hidden);
         void hideHSlider(bool hidden);
+        Pos<int> getViewportSize(){return _viewport.size();};
     protected:
         static constexpr std::string_view VSLIDER_NAME = "__vslider";
         static constexpr std::string_view HSLIDER_NAME = "__hslider";
@@ -43,6 +44,7 @@ namespace ReyEngine {
         std::shared_ptr<Slider> vslider;
         std::shared_ptr<Slider> hslider;
         ReyEngine::Size<int> _childBoundingBox;
+        Rect<int> _viewport; //the area that isn't obscured by sliders
         bool _hideVSlider = false;
         bool _hideHSlider = false;
     };

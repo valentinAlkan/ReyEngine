@@ -39,14 +39,17 @@ void ScrollArea::_on_rect_changed(){
     scrollOffsetY.setMax(_childBoundingBox.y - getHeight());
     auto vsliderNewRect = ReyEngine::Rect<int>((ourSize.x - sliderSize), 0, sliderSize, ourSize.y);
     auto hsliderNewRect = ReyEngine::Rect<int>(0,(ourSize.y - sliderSize), (ourSize.x - sliderSize), sliderSize);
+    _viewport = _rect.value;
     if (vslider) {
         vslider->setRect(vsliderNewRect);
         vslider->setVisible(!_hideVSlider && _childBoundingBox.y > _rect.value.height);
+        _viewport.width -= vsliderNewRect.width;
     }
     if (hslider) {
         //add in the width of the vslider if it is not visible
         hslider->setRect(hsliderNewRect + (vslider->getVisible() ? Size<int>() : Size<int>{sliderSize, 0}));
         hslider->setVisible(!_hideHSlider && _childBoundingBox.x > _rect.value.width);
+        _viewport.height -= hsliderNewRect.height;
     }
 }
 
