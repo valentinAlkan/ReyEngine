@@ -356,11 +356,17 @@ std::string string_tools::toUpper(const std::string &s) {
     for (auto& c: s) retval += std::toupper(c);
     return retval;
 }
+
 /////////////////////////////////////////////////////////////////////////////////////////
 std::string string_tools::toLower(const std::string &s) {
     string retval;
     for (auto& c: s) retval += std::tolower(c);
     return retval;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+bool string_tools::contains(const std::string &s, const std::string& substr) {
+    return s.find(substr) != string::npos;
 }
 
 

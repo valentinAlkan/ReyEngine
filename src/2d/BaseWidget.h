@@ -152,8 +152,8 @@ public:
    void setAnchoring(Anchor newAnchor);
    Anchor getAnchoring(){return _anchor.value;}
    bool isAnchored(){return _anchor.value != Anchor::NONE;}
-   void setMaxSize(const ReyEngine::Size<int>& size){maxSize = size;}
-   void setMinSize(const ReyEngine::Size<int>& size){minSize = size;}
+   void setMaxSize(const ReyEngine::Size<int>& size);
+   void setMinSize(const ReyEngine::Size<int>& size);
    void setRect(const ReyEngine::Rect<int>& r);
    void setPos(int x, int y);
    void setPos(const ReyEngine::Pos<int>& pos);
@@ -288,7 +288,7 @@ protected:
    bool isInLayout = false;
    bool acceptsHover = false;
    ReyEngine::Size<int> maxSize = {ReyEngine::MaxInt, ReyEngine::MaxInt};
-   ReyEngine::Size<int> minSize = {ReyEngine::MinInt, ReyEngine::MinInt};
+   ReyEngine::Size<int> minSize = {0, 0};
    BoolProperty isBackRender;
 
 public:

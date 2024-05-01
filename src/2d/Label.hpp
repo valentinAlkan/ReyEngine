@@ -11,6 +11,7 @@ class Label : public BaseWidget {
       auto expandOpt = needsExpand();
       if (expandOpt){
          _rect.value = {_rect.value.pos(), expandOpt.value()};
+         minSize = expandOpt.value();
       }
       theme->background = Style::Fill::NONE;
    }
@@ -46,7 +47,7 @@ public:
       if (!isInLayout) {
          auto expandOpt = needsExpand();
          if (expandOpt) {
-            setSize(expandOpt.value());
+            setMinSize(expandOpt.value());
          }
       }
    }
@@ -55,7 +56,7 @@ public:
       if (!isInLayout) {
          auto expandOpt = needsExpand();
          if (expandOpt) {
-            setSize(expandOpt.value());
+             setMinSize(expandOpt.value());
          }
       }
    }
