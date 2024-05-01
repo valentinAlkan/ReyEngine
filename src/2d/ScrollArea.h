@@ -35,6 +35,7 @@ namespace ReyEngine {
         void _on_child_added(std::shared_ptr<BaseWidget> &child) override;
         void _init() override;
         Handled _unhandled_input (const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
+        std::optional<std::shared_ptr<BaseWidget>> askHover(const ReyEngine::Pos<int>& globalPos) override;
 //        Handled _unhandled_masked_input(const InputEventMouse&, const std::optional<UnhandledMouseInput>&) override;
         ///Ignores scroll bars, but adds their widths if they are visible
         ReyEngine::Size<int> getScrollAreaChildBoundingBox();

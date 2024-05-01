@@ -67,9 +67,10 @@ vector<string> string_tools::split(const std::string &s) {
     auto find = [&](const string& s){
         size_t i = 0;
         for (const auto& c : s){
-            if (isspace(c)) return i;
+            if (isspace(c)) {found = i; return i;}
             i++;
         }
+        found = string::npos;
         return string::npos;
     };
     while(find(s) != string::npos){
@@ -80,7 +81,7 @@ vector<string> string_tools::split(const std::string &s) {
         }
         substr = string(s, start, s.size() - start);
     }
-    retval.push_back(substr);
+    if (retval.empty()) retval.push_back(substr);
     return retval;
 }
 
@@ -353,11 +354,13 @@ std::optional<int> string_tools::isInteger(const std::string &s) {
 std::string string_tools::toUpper(const std::string &s) {
     string retval;
     for (auto& c: s) retval += std::toupper(c);
+    return retval;
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 std::string string_tools::toLower(const std::string &s) {
     string retval;
     for (auto& c: s) retval += std::tolower(c);
+    return retval;
 }
 
 

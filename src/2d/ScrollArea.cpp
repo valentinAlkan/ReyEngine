@@ -123,3 +123,17 @@ Handled ScrollArea::_unhandled_input(const InputEvent& event, const std::optiona
     }
     return false;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<std::shared_ptr<BaseWidget>> ScrollArea::askHover(const ReyEngine::Pos<int>& globalPos) {
+    //pass to childwidgets
+    if (vslider && vslider->askHover(globalPos)) return vslider;
+    if (hslider && hslider->askHover(globalPos)) return hslider;
+    for (auto &child: getChildren()) {
+        if (child != vslider && child != hslider) {
+            auto handled = child->askHover(globalPos);
+            if (handled) return handled;
+        }
+    }
+    return nullopt;
+}
