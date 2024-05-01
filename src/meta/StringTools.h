@@ -35,6 +35,7 @@ namespace string_tools{
    std::optional<int> isInteger(const std::string& s); //true if the value can be represented as an int
    std::string toUpper(const std::string& s);
    std::string toLower(const std::string& s);
+   bool contains(const std::string& s, const std::string& substr);
 
     namespace AnsiColor{
         namespace Foreground {

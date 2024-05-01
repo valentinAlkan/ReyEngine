@@ -93,7 +93,7 @@ void ScrollArea::_init(){
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::Size<int> ScrollArea::getScrollAreaChildBoundingBox() {
-    ReyEngine::Size<double> childRect;
+    ReyEngine::Size<int> childRect;
     for (const auto &child: getChildren()) {
         if (child->getName() == VSLIDER_NAME) {
             if (vslider->getVisible()) childRect.x += vslider->getWidth();
@@ -103,7 +103,7 @@ ReyEngine::Size<int> ScrollArea::getScrollAreaChildBoundingBox() {
             continue;
         }
         auto totalOffset = child->getRect().size() + ReyEngine::Size<double>(child->getPos());
-        childRect.max(totalOffset);
+        childRect = childRect.max(totalOffset);
     }
     return childRect;
 }

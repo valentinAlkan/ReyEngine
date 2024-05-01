@@ -262,10 +262,10 @@ ReyEngine::Pos<int> BaseWidget::localToGlobal(const ReyEngine::Pos<int> &local) 
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::Size<int> BaseWidget::getChildBoundingBox() const {
-   ReyEngine::Size<double> childRect;
+   ReyEngine::Size<int> childRect;
    for (const auto& childIter : _children){
       auto totalOffset = childIter.second.second->getRect().size() + Size<double>(childIter.second.second->getPos());
-      childRect.max(totalOffset);
+      childRect = childRect.max(totalOffset);
    }
    return childRect;
 }
@@ -715,11 +715,24 @@ void BaseWidget::setRect(const ReyEngine::Rect<int>& r){
       default:
          break;
    }
+   //enforce min/max sizes
+   newRect.setSize(newRect.size().max(minSize));
+   newRect.setSize(newRect.size().min(maxSize));
    _rect.set(newRect);
    __on_rect_changed();
    _publishSize();
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::setMinSize(const ReyEngine::Size<int>& size) {
+    minSize = size;
+    setRect(_rect.value);
+}
+///////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::setMaxSize(const ReyEngine::Size<int>& size) {
+    maxSize = size;
+    setRect(_rect.value);
+}
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setPos(int x, int y){
    ReyEngine::Rect<int> r(x, y, _rect.value.width, _rect.value.height);

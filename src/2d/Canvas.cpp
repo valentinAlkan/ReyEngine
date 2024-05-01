@@ -29,7 +29,8 @@ void ReyEngine::Canvas::renderEnd() {
    auto modal = getModal();
    if (modal){
        auto modalWidget = modal.value().lock();
-       if (modalWidget->_visible) modalWidget->render();
+       Pos<double> toffset;
+       if (modalWidget->_visible) modalWidget->renderChain(toffset);
    }
    Application::instance().getWindow(0)->popRenderTarget();
    drawRenderTargetRect(_renderTarget, Rect<int>(_renderTarget.getSize()), {0,0});

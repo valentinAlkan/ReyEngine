@@ -17,6 +17,12 @@
 namespace ReyEngine {
    static constexpr long long MaxInt = INT_MAX;
    static constexpr long long MinInt = INT_MIN;
+
+    namespace Math {
+        template <typename T> T min(T a, T b){return a <= b ? a : b;}
+        template <typename T> T max(T a, T b){return a >= b ? a : b;}
+    }
+
    template <typename T> struct Size;
    template <typename T> struct Pos;
    template <typename T>
@@ -83,8 +89,8 @@ namespace ReyEngine {
       inline void operator=(Pos<T>&) = delete;
       inline operator Vector2() const {return {(float)x,(float)y};}
       inline Vec2 midpoint() const {return {x/2, y / 2};}
-      inline void min(Vec2<T> other){if (this->x > other.x) this->x = other.x; if (this->y > other.y) this->y = other.y;}
-      inline void max(Vec2<T> other){if (this->x < other.x) this->x = other.x; if (this->y < other.y) this->y = other.y;}
+      inline Vec2 min(const Vec2& other) const {Vec2 r; r.x = Math::min(Vec2::x, other.x); r.y = Math::min(Vec2::y, other.y); return r;}
+      inline Vec2 max(const Vec2& other) const {Vec2 r; r.x = Math::max(Vec2::x, other.x); r.y = Math::max(Vec2::y, other.y); return r;}
       inline double pct(double input) const {return (input-x)/(y - x);} //given an input value, what percentage of the range is it from 0 to 1?
       inline double lerp(double lerpVal) const {return lerpVal * (y - x) + x;} //given a value from 0 to 1, what is the value of the range that corresponds to it?
       inline Vec2 lerp(Vec2 otherPoint, double xprm) const {return {xprm, y + (((xprm - x) * (otherPoint.y - y)) / (otherPoint.x - x))};}

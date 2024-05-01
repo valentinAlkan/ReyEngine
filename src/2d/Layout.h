@@ -18,6 +18,7 @@ public:
       };
       void registerProperties() override {}
    };
+    ReyEngine::Size<int> calculateIdealBoundingBox();
    /////////////////////////////////////////////////////////////////////////////////////////
 protected:
    Layout(const std::string &name, const std::string &typeName, LayoutDir layoutDir);
@@ -29,6 +30,8 @@ protected:
    void renderEnd() override;
    virtual void arrangeChildren();
    void render() const override {};
+   //Given infinite layout space and children of minimum possible sizes, what would the childBoundingBox for this layout be?
+   // Useful to predict the rect of common layout situations - particularly pop up menus and the like.
 public:
    FloatListProperty childScales;
 protected:

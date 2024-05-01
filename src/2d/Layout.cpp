@@ -48,23 +48,24 @@ void Layout::renderEnd() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void Layout::arrangeChildren() {
    if (dir == LayoutDir::GRID){
-      //divide the space into boxes, each box being large enough to exactly contain the largest child (in either dimension)
-      // Center each child inside it's respective box.
+         //divide the space into boxes, each box being large enough to exactly contain the largest child (in either dimension)
+         // Center each child inside it's respective box.
 
-      //determine box size
-      Size<int> boundingBox;
-      for (const auto& child : getChildren()){
-         boundingBox.max(child->getMaxSize());
-      }
-      //create subrects to lay out the children
-      if (_rect.value.size().x && _rect.value.size().y) {
-         for (int i = 0; i < getChildren().size(); i++) {
-            auto &child = getChildren().at(i);
-            auto subrect = _rect.value.toSizeRect().getSubRect(boundingBox, i);
-            child->setRect(subrect);
+         //determine box size
+         Size<int> boundingBox;
+         for (const auto& child : getChildren()){
+            boundingBox = boundingBox.max(child->getMaxSize());
          }
-      }
-   } else {
+         if (!boundingBox.x || !boundingBox.y) return; //invalid rect
+         //create subrects to lay out the children
+         if (_rect.value.size().x && _rect.value.size().y) {
+            for (int i = 0; i < getChildren().size(); i++) {
+               auto &child = getChildren().at(i);
+               auto subrect = _rect.value.toSizeRect().getSubRect(boundingBox, i);
+               child->setRect(subrect);
+            }
+         }
+      } else {
       //how much space we have to allocate
       auto totalSpace = dir == LayoutDir::HORIZONTAL ? getWidth() : getHeight();
       ReyEngine::Pos<int> pos;
@@ -114,13 +115,49 @@ void Layout::arrangeChildren() {
                  consumedSpace = virtualRect.height;
                  break;
          }
-//       std::cout << child->getName() << " rect = " << actualRect << endl;
-         //apply transformations
          child->setRect(actualRect);
          childIndex++;
          //recalculate size each if we didn't use all available space
          sizeLeft -= consumedSpace;
-//         childrenLeft--;
       }
    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+ReyEngine::Size<int> Layout::calculateIdealBoundingBox() {
+   Size<int> idealBoundingBox;
+   if (dir == LayoutDir::GRID){
+      throw std::runtime_error("not implemented!");
+//      //divide the space into boxes, each box being large enough to exactly contain the largest child (in either dimension)
+//      // Center each child inside it's respective box.
+//
+//      //determine box size
+//      Size<int> boundingBox;
+//      for (const auto& child : getChildren()){
+//         boundingBox.max(child->getMaxSize());
+//      }
+//      //create subrects to lay out the children
+//      if (_rect.value.size().x && _rect.value.size().y) {
+//         for (int i = 0; i < getChildren().size(); i++) {
+//            auto &child = getChildren().at(i);
+//            auto subrect = _rect.value.toSizeRect().getSubRect(boundingBox, i);
+//            child->setRect(subrect);
+//         }
+//      }
+   } else {
+      if (dir == LayoutDir::VERTICAL){
+         for (auto& child : getChildren()){
+            auto childMinSize = child->getMinSize().max({0, 0});
+            idealBoundingBox.x = Math::max(idealBoundingBox.x, childMinSize.x);
+            idealBoundingBox.y += childMinSize.y;
+         }
+      } else {
+         for (auto& child : getChildren()){
+            auto childMinSize = child->getMinSize().min({0,0});
+            idealBoundingBox.x += childMinSize.x;
+            idealBoundingBox.y = Math::max(idealBoundingBox.y, childMinSize.y);
+         }
+      }
+   }
+   return idealBoundingBox;
 }
