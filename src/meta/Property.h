@@ -104,14 +104,23 @@ struct BaseProperty : PropertyContainer {
    , _typeName(typeName){}
 //   ~BaseProperty(){std::cout << "property dtor " << _instanceName << std::endl;}
    void _load(const PropertyPrototype& data);
-   virtual void load(const PropertyPrototype& data) = 0;
-   virtual std::string toString() const = 0;
    std::string instanceName() const {return _instanceName;}
    std::string typeName() const {return _typeName;}
    void registerProperties() override = 0;
+   virtual void load(const PropertyPrototype& data) = 0;
+   virtual std::string toString() const = 0;
 private:
    const std::string _instanceName;
    const std::string _typeName;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////
+// A simple Dynamic Property that won't be serialized and can be overridden.
+struct DynamicProperty : public BaseProperty {
+    DynamicProperty(const std::string& instanceName): BaseProperty(instanceName, "DynamicProperty"){}
+    void registerProperties() override{};
+    void load(const PropertyPrototype& data) override {}
+    std::string toString() const {return "";}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
