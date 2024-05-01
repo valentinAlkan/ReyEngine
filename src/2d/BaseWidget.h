@@ -177,7 +177,7 @@ public:
    std::weak_ptr<BaseWidget> getParent(){return _parent;}
    const ChildOrder& getChildren() const {return _childrenOrdered;}
    std::optional<WidgetPtr> getChild(const std::string& name);
-   std::vector<WidgetPtr> findChild(const std::string& name);
+   std::vector<std::weak_ptr<BaseWidget>> findChild(const std::string& name, bool exact=false);
    bool hasChild(const std::string& name); //cant be const because it locks
    bool isHovered() const {return _hovered;}
    void setInputFilter(InputFilter newFilter){ _inputFilter = newFilter;}
@@ -273,6 +273,7 @@ protected:
 public:
    virtual Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&){return false;}
    virtual Handled _unhandled_masked_input(const InputEventMouse&, const std::optional<UnhandledMouseInput>&){return true;} //masked input is handled by default
+   virtual std::optional<std::shared_ptr<BaseWidget>> askHover(const ReyEngine::Pos<int>& globalPos);
 protected:
    virtual void _register_parent_properties(){};
 
@@ -333,7 +334,6 @@ protected:
    Handled _process_unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&); //pass input to children if they want it and then process it for ourselves if necessary
    Handled _process_unhandled_editor_input(const InputEvent&, const std::optional<UnhandledMouseInput>&); //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)
    UnhandledMouseInput toMouseInput(const ReyEngine::Pos<int>& global) const;
-   std::optional<std::shared_ptr<BaseWidget>> askHover(const ReyEngine::Pos<int>& globalPos);
    InputFilter _inputFilter = InputFilter::INPUT_FILTER_PASS_AND_PROCESS;
 
    //theme

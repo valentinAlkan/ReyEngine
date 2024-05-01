@@ -142,15 +142,24 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::getChild(const std::string &chi
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-vector<BaseWidget::WidgetPtr> BaseWidget::findChild(const std::string &name) {
-   auto retval = vector<BaseWidget::WidgetPtr>();
+std::vector<std::weak_ptr<BaseWidget>> BaseWidget::findChild(const std::string &name, bool exact) {
+   vector<std::weak_ptr<BaseWidget>> retval;
+   vector<std::weak_ptr<BaseWidget>> descendents;
+   auto lock = scoped_lock<recursive_mutex>(_childLock);
+   for (auto& child : getChildren()){
+       for (auto& found : child->findChild(name, exact)){
+           descendents.push_back(found);
+       }
+   }
+
+   if (exact ? getName() == name : getName().find(name) != string::npos){
+       retval.push_back(toBaseWidget());
+   }
+   for (auto& descendent : descendents){
+       retval.push_back(descendent);
+   }
+
    return retval;
-//   auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
-//   auto found = _children.find(childName);
-//   if (found == _children.end()) {
-//      return nullopt;
-//   }
-//   return {found->second.second};
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -864,21 +873,23 @@ std::optional<std::shared_ptr<BaseWidget>> BaseWidget::askHover(const Pos<int>& 
     //ask this widget to accept the hover
 
     auto process = [&]() -> std::optional<std::shared_ptr<BaseWidget>> {
-        if (_visible && acceptsHover && isInside(globalToLocal(globalPos))){
+        if (acceptsHover && isInside(globalToLocal(globalPos))){
             return toBaseWidget();
         }
         return nullopt;
     };
 
     auto pass = [&]() -> std::optional<std::shared_ptr<BaseWidget>>{
-        for(auto it = getChildren().rbegin(); it != getChildren().rend(); ++it){
-            const auto& child = *it;
-            auto handled = child->askHover(globalPos);
-            if (handled) return handled;
-        }
+
+            for (auto it = getChildren().rbegin(); it != getChildren().rend(); ++it) {
+                const auto &child = *it;
+                auto handled = child->askHover(globalPos);
+                if (handled) return handled;
+            }
         return nullopt;
     };
 //            Application::printDebug() << "Asking widget " << widget->getName() << " to accept hover " << endl;
+    if (!_visible) return nullopt;
     std::optional<std::shared_ptr<BaseWidget>> handled;
     switch (_inputFilter) {
         case InputFilter::INPUT_FILTER_PROCESS_AND_STOP:
