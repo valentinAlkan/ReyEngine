@@ -28,7 +28,8 @@ void ReyEngine::Canvas::renderEnd() {
    //redraw the modal widget, if any
    auto modal = getModal();
    if (modal){
-      modal.value().lock()->render();
+       auto modalWidget = modal.value().lock();
+       if (modalWidget->_visible) modalWidget->render();
    }
    Application::instance().getWindow(0)->popRenderTarget();
    drawRenderTargetRect(_renderTarget, Rect<int>(_renderTarget.getSize()), {0,0});
@@ -39,7 +40,7 @@ Handled ReyEngine::Canvas::_unhandled_input(const InputEvent& inputEvent, const 
    //offer up input to modal widget first
    if (_modal){
       auto widget = _modal.value().lock();
-      if (widget){
+      if (widget && widget->_visible){
          auto modalMouseInput = mouseInput;
          //translate to local for mouse input
          if (modalMouseInput){
@@ -51,6 +52,10 @@ Handled ReyEngine::Canvas::_unhandled_input(const InputEvent& inputEvent, const 
             return true;
          }
       }
+   }
+
+   if (unhandledInputCallback) {
+       if (unhandledInputCallback(*this, inputEvent, mouseInput)) return true;
    }
    return false;
 }
