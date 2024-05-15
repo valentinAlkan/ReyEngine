@@ -141,6 +141,81 @@ std::string string_tools::lrstrip(const std::string &s) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+std::string string_tools::extractNumeric(const std::string &s) {
+    string retval;
+    for (char c : s){
+        if (isdigit(c)) retval.push_back(c);
+    }
+    return retval;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::string string_tools::extractNumericl(const std::string &s) {
+    string retval;
+    for (char c : s){
+        if (isdigit(c)){
+            retval.push_back(c);
+        } else {
+            break;
+        }
+    }
+    return retval;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::string string_tools::extractNumericr(const std::string &s) {
+    string s_reversed = s;
+    std::reverse(s_reversed.begin(), s_reversed.end());
+    string retval;
+    for (char c : s_reversed){
+        if (isdigit(c)){
+            retval.insert(retval.begin(), c);
+        } else {
+            break;
+        }
+    }
+    return retval;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::string string_tools::extractNonNumeric(const std::string &s) {
+    string retval;
+    for (char c : s){
+        if (!isdigit(c)) retval.push_back(c);
+    }
+    return retval;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::string string_tools::extractNonNumericl(const std::string &s) {
+    string retval;
+    for (char c : s){
+        if (!isdigit(c)){
+            retval.push_back(c);
+        } else {
+            break;
+        }
+    }
+    return retval;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::string string_tools::extractNonNumericr(const std::string &s) {
+    string s_reversed = s;
+    std::reverse(s_reversed.begin(), s_reversed.end());
+    string retval;
+    for (char c : s_reversed){
+        if (!isdigit(c)){
+            retval.insert(retval.begin(), c);
+        } else {
+            break;
+        }
+    }
+    return retval;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 int string_tools::count(const std::string &s, char c) {
    int count = 0;
    for (const auto& _c : s){
