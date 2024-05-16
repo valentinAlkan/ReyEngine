@@ -6,7 +6,7 @@
 #include "Event.h"
 #include "Property.h"
 
-class Timer : public EventPublisher {
+class Timer : public EventPublisher, public PropertyContainer {
 public:
    class TimeoutEvent : public Event<TimeoutEvent>{
    public:
@@ -45,6 +45,7 @@ protected:
       }
       return false;
    }
+   void registerProperties() override {}
 private:
    void reset(){startTime = SystemTime::instance().nowSteady();}
    bool autoRestart = true;

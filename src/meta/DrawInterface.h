@@ -568,24 +568,28 @@ namespace ReyEngine {
 
    struct ReyTexture{
       ReyTexture(){};
-      void loadTexture(const FileSystem::File& file);
       ReyTexture(const FileSystem::File& file);
-      ReyTexture(ReyTexture&& other) noexcept
+       ReyTexture(ReyTexture&& other) noexcept
       : _tex(other._tex)
       , _texLoaded(other._texLoaded)
       , size(other.size)
       {
          other._texLoaded = false;
+         _path = other._path;
       }
+      void loadTexture(const FileSystem::File& file);
       ~ReyTexture(){
          if (_texLoaded) {
             UnloadTexture(_tex);
          }
+         _path.clear();
       }
       const Texture2D& getTexture() const {return _tex;}
       operator bool() const {return _texLoaded;}
+      std::string getPath(){return _path;}
       Size<int> size;
    protected:
+      std::string _path;
       Texture2D _tex;
       bool _texLoaded = false;
    };
