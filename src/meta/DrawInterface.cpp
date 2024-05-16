@@ -9,6 +9,7 @@ using namespace std;
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyTexture::ReyTexture(const FileSystem::File& file) {
    loadTexture(file);
+   _path = file.str();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -20,6 +21,7 @@ void ReyTexture::loadTexture(const FileSystem::File &file) {
       }
       _tex = LoadTexture(path.c_str());
       _texLoaded = true;
+      _path = file.str();
       size = {_tex.width, _tex.height};
    };
    Application::registerForApplicationReady(doReady);

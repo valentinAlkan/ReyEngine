@@ -100,9 +100,8 @@ int main(int argc, char** argv)
    //create window (or don't idk)
    auto window = Application::instance().createWindow("MainWindow", screenWidth, screenHeight, {Window::RESIZE});
    if (!window){throw std::runtime_error("Something went horribly wrong! Please make a note of it.");}
-
    auto root = window->getCanvas();
-   root->setAnchoring(BaseWidget::Anchor::FILL);
+
    auto argLoadScene = args.getArg("--loadScene");
    if (argLoadScene){
       auto loadSceneArg = argLoadScene.value();

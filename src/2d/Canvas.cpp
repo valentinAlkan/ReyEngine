@@ -20,7 +20,7 @@ void ReyEngine::Canvas::renderBegin(ReyEngine::Pos<double>& textureOffset) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::Canvas::render() const{
-   drawRectangleLines(_rect.value.toSizeRect(), 2.0, Colors::red);
+//   drawRectangleLines(_rect.value.toSizeRect(), 2.0, Colors::red);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
