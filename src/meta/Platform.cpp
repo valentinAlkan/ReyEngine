@@ -2,9 +2,6 @@
 #include <stdexcept>
 #include <algorithm>
 
-using namespace std;
-
-
 #ifdef REYENGINE_PLATFORM_WINDOWS
 #include "windows.h"
 #endif
@@ -15,6 +12,9 @@ using namespace std;
 #include <stdio.h>
 #include <string.h>
 #endif
+
+//resist the urge to import std namespace BEFORE windows.h it will not work.
+using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 string CrossPlatform::getExePath() {
