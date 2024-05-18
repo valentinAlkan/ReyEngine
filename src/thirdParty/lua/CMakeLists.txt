@@ -43,7 +43,6 @@ add_library(lua STATIC
     lutf8lib.c
     lvm.c
     lzio.c
-    wmain.c
 )
 
 target_include_directories(lua PUBLIC .)

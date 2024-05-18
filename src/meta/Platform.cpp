@@ -2,24 +2,18 @@
 #include <stdexcept>
 #include <algorithm>
 
+using namespace std;
+
+
 #ifdef REYENGINE_PLATFORM_WINDOWS
 #include "windows.h"
 #endif
 
-using namespace std;
-
 #ifdef REYENGINE_PLATFORM_LINUX
-/////////////////////////////////////////////////////////////////////////////////////////
-std::string getExecutablePath() {
-   char rawPathName[PATH_MAX];
-   realpath(PROC_SELF_EXE, rawPathName);
-   return  std::string(rawPathName);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-std::string mergePaths(std::string pathA, std::string pathB) {
-  return pathA+"/"+pathB;
-}
+#include <unistd.h>
+#include <limits.h>
+#include <stdio.h>
+#include <string.h>
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -60,16 +54,15 @@ string CrossPlatform::getExePath() {
 #endif
 
 #ifdef REYENGINE_PLATFORM_LINUX
-   todo: needs testing
-
-    std::string executablePath = getExecutablePath();
-    char *executablePathStr = new char[executablePath.length() + 1];
-    strcpy(executablePathStr, executablePath.c_str());
-    char* executableDir = dirname(executablePathStr);
-    delete [] executablePathStr;
-    return std::string(executableDir);
-}
-
+    char dest[PATH_MAX];
+    memset(dest, 0, sizeof(dest)); // readlink does not null terminate!
+    if (readlink("/proc/self/exe", dest, PATH_MAX) == -1) {
+        perror("readlink");
+    } else {
+        printf("%s\n", dest);
+        throw std::runtime_error("Platform Linux: unable to determine self exe path");
+    }
+    return string(dest, PATH_MAX);
 #endif
 
 }
