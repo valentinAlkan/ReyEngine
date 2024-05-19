@@ -809,4 +809,9 @@ namespace InputInterface{
    inline ReyEngine::Vec2<int> getMouseDelta(){return GetMouseDelta();}
 
    inline void setCursor(MouseCursor crsr){ SetMouseCursor((int)crsr);}
+   inline void hideCursor(){HideCursor();}
+}
+
+namespace DisplayInterface {
+    inline void toggleFullscreen(){ToggleFullscreen();}
 }
