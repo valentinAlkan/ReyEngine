@@ -9,7 +9,15 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # enable -std=c++17
 set (CMAKE_CXX_STANDARD 17)
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse -msse2 -msse3 -mavx")
+
+# Add static linking flags for GCC and standard C++ libraries
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++ -static")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++ -static")
+
+# Ensure pthread is linked statically
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
 
 function(install_file SOURCE DEST)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${DEST} COPYONLY)
@@ -106,7 +114,7 @@ target_include_directories(ReyEngine2D PUBLIC
     src/thirdParty/uuid
 )
 
-target_link_libraries(ReyEngine2D raylib lua)
+target_link_libraries(ReyEngine2D raylib lua Threads::Threads)
 
 if (UNIX)
     target_link_libraries(ReyEngine2D stdc++fs)

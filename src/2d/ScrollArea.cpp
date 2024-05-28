@@ -117,7 +117,7 @@ Handled ScrollArea::_unhandled_input(const InputEvent& event, const std::optiona
         if (hslider && hslider->_process_unhandled_input(event, hslider->toMouseInput(globalPos))) return true;
         for (auto &child: getChildren()) {
             if (child != vslider && child != hslider) {
-                if (child->_process_unhandled_input(event, child->toMouseInput(globalPos))) return true;
+                if (child->_process_unhandled_input(event, child->toMouseInput(globalPos - getScrollOffset()))) return true;
             }
         }
     }

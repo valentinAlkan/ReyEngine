@@ -1,5 +1,6 @@
 #include "StringTools.h"
 #include "FileSystem.h"
+#include <algorithm>
 
 using namespace string_tools;
 using namespace AnsiColor;
