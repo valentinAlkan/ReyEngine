@@ -1,6 +1,7 @@
 #pragma once
 #include "Event.h"
 #include "DrawInterface.h"
+#include <algorithm>
 
 struct InputEvent : public Event<InputEvent> {
    EVENT_CTOR_SIMPLE_OVERRIDABLE(InputEvent, Event<InputEvent>){}
