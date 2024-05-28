@@ -10,5 +10,5 @@ private:
    std::vector<SearchNode> _openSet;
    std::vector<SearchNode> _closeSet;
 
-   
+
 };

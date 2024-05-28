@@ -1,7 +1,8 @@
 #include "SearchNode.h"
+#include "Application.h"
 
 SearchNode::SearchNode() {
-   _id = 1;
+   _id = Application::generateUniqueValue();
 }
 
 void SearchNode::addConnection(float cost, SearchNode connection) {
