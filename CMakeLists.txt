@@ -89,6 +89,8 @@ add_library(ReyEngine2D STATIC
     src/2d/TileMap.cpp
     src/2d/LineEdit.cpp
     src/2d/TextureRect.cpp
+    src/pathfinding/SearchNode.cpp
+    src/pathfinding/AStar.cpp
     ${CUSTOM_SOURCES}
 )
 
