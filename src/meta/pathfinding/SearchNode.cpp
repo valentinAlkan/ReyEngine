@@ -1,8 +1,9 @@
 #include "SearchNode.h"
 #include "Application.h"
 
-SearchNode::SearchNode() {
+SearchNode::SearchNode(float heuristic) {
    _id = Application::generateUniqueValue();
+   this->heuristic = heuristic;
 }
 
 void SearchNode::addConnection(float cost, SearchNode connection) {
@@ -12,7 +13,7 @@ void SearchNode::addConnection(float cost, SearchNode connection) {
       return;
    }
    //add to connections
-   connections[cost] = connection;
+   connections.insert(pair<float, SearchNode>(cost, connection));
    //add to _connectedNodes
-   _connectedNodes[connection.getId()] = connection;
+   _connectedNodes.insert(pair<int, SearchNode>(connection.getId(), connection));
 }

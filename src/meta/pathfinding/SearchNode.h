@@ -5,11 +5,15 @@ using namespace std;
 //class to hold node info to use in the pathfinding algorithm
 class SearchNode {
 public:
+   inline bool operator>(const SearchNode& other) {
+      return heuristic < other.heuristic;
+   }
    bool expanded = false;
    //first = cost of connection second = connected node
    map<float, SearchNode> connections;
+   float heuristic;
 
-   SearchNode();
+   SearchNode(float heuristic);
 
    int getId(){
       return _id;
