@@ -18,7 +18,6 @@ namespace ReyEngine {
          , _file(file)
          {
             setTileSize(_tileSize);
-            std::cout << _file.abs() << std::endl;
          }
          SpriteAtlas(SpriteAtlas&& other)
          : texture(std::move(other.texture))
