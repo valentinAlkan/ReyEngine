@@ -1,34 +1,17 @@
 #pragma once
-#include <map>
+#include <math.h>
+#include "Application.h"
 
 using namespace std;
 //class to hold node info to use in the pathfinding algorithm
 class SearchNode {
 public:
-   inline bool operator>(const SearchNode& other) {
-      return heuristic < other.heuristic;
-   }
-   bool expanded = false;
-   //first = cost of connection second = connected node
-   map<float, SearchNode> connections;
+   int x_coord, y_coord;
+   int id;
+   SearchNode *parent;
+   float combinedDistance;
    float heuristic;
 
-   SearchNode(float heuristic);
-
-   int getId(){
-      return _id;
-   }
-
-   /**
-    * adds a connection to the map with the given cost
-    * @param cost : The cost of the connection
-    * @param connection : The node to connect
-    */
-   void addConnection(float cost, SearchNode connection);
-
-private:
-   int _id;
-   //a map to determine if the node is already in the connections
-   map<int, SearchNode> _connectedNodes;
+   SearchNode() : parent(0){}
+   SearchNode(int x, int y, SearchNode *_parent = 0) : x_coord(x), y_coord(y), parent(_parent), id(Application::generateUniqueValue()){}
 };
-
