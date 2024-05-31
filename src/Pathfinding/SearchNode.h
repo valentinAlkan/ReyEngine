@@ -2,7 +2,7 @@
 #include "Application.h"
 
 //class to hold node info for a 2d map
-template <typename T> class SearchNode {
+class SearchNode {
 public:
    //operators
    inline bool operator==(const SearchNode other){
@@ -19,13 +19,12 @@ public:
    }
 
    unsigned long long id = Application::generateUniqueValue();
-   int xCoord, yCoord;
    float heuristic, cost, combinedCost;
    SearchNode *parent;
-   T *nodeData = nullptr;
+   std::vector<SearchNode*> connections;
 
    SearchNode() : parent(nullptr){}
-   SearchNode(int x, int y, float _heuristic, float _cost, SearchNode *_parent = nullptr) : xCoord(x), yCoord(y), heuristic(_heuristic) ,cost(_cost), combinedCost(heuristic + cost),parent(_parent){}
+   SearchNode(float _heuristic, float _cost, SearchNode *_parent = nullptr) : heuristic(_heuristic) ,cost(_cost), combinedCost(heuristic + cost),parent(_parent){}
 
    /**
     * updates the parent node if the cost is less than the cost from the previous parent
@@ -33,4 +32,6 @@ public:
     * @param _cost : the cost to get to the node from the new parent
     */
    void updateParent(SearchNode *_parent, float _cost);
+
+   void addConnection(SearchNode *connection);
 };
