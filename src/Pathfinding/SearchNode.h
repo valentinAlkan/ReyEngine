@@ -2,7 +2,7 @@
 #include "Application.h"
 
 //class to hold node info for a 2d map
-class SearchNode {
+template <typename T> class SearchNode {
 public:
    //operators
    inline bool operator==(const SearchNode other){
@@ -22,6 +22,7 @@ public:
    int xCoord, yCoord;
    float heuristic, cost, combinedCost;
    SearchNode *parent;
+   T *nodeData = nullptr;
 
    SearchNode() : parent(nullptr){}
    SearchNode(int x, int y, float _heuristic, float _cost, SearchNode *_parent = nullptr) : xCoord(x), yCoord(y), heuristic(_heuristic) ,cost(_cost), combinedCost(heuristic + cost),parent(_parent){}
