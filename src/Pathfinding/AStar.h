@@ -5,6 +5,12 @@
 struct coord{
    int x, y;
 };
+
+struct compareNodes{
+   bool operator()(const std::shared_ptr<SearchNode> a, const std::shared_ptr<SearchNode> b) const{
+      return a->combinedCost > b->combinedCost;
+   }
+};
 class AStar {
 public:
    AStar(){};
@@ -17,9 +23,10 @@ public:
     * @return : true if a path was found; false if no path was found;
     */
    bool findPath(std::shared_ptr<SearchNode> start, std::shared_ptr<SearchNode> goal);
+
 private:
 
-   std::priority_queue<std::shared_ptr<SearchNode>, std::vector<std::shared_ptr<SearchNode>>, std::greater<std::shared_ptr<SearchNode>>> _expandedNodes;
+   std::priority_queue<std::shared_ptr<SearchNode>, std::vector<std::shared_ptr<SearchNode>>, compareNodes> _expandedNodes;
    std::map<int, std::shared_ptr<SearchNode>> _openSet;
 
    std::shared_ptr<SearchNode> _start;
