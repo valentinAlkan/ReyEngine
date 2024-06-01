@@ -1,6 +1,6 @@
 #include "SearchNode.h"
 
-void SearchNode::updateParent(SearchNode *_parent, float _cost) {
+void SearchNode::updateParent(std::shared_ptr<SearchNode> _parent, float _cost) {
    //old cost is greater than new cost - update parent
    if(cost > _cost + baseCost){
       parent = _parent;
@@ -20,7 +20,12 @@ void SearchNode::calculateCombinedCost() {
    combinedCost = cost + heuristic;
 }
 
-void SearchNode::addConnection(float cost, SearchNode *connection) {
+void SearchNode::addConnection(float cost, std::shared_ptr<SearchNode> connection) {
    //todo: check to see if the connection exists
    connections.insert({connection, cost});
+}
+
+void SearchNode::setCoords(int xCoord, int yCoord) {
+   x_coord = xCoord;
+   y_coord = yCoord;
 }
