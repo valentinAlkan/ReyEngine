@@ -5,6 +5,8 @@ bool AStar::findPath(std::shared_ptr<SearchNode> start, std::shared_ptr<SearchNo
    _start = start;
    _goal = goal;
    std::shared_ptr<SearchNode> currentNode = _start;
+   _start->setHeuristic(calculateHeuristic(_start));
+   _start->calculateCombinedCost();
    while(currentNode != _goal){
       expandNode(currentNode);
       if(_expandedNodes.empty()) return false;
