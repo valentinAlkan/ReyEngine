@@ -4,6 +4,14 @@
 bool AStar::findPath(SearchNode *start, SearchNode *goal) {
    _start = start;
    _goal = goal;
+   SearchNode *currentNode = _start;
+   while(currentNode != _goal){
+      expandNode(currentNode);
+      if(_expandedNodes.empty()) return false;
+      currentNode = _expandedNodes.top();
+      _expandedNodes.pop();
+   }
+   return true;
 }
 
 void AStar::expandNode(SearchNode *node) {
@@ -13,10 +21,11 @@ void AStar::expandNode(SearchNode *node) {
          //Found the node in the openSet so need to update the parent
          openIt->second->updateParent(node, node->cost);
       } else {
-         //todo: create function to call all three in one line
+         //todo: create function to call all these in one line
          it->first->setCost(node->cost, it->second);
          it->first->setHeuristic(calculateHeuristic(it->first));
          it->first->calculateCombinedCost();
+         it->first->parent = node;
          _expandedNodes.push(it->first);
          _openSet.insert({it->first->id, it->first});
       }
@@ -24,5 +33,7 @@ void AStar::expandNode(SearchNode *node) {
 }
 
 float AStar::calculateHeuristic(SearchNode *node) {
-   float xTerm = (_goal->)
+   float xTerm = (_goal->x_coord - node->x_coord) * (_goal->x_coord - node->x_coord);
+   float yTerm = (_goal->y_coord - node->y_coord) * (_goal->y_coord - node->y_coord);
+   return sqrt(xTerm + yTerm);
 }
