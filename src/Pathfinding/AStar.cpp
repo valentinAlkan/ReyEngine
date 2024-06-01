@@ -21,7 +21,7 @@ void AStar::expandNode(std::shared_ptr<SearchNode> node) {
       auto openIt = _openSet.find(it->first->id);
       if(openIt != _openSet.end()){
          //Found the node in the openSet so need to update the parent
-         openIt->second->updateParent(node, node->cost);
+         openIt->second->updateParent(node, node->cost, it->second);
       } else {
          //todo: create function to call all these in one line
          it->first->setCost(node->cost, it->second);

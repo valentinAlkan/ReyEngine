@@ -31,8 +31,9 @@ public:
     * updates the parent node if the cost is less than the cost from the previous parent
     * @param _parent : the parent to update too
     * @param _cost : the cost to get to the node from the new parent
+    * @param connectionCost : the modifier to connect to this node
     */
-   void updateParent(std::shared_ptr<SearchNode> _parent, float _cost);
+   void updateParent(std::shared_ptr<SearchNode> _parent, float _cost, float connectionCost);
 
    /**
     * calculates the cost to get to this node from the start node
