@@ -7,13 +7,35 @@ struct coord{
 };
 class AStar {
 public:
-   AStar(coord start, coord goal);
+   AStar();
 
+   /**
+    * Finds the best path from the start node to the end node using an A* algorithm.
+    * The path can then be read by reading the parent of the _goal node and tracing the parents to the start
+    * @param _start : The node to start the path
+    * @param _goal : The goal node of the path; Read the parent of this node up the tree to the start
+    * @return : true if a path was found; false if no path was found;
+    */
+   bool findPath(SearchNode *start, SearchNode *goal);
 private:
-   //Map that is the search, first int is y, second is x
-   std::map<int, std::map<int, SearchNode>> _searchMap;
 
-   std::priority_queue<SearchNode, std::vector<SearchNode>, std::greater<SearchNode>> _expandedNodes;
-   std::map<int, SearchNode> _closedSet;
-   std::map<int, SearchNode> _openSet;
+   std::priority_queue<SearchNode*, std::vector<SearchNode*>, std::greater<SearchNode*>> _expandedNodes;
+   std::map<int, SearchNode*> _openSet;
+
+   SearchNode *_start;
+   SearchNode *_goal;
+
+   /**
+    * places all of the connections in _expandedNodes;
+    * Checks to see if the node already exists in _openSet and calls updateParent if so
+    * @param node : The node to expand
+    */
+   void expandNode(SearchNode *node);
+
+   /**
+    * calculates the Heuristic of the node with the distance formula
+    * @param node : node to calculate for
+    * @return : the heuristic
+    */
+   float calculateHeuristic(SearchNode *node);
 };
