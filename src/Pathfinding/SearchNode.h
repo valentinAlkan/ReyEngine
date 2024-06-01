@@ -19,7 +19,8 @@ public:
    }
 
    unsigned long long id = Application::generateUniqueValue();
-   float heuristic, baseCost, cost, combinedCost;
+   float cost = 0;
+   float heuristic, baseCost, combinedCost;
    int x_coord, y_coord;
    std::shared_ptr<SearchNode> parent;
    std::map<std::shared_ptr<SearchNode>, float> connections;
