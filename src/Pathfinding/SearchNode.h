@@ -22,6 +22,7 @@ public:
    float cost = 0;
    float heuristic, baseCost, combinedCost;
    int x_coord, y_coord;
+   bool isStart = false;
    std::shared_ptr<SearchNode> parent;
    std::map<std::shared_ptr<SearchNode>, float> connections;
 
