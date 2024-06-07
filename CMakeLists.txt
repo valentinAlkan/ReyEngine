@@ -50,7 +50,6 @@ set(CUSTOM_SOURCES
 )
 
 add_library(ReyEngine2D STATIC
-    src/meta/AStar.cpp
     src/meta/ArgParse.cpp
     src/meta/FileSystem.cpp
     src/meta/StringTools.cpp
@@ -91,6 +90,7 @@ add_library(ReyEngine2D STATIC
     src/2d/TextureRect.cpp
     src/pathfinding/SearchNode.cpp
     src/pathfinding/AStar.cpp
+    src/2d/Table.cpp
     ${CUSTOM_SOURCES}
 )
 
