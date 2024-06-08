@@ -1,6 +1,9 @@
 #include "Event.h"
 #include "BaseWidget.h"
+
 using namespace std;
+using namespace ReyEngine;
+
 /////////////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<BaseWidget> EventPublisher::toBaseWidget() {
    return downcasted_shared_from_this<BaseWidget>();

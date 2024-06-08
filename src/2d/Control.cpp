@@ -1,6 +1,7 @@
 #include "Control.h"
 
 using namespace std;
+using namespace ReyEngine;
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void Control::renderBegin(ReyEngine::Pos<double> &textureOffset) {

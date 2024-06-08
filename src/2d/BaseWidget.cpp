@@ -8,7 +8,7 @@
 
 using namespace std;
 using namespace ReyEngine;
-using namespace ReyEngine::FileSystem;
+using namespace FileSystem;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 BaseWidget::BaseWidget(const std::string& name, std::string  typeName)

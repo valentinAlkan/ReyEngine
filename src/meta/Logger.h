@@ -24,7 +24,7 @@ class Logger: public std::ostream
          return 0;
       }
       void putOutput() {
-         _output << "[" << SystemTime::nowSystemString() << "] [" << _prefix << "] : " << str();
+         _output << "[" << ReyEngine::SystemTime::nowSystemString() << "] [" << _prefix << "] : " << str();
          str("");
          _output.flush();
       }

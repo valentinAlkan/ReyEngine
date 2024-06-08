@@ -1,4 +1,7 @@
 #include "Button.h"
+using namespace std;
+using namespace ReyEngine;
+
 /////////////////////////////////////////////////////////////////////////////////////////
 Handled BaseButton::_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
     if (_isEditorWidget) return false;

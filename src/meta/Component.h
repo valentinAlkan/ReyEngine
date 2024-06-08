@@ -47,22 +47,24 @@ public:                                                   \
 
 
 // A thing which does stuff.
-class Window;
-class Component
-: public PropertyContainer
-{
-public:
-   using RID = uint64_t;
-   Component(const std::string& name);
-   inline RID getRid() const {return _resourceId;}
-   inline std::string getName() const {return _name;}
+namespace ReyEngine{
+   class Window;
+   class Component
+   : public PropertyContainer
+   {
+   public:
+      using RID = uint64_t;
+      Component(const std::string& name);
+      inline RID getRid() const {return _resourceId;}
+      inline std::string getName() const {return _name;}
 
-   inline bool operator==(const std::shared_ptr<Component>& other) const {return other ? other->getRid() == _resourceId : false;}
-   inline bool operator==(const Component& other) const{return other._resourceId == _resourceId;}
-   void registerProperties() override {}
-   uint64_t getFrameCounter() const;
-protected:
-   std::string _name;
-   BoolProperty _isProcessed;
-   IntProperty _resourceId;
-};
+      inline bool operator==(const std::shared_ptr<Component>& other) const {return other ? other->getRid() == _resourceId : false;}
+      inline bool operator==(const Component& other) const{return other._resourceId == _resourceId;}
+      void registerProperties() override {}
+      uint64_t getFrameCounter() const;
+   protected:
+      std::string _name;
+      BoolProperty _isProcessed;
+      IntProperty _resourceId;
+   };
+}

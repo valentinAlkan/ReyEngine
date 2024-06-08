@@ -9,6 +9,7 @@
 
 using namespace std;
 using namespace ReyEngine;
+
 /////////////////////////////////////////////////////////////////////////////////////////
 void TypeManager::registerType(std::string typeName, string parentTypeName, bool isVirtual, Deserializer fx) {
    if (typeName.empty()){

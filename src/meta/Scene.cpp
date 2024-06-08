@@ -1,15 +1,14 @@
 #include "Scene.h"
 #include "FileSystem.h"
 #include <iostream>
-#include <sstream>
 #include "Application.h"
 #include "StringTools.h"
 #include <stack>
 #include <utility>
 
 using namespace std;
-using namespace SceneFileParser;
 using namespace ReyEngine;
+using namespace SceneFileParser;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Scene::Scene(std::shared_ptr<BaseWidget> root)

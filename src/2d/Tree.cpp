@@ -1,6 +1,8 @@
 #include "Tree.h"
 
 using namespace std;
+using namespace ReyEngine;
+
 /////////////////////////////////////////////////////////////////////////////////////////
 void TreeItem::push_back(std::shared_ptr<TreeItem> &item) {
    children.push_back(item);
