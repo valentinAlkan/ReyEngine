@@ -3,6 +3,7 @@
 #include "StringTools.h"
 
 using namespace std;
+using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 RuntimeArg::RuntimeArg(const std::string &arg, std::string docString, int paramCount, ArgType argType,

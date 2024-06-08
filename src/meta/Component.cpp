@@ -1,6 +1,7 @@
 #include "Component.h"
 #include "Application.h"
 
+using namespace ReyEngine;
 ///////////////////////////////////////////////////////////////////////////////////////////
 Component::Component(const std::string &name)
 : _resourceId("resourceId", Application::instance().getNewRid())

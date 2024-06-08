@@ -18,7 +18,7 @@ public:
       return combinedCost < other.combinedCost;
    }
 
-   unsigned long long id = Application::generateUniqueValue();
+   unsigned long long id = ReyEngine::Application::generateUniqueValue();
    float cost = 0;
    float heuristic, baseCost, combinedCost;
    int x_coord, y_coord;

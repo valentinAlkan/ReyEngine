@@ -5,6 +5,7 @@
 
 using namespace std;
 using namespace chrono;
+using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 std::chrono::time_point<std::chrono::high_resolution_clock> SystemTime::nowHiRes() {
