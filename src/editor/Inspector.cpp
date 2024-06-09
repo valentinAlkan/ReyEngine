@@ -18,7 +18,7 @@ void Inspector::inspect(std::shared_ptr<BaseWidget> widget) {
    mainVLayout->removeAllChildren();
    mainVLayout->setSize(getSize());
 //   for (const auto& property : widget->getProperties()){
-//      Application::printDebug() << property.first << " = " << property.second->toString() << endl;
+//      Logger::debug() << property.first << " = " << property.second->toString() << endl;
 //      auto widget = InspectorWidgetFactory::generateWidget(*property.second);
 //      widget->setName(widget->getName() + "_" + property.first);
 //      mainVLayout->addChild(widget);

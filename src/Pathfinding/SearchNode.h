@@ -30,7 +30,7 @@ public:
 
    /**
     * updates the parent node if the cost is less than the cost from the previous parent
-    * @param _parent : the parent to update too
+    * @param _parent : the parent to run too
     * @param _cost : the cost to get to the node from the new parent
     * @param connectionCost : the modifier to connect to this node
     */

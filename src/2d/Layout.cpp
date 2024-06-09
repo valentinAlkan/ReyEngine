@@ -20,7 +20,7 @@ void Layout::_register_parent_properties() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Layout::_on_child_added(std::shared_ptr<BaseWidget> &child) {
-   Application::printDebug() << child->getName() << " added to layout " << getName() << std::endl;
+   Logger::debug() << child->getName() << " added to layout " << getName() << std::endl;
    if (childScales.size() < _childrenOrdered.size()){
       childScales.append(1.0);
    }

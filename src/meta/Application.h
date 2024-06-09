@@ -33,12 +33,7 @@ namespace ReyEngine{
       const std::shared_ptr<Window>& getWindow(int windowIndex){return _windows.at(windowIndex);}
       size_t windowCount(){return _windows.size();}
 
-      static Logger& printDebug(){return Application::instance()._debug_logger;}
-      static Logger& printInfo(){return Application::instance()._info_logger;}
-      static Logger& printWarn(){return Application::instance()._warn_logger;}
-      static Logger& printError(){return Application::instance()._error_logger;}
-
-      static void exitError(std::string msg, ExitReason rsn){printError() << msg << std::endl; ::exit((int)rsn);}
+      static void exitError(std::string msg, ExitReason rsn){Logger::error() << msg << std::endl; ::exit((int)rsn);}
       static void exit(ExitReason rsn){::exit((int)rsn);}
 
       static void registerForApplicationReady(std::shared_ptr<BaseWidget>&); //somethings require initwindow to have been called - so we can let the application know we want to be called when application is ready.
@@ -62,10 +57,6 @@ namespace ReyEngine{
       bool _is_ready = false;
       std::vector<std::shared_ptr<Window>> _windows;
       uint64_t newRid;
-      Logger _debug_logger;
-      Logger _info_logger;
-      Logger _warn_logger;
-      Logger _error_logger;
       std::unordered_set<std::shared_ptr<BaseWidget>> _applicationReadyList; //list of widgets that want to be notified when the application is fully initialized
       std::vector<std::function<void()>> _initListArbCallback; //list of arbitrary callbacks that serve the same purpose as the above
 

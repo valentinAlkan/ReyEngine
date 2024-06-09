@@ -195,7 +195,7 @@ std::shared_ptr<TreeObject> SceneFileParser::TreeStruct::parse(){
       auto newObj = TreeObject::make_shared(string_tools::lrstrip(line));
       parentStack.top()->addChild(newObj);
       parentStack.push(newObj);
-      Application::printDebug() << "Scene: TreeObject " << newObj->instanceName << " added to parent " << newObj->parent.lock()->instanceName << endl;
+      Logger::debug() << "Scene: TreeObject " << newObj->instanceName << " added to parent " << newObj->parent.lock()->instanceName << endl;
 
       currentIndentLevel = newIndentLevel;
    }

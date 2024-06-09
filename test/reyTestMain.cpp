@@ -108,7 +108,7 @@ int main(int argc, char** argv)
       //open and test a scene file
       auto loadedScene = Scene::fromFile("./test/" + loadSceneArg->getParams()[0]);
       if (loadedScene){
-         Application::printDebug() << "Got loaded file!" << endl;
+         Logger::debug() << "Got loaded file!" << endl;
          root->addChild(loadedScene.value()->getRoot());
       }
    }
@@ -469,7 +469,7 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--layoutTestBasic")){
-      Application::printDebug() << "Layout test basic!" << endl;
+      Logger::debug() << "Layout test basic!" << endl;
       auto mainVLayout = make_shared<VLayout>("MainVLayout");
       mainVLayout->setAnchoring(BaseWidget::Anchor::FILL);
       root->addChild(mainVLayout);
@@ -495,7 +495,7 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--layoutTest")){
-      Application::printDebug() << "Layout test!" << endl;
+      Logger::debug() << "Layout test!" << endl;
       auto mainVLayout = make_shared<VLayout>("MainVLayout");
       mainVLayout->setAnchoring(BaseWidget::Anchor::FILL);
       root->addChild(mainVLayout);
@@ -650,7 +650,7 @@ int main(int argc, char** argv)
 
       //iterate over the tree
       for (const auto& item : *tree){
-         Application::printDebug() << item.getText() << endl;
+         Logger::debug() << item.getText() << endl;
       }
 
       tree->setHideRoot(true);
@@ -683,16 +683,16 @@ int main(int argc, char** argv)
       FileSystem::File spriteSheet = "test/spritesheet.png";
       auto layerOpt = tileMap->addLayer(spriteSheet);
       if (layerOpt) {
-         Application::printDebug() << "Tilemap added layer " << layerOpt.value() << " using sprite sheet " << tileMap->getLayer(layerOpt.value()).getAtlas().getFile().abs() << endl;
+         Logger::debug() << "Tilemap added layer " << layerOpt.value() << " using sprite sheet " << tileMap->getLayer(layerOpt.value()).getAtlas().getFile().abs() << endl;
       } else {
-         Application::printError() << "Tilemap " << spriteSheet.abs() << " not found" << endl;
+         Logger::error() << "Tilemap " << spriteSheet.abs() << " not found" << endl;
          return 1;
       }
       layerOpt = tileMap->addLayer(spriteSheet);
       if (layerOpt) {
-         Application::printDebug() << "Tilemap added layer " << layerOpt.value() << " using sprite sheet " << tileMap->getLayer(layerOpt.value()).getAtlas().getFile().abs() << endl;
+         Logger::debug() << "Tilemap added layer " << layerOpt.value() << " using sprite sheet " << tileMap->getLayer(layerOpt.value()).getAtlas().getFile().abs() << endl;
       } else {
-         Application::printError() << "Tilemap " << spriteSheet.abs() << " not found" << endl;
+         Logger::error() << "Tilemap " << spriteSheet.abs() << " not found" << endl;
          return 1;
       }
 
@@ -1029,7 +1029,7 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--tabContainerTest")){
-      Application::printDebug() << "Starting tab container test!" << endl;
+      Logger::debug() << "Starting tab container test!" << endl;
       auto mainVLayout = make_shared<VLayout>("MainVLayout");
       auto tabContainer = make_shared<TabContainer>("TabContainer");
       mainVLayout->setAnchoring(BaseWidget::Anchor::FILL);
@@ -1328,13 +1328,13 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--uniqueValueTest")){
-      Application::printInfo() << "Generating some unique values...you don't need to do anything" << endl;
-      Application::printInfo() << Application::instance().generateUniqueValue() << endl;
-      Application::printInfo() << Application::instance().generateUniqueValue() << endl;
-      Application::printInfo() << Application::instance().generateUniqueValue() << endl;
-      Application::printInfo() << Application::instance().generateUniqueValue() << endl;
-      Application::printInfo() << Application::instance().generateUniqueValue() << endl;
-      Application::printInfo() << Application::instance().generateUniqueValue() << endl;
+      Logger::info() << "Generating some unique values...you don't need to do anything" << endl;
+      Logger::info() << Application::instance().generateUniqueValue() << endl;
+      Logger::info() << Application::instance().generateUniqueValue() << endl;
+      Logger::info() << Application::instance().generateUniqueValue() << endl;
+      Logger::info() << Application::instance().generateUniqueValue() << endl;
+      Logger::info() << Application::instance().generateUniqueValue() << endl;
+      Logger::info() << Application::instance().generateUniqueValue() << endl;
    }
 
    else if (args.getArg("--astarTest")) {
@@ -1356,7 +1356,7 @@ int main(int argc, char** argv)
       FileSystem::File spriteSheet = "test/spritesheet.png";
       auto layerOpt = tileMap->addLayer(spriteSheet);
       if (layerOpt) {
-         Application::printDebug() << "Tilemap added layer " << layerOpt.value() << " using sprite sheet " << tileMap->getLayer(layerOpt.value()).getAtlas().getFile().abs() << endl;
+         Logger::debug() << "Tilemap added layer " << layerOpt.value() << " using sprite sheet " << tileMap->getLayer(layerOpt.value()).getAtlas().getFile().abs() << endl;
       } else {
          exit(1);
       }
@@ -1506,7 +1506,7 @@ int main(int argc, char** argv)
       auto file = FileSystem::File("test/test.scn");
       auto fileCopy = file;
       //cat out the contents of the file as a whole
-      Application::printInfo() << "Catting out contents of " << file.abs() << " using readfile" << endl;
+      Logger::info() << "Catting out contents of " << file.abs() << " using readfile" << endl;
       stringstream ss;
       for (auto c : file.readFile()){
          ss << c;
@@ -1514,7 +1514,7 @@ int main(int argc, char** argv)
       std::cout << ss.str() << endl;
 
       //cat out the contents of the file byte by byte
-      Application::printInfo() << "Catting out contents of " << fileCopy.abs() << " using getByte" << endl;
+      Logger::info() << "Catting out contents of " << fileCopy.abs() << " using getByte" << endl;
       bool done = false;
       fileCopy.open();
       ss.clear();

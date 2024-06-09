@@ -59,7 +59,7 @@ void Editor::_init() {
 //   mainHLayout->addChild(inspector);
 //   //connect events
 //   auto onWidgetAdded = [&](const Workspace::EventWidgetAdded& event){
-//      Application::printDebug() << "Inspecting widget " << event.widget->getName() << endl;
+//      Logger::debug() << "Inspecting widget " << event.widget->getName() << endl;
 //      inspector->inspect(event.widget);
 //   };
 //   inspector->subscribe<Workspace::EventWidgetAdded>(workspace, onWidgetAdded);

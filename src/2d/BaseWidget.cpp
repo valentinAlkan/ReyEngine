@@ -167,7 +167,7 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::addChild(WidgetPtr widget){
    if (*widget == *this){
        stringstream ss;
        ss << "Cannot add widget " << widget->getName() << " to itself!" << endl;
-       Application::printError() << ss.str();
+       Logger::error() << ss.str();
        throw std::runtime_error(ss.str());
        return nullopt;
    }
@@ -176,21 +176,21 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::addChild(WidgetPtr widget){
    if (found){
       stringstream ss;
       ss << "Widget " << getName() << " already has a child with name <" << widget->getName() << ">";
-      Application::printError() << ss.str();
+      Logger::error() << ss.str();
       throw std::runtime_error(ss.str());
       return nullopt;
    }
    if (widget->getParent().lock()){
       stringstream ss;
       ss << "Widget " << widget->getName() << " already has a parent! It needs to be removed from its existing parent first!";
-      Application::printError() << ss.str();
+      Logger::error() << ss.str();
       throw std::runtime_error(ss.str());
       return nullopt;
    }
    //call immediate callback
    _on_child_added_immediate(widget);
    auto me = toBaseWidget();
-   Application::printDebug() << "Registering child " << widget->getName() << " to parent " << getName() << endl;
+   Logger::debug() << "Registering child " << widget->getName() << " to parent " << getName() << endl;
    Application::registerForEnterTree(widget, me);
 
    return widget;
@@ -204,7 +204,7 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::removeChild(const std::string& 
       if (!quiet) {
          stringstream ss;
          ss << "Widget " << getName() << " does not have a child with name <" << name << ">";
-         Application::printError() << ss.str() << endl;
+         Logger::error() << ss.str() << endl;
       }
       return nullopt;
    }
@@ -764,7 +764,7 @@ void BaseWidget::setSize(const ReyEngine::Size<int>& size){
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setAnchoring(Anchor newAnchor) {
    if (isInLayout){
-      Application::printError() << getPath() << ": Children of layouts cannot have anchoring!";
+      Logger::error() << getPath() << ": Children of layouts cannot have anchoring!";
       return;
    }
    _anchor.value = newAnchor;
@@ -901,7 +901,7 @@ std::optional<std::shared_ptr<BaseWidget>> BaseWidget::askHover(const Pos<int>& 
             }
         return nullopt;
     };
-//            Application::printDebug() << "Asking widget " << widget->getName() << " to accept hover " << endl;
+//            Logger::debug() << "Asking widget " << widget->getName() << " to accept hover " << endl;
     if (!_visible) return nullopt;
     std::optional<std::shared_ptr<BaseWidget>> handled;
     switch (_inputFilter) {

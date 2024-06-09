@@ -28,7 +28,7 @@ bool Sprite::setTexture(const ReyEngine::FileSystem::File& path) {
          _fitNextTexture = false;
       }
    } else {
-      Application::printError() << "Sprite setTexture failed: Path does not exist: " << path.abs() << endl;
+      Logger::error() << "Sprite setTexture failed: Path does not exist: " << path.abs() << endl;
       return false;
    }
    return true;

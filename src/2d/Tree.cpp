@@ -48,7 +48,7 @@ void Tree::determineVisible() {
    visible.clear();
    std::function<void(std::shared_ptr<TreeItem>&)> pushVisible = [&](std::shared_ptr<TreeItem>& item){
       //root must not be hidden, otherwise if it isn't root, then it's parent must be expanded
-//      Application::printDebug() << "visiting " << item->_text << endl;
+//      Logger::debug() << "visiting " << item->_text << endl;
       if ((item->isRoot && !_hideRoot) || (!item->isRoot)){
          auto meta = make_shared<TreeItemMeta>(item, visible.size());
          visible.push_back(meta);
@@ -125,7 +125,7 @@ Handled Tree::_unhandled_input(const InputEvent& event, const std::optional<Unha
              //expand/shrink branch
              auto btnEvent = event.toEventType<InputEventMouseButton>();
              if (!btnEvent.isDown) {
-//                Application::printDebug() << "click at = " << itemAt->_text << endl;
+//                Logger::debug() << "click at = " << itemAt->_text << endl;
                 if (!itemAt->children.empty() && itemAt->getExpandable()){
                    if (meta.value()->expansionIconClickRegion.isInside(localPos)) {
                       itemAt->setExpanded(!itemAt->getExpanded());

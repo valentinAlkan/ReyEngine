@@ -5,6 +5,7 @@
 #include "Application.h"
 #include "Scene.h"
 #include "Canvas.h"
+#include "SystemTime.h"
 
 using namespace std;
 using namespace ReyEngine;
