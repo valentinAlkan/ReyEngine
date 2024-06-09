@@ -23,15 +23,28 @@ bool Sprite::setTexture(const ReyEngine::FileSystem::File& path) {
       texture = make_unique<ReyTexture>(path);
       if (!region){
          region.value.setSize(texture->size);
+         _rect = region;
       } else if (_fitNextTexture){
          region = {{0, 0}, texture->size};
          _fitNextTexture = false;
       }
    } else {
-      Logger::error() << "Sprite setTexture failed: Path does not exist: " << path.abs() << endl;
+      Logger::error() << "Sprite " << getName() << " 'setTexture' failed: Path does not exist: " << path.abs() << endl;
       return false;
    }
    return true;
+}
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<const std::reference_wrapper<ReyTexture>> Sprite::getTexture() {
+   if (texture){
+      return *texture;
+   }
+   return nullopt;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Sprite::setRegion(const Rect<int>& newRegion) {
+   region = newRegion;
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 void Sprite::fitTexture(){

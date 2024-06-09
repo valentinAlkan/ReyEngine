@@ -15,12 +15,14 @@ namespace ReyEngine{
       void render() const override;
       void registerProperties() override;
       void _init() override;
-      bool setTexture(const ReyEngine::FileSystem::File&);
+      bool setTexture(const FileSystem::File&);
+      std::optional<const std::reference_wrapper<ReyTexture>> getTexture();
+      void setRegion(const Rect<int>&);
       void fitTexture(); //makes the sprite the same size as the texture REGION (not necessarily the texture SIZE!)
 
    protected:
-      ReyEngine::FileSystem::File texPath;
-      std::unique_ptr<ReyEngine::ReyTexture> texture;
+      FileSystem::File texPath;
+      std::unique_ptr<ReyTexture> texture;
       RectProperty<int> region;
 
    private:
