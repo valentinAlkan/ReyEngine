@@ -72,7 +72,7 @@ void TileMap::render() const {
 std::optional<TileMap::LayerIndex> TileMap::addLayer(const FileSystem::File& file) {
    //try to add the texture
    if (!file.exists()) {
-      Application::printError() << "TileMap::addTexture - file " + file.abs() + " does not exist!" << endl;
+      Logger::error() << "TileMap::addTexture - file " + file.abs() + " does not exist!" << endl;
       return nullopt;
    }
    //load the texture
@@ -173,7 +173,7 @@ std::optional<TileMap::TileIndex> TileMap::TileMapLayer::getTileIndex(const Tile
    try {
       return tiles.at(pos.x).at(pos.y);
    } catch (const out_of_range& e) {
-      Application::printDebug() << "Tile layer " << atlas._file.str() << " has no index at coordinates " << pos << endl;
+      Logger::debug() << "Tile layer " << atlas._file.str() << " has no index at coordinates " << pos << endl;
    }
    return nullopt;
 }

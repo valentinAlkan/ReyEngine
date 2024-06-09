@@ -9,10 +9,6 @@ using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Application::Application()
-: _debug_logger(std::cout, "debug")
-, _info_logger(std::cout, "info")
-, _warn_logger(std::cout, "WARNING")
-, _error_logger(std::cout, "ERROR")
 {
    TypeManager::instance()._registerTypes();
 }

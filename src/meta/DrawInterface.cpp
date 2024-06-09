@@ -17,7 +17,7 @@ void ReyTexture::loadTexture(const FileSystem::File &file) {
    auto doReady = [&]() {
       auto path = file.abs();
       if (!file.exists()){
-         Application::printError() << "LoadTexture failure: Texture file " << file.abs() << " does not exist!" << endl;
+         Logger::warn() << "LoadTexture failure: Texture file " << file.abs() << " does not exist!" << endl;
       }
       _tex = LoadTexture(path.c_str());
       _texLoaded = true;

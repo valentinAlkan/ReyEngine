@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <thread>
 
 namespace ReyEngine{
    class Timer;
@@ -39,4 +40,44 @@ namespace ReyEngine{
       friend class Timer;
       friend class Window;
    };
+  namespace Time{
+     ///////////////////////////////////////////////////////////////
+     //Ensures we run at the desired rate
+     class RateLimiter{
+     public:
+        using us = std::chrono::microseconds;
+        RateLimiter(double hz)
+        : _targetHz(hz)
+        , _targetPeriod((long long)(1.0 / hz * 1000000))
+        {
+           _timestamp = std::chrono::steady_clock::now();
+        }
+        void wait(){
+           auto now = std::chrono::steady_clock::now();
+           auto elapsed = now-_timestamp;
+           auto timeToWait = _targetPeriod - elapsed;
+           //slow down if necessary to achieve target loop rate
+           if (elapsed < _targetPeriod){
+              std::this_thread::sleep_until(now + timeToWait);
+           }
+           now = std::chrono::steady_clock::now();
+           elapsed = now-_timestamp;
+           _actualPeriod = std::chrono::microseconds(elapsed.count());
+           _actualHz = 1.0 / std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() * 1000000.0;
+           _timestamp = std::chrono::steady_clock::now();
+        }
+        us getTargetPeriod(){return _targetPeriod;}
+        double getTargetHz(){return _targetHz;}
+        us getActualPeriod(){return _actualPeriod;}
+        double getActualHz(){return _actualHz;}
+     private:
+        const us _targetPeriod;
+        const double _targetHz;
+        double _actualHz;
+        us _actualPeriod;
+        std::chrono::steady_clock::time_point _timestamp;
+     };
+  }
+
+
 }

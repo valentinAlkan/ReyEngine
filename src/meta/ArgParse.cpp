@@ -56,7 +56,7 @@ std::string RuntimeArg::sanitizeName(const std::string& arg){
    string sanitizedName;
    if (arg.empty()) return "";
     if (::isdigit(arg.front())){
-      Application::printError() << "Invalid argument name: " << arg << endl;
+      Logger::error() << "Invalid argument name: " << arg << endl;
       Application::exitError("Arg names cannot start with numbers!", Application::ExitReason::INVALID_ARGS);
    }
 
@@ -84,7 +84,7 @@ void ArgParse::defineArg(const RuntimeArg& arg) {
    if (found != _definedArgs.end()){
       stringstream msg;
       msg << "Arg name " << arg._rawValue << " already defined as " << arg.name() << "!" << endl;
-      Application::printError() << msg.str() << endl;
+      Logger::error() << msg.str() << endl;
       throw std::runtime_error(msg.str());
    }
    auto pair = make_pair(arg.name(), arg);
@@ -94,7 +94,7 @@ void ArgParse::defineArg(const RuntimeArg& arg) {
 /////////////////////////////////////////////////////////////////////////////////////////
 void ArgParse::parseArgs(int argc, char **argv) {
    if (argc == 0){
-      Application::printError() << "No first arg! por que????" << endl;
+      Logger::error() << "No first arg! por que????" << endl;
       exit(1);
    }
    _arg0 = argv[0];
@@ -133,7 +133,7 @@ void ArgParse::parseArgs(int argc, char **argv) {
                       stringstream msg;
                       msg << "Expected parameter #" << openParamCount << " to arg \"" << openArg->name()
                           << "\" but got flag \"" << rawArg << "\" instead!" << endl;
-                      Application::printError() << msg.str() << endl;
+                      Logger::error() << msg.str() << endl;
                       exit(1);
                   }
               } else {
@@ -162,7 +162,7 @@ void ArgParse::parseArgs(int argc, char **argv) {
          stringstream msg;
          msg << "Unrecognized " << (argType == RuntimeArg::ArgType::FLAG ? "flag" : "argument") << " \""
              << rawArg << "\" using name \"" << saniName << "\"";
-         Application::printError() << msg.str() << endl;
+         Logger::error() << msg.str() << endl;
          exit(1);
       }
       openArg = &it->second;

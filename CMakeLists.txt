@@ -58,6 +58,7 @@ add_library(ReyEngine2D STATIC
     src/meta/MathTools.cpp
     src/meta/DrawInterface.cpp
     src/meta/Application.cpp
+    src/meta/Thread.cpp
     src/meta/TypeManager.cpp
     src/meta/Window.cpp
     src/meta/Scene.cpp

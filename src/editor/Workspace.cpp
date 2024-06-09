@@ -9,7 +9,7 @@ void Workspace::_init() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void Workspace::_on_child_added(shared_ptr<BaseWidget>& widget) {
    //update the
-   Application::printDebug() << "Added child " << widget->getName() << " to workspace!";
+   Logger::debug() << "Added child " << widget->getName() << " to workspace!";
 }
 
 
