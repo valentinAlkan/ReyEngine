@@ -30,20 +30,23 @@
 //   }
 //};
 
-class WorkspaceWidget : public BaseWidget {
-   
-};
+namespace ReyEngine{
+   class WorkspaceWidget : public BaseWidget {
 
-
-class Workspace : public Panel {
-   REYENGINE_OBJECT(Workspace, Panel){}
-public:
-   struct EventWidgetAdded : public Event<EventWidgetAdded> {
-      EVENT_CTOR_SIMPLE(EventWidgetAdded, Event<EventWidgetAdded>){}
-      std::shared_ptr<BaseWidget> widget;
    };
-   void _init();
-   Handled _on_drag_drop(std::shared_ptr<Draggable>) override;
-   void _on_child_added(std::shared_ptr<BaseWidget>&) override;
-//   std::shared_ptr<WorkspaceWidget> instanceWidget(std::shared_ptr<BaseWidget>);
-};
+
+
+   class Workspace : public Panel {
+      REYENGINE_OBJECT(Workspace, Panel){}
+   public:
+      struct EventWidgetAdded : public Event<EventWidgetAdded> {
+         EVENT_CTOR_SIMPLE(EventWidgetAdded, Event<EventWidgetAdded>){}
+         std::shared_ptr<BaseWidget> widget;
+      };
+      void _init();
+      Handled _on_drag_drop(std::shared_ptr<Draggable>) override;
+      void _on_child_added(std::shared_ptr<BaseWidget>&) override;
+   //   std::shared_ptr<WorkspaceWidget> instanceWidget(std::shared_ptr<BaseWidget>);
+   };
+
+}
