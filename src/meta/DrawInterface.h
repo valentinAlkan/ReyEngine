@@ -77,8 +77,9 @@ namespace ReyEngine {
       inline Vec2 operator-(const Vec2& rhs) const {Vec2<T> val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
       inline Vec2& operator+=(const Vec2& rhs){x += rhs.x; y += rhs.y; return *this;}
       inline Vec2& operator-=(const Vec2& rhs){x -= rhs.x; y -= rhs.y; return *this;}
-      inline Vec2 operator*(const T rhs){Vec2 retval(*this); retval *= rhs.x; retval.y *= rhs; return retval;}
+      inline Vec2 operator*(T rhs){Vec2 retval(*this); retval.x *= rhs; retval.y *= rhs; return retval;}
       inline Vec2& operator*=(const Vec2& rhs){x *= rhs.x; y *= rhs.y; return *this;}
+      inline Vec2& operator*=(T rhs){x *= rhs; y *= rhs; return *this;}
       inline Vec2 operator/(const T rhs){Vec2 retval(*this); retval.x /= rhs; retval.y /= rhs; return retval;}
       inline Vec2& operator/=(const Vec2& rhs){x /= rhs.x; y /= rhs.y; return *this;}
       inline Vec2& operator=(const Vec2& rhs){x = rhs.x; y=rhs.y; return *this;}
@@ -634,6 +635,12 @@ namespace ReyEngine {
          RenderTexture2D _tex;
          Size<int> _size;
       };
+
+   namespace RenderCamera {
+      //simple namespace overrides for render cameras
+      struct Camera2D : public ::Camera2D{};
+      struct Camera3D : public ::Camera3D{};
+   }
 }
 
 namespace InputInterface{

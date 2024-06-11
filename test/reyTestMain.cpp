@@ -27,6 +27,7 @@
 #include "TextureRect.h"
 #include "AStar.h"
 #include "CSVParser.h"
+#include "Camera2D.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -94,7 +95,8 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--scissorTest", "scissoring test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--uniqueValueTest", "unique value test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--readFileTest", "char reading test", 0, RuntimeArg::ArgType::FLAG));
-   args.defineArg(RuntimeArg("--astarTest", "unique value test", 0, RuntimeArg::ArgType::FLAG));
+//   args.defineArg(RuntimeArg("--astarTest", "a star test", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--camera2dTest", "camera 2d test", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    //create window (or don't idk)
@@ -1501,6 +1503,53 @@ int main(int argc, char** argv)
 //      clickLayer->setRenderCallback(cbClickRender);
 //
 //   }
+   else if (args.getArg("--camera2dTest")) {
+      //add a background control
+      auto background = make_shared<Control>("background");
+      background->getTheme()->background.value = Style::Fill::SOLID;
+      background->getTheme()->background.colorPrimary.value = Colors::blue;
+      background->setRect({0, 0, 1000, 1000});
+
+      //add some text to it
+      auto backgroundLabel = make_shared<Label>("backgroundLabel");
+
+      root->addChild(background);
+      background->addChild(backgroundLabel);
+
+      //add a camera
+      auto camera = make_shared<ReyEngine::Camera2D>("Camera2D");
+      background->addChild(camera);
+
+      //add some ui to the camera
+      auto cameraUI = make_shared<Label>("cameraUI");
+      camera->addChild(cameraUI);
+      auto wkCamera = std::weak_ptr<ReyEngine::Camera2D>(camera);
+
+      auto cbBGProcess = [wkCamera](Control &ctl, double dt){
+         //make sure camera still exists
+         auto camera = wkCamera.lock();
+         if (!camera) return;
+         int moveSpeed = 5;
+         Vec2<int> mvVec;
+         if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_W)){
+            mvVec += {0, -1};
+         }
+         if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_A)) {
+            mvVec += {-1, 0};
+         }
+         if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_S)) {
+            mvVec += {0, 1};
+         }
+         if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_D)) {
+            mvVec += {1, 0};
+         }
+         auto newVec = camera->getPos() + (mvVec * moveSpeed);
+         camera->setPos(newVec);
+
+      };
+      background->setProcessCallback(cbBGProcess);
+
+   }
 
    else if (args.getArg("--readFileTest")){
       auto file = FileSystem::File("test/test.scn");
