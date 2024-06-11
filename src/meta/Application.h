@@ -55,7 +55,7 @@ namespace ReyEngine{
          static constexpr Platform PLATFORM = Platform::LINUX;
       #endif
       bool _is_ready = false;
-      std::vector<std::shared_ptr<Window>> _windows;
+      std::vector<std::shared_ptr<Window>> _windows; //for now, only one
       uint64_t newRid;
       std::unordered_set<std::shared_ptr<BaseWidget>> _applicationReadyList; //list of widgets that want to be notified when the application is fully initialized
       std::vector<std::function<void()>> _initListArbCallback; //list of arbitrary callbacks that serve the same purpose as the above
