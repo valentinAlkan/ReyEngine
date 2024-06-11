@@ -110,7 +110,9 @@ namespace ReyEngine {
       TileMapLayer& getLayer(LayerIndex);
       TileCoord getCell(const Pos<int>&) const;
       Pos<int> getCellPos(const TileCoord&) const;
+      Rect<int> getCellRect(const TileCoord&) const;
       Pos<int> getCellPosCenter(const TileCoord&) const;
+      int getCellIndex(const TileCoord&) const;
       ///Set the size of each tile
       void setTileSize(const Size<int>&);
       Size<int> getTileSize() const {return {_gridWidth, _gridHeight};}
