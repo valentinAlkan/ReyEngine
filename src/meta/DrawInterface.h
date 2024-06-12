@@ -814,6 +814,7 @@ namespace InputInterface{
    inline bool isMouseButtonReleased(MouseButton btn){return IsMouseButtonReleased(static_cast<int>(btn));}
    inline ReyEngine::Vec2<int> getMousePos(){return GetMousePosition();}
    inline ReyEngine::Vec2<int> getMouseDelta(){return GetMouseDelta();}
+   inline ReyEngine::Vec2<double> getMouseWheel(){return GetMouseWheelMoveV();}
 
    inline void setCursor(MouseCursor crsr){ SetMouseCursor((int)crsr);}
    inline void hideCursor(){HideCursor();}
