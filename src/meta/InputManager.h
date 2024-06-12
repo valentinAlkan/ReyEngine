@@ -83,6 +83,7 @@ namespace ReyEngine{
       char getCharPressed();
       InputInterface::MouseButton getMouseButtonPressed();
       InputInterface::MouseButton getMouseButtonReleased();
+      static inline Vec2<double> getMouseWheel(){return InputInterface::getMouseWheel();}
 
       std::vector<InputInterface::KeyCode> keyQueue; //holds keys that were pressed so we can check if they're still down
       InputInterface::KeyCode _lastKey = InputInterface::KeyCodes::KEY_NULL;

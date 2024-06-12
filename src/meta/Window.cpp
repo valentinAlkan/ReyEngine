@@ -209,6 +209,21 @@ void Window::exec(){
          }
       }
 
+      {
+         InputEventMouseWheel event(nullptr);
+         auto wheel = InputManager::getMouseWheel();
+         if (wheel) {
+            auto pos = InputManager::getMousePos();
+            event.globalPos = pos;
+            event.wheelMove = wheel;
+            UnhandledMouseInput mouse;
+            mouse.localPos = _root->globalToLocal(event.globalPos);
+            mouse.isInside = _root->isInside(mouse.localPos);
+            processUnhandledInput(event, mouse);
+         }
+      }
+
+
       //check the mouse delta compared to last frame
       auto mouseDelta = InputManager::getMouseDelta();
       if (mouseDelta) {
