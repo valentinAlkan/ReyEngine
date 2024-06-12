@@ -1504,11 +1504,15 @@ int main(int argc, char** argv)
 //
 //   }
    else if (args.getArg("--camera2dTest")) {
+      //add a camera
+      auto camera = make_shared<ReyEngine::Camera2D>("Camera2D");
+      root->addChild(camera);
+
       //add a background control
       auto background = make_shared<Control>("background");
       background->getTheme()->background.value = Style::Fill::SOLID;
       background->getTheme()->background.colorPrimary.value = Colors::blue;
-      background->setRect({0, 0, 1000, 1000});
+      background->setRect({0, 0, 10, 10});
 
       //add some text to it
       auto backgroundLabel = make_shared<Label>("backgroundLabel");
@@ -1516,14 +1520,25 @@ int main(int argc, char** argv)
       root->addChild(background);
       background->addChild(backgroundLabel);
 
-      //add a camera
-      auto camera = make_shared<ReyEngine::Camera2D>("Camera2D");
-      background->addChild(camera);
-
       //add some ui to the camera
       auto cameraUI = make_shared<Label>("cameraUI");
       camera->addChild(cameraUI);
       auto wkCamera = std::weak_ptr<ReyEngine::Camera2D>(camera);
+
+      auto cbBGUnhandledInput = [wkCamera](Control&, const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) -> Handled {
+         if (event.isEvent<InputEventMouseWheel>()){
+            auto wheelEvent = event.toEventType<InputEventMouseWheel>();
+            auto zoom = wheelEvent.wheelMove.y;
+            if (zoom){
+               auto camera = wkCamera.lock();
+               if (camera){
+                  camera->setZoom(camera->getZoom() + zoom);
+                  return true;
+               }
+            }
+         }
+         return false;
+      };
 
       auto cbBGProcess = [wkCamera](Control &ctl, double dt){
          //make sure camera still exists
@@ -1531,6 +1546,7 @@ int main(int argc, char** argv)
          if (!camera) return;
          int moveSpeed = 5;
          Vec2<int> mvVec;
+         double rotation = 0;
          if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_W)){
             mvVec += {0, -1};
          }
@@ -1543,12 +1559,23 @@ int main(int argc, char** argv)
          if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_D)) {
             mvVec += {1, 0};
          }
-         auto newVec = camera->getPos() + (mvVec * moveSpeed);
-         camera->setPos(newVec);
+         if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_Q)) {
+            rotation += 1;
+         }
+         if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_E)) {
+            rotation -= 1;
+         }
+         if (mvVec) {
+            auto newVec = camera->getPos() + (mvVec * moveSpeed);
+            camera->setPos(newVec);
+         }
+         if (rotation){
+            camera->setRotation(camera->getRotation() + rotation);
+         }
 
       };
+      background->setUnhandledInputCallback(cbBGUnhandledInput);
       background->setProcessCallback(cbBGProcess);
-
    }
 
    else if (args.getArg("--readFileTest")){
