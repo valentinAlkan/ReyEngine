@@ -6,6 +6,7 @@ namespace ReyEngine{
    public:
       REYENGINE_OBJECT(Canvas, BaseWidget)
       , _renderTarget()
+      , _activeCamera(_defaultCamera)
       {}
    public:
       //modality
@@ -16,6 +17,8 @@ namespace ReyEngine{
       void pushScissor(const ReyEngine::Rect<int>&);
       void popScissor();
       void setUnhandledInputCallback(std::function<Handled(Canvas&, const InputEvent&, const std::optional<UnhandledMouseInput>&)> fx){unhandledInputCallback = fx;}
+      void setActiveCamera(CameraTransform&);
+      void deleteActiveCamera();
    protected:
       void renderBegin(ReyEngine::Pos<double>& textureOffset) override;
       void render() const override;
@@ -28,6 +31,8 @@ namespace ReyEngine{
       std::optional<std::weak_ptr<BaseWidget>> _modal; //if a widget wishes to collect all input, it can be modal. Only one allowed at a time.
 
       std::stack<Rect<int>> _scissorStack;
+      CameraTransform _defaultCamera; //only exists to have something to point to in the event there is no camera defined in the scene tree
+      std::reference_wrapper<CameraTransform> _activeCamera; //the currently active camera
       std::function<Handled(Canvas&, const InputEvent&, const std::optional<UnhandledMouseInput>&)> unhandledInputCallback;
       friend class Window;
    };

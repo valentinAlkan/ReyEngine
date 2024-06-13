@@ -1,5 +1,6 @@
 #include "Canvas.h"
 #include "Application.h"
+#include "rlgl.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -15,7 +16,7 @@ void ReyEngine::Canvas::renderBegin(ReyEngine::Pos<double>& textureOffset) {
    Application::instance().getWindow(0)->pushRenderTarget(_renderTarget);
    _renderTarget.clear();
    textureOffset -= _rect.value.pos();
-
+//   _activeCamera.get().push();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -32,6 +33,7 @@ void ReyEngine::Canvas::renderEnd() {
        Pos<double> toffset;
        if (modalWidget->_visible) modalWidget->renderChain(toffset);
    }
+//   _activeCamera.get().pop();
    Application::instance().getWindow(0)->popRenderTarget();
    drawRenderTargetRect(_renderTarget, Rect<int>(_renderTarget.getSize()), {0,0});
 }
@@ -116,4 +118,14 @@ void Canvas::popScissor() {
    } else {
       EndScissorMode();
    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+void Canvas::setActiveCamera(CameraTransform& newCamera) {
+   _activeCamera = std::ref(newCamera);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::deleteActiveCamera() {
+   _activeCamera = _defaultCamera;
 }

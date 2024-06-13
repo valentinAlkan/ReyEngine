@@ -66,6 +66,8 @@ namespace ReyEngine{
       void operator=(InputManager const&) = delete;
       static inline bool isMouseButtonDown(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonDown(mouseButton);}
       static inline bool isMouseButtonUp(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonUp(mouseButton);}
+      static inline bool isMousButtonPressed(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonPressed(mouseButton);}
+      static inline bool isMousButtonReleased(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonReleased(mouseButton);}
       static inline bool isKeyDown(InputInterface::KeyCode key){return InputInterface::isKeyDown(key);}
       static inline bool isKeyUp(InputInterface::KeyCode key){return InputInterface::isKeyUp(key);}
       static inline void setExitKey(InputInterface::KeyCode key){return InputInterface::setExitKey(key);}
