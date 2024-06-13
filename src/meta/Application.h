@@ -40,6 +40,7 @@ namespace ReyEngine{
       static void registerForApplicationReady(std::function<void()>); //somethings require initwindow to have been called - so we can let the application know we want to be called when application is ready.
       static void registerForEnterTree(std::shared_ptr<BaseWidget>& widget, std::shared_ptr<BaseWidget>& parent); //widgets can't use shared_from_this in ctor so we need a place that gets called once on tree enter that can do it.
       static bool isReady(){return instance()._is_ready;}
+      static std::unique_lock<std::mutex> getLock(); //use this to syncrhonize with the engine
       static constexpr Platform getPlatform(){return PLATFORM;}
       static UniqueValue generateUniqueValue(){return instance()._nextUniqueValue++;}
    protected:
@@ -57,6 +58,7 @@ namespace ReyEngine{
       bool _is_ready = false;
       std::vector<std::shared_ptr<Window>> _windows; //for now, only one
       uint64_t newRid;
+      std::mutex _busy; //the main mutex that determines if the engine is busy or not
       std::unordered_set<std::shared_ptr<BaseWidget>> _applicationReadyList; //list of widgets that want to be notified when the application is fully initialized
       std::vector<std::function<void()>> _initListArbCallback; //list of arbitrary callbacks that serve the same purpose as the above
 

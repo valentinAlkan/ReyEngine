@@ -28,7 +28,6 @@ Window::Window(const std::string &title, int width, int height, const std::vecto
    }
 
    InitWindow(width, height, title.c_str());
-   SetTargetFPS(targetFPS);
    Application::ready();
    //Create canvas
    _root = make_shared<Canvas>("root");
@@ -58,225 +57,230 @@ void Window::exec(){
    applyProcess(_root);
    ReyEngine::Size<int> size = getSize();
    ReyEngine::Pos<int> position;
+   Time::RateLimiter rateLimit(60); //run at 60 fps
    while (!WindowShouldClose()){
-      //process widgets wanting to enter the tree for the first time
-      Application::processEnterTree();
-
-      //see if the window size has changed
-      auto newSize = getSize();
-      if (newSize != size){
-         WindowResizeEvent event(toEventPublisher(), newSize);
-         size = newSize;
-         publish(event);
-         //see if our root needs to resize
-         if (_root && _root->getAnchoring() != BaseWidget::Anchor::NONE){
-            _root->setRect({});//dummy size
-         }
-      }
-      //see if the window has moved
-      auto newPos = getPosition();
-      if (newPos != position){
-         WindowMoveEvent event(inheritable_enable_shared_from_this<EventPublisher>::shared_from_this());
-         position = newPos;
-         event.position = newPos;
-         publish(event);
-      }
-
-      //collect char input (up to limit)
-      // only downs for chars - no ups. Use keys for uppies.
-      for (size_t i=0; i<Window::INPUT_COUNT_LIMIT; i++){
-         auto charDown = InputManager::instance().getCharPressed();
-         if (charDown){
-            InputEventChar event(nullptr);
-            event.ch = charDown;
-            processUnhandledInput(event, nullopt);
-         } else {
-            break;
-         }
-      }
-
-      //collect key input (up to limit)
-      //do ups first so we don't process up and down on same frame
-      for (size_t i=0; i<Window::INPUT_COUNT_LIMIT; i++){
-         auto keyUp = InputManager::instance().getKeyReleased();
-         if ((int)keyUp){
-            InputEventKey event(nullptr);
-            event.key = keyUp;
-            event.isDown = false;
-            event.isRepeat = false;
-            processUnhandledInput(event, nullopt);
-         } else {
-            break;
-         }
-      }
-
-      //REPEATS
-      auto now = chrono::steady_clock::now();
-      static chrono::time_point<chrono::steady_clock> keyDownTimestamp = now;
-      auto lastKey = InputManager::getLastKeyPressed();
-      if (InputManager::isKeyDown(lastKey)) {
-         static chrono::time_point<chrono::steady_clock> keyRepeatTimestamp = now;
-         if (now - keyDownTimestamp > _keyDownRepeatDelay) {
-            //start sending repeats
-            if (now - keyRepeatTimestamp > _keyDownRepeatRate) {
-               keyRepeatTimestamp = chrono::steady_clock::now();
-               InputEventKey event(nullptr);
-               event.key = lastKey;
-               event.isDown = true;
-               event.isRepeat = true;
-               processUnhandledInput(event, nullopt);
-            }
-         }
-      }
-
-
-      //DOWNS
-      for (size_t i=0; i<Window::INPUT_COUNT_LIMIT; i++){
-         auto keyDown = InputManager::instance().getKeyPressed();
-         if ((int)keyDown){
-            keyDownTimestamp = chrono::steady_clock::now();
-            InputEventKey event(nullptr);
-            event.key = keyDown;
-            event.isDown = true;
-            event.isRepeat = false;
-            processUnhandledInput(event, nullopt);
-         } else {
-            break;
-         }
-      }
-
-      //now do mouse input
-      //UPS
-      for (size_t i=0; i<Window::INPUT_COUNT_LIMIT; i++){
-         auto btnUp = InputManager::instance().getMouseButtonReleased();
-         auto pos = InputManager::getMousePos();
-         if (btnUp != InputInterface::MouseButton::NONE){
-            if (btnUp == InputInterface::MouseButton::LEFT){
-               //check for drag n drop
-               if (_dragNDrop.has_value() && _isDragging){
-                  //we have a widget being dragged, lets try to drop it
-                  bool handled = false;
-                  auto widgetAt = _root->getWidgetAt(pos);
-                  if (widgetAt){
-                     handled = widgetAt.value()->_on_drag_drop(_dragNDrop.value());
-                  }
-                  _dragNDrop.reset();
-                  _isDragging = false;
-                  if (handled) continue; //otherwise continue on to publishing an event
-               }
-            }
-
-            InputEventMouseButton event(nullptr);
-            event.button = btnUp;
-            event.isDown = false;
-            event.globalPos = pos;
-            UnhandledMouseInput mouse;
-            mouse.localPos = _root->globalToLocal(pos);
-            mouse.isInside = _root->isInside(mouse.localPos);
-            processUnhandledInput(event, mouse);
-         }
-      }
-
-      //DOWNS
-      for (size_t i=0; i<Window::INPUT_COUNT_LIMIT; i++){
-         auto btnDown = InputManager::instance().getMouseButtonPressed();
-         if (btnDown != InputInterface::MouseButton::NONE){
-            auto pos = InputManager::getMousePos();
-            //check for dragndrops
-            if (btnDown == InputInterface::MouseButton::LEFT){
-               auto widgetAt = _root->getWidgetAt(pos);
-               if (widgetAt){
-                  auto willDrag = widgetAt.value()->_on_drag_start(pos);
-                  if (willDrag){
-                     _dragNDrop = willDrag.value();
-                     _dragNDrop.value()->startPos = pos;
-                  } else {
-                     _dragNDrop = nullopt;
-                  }
-                  _isDragging = false;
-               }
-            }
-            InputEventMouseButton event(nullptr);
-            event.button = btnDown;
-            event.isDown = true;
-            event.globalPos = pos;
-            UnhandledMouseInput mouse;
-            mouse.localPos = _root->globalToLocal(pos);
-            mouse.isInside = _root->isInside(mouse.localPos);
-            processUnhandledInput(event, mouse);
-         } else {
-            break;
-         }
-      }
-
       {
-         InputEventMouseWheel event(nullptr);
-         auto wheel = InputManager::getMouseWheel();
-         if (wheel) {
-            auto pos = InputManager::getMousePos();
-            event.globalPos = pos;
-            event.wheelMove = wheel;
-            UnhandledMouseInput mouse;
-            mouse.localPos = _root->globalToLocal(event.globalPos);
-            mouse.isInside = _root->isInside(mouse.localPos);
-            processUnhandledInput(event, mouse);
-         }
-      }
+         std::scoped_lock<std::mutex> sl(Application::instance()._busy);
+         //process widgets wanting to enter the tree for the first time
+         Application::processEnterTree();
 
-
-      //check the mouse delta compared to last frame
-      auto mouseDelta = InputManager::getMouseDelta();
-      if (mouseDelta) {
-         InputEventMouseMotion event(nullptr);
-         event.mouseDelta = mouseDelta;
-         event.globalPos = InputManager::getMousePos();
-
-         //don't do hovering or mouse input if we're dragging and dropping
-         static constexpr unsigned int DRAG_THRESHOLD = 20;
-         if (_dragNDrop){
-            //only drag if we've moved the mouse above a certain threshold
-            auto dragDelta = _dragNDrop.value()->startPos - getMousePos();
-            if (abs(dragDelta.x) > DRAG_THRESHOLD || abs(dragDelta.y) > DRAG_THRESHOLD) {
-               _isDragging = true;
+         //see if the window size has changed
+         auto newSize = getSize();
+         if (newSize != size) {
+            WindowResizeEvent event(toEventPublisher(), newSize);
+            size = newSize;
+            publish(event);
+            //see if our root needs to resize
+            if (_root && _root->getAnchoring() != BaseWidget::Anchor::NONE) {
+               _root->setRect({});//dummy size
             }
-         } else {
-             //find out which widget will accept the mouse motion as focus
-            auto hovered = _root->askHover(event.globalPos);
-            if (hovered) {
-               setHover(hovered.value());
+         }
+         //see if the window has moved
+         auto newPos = getPosition();
+         if (newPos != position) {
+            WindowMoveEvent event(inheritable_enable_shared_from_this<EventPublisher>::shared_from_this());
+            position = newPos;
+            event.position = newPos;
+            publish(event);
+         }
+
+         //collect char input (up to limit)
+         // only downs for chars - no ups. Use keys for uppies.
+         for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
+            auto charDown = InputManager::instance().getCharPressed();
+            if (charDown) {
+               InputEventChar event(nullptr);
+               event.ch = charDown;
+               processUnhandledInput(event, nullopt);
             } else {
-               clearHover();
+               break;
             }
-//            if (_isEditor) continue;
-            UnhandledMouseInput mouse;
-            mouse.localPos = _root->globalToLocal(event.globalPos);
-            mouse.isInside = _root->isInside(mouse.localPos);
-            _root->_process_unhandled_input(event, mouse);
          }
-      }
 
-      //process timers and call their callbacks
-      SystemTime::processTimers();
+         //collect key input (up to limit)
+         //do ups first so we don't process up and down on same frame
+         for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
+            auto keyUp = InputManager::instance().getKeyReleased();
+            if ((int) keyUp) {
+               InputEventKey event(nullptr);
+               event.key = keyUp;
+               event.isDown = false;
+               event.isRepeat = false;
+               processUnhandledInput(event, nullopt);
+            } else {
+               break;
+            }
+         }
 
-      float dt = getFrameDelta();
-      //process widget logic
-      for (auto& widget : _processList.getList()){
-         widget->_process(dt);
-      }
+         //REPEATS
+         auto now = chrono::steady_clock::now();
+         static chrono::time_point<chrono::steady_clock> keyDownTimestamp = now;
+         auto lastKey = InputManager::getLastKeyPressed();
+         if (InputManager::isKeyDown(lastKey)) {
+            static chrono::time_point<chrono::steady_clock> keyRepeatTimestamp = now;
+            if (now - keyDownTimestamp > _keyDownRepeatDelay) {
+               //start sending repeats
+               if (now - keyRepeatTimestamp > _keyDownRepeatRate) {
+                  keyRepeatTimestamp = chrono::steady_clock::now();
+                  InputEventKey event(nullptr);
+                  event.key = lastKey;
+                  event.isDown = true;
+                  event.isRepeat = true;
+                  processUnhandledInput(event, nullopt);
+               }
+            }
+         }
 
-      //draw children on top of their parents
-      BeginDrawing();
+
+         //DOWNS
+         for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
+            auto keyDown = InputManager::instance().getKeyPressed();
+            if ((int) keyDown) {
+               keyDownTimestamp = chrono::steady_clock::now();
+               InputEventKey event(nullptr);
+               event.key = keyDown;
+               event.isDown = true;
+               event.isRepeat = false;
+               processUnhandledInput(event, nullopt);
+            } else {
+               break;
+            }
+         }
+
+         //now do mouse input
+         //UPS
+         for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
+            auto btnUp = InputManager::instance().getMouseButtonReleased();
+            auto pos = InputManager::getMousePos();
+            if (btnUp != InputInterface::MouseButton::NONE) {
+               if (btnUp == InputInterface::MouseButton::LEFT) {
+                  //check for drag n drop
+                  if (_dragNDrop.has_value() && _isDragging) {
+                     //we have a widget being dragged, lets try to drop it
+                     bool handled = false;
+                     auto widgetAt = _root->getWidgetAt(pos);
+                     if (widgetAt) {
+                        handled = widgetAt.value()->_on_drag_drop(_dragNDrop.value());
+                     }
+                     _dragNDrop.reset();
+                     _isDragging = false;
+                     if (handled) continue; //otherwise continue on to publishing an event
+                  }
+               }
+
+               InputEventMouseButton event(nullptr);
+               event.button = btnUp;
+               event.isDown = false;
+               event.globalPos = pos;
+               UnhandledMouseInput mouse;
+               mouse.localPos = _root->globalToLocal(pos);
+               mouse.isInside = _root->isInside(mouse.localPos);
+               processUnhandledInput(event, mouse);
+            }
+         }
+
+         //DOWNS
+         for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
+            auto btnDown = InputManager::instance().getMouseButtonPressed();
+            if (btnDown != InputInterface::MouseButton::NONE) {
+               auto pos = InputManager::getMousePos();
+               //check for dragndrops
+               if (btnDown == InputInterface::MouseButton::LEFT) {
+                  auto widgetAt = _root->getWidgetAt(pos);
+                  if (widgetAt) {
+                     auto willDrag = widgetAt.value()->_on_drag_start(pos);
+                     if (willDrag) {
+                        _dragNDrop = willDrag.value();
+                        _dragNDrop.value()->startPos = pos;
+                     } else {
+                        _dragNDrop = nullopt;
+                     }
+                     _isDragging = false;
+                  }
+               }
+               InputEventMouseButton event(nullptr);
+               event.button = btnDown;
+               event.isDown = true;
+               event.globalPos = pos;
+               UnhandledMouseInput mouse;
+               mouse.localPos = _root->globalToLocal(pos);
+               mouse.isInside = _root->isInside(mouse.localPos);
+               processUnhandledInput(event, mouse);
+            } else {
+               break;
+            }
+         }
+
+         {
+            InputEventMouseWheel event(nullptr);
+            auto wheel = InputManager::getMouseWheel();
+            if (wheel) {
+               auto pos = InputManager::getMousePos();
+               event.globalPos = pos;
+               event.wheelMove = wheel;
+               UnhandledMouseInput mouse;
+               mouse.localPos = _root->globalToLocal(event.globalPos);
+               mouse.isInside = _root->isInside(mouse.localPos);
+               processUnhandledInput(event, mouse);
+            }
+         }
+
+
+         //check the mouse delta compared to last frame
+         auto mouseDelta = InputManager::getMouseDelta();
+         if (mouseDelta) {
+            InputEventMouseMotion event(nullptr);
+            event.mouseDelta = mouseDelta;
+            event.globalPos = InputManager::getMousePos();
+
+            //don't do hovering or mouse input if we're dragging and dropping
+            static constexpr unsigned int DRAG_THRESHOLD = 20;
+            if (_dragNDrop) {
+               //only drag if we've moved the mouse above a certain threshold
+               auto dragDelta = _dragNDrop.value()->startPos - getMousePos();
+               if (abs(dragDelta.x) > DRAG_THRESHOLD || abs(dragDelta.y) > DRAG_THRESHOLD) {
+                  _isDragging = true;
+               }
+            } else {
+               //find out which widget will accept the mouse motion as focus
+               auto hovered = _root->askHover(event.globalPos);
+               if (hovered) {
+                  setHover(hovered.value());
+               } else {
+                  clearHover();
+               }
+//            if (_isEditor) continue;
+               UnhandledMouseInput mouse;
+               mouse.localPos = _root->globalToLocal(event.globalPos);
+               mouse.isInside = _root->isInside(mouse.localPos);
+               _root->_process_unhandled_input(event, mouse);
+            }
+         }
+
+         //process timers and call their callbacks
+         SystemTime::processTimers();
+
+         float dt = getFrameDelta();
+         //process widget logic
+         for (auto &widget: _processList.getList()) {
+            widget->_process(dt);
+         }
+
+         //draw children on top of their parents
+         BeginDrawing();
 //      ClearBackground(ReyEngine::Colors::none);
-      ReyEngine::Pos<double> texOffset;
-      _root->renderChain(texOffset);
+         ReyEngine::Pos<double> texOffset;
+         _root->renderChain(texOffset);
 
-      //draw the drag and drop preview (if any)
-      if (_isDragging && _dragNDrop && _dragNDrop.value()->preview){
-         _dragNDrop.value()->preview.value()->setPos(InputManager::getMousePos());
-         _dragNDrop.value()->preview.value()->renderChain(texOffset);
-      }
-
-      EndDrawing();
+         //draw the drag and drop preview (if any)
+         if (_isDragging && _dragNDrop && _dragNDrop.value()->preview) {
+            _dragNDrop.value()->preview.value()->setPos(InputManager::getMousePos());
+            _dragNDrop.value()->preview.value()->renderChain(texOffset);
+         }
+         EndDrawing();
+      } // release scoped lock here
+      //wait some time
+      rateLimit.wait();
       _frameCounter++;
    }
 }
