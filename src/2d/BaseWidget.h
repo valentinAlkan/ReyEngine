@@ -67,6 +67,16 @@ namespace ReyEngine{
            WidgetPtr& descendent;
        };
 
+      struct DescendentRemovedEvent : public Event<DescendentRemovedEvent> {
+         EVENT_GENERATE_UNIQUE_ID(DescendentRemovedEvent)
+         EVENT_GET_NAME(DescendentRemovedEvent)
+         explicit DescendentRemovedEvent(std::shared_ptr<EventPublisher> publisher, WidgetPtr& descendent)
+         : Event<DescendentRemovedEvent>(DescendentRemovedEvent_UNIQUE_ID, publisher)
+         , descendent(descendent)
+         {}
+         WidgetPtr& descendent;
+      };
+
       //Input masking controls whether input inside the rect is masked (ignored)
       enum InputMask {NONE, IGNORE_INSIDE, IGNORE_OUTSIDE};
       template <typename T>
@@ -232,18 +242,23 @@ namespace ReyEngine{
    //   void recalculateRect();
       std::shared_ptr<BaseWidget> toBaseWidget(){return inheritable_enable_shared_from_this<BaseWidget>::downcasted_shared_from_this<BaseWidget>();}
       virtual void _on_application_ready(){}; //called when the main loop is starting, or immediately if that's already happened
-      virtual void _init(){}; //run ONCE PER OBJECt when it enters tree for first time.
+      virtual void _init(){}; //run ONCE PER OBJECT when it enters tree for first time. Subsequent additions to the tree will not call this.
       void __on_rect_changed(); //internal. Trigger resize for anchored widgets.
       virtual void _on_rect_changed(){} //called when the rect is manipulated
       virtual void _on_mouse_enter(){};
       virtual void _on_mouse_exit(){};
       virtual void _on_child_added_immediate(WidgetPtr&){} //Called immediately upon a call to addChild - DANGER: widget is not actually a child yet! It is (probably) a very bad idea to do much at all here. Make sure you know what you're doing.
       void __on_child_added(WidgetPtr); //internal. Trigger resize for anchored widgets.
-      void __on_descendent_added(WidgetPtr&); // Internal. see below.
-      virtual void _on_descendent_added(WidgetPtr&){} // See below. All parents up the chain will emit this signal. Emits along with _on_child_added when this node is the parent.
+      void __on_descendent_added(WidgetPtr&); // Internal.
+      virtual void _on_descendent_added(WidgetPtr&){} // All parents up the chain will emit this signal. Emits along with _on_child_added when this node is the parent.
+      void __on_descendent_removed(WidgetPtr&){} // Internal
+      virtual void _on_descendent_about_to_be_removed(WidgetPtr&){} // All parents up the chain will emit this signal. Emits along with _on_child_removed when this node is the parent.
+      virtual void _on_descendent_removed(WidgetPtr&){} // All parents up the chain will emit this signal. Emits along with _on_child_removed when this node is the parent.
       virtual void _on_child_added(WidgetPtr&){} // called at the beginning of the next frame after a child is added. Child is now owned by us. Safe to manipulate child. Called after all events are emitted.
-      virtual void _on_enter_tree(){} //called every time a widget enters the tree
-      virtual void _on_exit_tree(){}
+      virtual void _on_enter_tree(){} //called EVERY TIME a widget enters the tree
+      void __on_exit_tree(WidgetPtr&, bool aboutToExit); //internal.
+      virtual void _on_about_to_exit_tree(){} //called right before a widget leaves the tree
+      virtual void _on_exit_tree(){} //called right after a widget leaves the tree
       virtual void _on_child_removed(WidgetPtr&){}
       virtual void _on_modality_gained(){}
       virtual void _on_modality_lost(){}

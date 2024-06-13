@@ -1,5 +1,6 @@
 #include "DrawInterface.h"
 #include "Application.h"
+#include "rlgl.h"
 
 using namespace ReyEngine;
 using namespace std;
@@ -192,6 +193,7 @@ ReyEngineFont ReyEngine::getDefaultFont(std::optional<float> fontSize) {
    return retval;
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
 ReyEngineFont &ReyEngineFont::operator=(const ReyEngineFont &rhs)
 {
    size = rhs.size;
@@ -205,4 +207,17 @@ ReyEngineFont &ReyEngineFont::operator=(const ReyEngineFont &rhs)
 /////////////////////////////////////////////////////////////////////////////////////////
 Size<int> ReyEngineFont::measure(const std::string &text) const {
    return ReyEngine::measureText(text, *this);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void CameraTransform::push() const {
+   rlPushMatrix();
+   //push camera translation matrix
+   rlTranslatef(offset.x, offset.y, offset.z);
+   rlScalef(zoom, zoom, 0); // do we need the Z zoom value? idk. will find out in the future when doing 3d i guess.
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void CameraTransform::pop(){
+   rlPopMatrix();
 }

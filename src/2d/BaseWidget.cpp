@@ -219,11 +219,37 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::removeChild(const std::string& 
    }
 
    auto child = found->second.second;
+
+   //do this here since __on_exit_tree is recursive
+   {
+      auto parent = toBaseWidget();
+      while (parent) {
+         DescendentRemovedEvent event(toEventPublisher(), child);
+         parent->publish(event);
+         parent->_on_descendent_about_to_be_removed(child);
+         parent = parent->getParent().lock();
+      }
+   }
+   __on_exit_tree(child, true);
+
    auto orderIndex = found->second.first;
    _children.erase(found);
    _childrenOrdered.erase(_childrenOrdered.begin() + orderIndex);
    child->isInLayout = false;
    _on_child_removed(child);
+
+
+   //do this again
+   {
+      auto parent = toBaseWidget();
+      while (parent) {
+         DescendentRemovedEvent event(toEventPublisher(), child);
+         parent->publish(event);
+         parent->_on_descendent_removed(child);
+         parent = parent->getParent().lock();
+      }
+   }
+   __on_exit_tree(child, false);
    return child;
 }
 
@@ -829,6 +855,23 @@ void BaseWidget::__on_rect_changed(){
    }
    _on_rect_changed();
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::__on_exit_tree(WidgetPtr& widget, bool aboutToExit){
+   //Every descendent of the removed widget must call it's own exit tree functions.
+   // This will occurr in reverse order, starting with the most descendent child and ending with the one that was removed.
+   for (auto it = _childrenOrdered.rbegin(); it != _childrenOrdered.rend(); it++) {
+      auto &child = *it;
+      child->__on_exit_tree(widget, aboutToExit);
+   }
+   //so we can use this function for either version
+   if (aboutToExit){
+      _on_about_to_exit_tree();
+   } else {
+      _on_exit_tree();
+   }
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setModal(bool isModal) {

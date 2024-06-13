@@ -1,23 +1,26 @@
 #include <iostream>
 #include "DrawInterface.h"
 #include "InputManager.h"
+#include "rlgl.h"
+#include <stack>
 
 using namespace std;
 using namespace ReyEngine;
 
+bool cameraToggle = false;
+struct CamTransform{
+   Vec2<int> target;
+   Vec2<int> position;
+   double rotation;
+};
+
+std::stack<CamTransform> cameraStack;
 int main(int argc, char** argv){
 
    Size<int> windowSize(800, 600);
    InitWindow(windowSize.x, windowSize.y, "basic drawsing test");
-
-   Camera2D camera = {};
-   camera.rotation = 0;
-   camera.offset.x = GetScreenWidth() / 2;
-   camera.offset.y = GetScreenHeight() / 2;
-   camera.target.x = camera.offset.x;
-   camera.target.y = camera.offset.y;
-   camera.zoom = 1.0f;
    SetTargetFPS(60);
+   cameraStack.push(CamTransform());
    while(!WindowShouldClose()){
       int moveSpeed = 5;
       Vec2<int> mvVec;
@@ -40,26 +43,39 @@ int main(int argc, char** argv){
       if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_E)) {
          rotation -= 1;
       }
+      if (InputManager::isMousButtonPressed(InputInterface::MouseButton::LEFT)){
+         cameraToggle = !cameraToggle;
+         std::cout << "Switching camera!" << endl;
+      }
+
       if (mvVec) {
          auto newVec = mvVec * moveSpeed;
-         camera.target.x += newVec.x;
-         camera.target.y += newVec.y;
+         cameraStack.top().target += newVec;
       }
       if (rotation){
-         camera.rotation += rotation;
+         cameraStack.top().rotation += rotation;
       }
 
       BeginDrawing();
       ClearBackground(WHITE);
-      DrawText("Foreground", 300, 300, 20, RED);
-      DrawRectangle(0,0,20,20,BLUE);
-      BeginMode2D(camera);
-      DrawText("Background", 100, 100, 20, BLACK);
-      DrawRectangle(100,200,20,20,GREEN);
-      EndMode2D();
+      rlPushMatrix();
+      rlTranslatef(-cameraStack.top().target.x, -cameraStack.top().target.y, 0);
+      {
 
-      DrawText("MoreForeground", 300, 400, 20, RED);
+         DrawText("CameraBackground", 100, 100, 20, cameraToggle ? BLUE : LIGHTGRAY);
+         DrawRectangle(100, 200, 20, 20, GREEN);
 
+         rlPopMatrix();
+            // Draw camera foreground
+            DrawText("Foreground", 300, 300, 20, RED);
+            DrawRectangle(0, 0, 20, 20, BLUE);
+         rlPushMatrix();
+         rlTranslatef(-cameraStack.top().target.x, -cameraStack.top().target.y, 0);
+
+         DrawText("More background", 500, 300, 20, RED);
+         DrawRectangle(40, 20, 20, 20, PURPLE);
+      }
+      rlPopMatrix();
       EndDrawing();
 
    }

@@ -80,7 +80,9 @@ namespace ReyEngine {
       inline Vec2 operator*(T rhs){Vec2 retval(*this); retval.x *= rhs; retval.y *= rhs; return retval;}
       inline Vec2& operator*=(const Vec2& rhs){x *= rhs.x; y *= rhs.y; return *this;}
       inline Vec2& operator*=(T rhs){x *= rhs; y *= rhs; return *this;}
-      inline Vec2 operator/(const T rhs){Vec2 retval(*this); retval.x /= rhs; retval.y /= rhs; return retval;}
+      inline Vec2<double> operator/(double rhs){Vec2<double> retval(*this); retval.x /= rhs; retval.y /= rhs; return retval;}
+      inline Vec2<float> operator/(float rhs){Vec2<float> retval(*this); retval.x /= rhs; retval.y /= rhs; return retval;}
+      inline Vec2<int> operator/(int rhs){Vec2<int> retval(*this); retval.x /= rhs; retval.y /= rhs; return retval;}
       inline Vec2& operator/=(const Vec2& rhs){x /= rhs.x; y /= rhs.y; return *this;}
       inline Vec2& operator=(const Vec2& rhs){x = rhs.x; y=rhs.y; return *this;}
       inline bool operator==(const Vec2& rhs){return x==rhs.x && y==rhs.y;}
@@ -636,11 +638,13 @@ namespace ReyEngine {
          Size<int> _size;
       };
 
-   namespace RenderCamera {
-      //simple namespace overrides for render cameras
-      struct Camera2D : public ::Camera2D{};
-      struct Camera3D : public ::Camera3D{};
-   }
+   struct CameraTransform{
+      Vec3<float> offset = {};
+      float rotation = 0;
+      float zoom = 0;
+      void push() const;
+      void pop();
+   };
 }
 
 namespace InputInterface{
