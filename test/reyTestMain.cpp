@@ -1508,15 +1508,12 @@ int main(int argc, char** argv)
       auto camera = make_shared<ReyEngine::Camera2D>("Camera2D");
       auto cameraUI = make_shared<Label>("cameraUI");
       auto background = make_shared<Control>("background");
-
+      auto backgroundLabel = make_shared<Label>("backgroundLabel");
 
       //setup background
       background->getTheme()->background.value = Style::Fill::SOLID;
       background->getTheme()->background.colorPrimary.value = Colors::blue;
       background->setRect({0, 0, 10, 10});
-
-      //add some text to it
-      auto backgroundLabel = make_shared<Label>("backgroundLabel");
 
       // add nodes in correct order
       root->addChild(background);
@@ -1574,7 +1571,7 @@ int main(int argc, char** argv)
          if (rotation){
             camera->setRotation(camera->getRotation() + rotation);
          }
-         cameraUI->setText("This label shouldn't move from the top left corner: " + string(camera->getPos()));
+         cameraUI->setText("Label: " + string(cameraUI->getPos()) + ": Camera = " + string(camera->getPos()));
          backgroundLabel->setText(backgroundLabel->getPos());
 
       };

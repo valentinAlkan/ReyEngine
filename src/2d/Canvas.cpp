@@ -16,12 +16,12 @@ void ReyEngine::Canvas::renderBegin(ReyEngine::Pos<double>& textureOffset) {
    Application::instance().getWindow(0)->pushRenderTarget(_renderTarget);
    _renderTarget.clear();
    textureOffset -= _rect.value.pos();
-//   _activeCamera.get().push();
+   _activeCamera.get().push();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::Canvas::render() const{
-//   drawRectangleLines(_rect.value.toSizeRect(), 2.0, Colors::red);
+   drawRectangleLines(_rect.value.toSizeRect(), 2.0, Colors::red);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -33,7 +33,7 @@ void ReyEngine::Canvas::renderEnd() {
        Pos<double> toffset;
        if (modalWidget->_visible) modalWidget->renderChain(toffset);
    }
-//   _activeCamera.get().pop();
+   _activeCamera.get().pop();
    Application::instance().getWindow(0)->popRenderTarget();
    drawRenderTargetRect(_renderTarget, Rect<int>(_renderTarget.getSize()), {0,0});
 }
