@@ -639,7 +639,8 @@ namespace ReyEngine {
       };
 
    struct CameraTransform{
-      Vec3<float> offset = {};
+      Vec3<float> offset = {}; // target offset from top left corner (0 indicates camera is not looking at target)
+      Vec3<float> target = {}; // zoom center
       float rotation = 0;
       float zoom = 0;
       void push() const;

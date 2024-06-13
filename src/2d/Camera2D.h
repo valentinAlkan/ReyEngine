@@ -38,6 +38,10 @@ namespace ReyEngine {
          _camera.zoom = 1.0f;
          canvas->setActiveCamera(_camera);
       };
+      void _on_rect_changed() override {
+         _camera.target.x = _rect.value.x;
+         _camera.target.y = _rect.value.y;
+      }
       void _on_about_to_exit_tree() override{
          ////center of screen
          auto canvasOpt = getCanvas();

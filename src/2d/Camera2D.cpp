@@ -6,12 +6,14 @@ using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::Camera2D::renderBegin(ReyEngine::Pos<double> &textureOffset) {
+   //zero out our position on the texture offset
+   textureOffset -= getPos();
    //pop the active camera - that is to say, return to a 'no camera' scenario
-//   _camera.push();
+   _camera.pop();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::Camera2D::renderEnd() {
    //return to trasnformation mode
-//   _camera.pop();
+   _camera.push();
 }
