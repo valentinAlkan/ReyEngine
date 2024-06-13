@@ -100,3 +100,9 @@ void Application::processEnterTree() {
       queue.pop();
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////////////
+std::unique_lock<std::mutex> Application::getLock() {
+   std::unique_lock<std::mutex> l(instance()._busy);
+   return std::move(l);
+}
