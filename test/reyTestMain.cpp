@@ -1543,7 +1543,7 @@ int main(int argc, char** argv)
          //make sure camera still exists
          auto camera = wkCamera.lock();
          if (!camera) return;
-         int moveSpeed = 5;
+         int moveSpeed = 10;
          Vec2<int> mvVec;
          double rotation = 0;
          if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_W)){
