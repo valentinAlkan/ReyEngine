@@ -126,7 +126,7 @@ struct DynamicProperty : public BaseProperty {
 /////////////////////////////////////////////////////////////////////////////////////////
 template <typename T>
 struct Property : public BaseProperty {
-//   Property(const std::string instanceName, const std::string& typeName): BaseProperty(instanceName, typeName){}
+   Property(const std::string instanceName, const std::string& typeName): BaseProperty(instanceName, typeName){}
    Property(const std::string instanceName, const std::string& typeName, T&& defaultvalue)
    : BaseProperty(instanceName, typeName)
    , value(std::move(defaultvalue)){}

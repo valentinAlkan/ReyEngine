@@ -1,6 +1,7 @@
 #include "DrawInterface.h"
 #include "Application.h"
 #include "rlgl.h"
+#include <cstring>
 
 using namespace ReyEngine;
 using namespace std;
@@ -210,14 +211,37 @@ Size<int> ReyEngineFont::measure(const std::string &text) const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
 void CameraTransform::push() const {
-   rlPushMatrix();
-//   //push camera translation matrix
-   rlTranslatef(target.x + offset.x, target.y + offset.y, target.z + offset.z);
-   rlScalef(zoom, zoom, 0); // do we need the Z zoom value? idk. will find out in the future when doing 3d i guess.
+//   rlPushMatrix();
+   //push camera translation matrix
+//   rlTranslatef(target.x + offset.x, target.y + offset.y, target.z + offset.z);
+//   rlScalef(zoom, zoom, 0); // do we need the Z zoom value? idk. will find out in the future when doing 3d i guess.
+   BeginMode2D(camera);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+CameraTransform::CameraTransform() {
+   memset(&camera, 0, sizeof(Camera2D));
+}
+/////////////////////////////////////////////////////////////////////////////////////////
 void CameraTransform::pop(){
-   rlPopMatrix();
+   EndMode2D();
+}
+/////////////////////////////////////////////////////////////////////////////////////////
+void CameraTransform::setZoom(float newZoom) {
+   camera.zoom = newZoom;
+}
+/////////////////////////////////////////////////////////////////////////////////////////
+void CameraTransform::setRotation(float newRot) {
+   camera.rotation = newRot;
+}
+/////////////////////////////////////////////////////////////////////////////////////////
+void CameraTransform::setOffset(Vec2<float> newOffset) {
+   camera.offset = newOffset;
+}
+/////////////////////////////////////////////////////////////////////////////////////////
+void CameraTransform::setTarget(Vec2<float> newTarget) {
+   camera.target = newTarget;
 }

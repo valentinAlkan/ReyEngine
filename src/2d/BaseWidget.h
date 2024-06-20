@@ -280,6 +280,7 @@ namespace ReyEngine{
    //   void renderTextureOffsetReset(ReyEngine::Pos<float>& textureOffset){}
       void registerProperties() override;
       void _deserialize(PropertyPrototypeMap&);
+      virtual void _on_deserialize(PropertyPrototypeMap&){} //used to do any deserializations specific to this type
       RectProperty<int> _rect;
       InputMaskProperty<int> _inputMask; //Only input inside this rectangle will be handled;
 

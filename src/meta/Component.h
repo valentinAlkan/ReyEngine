@@ -10,8 +10,9 @@ std::string _get_static_constexpr_typename() override {return TYPE_NAME;}
 #define REYENGINE_SERIALIZER(CLASSNAME, PARENT_CLASSNAME) \
    public:                                           \
    static std::shared_ptr<BaseWidget> deserialize(const std::string& instanceName, PropertyPrototypeMap& properties) { \
-   auto retval = std::make_shared<CLASSNAME>(instanceName); \
-   retval->BaseWidget::_deserialize(properties);        \
+   auto retval = std::shared_ptr<CLASSNAME>(new CLASSNAME(instanceName)); \
+   retval->BaseWidget::_deserialize(properties);          \
+   retval->BaseWidget::_on_deserialize(properties);       \
    return retval;}                                       \
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME) \
@@ -44,6 +45,15 @@ public:                                                   \
    REYENGINE_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME)  \
    REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME)
 
+//to disallow building except via a factory function
+#define REYENGINE_OBJECT_BUILD_ONLY(CLASSNAME, PARENT_CLASSNAME)  \
+public:                                                   \
+   REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(CLASSNAME)  \
+   REYENGINE_SERIALIZER(CLASSNAME, PARENT_CLASSNAME)              \
+   protected:                                                     \
+   REYENGINE_DEFAULT_CTOR(CLASSNAME)                       \
+   REYENGINE_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME)  \
+   REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME)
 
 
 // A thing which does stuff.

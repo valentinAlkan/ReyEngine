@@ -8,19 +8,13 @@ using namespace std;
 using namespace ReyEngine;
 
 bool cameraToggle = false;
-struct CamTransform{
-   Vec2<int> target;
-   Vec2<int> position;
-   double rotation;
-};
 
-std::stack<CamTransform> cameraStack;
 int main(int argc, char** argv){
-
+   Camera2D foregroundCamera = {0}; //BEGIN to draw background
+   foregroundCamera.zoom = 1.0;
    Size<int> windowSize(800, 600);
    InitWindow(windowSize.x, windowSize.y, "basic drawsing test");
    SetTargetFPS(60);
-   cameraStack.push(CamTransform());
    while(!WindowShouldClose()){
       int moveSpeed = 5;
       Vec2<int> mvVec;
@@ -50,32 +44,34 @@ int main(int argc, char** argv){
 
       if (mvVec) {
          auto newVec = mvVec * moveSpeed;
-         cameraStack.top().target += newVec;
+         foregroundCamera.offset += newVec;
+         cout << Vec2<float>(foregroundCamera.offset) << endl;
       }
       if (rotation){
-         cameraStack.top().rotation += rotation;
+         foregroundCamera.rotation += rotation;
       }
 
       BeginDrawing();
       ClearBackground(WHITE);
-      rlPushMatrix();
-      rlTranslatef(-cameraStack.top().target.x, -cameraStack.top().target.y, 0);
+      // Draw somebackground
+      BeginMode2D(foregroundCamera);
       {
-
-         DrawText("CameraBackground", 100, 100, 20, cameraToggle ? BLUE : LIGHTGRAY);
-         DrawRectangle(100, 200, 20, 20, GREEN);
-
-         rlPopMatrix();
-            // Draw camera foreground
-            DrawText("Foreground", 300, 300, 20, RED);
-            DrawRectangle(0, 0, 20, 20, BLUE);
-         rlPushMatrix();
-         rlTranslatef(-cameraStack.top().target.x, -cameraStack.top().target.y, 0);
-
-         DrawText("More background", 500, 300, 20, RED);
-         DrawRectangle(40, 20, 20, 20, PURPLE);
+         DrawText("CameraBackground", 100, 100, 20, RED);
+         DrawRectangle(100, 200, 20, 20, RED);
       }
-      rlPopMatrix();
+      EndMode2D();
+
+
+      DrawText("Foreground", 300, 300, 20, BLUE);
+      DrawRectangle(0, 0, 20, 20, BLUE);
+
+      //Draw more background
+      BeginMode2D(foregroundCamera);
+      {
+         DrawText("More background", 500, 300, 20, RED);
+         DrawRectangle(40, 20, 20, 20, RED);
+      }
+      EndMode2D();
       EndDrawing();
 
    }

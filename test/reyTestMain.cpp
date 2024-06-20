@@ -1511,9 +1511,10 @@ int main(int argc, char** argv)
       auto backgroundLabel = make_shared<Label>("backgroundLabel");
 
       //setup background
-      background->getTheme()->background.value = Style::Fill::SOLID;
+      background->getTheme()->background.value = Style::Fill::GRADIENT;
       background->getTheme()->background.colorPrimary.value = Colors::blue;
-      background->setRect({0, 0, 10, 10});
+      background->getTheme()->background.colorSecondary.value = Colors::red;
+      background->setRect({0, 0, 1000, 1000});
 
       // add nodes in correct order
       root->addChild(background);
@@ -1530,7 +1531,7 @@ int main(int argc, char** argv)
             if (zoom){
                auto camera = wkCamera.lock();
                if (camera){
-                  camera->setZoom(camera->getZoom() + zoom);
+                  camera->setZoom(camera->getZoom() * zoom/10);
                   Logger::info() << "New camera zoom level = " << camera->getZoom() << endl;
                   return true;
                }
@@ -1547,16 +1548,16 @@ int main(int argc, char** argv)
          Vec2<int> mvVec;
          double rotation = 0;
          if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_W)){
-            mvVec += {0, 1};
-         }
-         if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_A)) {
-            mvVec += {1, 0};
-         }
-         if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_S)) {
             mvVec += {0, -1};
          }
-         if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_D)) {
+         if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_A)) {
             mvVec += {-1, 0};
+         }
+         if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_S)) {
+            mvVec += {0, 1};
+         }
+         if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_D)) {
+            mvVec += {1, 0};
          }
          if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_Q)) {
             rotation += 1;

@@ -108,6 +108,7 @@ namespace ReyEngine {
       }
       inline static std::vector<T> fromString(const std::string& s){return Vec<T>::fromString(2, s);};
       friend std::ostream& operator<<(std::ostream& os, Vec2<T> v) {os << v.toString(); return os;}
+      friend Vector2& operator+=(Vector2& in, Vec2<T> add) {in.x += add.x; in.y += add.y; return in;}
       T x;
       T y;
    protected:
@@ -639,10 +640,12 @@ namespace ReyEngine {
       };
 
    struct CameraTransform{
-      Vec3<float> offset = {}; // target offset from top left corner (0 indicates camera is not looking at target)
-      Vec3<float> target = {}; // zoom center
-      float rotation = 0;
-      float zoom = 0;
+      CameraTransform();
+      Camera2D camera;
+      void setRotation(float newRot);
+      void setOffset(Vec2<float> newOffset);
+      void setTarget(Vec2<float> newTarget);
+      void setZoom(float newZoom);
       void push() const;
       void pop();
    };
