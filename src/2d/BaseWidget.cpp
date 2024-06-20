@@ -609,6 +609,7 @@ void BaseWidget::_deserialize(PropertyPrototypeMap& propertyData){
       }
       found->second->_load(data);
    }
+
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -15,8 +15,15 @@ void Control::render() const {
    if (renderCallback) {
       renderCallback(*this);
    } else {
-      if (theme->background.value == Style::Fill::SOLID) {
-         drawRectangle(getRect().toSizeRect(), theme->background.colorPrimary.value);
+      switch(theme->background.value){
+         case Style::Fill::SOLID:
+            drawRectangle(getRect().toSizeRect(), theme->background.colorPrimary.value);
+            break;
+         case Style::Fill::GRADIENT:
+            drawRectangleGradientV(getRect().toSizeRect(), theme->background.colorPrimary.value, theme->background.colorSecondary.value);
+            break;
+         default:
+            break;
       }
    }
 }
