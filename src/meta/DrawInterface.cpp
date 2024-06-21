@@ -223,7 +223,10 @@ void CameraTransform::push() const {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 CameraTransform::CameraTransform() {
-   memset(&camera, 0, sizeof(Camera2D));
+   camera.rotation = 0;
+   camera.zoom = 1;
+   camera.target = {0,0};
+   camera.offset = {0,0};
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 void CameraTransform::pop(){

@@ -61,6 +61,7 @@ namespace ReyEngine{
       Window(const std::string& title, int width, int height, const std::vector<Flags>& flags, int targetFPS=60, std::optional<std::shared_ptr<Canvas>> root=std::nullopt);
       static constexpr size_t INPUT_COUNT_LIMIT = 256;
    private:
+      void makeRoot(std::shared_ptr<Canvas>& newRoot, const Size<int>&); //internal. Makes a new canvas into the root. Drops old one.
       void processUnhandledInput(InputEvent&, std::optional<UnhandledMouseInput>);
       std::shared_ptr<Canvas> _root; //the scene to draw
       std::weak_ptr<BaseWidget> _hovered; //the currently hovered widget

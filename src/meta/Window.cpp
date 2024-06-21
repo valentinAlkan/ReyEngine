@@ -31,17 +31,11 @@ Window::Window(const std::string &title, int width, int height, const std::vecto
    Application::ready();
    //Create canvas if not provided
    if (!root) {
-      _root = make_shared<Canvas>("root");
+      auto newRoot = make_shared<Canvas>("root");
+      makeRoot(newRoot, {width, height});
    } else {
-      _root = root.value();
+      makeRoot(root.value(), {width, height});
    }
-   _root->setAnchoring(BaseWidget::Anchor::FILL); //canvas is filled by default
-   _root->_isRoot = true;
-   auto base = _root->toBaseWidget();
-   //make sure we init the root
-   _root->_has_inited = true;
-   _root->setRect(Rect<int>(0, 0, width, height)); //initialize to be the same size as the window
-   _root->_on_enter_tree();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -351,10 +345,7 @@ std::optional<std::shared_ptr<BaseWidget>> Window::ProcessList::find(const std::
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
 void Window::setCanvas(std::shared_ptr<Canvas>& newRoot) {
-   if (!newRoot->_has_inited){
-      newRoot->_init();
-   }
-   _root = newRoot;
+   makeRoot(newRoot, getSize());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -413,4 +404,15 @@ void Window::popRenderTarget() {
    if (!renderStack.empty()) {
       renderStack.top()->beginRenderMode();
    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Window::makeRoot(std::shared_ptr<Canvas>& newRoot, const Size<int>& size){
+   _root = newRoot;
+   _root->setAnchoring(BaseWidget::Anchor::FILL); //canvas is filled by default
+   _root->_isRoot = true;
+   //make sure we init the root
+   _root->_has_inited = true;
+   _root->setRect(Rect<int>(0, 0, size.x, size.y)); //initialize to be the same size as the window
+   _root->_on_enter_tree();
 }
