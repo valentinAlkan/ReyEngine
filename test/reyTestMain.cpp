@@ -97,6 +97,7 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--readFileTest", "char reading test", 0, RuntimeArg::ArgType::FLAG));
 //   args.defineArg(RuntimeArg("--astarTest", "a star test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--camera2dTest", "camera 2d test", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--setRootTest", "Setting a new root test", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    //create window (or don't idk)
@@ -1578,6 +1579,13 @@ int main(int argc, char** argv)
       };
       background->setUnhandledInputCallback(cbBGUnhandledInput);
       background->setProcessCallback(cbBGProcess);
+   }
+
+   else if (args.getArg("--setRootTest")){
+      auto myRoot = make_shared<Canvas>("myRoot");
+      window->setCanvas(myRoot);
+      auto someLabel = make_shared<Label>("somelabel");
+      window->getCanvas()->addChild(someLabel);
    }
 
    else if (args.getArg("--readFileTest")){

@@ -92,7 +92,7 @@ void Canvas::clearModal() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::_on_rect_changed() {
    _renderTarget.setSize(_rect.value.size());
-   _defaultCamera.setTarget(Vec2<float>(getSize().x/2, getSize().y/2));
+//   _defaultCamera.setTarget(Vec2<float>(getSize().x/2, getSize().y/2));
 //   _defaultCamera.target = _defaultCamera.offset;
 //   auto gpos = getGlobalPos();
 //   _virtualInputOffset = Pos<int>(gpos.x, gpos.y);
