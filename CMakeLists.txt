@@ -98,7 +98,10 @@ add_library(ReyEngine2D STATIC
 )
 
 add_library(ReyEngine3D STATIC
+    src/3d/DrawInterface3D.cpp
     src/3d/Viewport.cpp
+    src/3d/BaseBody.cpp
+    src/3d/Camera3D.cpp
 )
 
 add_library(editor STATIC
@@ -119,11 +122,19 @@ target_include_directories(ReyEngine2D PUBLIC
     src/thirdParty/uuid
 )
 
+# most stuff is linked against and included with ReyEngine2D already. Since ReyEngine3D is linked against ReyEngine2D,
+# there's no need to link against much new stuff (for now)
+target_include_directories( ReyEngine3D PUBLIC
+    src/3d
+)
+
 target_link_libraries(ReyEngine2D raylib lua Threads::Threads)
 
 if (UNIX)
     target_link_libraries(ReyEngine2D stdc++fs)
 endif (UNIX)
+
+target_link_libraries(ReyEngine3D ReyEngine2D)
 
 
 target_include_directories(editor PUBLIC

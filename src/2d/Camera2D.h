@@ -53,6 +53,6 @@ namespace ReyEngine {
       }
       BoolProperty active;
    private:
-      CameraTransform _camera;
+      CameraTransform2D _camera;
    };
 }

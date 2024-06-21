@@ -28,6 +28,7 @@
 #include "AStar.h"
 #include "CSVParser.h"
 #include "Camera2D.h"
+#include "Viewport.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -98,6 +99,7 @@ int main(int argc, char** argv)
 //   args.defineArg(RuntimeArg("--astarTest", "a star test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--camera2dTest", "camera 2d test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--setRootTest", "Setting a new root test", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--3dTest", "Basic3DTest", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    //create window (or don't idk)
@@ -1623,6 +1625,11 @@ int main(int argc, char** argv)
       root->addChild(someWidget);
       root->addChild(inspector);
       inspector->inspect(someWidget);
+   }
+
+
+   else if (args.getArg("--3dTest")){
+      //delcare a viewport
    }
 
    else {

@@ -639,8 +639,8 @@ namespace ReyEngine {
          Size<int> _size;
       };
 
-   struct CameraTransform{
-      CameraTransform();
+   struct CameraTransform2D{
+      CameraTransform2D();
       Camera2D camera;
       void setRotation(float newRot);
       void setOffset(Vec2<float> newOffset);
