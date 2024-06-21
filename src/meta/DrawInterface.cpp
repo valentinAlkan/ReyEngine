@@ -213,7 +213,7 @@ Size<int> ReyEngineFont::measure(const std::string &text) const {
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
-void CameraTransform::push() const {
+void CameraTransform2D::push() const {
 //   rlPushMatrix();
    //push camera translation matrix
 //   rlTranslatef(target.x + offset.x, target.y + offset.y, target.z + offset.z);
@@ -222,29 +222,29 @@ void CameraTransform::push() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-CameraTransform::CameraTransform() {
+CameraTransform2D::CameraTransform2D() {
    camera.rotation = 0;
    camera.zoom = 1;
    camera.target = {0,0};
    camera.offset = {0,0};
 }
 /////////////////////////////////////////////////////////////////////////////////////////
-void CameraTransform::pop(){
+void CameraTransform2D::pop(){
    EndMode2D();
 }
 /////////////////////////////////////////////////////////////////////////////////////////
-void CameraTransform::setZoom(float newZoom) {
+void CameraTransform2D::setZoom(float newZoom) {
    camera.zoom = newZoom;
 }
 /////////////////////////////////////////////////////////////////////////////////////////
-void CameraTransform::setRotation(float newRot) {
+void CameraTransform2D::setRotation(float newRot) {
    camera.rotation = newRot;
 }
 /////////////////////////////////////////////////////////////////////////////////////////
-void CameraTransform::setOffset(Vec2<float> newOffset) {
+void CameraTransform2D::setOffset(Vec2<float> newOffset) {
    camera.offset = newOffset;
 }
 /////////////////////////////////////////////////////////////////////////////////////////
-void CameraTransform::setTarget(Vec2<float> newTarget) {
+void CameraTransform2D::setTarget(Vec2<float> newTarget) {
    camera.target = newTarget;
 }

@@ -123,7 +123,7 @@ void Canvas::popScissor() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void Canvas::setActiveCamera(CameraTransform& newCamera) {
+void Canvas::setActiveCamera(CameraTransform2D& newCamera) {
    _activeCamera = std::ref(newCamera);
 }
 
