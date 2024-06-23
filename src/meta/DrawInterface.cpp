@@ -214,10 +214,6 @@ Size<int> ReyEngineFont::measure(const std::string &text) const {
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 void CameraTransform2D::push() const {
-//   rlPushMatrix();
-   //push camera translation matrix
-//   rlTranslatef(target.x + offset.x, target.y + offset.y, target.z + offset.z);
-//   rlScalef(zoom, zoom, 0); // do we need the Z zoom value? idk. will find out in the future when doing 3d i guess.
    BeginMode2D(camera);
 }
 

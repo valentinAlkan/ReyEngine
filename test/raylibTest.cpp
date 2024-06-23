@@ -3,11 +3,10 @@
 #include "InputManager.h"
 #include "rlgl.h"
 #include <stack>
+#include <Eigen/Dense>
 
 using namespace std;
 using namespace ReyEngine;
-
-bool cameraToggle = false;
 
 int main(int argc, char** argv){
    Camera2D foregroundCamera = {0}; //BEGIN to draw background
@@ -26,13 +25,13 @@ int main(int argc, char** argv){
    camera.projection = CAMERA_PERSPECTIVE;             // Camera projection type
 
    Vector3 cubePosition = { 0.0f, 0.0f, 0.0f };
-   RenderTexture2D renderTarget = LoadRenderTexture(windowSize.x, windowSize.y);
+   RenderTexture2D canvasTarget = LoadRenderTexture(windowSize.x, windowSize.y);
 
-   while(!WindowShouldClose()){
+   while(!WindowShouldClose()) {
       int moveSpeed = 5;
       Vec2<int> mvVec;
       double rotation = 0;
-      if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_W)){
+      if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_W)) {
          mvVec += {0, -1};
       }
       if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_A)) {
@@ -50,9 +49,29 @@ int main(int argc, char** argv){
       if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_E)) {
          rotation -= 1;
       }
-      if (InputManager::isMousButtonPressed(InputInterface::MouseButton::LEFT)){
-         cameraToggle = !cameraToggle;
-         std::cout << "Switching camera!" << endl;
+      if (InputManager::isMouseButtonDown(InputInterface::MouseButton::LEFT)) {
+         //see what the mouse delta is
+         auto delta = InputManager::getMouseDelta();
+         // Define the camera's initial position
+         Eigen::Vector3d cameraPosition(camera.position.x, camera.position.y, camera.position.z);
+
+         // Define the angle of rotation in degrees and convert it to radians
+         double angleDegrees = delta.x;
+         double angleRadians = angleDegrees * M_PI / 180.0;
+
+         // Define the rotation matrix around the y-axis
+         Eigen::Matrix3d rotationMatrix;
+         rotationMatrix = Eigen::AngleAxisd(angleRadians, Eigen::Vector3d::UnitY());
+
+         // Apply the rotation to the camera position
+         Eigen::Vector3d rotatedPosition = rotationMatrix * cameraPosition;
+
+         // Output the result
+         std::cout << "Original position: " << cameraPosition.transpose() << std::endl;
+         std::cout << "Rotated position: " << rotatedPosition.transpose() << std::endl;
+         camera.position.x = rotatedPosition.x();
+         camera.position.y = rotatedPosition.y();
+         camera.position.z = rotatedPosition.z();
       }
 
       if (mvVec) {
@@ -60,7 +79,7 @@ int main(int argc, char** argv){
          foregroundCamera.offset += newVec;
          cout << Vec2<float>(foregroundCamera.offset) << endl;
       }
-      if (rotation){
+      if (rotation) {
          foregroundCamera.rotation += rotation;
       }
 
@@ -90,26 +109,36 @@ int main(int argc, char** argv){
 
       // Draw somebackground
 
-//      Rendering3D to a texture
-      BeginTextureMode(renderTarget);              // Begin drawing to render texture
-      ClearBackground(WHITE);
-      BeginMode3D(camera);
+      // Rendering3D to a (nested) texture
+      BeginTextureMode(canvasTarget);              // Begin drawing to render texture
+      {
+         ClearBackground(WHITE);
+         DrawText("This is the Camera UI", 0, windowSize.y - 20, 20, BLACK);
 
+         {
+            BeginMode2D(foregroundCamera);
+            DrawText("This is the 2D background", 0, 0, 20, BLACK);
 
-      DrawCube(cubePosition, 2.0f, 2.0f, 2.0f, RED);
-      DrawCubeWires(cubePosition, 2.0f, 2.0f, 2.0f, MAROON);
+            {
+               BeginMode3D(camera);
+               DrawCube(cubePosition, 2.0f, 2.0f, 2.0f, RED);
+               DrawSphere({1, 1, 1}, 0.5, BLUE);
+               DrawCubeWires(cubePosition, 2.0f, 2.0f, 2.0f, MAROON);
+               DrawGrid(10, 1.0f);
+               EndMode3D();
+            }
 
-      DrawGrid(10, 1.0f);
-
-      EndMode3D();
-      EndTextureMode();
-
+            EndMode2D();
+         }
+         EndTextureMode();
+      }
+      //window
       BeginDrawing();
       ClearBackground(WHITE);
       //DRaw the texture
-      DrawTextureRec(renderTarget.texture, {0,0,(float)windowSize.x, -(float)windowSize.y}, {0,0}, WHITE);
-
+      DrawTextureRec(canvasTarget.texture, {0, 0, (float)windowSize.x, -(float)windowSize.y}, {0, 0}, WHITE);
       EndDrawing();
+      //end window
    }
 
    return 0;

@@ -265,8 +265,7 @@ void Window::exec(){
          }
 
          //draw children on top of their parents
-         BeginDrawing();
-//      ClearBackground(ReyEngine::Colors::none);
+
          ReyEngine::Pos<double> texOffset;
          _root->renderChain(texOffset);
 
@@ -275,6 +274,9 @@ void Window::exec(){
             _dragNDrop.value()->preview.value()->setPos(InputManager::getMousePos());
             _dragNDrop.value()->preview.value()->renderChain(texOffset);
          }
+         //render the canvas
+         BeginDrawing();
+         DrawTextureRec(_root->_renderTarget.getRenderTexture(), {0,0,(float)_root->_renderTarget.getSize().x, -(float)_root->_renderTarget.getSize().y},{0, 0}, WHITE);
          EndDrawing();
       } // release scoped lock here
       //wait some time

@@ -42,6 +42,31 @@ if (NOT raylib_FOUND) # If there's none, fetch and build raylib
     endif()
 endif()
 
+#set up eigen
+message(CHECK_START "Fetching Eigen3")
+list(APPEND CMAKE_MESSAGE_INDENT "  ")
+
+include(FetchContent)
+FetchContent_Declare(
+        Eigen
+        GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
+        GIT_TAG master
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE)
+# note: To disable eigen tests,
+# you should put this code in a add_subdirectory to avoid to change
+# BUILD_TESTING for your own project too since variables are directory
+# scoped
+set(BUILD_TESTING OFF)
+set(EIGEN_BUILD_TESTING OFF)
+set(EIGEN_MPL2_ONLY ON)
+set(EIGEN_BUILD_PKGCONFIG OFF)
+set(EIGEN_BUILD_DOC OFF)
+FetchContent_MakeAvailable(Eigen)
+
+list(POP_BACK CMAKE_MESSAGE_INDENT)
+message(CHECK_PASS "fetched")
+# /eigen
 
 set(CUSTOM_SOURCES
     test/TestWidgets.cpp
@@ -128,7 +153,7 @@ target_include_directories( ReyEngine3D PUBLIC
     src/3d
 )
 
-target_link_libraries(ReyEngine2D raylib lua Threads::Threads)
+target_link_libraries(ReyEngine2D raylib lua Threads::Threads Eigen3::Eigen)
 
 if (UNIX)
     target_link_libraries(ReyEngine2D stdc++fs)
