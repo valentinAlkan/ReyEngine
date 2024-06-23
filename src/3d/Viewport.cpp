@@ -5,33 +5,40 @@ using namespace std;
 using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::Viewport::_init() {
-   if (!_renderTarget.ready()) {
-      _renderTarget.setSize(getSize());
-   }
+std::shared_ptr<Viewport> Viewport::build(const std::string &instanceName) {
+   auto viewport = shared_ptr<Viewport>(new Viewport(instanceName));
+   return viewport;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Viewport::_init() {
 }
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::Viewport::renderBegin(ReyEngine::Pos<double>& textureOffset) {
-   Application::instance().getWindow(0)->pushRenderTarget(_renderTarget);
-   _renderTarget.clear();
+void Viewport::renderBegin(Pos<double>& textureOffset) {
    textureOffset -= _rect.value.pos();
    _activeCamera.get().push();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::Viewport::render() const{
-   drawRectangleLines(_rect.value.toSizeRect(), 2.0, Colors::blue);
+void Viewport::render() const{
+   if (_showGrid){
+      DrawGrid(10, 1.0f);
+      DrawCube({0,0,0}, 1,1,1, RED);
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::Viewport::renderEnd() {
+void Viewport::renderEnd() {
    _activeCamera.get().pop();
-   Application::instance().getWindow(0)->popRenderTarget();
-   drawRenderTargetRect(_renderTarget, Rect<int>(_renderTarget.getSize()), {0,0});
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled ReyEngine::Viewport::_unhandled_input(const InputEvent& inputEvent, const std::optional<UnhandledMouseInput>& mouseInput) {
+void Viewport::setUnhandledInputCallback(std::function<Handled(Viewport &, const InputEvent &, const std::optional<UnhandledMouseInput> &)> fx){
+   unhandledInputCallback = fx;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Handled Viewport::_unhandled_input(const InputEvent& inputEvent, const std::optional<UnhandledMouseInput>& mouseInput) {
    //offer up input to modal widget first
    if (unhandledInputCallback) {
       if (unhandledInputCallback(*this, inputEvent, mouseInput)) return true;
@@ -41,7 +48,6 @@ Handled ReyEngine::Viewport::_unhandled_input(const InputEvent& inputEvent, cons
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Viewport::_on_rect_changed() {
-   _renderTarget.setSize(_rect.value.size());
 //   _defaultCamera.setTarget(Vec2<float>(getSize().x/2, getSize().y/2));
 //   _defaultCamera.target = _defaultCamera.offset;
 //   auto gpos = getGlobalPos();

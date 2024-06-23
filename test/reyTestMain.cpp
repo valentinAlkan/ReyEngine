@@ -1629,7 +1629,10 @@ int main(int argc, char** argv)
 
 
    else if (args.getArg("--3dTest")){
-      //delcare a viewport
+      //declare a viewport
+      auto viewport = Viewport::build("viewport");
+      root->addChild(viewport);
+//      viewport->addChild()
    }
 
    else {

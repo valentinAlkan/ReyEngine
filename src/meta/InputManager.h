@@ -66,8 +66,8 @@ namespace ReyEngine{
       void operator=(InputManager const&) = delete;
       static inline bool isMouseButtonDown(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonDown(mouseButton);}
       static inline bool isMouseButtonUp(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonUp(mouseButton);}
-      static inline bool isMousButtonPressed(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonPressed(mouseButton);}
-      static inline bool isMousButtonReleased(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonReleased(mouseButton);}
+      static inline bool isMouseButtonPressed(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonPressed(mouseButton);}
+      static inline bool isMouseButtonReleased(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonReleased(mouseButton);}
       static inline bool isKeyDown(InputInterface::KeyCode key){return InputInterface::isKeyDown(key);}
       static inline bool isKeyUp(InputInterface::KeyCode key){return InputInterface::isKeyUp(key);}
       static inline void setExitKey(InputInterface::KeyCode key){return InputInterface::setExitKey(key);}
@@ -76,8 +76,6 @@ namespace ReyEngine{
       static inline ReyEngine::Pos<int> getMousePos(){return InputInterface::getMousePos();}
       static inline ReyEngine::Vec2<int> getMouseDelta(){return InputInterface::getMouseDelta();}
    protected:
-      static inline bool isMouseButtonPressed(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonPressed(mouseButton);}
-      static inline bool isMouseButtonReleased(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonReleased(mouseButton);}
       static inline bool isKeyPressed(InputInterface::KeyCode key){return InputInterface::isKeyPressed(key);}
       static inline bool isKeyReleased(InputInterface::KeyCode key){return InputInterface::isKeyReleased(key);}
       InputInterface::KeyCode getKeyPressed();

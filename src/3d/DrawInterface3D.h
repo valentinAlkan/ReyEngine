@@ -1,4 +1,5 @@
 #pragma once
+#include "raylib.h"
 #include "DrawInterface.h"
 
 namespace ReyEngine {
@@ -51,10 +52,7 @@ namespace ReyEngine {
    struct CameraTransform3D{
       CameraTransform3D();
       Camera3D camera;
-      void setRotation(float newRot);
-      void setOffset(Vec3<float> newOffset);
-      void setTarget(Vec3<float> newTarget);
-      void setZoom(float newZoom);
+      void setFOV(float newFOV);
       void push() const;
       void pop();
    };
