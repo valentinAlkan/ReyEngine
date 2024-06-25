@@ -574,9 +574,9 @@ namespace ReyEngine {
       ReyTexture(){};
       ReyTexture(const FileSystem::File& file);
        ReyTexture(ReyTexture&& other) noexcept
-      : _tex(other._tex)
+      :  size(other.size)
+      , _tex(other._tex)
       , _texLoaded(other._texLoaded)
-      , size(other.size)
       {
          other._texLoaded = false;
          _path = other._path;

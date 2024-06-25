@@ -9,7 +9,6 @@ namespace ReyEngine{
    // A pre-made tree of widgets
    class Scene;
    namespace SceneFileParser{
-      static bool allWhite(const std::string& s){return string_tools::countwhite(s) == s.size();};
       //a potential widget
       struct TreeObject : std::enable_shared_from_this<TreeObject>{
       private:

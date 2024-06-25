@@ -25,7 +25,7 @@ bool Sprite::setTexture(const ReyEngine::FileSystem::File& path) {
          region.value.setSize(texture->size);
          _rect = region;
       } else if (_fitNextTexture){
-         region = {{0, 0}, texture->size};
+         region = Rect<int>({0, 0}, texture->size);
          _fitNextTexture = false;
       }
    } else {

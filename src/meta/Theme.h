@@ -103,16 +103,16 @@ namespace Style {
    public:
       Theme(const std::string& instanceName = "DefaultTheme")
       : Property<Empty>(instanceName, PropertyTypes::Theme, Empty()),
-      PROPERTY_DECLARE(outline, Outline::NONE),
-      PROPERTY_DECLARE(background, Fill::NONE),
-      PROPERTY_DECLARE(foreground, Fill::SOLID),
-      PROPERTY_DECLARE(roundness, 0.02),
-      PROPERTY_DECLARE(roundnessSegments, 10),
-      PROPERTY_DECLARE(font),
-      PROPERTY_DECLARE(layoutMargins),
-      PROPERTY_DECLARE(lineThick),
-      PROPERTY_DECLARE(highlight, ReyEngine::Colors::blue),
-      PROPERTY_DECLARE(cursor)
+        PROPERTY_DECLARE(background, Fill::NONE),
+        PROPERTY_DECLARE(foreground, Fill::SOLID),
+        PROPERTY_DECLARE(highlight, ReyEngine::Colors::blue),
+        PROPERTY_DECLARE(outline, Outline::NONE),
+        PROPERTY_DECLARE(roundness, 0.02),
+        PROPERTY_DECLARE(roundnessSegments, 10),
+        PROPERTY_DECLARE(font),
+        PROPERTY_DECLARE(layoutMargins),
+        PROPERTY_DECLARE(lineThick),
+        PROPERTY_DECLARE(cursor)
       {
          //apply defaults
          background = Fill::SOLID;

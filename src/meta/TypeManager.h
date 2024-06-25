@@ -14,9 +14,9 @@ namespace ReyEngine {
    struct TypeMeta {
       TypeMeta(std::string typeName, std::string parentTypeName, bool isVirtual, Deserializer deserializer)
       : typeName(typeName)
+      , deserializer(deserializer)
       , parentTypeName(parentTypeName)
       , isVirtual(isVirtual)
-      , deserializer(deserializer)
       {}
       std::string typeName;
       Deserializer deserializer;
