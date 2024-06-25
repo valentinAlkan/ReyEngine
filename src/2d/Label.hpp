@@ -21,7 +21,7 @@ namespace ReyEngine{
          //todo: scissor text
          auto& outline = theme->outline;
          auto& background = theme->background;
-         auto& foreground = theme->foreground;
+//         auto& foreground = theme->foreground;
          switch (background.value){
             case Style::Fill::SOLID:
                drawRectangle(_rect.value.toSizeRect(), background.colorPrimary.value);
@@ -67,7 +67,7 @@ namespace ReyEngine{
          auto digitsCount = string_tools::decimalCount(textRepr);
          auto integerCount = digitsCount.value().first;
          auto decimalCount = digitsCount.value().second;
-         setText(std::string(textRepr, 0, integerCount + 1 + (decimalCount > precision ? precision : decimalCount)));
+         setText(std::string(textRepr, 0, integerCount + 1 + ((int)decimalCount > precision ? precision : decimalCount)));
       }
       void setText(int newText){
          setText(std::to_string(newText));

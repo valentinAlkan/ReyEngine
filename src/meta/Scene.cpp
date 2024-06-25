@@ -10,6 +10,7 @@ using namespace std;
 using namespace ReyEngine;
 using namespace SceneFileParser;
 
+bool allWhite(const std::string &s) { return string_tools::countwhite(s) == (int) s.size(); }
 /////////////////////////////////////////////////////////////////////////////////////////
 Scene::Scene(std::shared_ptr<BaseWidget> root)
 : _root(root){

@@ -12,9 +12,9 @@ namespace ReyEngine{
    class Draggable{
    public:
       Draggable(const std::string& id, std::shared_ptr<BaseWidget> preview) : id(id), preview(preview){}
-      std::optional<std::shared_ptr<BaseWidget>> preview;
-      const std::string id;
       Pos<int> startPos;
+      const std::string id;
+      std::optional<std::shared_ptr<BaseWidget>> preview;
    };
    
    class Canvas;

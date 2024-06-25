@@ -33,8 +33,8 @@ namespace ReyEngine{
    class BaseEvent{
    public:
       BaseEvent(EventId eventId, const std::shared_ptr<EventPublisher>& publisher)
-      : eventId(eventId)
-      , publisher(publisher)
+      : publisher(publisher)
+      , eventId(eventId)
       {}
       const std::shared_ptr<EventPublisher>& publisher;
       const EventId eventId;

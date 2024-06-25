@@ -272,7 +272,7 @@ struct EnumProperty : public Property<T>{
    : Property<T>(instanceName, PropertyTypes::Enum, std::move(defaultvalue))
    {}
    std::string toString() const override {
-      for(int i=0;i<getDict().size();i++){
+      for(long unsigned int i=0;i<getDict().size();i++){
          auto _value = getDict()[i].first;
          auto _name = getDict()[i].second;
          if (_name.empty())throw std::runtime_error("Empty EnumProperty value for enum " + this->instanceName());
@@ -283,7 +283,7 @@ struct EnumProperty : public Property<T>{
       throw std::runtime_error("Invalid EnumProperty lookup");
    }
    T fromString(const std::string& str) override {
-      for(int i=0;i<getDict().size();i++){
+      for(long unsigned int i=0;i<getDict().size();i++){
          auto name = getDict()[i].second;
          if (name.empty()) throw std::runtime_error("Empty EnumProperty value for enum " + this->instanceName());
          if (name == str){

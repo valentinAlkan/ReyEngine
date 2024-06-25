@@ -1,17 +1,16 @@
 cmake_minimum_required(VERSION 3.11) # FetchContent is available in 3.11+
 project(ReyEngine)
 
+set(CMAKE_REQUIRED_FLAGS "-Wno-old-style-definitions")
+
 # add lua
 add_subdirectory(src/thirdParty/lua)
-
-# Generate compile_commands.json
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # enable -std=c++17
 set (CMAKE_CXX_STANDARD 17)
 
 # Add static linking flags for GCC and standard C++ libraries
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++ -static")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++ -static -pthread")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++ -static")
 
 # Ensure pthread is linked statically
@@ -117,8 +116,8 @@ add_library(ReyEngine2D STATIC
     src/2d/TextureRect.cpp
     src/2d/CustomTypes.cpp
     src/2d/Camera2D.cpp
-    src/pathfinding/SearchNode.cpp
-    src/pathfinding/AStar.cpp
+    src/Pathfinding/SearchNode.cpp
+    src/Pathfinding/AStar.cpp
     ${CUSTOM_SOURCES}
 )
 
