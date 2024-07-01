@@ -1,9 +1,14 @@
 #pragma once
 #include "BaseWidget.h"
 #include "DrawInterface3D.h"
+#include "BaseBody.h"
 
 namespace ReyEngine {
-   class Viewport : public BaseWidget {
+
+   class Viewport
+   : public BaseWidget
+   , public Internal::Renderer3D
+   {
       REYENGINE_OBJECT_BUILD_ONLY(Viewport, BaseWidget)
       , _activeCamera(_defaultCamera)
       , _showGrid("showGrid", true)
@@ -15,9 +20,10 @@ namespace ReyEngine {
       void deleteActiveCamera();
       static std::shared_ptr<Viewport> build(const std::string& instanceName);
    protected:
-      void renderBegin(ReyEngine::Pos<double>& textureOffset) override;
+      void renderChain(ReyEngine::Pos<double>& textureOffset) override;
       void render() const override;
-      void renderEnd() override;
+      void renderer3DBegin() override;
+      void renderer3DEnd() override;
       void _on_rect_changed() override;
       void _process(float dt) override {}
       void registerProperties() override{}
@@ -26,6 +32,7 @@ namespace ReyEngine {
       CameraTransform3D _defaultCamera; //only exists to have something to point to in the event there is no camera defined in the scene tree
       std::reference_wrapper<CameraTransform3D> _activeCamera; //the currently active camera
       std::function<Handled(Viewport&, const InputEvent&, const std::optional<UnhandledMouseInput>&)> unhandledInputCallback;
+
 
    private:
       BoolProperty _showGrid;
