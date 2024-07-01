@@ -272,8 +272,8 @@ namespace ReyEngine{
       virtual void renderBegin(ReyEngine::Pos<double>& textureOffset){}
       virtual void renderEnd(){}
 
-      void renderEditorFeatures();
-      void renderChain(ReyEngine::Pos<double>& textureOffset);
+      virtual void renderEditorFeatures();
+      virtual void renderChain(ReyEngine::Pos<double>& textureOffset);
       ReyEngine::Vec2<float> getRenderOffset() const {return _renderOffset;}
       void setRenderOffset(ReyEngine::Pos<double> offset){_renderOffset = offset;}
    //   void renderTextureOffsetApply(ReyEngine::Pos<float>& textureOffset){}
