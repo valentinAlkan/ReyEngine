@@ -2,6 +2,7 @@
 #include "DrawInterface.h"
 #include "Event.h"
 #include "Component.h"
+#include <mutex>
 
 namespace ReyEngine {
    class BaseBody;
@@ -20,27 +21,53 @@ namespace ReyEngine {
       };
 
 
-      class BaseBodyContainer : public virtual PropertyContainer {
+//      class BaseBody;
+      template <typename T>
+      class TypeContainer : public Component
+      {
          using ChildIndex = unsigned long;
-         using BodyPtr = std::shared_ptr<BaseBody>;
-         using ChildMap = std::map<std::string, std::pair<ChildIndex, BodyPtr>>;
-         using ChildOrder = std::vector<BodyPtr>;
+         using ChildPtr = std::shared_ptr<T>;
+         using ChildMap = std::map<std::string, std::pair<ChildIndex, std::shared_ptr<T>>>;
+         using ChildOrder = std::vector<ChildPtr>;
+      public:
+         TypeContainer(const std::string& instanceName)
+         : Component(instanceName){}
+         T& toContainedType();
+         std::optional<ChildPtr> addChild(ChildPtr&);
+         void removeChild3D(ChildPtr&);
+         std::optional<ChildPtr> getChild(const std::string& name);
+         std::weak_ptr<T> getParent(){return _parent;}
       protected:
+         virtual void _on_child_added_immediate(ChildPtr&) = 0;
+
+
          ChildMap _childMap3D;
          ChildOrder _childOrder3D;
+      private:
+         std::weak_ptr<T> _parent;
+         std::recursive_mutex _childLock;
       };
 
       //Something which renders 3D objects but is not a 3D body in itself
-      class Renderer3D : public virtual BaseBodyContainer {
+      class Renderer3D : public TypeContainer<BaseBody> {
+      public:
+         Renderer3D(const std::string& instanceName)
+         : TypeContainer<BaseBody>(instanceName){}
       protected:
          virtual void renderer3DBegin(){};
          virtual void renderer3DChain();
          virtual void renderer3DEnd(){};
          virtual void renderer3DEditorFeatures(){}
+         void _on_child_added_immediate(std::shared_ptr<BaseBody>&) override {};
       };
 
       // Something which has volume is able to be rendered in 3D along with its children.
-      class Renderable3D : public virtual Renderer3D {
+      class Renderable3D : public Renderer3D {
+      public:
+         Renderable3D(const std::string& instanceName)
+         : Renderer3D(instanceName)
+         , _visible("visible")
+         {}
       protected:
          virtual void render3DBegin(){};
          virtual void render3D(){};
@@ -56,14 +83,11 @@ namespace ReyEngine {
    //Combines the functionality above
    class BaseBody
    : public inheritable_enable_shared_from_this<BaseBody>
-   , public virtual Internal::Renderable3D
-   , public virtual Internal::Renderer3D
-   , public Component
+   , public Internal::Renderable3D
    , public EventPublisher
    , public EventSubscriber
    {
    protected:
-
       friend class Internal::Renderer3D;
 
 
