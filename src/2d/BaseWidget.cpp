@@ -288,7 +288,7 @@ ReyEngine::Pos<int> BaseWidget::localToGlobal(const ReyEngine::Pos<int> &local) 
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::Size<int> BaseWidget::getChildBoundingBox() const {
-   ReyEngine::Size<int> childRect;
+   Size<int> childRect;
    for (const auto& childIter : _children){
       auto totalOffset = childIter.second.second->getRect().size() + Size<double>(childIter.second.second->getPos());
       childRect = childRect.max(totalOffset);
@@ -299,7 +299,7 @@ ReyEngine::Size<int> BaseWidget::getChildBoundingBox() const {
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::renderChain(ReyEngine::Pos<double>& parentOffset) {
    if (!_visible) return;
-   ReyEngine::Pos<double> localOffset;
+   Pos<double> localOffset;
    renderBegin(localOffset);
    auto prevOffset = _renderOffset;
    _renderOffset += (localOffset + parentOffset);
