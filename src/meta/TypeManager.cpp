@@ -9,6 +9,7 @@
 
 using namespace std;
 using namespace ReyEngine;
+using namespace Internal;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void TypeManager::registerType(std::string typeName, string parentTypeName, bool isVirtual, Deserializer fx) {
@@ -44,19 +45,19 @@ void TypeManager::_registerTypes() {
    static constexpr char basewidget[] = "BaseWidget";
    instance()._types[basewidget] = make_shared<TypeMeta>(basewidget, "", true, nullptr);
    //register all other internal widget types here
-   BaseWidget::registerType("Control", "BaseWidget", false, &Control::deserialize);
-   BaseWidget::registerType("BaseButton", "Control", true, nullptr);
-   BaseWidget::registerType("PushButton", "BaseButton", false, &PushButton::deserialize);
-   BaseWidget::registerType("Label", "Control", false, &Label::deserialize);
-   BaseWidget::registerType("ScrollArea", "Control", false, &ScrollArea::deserialize);
-   BaseWidget::registerType("Slider", "Control", false, &Slider::deserialize);
+   Component::registerType("Control", "BaseWidget", false, &Control::deserialize);
+   Component::registerType("BaseButton", "Control", true, nullptr);
+   Component::registerType("PushButton", "BaseButton", false, &PushButton::deserialize);
+   Component::registerType("Label", "Control", false, &Label::deserialize);
+   Component::registerType("ScrollArea", "Control", false, &ScrollArea::deserialize);
+   Component::registerType("Slider", "Control", false, &Slider::deserialize);
 
    //register custom types
    CustomTypes::registerTypes();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<BaseWidget> TypeManager::deserialize(const std::string &typeName, const std::string &instanceName, PropertyPrototypeMap& protoperties) {
+std::shared_ptr<Component> TypeManager::deserialize(const std::string &typeName, const std::string &instanceName, PropertyPrototypeMap& protoperties) {
    auto& instance = TypeManager::instance();
    auto found = instance.getType(typeName);
    if (!found->deserializer){

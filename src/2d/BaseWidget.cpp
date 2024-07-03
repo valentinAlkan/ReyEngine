@@ -12,12 +12,11 @@ using namespace FileSystem;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 BaseWidget::BaseWidget(const std::string& name, std::string  typeName)
-: Component(name)
+: Component(name, typeName)
 , PROPERTY_DECLARE(isBackRender, false)
 , PROPERTY_DECLARE(_rect)
 , PROPERTY_DECLARE(_anchor, Anchor::NONE)
 , PROPERTY_DECLARE(_inputMask, InputMask::NONE)
-, _typeName(std::move(typeName))
 , theme(make_shared<Style::Theme>())
 {}
 
@@ -209,8 +208,8 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::removeChild(const std::string& 
       return nullopt;
    }
    //remove from renderlist
-   auto frontRenderFound = std::find(_frontRenderList.begin(), _frontRenderList.end(), inheritable_enable_shared_from_this<BaseWidget>::shared_from_this());
-   auto backRenderFound = std::find(_backRenderList.begin(), _backRenderList.end(), inheritable_enable_shared_from_this<BaseWidget>::shared_from_this());
+   auto frontRenderFound = std::find(_frontRenderList.begin(), _frontRenderList.end(), toBaseWidget());
+   auto backRenderFound = std::find(_backRenderList.begin(), _backRenderList.end(), toBaseWidget());
    if (frontRenderFound != _frontRenderList.end()){
       _frontRenderList.erase(frontRenderFound);
    }
@@ -595,24 +594,6 @@ std::string BaseWidget::serialize() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::_deserialize(PropertyPrototypeMap& propertyData){
-   //register all properties so we know what's what
-   _register_parent_properties();
-   registerProperties();
-   //   move the properties to their new home
-   for (auto& [name, data] : propertyData){
-      auto found = _properties.find(name);
-      if (found == _properties.end()){
-         throw std::runtime_error("Property " + name + " of type " + data.typeName + " not registered to type " + _typeName + ". Did you remember to call ParentType::registerProperties() for each parent type?");
-         //dynamic property - throw it in the data struct
-
-      }
-      found->second->_load(data);
-   }
-
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::registerProperties() {
    registerProperty(_rect);
    registerProperty(_isProcessed);
@@ -967,3 +948,8 @@ std::optional<std::shared_ptr<BaseWidget>> BaseWidget::askHover(const Pos<int>& 
             return nullopt;
     }
 };
+
+///////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<BaseWidget> BaseWidget::toBaseWidget(){
+   return inheritable_enable_shared_from_this<Component>::downcasted_shared_from_this<BaseWidget>();
+}

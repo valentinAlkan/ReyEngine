@@ -7,7 +7,7 @@ using namespace ReyEngine;
 /////////////////////////////////////////////////////////////////////////////////////////
 void WidgetTree::_init(){
    //populate with widgets
-   auto& typeManager = TypeManager::instance();
+   auto& typeManager = Internal::TypeManager::instance();
    auto typeMetaRoot = typeManager.getRoot();
    auto treeRoot = make_shared<WidgetTreeItem>(typeMetaRoot);
    treeRoot->setEnabled(false);
@@ -34,7 +34,7 @@ std::optional<std::shared_ptr<Draggable>> WidgetTree::_on_drag_start(ReyEngine::
    auto metaAt = getMetaAt(globalToLocal(globalPos));
    if (metaAt) {
       auto typeName = metaAt.value()->item->getText();
-      auto typeMeta = TypeManager::getType(typeName);
+      auto typeMeta = Internal::TypeManager::getType(typeName);
       if (typeMeta->isVirtual) return nullopt;
       cout << "drag start at " << globalPos << endl;
       auto label = make_shared<Label>("dragLabel");

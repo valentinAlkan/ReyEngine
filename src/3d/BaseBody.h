@@ -22,51 +22,24 @@ namespace ReyEngine {
 
 
 //      class BaseBody;
-      template <typename T>
-      class TypeContainer : public Component
-      {
-         using ChildIndex = unsigned long;
-         using ChildPtr = std::shared_ptr<T>;
-         using ChildMap = std::map<std::string, std::pair<ChildIndex, std::shared_ptr<T>>>;
-         using ChildOrder = std::vector<ChildPtr>;
-      public:
-         TypeContainer(const std::string& instanceName)
-         : Component(instanceName){}
-         T& toContainedType();
-         std::optional<ChildPtr> addChild(ChildPtr&);
-         void removeChild3D(ChildPtr&);
-         std::optional<ChildPtr> getChild(const std::string& name);
-         std::weak_ptr<T> getParent(){return _parent;}
-      protected:
-         virtual void _on_child_added_immediate(ChildPtr&) = 0;
 
-
-         ChildMap _childMap3D;
-         ChildOrder _childOrder3D;
-      private:
-         std::weak_ptr<T> _parent;
-         std::recursive_mutex _childLock;
-      };
 
       //Something which renders 3D objects but is not a 3D body in itself
-      class Renderer3D : public TypeContainer<BaseBody> {
+      class Renderable3D;
+      class Renderer3D : public TypeContainerInterface<Renderable3D>{
       public:
-         Renderer3D(const std::string& instanceName)
-         : TypeContainer<BaseBody>(instanceName){}
+         Renderer3D() : TypeContainerInterface<Renderable3D>(_container) {}
       protected:
          virtual void renderer3DBegin(){};
          virtual void renderer3DChain();
          virtual void renderer3DEnd(){};
          virtual void renderer3DEditorFeatures(){}
-         void _on_child_added_immediate(std::shared_ptr<BaseBody>&) override {};
+         TypeContainer<Renderable3D> _container;
       };
 
       // Something which has volume is able to be rendered in 3D along with its children.
       class Renderable3D : public Renderer3D {
-      public:
-         Renderable3D(const std::string& instanceName)
-         : Renderer3D(instanceName)
-         , _visible("visible")
+         Renderable3D() : _visible("visible")
          {}
       protected:
          virtual void render3DBegin(){};
@@ -76,21 +49,17 @@ namespace ReyEngine {
          virtual void renderable3DEditorFeatures(){}
          BoolProperty _visible;
          Transform3D _transform;
+         friend class Renderer3D;
       };
    }
 
 
    //Combines the functionality above
-   class BaseBody
-   : public inheritable_enable_shared_from_this<BaseBody>
-   , public Internal::Renderable3D
-   , public EventPublisher
-   , public EventSubscriber
-   {
+   class BaseBody : public Internal::Component {
+      REYENGINE_OBJECT_BUILD_ONLY(BaseBody, Internal::Component){}
    protected:
+      std::shared_ptr<BaseBody> toBaseBody();
+      void _on_child_added_immediate();
       friend class Internal::Renderer3D;
-
-
-
    };
 }

@@ -26,18 +26,19 @@ Handled Workspace::_on_drag_drop(std::shared_ptr<Draggable> draggable){
             throw std::runtime_error("Too many children with the same or similar instanceName as " + instanceName);
          }
       }
-      auto typemeta = TypeManager::getType(draggable->id);
+      auto typemeta = ReyEngine::Internal::TypeManager::getType(draggable->id);
       if (typemeta->isVirtual) throw std::runtime_error("Cannot instantiate virtual type " + draggable->id);
       PropertyPrototypeMap empty;
-      auto newWidget = TypeManager::instance().deserialize(draggable->id, instanceName, empty);
-      newWidget->setInEditor(true);
-      newWidget->setEditorSelected(true);
-      addChild(newWidget);
-      newWidget->setPos(getLocalMousePos());
-      //publish widget add event
-      EventWidgetAdded event(toEventPublisher());
-      event.widget = newWidget;
-      publish<EventWidgetAdded>(event);
+      auto newWidget = ReyEngine::Internal::TypeManager::instance().deserialize(draggable->id, instanceName, empty);
+      throw std::runtime_error("Fix this");
+//      newWidget->setInEditor(true);
+//      newWidget->setEditorSelected(true);
+//      addChild(newWidget);
+//      newWidget->setPos(getLocalMousePos());
+//      //publish widget add event
+//      EventWidgetAdded event(toEventPublisher());
+//      event.widget = newWidget;
+//      publish<EventWidgetAdded>(event);
       return true;
    }
    return false;
