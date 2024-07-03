@@ -98,6 +98,7 @@ add_library(ReyEngine2D STATIC
     src/meta/Config.cpp
     src/meta/CSVParser.cpp
     src/meta/Platform.cpp
+    src/meta/TypeContainer.cpp
     src/2d/BaseWidget.cpp
     src/2d/ComboBox.cpp
     src/2d/Control.cpp
@@ -126,6 +127,7 @@ add_library(ReyEngine3D STATIC
     src/3d/Viewport.cpp
     src/3d/BaseBody.cpp
     src/3d/Camera3D.cpp
+    src/3d/Plane3D.cpp
 )
 
 add_library(editor STATIC

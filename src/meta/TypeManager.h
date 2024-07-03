@@ -7,9 +7,9 @@
 #include <optional>
 #include "Property.h"
 
-namespace ReyEngine {
-   class BaseWidget;
-   using Deserializer = std::function<std::shared_ptr<ReyEngine::BaseWidget>(const std::string& instanceName, PropertyPrototypeMap&)>;
+namespace ReyEngine::Internal {
+   class Component;
+   using Deserializer = std::function<std::shared_ptr<Component>(const std::string& instanceName, PropertyPrototypeMap&)>;
 
    struct TypeMeta {
       TypeMeta(std::string typeName, std::string parentTypeName, bool isVirtual, Deserializer deserializer)
@@ -28,12 +28,12 @@ namespace ReyEngine {
    class TypeManager{
    public:
       static void registerType(std::string typeName, std::string parentTypeName, bool isVirtual, Deserializer);
-      static std::shared_ptr<BaseWidget> deserialize(const std::string& typeName, const std::string& instanceName, PropertyPrototypeMap&);
+      static std::shared_ptr<Component> deserialize(const std::string& typeName, const std::string& instanceName, PropertyPrototypeMap&);
       static std::shared_ptr<TypeMeta> getType(std::string typeName);
-      std::shared_ptr<TypeMeta> getRoot(){return getType("BaseWidget");};
+      std::shared_ptr<TypeMeta> getRoot(){return getType("Component");};
       static TypeManager& instance(){static TypeManager instance;return instance;}
-   protected:
       void _registerTypes();
+   protected:
       friend class Application;
    private:
       TypeManager(){}

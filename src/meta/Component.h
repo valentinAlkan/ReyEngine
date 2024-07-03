@@ -1,6 +1,9 @@
 #pragma once
 #include "Property.h"
 #include "DrawInterface.h"
+#include "TypeManager.h"
+#include "TypeContainer.h"
+#include "Event.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(TYPENAME) \
@@ -9,10 +12,10 @@ std::string _get_static_constexpr_typename() override {return TYPE_NAME;}
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_SERIALIZER(CLASSNAME, PARENT_CLASSNAME) \
    public:                                           \
-   static std::shared_ptr<BaseWidget> deserialize(const std::string& instanceName, PropertyPrototypeMap& properties) { \
+   static std::shared_ptr<Component> deserialize(const std::string& instanceName, PropertyPrototypeMap& properties) { \
    auto retval = std::shared_ptr<CLASSNAME>(new CLASSNAME(instanceName)); \
-   retval->BaseWidget::_deserialize(properties);          \
-   retval->BaseWidget::_on_deserialize(properties);       \
+   retval->Component::_deserialize(properties);          \
+   retval->Component::_on_deserialize(properties);       \
    return retval;}                                       \
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME) \
@@ -55,16 +58,19 @@ public:                                                   \
    REYENGINE_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME)  \
    REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME)
 
+namespace ReyEngine::Internal{
 
-// A thing which does stuff.
-namespace ReyEngine{
-   class Window;
+   // A thing which does stuff.
    class Component
-   : public PropertyContainer
+   : public inheritable_enable_shared_from_this<Component>
+   , public PropertyContainer
+   , public ReyEngine::EventSubscriber
+   , public ReyEngine::EventPublisher
    {
    public:
       using RID = uint64_t;
-      Component(const std::string& name);
+      static constexpr char TYPE_NAME[] = "TypeContainer";
+      Component(const std::string& name, const std::string& typeName);
       inline RID getRid() const {return _resourceId;}
       inline std::string getName() const {return _name;}
 
@@ -72,9 +78,20 @@ namespace ReyEngine{
       inline bool operator==(const Component& other) const{return other._resourceId == _resourceId;}
       void registerProperties() override {}
       uint64_t getFrameCounter() const;
+      std::shared_ptr<Component> toComponent();
+      ReyEngine::Internal::TypeContainer<Component>& getComponentContainer(){return _components;}
+      static void registerType(const std::string& typeName, const std::string& parentType, bool isVirtual, Deserializer fx){TypeManager::registerType(typeName, parentType, isVirtual, fx);}
+
    protected:
+      virtual std::string _get_static_constexpr_typename(){return TYPE_NAME;}
+      TypeContainer<Component> _components;
+      virtual void _register_parent_properties(){};
+      void _deserialize(PropertyPrototypeMap&);
+      virtual void _on_deserialize(PropertyPrototypeMap&){} //used to do any deserializations specific to this type
+      const std::string _typeName; //can't just use static constexpr TYPE_NAME since we need to know what the type is if using type-erasure
       std::string _name;
       BoolProperty _isProcessed;
       IntProperty _resourceId;
+      friend class TypeManager;
    };
 }

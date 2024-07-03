@@ -321,7 +321,8 @@ std::shared_ptr<Scene> SceneFileParser::DescStruct::parse(std::shared_ptr<TreeOb
          throw std::runtime_error("Object type " + desc->instanceName + " has no matching Description!");
       }
       //Deserialize the type
-      obj->widget = TypeManager::deserialize(desc->typeName, desc->instanceName, desc->properties);
+      throw std::runtime_error("fix this to deserialize from component");
+//      obj->widget = TypeManager::deserialize(desc->typeName, desc->instanceName, desc->properties);
       //deserialize children
       for (auto& child : obj->children){
          deserialize(child);

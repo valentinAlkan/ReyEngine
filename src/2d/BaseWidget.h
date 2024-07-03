@@ -27,11 +27,7 @@ namespace ReyEngine{
    class Scene;
    class Draggable;
    class Canvas;
-   class  BaseWidget
-   : public inheritable_enable_shared_from_this<BaseWidget>
-   , public EventSubscriber
-   , public EventPublisher
-   , public Component
+   class BaseWidget : public Internal::Component
    {
       using ChildIndex = unsigned long;
       using WidgetPtr = std::shared_ptr<BaseWidget>;
@@ -215,7 +211,6 @@ namespace ReyEngine{
       void removeAllChildren(); //removes all children and DOES NOT RETURN THEM!
 
       template <typename T> bool is_base_of(){return std::is_base_of_v<BaseWidget, T>;}
-      static void registerType(const std::string& typeName, const std::string& parentType, bool isVirtual, Deserializer fx){TypeManager::registerType(typeName, parentType, isVirtual, fx);}
       std::string serialize();
       inline std::shared_ptr<Style::Theme>& getTheme(){return theme;}
       inline void setTheme(std::shared_ptr<Style::Theme>& newTheme){theme = newTheme;}
@@ -240,7 +235,7 @@ namespace ReyEngine{
    //   void drawTextureRect(const ReyEngine::ReyTexture&, const ReyEngine::Rect<int>&, const ReyEngine::Pos<int>&) const;
 
    //   void recalculateRect();
-      std::shared_ptr<BaseWidget> toBaseWidget(){return inheritable_enable_shared_from_this<BaseWidget>::downcasted_shared_from_this<BaseWidget>();}
+      std::shared_ptr<BaseWidget> toBaseWidget();
       virtual void _on_application_ready(){}; //called when the main loop is starting, or immediately if that's already happened
       virtual void _init(){}; //run ONCE PER OBJECT when it enters tree for first time. Subsequent additions to the tree will not call this.
       void __on_rect_changed(); //internal. Trigger resize for anchored widgets.
@@ -279,8 +274,6 @@ namespace ReyEngine{
    //   void renderTextureOffsetApply(ReyEngine::Pos<float>& textureOffset){}
    //   void renderTextureOffsetReset(ReyEngine::Pos<float>& textureOffset){}
       void registerProperties() override;
-      void _deserialize(PropertyPrototypeMap&);
-      virtual void _on_deserialize(PropertyPrototypeMap&){} //used to do any deserializations specific to this type
       RectProperty<int> _rect;
       InputMaskProperty<int> _inputMask; //Only input inside this rectangle will be handled;
 
@@ -290,8 +283,6 @@ namespace ReyEngine{
       virtual Handled _unhandled_masked_input(const InputEventMouse&, const std::optional<UnhandledMouseInput>&){return true;} //masked input is handled by default
       virtual std::optional<std::shared_ptr<BaseWidget>> askHover(const ReyEngine::Pos<int>& globalPos);
    protected:
-      virtual void _register_parent_properties(){};
-
       void _is_extendable(){static_assert(true);}
       virtual std::string _get_static_constexpr_typename(){return TYPE_NAME;}
 
@@ -331,7 +322,6 @@ namespace ReyEngine{
 
       AnchorProperty _anchor;
       void rename(WidgetPtr& child, const std::string& newName);
-      const std::string _typeName; //can't just use static constexpr TYPE_NAME since we need to know what the type is if using type-erasure
 
       std::weak_ptr<BaseWidget> _parent;
       ///If this widget is the root of a scene, then the rest of the scene data is here.

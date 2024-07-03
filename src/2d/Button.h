@@ -38,7 +38,8 @@ namespace ReyEngine{
    /////////////////////////////////////////////////////////////////////////////////////////
    class PushButton : public BaseButton{
       REYENGINE_OBJECT(PushButton, BaseButton)
-      , PROPERTY_DECLARE(text){
+      , PROPERTY_DECLARE(text)
+      {
          text.value = getName();
          theme->background.colorPrimary.set(COLORS::gray);
          theme->background.colorSecondary.set(COLORS::lightGray);
