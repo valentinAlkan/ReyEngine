@@ -690,8 +690,6 @@ std::optional<std::shared_ptr<BaseWidget>> BaseWidget::askHover(const Pos<int>& 
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::__on_enter_tree() {
    auto me = inheritable_enable_shared_from_this<Component>::downcasted_shared_from_this<BaseWidget>();
    auto parent = getParent().lock();
