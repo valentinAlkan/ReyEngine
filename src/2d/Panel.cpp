@@ -106,10 +106,15 @@ void Panel::_init() {
       setScissor();
       window->setVisible(!_isMinimized);
       _isResizable = !_isMinimized;
-      static InputFilter filterCache;
-      filterCache = window->getInputFilter();
+      if (_isMinimized){
+         //record the input filter type so we can recall it later
+         _filterCache = window->getInputFilter();
+         window->setInputFilter(InputFilter::INPUT_FILTER_IGNORE_AND_STOP);
+      } else {
+         window->setInputFilter(_filterCache);
+      }
       setAcceptsHover(!_isMinimized);
-      window->setInputFilter(_isMinimized ? InputFilter::INPUT_FILTER_IGNORE_AND_STOP : filterCache);
+
       return true;
    };
    auto toggleMaxCB = [this, toggleMinCB](const PushButton::ButtonPressEvent& event){
@@ -272,6 +277,7 @@ Handled Panel::_unhandled_input(const InputEvent& event, const std::optional<Unh
                   break;
                default:
                   InputInterface::setCursor(cursor);
+                  return false;
             }
             return true;
          }

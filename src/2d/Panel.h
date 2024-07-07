@@ -61,6 +61,8 @@ namespace ReyEngine{
       BoolProperty _isMinimized;
       BoolProperty _isMaximized;
 
+      InputFilter _filterCache;
+
       ResizeDir _resizeDir = ResizeDir::NONE;
       std::array<ReyEngine::Rect<int>, 4> stretchRegion; //top/right/bottom/left
       ReyEngine::Rect<int> _scissorArea;
