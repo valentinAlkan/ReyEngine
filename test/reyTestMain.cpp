@@ -1,3 +1,4 @@
+#include "reyTestMain.h"
 #include "DrawInterface.h"
 #include <cassert>
 #include "ScrollArea.h"
@@ -589,9 +590,12 @@ int main(int argc, char** argv)
       auto internalPanelLabel = make_shared<Label>("InternalPanelLabel");
       internalPanel->addChildToPanel(internalPanelLabel);
 
-      auto internalMoveCB = [](Control& internalpanel){
+      auto internalMoveCB = [](Control& internalpanel){};
+      //create another panel that is an extension
 
-      };
+      auto internalSuperPanel = SuperPanel::build("superPanel");
+      panel->addChildToPanel(internalSuperPanel);
+      internalSuperPanel->setRect({30, 30, 100, 100});
    }
 
    else if (args.getArg("--editor")){
