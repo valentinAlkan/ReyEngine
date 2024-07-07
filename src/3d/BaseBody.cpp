@@ -56,7 +56,7 @@ optional<shared_ptr<BaseBody>> Internal::TypeContainer<BaseBody>::addChild(Child
    _on_child_added_immediate(child);
    auto& me = toContainedType();
    Logger::debug() << "Registering child " << child->getName() << " to parent " << parent->getName() << endl;
-//   Application::registerForEnterTree(child, me);
+   Application::registerForEnterTree(child, me);
 
    return child;
 }

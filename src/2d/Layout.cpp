@@ -21,7 +21,7 @@ void Layout::_register_parent_properties() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void Layout::_on_child_added(std::shared_ptr<BaseWidget> &child) {
    Logger::debug() << child->getName() << " added to layout " << getName() << std::endl;
-   if (childScales.size() < _childrenOrdered.size()){
+   if (childScales.size() < getChildren().size()){
       childScales.append(1.0);
    }
    arrangeChildren();
@@ -35,7 +35,7 @@ void Layout::_on_child_added(std::shared_ptr<BaseWidget> &child) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Layout::_on_child_removed(std::shared_ptr<BaseWidget>& child){
-   if (childScales.size() > _childrenOrdered.size()){
+   if (childScales.size() > getChildren().size()){
       childScales.pop_back();
    }
 }
@@ -81,7 +81,7 @@ void Layout::arrangeChildren() {
       };
 
       auto sizeLeft = totalSpace;
-      for (auto &child: _childrenOrdered) {
+      for (auto &child: getChildren()) {
          int allowedSpace = (int) (sizeLeft * calcRatio(childIndex));
          auto actualRect = dir == LayoutDir::HORIZONTAL ? ReyEngine::Rect<int>(pos, {allowedSpace, _rect.value.height})
                                                         : ReyEngine::Rect<int>(pos, {_rect.value.width, allowedSpace});

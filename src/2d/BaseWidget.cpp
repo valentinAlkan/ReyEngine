@@ -10,9 +10,12 @@ using namespace std;
 using namespace ReyEngine;
 using namespace FileSystem;
 
+#define FIXME(identifier) throw std::runtime_error("FIXME: " #identifier)
+
 /////////////////////////////////////////////////////////////////////////////////////////
 BaseWidget::BaseWidget(const std::string& name, std::string  typeName)
 : Component(name, typeName)
+, Internal::TypeContainerInterface<BaseWidget>(_container)
 , PROPERTY_DECLARE(isBackRender, false)
 , PROPERTY_DECLARE(_rect)
 , PROPERTY_DECLARE(_anchor, Anchor::NONE)
@@ -76,11 +79,13 @@ bool BaseWidget::setName(const std::string& newName, bool append_index) {
 void BaseWidget::rename(WidgetPtr &child, const std::string &newName) {
    //rename but not move
    //find the existing reference to the child
-   auto childIter = _children[child->_name];
-   auto oldName = child->_name;
-   _children[newName] = childIter;
-   _children.erase(oldName);
-   child->_name = newName;
+   FIXME(basewidget::rename);
+//   auto& children = getChildren();
+//   auto childIter = children[child->_name];
+//   auto oldName = child->_name;
+//   _children[newName] = childIter;
+//   _children.erase(oldName);
+//   child->_name = newName;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -91,18 +96,19 @@ bool BaseWidget::setIndex(unsigned int newIndex){
    }
    auto parent = _parent.lock();
    //get reference to widget in map
-   auto selfMapIter = parent->_children[_name];
-   auto index = selfMapIter.first;
-
-   //delete reference to widget in ordered vector
-   auto selfVectorIter = parent->_childrenOrdered.begin() + index;
-   parent->_childrenOrdered.erase(selfVectorIter);
-
-   //insert new reference in new position
-   //todo: finish
-   throw std::runtime_error("not finished");
-
-
+   FIXME(basewidget::setIndex);
+//   auto selfMapIter = parent->_children[_name];
+//   auto index = selfMapIter.first;
+//
+//   //delete reference to widget in ordered vector
+//   auto selfVectorIter = parent->_childrenOrdered.begin() + index;
+//   parent->_childrenOrdered.erase(selfVectorIter);
+//
+//   //insert new reference in new position
+//   //todo: finish
+//   throw std::runtime_error("not finished");
+//
+//
 
 }
 
@@ -122,22 +128,6 @@ ReyEngine::Size<int> BaseWidget::getClampedSize(ReyEngine::Size<int> size){
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::Size<int> BaseWidget::getClampedSize(){
    return getClampedSize(getSize());
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-bool BaseWidget::hasChild(const std::string &name){
-   auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
-   return _children.find(name) != _children.end();
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-std::optional<BaseWidget::WidgetPtr> BaseWidget::getChild(const std::string &childName) {
-   auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
-   auto found = _children.find(childName);
-   if (found == _children.end()) {
-      return nullopt;
-   }
-   return {found->second.second};
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -957,4 +947,35 @@ std::optional<std::shared_ptr<BaseWidget>> BaseWidget::askHover(const Pos<int>& 
 ///////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<BaseWidget> BaseWidget::toBaseWidget(){
    return inheritable_enable_shared_from_this<Component>::downcasted_shared_from_this<BaseWidget>();
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::__on_component_enter_tree() {
+   auto parent = getParent();
+   auto newIndex = parent->_childrenOrdered.size(); //index of new child's location in ordered vector
+   parent->_children[component->getName()] = std::pair<int, std::shared_ptr<Component>>(newIndex, component);
+   parent->_childrenOrdered.push_back(component);
+   if (component->isBackRender.value){
+      parent->_backRenderList.push_back(component);
+   } else {
+      parent->_frontRenderList.push_back(component);
+   }
+
+   component->_parent = parent->toComponent();
+   component->isInLayout = parent->isLayout;
+   //recalculate the size rect if need to
+   //todo: fix size published twice (setrect and later _publishSize
+   if (component->isAnchored() || component->isLayout){
+      //anchoring and layout of children managed by this component
+      component->setRect(component->_rect.value);
+   }
+   if (component->isInLayout){
+      //placement of layout managed by parent
+      parent->setRect(parent->_rect.value);
+   }
+   if (!hasInit) {
+      component->_init();
+      hasInit = true;
+      component->_publishSize();
+   }
 }

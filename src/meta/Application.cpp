@@ -1,5 +1,5 @@
 #include "Application.h"
-#include "BaseWidget.h"
+#include "Component.h"
 #include <utility>
 #include "Canvas.h"
 #include "Platform.h"
@@ -22,16 +22,16 @@ std::shared_ptr<Window> Application::createWindow(const std::string &title, int 
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Application::registerForEnterTree(std::shared_ptr<BaseWidget>& widget, std::shared_ptr<BaseWidget>& parent) {
-   instance()._initQueue.emplace(widget, parent);
+void Application::registerForEnterTree(std::shared_ptr<Component>& component, std::shared_ptr<Component>& parent) {
+   instance()._initQueue.emplace(component, parent);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Application::registerForApplicationReady(std::shared_ptr<BaseWidget>& widget) {
+void Application::registerForApplicationReady(std::shared_ptr<Component>& component) {
    if (!isReady()) {
-      instance()._applicationReadyList.insert(widget);
+      instance()._applicationReadyList.insert(component);
    } else {
-      widget->_on_application_ready();
+      component->_on_application_ready();
    }
 }
 
@@ -46,8 +46,8 @@ void Application::registerForApplicationReady(std::function<void()> cb) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Application::ready() {
-   for (auto& widget : instance()._applicationReadyList){
-      widget->_on_application_ready();
+   for (auto& component : instance()._applicationReadyList){
+      component->_on_application_ready();
    }
    instance()._applicationReadyList.clear(); //done with this forever
    for (auto& cb : instance()._initListArbCallback){
@@ -64,40 +64,11 @@ void Application::processEnterTree() {
    auto& queue = instance()._initQueue;
    while (!queue.empty()){
       auto& p = queue.front();
-      auto& widget = p.first;
+      auto& component = p.first;
       auto& parent = p.second;
-      if (parent->hasChild(widget->getName())){
-         throw std::runtime_error("Parent "  + parent->getName() + " already has child with the name " + widget->getName());
-      }
-      auto& hasInit = widget->_has_inited;
-      auto newIndex = parent->_childrenOrdered.size(); //index of new child's location in ordered vector
-      parent->_children[widget->getName()] = std::pair<int, std::shared_ptr<BaseWidget>>(newIndex, widget);
-      parent->_childrenOrdered.push_back(widget);
-      if (widget->isBackRender.value){
-         parent->_backRenderList.push_back(widget);
-      } else {
-         parent->_frontRenderList.push_back(widget);
-      }
-
-      widget->_parent = parent->toBaseWidget();
-      widget->isInLayout = parent->isLayout;
-      //recalculate the size rect if need to
-      //todo: fix size published twice (setrect and later _publishSize
-      if (widget->isAnchored() || widget->isLayout){
-         //anchoring and layout of children managed by this widget
-         widget->setRect(widget->_rect.value);
-      }
-      if (widget->isInLayout){
-         //placement of layout managed by parent
-         parent->setRect(parent->_rect.value);
-      }
-      if (!hasInit) {
-         widget->_init();
-         hasInit = true;
-         widget->_publishSize();
-      }
-      widget->_on_enter_tree();
-      parent->__on_child_added(widget);
+      auto& hasInit = component->_has_inited;
+      component->__on_component_enter_tree();
+//      parent->__on_child_added(component);
       queue.pop();
    }
 }

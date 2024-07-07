@@ -58,40 +58,50 @@ public:                                                   \
    REYENGINE_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME)  \
    REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME)
 
-namespace ReyEngine::Internal{
+namespace ReyEngine{
+   class Application;
+      namespace Internal{
 
-   // A thing which does stuff.
-   class Component
-   : public inheritable_enable_shared_from_this<Component>
-   , public PropertyContainer
-   , public ReyEngine::EventSubscriber
-   , public ReyEngine::EventPublisher
-   {
-   public:
-      using RID = uint64_t;
-      static constexpr char TYPE_NAME[] = "TypeContainer";
-      Component(const std::string& name, const std::string& typeName);
-      inline RID getRid() const {return _resourceId;}
-      inline std::string getName() const {return _name;}
+      // A thing which does stuff.
+      class Component
+      : public inheritable_enable_shared_from_this<Component>
+      , public PropertyContainer
+      , public ReyEngine::EventSubscriber
+      , public ReyEngine::EventPublisher
+      {
+      public:
+         using RID = uint64_t;
+         static constexpr char TYPE_NAME[] = "TypeContainer";
+         Component(const std::string& name, const std::string& typeName);
+         inline RID getRid() const {return _resourceId;}
+         inline std::string getName() const {return _name;}
 
-      inline bool operator==(const std::shared_ptr<Component>& other) const {return other && other->getRid() == (unsigned long) _resourceId;}
-      inline bool operator==(const Component& other) const{return other._resourceId == _resourceId;}
-      void registerProperties() override {}
-      uint64_t getFrameCounter() const;
-      std::shared_ptr<Component> toComponent();
-      ReyEngine::Internal::TypeContainer<Component>& getComponentContainer(){return _components;}
-      static void registerType(const std::string& typeName, const std::string& parentType, bool isVirtual, Deserializer fx){TypeManager::registerType(typeName, parentType, isVirtual, fx);}
+         inline bool operator==(const std::shared_ptr<Component>& other) const {return other && other->getRid() == (unsigned long) _resourceId;}
+         inline bool operator==(const Component& other) const{return other._resourceId == _resourceId;}
+         void registerProperties() override {}
+         uint64_t getFrameCounter() const;
+         std::shared_ptr<Component> toComponent();
+//         ReyEngine::Internal::TypeContainer<Component>& getComponentContainer(){return _components;}
+         static void registerType(const std::string& typeName, const std::string& parentType, bool isVirtual, Deserializer fx){TypeManager::registerType(typeName, parentType, isVirtual, fx);}
 
-   protected:
-      virtual std::string _get_static_constexpr_typename(){return TYPE_NAME;}
-      TypeContainer<Component> _components;
-      virtual void _register_parent_properties(){};
-      void _deserialize(PropertyPrototypeMap&);
-      virtual void _on_deserialize(PropertyPrototypeMap&){} //used to do any deserializations specific to this type
-      const std::string _typeName; //can't just use static constexpr TYPE_NAME since we need to know what the type is if using type-erasure
-      std::string _name;
-      BoolProperty _isProcessed;
-      IntProperty _resourceId;
-      friend class TypeManager;
-   };
+      protected:
+         virtual std::string _get_static_constexpr_typename(){return TYPE_NAME;}
+//         TypeContainer<Component> _components;
+         void _deserialize(PropertyPrototypeMap&);
+         virtual void _on_deserialize(PropertyPrototypeMap&){} //used to do any deserializations specific to this type
+         const std::string _typeName; //can't just use static constexpr TYPE_NAME since we need to know what the type is if using type-erasure
+         std::string _name;
+         bool _has_inited = false; //set true THE FIRST TIME a widget enters the tree. Can do constructors of children and other stuff requiring shared_from_this();
+
+         virtual void _on_application_ready() = 0;
+         virtual void _register_parent_properties(){};
+         virtual void __on_component_enter_tree() = 0; //must be overridden internally. Responsible for calling __on_enter_tree() for each typecontainer associated with a component. You should not normally need to override these functions.
+
+         BoolProperty _isProcessed;
+         IntProperty _resourceId;
+
+         friend class TypeManager;
+         friend class ReyEngine::Application;
+      };
+   }
 }

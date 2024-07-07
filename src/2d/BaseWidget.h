@@ -27,15 +27,15 @@ namespace ReyEngine{
    class Scene;
    class Draggable;
    class Canvas;
-   class BaseWidget : public Internal::Component
+   class BaseWidget
+   : public Internal::Component
+   , public Internal::TypeContainer<BaseWidget>
+   , public Internal::TypeContainerInterface<BaseWidget>
    {
       using ChildIndex = unsigned long;
       using WidgetPtr = std::shared_ptr<BaseWidget>;
-      using ChildMap = std::map<std::string, std::pair<ChildIndex, WidgetPtr>>;
       using ChildOrder = std::vector<std::shared_ptr<BaseWidget>>;
-      using fVec = ReyEngine::Vec2<float>;
       using iVec = ReyEngine::Vec2<int>;
-      using dVec = ReyEngine::Vec2<double>;
    public:
 
       struct WidgetResizeEvent : public Event<WidgetResizeEvent> {
@@ -179,11 +179,10 @@ namespace ReyEngine{
       std::string getTypeName() const {return _typeName;}
 
       std::optional<std::shared_ptr<BaseWidget>> getWidgetAt(ReyEngine::Pos<int> pos);
-      std::weak_ptr<BaseWidget> getParent(){return _parent;}
-      const ChildOrder& getChildren() const {return _childrenOrdered;}
-      std::optional<WidgetPtr> getChild(const std::string& name);
-      std::vector<std::weak_ptr<BaseWidget>> findChild(const std::string& name, bool exact=false);
-      bool hasChild(const std::string& name); //cant be const because it locks
+//      std::weak_ptr<BaseWidget> getParent(){return _parent;}
+//      const ChildOrder& getChildren() const {return _childrenOrdered;}
+//      std::optional<WidgetPtr> getChild(const std::string& name);
+//      std::vector<std::weak_ptr<BaseWidget>> findChild(const std::string& name, bool exact=false);
       bool isHovered() const {return _hovered;}
       void setInputFilter(InputFilter newFilter){ _inputFilter = newFilter;}
       InputFilter getInputFilter(){return _inputFilter;}
@@ -242,7 +241,7 @@ namespace ReyEngine{
       virtual void _on_rect_changed(){} //called when the rect is manipulated
       virtual void _on_mouse_enter(){};
       virtual void _on_mouse_exit(){};
-      virtual void _on_child_added_immediate(WidgetPtr&){} //Called immediately upon a call to addChild - DANGER: widget is not actually a child yet! It is (probably) a very bad idea to do much at all here. Make sure you know what you're doing.
+      void _on_child_added_immediate(WidgetPtr&) override {} //Called immediately upon a call to addChild - DANGER: widget is not actually a child yet! It is (probably) a very bad idea to do much at all here. Make sure you know what you're doing.
       void __on_child_added(WidgetPtr); //internal. Trigger resize for anchored widgets.
       void __on_descendent_added(WidgetPtr&); // Internal.
       virtual void _on_descendent_added(WidgetPtr&){} // All parents up the chain will emit this signal. Emits along with _on_child_added when this node is the parent.
@@ -250,6 +249,7 @@ namespace ReyEngine{
       virtual void _on_descendent_about_to_be_removed(WidgetPtr&){} // All parents up the chain will emit this signal. Emits along with _on_child_removed when this node is the parent.
       virtual void _on_descendent_removed(WidgetPtr&){} // All parents up the chain will emit this signal. Emits along with _on_child_removed when this node is the parent.
       virtual void _on_child_added(WidgetPtr&){} // called at the beginning of the next frame after a child is added. Child is now owned by us. Safe to manipulate child. Called after all events are emitted.
+      void __on_component_enter_tree() override; //do not override unless you absolutely know what you are doing!
       virtual void _on_enter_tree(){} //called EVERY TIME a widget enters the tree
       void __on_exit_tree(WidgetPtr&, bool aboutToExit); //internal.
       virtual void _on_about_to_exit_tree(){} //called right before a widget leaves the tree
@@ -289,7 +289,6 @@ namespace ReyEngine{
       //convenience
       void _publishSize(){WidgetResizeEvent event(toEventPublisher());publish<decltype(event)>(event);}
 
-      bool _has_inited = false; //set true THE FIRST TIME a widget enters the tree. Can do constructors of children and other stuff requiring shared_from_this();
       bool isLayout = false;
       bool isInLayout = false;
       bool acceptsHover = false;
@@ -298,24 +297,26 @@ namespace ReyEngine{
       BoolProperty isBackRender;
 
    public:
+      std::string getName() const final {return Internal::Component::getName();}
       //modality
       void setModal(bool isModal);
-      bool isModal(){return _isModal;};
+      bool isModal() const {return _isModal;};
       std::optional<std::shared_ptr<Canvas>> getCanvas(); //get the most closely-related parent canvas this widget belongs to
 
       //editor stuff
       inline void setInEditor(bool state){_isEditorWidget = state;}
-      inline bool isInEditor(){return _isEditorWidget;}
+      inline bool isInEditor() const {return _isEditorWidget;}
       inline void setEditorSelected(bool selected){_editor_selected = selected;}
-      inline bool isEditorSelected(){return _editor_selected;}
+      inline bool isEditorSelected() const {return _editor_selected;}
    protected:
       bool _isEditorWidget = false; //true if this is a widget THE USER HAS PLACED IN THE EDITOR WORKSPACE (not a widget that the editor uses for normal stuff)
       bool _editor_selected = false; // true when the object is *selected* in the editor
       static constexpr int GRAB_HANDLE_SIZE = 10;
       ReyEngine::Rect<int> _getGrabHandle(int index);// 0-3 clockwise starting in top left (TL,TR,BR,BL)
       int _editor_grab_handles_dragging = -1; //which grab handle is being drug around
-      ChildMap _children;
-      ChildOrder _childrenOrdered;
+//      ChildMap _children;
+//      ChildOrder _childrenOrdered;
+      Internal::TypeContainer<BaseWidget> _container;
       ChildOrder _frontRenderList; //children to be rendered IN FRONT of this widget (normal behavior)
       ChildOrder _backRenderList; //children to be rendered BEHIND this widget
       std::vector<std::shared_ptr<Component>> _components;
