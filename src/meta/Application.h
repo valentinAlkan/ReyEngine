@@ -7,8 +7,12 @@
 #include "DrawInterface.h"
 #include "Platform.h"
 #include "FileSystem.h"
+#include "Component.h"
 
 namespace ReyEngine{
+   namespace Internal{
+      class Component;
+   }
    class Application
    {
    public:
@@ -36,15 +40,15 @@ namespace ReyEngine{
       static void exitError(std::string msg, ExitReason rsn){Logger::error() << msg << std::endl; ::exit((int)rsn);}
       static void exit(ExitReason rsn){::exit((int)rsn);}
 
-      static void registerForApplicationReady(std::shared_ptr<BaseWidget>&); //somethings require initwindow to have been called - so we can let the application know we want to be called when application is ready.
+      static void registerForApplicationReady(std::shared_ptr<Internal::Component>&); //somethings require initwindow to have been called - so we can let the application know we want to be called when application is ready.
       static void registerForApplicationReady(std::function<void()>); //somethings require initwindow to have been called - so we can let the application know we want to be called when application is ready.
-      static void registerForEnterTree(std::shared_ptr<BaseWidget>& widget, std::shared_ptr<BaseWidget>& parent); //widgets can't use shared_from_this in ctor so we need a place that gets called once on tree enter that can do it.
+      static void registerForEnterTree(std::shared_ptr<Internal::Component>& widget, std::shared_ptr<Internal::Component>& parent); //widgets can't use shared_from_this in ctor so we need a place that gets called once on tree enter that can do it.
       static bool isReady(){return instance()._is_ready;}
       static std::unique_lock<std::mutex> getLock(); //use this to syncrhonize with the engine
       static constexpr Platform getPlatform(){return PLATFORM;}
       static UniqueValue generateUniqueValue(){return instance()._nextUniqueValue++;}
    protected:
-      uint64_t getNewRid(){return ++newRid;}
+      static uint64_t getNewRid(){return ++instance().newRid;}
       static void processEnterTree();
       static void ready();
 
@@ -59,13 +63,12 @@ namespace ReyEngine{
       std::vector<std::shared_ptr<Window>> _windows; //for now, only one
       uint64_t newRid;
       std::mutex _busy; //the main mutex that determines if the engine is busy or not
-      std::unordered_set<std::shared_ptr<BaseWidget>> _applicationReadyList; //list of widgets that want to be notified when the application is fully initialized
+      std::unordered_set<std::shared_ptr<Internal::Component>> _applicationReadyList; //list of widgets that want to be notified when the application is fully initialized
       std::vector<std::function<void()>> _initListArbCallback; //list of arbitrary callbacks that serve the same purpose as the above
 
       //init list
-      using InitPair = std::pair<std::shared_ptr<BaseWidget>, std::shared_ptr<BaseWidget>>;
+      using InitPair = std::pair<std::shared_ptr<Internal::Component>, std::shared_ptr<Internal::Component>>;
       std::queue<InitPair> _initQueue;
-      friend class BaseWidget;
       friend class Internal::Component;
       friend class Window;
    };

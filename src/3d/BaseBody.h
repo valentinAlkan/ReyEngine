@@ -58,8 +58,10 @@ namespace ReyEngine {
    class BaseBody : public Internal::Component {
       REYENGINE_OBJECT_BUILD_ONLY(BaseBody, Internal::Component){}
    protected:
+      void _on_application_ready() override{}
       std::shared_ptr<BaseBody> toBaseBody();
-      void _on_child_added_immediate();
+      void __on_component_enter_tree() override;
+      void _on_child_added_immediate(std::shared_ptr<BaseBody>&) override;
       friend class Internal::Renderer3D;
    };
 }

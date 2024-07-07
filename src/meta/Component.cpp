@@ -5,15 +5,9 @@ using namespace std;
 using namespace ReyEngine;
 using namespace Internal;
 
-/////////////////////////////////////////////////////////////////////////////////////////
-template <>
-void TypeContainer<Component>::_on_child_added_immediate(ChildPtr& child) {
-
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////
 Component::Component(const std::string &name, const std::string& typeName)
-: _resourceId("resourceId", Application::instance().getNewRid())
+: _resourceId("resourceId", Application::getNewRid())
 , _isProcessed("isProcessed")
 , _name(name)
 , _typeName(typeName)

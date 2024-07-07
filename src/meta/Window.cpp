@@ -47,8 +47,8 @@ void Window::exec(){
    //NOTE: This must be done here, because widgets can be created and loaded before a window exists
    // Since the window controls the process list, it might not exist yet.
    std::function<void(shared_ptr<BaseWidget>)> applyProcess = [&](shared_ptr<BaseWidget> widget){
-      for (auto& [name, childIter] : widget->_children){
-         applyProcess(childIter.second);
+      for (auto& child : widget->getChildren()){
+         applyProcess(child);
       }
       if (widget->_isProcessed.value) widget->setProcess(true);
    };
