@@ -18,7 +18,7 @@ namespace ReyEngine{
       REYENGINE_OBJECT(Panel, BaseWidget)
       , PROPERTY_DECLARE(panelTitle)
       , PROPERTY_DECLARE(showHeader, true)
-      , PROPERTY_DECLARE(_isResizable)
+      , PROPERTY_DECLARE(_isResizable, true)
       , PROPERTY_DECLARE(_isMinimized)
       , PROPERTY_DECLARE(_isMaximized)
       {
@@ -34,7 +34,7 @@ namespace ReyEngine{
       void render() const override;
       void registerProperties() override;
       std::optional<std::shared_ptr<BaseWidget>> addChildInternal(std::shared_ptr<BaseWidget> child){return BaseWidget::addChild(child);}
-      void setTitle(const std::string& newtitle){panelTitle = newtitle; titleLabel->setText(newtitle);}
+      void setTitle(const std::string& newtitle);
       std::optional<std::shared_ptr<BaseWidget>> addChildToPanel(std::shared_ptr<BaseWidget> child);
       inline void setResizable(bool resizeable){_isResizable = resizeable;}
       inline bool getResizable(){return _isResizable;}

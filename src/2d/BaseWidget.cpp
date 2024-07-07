@@ -163,6 +163,7 @@ std::vector<std::weak_ptr<BaseWidget>> BaseWidget::findChild(const std::string &
 
 /////////////////////////////////////////////////////////////////////////////////////////
 std::optional<BaseWidget::WidgetPtr> BaseWidget::addChild(WidgetPtr widget){
+   if (!widget) throw std::runtime_error("Cannot add a null widget to " + getName());
    if (*widget == *this){
        stringstream ss;
        ss << "Cannot add widget " << widget->getName() << " to itself!" << endl;
@@ -207,14 +208,18 @@ std::optional<BaseWidget::WidgetPtr> BaseWidget::removeChild(const std::string& 
       }
       return nullopt;
    }
-   //remove from renderlist
-   auto frontRenderFound = std::find(_frontRenderList.begin(), _frontRenderList.end(), toBaseWidget());
-   auto backRenderFound = std::find(_backRenderList.begin(), _backRenderList.end(), toBaseWidget());
-   if (frontRenderFound != _frontRenderList.end()){
-      _frontRenderList.erase(frontRenderFound);
+   //remove from renderlist(s)
+   for (auto it = _frontRenderList.begin(); it != _frontRenderList.end(); it++){
+      if ((*it)->getName() == name) {
+         _frontRenderList.erase(it);
+         break;
+      }
    }
-   if (backRenderFound != _backRenderList.end()){
-      _backRenderList.erase(backRenderFound);
+   for (auto it = _backRenderList.begin(); it != _backRenderList.end(); it++){
+      if ((*it)->getName() == name) {
+         _backRenderList.erase(it);
+         break;
+      }
    }
 
    auto child = found->second.second;

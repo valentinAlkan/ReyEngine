@@ -74,7 +74,7 @@ void Panel::_init() {
    titleLabel = make_shared<Label>(TITLE_LABEL_NAME);
    titleLabel->setTheme(theme);
    menuBar->addChild(titleLabel);
-   titleLabel->setText(getName());
+   titleLabel->setText(panelTitle.value.empty() ? getName() : panelTitle.value);
 
    //add another spacer
    auto rspacer = make_shared<Control>("__rspacer");
@@ -307,4 +307,12 @@ ReyEngine::Rect<int> Panel::getScissorArea() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::_on_mouse_exit() {
    InputInterface::setCursor(InputInterface::MouseCursor::DEFAULT);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Panel::setTitle(const std::string &newtitle) {
+   panelTitle = newtitle;
+   if (titleLabel) {
+      titleLabel->setText(newtitle);
+   }
 }

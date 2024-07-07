@@ -3,7 +3,7 @@
 #include <map>
 
 namespace ReyEngine {
-   class TileMap : public Canvas {
+   class TileMap : public BaseWidget {
    public:
       struct TileCoord : public Vec2<int> {
            TileCoord(int x, int y): Vec2(x,y){}
@@ -98,7 +98,7 @@ namespace ReyEngine {
          const Rect<int>& cellRect;
       };
 
-      REYENGINE_OBJECT(TileMap, Canvas)
+      REYENGINE_OBJECT(TileMap, BaseWidget)
       , PROPERTY_DECLARE(_showGrid, true)
       , PROPERTY_DECLARE(_gridType, GridType::SQUARE)
       , PROPERTY_DECLARE(_gridHeight, 32)
@@ -118,17 +118,12 @@ namespace ReyEngine {
       Size<int> getTileSize() const {return {_gridWidth, _gridHeight};}
    protected:
       void render() const override;
-//      inline void renderBegin(ReyEngine::Pos<double>&) override;
-//      inline void renderEnd() override;
       virtual Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
       void registerProperties() override;
-      void _init() override;
-      void _on_rect_changed() override;
    protected:
       std::map<LayerIndex, TileMapLayer> _layers;
    private:
       void updateAllLayers();
-      bool _ready = false;
       BoolProperty _showGrid;
       GridTypeProperty _gridType;
       IntProperty _gridHeight;

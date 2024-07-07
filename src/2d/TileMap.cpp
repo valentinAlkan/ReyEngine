@@ -5,28 +5,9 @@
 using namespace ReyEngine;
 using namespace std;
 /////////////////////////////////////////////////////////////////////////////////////////
-void TileMap::_init() {
-   if (!_renderTarget.ready()) {
-      _renderTarget.setSize(getSize());
-   }
-   _ready = true;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void TileMap::_on_rect_changed() {
-   Canvas::_on_rect_changed();
-   if (_ready) {
-      _renderTarget.setSize(getSize());
-   }
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
 void TileMap::render() const {
    //draw all tiles in the layer
    for (auto& layer : _layers){
-//      if (!layer.second.needsUpdate()) continue;
-//      const_cast<bool&>(layer.second._needsUpdate) = false;
-//      const_cast<bool&>(layer.second.atlas._needsUpdate) = false;
       for (auto& [x, yMap] : layer.second.tiles){
          for (auto& [y, index] : yMap){
             auto pos = getCellPos({x,y});
