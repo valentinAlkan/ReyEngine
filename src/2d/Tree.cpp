@@ -4,14 +4,15 @@ using namespace std;
 using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void TreeItem::push_back(std::shared_ptr<TreeItem> &item) {
-   children.push_back(item);
+void TreeItem::push_back(std::shared_ptr<TreeItem> &newChildItem) {
+   children.push_back(newChildItem);
    auto me = downcasted_shared_from_this<TreeItem>();
-   item->parent = me;
+   newChildItem->parent = me;
    //find the root and recalculate the reference vector
-   item->tree = me->tree;
-   item->generation = generation + 1;
-   tree->determineOrdering();
+   if (!_tree.expired()) newChildItem->_tree = me->_tree;
+   newChildItem->setGeneration(_generation+1);
+   auto tree = _tree.lock();
+   if (tree) tree->determineOrdering();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -22,10 +23,11 @@ std::shared_ptr<TreeItem> TreeItem::removeItem(size_t index){
    ptr->parent.reset();
 
    //let the tree know to recalculate
-   tree->determineOrdering();
+   auto tree = _tree.lock();
+   if (tree) tree->determineOrdering();
    //remove reference to tree
-   ptr->tree = nullptr;
-   ptr->generation = TreeItem::GENERATION_NULL;
+   ptr->_tree.reset();
+   ptr->_generation = TreeItem::GENERATION_NULL;
    return ptr;
 }
 
@@ -82,7 +84,7 @@ void Tree::render() const{
 
       char c = item->expanded ? '-' : '+';
 
-      std::string expansionRegionText = c + std::string(generationOffset + item->generation, c);
+      std::string expansionRegionText = c + std::string(generationOffset + item->_generation, c);
       auto enabledColor = font.color;
       ReyEngine::ColorRGBA disabledColor = {127, 127, 127, 255};
       if (!item->_enabled) {
@@ -150,8 +152,8 @@ void Tree::setRoot(std::shared_ptr<TreeItem> item) {
     order.clear();
     order.push_back(root);
     root->isRoot = true;
-    root->tree = this;
-    root->generation = 0;
+    root->_tree = inheritable_enable_shared_from_this<ReyEngine::Internal::Component>::downcasted_shared_from_this<Tree>();
+    root->setGeneration(0);
     determineOrdering();
 }
 
@@ -163,6 +165,17 @@ std::optional<std::shared_ptr<Tree::TreeItemMeta>> Tree::getMetaAt(const ReyEngi
       return visible.at(rowAt);
    }
    return nullopt;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+void TreeItem::setGeneration(long long generation){
+   _generation = generation;
+   for (auto& child : getChildren()){
+      child->_tree = _tree;
+      child->setGeneration(generation + 1);
+   }
 }
 
 //
