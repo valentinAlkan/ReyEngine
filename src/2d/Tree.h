@@ -26,7 +26,7 @@ namespace ReyEngine{
       TreeItem(const std::string& text=""): _text(text){}
       void setText(const std::string& text){_text = text;}
       std::string getText() const {return _text;}
-      void push_back(std::shared_ptr<TreeItem>& item) override;
+      void push_back(std::shared_ptr<TreeItem>& newChildItem) override;
       std::shared_ptr<TreeItem> removeItem(size_t index) override;
       std::vector<std::shared_ptr<TreeItem>>& getChildren() override {return children;}
       bool getExpanded(){return expanded;}
@@ -36,6 +36,7 @@ namespace ReyEngine{
       bool getEnabled(){return _enabled;}
       void setEnabled(bool enabled){_enabled = enabled;}
    protected:
+      void setGeneration(long long generation);
       std::string _text;
       bool _enabled = true; //used to limit interaction and gray it out.
       std::weak_ptr<TreeItem> parent;
@@ -43,7 +44,7 @@ namespace ReyEngine{
       bool expanded = true; //unexpanded tree items are visible, it's their children that are not;
       bool visible = true;
       bool expandable = true;
-      Tree* tree = nullptr;
+      std::weak_ptr<Tree> _tree;
       std::vector<std::shared_ptr<TreeItem>> children;
 
    private:
@@ -51,7 +52,7 @@ namespace ReyEngine{
       // For example, the root is always generation 0, its children are generation 1,
       // those children's children are generation 2, and so on.
       // Orphaned items have generation -1;
-      long long generation = GENERATION_NULL;
+      long long _generation = GENERATION_NULL;
 
       friend class Tree;
       friend class TreeItemContainerInterface;
@@ -117,7 +118,7 @@ namespace ReyEngine{
          reference operator*() const { return *iterPtr.get(); }
          pointer operator->() { return iterPtr; }
          Iterator& operator++() {
-            auto& order = root->tree->order;
+            auto& order = root->_tree.lock()->order;
             if (leafIndex >= order.size()){
                iterPtr = nullptr;
             } else {
