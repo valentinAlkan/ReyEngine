@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.11) # FetchContent is available in 3.11+
 project(ReyEngine)
 
 set(CMAKE_REQUIRED_FLAGS "-Wno-old-style-definitions")
+set(CMAKE_THREAD_LIBS_INIT "-lpthread")
+set(CMAKE_HAVE_THREADS_LIBRARY 1)
+set(CMAKE_USE_WIN32_THREADS_INIT 0)
+set(CMAKE_USE_PTHREADS_INIT 1)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
 
 # add lua
 add_subdirectory(src/thirdParty/lua)
@@ -10,8 +15,7 @@ add_subdirectory(src/thirdParty/lua)
 set (CMAKE_CXX_STANDARD 17)
 
 # Add static linking flags for GCC and standard C++ libraries
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++ -static -pthread")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++ -static")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
 # Ensure pthread is linked statically
 set(THREADS_PREFER_PTHREAD_FLAG ON)
