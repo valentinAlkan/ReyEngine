@@ -3,7 +3,7 @@
 #include "InputManager.h"
 #include "rlgl.h"
 #include <stack>
-#include <Eigen/Dense>
+//#include <Eigen/Dense>
 
 using namespace std;
 using namespace ReyEngine;
@@ -53,25 +53,25 @@ int main(int argc, char** argv){
          //see what the mouse delta is
          auto delta = InputManager::getMouseDelta();
          // Define the camera's initial position
-         Eigen::Vector3d cameraPosition(camera.position.x, camera.position.y, camera.position.z);
-
-         // Define the angle of rotation in degrees and convert it to radians
-         double angleDegrees = delta.x;
-         double angleRadians = angleDegrees * M_PI / 180.0;
-
-         // Define the rotation matrix around the y-axis
-         Eigen::Matrix3d rotationMatrix;
-         rotationMatrix = Eigen::AngleAxisd(angleRadians, Eigen::Vector3d::UnitY());
-
-         // Apply the rotation to the camera position
-         Eigen::Vector3d rotatedPosition = rotationMatrix * cameraPosition;
-
-         // Output the result
-         std::cout << "Original position: " << cameraPosition.transpose() << std::endl;
-         std::cout << "Rotated position: " << rotatedPosition.transpose() << std::endl;
-         camera.position.x = rotatedPosition.x();
-         camera.position.y = rotatedPosition.y();
-         camera.position.z = rotatedPosition.z();
+//         Eigen::Vector3d cameraPosition(camera.position.x, camera.position.y, camera.position.z);
+//
+//         // Define the angle of rotation in degrees and convert it to radians
+//         double angleDegrees = delta.x;
+//         double angleRadians = angleDegrees * M_PI / 180.0;
+//
+//         // Define the rotation matrix around the y-axis
+//         Eigen::Matrix3d rotationMatrix;
+//         rotationMatrix = Eigen::AngleAxisd(angleRadians, Eigen::Vector3d::UnitY());
+//
+//         // Apply the rotation to the camera position
+//         Eigen::Vector3d rotatedPosition = rotationMatrix * cameraPosition;
+//
+//         // Output the result
+//         std::cout << "Original position: " << cameraPosition.transpose() << std::endl;
+//         std::cout << "Rotated position: " << rotatedPosition.transpose() << std::endl;
+//         camera.position.x = rotatedPosition.x();
+//         camera.position.y = rotatedPosition.y();
+//         camera.position.z = rotatedPosition.z();
       }
 
       if (mvVec) {
