@@ -61,7 +61,7 @@ void Window::exec(){
       {
          std::scoped_lock<std::mutex> sl(Application::instance()._busy);
          //process widgets wanting to enter the tree for the first time
-         Application::processEnterTree();
+//         auto nextPair = Internal::EnterTreeQueue::instance().getNextInQueue();
 
          //see if the window size has changed
          auto newSize = getSize();

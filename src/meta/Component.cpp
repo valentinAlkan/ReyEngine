@@ -52,13 +52,6 @@ void Component::_deserialize(PropertyPrototypeMap& propertyData){
    }
 
 }
-/////////////////////////////////////////////////////////////////////////////////////////
-template <>
-void TypeContainer<Component>::___on_component_added_immediate(ChildPtr& child) {
-   auto me = toContainedTypePtr();
-   Logger::debug() << "Registering child " << child->getName() << " to parent " << getName() << std::endl;
-   Application::registerForEnterTree(child, me);
-}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -58,6 +58,8 @@ public:                                                   \
    REYENGINE_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME)  \
    REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME)
 
+#define REYENGINE_COMPONENT_OVERRIDE \
+___on_component_added_immediate
 namespace ReyEngine{
    class Application;
       namespace Internal{
@@ -96,6 +98,8 @@ namespace ReyEngine{
          BoolProperty _isProcessed;
          IntProperty _resourceId;
 
+         template<typename T>
+         friend class TypeContainer;
          friend class TypeManager;
          friend class ReyEngine::Application;
       };

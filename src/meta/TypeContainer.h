@@ -7,6 +7,7 @@
 #include <mutex>
 #include "Logger.h"
 #include "Event.h"
+
 #define FIXME(identifier) throw std::runtime_error("FIXME: " #identifier)
 namespace ReyEngine::Internal{
     class Component;
@@ -78,8 +79,7 @@ namespace ReyEngine::Internal{
         ChildPtr toContainedTypePtr(){
             return inheritable_enable_shared_from_this<TypeContainer<T>>::template downcasted_shared_from_this<T>();
         };
-        virtual void addChild(std::shared_ptr<TypeContainer<T>> child){
-//            static_assert(std::is_base_of_v<T, decltype(*child)>);
+        void addChild(std::shared_ptr<TypeContainer<T>> child){
             auto me = toContainedTypePtr();
             auto childTypePtr = child->toContainedTypePtr();
             if (child == me){
@@ -105,13 +105,16 @@ namespace ReyEngine::Internal{
             //set the parent
             child->_parent = me;
             //call your template specializations here
-            if (std::is_same_v<Component, T>){
-                ___on_component_added_immediate(childTypePtr);
+            if (std::is_base_of_v<Component, T>){
+               Logger::debug() << "Registering child " << child->getName() << " to parent " << getName() << std::endl;
+               childTypePtr->_init();
+               childTypePtr->_has_inited = true;
             }
 
             __on_child_added_immediate(childTypePtr);
             _childOrder.push_back(childTypePtr);
             _childMap[child->getName()];
+            child->__on_enter_tree();
         }
         std::optional<ChildPtr>removeChild(ChildPtr& child, bool quiet){
             auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
@@ -277,8 +280,6 @@ namespace ReyEngine::Internal{
     protected:
         ChildMap& getChildMap(){return _childMap;}
         const ChildMap& getChildMap() const {return _childMap;}
-
-        void ___on_component_added_immediate(ChildPtr&);
         virtual void _on_child_added_immediate(ChildPtr&){} //Called immediately upon a call to addChild - DANGER: type is not actually a child yet! It is (probably) a very bad idea to do much at all here. Make sure you know what you're doing.
         virtual void __on_child_added_immediate(ChildPtr&){};
         virtual void _on_child_added(ChildPtr&){} // called at the beginning of the next frame after a child is added. Child is now owned by us. Safe to manipulate child. Called after all events are emitted.
