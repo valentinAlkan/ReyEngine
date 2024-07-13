@@ -734,3 +734,9 @@ void BaseWidget::__on_child_removed(Internal::TypeContainer<BaseWidget>::ChildPt
       _backRenderList.erase(backRenderFound);
    }
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+//template <>
+//void ReyEngine::Internal::TypeContainer<BaseWidget>::___on_component_added_immediate(ChildPtr& child) {
+//
+//}

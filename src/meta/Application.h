@@ -42,14 +42,12 @@ namespace ReyEngine{
 
       static void registerForApplicationReady(std::shared_ptr<Internal::Component>&); //somethings require initwindow to have been called - so we can let the application know we want to be called when application is ready.
       static void registerForApplicationReady(std::function<void()>); //somethings require initwindow to have been called - so we can let the application know we want to be called when application is ready.
-      static void registerForEnterTree(std::shared_ptr<Internal::Component>& widget, std::shared_ptr<Internal::Component>& parent); //widgets can't use shared_from_this in ctor so we need a place that gets called once on tree enter that can do it.
       static bool isReady(){return instance()._is_ready;}
       static std::unique_lock<std::mutex> getLock(); //use this to syncrhonize with the engine
       static constexpr Platform getPlatform(){return PLATFORM;}
       static UniqueValue generateUniqueValue(){return instance()._nextUniqueValue++;}
    protected:
       static uint64_t getNewRid(){return ++instance().newRid;}
-      static void processEnterTree();
       static void ready();
 
    private:
