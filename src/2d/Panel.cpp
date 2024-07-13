@@ -287,9 +287,9 @@ Handled Panel::_unhandled_input(const InputEvent& event, const std::optional<Unh
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::optional<std::shared_ptr<BaseWidget>> Panel::addChildToPanel(std::shared_ptr<BaseWidget> child){
+void Panel::addChildToPanel(std::shared_ptr<BaseWidget> child){
    if (!window) window = make_shared<Control>(WINDOW_NAME);
-   return window->addChild(child);
+   window->addChild(child);
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::registerProperties(){

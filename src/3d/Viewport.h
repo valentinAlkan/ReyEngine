@@ -10,7 +10,7 @@ namespace ReyEngine {
    , public virtual Internal::Renderer3D
    {
       REYENGINE_OBJECT_BUILD_ONLY(Viewport, BaseWidget)
-      , Internal::Renderer3D()
+      , Internal::Renderer3D(name, typeName)
       , _activeCamera(_defaultCamera)
       , _showGrid("showGrid", true)
       {}

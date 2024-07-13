@@ -26,20 +26,25 @@ namespace ReyEngine {
 
       //Something which renders 3D objects but is not a 3D body in itself
       class Renderable3D;
-      class Renderer3D : public TypeContainerInterface<Renderable3D>{
+      class Renderer3D : public TypeContainer<Renderable3D>{
       public:
-         Renderer3D() : TypeContainerInterface<Renderable3D>(_container) {}
+         Renderer3D(const std::string& name, const std::string& typeName)
+         : TypeContainer<Renderable3D>(name, typeName)
+         , NamedInstance(name, typeName)
+         {}
       protected:
          virtual void renderer3DBegin(){};
          virtual void renderer3DChain();
          virtual void renderer3DEnd(){};
          virtual void renderer3DEditorFeatures(){}
-         TypeContainer<Renderable3D> _container;
       };
 
       // Something which has volume is able to be rendered in 3D along with its children.
       class Renderable3D : public Renderer3D {
-         Renderable3D() : _visible("visible")
+         Renderable3D(const std::string& name, const std::string& typeName)
+         : Renderer3D(name, typeName)
+         , NamedInstance(name, typeName)
+         , _visible("visible")
          {}
       protected:
          virtual void render3DBegin(){};
@@ -60,8 +65,6 @@ namespace ReyEngine {
    protected:
       void _on_application_ready() override{}
       std::shared_ptr<BaseBody> toBaseBody();
-      void __on_component_enter_tree() override;
-      void _on_child_added_immediate(std::shared_ptr<BaseBody>&) override;
       friend class Internal::Renderer3D;
    };
 }

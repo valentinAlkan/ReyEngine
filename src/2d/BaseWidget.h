@@ -30,47 +30,32 @@ namespace ReyEngine{
    class BaseWidget
    : public Internal::Component
    , public Internal::TypeContainer<BaseWidget>
-   , public Internal::TypeContainerInterface<BaseWidget>
    {
       using ChildIndex = unsigned long;
       using WidgetPtr = std::shared_ptr<BaseWidget>;
       using ChildOrder = std::vector<std::shared_ptr<BaseWidget>>;
       using iVec = ReyEngine::Vec2<int>;
    public:
+      //disambiguation
+      using Internal::TypeContainer<BaseWidget>::toEventSubscriber;
+      using Internal::TypeContainer<BaseWidget>::toEventPublisher;
+      using Internal::TypeContainer<BaseWidget>::publish;
+      using Internal::TypeContainer<BaseWidget>::getName;
+      using Internal::TypeContainer<BaseWidget>::getChild;
+      using Internal::TypeContainer<BaseWidget>::getChildMap;
+      using Internal::TypeContainer<BaseWidget>::getChildren;
+      using Internal::TypeContainer<BaseWidget>::getParent;
+      using Internal::TypeContainer<BaseWidget>::addChild;
+      using Internal::TypeContainer<BaseWidget>::removeAllChildren;
+      using Internal::TypeContainer<BaseWidget>::toContainedType;
+      using Internal::TypeContainer<BaseWidget>::toContainedTypePtr;
+      using Internal::TypeContainer<BaseWidget>::ChildPtr;
 
       struct WidgetResizeEvent : public Event<WidgetResizeEvent> {
          EVENT_CTOR_SIMPLE(WidgetResizeEvent, Event<WidgetResizeEvent>){
-            size = publisher->toBaseWidget()->getSize();
+            size = publisher->toPublisherType<BaseWidget>()->getSize();
          }
          ReyEngine::Size<float> size;
-      };
-       struct ChildAddedEvent : public Event<ChildAddedEvent> {
-           EVENT_GENERATE_UNIQUE_ID(ChildAddedEvent)
-           EVENT_GET_NAME(ChildAddedEvent)
-           explicit ChildAddedEvent(std::shared_ptr<EventPublisher> publisher, WidgetPtr& child)
-           : Event<ChildAddedEvent>(ChildAddedEvent_UNIQUE_ID, publisher)
-           , child(child)
-           {}
-           WidgetPtr& child;
-       };
-       struct DescendentAddedEvent : public Event<DescendentAddedEvent> {
-           EVENT_GENERATE_UNIQUE_ID(DescendentAddedEvent)
-           EVENT_GET_NAME(DescendentAddedEvent)
-           explicit DescendentAddedEvent(std::shared_ptr<EventPublisher> publisher, WidgetPtr& descendent)
-           : Event<DescendentAddedEvent>(DescendentAddedEvent_UNIQUE_ID, publisher)
-           , descendent(descendent)
-           {}
-           WidgetPtr& descendent;
-       };
-
-      struct DescendentRemovedEvent : public Event<DescendentRemovedEvent> {
-         EVENT_GENERATE_UNIQUE_ID(DescendentRemovedEvent)
-         EVENT_GET_NAME(DescendentRemovedEvent)
-         explicit DescendentRemovedEvent(std::shared_ptr<EventPublisher> publisher, WidgetPtr& descendent)
-         : Event<DescendentRemovedEvent>(DescendentRemovedEvent_UNIQUE_ID, publisher)
-         , descendent(descendent)
-         {}
-         WidgetPtr& descendent;
       };
 
       //Input masking controls whether input inside the rect is masked (ignored)
@@ -190,27 +175,22 @@ namespace ReyEngine{
       template <typename T>
       std::shared_ptr<T> toType(){
          static_assert(std::is_base_of_v<BaseWidget, T>);
-         auto me = toBaseWidget();
-         return std::static_pointer_cast<T>(me);
+         return std::static_pointer_cast<T>(toContainedTypePtr());
       }
+      WidgetPtr toBaseWidget(){return toType<BaseWidget>();}
 
       void setAcceptsHover(bool accepts){acceptsHover = accepts;} //only way to get mouse_enter and mouse_exit
       bool getAcceptsHover() const {return acceptsHover;}
       void setProcess(bool process);
-      WidgetPtr setFree(); //request to remove this widget from the tree at next available opportunity. Does not immediately delete it
+//      WidgetPtr setFree(); //request to remove this widget from the tree at next available opportunity. Does not immediately delete it
                       // if you need your object to stop being processed immediately, use setFreeImmediately(), which could pause to syncrhonize threads.
-      WidgetPtr setFreeImmediately(); // Pauses other threads and immediately removes objects from the tree.
+//      WidgetPtr setFreeImmediately(); // Pauses other threads and immediately removes objects from the tree.
 
       virtual void render() const = 0; //draw the widget
       void setBackRender(bool);
       bool isRoot() const;
 
-      virtual std::optional<WidgetPtr> addChild(WidgetPtr);
-      std::optional<WidgetPtr> removeChild(const std::string& name, bool quiet = false); //quiet silences the output if child is not found.
-      void removeAllChildren(); //removes all children and DOES NOT RETURN THEM!
-
       template <typename T> bool is_base_of(){return std::is_base_of_v<BaseWidget, T>;}
-      std::string serialize();
       inline std::shared_ptr<Style::Theme>& getTheme(){return theme;}
       inline void setTheme(std::shared_ptr<Style::Theme>& newTheme){theme = newTheme;}
 
@@ -231,30 +211,14 @@ namespace ReyEngine{
       void startScissor(const ReyEngine::Rect<int>&) const;
       void stopScissor() const;
    protected:
-   //   void drawTextureRect(const ReyEngine::ReyTexture&, const ReyEngine::Rect<int>&, const ReyEngine::Pos<int>&) const;
 
-   //   void recalculateRect();
-      std::shared_ptr<BaseWidget> toBaseWidget();
-      virtual void _on_application_ready(){}; //called when the main loop is starting, or immediately if that's already happened
-      virtual void _init(){}; //run ONCE PER OBJECT when it enters tree for first time. Subsequent additions to the tree will not call this.
       void __on_rect_changed(); //internal. Trigger resize for anchored widgets.
+      void __on_child_removed(ChildPtr&) override;
+      void __on_exit_tree() override {}
+      void __on_enter_tree() override;
       virtual void _on_rect_changed(){} //called when the rect is manipulated
       virtual void _on_mouse_enter(){};
       virtual void _on_mouse_exit(){};
-      void _on_child_added_immediate(WidgetPtr&) override {} //Called immediately upon a call to addChild - DANGER: widget is not actually a child yet! It is (probably) a very bad idea to do much at all here. Make sure you know what you're doing.
-      void __on_child_added(WidgetPtr); //internal. Trigger resize for anchored widgets.
-      void __on_descendent_added(WidgetPtr&); // Internal.
-      virtual void _on_descendent_added(WidgetPtr&){} // All parents up the chain will emit this signal. Emits along with _on_child_added when this node is the parent.
-      void __on_descendent_removed(WidgetPtr&){} // Internal
-      virtual void _on_descendent_about_to_be_removed(WidgetPtr&){} // All parents up the chain will emit this signal. Emits along with _on_child_removed when this node is the parent.
-      virtual void _on_descendent_removed(WidgetPtr&){} // All parents up the chain will emit this signal. Emits along with _on_child_removed when this node is the parent.
-      virtual void _on_child_added(WidgetPtr&){} // called at the beginning of the next frame after a child is added. Child is now owned by us. Safe to manipulate child. Called after all events are emitted.
-      void __on_component_enter_tree() override; //do not override unless you absolutely know what you are doing!
-      virtual void _on_enter_tree(){} //called EVERY TIME a widget enters the tree
-      void __on_exit_tree(WidgetPtr&, bool aboutToExit); //internal.
-      virtual void _on_about_to_exit_tree(){} //called right before a widget leaves the tree
-      virtual void _on_exit_tree(){} //called right after a widget leaves the tree
-      virtual void _on_child_removed(WidgetPtr&){}
       virtual void _on_modality_gained(){}
       virtual void _on_modality_lost(){}
       virtual std::optional<std::shared_ptr<Draggable>> _on_drag_start(ReyEngine::Pos<int> globalPos){return std::nullopt;} //override and return something to implement drag and drop
@@ -287,7 +251,7 @@ namespace ReyEngine{
       virtual std::string _get_static_constexpr_typename(){return TYPE_NAME;}
 
       //convenience
-      void _publishSize(){WidgetResizeEvent event(toEventPublisher());publish<decltype(event)>(event);}
+      void _publishSize(){WidgetResizeEvent event(toEventPublisher()); publish<WidgetResizeEvent>(event);}
 
       bool isLayout = false;
       bool isInLayout = false;
@@ -297,7 +261,6 @@ namespace ReyEngine{
       BoolProperty isBackRender;
 
    public:
-      std::string getName() const final {return Internal::Component::getName();}
       //modality
       void setModal(bool isModal);
       bool isModal() const {return _isModal;};
@@ -314,9 +277,6 @@ namespace ReyEngine{
       static constexpr int GRAB_HANDLE_SIZE = 10;
       ReyEngine::Rect<int> _getGrabHandle(int index);// 0-3 clockwise starting in top left (TL,TR,BR,BL)
       int _editor_grab_handles_dragging = -1; //which grab handle is being drug around
-//      ChildMap _children;
-//      ChildOrder _childrenOrdered;
-      Internal::TypeContainer<BaseWidget> _container;
       ChildOrder _frontRenderList; //children to be rendered IN FRONT of this widget (normal behavior)
       ChildOrder _backRenderList; //children to be rendered BEHIND this widget
       std::vector<std::shared_ptr<Component>> _components;

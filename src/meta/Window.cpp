@@ -1,11 +1,10 @@
 #include "Window.h"
 #include <iostream>
-#include <utility>
-#include <array>
 #include "Application.h"
 #include "Scene.h"
 #include "Canvas.h"
 #include "SystemTime.h"
+#include "TypeContainer.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -14,7 +13,9 @@ using namespace ReyEngine;
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 Window::Window(const std::string &title, int width, int height, const std::vector<Flags> &flags, int targetFPS, std::optional<std::shared_ptr<Canvas>> root)
-: targetFPS(targetFPS)
+: NamedInstance("Window", "Window")
+, Internal::TypeContainer<BaseWidget>("Window", "Window")
+, targetFPS(targetFPS)
 {
    for (const auto& flag : flags){
       switch (flag){
@@ -76,7 +77,8 @@ void Window::exec(){
          //see if the window has moved
          auto newPos = getPosition();
          if (newPos != position) {
-            WindowMoveEvent event(inheritable_enable_shared_from_this<EventPublisher>::shared_from_this());
+            auto me = toEventPublisher();
+            WindowMoveEvent event(toEventPublisher());
             position = newPos;
             event.position = newPos;
             publish(event);
@@ -416,5 +418,5 @@ void Window::makeRoot(std::shared_ptr<Canvas>& newRoot, const Size<int>& size){
    //make sure we init the root
    _root->_has_inited = true;
    _root->setRect(Rect<int>(0, 0, size.x, size.y)); //initialize to be the same size as the window
-   _root->_on_enter_tree();
+   _root->TypeContainer<BaseWidget>::_on_enter_tree();
 }

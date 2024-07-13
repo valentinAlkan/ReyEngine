@@ -24,6 +24,7 @@ namespace ReyEngine{
       REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(Slider)
       Slider(const std::string &name, SliderType sliderDir)
             : BaseWidget(name, _get_static_constexpr_typename())
+            , NamedInstance(name, _get_static_constexpr_typename())
             , sliderValue("sliderValue", 0.0)
             , minSliderValue("minSliderValue", 0.0)
             , maxSlidervalue("maxSliderValue", 100.0)

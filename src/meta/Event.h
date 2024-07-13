@@ -120,9 +120,14 @@ namespace ReyEngine{
                }
            }
        }
-       std::shared_ptr<BaseWidget> toBaseWidget();
+
+      template <typename T>
+      std::shared_ptr<T> toPublisherType(){
+         static_assert(std::is_base_of_v<EventPublisher, T>);
+         return downcasted_shared_from_this<T>();
+       }
    protected:
-       std::shared_ptr<EventPublisher> toEventPublisher(){return downcasted_shared_from_this<EventPublisher>();}
+      std::shared_ptr<EventPublisher> toEventPublisher(){return downcasted_shared_from_this<EventPublisher>();}
    private:
        std::map<std::string, EventCallbackMap> _eventMap;
    };
@@ -144,7 +149,6 @@ namespace ReyEngine{
          publisher->addSubscriber(me, T::getEventName(), adapter);
       };
       std::shared_ptr<EventSubscriber> toEventSubscriber(){return inheritable_enable_shared_from_this<EventSubscriber>::shared_from_this();}
-      std::shared_ptr<BaseWidget> toBaseWidget();
    };
 
    /////////////////////////////////////////////////////////////////////////////////////////

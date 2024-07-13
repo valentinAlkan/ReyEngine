@@ -12,7 +12,7 @@ using namespace SceneFileParser;
 
 bool allWhite(const std::string &s) { return string_tools::countwhite(s) == (int) s.size(); }
 /////////////////////////////////////////////////////////////////////////////////////////
-Scene::Scene(std::shared_ptr<BaseWidget> root)
+Scene::Scene(std::shared_ptr<Internal::Component> root)
 : _root(root){
 
 }
@@ -204,7 +204,7 @@ std::shared_ptr<TreeObject> SceneFileParser::TreeStruct::parse(){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::string SceneFileParser::TreeStruct::toString(std::shared_ptr<BaseWidget> root) {
+std::string SceneFileParser::TreeStruct::toString(std::shared_ptr<Internal::Component> root) {
    return "";
 }
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -326,24 +326,24 @@ std::shared_ptr<Scene> SceneFileParser::DescStruct::parse(std::shared_ptr<TreeOb
       //deserialize children
       for (auto& child : obj->children){
          deserialize(child);
-         obj->widget->addChild(child->widget);
+         obj->component->addChild(child->component);
       }
    };
 
    deserialize(root);
    //declare the scene
-   auto scene = make_shared<Scene>(root->widget);
+   auto scene = make_shared<Scene>(root->component);
    return scene;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::string SceneFileParser::DescStruct::toString(std::shared_ptr<BaseWidget> root) {
+std::string SceneFileParser::DescStruct::toString(std::shared_ptr<Internal::Component> root) {
    stringstream ss;
    ss << TOKEN_DESC_START;
    map<string, std::string> descs;
-   auto& widget = root;
-   while (widget){
-      descs[widget->getName()] = widget->serialize();
+   auto& component = root;
+   while (component){
+      descs[component->getName()] = component->serialize();
    }
    return "";
 }
@@ -368,6 +368,6 @@ std::shared_ptr<Scene> SceneFileParser::MetaStruct::parse(std::shared_ptr<Scene>
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::string SceneFileParser::MetaStruct::toString(std::shared_ptr<BaseWidget> root) {
+std::string SceneFileParser::MetaStruct::toString(std::shared_ptr<Internal::Component> root) {
    return "";
 }

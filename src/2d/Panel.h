@@ -33,9 +33,9 @@ namespace ReyEngine{
       void renderEnd() override;
       void render() const override;
       void registerProperties() override;
-      std::optional<std::shared_ptr<BaseWidget>> addChildInternal(std::shared_ptr<BaseWidget> child){return BaseWidget::addChild(child);}
-      void setTitle(const std::string& newtitle);
-      std::optional<std::shared_ptr<BaseWidget>> addChildToPanel(std::shared_ptr<BaseWidget> child);
+      void addChildInternal(std::shared_ptr<BaseWidget> child){BaseWidget::addChild(child);}
+      void setTitle(const std::string& newtitle){panelTitle = newtitle; titleLabel->setText(newtitle);}
+      void addChildToPanel(std::shared_ptr<BaseWidget> child);
       inline void setResizable(bool resizeable){_isResizable = resizeable;}
       inline bool getResizable(){return _isResizable;}
 
@@ -44,7 +44,7 @@ namespace ReyEngine{
       ReyEngine::Rect<int> getScissorArea();
       enum class ResizeDir{NONE, N, E, S, W, NE, SE, SW, NW};
 
-      std::optional<std::shared_ptr<BaseWidget>> addChild(std::shared_ptr<BaseWidget> child) override{return BaseWidget::addChild(child);}
+      void addChild(std::shared_ptr<BaseWidget> child) override{return BaseWidget::addChild(child);}
       StringProperty panelTitle;
       BoolProperty showHeader;
       std::shared_ptr<VLayout> vlayout;

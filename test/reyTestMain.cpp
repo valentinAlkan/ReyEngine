@@ -115,7 +115,8 @@ int main(int argc, char** argv)
       auto loadedScene = Scene::fromFile("./test/" + loadSceneArg->getParams()[0]);
       if (loadedScene){
          Logger::debug() << "Got loaded file!" << endl;
-         root->addChild(loadedScene.value()->getRoot());
+         throw std::runtime_error("--loadscene test: fix me");
+//         root->addChild(loadedScene.value()->getRoot());
       }
    }
 
@@ -828,19 +829,19 @@ int main(int argc, char** argv)
 
       //callback lambda(s)
       auto cb = [&](const BaseButton::ButtonToggleEvent& event){
-         auto senderName = event.publisher->toBaseWidget()->getName();
+         auto senderName = event.publisher->toPublisherType<BaseWidget>()->getName();
          label->setText(senderName + " : " + (event.down ? "down" : "up"));
          //you can do whatever else here
       };
 
       auto cbSecret = [&](const BaseButton::ButtonToggleEvent& event){
-         auto senderName = event.publisher->toBaseWidget()->getName();
+         auto senderName = event.publisher->toPublisherType<BaseWidget>()->getName();
          label->setText(senderName + " is the secret button! You win it all!");
          //you can do whatever else here
       };
 
       auto cbPress = [&](const BaseButton::ButtonPressEvent& event) {
-         auto pushButton = event.publisher->toBaseWidget()->toType<PushButton>();
+         auto pushButton = event.publisher->toPublisherType<BaseWidget>()->toType<PushButton>();
          //get the control property
          auto& control = pushButton->getProperty<BaseWidget::WidgetProperty>("control");
          auto& pressCount = control.value->getProperty<IntProperty>("pressCount");
@@ -1226,13 +1227,13 @@ int main(int argc, char** argv)
          };
 
          auto hoverCB = [&](const ComboBox::EventComboBoxItemHovered& event){
-            auto combobox = event.publisher->toBaseWidget()->toType<ComboBox>();
+            auto combobox = event.publisher->toPublisherType<BaseWidget>()->toType<ComboBox>();
             auto data = static_pointer_cast<ColorData>(event.field.data);
             combobox->getTheme()->background.colorPrimary = data->color;
          };
 
          auto selectCB = [&](const ComboBox::EventComboBoxItemSelected& event){
-            auto combobox = event.publisher->toBaseWidget()->toType<ComboBox>();
+            auto combobox = event.publisher->toPublisherType<BaseWidget>()->toType<ComboBox>();
             auto data = static_pointer_cast<ColorData>(event.field.data);
             combobox->getTheme()->background.colorPrimary = data->color;
          };
@@ -1242,7 +1243,7 @@ int main(int argc, char** argv)
          };
 
          auto menuCloseCB = [&](const ComboBox::EventComboBoxMenuClosed& event){
-            auto combobox = event.publisher->toBaseWidget()->toType<ComboBox>();
+            auto combobox = event.publisher->toPublisherType<BaseWidget>()->toType<ComboBox>();
             auto data = static_pointer_cast<ColorData>(combobox->getCurrentField().data);
             combobox->getTheme()->background.colorPrimary = data->color;
          };

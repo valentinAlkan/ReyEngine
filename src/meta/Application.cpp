@@ -67,8 +67,7 @@ void Application::processEnterTree() {
       auto& component = p.first;
       auto& parent = p.second;
       auto& hasInit = component->_has_inited;
-      component->__on_component_enter_tree();
-//      parent->__on_child_added(component);
+      component->__on_enter_tree();
       queue.pop();
    }
 }

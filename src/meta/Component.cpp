@@ -7,11 +7,28 @@ using namespace Internal;
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 Component::Component(const std::string &name, const std::string& typeName)
-: _resourceId("resourceId", Application::getNewRid())
+: TypeContainer<Component>(name, typeName)
+, NamedInstance(name, typeName)
+, _resourceId("resourceId", Application::getNewRid())
 , _isProcessed("isProcessed")
 , _name(name)
 , _typeName(typeName)
 {}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::string Component::serialize() {
+   stringstream data;
+   data << _name << " - " << _typeName << ":\n";
+   for (const auto& [name, property] : _properties){
+      auto value = property->toString();
+      data << PropertyMeta::INDENT << property->instanceName();
+      data << PropertyMeta::SEP << property->typeName(); //todo: ? pretty sure this isn't actually necesary
+      data << PropertyMeta::SEP << value.size();
+      data << PropertyMeta ::SEP << value;
+      data << ";";
+   }
+   return data.str();
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 uint64_t Component::getFrameCounter() const {
@@ -34,6 +51,13 @@ void Component::_deserialize(PropertyPrototypeMap& propertyData){
       found->second->_load(data);
    }
 
+}
+/////////////////////////////////////////////////////////////////////////////////////////
+template <>
+void TypeContainer<Component>::___on_component_added_immediate(ChildPtr& child) {
+   auto me = toContainedTypePtr();
+   Logger::debug() << "Registering child " << child->getName() << " to parent " << getName() << std::endl;
+   Application::registerForEnterTree(child, me);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
