@@ -29,6 +29,7 @@ namespace ReyEngine{
       void _init() override;
       void _on_rect_changed() override;
       Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
+      void addChild(std::shared_ptr<BaseWidget> child) = delete;
       void renderBegin(ReyEngine::Pos<double>& textureOffset) override;
       void renderEnd() override;
       void render() const override;
@@ -44,7 +45,6 @@ namespace ReyEngine{
       ReyEngine::Rect<int> getScissorArea();
       enum class ResizeDir{NONE, N, E, S, W, NE, SE, SW, NW};
 
-      void addChild(std::shared_ptr<BaseWidget> child) override{return BaseWidget::addChild(child);}
       StringProperty panelTitle;
       BoolProperty showHeader;
       std::shared_ptr<VLayout> vlayout;
