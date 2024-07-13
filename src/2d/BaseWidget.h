@@ -283,14 +283,11 @@ namespace ReyEngine{
 
       AnchorProperty _anchor;
       void rename(WidgetPtr& child, const std::string& newName);
-
-      std::weak_ptr<BaseWidget> _parent;
       ///If this widget is the root of a scene, then the rest of the scene data is here.
       std::optional<std::shared_ptr<Scene>> _scene;
       bool _request_delete = false; //true when we want to remove this object from the tree
       bool _hovered = false; //true when hovered, set by application
       bool _visible = true; //whether to show the widget (and its children)
-      std::recursive_mutex _childLock;
       bool _isModal = false;
       bool _scheduled_for_deletion = false; // true when the widget has been scheduled for deletion but is not yet deleted.
       ReyEngine::Pos<double> _renderOffset; //used for different rendering modes. does not offset position.

@@ -10,8 +10,6 @@ using namespace std;
 using namespace ReyEngine;
 using namespace FileSystem;
 
-#define FIXME(identifier) throw std::runtime_error("FIXME: " #identifier)
-
 /////////////////////////////////////////////////////////////////////////////////////////
 BaseWidget::BaseWidget(const std::string& name, std::string  typeName)
 : Component(name, typeName)
@@ -45,74 +43,6 @@ ReyEngine::FileSystem::ComponentPath BaseWidget::getPath() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-bool BaseWidget::setName(const std::string& newName, bool append_index) {
-   auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
-   //if the child has a sibling by the same name, it cannot be renamed
-   if (!_parent.expired()) {
-      //has a parent
-      auto self = toBaseWidget();
-      string _newName = newName;
-      auto parent = _parent.lock();
-      if (parent->getChild(newName)) {
-         //parent has existing child with that name
-         //if we are allowed to, just append an index to the name (start at 2)
-         if (append_index) {
-            int index = 2;
-            while (parent->getChild(newName + to_string(index))) {
-               index++;
-            }
-            //todo: is this right?
-            _newName = newName + to_string(index);
-         } else {
-            return false;
-         }
-      }
-      //parent does not have a child with the name
-      parent->rename(self, _newName);
-   }
-   //root widget or orphaned, no need to deal with parent
-   _name = newName;
-   return true;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::rename(WidgetPtr &child, const std::string &newName) {
-   //rename but not move
-   //find the existing reference to the child
-   FIXME(basewidget::rename);
-//   auto& children = getChildren();
-//   auto childIter = children[child->_name];
-//   auto oldName = child->_name;
-//   _children[newName] = childIter;
-//   _children.erase(oldName);
-//   child->_name = newName;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-bool BaseWidget::setIndex(unsigned int newIndex){
-   if (_parent.expired()){
-      //root widget, there is no index
-      return false;
-   }
-   auto parent = _parent.lock();
-   //get reference to widget in map
-   FIXME(basewidget::setIndex);
-//   auto selfMapIter = parent->_children[_name];
-//   auto index = selfMapIter.first;
-//
-//   //delete reference to widget in ordered vector
-//   auto selfVectorIter = parent->_childrenOrdered.begin() + index;
-//   parent->_childrenOrdered.erase(selfVectorIter);
-//
-//   //insert new reference in new position
-//   //todo: finish
-//   throw std::runtime_error("not finished");
-//
-//
-
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setGlobalPos(const Vec2<int>& newPos) {
    auto newLocalPos = globalToLocal(newPos);
    setPos(newLocalPos);
@@ -137,8 +67,8 @@ Pos<int> BaseWidget::getGlobalPos() const {
    //sum up all our ancestors' positions and add our own to it
    auto offset = getPos();
 //   if (getTypeName() != Canvas::TYPE_NAME && !_parent.expired()){ //todo: Race conditions?
-   if (!_parent.expired()){ //todo: Race conditions?
-      offset += _parent.lock()->getGlobalPos();
+   if (!getParent().expired()){ //todo: Race conditions?
+      offset += getParent().lock()->getGlobalPos();
    }
    return offset;
 }
@@ -774,7 +704,6 @@ void BaseWidget::__on_enter_tree() {
       parent->_frontRenderList.push_back(me);
    }
 
-   _parent = parent;
    isInLayout = parent->isLayout;
    //recalculate the size rect if need to
    //todo: fix size published twice (setrect and later _publishSize

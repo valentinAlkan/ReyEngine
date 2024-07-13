@@ -57,7 +57,7 @@ void Panel::_init() {
    //get rid of control backgrounds so we only see panel background
    window->getTheme()->background = Style::Fill::NONE;
 
-   addChild(vlayout);
+   BaseWidget::addChild(vlayout);
    vlayout->setAnchoring(BaseWidget::Anchor::FILL);
    vlayout->addChild(menuBar);
    vlayout->addChild(window);
