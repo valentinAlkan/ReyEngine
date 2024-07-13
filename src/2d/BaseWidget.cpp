@@ -15,7 +15,7 @@ using namespace FileSystem;
 /////////////////////////////////////////////////////////////////////////////////////////
 BaseWidget::BaseWidget(const std::string& name, std::string  typeName)
 : Component(name, typeName)
-, Internal::TypeContainerInterface<BaseWidget>(_container)
+, Internal::TypeContainer<BaseWidget>(name, typeName)
 , PROPERTY_DECLARE(isBackRender, false)
 , PROPERTY_DECLARE(_rect)
 , PROPERTY_DECLARE(_anchor, Anchor::NONE)
@@ -130,132 +130,7 @@ ReyEngine::Size<int> BaseWidget::getClampedSize(){
    return getClampedSize(getSize());
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
-std::vector<std::weak_ptr<BaseWidget>> BaseWidget::findChild(const std::string &name, bool exact) {
-   vector<std::weak_ptr<BaseWidget>> retval;
-   vector<std::weak_ptr<BaseWidget>> descendents;
-   auto lock = scoped_lock<recursive_mutex>(_childLock);
-   for (auto& child : getChildren()){
-       for (auto& found : child->findChild(name, exact)){
-           descendents.push_back(found);
-       }
-   }
 
-   if (exact ? getName() == name : getName().find(name) != string::npos){
-       retval.push_back(toBaseWidget());
-   }
-   for (auto& descendent : descendents){
-       retval.push_back(descendent);
-   }
-
-   return retval;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-std::optional<BaseWidget::WidgetPtr> BaseWidget::addChild(WidgetPtr widget){
-   if (!widget) throw std::runtime_error("Cannot add a null widget to " + getName());
-   if (*widget == *this){
-       stringstream ss;
-       ss << "Cannot add widget " << widget->getName() << " to itself!" << endl;
-       Logger::error() << ss.str();
-       throw std::runtime_error(ss.str());
-       return nullopt;
-   }
-    auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
-   auto found = getChild(widget->getName());
-   if (found){
-      stringstream ss;
-      ss << "Widget " << getName() << " already has a child with name <" << widget->getName() << ">";
-      Logger::error() << ss.str();
-      throw std::runtime_error(ss.str());
-      return nullopt;
-   }
-   if (widget->getParent().lock()){
-      stringstream ss;
-      ss << "Widget " << widget->getName() << " already has a parent! It needs to be removed from its existing parent first!";
-      Logger::error() << ss.str();
-      throw std::runtime_error(ss.str());
-      return nullopt;
-   }
-   //call immediate callback
-   _on_child_added_immediate(widget);
-   auto me = toBaseWidget();
-   Logger::debug() << "Registering child " << widget->getName() << " to parent " << getName() << endl;
-   Application::registerForEnterTree(widget, me);
-
-   return widget;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-std::optional<BaseWidget::WidgetPtr> BaseWidget::removeChild(const std::string& name, bool quiet) {
-   auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
-   auto found = _children.find(name);
-   if (found == _children.end()){
-      if (!quiet) {
-         stringstream ss;
-         ss << "Widget " << getName() << " does not have a child with name <" << name << ">";
-         Logger::error() << ss.str() << endl;
-      }
-      return nullopt;
-   }
-   //remove from renderlist(s)
-   for (auto it = _frontRenderList.begin(); it != _frontRenderList.end(); it++){
-      if ((*it)->getName() == name) {
-         _frontRenderList.erase(it);
-         break;
-      }
-   }
-   for (auto it = _backRenderList.begin(); it != _backRenderList.end(); it++){
-      if ((*it)->getName() == name) {
-         _backRenderList.erase(it);
-         break;
-      }
-   }
-
-   auto child = found->second.second;
-
-   //do this here since __on_exit_tree is recursive
-   {
-      auto parent = toBaseWidget();
-      while (parent) {
-         DescendentRemovedEvent event(toEventPublisher(), child);
-         parent->publish(event);
-         parent->_on_descendent_about_to_be_removed(child);
-         parent = parent->getParent().lock();
-      }
-   }
-   __on_exit_tree(child, true);
-
-   auto orderIndex = found->second.first;
-   _children.erase(found);
-   _childrenOrdered.erase(_childrenOrdered.begin() + orderIndex);
-   child->isInLayout = false;
-   _on_child_removed(child);
-
-
-   //do this again
-   {
-      auto parent = toBaseWidget();
-      while (parent) {
-         DescendentRemovedEvent event(toEventPublisher(), child);
-         parent->publish(event);
-         parent->_on_descendent_removed(child);
-         parent = parent->getParent().lock();
-      }
-   }
-   __on_exit_tree(child, false);
-   return child;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::removeAllChildren() {
-   auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
-   for (auto& child : _children){
-      child.second.second->isInLayout = false;
-   }
-   _children.clear();
-   _childrenOrdered.clear();
-}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Pos<int> BaseWidget::getGlobalPos() const {
@@ -283,7 +158,7 @@ ReyEngine::Pos<int> BaseWidget::localToGlobal(const ReyEngine::Pos<int> &local) 
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::Size<int> BaseWidget::getChildBoundingBox() const {
    Size<int> childRect;
-   for (const auto& childIter : _children){
+   for (const auto& childIter : getChildMap()){
       auto totalOffset = childIter.second.second->getRect().size() + Size<double>(childIter.second.second->getPos());
       childRect = childRect.max(totalOffset);
    }
@@ -315,7 +190,7 @@ void BaseWidget::renderChain(ReyEngine::Pos<double>& parentOffset) {
 Handled BaseWidget::_process_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
    auto passInput = [&](const InputEvent& _event, std::optional<UnhandledMouseInput> _mouse) {
       //iterate backwards since siblings that are towards the end of the orderered child vector are drawn ON TOP of ones prior to them
-      for(auto it = _childrenOrdered.rbegin(); it != _childrenOrdered.rend(); ++it){
+      for(auto it = getChildren().rbegin(); it != getChildren().rend(); ++it){
          auto& child = *it;
          if (_mouse) {
             //if this is mouse input, make sure it is inside the bounding rect
@@ -572,22 +447,6 @@ void BaseWidget::drawTextureRect(const ReyEngine::ReyTexture& rtex, const ReyEng
    DrawTexturePro(rtex.getTexture(), _src, _dst, {0,0}, rotation, Colors::none);
 }
 
-
-/////////////////////////////////////////////////////////////////////////////////////////
-std::string BaseWidget::serialize() {
-   stringstream data;
-   data << _name << " - " << _typeName << ":\n";
-   for (const auto& [name, property] : _properties){
-      auto value = property->toString();
-      data << PropertyMeta::INDENT << property->instanceName();
-      data << PropertyMeta::SEP << property->typeName(); //todo: ? pretty sure this isn't actually necesary
-      data << PropertyMeta::SEP << value.size();
-      data << PropertyMeta ::SEP << value;
-      data << ";";
-   }
-   return data.str();
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::registerProperties() {
    registerProperty(_rect);
@@ -795,36 +654,9 @@ void BaseWidget::setHeight(int height){
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::__on_descendent_added(WidgetPtr& widget) {
-    DescendentAddedEvent event(toEventPublisher(), widget);
-    publish(event);
-    _on_descendent_added(widget);
-    auto parent = _parent.lock();
-    if (parent){
-        parent->__on_descendent_added(widget);
-    }
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::__on_child_added(WidgetPtr widget){
-   if (!isLayout){
-      for (auto& child : _childrenOrdered){
-         if (child->isAnchored()){
-            child->setRect(child->_rect);
-         }
-      }
-   }
-   ChildAddedEvent event(toEventPublisher(), widget);
-   publish(event);
-
-   __on_descendent_added(widget);
-   _on_child_added(widget);
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::__on_rect_changed(){
    if (!isLayout) {
-      for (auto &child: _childrenOrdered) {
+      for (auto &child: getChildren()) {
          if (child->isAnchored()) {
             child->setRect(child->_rect);
          }
@@ -832,23 +664,6 @@ void BaseWidget::__on_rect_changed(){
    }
    _on_rect_changed();
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::__on_exit_tree(WidgetPtr& widget, bool aboutToExit){
-   //Every descendent of the removed widget must call it's own exit tree functions.
-   // This will occurr in reverse order, starting with the most descendent child and ending with the one that was removed.
-   for (auto it = _childrenOrdered.rbegin(); it != _childrenOrdered.rend(); it++) {
-      auto &child = *it;
-      child->__on_exit_tree(widget, aboutToExit);
-   }
-   //so we can use this function for either version
-   if (aboutToExit){
-      _on_about_to_exit_tree();
-   } else {
-      _on_exit_tree();
-   }
-}
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setModal(bool isModal) {
@@ -945,37 +760,48 @@ std::optional<std::shared_ptr<BaseWidget>> BaseWidget::askHover(const Pos<int>& 
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<BaseWidget> BaseWidget::toBaseWidget(){
-   return inheritable_enable_shared_from_this<Component>::downcasted_shared_from_this<BaseWidget>();
-}
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::__on_component_enter_tree() {
-   auto parent = getParent();
-   auto newIndex = parent->_childrenOrdered.size(); //index of new child's location in ordered vector
-   parent->_children[component->getName()] = std::pair<int, std::shared_ptr<Component>>(newIndex, component);
-   parent->_childrenOrdered.push_back(component);
-   if (component->isBackRender.value){
-      parent->_backRenderList.push_back(component);
+void BaseWidget::__on_enter_tree() {
+   auto me = inheritable_enable_shared_from_this<Component>::downcasted_shared_from_this<BaseWidget>();
+   auto parent = getParent().lock();
+   auto newIndex = parent->getChildren().size(); //index of new child's location in ordered vector
+   parent->getChildMap()[getName()] = std::pair<int, std::shared_ptr<BaseWidget>>(newIndex, me);
+   parent->getChildren().push_back(me);
+   if (me->isBackRender.value){
+      parent->_backRenderList.push_back(me);
    } else {
-      parent->_frontRenderList.push_back(component);
+      parent->_frontRenderList.push_back(me);
    }
 
-   component->_parent = parent->toComponent();
-   component->isInLayout = parent->isLayout;
+   _parent = parent;
+   isInLayout = parent->isLayout;
    //recalculate the size rect if need to
    //todo: fix size published twice (setrect and later _publishSize
-   if (component->isAnchored() || component->isLayout){
+   if (isAnchored() || isLayout){
       //anchoring and layout of children managed by this component
-      component->setRect(component->_rect.value);
+      setRect(_rect.value);
    }
-   if (component->isInLayout){
+   if (isInLayout){
       //placement of layout managed by parent
       parent->setRect(parent->_rect.value);
    }
-   if (!hasInit) {
-      component->_init();
-      hasInit = true;
-      component->_publishSize();
+   if (_has_inited) {
+      _init();
+      _has_inited = true;
+      _publishSize();
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::__on_child_removed(Internal::TypeContainer<BaseWidget>::ChildPtr&) {
+   //remove from renderlist
+   auto frontRenderFound = std::find(_frontRenderList.begin(), _frontRenderList.end(), toBaseWidget());
+   auto backRenderFound = std::find(_backRenderList.begin(), _backRenderList.end(), toBaseWidget());
+   if (frontRenderFound != _frontRenderList.end()){
+      _frontRenderList.erase(frontRenderFound);
+   }
+   if (backRenderFound != _backRenderList.end()){
+      _backRenderList.erase(backRenderFound);
    }
 }

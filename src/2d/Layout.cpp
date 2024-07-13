@@ -6,6 +6,7 @@ using namespace ReyEngine;
 /////////////////////////////////////////////////////////////////////////////////////////
 Layout::Layout(const std::string &name, const std::string &typeName, LayoutDir layoutDir)
 : BaseWidget(name, typeName)
+, NamedInstance(name, typeName)
 , childScales("layoutRatios")
 , dir(layoutDir)
 {

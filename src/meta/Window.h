@@ -4,11 +4,19 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <stack>
+#include <unordered_set>
 #include "Scene.h"
 #include "Event.h"
 
 //implement to enable dragndrop
 namespace ReyEngine{
+   namespace Internal{
+      template <typename T>
+      class TypeContainer;
+   }
+   class UnhandledMouseInput;
+   class InputEvent;
    class Draggable{
    public:
       Draggable(const std::string& id, std::shared_ptr<BaseWidget> preview) : id(id), preview(preview){}
@@ -18,7 +26,8 @@ namespace ReyEngine{
    };
    
    class Canvas;
-   class Window : public EventPublisher {
+   class Window
+   : public Internal::TypeContainer<BaseWidget>{
    public:
       struct WindowResizeEvent : public Event<WindowResizeEvent> {
          EVENT_CTOR_SIMPLE(WindowResizeEvent, Event<WindowResizeEvent>, Pos<int> newSize), size(newSize){

@@ -70,8 +70,8 @@ void ScrollArea::_on_child_added(std::shared_ptr<BaseWidget>& child){
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::_init(){
     //create scrollbars
-    vslider = std::make_shared<Slider>(std::string(VSLIDER_NAME), Slider::SliderType::VERTICAL);
-    hslider = std::make_shared<Slider>(std::string(HSLIDER_NAME), Slider::SliderType::HORIZONTAL);
+    vslider = make_shared<Slider>(std::string(VSLIDER_NAME), Slider::SliderType::VERTICAL);
+    hslider = make_shared<Slider>(std::string(HSLIDER_NAME), Slider::SliderType::HORIZONTAL);
     vslider->setVisible(false);
     hslider->setVisible(false);
     addChild(vslider);

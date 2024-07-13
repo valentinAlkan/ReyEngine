@@ -1,5 +1,5 @@
 #pragma once
-#include "BaseWidget.h"
+#include "Component.h"
 #include "Property.h"
 #include <map>
 #include "StringTools.h"
@@ -28,7 +28,7 @@ namespace ReyEngine{
          const std::string instanceName;
          std::weak_ptr<TreeObject> parent;
          std::vector<std::shared_ptr<TreeObject>> children;
-         std::shared_ptr<BaseWidget> widget;
+         std::shared_ptr<Internal::Component> component;
 
       };
 
@@ -63,25 +63,25 @@ namespace ReyEngine{
          const StructType type;
          ParseState currentState = ParseState::NOT_FOUND;
          std::vector<std::string> _lines;
-         virtual std::string toString(std::shared_ptr<BaseWidget> root) = 0;
+         virtual std::string toString(std::shared_ptr<Internal::Component> root) = 0;
       };
 
       struct TreeStruct : public ParseStruct{
          TreeStruct(): ParseStruct(ParseStruct::StructType::TREE){};
          std::shared_ptr<TreeObject> parse();
-         std::string toString(std::shared_ptr<BaseWidget> root) override;
+         std::string toString(std::shared_ptr<Internal::Component> root) override;
       };
 
       struct DescStruct : public ParseStruct{
          DescStruct(): ParseStruct(ParseStruct::StructType::DESC){};
          std::shared_ptr<Scene> parse(std::shared_ptr<TreeObject> root);
-         std::string toString(std::shared_ptr<BaseWidget> root) override;
+         std::string toString(std::shared_ptr<Internal::Component> root) override;
       };
 
       struct MetaStruct : public ParseStruct{
          MetaStruct(): ParseStruct(ParseStruct::StructType::META){}
          std::shared_ptr<Scene> parse(std::shared_ptr<Scene> scene);
-         std::string toString(std::shared_ptr<BaseWidget> root) override;
+         std::string toString(std::shared_ptr<Internal::Component> root) override;
       };
 
       class Parser{
@@ -114,15 +114,15 @@ namespace ReyEngine{
 
    class Scene{
    public:
-      Scene(std::shared_ptr<BaseWidget> root);
+      Scene(std::shared_ptr<Internal::Component> root);
       std::string toString();
       static std::optional<std::shared_ptr<Scene>> fromString();
       static std::optional<std::shared_ptr<Scene>> fromFile(const std::string& filePath);
-      std::shared_ptr<BaseWidget> getRoot(){return _root;}
+      std::shared_ptr<Internal::Component> getRoot(){return _root;}
    protected:
       std::string name;
    private:
-      std::shared_ptr<BaseWidget> _root;
+      std::shared_ptr<Internal::Component> _root;
       std::string sceneName;
       friend struct SceneFileParser::MetaStruct;
       friend class Window;

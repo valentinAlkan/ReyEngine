@@ -42,14 +42,18 @@ namespace ReyEngine{
    /////////////////////////////////////////////////////////////////////////////////////////
    class VLayout : public Layout {
    public:
-      VLayout(const std::string& instanceName)
-      : Layout(instanceName, _get_static_constexpr_typename(), LayoutDir::VERTICAL)
+      VLayout(const std::string& name)
+      : Layout(name, _get_static_constexpr_typename(), LayoutDir::VERTICAL)
+      , NamedInstance(name, _get_static_constexpr_typename())
       {}
       REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(VLayout);
       REYENGINE_SERIALIZER(VLayout, Layout)
 
    protected:
-      VLayout(const std::string& name, const std::string& typeName): Layout(name, typeName, LayoutDir::VERTICAL){}
+      VLayout(const std::string& name, const std::string& typeName)
+      : Layout(name, typeName, LayoutDir::VERTICAL)
+      , NamedInstance(name, _get_static_constexpr_typename())
+      {}
    };
 
    /////////////////////////////////////////////////////////////////////////////////////////
@@ -57,11 +61,15 @@ namespace ReyEngine{
    public:
       HLayout(const std::string& instanceName)
       : Layout(instanceName, _get_static_constexpr_typename(), Layout::LayoutDir::HORIZONTAL)
+      , NamedInstance(instanceName, _get_static_constexpr_typename())
       {}
       REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(HLayout);
       REYENGINE_SERIALIZER(HLayout, Layout)
    protected:
-      HLayout(const std::string& name, const std::string& typeName): Layout(name, typeName, LayoutDir::HORIZONTAL){}
+      HLayout(const std::string& name, const std::string& typeName)
+      : Layout(name, typeName, LayoutDir::HORIZONTAL)
+      , NamedInstance(name, typeName)
+      {}
    };
 
    /////////////////////////////////////////////////////////////////////////////////////////
@@ -69,10 +77,13 @@ namespace ReyEngine{
    public:
        GridLayout(const std::string& instanceName)
        : Layout(instanceName, _get_static_constexpr_typename(), Layout::LayoutDir::GRID)
+       , NamedInstance(instanceName, _get_static_constexpr_typename())
        {}
        REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(GridLayout);
        REYENGINE_SERIALIZER(GridLayout, Layout)
    protected:
-       GridLayout(const std::string& name, const std::string& typeName): Layout(name, typeName, LayoutDir::GRID){}
+       GridLayout(const std::string& name, const std::string& typeName): Layout(name, typeName, LayoutDir::GRID)
+       , NamedInstance(name, typeName)
+       {}
    };
 }

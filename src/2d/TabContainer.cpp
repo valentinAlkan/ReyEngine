@@ -28,7 +28,7 @@ void TabContainer::render() const {
        drawLine(rect.rightSide(), 1.0, backgroundSecondary);
 //      drawRectangleLines(rect, 1.0, backgroundSecondary);
       //draw the tab child names
-      auto child = _childrenOrdered.at(i);
+      auto child = getChildren().at(i);
       drawText(child->getName(), rect.pos() + Pos<int>(1,1), tabTheme->font);
    }
 }
@@ -45,8 +45,8 @@ void TabContainer::_on_child_added(std::shared_ptr<BaseWidget>& child) {
 void TabContainer::setCurrentTab(int index) {
    currentTab = index;
    cout << "Set current tab to " << index << endl;
-   for (int idx=0; idx < _childrenOrdered.size(); idx++){
-      auto child = _childrenOrdered[idx];
+   for (int idx=0; idx < getChildren().size(); idx++){
+      auto child = getChildren()[idx];
       child->setVisible(idx == currentTab.value);
       cout << child->getName() << " set visible == " << child->getVisible() << endl;
    }
@@ -62,8 +62,8 @@ void TabContainer::arrangeChildren() {
 
    _tabRects.clear();
    int startXpos = tabTheme->tabMargin;
-   for (int childIndex=0; childIndex < _childrenOrdered.size(); childIndex++){
-      auto& child = _childrenOrdered[childIndex];
+   for (int childIndex=0; childIndex < getChildren().size(); childIndex++){
+      auto& child = getChildren()[childIndex];
       child->setRect(_childBoundingRect);
       //create a tab rect for the child
       auto x = startXpos + (childIndex * tabTheme->tabWidth.value);
