@@ -54,7 +54,6 @@ public:                                                   \
 public:                                                           \
    REYENGINE_DECLARE_COMPONENT_FRIEND                             \
    REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(CLASSNAME)  \
-   REYENGINE_SERIALIZER(CLASSNAME, PARENT_CLASSNAME)              \
    protected:                                                     \
    REYENGINE_DEFAULT_CTOR(CLASSNAME)                       \
    REYENGINE_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME)  \
