@@ -180,14 +180,19 @@ target_link_libraries(${TEST_PROJECT}
     editor
 )
 
+##########################################
 # for testing basic raylib stuff
 add_executable( raylibTest
     test/raylibTest.cpp
 )
-
 target_link_libraries(raylibTest
     ReyEngine2D
 )
+add_executable( cppTest
+    test/cppTest.cpp
+)
+
+##########################################
 
 
 install_file(./test/test.scn ./test/test.scn)
