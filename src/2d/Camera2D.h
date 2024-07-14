@@ -8,7 +8,7 @@ namespace ReyEngine {
 
    //Each canvas can have excatly 1 active camera at a time!!!!
    class Camera2D : public BaseWidget {
-      REYENGINE_OBJECT(Camera2D, BaseWidget)
+      REYENGINE_OBJECT_BUILD_ONLY(Camera2D, BaseWidget)
       , active("active", true)
       {
 

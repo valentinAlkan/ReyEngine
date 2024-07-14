@@ -8,11 +8,11 @@ using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Editor::_init() {
-   auto mainPanel = make_shared<Panel>("MainPanel");
+   auto mainPanel = Panel::build<Panel>("MainPanel");
 ////   mainPanel->setLayout<VLayout>();
 ////   addChild(mainPanel);
 ////
-////   auto menuBarPanel= make_shared<Panel>("menuBarPanel");
+////   auto menuBarPanel= Panel::build<Panel>("menuBarPanel");
 ////   menuBarPanel->setLayout<HLayout>();
 ////   mainPanel->addToLayout(menuBarPanel);
 ////   //set blue background (you gotta color it hard...so they can *see* it)
@@ -20,17 +20,17 @@ void Editor::_init() {
 ////   //set menubar size
 ////   menuBarPanel->setMaxSize({0,25});
 ////   //add some buttons to the menu bar
-////   auto fileButton  = std::make_shared<PushButton>("fileBtn");
+////   auto fileButton  = std::PushButton::build<std::PushButton>("fileBtn");
 ////   fileButton->setMaxSize({100,99999});
 ////   menuBarPanel->addToLayout(fileButton);
 ////
 ////   //create the workspace
-////   auto mainHLayout = make_shared<HLayout>("mainHLayout");
+////   auto mainHLayout = HLayout::build<HLayout>("mainHLayout");
 ////   mainHLayout->getTheme()->background.colorPrimary.set(ReyEngine::Colors::lightGray);
 ////   mainPanel->addToLayout(mainHLayout);
 //
 //   //create left panel
-//   auto mainHLayoutLeftPanel = make_shared<VLayout>("mainHLayoutLeftPanel");
+//   auto mainHLayoutLeftPanel = VLayout::build<VLayout>("mainHLayoutLeftPanel");
 //   mainHLayout->addChild(mainHLayoutLeftPanel);
 //
 //   //create scene tree panel

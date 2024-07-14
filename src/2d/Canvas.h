@@ -3,8 +3,7 @@
 
 namespace ReyEngine{
    class Canvas : public BaseWidget {
-   public:
-      REYENGINE_OBJECT(Canvas, BaseWidget)
+      REYENGINE_OBJECT_BUILD_ONLY(Canvas, BaseWidget)
       , _renderTarget()
       , _activeCamera(_defaultCamera)
       {}

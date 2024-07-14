@@ -6,28 +6,9 @@ namespace ReyEngine{
    class Control : public BaseWidget {
 
    public:
+      REYENGINE_OBJECT_BUILD_ONLY(Control, BaseWidget){}
    public:
-      static constexpr char TYPE_NAME[] = "Control";
-      std::string _get_static_constexpr_typename()
-      override{
-         return
-               TYPE_NAME;
-      }public:
-      static std::shared_ptr<Component> deserialize(const std::string &instanceName, PropertyPrototypeMap &properties) {
-         auto retval = std::shared_ptr<Control>(new Control(instanceName));
-         retval->Component::_deserialize(properties);
-         retval->Component::_on_deserialize(properties);
-         return retval;
-      }
-      Control(const std::string &name) : Control(name, _get_static_constexpr_typename()) {}
-   protected:
-      void _register_parent_properties()
-      override{
-         BaseWidget::_register_parent_properties();
-         BaseWidget::registerProperties();
-      }
-      Control(const std::string &name, const std::string &typeName) : BaseWidget(name, typeName), NamedInstance(name, typeName){}
-   public:
+//       static std::shared_ptr<Control> build(const std::string& name){return std::shared_ptr<Control>(new Control(name));}
        void _process(float dt) override;
        Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
        void _on_mouse_enter() override;

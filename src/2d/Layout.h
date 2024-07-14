@@ -25,14 +25,11 @@ namespace ReyEngine{
       Layout(const std::string &name, const std::string &typeName, LayoutDir layoutDir);
       void _register_parent_properties() override;
       void _on_child_added(std::shared_ptr<BaseWidget>& child) override;
-   //   void _on_child_added_immediate(std::shared_ptr<BaseWidget>& child) override;
       void _on_child_removed(std::shared_ptr<BaseWidget>& child) override;
       void _on_rect_changed() override {arrangeChildren();}
       void renderEnd() override;
       virtual void arrangeChildren();
       void render() const override {};
-      //Given infinite layout space and children of minimum possible sizes, what would the childBoundingBox for this layout be?
-      // Useful to predict the rect of common layout situations - particularly pop up menus and the like.
    public:
       FloatListProperty childScales;
    protected:
@@ -42,48 +39,46 @@ namespace ReyEngine{
    /////////////////////////////////////////////////////////////////////////////////////////
    class VLayout : public Layout {
    public:
-      VLayout(const std::string& name)
-      : Layout(name, _get_static_constexpr_typename(), LayoutDir::VERTICAL)
-      , NamedInstance(name, _get_static_constexpr_typename())
-      {}
       REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(VLayout);
       REYENGINE_SERIALIZER(VLayout, Layout)
-
+      REYENGINE_DEFAULT_BUILD;
    protected:
-      VLayout(const std::string& name, const std::string& typeName)
-      : Layout(name, typeName, LayoutDir::VERTICAL)
-      , NamedInstance(name, _get_static_constexpr_typename())
+      VLayout(const std::string& instanceName)
+      : Layout(instanceName, _get_static_constexpr_typename(), LayoutDir::VERTICAL)
       {}
+      VLayout(const std::string& name, const std::string& typeName): Layout(name, typeName, LayoutDir::VERTICAL){}
    };
 
    /////////////////////////////////////////////////////////////////////////////////////////
    class HLayout : public Layout {
    public:
-      HLayout(const std::string& instanceName)
-      : Layout(instanceName, _get_static_constexpr_typename(), Layout::LayoutDir::HORIZONTAL)
-      , NamedInstance(instanceName, _get_static_constexpr_typename())
-      {}
+      REYENGINE_DEFAULT_BUILD;
       REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(HLayout);
       REYENGINE_SERIALIZER(HLayout, Layout)
    protected:
-      HLayout(const std::string& name, const std::string& typeName)
-      : Layout(name, typeName, LayoutDir::HORIZONTAL)
-      , NamedInstance(name, typeName)
+      HLayout(const std::string& instanceName)
+      : Layout(instanceName, _get_static_constexpr_typename(), Layout::LayoutDir::HORIZONTAL)
       {}
+      HLayout(const std::string& name, const std::string& typeName): Layout(name, typeName, LayoutDir::HORIZONTAL){}
    };
 
    /////////////////////////////////////////////////////////////////////////////////////////
    class GridLayout : public Layout {
    public:
+      REYENGINE_DEFAULT_BUILD;
        GridLayout(const std::string& instanceName)
        : Layout(instanceName, _get_static_constexpr_typename(), Layout::LayoutDir::GRID)
        , NamedInstance(instanceName, _get_static_constexpr_typename())
        {}
        REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(GridLayout);
        REYENGINE_SERIALIZER(GridLayout, Layout)
+//       static std::shared_ptr<GridLayout> build(const std::string& name) noexcept {
+//          return std::shared_ptr<GridLayout> (new GridLayout(name));
+//       }
    protected:
-       GridLayout(const std::string& name, const std::string& typeName): Layout(name, typeName, LayoutDir::GRID)
-       , NamedInstance(name, typeName)
+       GridLayout(const std::string& instanceName)
+       : Layout(instanceName, _get_static_constexpr_typename(), Layout::LayoutDir::HORIZONTAL)
        {}
+       GridLayout(const std::string& name, const std::string& typeName): Layout(name, typeName, LayoutDir::GRID){}
    };
 }

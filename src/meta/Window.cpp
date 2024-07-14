@@ -32,7 +32,7 @@ Window::Window(const std::string &title, int width, int height, const std::vecto
    Application::ready();
    //Create canvas if not provided
    if (!root) {
-      auto newRoot = make_shared<Canvas>("root");
+      auto newRoot = Canvas::build<Canvas>("root");
       makeRoot(newRoot, {width, height});
    } else {
       makeRoot(root.value(), {width, height});

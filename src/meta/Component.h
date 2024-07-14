@@ -6,6 +6,8 @@
 #include "Event.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////
+#define REYENGINE_DECLARE_COMPONENT_FRIEND friend class ReyEngine::Internal::Component;
+/////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(TYPENAME) \
 static constexpr char TYPE_NAME[] = #TYPENAME;               \
 std::string _get_static_constexpr_typename() override {return TYPE_NAME;}
@@ -13,13 +15,19 @@ std::string _get_static_constexpr_typename() override {return TYPE_NAME;}
 #define REYENGINE_SERIALIZER(CLASSNAME, PARENT_CLASSNAME) \
    public:                                           \
    static std::shared_ptr<Component> deserialize(const std::string& instanceName, PropertyPrototypeMap& properties) { \
-   auto retval = std::shared_ptr<CLASSNAME>(new CLASSNAME(instanceName)); \
+   auto retval = CLASSNAME::build<CLASSNAME>(instanceName); \
    retval->Component::_deserialize(properties);          \
    retval->Component::_on_deserialize(properties);       \
-   return retval;}                                       \
+   return retval;}
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME) \
    CLASSNAME(const std::string& name, const std::string& typeName): PARENT_CLASSNAME(name, typeName), NamedInstance(name, typeName)
+/////////////////////////////////////////////////////////////////////////////////////////
+#define REYENGINE_DEFAULT_BUILD \
+   template <typename T>    \
+   static std::shared_ptr<T> build(const std::string& name) noexcept {  \
+      auto me = std::shared_ptr<T>(new T(name)); \
+      return me; }
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_DEFAULT_CTOR(CLASSNAME) \
    CLASSNAME(const std::string& name): CLASSNAME(name, _get_static_constexpr_typename()){}
@@ -31,26 +39,20 @@ protected:                                                \
       PARENT_CLASSNAME::registerProperties();             \
    }
 
-//to instantiate a deserializable object
-#define REYENGINE_OBJECT(CLASSNAME, PARENT_CLASSNAME)  \
-public:                                                   \
-   REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(CLASSNAME)  \
-   REYENGINE_SERIALIZER(CLASSNAME, PARENT_CLASSNAME)       \
-   REYENGINE_DEFAULT_CTOR(CLASSNAME)                       \
-   REYENGINE_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME)  \
-   REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME)
-
 //to instantiate a virtual object with no deserializer
 #define REYENGINE_VIRTUAL_OBJECT(CLASSNAME, PARENT_CLASSNAME)  \
 public:                                                   \
+   REYENGINE_DECLARE_COMPONENT_FRIEND                             \
    REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(CLASSNAME)  \
+   protected:                                                     \
    REYENGINE_DEFAULT_CTOR(CLASSNAME)                       \
    REYENGINE_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME)  \
    REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME)
 
 //to disallow building except via a factory function
 #define REYENGINE_OBJECT_BUILD_ONLY(CLASSNAME, PARENT_CLASSNAME)  \
-public:                                                   \
+public:                                                           \
+   REYENGINE_DECLARE_COMPONENT_FRIEND                             \
    REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(CLASSNAME)  \
    REYENGINE_SERIALIZER(CLASSNAME, PARENT_CLASSNAME)              \
    protected:                                                     \
@@ -58,8 +60,6 @@ public:                                                   \
    REYENGINE_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME)  \
    REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME)
 
-#define REYENGINE_COMPONENT_OVERRIDE \
-___on_component_added_immediate
 namespace ReyEngine{
    class Application;
       namespace Internal{

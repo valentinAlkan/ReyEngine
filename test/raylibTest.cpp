@@ -1,5 +1,5 @@
 #include <iostream>
-#include "DrawInterface.h"
+//#include "DrawInterface.h"
 #include "InputManager.h"
 #include "rlgl.h"
 #include <stack>
@@ -7,6 +7,13 @@
 
 using namespace std;
 using namespace ReyEngine;
+
+#define STATIC_BUILD(CLASSNAME, ...) static std::shared_ptr<CLASSNAME>(const std::string& name, __VA_ARGS__)
+
+class BuildClass{
+public:
+   STATIC_BUILD(BuildClass){}
+};
 
 int main(int argc, char** argv){
    Camera2D foregroundCamera = {0}; //BEGIN to draw background

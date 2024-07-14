@@ -16,7 +16,8 @@ namespace ReyEngine{
 
 
    class WidgetTree : public Tree{
-      REYENGINE_OBJECT(WidgetTree, Tree){}
+      REYENGINE_DEFAULT_BUILD;
+      REYENGINE_OBJECT_BUILD_ONLY(WidgetTree, Tree){}
    public:
       std::optional<std::shared_ptr<Draggable>> _on_drag_start(ReyEngine::Pos<int> globalPos) override;
    protected:

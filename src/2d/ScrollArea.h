@@ -4,11 +4,12 @@
 
 namespace ReyEngine {
     class ScrollArea : public BaseWidget {
-    REYENGINE_OBJECT(ScrollArea, BaseWidget), scrollOffsetX(0, 0, 0), scrollOffsetY(0, 0, 0) {
+    REYENGINE_OBJECT_BUILD_ONLY(ScrollArea, BaseWidget), scrollOffsetX(0, 0, 0), scrollOffsetY(0, 0, 0) {
         _inputFilter = InputFilter::INPUT_FILTER_PROCESS_AND_STOP; //catch all input so we can prioritize sliders
     }
 
     public:
+//       static std::shared_ptr<ScrollArea> build(const std::string& name){return std::shared_ptr<ScrollArea>(new ScrollArea(name));}
         inline ReyEngine::Size<double> getScrollAreaSize() const {
             return {scrollOffsetX.getMax(), scrollOffsetY.getMax()};
         }

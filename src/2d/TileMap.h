@@ -98,7 +98,7 @@ namespace ReyEngine {
          const Rect<int>& cellRect;
       };
 
-      REYENGINE_OBJECT(TileMap, BaseWidget)
+      REYENGINE_OBJECT_BUILD_ONLY(TileMap, BaseWidget)
       , PROPERTY_DECLARE(_showGrid, true)
       , PROPERTY_DECLARE(_gridType, GridType::SQUARE)
       , PROPERTY_DECLARE(_gridHeight, 32)
