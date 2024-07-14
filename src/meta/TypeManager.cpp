@@ -45,12 +45,12 @@ void TypeManager::_registerTypes() {
    static constexpr char basewidget[] = "BaseWidget";
    instance()._types[basewidget] = make_shared<TypeMeta>(basewidget, "", true, nullptr);
    //register all other internal widget types here
-   Component::registerType("Control", "BaseWidget", false, &Control::deserialize);
-   Component::registerType("BaseButton", "Control", true, nullptr);
-   Component::registerType("PushButton", "BaseButton", false, &PushButton::deserialize);
-   Component::registerType("Label", "Control", false, &Label::deserialize);
-   Component::registerType("ScrollArea", "Control", false, &ScrollArea::deserialize);
-   Component::registerType("Slider", "Control", false, &Slider::deserialize);
+//   Component::registerType("Control", "BaseWidget", false, &Control::deserialize);
+//   Component::registerType("BaseButton", "Control", true, nullptr);
+//   Component::registerType("PushButton", "BaseButton", false, &PushButton::deserialize);
+//   Component::registerType("Label", "Control", false, &Label::deserialize);
+//   Component::registerType("ScrollArea", "Control", false, &ScrollArea::deserialize);
+//   Component::registerType("Slider", "Control", false, &Slider::deserialize);
 
    //register custom types
    CustomTypes::registerTypes();

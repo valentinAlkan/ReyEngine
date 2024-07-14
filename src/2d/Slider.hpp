@@ -21,6 +21,11 @@ namespace ReyEngine{
          SliderType fromString(const std::string& str) override {return (str == "VERTICAL" ? SliderType::VERTICAL : SliderType::HORIZONTAL);}
       };
 
+      template<typename T>
+      static std::shared_ptr<T> build(const std::string &name, SliderType sliderType) noexcept {
+         auto me = std::shared_ptr<T>(new T(name, sliderType));
+         return me;
+      }
       REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(Slider)
       Slider(const std::string &name, SliderType sliderDir)
             : BaseWidget(name, _get_static_constexpr_typename())
