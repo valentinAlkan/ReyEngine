@@ -6,7 +6,7 @@
 
 namespace ReyEngine{
    class Label : public BaseWidget {
-      REYENGINE_OBJECT(Label, BaseWidget)
+      REYENGINE_OBJECT_BUILD_ONLY(Label, BaseWidget)
       , PROPERTY_DECLARE(text, getName())
       {
          auto expandOpt = needsExpand();
@@ -17,6 +17,10 @@ namespace ReyEngine{
          theme->background = Style::Fill::NONE;
       }
    public:
+//      static std::shared_ptr<Label> build(const std::string& name){
+//         auto me = std::shared_ptr<Label>(new Label(name));
+//         return me;
+//      }
       void render() const override{
          //todo: scissor text
          auto& outline = theme->outline;

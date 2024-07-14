@@ -13,7 +13,7 @@ namespace ReyEngine {
          const std::string newText;
       };
 
-   REYENGINE_OBJECT(LineEdit, BaseWidget)
+   REYENGINE_OBJECT_BUILD_ONLY(LineEdit, BaseWidget)
    , PROPERTY_DECLARE(_defaultText)
    , PROPERTY_DECLARE(_text)
    {}

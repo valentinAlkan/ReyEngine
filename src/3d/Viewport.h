@@ -15,11 +15,16 @@ namespace ReyEngine {
       , _showGrid("showGrid", true)
       {}
    public:
+      template <typename T>
+      static std::shared_ptr<T> build(const std::string& name){
+         auto me = std::shared_ptr<T>(new T(name));
+         return me;
+      }
       void _init() override;
       void setUnhandledInputCallback(std::function<Handled(Viewport&, const InputEvent&, const std::optional<UnhandledMouseInput>&)> fx);
       void setActiveCamera(CameraTransform3D&);
       void deleteActiveCamera();
-      static std::shared_ptr<Viewport> build(const std::string& instanceName);
+//      static std::shared_ptr<Viewport> build(const std::string& instanceName);
    protected:
       void renderChain(ReyEngine::Pos<double>& textureOffset) override;
       void render() const override;

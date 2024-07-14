@@ -37,7 +37,7 @@ namespace ReyEngine{
 
    /////////////////////////////////////////////////////////////////////////////////////////
    class PushButton : public BaseButton{
-      REYENGINE_OBJECT(PushButton, BaseButton)
+      REYENGINE_OBJECT_BUILD_ONLY(PushButton, BaseButton)
       , PROPERTY_DECLARE(text)
       {
          text.value = getName();
@@ -51,6 +51,7 @@ namespace ReyEngine{
       void render() const override;
       StringProperty text;
    public:
+//      static std::shared_ptr<PushButton> build(const std::string& name){return std::shared_ptr<PushButton>(new PushButton(name));}
       std::string getText(){return text.value;}
       void setText(const std::string& newText){text.value = newText;}
    protected:

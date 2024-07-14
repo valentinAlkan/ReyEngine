@@ -8,7 +8,7 @@ namespace ReyEngine{
    class Sprite : public BaseWidget {
 
    public:
-   REYENGINE_OBJECT(Sprite, BaseWidget)
+   REYENGINE_OBJECT_BUILD_ONLY(Sprite, BaseWidget)
       , PROPERTY_DECLARE(region)
       {}
    public:
@@ -33,7 +33,7 @@ namespace ReyEngine{
    class AnimatedSprite : public BaseWidget {
 
    public:
-   REYENGINE_OBJECT(AnimatedSprite, BaseWidget){}
+   REYENGINE_OBJECT_BUILD_ONLY(AnimatedSprite, BaseWidget){}
    public:
       void render() const override;
       void registerProperties() override;

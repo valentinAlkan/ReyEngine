@@ -3,8 +3,9 @@
 
 namespace ReyEngine{
    class RootWidget : public BaseWidget{
-      REYENGINE_OBJECT(RootWidget, BaseWidget){}
+      REYENGINE_OBJECT_BUILD_ONLY(RootWidget, BaseWidget){}
    public:
+//      static std::shared_ptr<RootWidget> build(const std::string& name){return std::shared_ptr<RootWidget>(new RootWidget(name));}
    //   void renderBegin(ReyEngine::Vec2<float>& textureOffset) override {}
       void render() const override {
          drawRectangle(_rect.value, theme->background.colorPrimary.value);

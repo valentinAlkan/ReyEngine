@@ -5,12 +5,6 @@ using namespace std;
 using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<Viewport> Viewport::build(const std::string &instanceName) {
-   auto viewport = shared_ptr<Viewport>(new Viewport(instanceName));
-   return viewport;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
 void Viewport::_init() {
 }
 

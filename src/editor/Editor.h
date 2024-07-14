@@ -6,9 +6,10 @@
 
 namespace ReyEngine {
    class Editor : public VLayout {
-   REYENGINE_OBJECT(Editor, VLayout) {}
+      REYENGINE_OBJECT_BUILD_ONLY(Editor, VLayout) {}
 
    public:
+      REYENGINE_DEFAULT_BUILD;
       void _init() override;
 //   void inspect(std::shared_ptr<BaseWidget>);
    private:

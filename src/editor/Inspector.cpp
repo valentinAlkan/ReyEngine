@@ -8,7 +8,7 @@ using namespace ReyEngine;
 /////////////////////////////////////////////////////////////////////////////////////////
 void Inspector::_init() {
    //add some fields
-   mainVLayout = make_shared<VLayout>("MainVLayout");
+   mainVLayout = VLayout::build<VLayout>("MainVLayout");
    mainVLayout->setSize({100,100});
    addChild(mainVLayout);
 }

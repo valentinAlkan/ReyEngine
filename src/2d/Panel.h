@@ -15,7 +15,7 @@ namespace ReyEngine{
       static constexpr char BTN_MIN_NAME[] = "__btn_min";
       static constexpr char BTN_MAX_NAME[] = "__btn_max";
       static constexpr char TITLE_LABEL_NAME[] = "__titleLabel";
-      REYENGINE_OBJECT(Panel, BaseWidget)
+      REYENGINE_OBJECT_BUILD_ONLY(Panel, BaseWidget)
       , PROPERTY_DECLARE(panelTitle)
       , PROPERTY_DECLARE(showHeader, true)
       , PROPERTY_DECLARE(_isResizable, true)
@@ -26,6 +26,7 @@ namespace ReyEngine{
          theme->background.colorPrimary = ReyEngine::ColorRGBA(94, 142, 181, 255);
       }
    public:
+//      static std::shared_ptr<Panel> build(const std::string& name){return std::shared_ptr<Panel>(new Panel(name));}
       void _init() override;
       void _on_rect_changed() override;
       Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
