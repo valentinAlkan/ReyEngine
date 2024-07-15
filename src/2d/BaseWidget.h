@@ -225,6 +225,7 @@ namespace ReyEngine{
       void _on_child_removed(ChildPtr& child) override {
          child->isInLayout = false;
       }
+      void __on_child_added_immediate(ChildPtr&);
       virtual std::optional<std::shared_ptr<Draggable>> _on_drag_start(ReyEngine::Pos<int> globalPos){return std::nullopt;} //override and return something to implement drag and drop
       virtual Handled _on_drag_drop(std::shared_ptr<Draggable>){return false;}
 
