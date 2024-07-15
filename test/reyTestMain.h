@@ -6,8 +6,5 @@ class SuperPanel : public ReyEngine::Panel {
    // What it does is declare some constructors and a static constexpr TYPE_NAME that the type system uses
    REYENGINE_OBJECT_BUILD_ONLY(SuperPanel, Panel){}
 public:
-//   static std::shared_ptr<SuperPanel> build(const std::string& instanceName){
-//      auto me = std::shared_ptr<SuperPanel>(new SuperPanel(instanceName));
-//      return me;
-//   };
+   REYENGINE_DEFAULT_BUILD
 };

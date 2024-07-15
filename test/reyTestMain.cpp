@@ -1041,7 +1041,7 @@ int main(int argc, char** argv)
    else if (args.getArg("--tabContainerTest")){
       Logger::debug() << "Starting tab container test!" << endl;
       auto mainVLayout = VLayout::build<VLayout>("MainVLayout");
-      auto tabContainer = make_shared<TabContainer>("TabContainer");
+      auto tabContainer = TabContainer::build<TabContainer>("TabContainer");
       mainVLayout->setAnchoring(BaseWidget::Anchor::FILL);
       mainVLayout->addChild(tabContainer);
       mainVLayout->getTheme()->layoutMargins.setAll(5);

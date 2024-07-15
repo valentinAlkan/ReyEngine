@@ -4,10 +4,8 @@
 class TextureTestWidget : public ReyEngine::BaseWidget{
    REYENGINE_OBJECT_BUILD_ONLY(TextureTestWidget, BaseWidget){}
 public:
-//   static std::shared_ptr<TextureTestWidget> build(const std::string& name){return std::shared_ptr<TextureTestWidget>(new TextureTestWidget(name));}
-   void renderBegin(ReyEngine::Pos<double>& textureOffset) override {
-//      _render
-   }
+   REYENGINE_DEFAULT_BUILD
+   void renderBegin(ReyEngine::Pos<double>& textureOffset) override {}
    void render() const override {}
 //   void renderEnd() override{}
    void _process(float dt) override {}
