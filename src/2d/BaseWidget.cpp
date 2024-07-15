@@ -714,8 +714,6 @@ void BaseWidget::__on_enter_tree() {
       parent->setRect(parent->_rect.value);
    }
    if (_has_inited) {
-      _init();
-      _has_inited = true;
       _publishSize();
    }
 }
@@ -734,7 +732,7 @@ void BaseWidget::__on_child_removed(Internal::TypeContainer<BaseWidget>::ChildPt
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-//template <>
-//void ReyEngine::Internal::TypeContainer<BaseWidget>::___on_component_added_immediate(ChildPtr& child) {
-//
-//}
+template <>
+void ReyEngine::Internal::TypeContainer<BaseWidget>::__on_child_added_immediate(std::shared_ptr<BaseWidget>& child){
+   child->__init();
+}

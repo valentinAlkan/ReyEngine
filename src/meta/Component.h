@@ -76,9 +76,12 @@ namespace ReyEngine{
          std::shared_ptr<Component> toComponent();
          static void registerType(const std::string& typeName, const std::string& parentType, bool isVirtual, Deserializer fx){TypeManager::registerType(typeName, parentType, isVirtual, fx);}
          std::string serialize();
-
+         void __init(){
+            _init();
+            _has_inited = true;
+         }
       protected:
-         virtual void _init() {}
+         virtual void _init(){}
          void _deserialize(PropertyPrototypeMap&);
          virtual void _on_deserialize(PropertyPrototypeMap&){} //used to do any deserializations specific to this type
          const std::string _typeName; //can't just use static constexpr TYPE_NAME since we need to know what the type is if using type-erasure
@@ -87,6 +90,11 @@ namespace ReyEngine{
 
          virtual void _on_application_ready(){};
          virtual void _register_parent_properties(){};
+         void __on_child_added_immediate(ChildPtr&) {
+            Logger::debug() << "component init" << std::endl;
+            _init();
+            _has_inited = true;
+         };
 
          BoolProperty _isProcessed;
          IntProperty _resourceId;

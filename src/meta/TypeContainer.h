@@ -106,10 +106,6 @@ namespace ReyEngine::Internal{
             child->_parent = me;
             //call your template specializations here
            Logger::debug() << "Registering child " << child->getName() << " to parent " << getName() << std::endl;
-            if (std::is_base_of_v<Component, T>){
-//               childTypePtr->_init();
-//               childTypePtr->_has_inited = true;
-            }
 
             __on_child_added_immediate(childTypePtr);
             _childOrder.push_back(childTypePtr);
@@ -298,7 +294,7 @@ namespace ReyEngine::Internal{
         ChildMap& getChildMap(){return _childMap;}
         const ChildMap& getChildMap() const {return _childMap;}
         virtual void _on_child_added_immediate(ChildPtr&){} //Called immediately upon a call to addChild - DANGER: type is not actually a child yet! It is (probably) a very bad idea to do much at all here. Make sure you know what you're doing.
-        virtual void __on_child_added_immediate(ChildPtr&){};
+        void __on_child_added_immediate(ChildPtr&);
         virtual void _on_child_added(ChildPtr&){} // called at the beginning of the next frame after a child is added. Child is now owned by us. Safe to manipulate child. Called after all events are emitted.
         virtual void __on_child_added(ChildPtr&){};
         virtual void _on_descendent_added(ChildPtr&){} // All parents up the chain will emit this signal. Emits along with _on_child_added when this node is the parent.
