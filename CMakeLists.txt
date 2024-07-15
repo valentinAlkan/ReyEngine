@@ -66,9 +66,13 @@ set(EIGEN_MPL2_ONLY ON)
 set(EIGEN_BUILD_PKGCONFIG OFF)
 set(EIGEN_BUILD_DOC OFF)
 FetchContent_MakeAvailable(Eigen)
+message(CHECK_START "Fetching Eigen3")
+list(APPEND CMAKE_MESSAGE_INDENT "  ")
 
-list(POP_BACK CMAKE_MESSAGE_INDENT)
-message(CHECK_PASS "fetched")
+#find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+
+#list(POP_BACK CMAKE_MESSAGE_INDENT)
+#message(CHECK_PASS "fetched")
 # /eigen
 
 set(CUSTOM_SOURCES

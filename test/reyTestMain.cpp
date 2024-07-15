@@ -1637,7 +1637,32 @@ int main(int argc, char** argv)
       //declare a viewport
       auto viewport = Viewport::build<Viewport>("viewport");
       root->addChild(viewport);
-//      viewport->addChild()
+
+      auto vlayout = make_shared<VLayout>("mainvlayout");
+      root->addChild(vlayout);
+
+      vlayout->setAnchoring(ReyEngine::BaseWidget::Anchor::FILL);
+
+      auto btnCB = [&](const PushButton::ButtonPressEvent& e){
+         auto button = e.publisher->toBaseWidget()->toType<PushButton>();
+         cout << button->getName() << endl;
+         button->setText("Pressed!");
+      };
+
+      for (int i = 0; i<20; i++) {
+         auto button = make_shared<PushButton>("Btn" + to_string(i));
+         root->addChild(button);
+         button->subscribe<PushButton::ButtonPressEvent>(button, btnCB);
+         auto w = 100;
+         auto h = 30;
+         button->setRect({i*w, i*h, w,h});
+      }
+
+      auto panel = make_shared<Panel>("Panel");
+      root->addChild(panel);
+      panel->setResizable(true);
+      panel->setRect({100,300,500,500});
+//      panel->setTitle("Hi Tony!");
    }
 
    else {
