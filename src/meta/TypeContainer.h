@@ -105,10 +105,10 @@ namespace ReyEngine::Internal{
             //set the parent
             child->_parent = me;
             //call your template specializations here
+           Logger::debug() << "Registering child " << child->getName() << " to parent " << getName() << std::endl;
             if (std::is_base_of_v<Component, T>){
-               Logger::debug() << "Registering child " << child->getName() << " to parent " << getName() << std::endl;
-               childTypePtr->_init();
-               childTypePtr->_has_inited = true;
+//               childTypePtr->_init();
+//               childTypePtr->_has_inited = true;
             }
 
             __on_child_added_immediate(childTypePtr);
