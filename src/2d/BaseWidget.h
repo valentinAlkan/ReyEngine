@@ -46,6 +46,7 @@ namespace ReyEngine{
       using Internal::TypeContainer<BaseWidget>::getChildren;
       using Internal::TypeContainer<BaseWidget>::getParent;
       using Internal::TypeContainer<BaseWidget>::addChild;
+      using Internal::TypeContainer<BaseWidget>::removeChild;
       using Internal::TypeContainer<BaseWidget>::removeAllChildren;
       using Internal::TypeContainer<BaseWidget>::toContainedType;
       using Internal::TypeContainer<BaseWidget>::toContainedTypePtr;
@@ -221,6 +222,9 @@ namespace ReyEngine{
       virtual void _on_mouse_exit(){};
       virtual void _on_modality_gained(){}
       virtual void _on_modality_lost(){}
+      void _on_child_removed(ChildPtr& child) override {
+         child->isInLayout = false;
+      }
       virtual std::optional<std::shared_ptr<Draggable>> _on_drag_start(ReyEngine::Pos<int> globalPos){return std::nullopt;} //override and return something to implement drag and drop
       virtual Handled _on_drag_drop(std::shared_ptr<Draggable>){return false;}
 
