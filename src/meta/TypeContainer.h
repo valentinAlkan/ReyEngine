@@ -116,9 +116,22 @@ namespace ReyEngine::Internal{
             _childMap[child->getName()];
             child->__on_enter_tree();
         }
+
+        std::optional<ChildPtr>removeChild(const std::string& name, bool quiet=false){
+            auto found = findChild(name);
+            if (found){
+               removeChild(found.value(), quiet);
+            } else if(!quiet) {
+               std::stringstream ss;
+               ss << getType() << "::" << getName() << " does not have a child with name <" << getName() << ">";
+               Logger::error() << ss.str() << std::endl;
+            }
+            return std::nullopt;
+        }
+
         std::optional<ChildPtr>removeChild(ChildPtr& child, bool quiet){
             auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
-            auto found = getChildMap().find(getName());
+            auto found = getChildMap().find(child->getName());
             if (found == getChildMap().end()){
                 if (!quiet) {
                     std::stringstream ss;
@@ -134,7 +147,7 @@ namespace ReyEngine::Internal{
                 while (parent) {
                     DescendentRemovedEvent event(toEventPublisher(), child);
                     parent->publish(event);
-                    parent->_on_descendent_about_to_be_removed(child);
+                    parent->TypeContainer<T>::_on_descendent_about_to_be_removed(child);
                     parent = parent->getParent().lock();
                 }
             }
@@ -143,9 +156,7 @@ namespace ReyEngine::Internal{
             auto orderIndex = found->second.first;
             getChildMap().erase(found);
             _childOrder.erase(_childOrder.begin() + orderIndex);
-            child->isInLayout = false;
             _on_child_removed(child);
-
 
             //do this again
             {
@@ -153,7 +164,7 @@ namespace ReyEngine::Internal{
                 while (parent) {
                     DescendentRemovedEvent event(toEventPublisher(), child);
                     parent->publish(event);
-                    parent->_on_descendent_removed(child);
+                    parent->TypeContainer<T>::_on_descendent_removed(child);
                     parent = parent->getParent().lock();
                 }
             }
@@ -163,10 +174,6 @@ namespace ReyEngine::Internal{
 
         inline void removeAllChildren() {
             auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
-            //todo: put this somewhere else
-//            for (auto& child : _childMap){
-//                child.second.second->isInLayout = false;
-//            }
             _childOrder.clear();
             _childMap.clear();
         }
@@ -188,12 +195,22 @@ namespace ReyEngine::Internal{
             auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
             return _childMap.find(name) != _childMap.end();
         }
-        inline std::vector<std::weak_ptr<T>> findChild(const std::string& name, bool exact=false){
+
+        inline std::optional<ChildPtr>findChild(const std::string& name){
+           auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
+           for (auto& child : getChildren()){
+              if (child->getName() == name){
+                 return child;
+              }
+           }
+        }
+
+        inline std::vector<std::weak_ptr<T>> findDescendents(const std::string& name, bool exact=false){
             std::vector<std::weak_ptr<T>> retval;
             std::vector<std::weak_ptr<T>> descendents;
             auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
             for (auto& child : getChildren()){
-                for (auto& found : child->findChild(name, exact)){
+                for (auto& found : child->findDescendents(name, exact)){
                     descendents.push_back(found);
                 }
             }
