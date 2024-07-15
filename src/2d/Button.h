@@ -51,7 +51,7 @@ namespace ReyEngine{
       void render() const override;
       StringProperty text;
    public:
-//      static std::shared_ptr<PushButton> build(const std::string& name){return std::shared_ptr<PushButton>(new PushButton(name));}
+      REYENGINE_DEFAULT_BUILD
       std::string getText(){return text.value;}
       void setText(const std::string& newText){text.value = newText;}
    protected:

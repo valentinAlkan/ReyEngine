@@ -8,6 +8,7 @@ namespace ReyEngine{
       , _activeCamera(_defaultCamera)
       {}
    public:
+      REYENGINE_DEFAULT_BUILD
       //modality
       void setModal(std::shared_ptr<BaseWidget>&);
       void clearModal();

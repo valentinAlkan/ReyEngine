@@ -26,7 +26,7 @@ namespace ReyEngine{
          theme->background.colorPrimary = ReyEngine::ColorRGBA(94, 142, 181, 255);
       }
    public:
-//      static std::shared_ptr<Panel> build(const std::string& name){return std::shared_ptr<Panel>(new Panel(name));}
+      REYENGINE_DEFAULT_BUILD
       void _init() override;
       void _on_rect_changed() override;
       Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
@@ -36,7 +36,7 @@ namespace ReyEngine{
       void render() const override;
       void registerProperties() override;
       void addChildInternal(std::shared_ptr<BaseWidget> child){BaseWidget::addChild(child);}
-      void setTitle(const std::string& newtitle){panelTitle = newtitle; titleLabel->setText(newtitle);}
+      void setTitle(const std::string& newtitle);
       void addChildToPanel(std::shared_ptr<BaseWidget> child);
       inline void setResizable(bool resizeable){_isResizable = resizeable;}
       inline bool getResizable(){return _isResizable;}

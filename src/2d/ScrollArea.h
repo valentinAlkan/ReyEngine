@@ -9,7 +9,7 @@ namespace ReyEngine {
     }
 
     public:
-//       static std::shared_ptr<ScrollArea> build(const std::string& name){return std::shared_ptr<ScrollArea>(new ScrollArea(name));}
+        REYENGINE_DEFAULT_BUILD
         inline ReyEngine::Size<double> getScrollAreaSize() const {
             return {scrollOffsetX.getMax(), scrollOffsetY.getMax()};
         }

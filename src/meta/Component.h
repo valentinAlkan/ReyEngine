@@ -12,13 +12,7 @@
 static constexpr char TYPE_NAME[] = #TYPENAME;               \
 std::string _get_static_constexpr_typename() override {return TYPE_NAME;}
 /////////////////////////////////////////////////////////////////////////////////////////
-#define REYENGINE_SERIALIZER(CLASSNAME, PARENT_CLASSNAME) \
-   public:                                           \
-   static std::shared_ptr<Component> deserialize(const std::string& instanceName, PropertyPrototypeMap& properties) { \
-   auto retval = CLASSNAME::build<CLASSNAME>(instanceName); \
-   retval->Component::_deserialize(properties);          \
-   retval->Component::_on_deserialize(properties);       \
-   return retval;}
+#define REYENGINE_SERIALIZER(CLASSNAME, PARENT_CLASSNAME)
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME) \
    CLASSNAME(const std::string& name, const std::string& typeName): PARENT_CLASSNAME(name, typeName), NamedInstance(name, typeName)

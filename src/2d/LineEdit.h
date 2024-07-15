@@ -18,6 +18,7 @@ namespace ReyEngine {
    , PROPERTY_DECLARE(_text)
    {}
    public:
+      REYENGINE_DEFAULT_BUILD
       inline void clear(){ setText("");}
       void setText(const std::string&, bool noPublish=false);
       void setDefaultText(const std::string&, bool noPublish=false);

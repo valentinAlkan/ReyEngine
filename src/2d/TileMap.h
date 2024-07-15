@@ -5,6 +5,7 @@
 namespace ReyEngine {
    class TileMap : public BaseWidget {
    public:
+      REYENGINE_DEFAULT_BUILD
       struct TileCoord : public Vec2<int> {
            TileCoord(int x, int y): Vec2(x,y){}
            TileCoord(const Vec2<int>& other): Vec2(other){}

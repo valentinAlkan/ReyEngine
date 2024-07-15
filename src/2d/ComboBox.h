@@ -58,6 +58,7 @@ namespace ReyEngine {
       struct EventComboBoxMenuClosed : public Event<EventComboBoxMenuClosed>{EVENT_CTOR_SIMPLE(EventComboBoxMenuClosed, Event<EventComboBoxMenuClosed>){}};
       struct EventComboBoxMenuOpened : public Event<EventComboBoxMenuOpened>{EVENT_CTOR_SIMPLE(EventComboBoxMenuOpened, Event<EventComboBoxMenuOpened>){}};
 
+      REYENGINE_DEFAULT_BUILD
       ComboBoxDataField& addItem(const std::string&);
       void setItems(const std::vector<std::string>&);
       void clear();
