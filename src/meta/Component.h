@@ -78,7 +78,7 @@ namespace ReyEngine{
          std::string serialize();
 
       protected:
-         virtual void _init(){}
+         virtual void _init() {}
          void _deserialize(PropertyPrototypeMap&);
          virtual void _on_deserialize(PropertyPrototypeMap&){} //used to do any deserializations specific to this type
          const std::string _typeName; //can't just use static constexpr TYPE_NAME since we need to know what the type is if using type-erasure
@@ -91,8 +91,8 @@ namespace ReyEngine{
          BoolProperty _isProcessed;
          IntProperty _resourceId;
 
-         template<typename T>
-         friend class TypeContainer;
+//         friend class TypeContainer<Component>;
+//         friend class TypeContainer<BaseWidget>;
          friend class TypeManager;
          friend class ReyEngine::Application;
       };
