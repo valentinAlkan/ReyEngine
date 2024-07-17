@@ -104,13 +104,16 @@ namespace ReyEngine::Internal{
             }
             //set the parent
             child->_parent = me;
-            //call your template specializations here
-           Logger::debug() << "Registering child " << child->getName() << " to parent " << getName() << std::endl;
+            Logger::debug() << "Registering child " << child->getName() << " to parent " << getName() << std::endl;
 
-            __on_child_added_immediate(childTypePtr);
+            auto newIndex = getChildren().size(); //index of new child's location in ordered vector
             _childOrder.push_back(childTypePtr);
-            _childMap[child->getName()];
-            child->__on_enter_tree();
+            _childMap[getName()] = std::pair<int, ChildPtr>(newIndex, me);
+            __on_child_added_immediate(childTypePtr);
+            if (isInTree()){
+               child->__on_enter_tree();
+               child->_on_enter_tree();
+            }
         }
 
         std::optional<ChildPtr>removeChild(const std::string& name, bool quiet=false){
@@ -184,7 +187,7 @@ namespace ReyEngine::Internal{
         }
         std::weak_ptr<T> getParent(){return _parent;}
         const std::weak_ptr<T> getParent() const {return _parent;}
-        inline ChildOrder& getChildren() {return _childOrder;}
+//        inline ChildOrder& getChildren() {return _childOrder;}
         inline const ChildOrder& getChildren() const {return _childOrder;}
         inline bool hasChild(const std::string& name){
             //cant be const because it locks
@@ -289,9 +292,18 @@ namespace ReyEngine::Internal{
 //
 
         }
-
+        bool isRoot() {return _isRoot;}
+        bool isInTree(){
+           std::cout << _isRoot << std::endl;
+           if (TypeContainer<T>::_isRoot){
+               return true;
+            }
+            auto parent = getParent().lock();
+            if (!parent) return false;
+            return parent->TypeContainer<T>::isInTree();
+        }
     protected:
-        ChildMap& getChildMap(){return _childMap;}
+        void setRoot(bool isRoot){_isRoot = isRoot;}
         const ChildMap& getChildMap() const {return _childMap;}
         virtual void _on_child_added_immediate(ChildPtr&){} //Called immediately upon a call to addChild - DANGER: type is not actually a child yet! It is (probably) a very bad idea to do much at all here. Make sure you know what you're doing.
         void __on_child_added_immediate(ChildPtr&);
@@ -305,8 +317,9 @@ namespace ReyEngine::Internal{
         virtual void __on_descendent_removed(ChildPtr&){} // Internal
         virtual void _on_descendent_about_to_be_removed(ChildPtr&){} // All parents up the chain will emit this signal. Emits along with _on_child_removed when this node is the parent.
         virtual void __on_descendent_about_to_be_removed(ChildPtr&){}
-        virtual void _on_enter_tree(){} //called EVERY TIME a type enters the tree
-        virtual void __on_enter_tree(){} //called EVERY TIME a type enters the tree
+       //called EVERY TIME a type enters the tree
+        virtual void _on_enter_tree(){}
+        virtual void __on_enter_tree(){}
         virtual void _on_exit_tree(ChildPtr&, bool aboutToExit){};
         virtual void __on_exit_tree(ChildPtr&, bool aboutToExit){};
         virtual void _on_about_to_exit_tree(){} //called right before a type leave
@@ -328,10 +341,11 @@ namespace ReyEngine::Internal{
                 _on_exit_tree();
             }
         } //called right after a type leaves the tree
-        ChildMap _childMap;
-        ChildOrder _childOrder;
+       bool _isRoot = false;
     private:
         std::weak_ptr<T> _parent;
         std::recursive_mutex _childLock;
+       ChildMap _childMap;
+       ChildOrder _childOrder;
     };
 }

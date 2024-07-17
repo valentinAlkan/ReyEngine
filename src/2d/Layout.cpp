@@ -48,25 +48,26 @@ void Layout::renderEnd() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Layout::arrangeChildren() {
+   if (getChildren().empty()) return;
    if (dir == LayoutDir::GRID){
-         //divide the space into boxes, each box being large enough to exactly contain the largest child (in either dimension)
-         // Center each child inside it's respective box.
+      //divide the space into boxes, each box being large enough to exactly contain the largest child (in either dimension)
+      // Center each child inside it's respective box.
 
-         //determine box size
-         Size<int> boundingBox;
-         for (const auto& child : getChildren()){
-            boundingBox = boundingBox.max(child->getMaxSize());
+      //determine box size
+      Size<int> boundingBox;
+      for (const auto& child : getChildren()){
+         boundingBox = boundingBox.max(child->getMaxSize());
+      }
+      if (!boundingBox.x || !boundingBox.y) return; //invalid rect
+      //create subrects to lay out the children
+      if (_rect.value.size().x && _rect.value.size().y) {
+         for (int i = 0; i < getChildren().size(); i++) {
+            auto &child = getChildren().at(i);
+            auto subrect = _rect.value.toSizeRect().getSubRect(boundingBox, i);
+            child->setRect(subrect);
          }
-         if (!boundingBox.x || !boundingBox.y) return; //invalid rect
-         //create subrects to lay out the children
-         if (_rect.value.size().x && _rect.value.size().y) {
-            for (int i = 0; i < getChildren().size(); i++) {
-               auto &child = getChildren().at(i);
-               auto subrect = _rect.value.toSizeRect().getSubRect(boundingBox, i);
-               child->setRect(subrect);
-            }
-         }
-      } else {
+      }
+   } else {
       //how much space we have to allocate
       auto totalSpace = dir == LayoutDir::HORIZONTAL ? getWidth() : getHeight();
       ReyEngine::Pos<int> pos;
@@ -75,13 +76,17 @@ void Layout::arrangeChildren() {
       auto calcRatio = [this](int startIndex) -> float {
           float sum = 0;
           for (int i = startIndex; i < childScales.size(); i++) {
-             sum += this->childScales.get(i);
+             sum += childScales.get(i);
           }
-          if (!childScales.size()) childScales.append(1.0); //always ensure we have a child scale
+          if (!childScales.size()){
+             childScales.append(1.0); //always ensure we have a child scale
+             sum = 1;
+          }
           return childScales.value[startIndex] / sum;
       };
 
       auto sizeLeft = totalSpace;
+      cout << "Layout " << getName() << " has " << getChildren().size() << " children" << endl;
       for (auto &child: getChildren()) {
          int allowedSpace = (int) (sizeLeft * calcRatio(childIndex));
          auto actualRect = dir == LayoutDir::HORIZONTAL ? ReyEngine::Rect<int>(pos, {allowedSpace, _rect.value.height})
@@ -117,6 +122,7 @@ void Layout::arrangeChildren() {
                  break;
          }
          child->setRect(actualRect);
+         Logger::debug() << "Parent " << getName() << ":" << getRect() << " applying rectangle " << actualRect << " to child " << child->getName() << endl;
          childIndex++;
          //recalculate size each if we didn't use all available space
          sizeLeft -= consumedSpace;

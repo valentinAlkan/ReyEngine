@@ -414,7 +414,7 @@ void Window::popRenderTarget() {
 void Window::makeRoot(std::shared_ptr<Canvas>& newRoot, const Size<int>& size){
    _root = newRoot;
    _root->setAnchoring(BaseWidget::Anchor::FILL); //canvas is filled by default
-   _root->_isRoot = true;
+   _root->ReyEngine::Internal::TypeContainer<ReyEngine::BaseWidget>::setRoot(true);
    //make sure we init the root
    _root->_has_inited = true;
    _root->setRect(Rect<int>(0, 0, size.x, size.y)); //initialize to be the same size as the window

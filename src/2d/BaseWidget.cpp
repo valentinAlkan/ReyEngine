@@ -266,11 +266,6 @@ void BaseWidget::setProcess(bool process) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-bool BaseWidget::isRoot() const {
-   return _isRoot;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setBackRender(bool _isBackrender) {
    //see if we're in the front render list
    if (_isBackrender) {
@@ -437,7 +432,7 @@ void BaseWidget::setRect(const ReyEngine::Rect<int>& r){
    if(parent && getAnchoring() != Anchor::NONE) {
       parentHeight = parent->getHeight();
       parentWidth = parent->getWidth();
-      newRect = {{0, 0}, parent->getSize()};
+      newRect = {{0, 0}, {parentWidth, parentHeight}};
    } else if (isRoot()) {
       auto windowSize = Application::instance().windowCount() ? Application::instance().getWindow(0)->getSize() : Size<int>(0,0);
       newRect = {{0, 0}, windowSize};
@@ -560,7 +555,8 @@ void BaseWidget::setAnchoring(Anchor newAnchor) {
       return;
    }
    _anchor.value = newAnchor;
-   if (!getParent().expired()){
+   auto parent = getParent().lock();
+   if (parent){
       setRect(_rect.value);
    }
 }
@@ -693,13 +689,11 @@ std::optional<std::shared_ptr<BaseWidget>> BaseWidget::askHover(const Pos<int>& 
 void BaseWidget::__on_enter_tree() {
    auto me = inheritable_enable_shared_from_this<Component>::downcasted_shared_from_this<BaseWidget>();
    auto parent = getParent().lock();
-   auto newIndex = parent->getChildren().size(); //index of new child's location in ordered vector
-   parent->getChildMap()[getName()] = std::pair<int, std::shared_ptr<BaseWidget>>(newIndex, me);
-   parent->getChildren().push_back(me);
    if (me->isBackRender.value){
       parent->_backRenderList.push_back(me);
    } else {
       parent->_frontRenderList.push_back(me);
+      Logger::debug() << "Child " << getName() << " added to parent " << parent->getName() << "'s front render list" << endl;
    }
 
    isInLayout = parent->isLayout;
@@ -735,4 +729,5 @@ void BaseWidget::__on_child_removed(Internal::TypeContainer<BaseWidget>::ChildPt
 template <>
 void ReyEngine::Internal::TypeContainer<BaseWidget>::__on_child_added_immediate(std::shared_ptr<BaseWidget>& child){
    child->__init();
+   _on_child_added(child);
 }
