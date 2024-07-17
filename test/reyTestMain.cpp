@@ -489,6 +489,7 @@ int main(int argc, char** argv)
       control2->getTheme()->background = Style::Fill::SOLID;
       control2->getTheme()->background.colorPrimary.set(ReyEngine::Colors::green);
       mainVLayout->addChild(control1);
+      Logger::debug() << "Layout " << mainVLayout->getName() << " child count = " << mainVLayout->getChildren().size() << endl;
       mainVLayout->addChild(control2);
       mainVLayout->addChild(layout3);
 
@@ -817,7 +818,6 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--buttonTest")) {
-      root->addChild(Control::build<Control>("root"));
       auto label = Label::build<Label>("Label");
       auto explainerLabel = Label::build<Label>("Explainer");
       explainerLabel->setText("This will turn green when the button is PRESSED (as opposed to when it is toggled up or down)");

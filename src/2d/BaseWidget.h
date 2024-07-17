@@ -51,6 +51,7 @@ namespace ReyEngine{
       using Internal::TypeContainer<BaseWidget>::toContainedType;
       using Internal::TypeContainer<BaseWidget>::toContainedTypePtr;
       using Internal::TypeContainer<BaseWidget>::ChildPtr;
+      using Internal::TypeContainer<BaseWidget>::isRoot;
 
       struct WidgetResizeEvent : public Event<WidgetResizeEvent> {
          EVENT_CTOR_SIMPLE(WidgetResizeEvent, Event<WidgetResizeEvent>){
@@ -189,7 +190,6 @@ namespace ReyEngine{
 
       virtual void render() const = 0; //draw the widget
       void setBackRender(bool);
-      bool isRoot() const;
 
       template <typename T> bool is_base_of(){return std::is_base_of_v<BaseWidget, T>;}
       inline std::shared_ptr<Style::Theme>& getTheme(){return theme;}
@@ -284,7 +284,6 @@ namespace ReyEngine{
       int _editor_grab_handles_dragging = -1; //which grab handle is being drug around
       ChildOrder _frontRenderList; //children to be rendered IN FRONT of this widget (normal behavior)
       ChildOrder _backRenderList; //children to be rendered BEHIND this widget
-      std::vector<std::shared_ptr<Component>> _components;
 
       AnchorProperty _anchor;
       void rename(WidgetPtr& child, const std::string& newName);
@@ -306,8 +305,6 @@ namespace ReyEngine{
 
       //theme
       std::shared_ptr<Style::Theme> theme;
-
-      bool _isRoot = false;
       friend class Window;
       friend class Canvas;
       friend class Application;

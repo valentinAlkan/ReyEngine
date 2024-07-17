@@ -8,7 +8,11 @@ namespace ReyEngine{
       , _activeCamera(_defaultCamera)
       {}
    public:
-      REYENGINE_DEFAULT_BUILD
+      template<typename T>
+      static std::shared_ptr<T> build(const std::string &name) noexcept {
+         auto me = std::shared_ptr<T>(new T(name));
+         return me;
+      }
       //modality
       void setModal(std::shared_ptr<BaseWidget>&);
       void clearModal();
