@@ -1,6 +1,7 @@
 #include "Application.h"
 #include "Component.h"
 #include <utility>
+#include <random>
 #include "Canvas.h"
 #include "Platform.h"
 
@@ -56,4 +57,12 @@ void Application::ready() {
 std::unique_lock<std::mutex> Application::getLock() {
    std::unique_lock<std::mutex> l(instance()._busy);
    return std::move(l);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+double Application::generateRandom(double low, double high) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(low, high);
+    return dis(gen);
 }

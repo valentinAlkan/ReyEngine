@@ -294,7 +294,6 @@ namespace ReyEngine::Internal{
         }
         bool isRoot() {return _isRoot;}
         bool isInTree(){
-           std::cout << _isRoot << std::endl;
            if (TypeContainer<T>::_isRoot){
                return true;
             }

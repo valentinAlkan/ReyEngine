@@ -55,7 +55,7 @@ namespace ReyEngine::FileSystem {
       File(){}
       File(const std::string& path): Path(path){}
       File(const char* path): Path(path){}
-      File(const File& other): Path(other._path){}
+      File(const File& other): Path(other){}
       using Path::operator=;
       Directory dir();
       File(File&& other){

@@ -86,7 +86,7 @@ void Layout::arrangeChildren() {
       };
 
       auto sizeLeft = totalSpace;
-      cout << "Layout " << getName() << " has " << getChildren().size() << " children" << endl;
+      Logger::debug() << "Layout " << getName() << " has " << getChildren().size() << " children" << endl;
       for (auto &child: getChildren()) {
          int allowedSpace = (int) (sizeLeft * calcRatio(childIndex));
          auto actualRect = dir == LayoutDir::HORIZONTAL ? ReyEngine::Rect<int>(pos, {allowedSpace, _rect.value.height})
