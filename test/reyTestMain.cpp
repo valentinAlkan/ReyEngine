@@ -506,23 +506,31 @@ int main(int argc, char** argv)
       Logger::debug() << "Layout test!" << endl;
       auto mainVLayout = VLayout::build<VLayout>("MainVLayout");
       mainVLayout->setAnchoring(BaseWidget::Anchor::FILL);
+      mainVLayout->childScales = {1, 5};
       root->addChild(mainVLayout);
       bool flipFlop = false;
       std::shared_ptr<Layout> prevlayout = mainVLayout;
-      for (int i=0;i<50;i++){
-         std::shared_ptr<Layout> newlayout;
+      for (int i=0;i<20;i++){
+         std::shared_ptr<Layout> newlayout1;
+         std::shared_ptr<Layout> newlayout2;
          if (flipFlop){
-             newlayout = VLayout::build<VLayout>("Vlayout" + to_string(i));
+             newlayout1 = VLayout::build<VLayout>("Vlayout1_" + to_string(i));
+             newlayout2 = VLayout::build<VLayout>("Vlayout2_" + to_string(i));
          } else {
-             newlayout = HLayout::build<HLayout>("Hlayout" + to_string(i));
+             newlayout1 = HLayout::build<HLayout>("Hlayout1_" + to_string(i));
+             newlayout2 = HLayout::build<HLayout>("Hlayout2_" + to_string(i));
          }
+         newlayout1->childScales = {1, 5};
+         newlayout2->childScales = {1, 5};
          flipFlop = !flipFlop;
          auto control = Control::build<Control>("control" + to_string(i));
          control->getTheme()->background.set(Style::Fill::SOLID);
          control->getTheme()->background.colorPrimary.set(ColorRGBA::random(254));
-         newlayout->addChild(control);
-         prevlayout->addChild(newlayout);
-         prevlayout = newlayout;
+         control->setAnchoring(ReyEngine::BaseWidget::Anchor::FILL);
+         prevlayout->addChild(newlayout1);
+         prevlayout->addChild(newlayout2);
+         newlayout1->addChild(control);
+         prevlayout = newlayout2;
       }
    }
 
