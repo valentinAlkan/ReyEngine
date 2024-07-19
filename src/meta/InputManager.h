@@ -2,6 +2,7 @@
 #include "Event.h"
 #include "DrawInterface.h"
 #include <algorithm>
+#include "Logger.h"
 
 namespace ReyEngine{
    struct InputEvent : public ReyEngine::Event<InputEvent> {

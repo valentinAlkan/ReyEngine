@@ -262,7 +262,7 @@ UnhandledMouseInput BaseWidget::toMouseInput(const ReyEngine::Pos<int> &global) 
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setProcess(bool process) {
-   Application::instance().getWindow(0)->setProcess(process, toBaseWidget());
+   Application::instance().getWindow(0).setProcess(process, toBaseWidget());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -434,7 +434,7 @@ void BaseWidget::setRect(const ReyEngine::Rect<int>& r){
       parentWidth = parent->getWidth();
       newRect = {{0, 0}, {parentWidth, parentHeight}};
    } else if (isRoot()) {
-      auto windowSize = Application::instance().windowCount() ? Application::instance().getWindow(0)->getSize() : Size<int>(0,0);
+      auto windowSize = Application::instance().windowCount() ? Application::instance().getWindow(0).getSize() : Size<int>(0,0);
       newRect = {{0, 0}, windowSize};
    } else {
       _rect.set(r);

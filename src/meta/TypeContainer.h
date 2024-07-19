@@ -111,8 +111,7 @@ namespace ReyEngine::Internal{
             _childMap[getName()] = std::pair<int, ChildPtr>(newIndex, me);
             __on_child_added_immediate(childTypePtr);
             if (isInTree()){
-               child->__on_enter_tree();
-               child->_on_enter_tree();
+               child->doEnterTree();
             }
         }
 
@@ -153,7 +152,7 @@ namespace ReyEngine::Internal{
             __on_exit_tree(child, true);
 
             auto orderIndex = found->second.first;
-            getChildMap().erase(found);
+            _childMap.erase(found);
             _childOrder.erase(_childOrder.begin() + orderIndex);
             _on_child_removed(child);
 
@@ -187,7 +186,7 @@ namespace ReyEngine::Internal{
         }
         std::weak_ptr<T> getParent(){return _parent;}
         const std::weak_ptr<T> getParent() const {return _parent;}
-//        inline ChildOrder& getChildren() {return _childOrder;}
+        inline ChildOrder& getChildren() {return _childOrder;}
         inline const ChildOrder& getChildren() const {return _childOrder;}
         inline bool hasChild(const std::string& name){
             //cant be const because it locks
@@ -342,8 +341,15 @@ namespace ReyEngine::Internal{
         } //called right after a type leaves the tree
        bool _isRoot = false;
     private:
-        std::weak_ptr<T> _parent;
-        std::recursive_mutex _childLock;
+       void doEnterTree(){
+           __on_enter_tree();
+           _on_enter_tree();
+           for (auto& child : _childOrder) {
+              child->TypeContainer<T>::doEnterTree();
+           }
+       }
+       std::weak_ptr<T> _parent;
+       std::recursive_mutex _childLock;
        ChildMap _childMap;
        ChildOrder _childOrder;
     };

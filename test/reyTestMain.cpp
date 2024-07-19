@@ -99,14 +99,13 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--readFileTest", "char reading test", 0, RuntimeArg::ArgType::FLAG));
 //   args.defineArg(RuntimeArg("--astarTest", "a star test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--camera2dTest", "camera 2d test", 0, RuntimeArg::ArgType::FLAG));
-   args.defineArg(RuntimeArg("--setRootTest", "Setting a new root test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--3dTest", "Basic3DTest", 0, RuntimeArg::ArgType::FLAG));
    args.parseArgs(argc, argv);
 
    //create window (or don't idk)
-   auto window = Application::instance().createWindow("MainWindow", screenWidth, screenHeight, {Window::RESIZE});
-   if (!window){throw std::runtime_error("Something went horribly wrong! Please make a note of it.");}
-   auto root = window->getCanvas();
+   auto windowProto = Application::instance().createWindowPrototype("MainWindow", screenWidth, screenHeight, {Window::RESIZE});
+   auto& window = windowProto.createWindow();
+   auto root = window.getCanvas();
 
    auto argLoadScene = args.getArg("--loadScene");
    if (argLoadScene){
@@ -1596,13 +1595,6 @@ int main(int argc, char** argv)
       background->setProcessCallback(cbBGProcess);
    }
 
-   else if (args.getArg("--setRootTest")){
-      auto myRoot = Canvas::build<Canvas>("myRoot");
-      window->setCanvas(myRoot);
-      auto someLabel = Label::build<Label>("somelabel");
-      window->getCanvas()->addChild(someLabel);
-   }
-
    else if (args.getArg("--readFileTest")){
       auto file = FileSystem::File("test/test.scn");
       auto fileCopy = file;
@@ -1679,6 +1671,6 @@ int main(int argc, char** argv)
    }
 
    root->setAnchoring(BaseWidget::Anchor::FILL);
-   window->exec();
+   window.exec();
    return 0;
 }

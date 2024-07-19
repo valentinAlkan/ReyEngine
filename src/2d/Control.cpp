@@ -17,10 +17,10 @@ void Control::render() const {
    } else {
       switch(theme->background.value){
          case Style::Fill::SOLID:
-            drawRectangle(getRect().toSizeRect(), theme->background.colorPrimary.value);
+            drawRectangle(_rect.value.toSizeRect(), theme->background.colorPrimary.value);
             break;
          case Style::Fill::GRADIENT:
-            drawRectangleGradientV(getRect().toSizeRect(), theme->background.colorPrimary.value, theme->background.colorSecondary.value);
+            drawRectangleGradientV(_rect.value.toSizeRect(), theme->background.colorPrimary.value, theme->background.colorSecondary.value);
             break;
          default:
             break;

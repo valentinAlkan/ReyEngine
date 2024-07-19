@@ -8,42 +8,83 @@
 
 using namespace std;
 using namespace ReyEngine;
+using namespace Internal;
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+WindowPrototype::WindowPrototype(const std::string &title, int width, int height, const std::vector<Window::Flags> &flags, int targetFPS)
+: title(title)
+, width(width)
+, height(height)
+, flags(flags)
+, targetFPS(targetFPS)
+{
+    for (const auto& flag : flags){
+        switch (flag){
+            case Window::Flags::RESIZE:
+                SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+                break;
+            case Window::Flags::IS_EDITOR:
+                _isEditor = true;
+                break;
+        }
+    }
+
+    InitWindow(width, height, title.c_str());
+    Application::ready();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Window& WindowPrototype::createWindow() {
+    use();
+    return Application::instance().createWindow(*this, nullopt);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Window& WindowPrototype::createWindow(std::shared_ptr<Canvas> &root) {
+    use();
+    return Application::instance().createWindow(*this, root);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void WindowPrototype::use() {
+    if (_usedUp) {
+        throw std::runtime_error(
+                "WindowPrototype for window " + title + " {" + std::to_string(width) + ":" + std::to_string(height) + " already used!");
+    }
+    _usedUp = true;
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
-Window::Window(const std::string &title, int width, int height, const std::vector<Flags> &flags, int targetFPS, std::optional<std::shared_ptr<Canvas>> root)
+Window::Window(const std::string &title, int width, int height, const std::vector<Flags> &flags, int targetFPS)
 : NamedInstance("Window", "Window")
 , Internal::TypeContainer<BaseWidget>("Window", "Window")
 , targetFPS(targetFPS)
+, startingWidth(width)
+, startingHeight(height)
 {
-   for (const auto& flag : flags){
-      switch (flag){
-         case Flags::RESIZE:
-            SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-            break;
-         case Flags::IS_EDITOR:
-            _isEditor = true;
-            break;
-      }
-   }
+}
 
-   InitWindow(width, height, title.c_str());
-   Application::ready();
-   //Create canvas if not provided
-   if (!root) {
-      auto newRoot = Canvas::build<Canvas>("root");
-      makeRoot(newRoot, {width, height});
-   } else {
-      makeRoot(root.value(), {width, height});
-   }
+/////////////////////////////////////////////////////////////////////////////////////////
+void Window::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
+    //Create canvas if not provided
+    if (!optRoot) {
+        optRoot = Canvas::build<Canvas>("root");
+    }
+    auto& root = optRoot.value();
+    root->ReyEngine::Internal::TypeContainer<ReyEngine::BaseWidget>::setRoot(true);
+    root->setAnchoring(BaseWidget::Anchor::FILL); //canvas is filled by default
+    root->ReyEngine::Internal::TypeContainer<ReyEngine::BaseWidget>::setRoot(true);
+    //make sure we init the root
+    root->_has_inited = true;
+    root->setRect(Rect<int>(0, 0, startingWidth, startingHeight)); //initialize to be the same size as the window
+    addChild(root);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Window::exec(){
-   if (!_root){
-      throw std::runtime_error("Window does not have a root! Did you call setRoot()? I bet not. That's what I bet.");
-   }
    //set widgets as processed
    //NOTE: This must be done here, because widgets can be created and loaded before a window exists
    // Since the window controls the process list, it might not exist yet.
@@ -53,7 +94,7 @@ void Window::exec(){
       }
       if (widget->_isProcessed.value) widget->setProcess(true);
    };
-   applyProcess(_root);
+   applyProcess(getCanvas());
    ReyEngine::Size<int> size = getSize();
    ReyEngine::Pos<int> position;
    Time::RateLimiter rateLimit(targetFPS);
@@ -70,8 +111,8 @@ void Window::exec(){
             size = newSize;
             publish(event);
             //see if our root needs to resize
-            if (_root && _root->getAnchoring() != BaseWidget::Anchor::NONE) {
-               _root->setSize(size);
+            if (getCanvas()->getAnchoring() != BaseWidget::Anchor::NONE) {
+               getCanvas()->setSize(size);
             }
          }
          //see if the window has moved
@@ -89,7 +130,7 @@ void Window::exec(){
          for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
             auto charDown = InputManager::instance().getCharPressed();
             if (charDown) {
-               InputEventChar event(nullptr);
+               InputEventChar event(toEventPublisher());
                event.ch = charDown;
                processUnhandledInput(event, nullopt);
             } else {
@@ -102,7 +143,7 @@ void Window::exec(){
          for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
             auto keyUp = InputManager::instance().getKeyReleased();
             if ((int) keyUp) {
-               InputEventKey event(nullptr);
+               InputEventKey event(toEventPublisher());
                event.key = keyUp;
                event.isDown = false;
                event.isRepeat = false;
@@ -122,7 +163,7 @@ void Window::exec(){
                //start sending repeats
                if (now - keyRepeatTimestamp > _keyDownRepeatRate) {
                   keyRepeatTimestamp = chrono::steady_clock::now();
-                  InputEventKey event(nullptr);
+                  InputEventKey event(toEventPublisher());
                   event.key = lastKey;
                   event.isDown = true;
                   event.isRepeat = true;
@@ -137,7 +178,7 @@ void Window::exec(){
             auto keyDown = InputManager::instance().getKeyPressed();
             if ((int) keyDown) {
                keyDownTimestamp = chrono::steady_clock::now();
-               InputEventKey event(nullptr);
+               InputEventKey event(toEventPublisher());
                event.key = keyDown;
                event.isDown = true;
                event.isRepeat = false;
@@ -158,7 +199,7 @@ void Window::exec(){
                   if (_dragNDrop.has_value() && _isDragging) {
                      //we have a widget being dragged, lets try to drop it
                      bool handled = false;
-                     auto widgetAt = _root->getWidgetAt(pos);
+                     auto widgetAt = getCanvas()->getWidgetAt(pos);
                      if (widgetAt) {
                         handled = widgetAt.value()->_on_drag_drop(_dragNDrop.value());
                      }
@@ -168,13 +209,13 @@ void Window::exec(){
                   }
                }
 
-               InputEventMouseButton event(nullptr);
+               InputEventMouseButton event(toEventPublisher());
                event.button = btnUp;
                event.isDown = false;
                event.globalPos = pos;
                UnhandledMouseInput mouse;
-               mouse.localPos = _root->globalToLocal(pos);
-               mouse.isInside = _root->isInside(mouse.localPos);
+               mouse.localPos = getCanvas()->globalToLocal(pos);
+               mouse.isInside = getCanvas()->isInside(mouse.localPos);
                processUnhandledInput(event, mouse);
             }
          }
@@ -186,7 +227,7 @@ void Window::exec(){
                auto pos = InputManager::getMousePos();
                //check for dragndrops
                if (btnDown == InputInterface::MouseButton::LEFT) {
-                  auto widgetAt = _root->getWidgetAt(pos);
+                  auto widgetAt = getCanvas()->getWidgetAt(pos);
                   if (widgetAt) {
                      auto willDrag = widgetAt.value()->_on_drag_start(pos);
                      if (willDrag) {
@@ -198,13 +239,13 @@ void Window::exec(){
                      _isDragging = false;
                   }
                }
-               InputEventMouseButton event(nullptr);
+               InputEventMouseButton event(toEventPublisher());
                event.button = btnDown;
                event.isDown = true;
                event.globalPos = pos;
                UnhandledMouseInput mouse;
-               mouse.localPos = _root->globalToLocal(pos);
-               mouse.isInside = _root->isInside(mouse.localPos);
+               mouse.localPos = getCanvas()->globalToLocal(pos);
+               mouse.isInside = getCanvas()->isInside(mouse.localPos);
                processUnhandledInput(event, mouse);
             } else {
                break;
@@ -212,15 +253,15 @@ void Window::exec(){
          }
 
          {
-            InputEventMouseWheel event(nullptr);
             auto wheel = InputManager::getMouseWheel();
             if (wheel) {
+               InputEventMouseWheel event(toEventPublisher());
                auto pos = InputManager::getMousePos();
                event.globalPos = pos;
                event.wheelMove = wheel;
                UnhandledMouseInput mouse;
-               mouse.localPos = _root->globalToLocal(event.globalPos);
-               mouse.isInside = _root->isInside(mouse.localPos);
+               mouse.localPos = getCanvas()->globalToLocal(event.globalPos);
+               mouse.isInside = getCanvas()->isInside(mouse.localPos);
                processUnhandledInput(event, mouse);
             }
          }
@@ -229,7 +270,7 @@ void Window::exec(){
          //check the mouse delta compared to last frame
          auto mouseDelta = InputManager::getMouseDelta();
          if (mouseDelta) {
-            InputEventMouseMotion event(nullptr);
+            InputEventMouseMotion event(toEventPublisher());
             event.mouseDelta = mouseDelta;
             event.globalPos = InputManager::getMousePos();
 
@@ -243,7 +284,7 @@ void Window::exec(){
                }
             } else {
                //find out which widget will accept the mouse motion as focus
-               auto hovered = _root->askHover(event.globalPos);
+               auto hovered = getCanvas()->askHover(event.globalPos);
                if (hovered) {
                   setHover(hovered.value());
                } else {
@@ -251,9 +292,9 @@ void Window::exec(){
                }
 //            if (_isEditor) continue;
                UnhandledMouseInput mouse;
-               mouse.localPos = _root->globalToLocal(event.globalPos);
-               mouse.isInside = _root->isInside(mouse.localPos);
-               _root->_process_unhandled_input(event, mouse);
+               mouse.localPos = getCanvas()->globalToLocal(event.globalPos);
+               mouse.isInside = getCanvas()->isInside(mouse.localPos);
+               getCanvas()->_process_unhandled_input(event, mouse);
             }
          }
 
@@ -269,7 +310,7 @@ void Window::exec(){
          //draw children on top of their parents
 
          ReyEngine::Pos<double> texOffset;
-         _root->renderChain(texOffset);
+         getCanvas()->renderChain(texOffset);
 
          //draw the drag and drop preview (if any)
          if (_isDragging && _dragNDrop && _dragNDrop.value()->preview) {
@@ -278,7 +319,7 @@ void Window::exec(){
          }
          //render the canvas
          BeginDrawing();
-         DrawTextureRec(_root->_renderTarget.getRenderTexture(), {0,0,(float)_root->_renderTarget.getSize().x, -(float)_root->_renderTarget.getSize().y},{0, 0}, WHITE);
+         DrawTextureRec(getCanvas()->_renderTarget.getRenderTexture(), {0,0,(float)getCanvas()->_renderTarget.getSize().x, -(float)getCanvas()->_renderTarget.getSize().y},{0, 0}, WHITE);
          EndDrawing();
       } // release scoped lock here
       //wait some time
@@ -348,9 +389,9 @@ std::optional<std::shared_ptr<BaseWidget>> Window::ProcessList::find(const std::
    return nullopt;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
-void Window::setCanvas(std::shared_ptr<Canvas>& newRoot) {
-   makeRoot(newRoot, getSize());
-}
+//void Window::setCanvas(std::shared_ptr<Canvas>& newRoot) {
+//   makeRoot(newRoot, getSize());
+//}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Window::clearHover() {
@@ -389,7 +430,7 @@ std::optional<std::weak_ptr<BaseWidget>> Window::getHovered() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void Window::processUnhandledInput(InputEvent& inputEvent, std::optional<UnhandledMouseInput> mouseInput){
    //first offer up input to modal widget (if any)
-   _root->_process_unhandled_input(inputEvent, mouseInput);
+   getCanvas()->_process_unhandled_input(inputEvent, mouseInput);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -410,13 +451,7 @@ void Window::popRenderTarget() {
    }
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
-void Window::makeRoot(std::shared_ptr<Canvas>& newRoot, const Size<int>& size){
-   _root = newRoot;
-   _root->setAnchoring(BaseWidget::Anchor::FILL); //canvas is filled by default
-   _root->ReyEngine::Internal::TypeContainer<ReyEngine::BaseWidget>::setRoot(true);
-   //make sure we init the root
-   _root->_has_inited = true;
-   _root->setRect(Rect<int>(0, 0, size.x, size.y)); //initialize to be the same size as the window
-   _root->TypeContainer<BaseWidget>::_on_enter_tree();
+///////////////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<Canvas> Window::getCanvas() {
+    return getChildren().at(0)->toType<Canvas>();
 }
