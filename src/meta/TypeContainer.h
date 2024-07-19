@@ -121,7 +121,7 @@ namespace ReyEngine::Internal{
                removeChild(found.value(), quiet);
             } else if(!quiet) {
                std::stringstream ss;
-               ss << getType() << "::" << getName() << " does not have a child with name <" << getName() << ">";
+               ss << getType() << "::" << getName() << " does not have a child with name <" << name << ">";
                Logger::error() << ss.str() << std::endl;
             }
             return std::nullopt;
@@ -129,8 +129,8 @@ namespace ReyEngine::Internal{
 
         std::optional<ChildPtr>removeChild(ChildPtr& child, bool quiet){
             auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
-            auto found = getChildMap().find(child->getName());
-            if (found == getChildMap().end()){
+            auto found = _childMap.find(child->getName());
+            if (found == _childMap.end()){
                 if (!quiet) {
                     std::stringstream ss;
                     ss << getType() << "::" << getName() << " does not have a child with name <" << getName() << ">";
@@ -201,6 +201,7 @@ namespace ReyEngine::Internal{
                  return child;
               }
            }
+           return std::nullopt;
         }
 
         inline std::vector<std::weak_ptr<T>> findDescendents(const std::string& name, bool exact=false){
