@@ -14,12 +14,18 @@ Application::Application()
 {
    TypeManager::instance()._registerTypes();
 }
-/////////////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<Window> Application::createWindow(const std::string &title, int width, int height, const std::vector<Window::Flags> &flags, int targetFPS){
-   _windows.push_back(std::shared_ptr<Window>(new Window(title, width, height, flags, targetFPS)));
-   _windows.back()->getCanvas()->setRect({}); //will auto fill
 
-   return _windows.back();
+/////////////////////////////////////////////////////////////////////////////////////////
+Internal::WindowPrototype Application::createWindowPrototype(const std::string &title, int width, int height, const std::vector<ReyEngine::Window::Flags> &flags, int targetFPS) {
+    return WindowPrototype(title, width, height, flags, targetFPS);
+}
+/////////////////////////////////////////////////////////////////////////////////////////
+Window& Application::createWindow(Internal::WindowPrototype& prototype, std::optional<std::shared_ptr<Canvas>> root){
+   _windows.emplace_back(new Window(prototype.title, prototype.width, prototype.height, prototype.flags, prototype.targetFPS));
+   auto& window = *_windows.back();
+   window.initialize(root);
+   window.getCanvas()->setRect({}); //will auto fill
+   return window;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

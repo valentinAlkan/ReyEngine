@@ -33,8 +33,8 @@ namespace ReyEngine{
       Application(Application const&)    = delete;
       void operator=(Application const&) = delete;
 
-      std::shared_ptr<Window> createWindow(const std::string& title, int width, int height, const std::vector<ReyEngine::Window::Flags>& flags, int targetFPS=60);
-      const std::shared_ptr<Window>& getWindow(int windowIndex){return _windows.at(windowIndex);}
+      static Internal::WindowPrototype createWindowPrototype(const std::string& title, int width, int height, const std::vector<ReyEngine::Window::Flags>& flags, int targetFPS=60);
+      Window& getWindow(int windowIndex){return *_windows.at(windowIndex);}
       size_t windowCount(){return _windows.size();}
 
       static void exitError(std::string msg, ExitReason rsn){Logger::error() << msg << std::endl; ::exit((int)rsn);}
@@ -48,6 +48,7 @@ namespace ReyEngine{
       static UniqueValue generateUniqueValue(){return instance()._nextUniqueValue++;}
        static double generateRandom(double low, double high);
    protected:
+      Window& createWindow(Internal::WindowPrototype&, std::optional<std::shared_ptr<Canvas>>);
       static uint64_t getNewRid(){return ++instance().newRid;}
       static void ready();
 
@@ -59,7 +60,11 @@ namespace ReyEngine{
          static constexpr Platform PLATFORM = Platform::LINUX;
       #endif
       bool _is_ready = false;
-      std::vector<std::shared_ptr<Window>> _windows; //for now, only one
+
+     //for now, only one. Note: Windows MUST be shared_ptrs, as they are TypeContainers, which leverages shared_from_this,
+     // which requires that a shared_ptr exist before being called. HOWEVER, we do not hand out the shared_ptrs, only references to
+     // the underlying window, in order to maintain strict ownership.
+      std::vector<std::shared_ptr<Window>> _windows;
       uint64_t newRid;
       std::mutex _busy; //the main mutex that determines if the engine is busy or not
       std::unordered_set<std::shared_ptr<Internal::Component>> _applicationReadyList; //list of widgets that want to be notified when the application is fully initialized
@@ -69,6 +74,7 @@ namespace ReyEngine{
       using InitPair = std::pair<std::shared_ptr<Internal::Component>, std::shared_ptr<Internal::Component>>;
       std::queue<InitPair> _initQueue;
       friend class Internal::Component;
+      friend class Internal::WindowPrototype;
       friend class Window;
    };
 }

@@ -14,7 +14,7 @@ static constexpr int getUniqueEventId(){return CLASSNAME##_UNIQUE_ID;}
 #define EVENT_CTOR_SIMPLE(CLASSNAME, PARENTCLASS, ...) \
 EVENT_GENERATE_UNIQUE_ID(CLASSNAME)               \
 EVENT_GET_NAME(CLASSNAME)                                     \
-explicit CLASSNAME(const std::shared_ptr<ReyEngine::EventPublisher> publisher, ##__VA_ARGS__): PARENTCLASS(CLASSNAME##_UNIQUE_ID, publisher)
+explicit CLASSNAME(const std::shared_ptr<ReyEngine::EventPublisher> publisher, ##__VA_ARGS__): PARENTCLASS(getUniqueEventId(), publisher)
 //NOTE: event publisher is a pointer copy and not a reference because toEventPublisher expects an lvalue, which toEventPublisher is not;
 
 

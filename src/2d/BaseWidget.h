@@ -52,6 +52,7 @@ namespace ReyEngine{
       using Internal::TypeContainer<BaseWidget>::toContainedTypePtr;
       using Internal::TypeContainer<BaseWidget>::ChildPtr;
       using Internal::TypeContainer<BaseWidget>::isRoot;
+      using Internal::TypeContainer<BaseWidget>::setRoot;
 
       struct WidgetResizeEvent : public Event<WidgetResizeEvent> {
          EVENT_CTOR_SIMPLE(WidgetResizeEvent, Event<WidgetResizeEvent>){
