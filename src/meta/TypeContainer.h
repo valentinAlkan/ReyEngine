@@ -209,13 +209,13 @@ namespace ReyEngine::Internal{
             std::vector<std::weak_ptr<T>> descendents;
             auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
             for (auto& child : getChildren()){
-                for (auto& found : child->findDescendents(name, exact)){
+                for (auto& found : child->TypeContainer<T>::findDescendents(name, exact)){
                     descendents.push_back(found);
                 }
             }
 
             if (exact ? getName() == name : getName().find(name) != std::string::npos){
-                retval.push_back(toContainedType());
+                retval.push_back(toContainedTypePtr());
             }
             for (auto& descendent : descendents){
                 retval.push_back(descendent);
