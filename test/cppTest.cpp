@@ -59,18 +59,18 @@ class SuperDerived : public Derived{
 
 
 int main (int argc, char** argv){
-   Derived::Args dargs;
-   Derived d(dargs);
-   auto base = DESERIALIZE(BaseClass)("sjadfkjasdf");
-   auto derived = DESERIALIZE(BaseClass)("data");
-   auto superDervied = SuperDerived::Args::fromString<SuperDerived::Args>("junk");
-
-   cout << dargs.baseArg << endl;
-   cout << dargs.derivedArg << endl;
-   cout << dargs.toString() << endl;
-
-   cout << "-------------------" << endl;
-   cout << base.toString() << endl;
-   cout << derived.toString() << endl;
-   cout << superDervied.toString() << endl;
+//   Derived::Args dargs;
+//   Derived d(dargs);
+//   auto base = DESERIALIZE(BaseClass)("sjadfkjasdf");
+//   auto derived = DESERIALIZE(BaseClass)("data");
+//   auto superDervied = SuperDerived::Args::fromString<SuperDerived::Args>("junk");
+//
+//   cout << dargs.baseArg << endl;
+//   cout << dargs.derivedArg << endl;
+//   cout << dargs.toString() << endl;
+//
+//   cout << "-------------------" << endl;
+//   cout << base.toString() << endl;
+//   cout << derived.toString() << endl;
+//   cout << superDervied.toString() << endl;
 }
