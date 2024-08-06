@@ -45,6 +45,7 @@ namespace ReyEngine{
       enum Flags{RESIZE, IS_EDITOR};
       virtual void exec();
       virtual ~Window();
+      template <typename T> void addChild(std::shared_ptr<TypeContainer<T>> child) = delete;
       bool isProcessed(const std::shared_ptr<BaseWidget>&) const;
       bool isEditor(){return _isEditor;}
       bool setProcess(bool, std::shared_ptr<BaseWidget>); //returns whether operation was successful. Returns false if widget already being processed or is not found.

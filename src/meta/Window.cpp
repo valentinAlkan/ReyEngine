@@ -80,7 +80,7 @@ void Window::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
     //make sure we init the root
     root->_has_inited = true;
     root->setRect(Rect<int>(0, 0, startingWidth, startingHeight)); //initialize to be the same size as the window
-    addChild(root);
+    TypeContainer<BaseWidget>::addChild(root);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
