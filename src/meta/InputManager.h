@@ -48,7 +48,10 @@ namespace ReyEngine{
       INPUT_FILTER_PROCESS_AND_PASS, //processes input locally first, and passes it to children if we can't use it locally
       INPUT_FILTER_PROCESS_AND_STOP, //processes input locally but does not pass it to children
       INPUT_FILTER_IGNORE_AND_PASS, //passes input to children without handling it
-      INPUT_FILTER_IGNORE_AND_STOP //ignores input and does not pass or handle it
+      INPUT_FILTER_IGNORE_AND_STOP, //ignores input and does not pass or handle it
+      INPUT_FILTER_PUBLISH_AND_PASS, //publishes subscribers input instead of handling it locally
+      INPUT_FILTER_PASS_AND_PUBLISH, //publishes input subscribers instead of handling it locally
+      INPUT_FILTER_PUBLISH_AND_STOP, //publishes input to subscribers instead of handling it locally
    };
 
    struct UnhandledMouseInput{
