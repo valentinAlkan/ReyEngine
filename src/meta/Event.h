@@ -36,22 +36,22 @@ constexpr size_t hash ( const char (&s)[N] ) {
 #define CONCAT3_DETAIL(x, y, z) x ## y ## z
 #define CONCAT3(x, y, z) CONCAT3_DETAIL(x, y, z)
 
-#define EVENT_GENERATE_UNIQUE_ID(CLASSNAME) \
-    static constexpr long long unsigned int CLASSNAME##_UNIQUE_ID = hash(STRINGIFY(CONCAT3(CLASSNAME, PARENTCLASS, __COUNTER__))); \
+#define EVENT_GENERATE_UNIQUE_ID(CLASSNAME, PARENTCLASS) \
+    static constexpr long long unsigned int CLASSNAME##_UNIQUE_ID = hash(STRINGIFY(CONCAT(CLASSNAME, __COUNTER__))); \
     static constexpr long long unsigned int getUniqueEventId() { return CLASSNAME##_UNIQUE_ID; }
 
 #define EVENT_GET_NAME(CLASSNAME) \
     static std::string getEventName() { return #CLASSNAME + std::string("_") + std::to_string(CLASSNAME##_UNIQUE_ID); }
 
 #define EVENT_CTOR_SIMPLE(CLASSNAME, PARENTCLASS, ...) \
-    EVENT_GENERATE_UNIQUE_ID(CLASSNAME) \
+    EVENT_GENERATE_UNIQUE_ID(CLASSNAME, PARENTCLASS) \
     explicit CLASSNAME(const std::shared_ptr<ReyEngine::EventPublisher> publisher, ##__VA_ARGS__) : PARENTCLASS(CLASSNAME::getUniqueEventId(), publisher)
 
 //NOTE: event publisher is a pointer copy and not a reference because toEventPublisher expects an lvalue, which toEventPublisher is not;
 
 
 #define EVENT_CTOR_SIMPLE_OVERRIDABLE(CLASSNAME, PARENTCLASS) \
-EVENT_GENERATE_UNIQUE_ID(CLASSNAME)                           \
+EVENT_GENERATE_UNIQUE_ID(CLASSNAME, PARENTCLASS)              \
 explicit CLASSNAME(ReyEngine::EventId eventId, const std::shared_ptr<ReyEngine::EventPublisher>& publisher): PARENTCLASS(eventId, publisher)
 
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -41,7 +41,7 @@ namespace ReyEngine::Internal{
         using ChildOrder = std::vector<ChildPtr>;
 
         struct ChildAddedEvent : public Event<ChildAddedEvent> {
-            EVENT_GENERATE_UNIQUE_ID(ChildAddedEvent)
+            EVENT_GENERATE_UNIQUE_ID(ChildAddedEvent, Event_ChildAddedEvent)
             EVENT_GET_NAME(ChildAddedEvent)
             explicit ChildAddedEvent(std::shared_ptr<EventPublisher> publisher, ChildPtr& child)
             : Event<ChildAddedEvent>(ChildAddedEvent_UNIQUE_ID, publisher)
@@ -50,7 +50,7 @@ namespace ReyEngine::Internal{
             ChildPtr& child;
         };
         struct DescendentAddedEvent : public Event<DescendentAddedEvent> {
-            EVENT_GENERATE_UNIQUE_ID(DescendentAddedEvent)
+            EVENT_GENERATE_UNIQUE_ID(DescendentAddedEvent, Event_DescendentAddedEvent)
             EVENT_GET_NAME(DescendentAddedEvent)
             explicit DescendentAddedEvent(std::shared_ptr<EventPublisher> publisher, ChildPtr& descendent)
             : Event<DescendentAddedEvent>(DescendentAddedEvent_UNIQUE_ID, publisher)
@@ -60,7 +60,7 @@ namespace ReyEngine::Internal{
         };
 
         struct DescendentRemovedEvent : public Event<DescendentRemovedEvent> {
-            EVENT_GENERATE_UNIQUE_ID(DescendentRemovedEvent)
+            EVENT_GENERATE_UNIQUE_ID(DescendentRemovedEvent, Event_DescendentRemovedEvent)
             EVENT_GET_NAME(DescendentRemovedEvent)
             explicit DescendentRemovedEvent(std::shared_ptr<EventPublisher> publisher, ChildPtr& descendent)
             : Event<DescendentRemovedEvent>(DescendentRemovedEvent_UNIQUE_ID, publisher)
