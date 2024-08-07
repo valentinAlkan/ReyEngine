@@ -174,6 +174,16 @@ Handled BaseWidget::_process_unhandled_input(const InputEvent& event, const std:
          return _unhandled_input(event, mouse);
       case InputFilter::INPUT_FILTER_IGNORE_AND_STOP:
          return false;
+       case InputFilter::INPUT_FILTER_PUBLISH_AND_PASS:
+           publish(event);
+           return passInput(event, mouse);
+       case InputFilter::INPUT_FILTER_PASS_AND_PUBLISH:
+           if (passInput(event, mouse)) return true;
+           publish(event);
+           break;
+       case InputFilter::INPUT_FILTER_PUBLISH_AND_STOP:
+           publish(event);
+           return false;
       default:
          throw std::runtime_error("INVALID INPUT FILTER STATE!");
    }
