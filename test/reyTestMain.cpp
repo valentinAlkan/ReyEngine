@@ -66,6 +66,7 @@ int main(int argc, char** argv)
    Application::instance(); //initialize the application
    ArgParse args;
    args.defineArg(RuntimeArg("--loadScene", "help", 1, RuntimeArg::ArgType::POSITIONAL));
+   args.defineArg(RuntimeArg("--eventTest", "help", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--renderTest", "help", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--scrollAreaTest", "help", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--sliderTest", "help", 0, RuntimeArg::ArgType::FLAG));
@@ -117,6 +118,30 @@ int main(int argc, char** argv)
          throw std::runtime_error("--loadscene test: fix me");
 //         root->addChild(loadedScene.value()->getRoot());
       }
+   }
+
+   else if (args.getArg("--eventTest")){
+       auto publisher = make_shared<EventPublisher>();
+       auto subscriber = make_shared<EventSubscriber>();
+       static int j =0;
+       auto cb = [](const InputEventMouseButton& event){
+           std::cout << "got InputEvent" << j << endl; j++;
+       };
+       static constexpr int PUB_COUNT = 10;
+       for (int i=0; i<PUB_COUNT; i++) {
+           subscriber->subscribe<InputEventMouseButton>(publisher, cb);
+       }
+
+       for (int i=0; i<10; i++) {
+           InputEventMouseButton e(publisher);
+           publisher->publish<InputEventMouseButton>(e);
+           if (j != PUB_COUNT) {
+               throw std::runtime_error("Did not catch 10 events");
+           }
+           j = 0;
+       }
+
+
    }
 
    else if (args.getArg("--drawTest")){
