@@ -32,7 +32,7 @@ constexpr size_t hash ( const char (&s)[N] ) {
 #define TOSTRING(x) STRINGIFY(x)
 
 #define EVENT_GENERATE_UNIQUE_ID(CLASSNAME, PARENTCLASS) \
-    static constexpr long long unsigned int CLASSNAME##_UNIQUE_ID = hash(TOSTRING(CLASSNAME) TOSTRING(PARENTCLASS) __FILE__ TOSTRING(__LINE__)); \
+    static constexpr long long unsigned int CLASSNAME##_UNIQUE_ID = hash(TOSTRING(CLASSNAME) TOSTRING(PARENTCLASS)); \
     static constexpr long long unsigned int getUniqueEventId() { return CLASSNAME##_UNIQUE_ID; }
 
 #define EVENT_GET_NAME(CLASSNAME) \
