@@ -199,6 +199,7 @@ namespace ReyEngine {
       inline std::string toString() const {return "{" + a.toString() + ", " + b.toString() + "}";}
       inline Line& operator+=(const Pos<T>& pos){a += pos; b += pos; return *this;}
       inline Line operator+(const Pos<T>& pos) const {Line<T> l(*this); l.a += pos; l.b += pos; return l;}
+      friend std::ostream& operator<<(std::ostream& os, Line r) {os << r.toString(); return os;}
       Pos<T> a;
       Pos<T> b;
    };
