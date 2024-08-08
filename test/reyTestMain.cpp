@@ -121,27 +121,24 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--eventTest")){
-       auto publisher = make_shared<EventPublisher>();
-       auto subscriber = make_shared<EventSubscriber>();
+       auto sprite = Sprite::build<Sprite>("sprite");
        static int j =0;
-       auto cb = [](const InputEventMouseButton& event){
+       auto cb = [&](const InputEventMouseMotion& event){
            std::cout << "got InputEvent" << j << endl; j++;
        };
        static constexpr int PUB_COUNT = 10;
        for (int i=0; i<PUB_COUNT; i++) {
-           subscriber->subscribe<InputEventMouseButton>(publisher, cb);
+           sprite->subscribe<InputEventMouseMotion>(sprite, cb);
        }
 
        for (int i=0; i<10; i++) {
-           InputEventMouseButton e(publisher);
-           publisher->publish<InputEventMouseButton>(e);
+           InputEventMouseMotion e(sprite);
+           sprite->publish<InputEventMouseMotion>(e);
            if (j != PUB_COUNT) {
                throw std::runtime_error("Did not catch 10 events");
            }
            j = 0;
        }
-
-
    }
 
    else if (args.getArg("--drawTest")){
