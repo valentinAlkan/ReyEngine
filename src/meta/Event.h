@@ -27,17 +27,12 @@ constexpr size_t hash ( const char (&s)[N] ) {
     return hash_calc<N>::apply(s);
 }
 
-#define STRINGIFY_DETAIL(x) #x
-#define STRINGIFY(x) STRINGIFY_DETAIL(x)
-
-#define CONCAT_DETAIL(x, y) x ## y
-#define CONCAT(x, y) CONCAT_DETAIL(x, y)
-
-#define CONCAT3_DETAIL(x, y, z) x ## y ## z
-#define CONCAT3(x, y, z) CONCAT3_DETAIL(x, y, z)
+// Helper macros for stringifying and concatenation
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
 
 #define EVENT_GENERATE_UNIQUE_ID(CLASSNAME, PARENTCLASS) \
-    static constexpr long long unsigned int CLASSNAME##_UNIQUE_ID = hash(STRINGIFY(CONCAT(CLASSNAME, __COUNTER__))); \
+    static constexpr long long unsigned int CLASSNAME##_UNIQUE_ID = hash(TOSTRING(CLASSNAME) TOSTRING(PARENTCLASS) __FILE__ TOSTRING(__LINE__)); \
     static constexpr long long unsigned int getUniqueEventId() { return CLASSNAME##_UNIQUE_ID; }
 
 #define EVENT_GET_NAME(CLASSNAME) \
@@ -120,6 +115,7 @@ namespace ReyEngine{
                //create new set
                _eventMap[eventId][subscriber];
            }
+           std::cout << "subscribing to event " << eventId << std::endl;
            _eventMap[eventId][subscriber].push_back(fx);
        }
        template <typename T>
