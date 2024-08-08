@@ -89,7 +89,7 @@ TileMap::TileMapLayer& TileMap::getLayer(ReyEngine::TileMap::LayerIndex idx) {
 /////////////////////////////////////////////////////////////////////////////////////////
 TileMap::TileCoord TileMap::getCell(const Pos<int>& localPos) const {
    auto vec2 = _rect.value.toSizeRect().getSubRectCoord({_gridWidth.value, _gridHeight.value}, localPos);
-   return {vec2.x, vec2.y};
+   return {vec2.get().x, vec2.get().y};
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
