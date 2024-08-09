@@ -153,6 +153,7 @@ target_include_directories(ReyEngine2D PUBLIC
     test
     src/thirdParty/xml
     src/thirdParty/uuid
+    src/Pathfinding
 )
 
 # most stuff is linked against and included with ReyEngine2D already. Since ReyEngine3D is linked against ReyEngine2D,

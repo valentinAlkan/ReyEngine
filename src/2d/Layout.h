@@ -41,7 +41,7 @@ namespace ReyEngine{
    public:
       REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(VLayout);
       REYENGINE_SERIALIZER(VLayout, Layout)
-      REYENGINE_DEFAULT_BUILD;
+      REYENGINE_DEFAULT_BUILD(VLayout);
    protected:
       VLayout(const std::string& instanceName)
       : Layout(instanceName, _get_static_constexpr_typename(), LayoutDir::VERTICAL), NamedInstance(instanceName, _get_static_constexpr_typename()){}
@@ -51,7 +51,7 @@ namespace ReyEngine{
    /////////////////////////////////////////////////////////////////////////////////////////
    class HLayout : public Layout {
    public:
-      REYENGINE_DEFAULT_BUILD;
+      REYENGINE_DEFAULT_BUILD(HLayout);
       REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(HLayout);
       REYENGINE_SERIALIZER(HLayout, Layout)
    protected:
@@ -67,7 +67,7 @@ namespace ReyEngine{
    /////////////////////////////////////////////////////////////////////////////////////////
    class GridLayout : public Layout {
    public:
-      REYENGINE_DEFAULT_BUILD;
+       REYENGINE_DEFAULT_BUILD(GridLayout);
        REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(GridLayout);
        REYENGINE_SERIALIZER(GridLayout, Layout)
 //       static std::shared_ptr<GridLayout> build(const std::string& name) noexcept {

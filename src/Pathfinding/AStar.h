@@ -7,7 +7,7 @@ struct coord{
 };
 
 struct compareNodes{
-   bool operator()(const std::shared_ptr<SearchNode> a, const std::shared_ptr<SearchNode> b) const{
+   bool operator()(const SearchNode* a, const SearchNode* b) const{
       return a->combinedCost > b->combinedCost;
    }
 };
@@ -22,27 +22,27 @@ public:
     * @param _goal : The goal node of the path; Read the parent of this node up the tree to the start
     * @return : true if a path was found; false if no path was found;
     */
-   bool findPath(std::shared_ptr<SearchNode> start, std::shared_ptr<SearchNode> goal);
+   bool findPath(SearchNode* start, SearchNode* goal);
 
 private:
 
-   std::priority_queue<std::shared_ptr<SearchNode>, std::vector<std::shared_ptr<SearchNode>>, compareNodes> _expandedNodes;
-   std::map<int, std::shared_ptr<SearchNode>> _openSet;
+   std::priority_queue<SearchNode*, std::vector<SearchNode*>, compareNodes> _expandedNodes;
+   std::map<int, SearchNode*> _openSet;
 
-   std::shared_ptr<SearchNode> _start;
-   std::shared_ptr<SearchNode> _goal;
+   SearchNode* _start;
+   SearchNode* _goal;
 
    /**
     * places all of the connections in _expandedNodes;
     * Checks to see if the node already exists in _openSet and calls updateParent if so
     * @param node : The node to expand
     */
-   void expandNode(std::shared_ptr<SearchNode> node);
+   void expandNode(SearchNode* node);
 
    /**
     * calculates the Heuristic of the node with the distance formula
     * @param node : node to calculate for
     * @return : the heuristic
     */
-   float calculateHeuristic(std::shared_ptr<SearchNode> node);
+   float calculateHeuristic(SearchNode* node);
 };

@@ -4,7 +4,7 @@
 class TextureTestWidget : public ReyEngine::BaseWidget{
    REYENGINE_OBJECT_BUILD_ONLY(TextureTestWidget, BaseWidget){}
 public:
-   REYENGINE_DEFAULT_BUILD
+   REYENGINE_DEFAULT_BUILD(TextureTestWidget)
    void renderBegin(ReyEngine::Pos<double>& textureOffset) override {}
    void render() const override {}
 //   void renderEnd() override{}

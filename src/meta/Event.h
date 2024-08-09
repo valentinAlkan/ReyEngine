@@ -115,14 +115,14 @@ namespace ReyEngine{
                //create new set
                _eventMap[eventId][subscriber];
            }
-           std::cout << "subscribing to event " << eventId << std::endl;
+//           std::cout << "subscribing to event " << eventId << std::endl;
            _eventMap[eventId][subscriber].push_back(fx);
        }
        template <typename T>
        void publish(const T& event){
            static_assert(std::is_base_of_v<BaseEvent, T>); //compile time check
            auto publisher = downcasted_shared_from_this<EventPublisher>();
-   //      std::cout << "Publishing eventType " << T::getUniqueEventId() << "(" << T::getEventName() << ")" << std::endl;
+//           std::cout << "Publishing event " << T::getUniqueEventId() << std::endl;
            //publish by virtual eventId so we can publish from the base class
            auto _ev = _eventMap.find(event.eventId);
            if (_ev == _eventMap.end()){

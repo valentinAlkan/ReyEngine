@@ -1,20 +1,21 @@
 #pragma once
 #include "Application.h"
+#include <set>
 
 //class to hold node info for a 2d map
 class SearchNode {
 public:
    //operators
-   inline bool operator==(const SearchNode other){
+   inline bool operator==(const SearchNode& other) const {
       return id == other.id;
    }
-   inline bool operator!=(const SearchNode other){
+   inline bool operator!=(const SearchNode& other) const {
       return id != other.id;
    }
-   inline bool operator>(const SearchNode other){
+   inline bool operator>(const SearchNode& other) const {
       return combinedCost > other.combinedCost;
    }
-   inline bool operator<(const SearchNode other){
+   inline bool operator<(const SearchNode& other) const {
       return combinedCost < other.combinedCost;
    }
 
@@ -23,18 +24,19 @@ public:
    float heuristic, baseCost, combinedCost;
    int x_coord, y_coord;
    bool isStart = false;
-   std::shared_ptr<SearchNode> parent;
-   std::map<std::shared_ptr<SearchNode>, float> connections;
+   SearchNode* parent;
+   std::map<SearchNode*, float> connections;
+   std::set<SearchNode*> references; //nodes that connect TO this node - so we can let them know we've been deleted.
 
-   SearchNode() : parent(nullptr){}
-
+   SearchNode(int x, int y): x_coord(x), y_coord(y){}
+   ~SearchNode();
    /**
     * updates the parent node if the cost is less than the cost from the previous parent
     * @param _parent : the parent to run too
     * @param _cost : the cost to get to the node from the new parent
     * @param connectionCost : the modifier to connect to this node
     */
-   void updateParent(std::shared_ptr<SearchNode> _parent, float _cost, float connectionCost);
+   void updateParent(SearchNode* _parent, float _cost, float connectionCost);
 
    /**
     * calculates the cost to get to this node from the start node
@@ -59,12 +61,6 @@ public:
     * @param cost : the cost modifier to connect to the connection
     * @param connection : the connection
     */
-   void addConnection(float cost, std::shared_ptr<SearchNode> connection);
-
-   /**
-    * sets the x_coord and the y_coord of the node
-    * @param x_coord : the desired x_coord
-    * @param y_coord : the desired y_coord
-    */
-   void setCoords(int xCoord, int yCoord);
+   void addConnection(float cost, SearchNode* connection);
+   void removeConnection(SearchNode* connection);
 };

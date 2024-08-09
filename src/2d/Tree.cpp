@@ -178,6 +178,26 @@ void TreeItem::setGeneration(long long generation){
    }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////
+void TreeItem::clear() {
+   children.clear();
+   auto tree = _tree.lock();
+   if (tree) tree->determineOrdering();
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void TreeItem::setMetaData(const std::string &key, std::unique_ptr<TreeItemMeta> meta) {
+    metaData[key] = std::move(meta);
+}
+///////////////////////////////////////////////////////////////////////////////////////////
+std::optional<std::reference_wrapper<std::unique_ptr<TreeItemMeta>>> TreeItem::getMetaData(const std::string &key) {
+    auto found = metaData.find(key);
+    if (found != metaData.end()){
+        return found->second;
+    }
+    return nullopt;
+}
+
 //
 ///////////////////////////////////////////////////////////////////////////////////////////
 //std::vector<std::shared_ptr<TreeItem>> Tree::getItem(const Tree::TreePath& path) const {

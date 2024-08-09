@@ -21,7 +21,7 @@ namespace ReyEngine{
 //         auto me = std::shared_ptr<Label>(new Label(name));
 //         return me;
 //      }
-      REYENGINE_DEFAULT_BUILD
+      REYENGINE_DEFAULT_BUILD(Label)
       void render() const override{
          //todo: scissor text
          auto& outline = theme->outline;

@@ -8,7 +8,7 @@ namespace ReyEngine{
    public:
       REYENGINE_OBJECT_BUILD_ONLY(Control, BaseWidget){}
    public:
-       REYENGINE_DEFAULT_BUILD;
+       REYENGINE_DEFAULT_BUILD(Control);
        void _process(float dt) override;
        Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
        void _on_mouse_enter() override;

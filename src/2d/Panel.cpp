@@ -49,9 +49,9 @@ void Panel::renderEnd() {
 void Panel::_init() {
    setAcceptsHover(true);
    //create subwidgets
-   vlayout = VLayout::build<VLayout>(VLAYOUT_NAME);
-   if (!window) window = Control::build<Control>(WINDOW_NAME);
-   menuBar = HLayout::build<HLayout>(MENU_NAME);
+   vlayout = VLayout::build(VLAYOUT_NAME);
+   if (!window) window = Control::build(WINDOW_NAME);
+   menuBar = HLayout::build(MENU_NAME);
    menuBar->getTheme()->layoutMargins.setAll(2);
 
    //get rid of control backgrounds so we only see panel background
@@ -67,29 +67,29 @@ void Panel::_init() {
    menuBar->getTheme()->background = Style::Fill::SOLID;
 
    //add a spacer
-   auto lspacer = Control::build<Control>("__lspacer");
+   auto lspacer = Control::build("__lspacer");
    lspacer->setVisible(false);
    menuBar->addChild(lspacer);
 
-   titleLabel = Label::build<Label>(TITLE_LABEL_NAME);
+   titleLabel = Label::build(TITLE_LABEL_NAME);
    titleLabel->setTheme(theme);
    menuBar->addChild(titleLabel);
    titleLabel->setText(panelTitle.value.empty() ? getName() : panelTitle.value);
 
    //add another spacer
-   auto rspacer = Control::build<Control>("__rspacer");
+   auto rspacer = Control::build("__rspacer");
    rspacer->setVisible(false);
    menuBar->addChild(rspacer);
 
    //add a button cluster on the right side of the menu bar
-   auto btnClusterRight = HLayout::build<HLayout>("__btnClusterRight");
+   auto btnClusterRight = HLayout::build("__btnClusterRight");
    menuBar->addChild(btnClusterRight);
    menuBar->childScales = {1,1,1,.5};
 
    //add some buttons
-   auto btnMin = PushButton::build<PushButton>(BTN_MIN_NAME); btnMin->setText("_");
-   auto btnMax = PushButton::build<PushButton>(BTN_MAX_NAME); btnMax->setText("o");
-   auto btnClose = PushButton::build<PushButton>(BTN_CLOSE_NAME);
+   auto btnMin = PushButton::build(BTN_MIN_NAME); btnMin->setText("_");
+   auto btnMax = PushButton::build(BTN_MAX_NAME); btnMax->setText("o");
+   auto btnClose = PushButton::build(BTN_CLOSE_NAME);
    btnClose->setText("x");
    btnClusterRight->addChild(btnMin);
    btnClusterRight->addChild(btnMax);
@@ -288,7 +288,7 @@ Handled Panel::_unhandled_input(const InputEvent& event, const std::optional<Unh
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::addChildToPanel(std::shared_ptr<BaseWidget> child){
-   if (!window) window = Control::build<Control>(WINDOW_NAME);
+   if (!window) window = Control::build(WINDOW_NAME);
    window->addChild(child);
 }
 /////////////////////////////////////////////////////////////////////////////////////////

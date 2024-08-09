@@ -20,6 +20,8 @@ namespace ReyEngine{
       virtual std::vector<std::shared_ptr<TreeItem>>& getChildren() = 0;
    };
 
+   //A struct to hold extra data for us
+   struct TreeItemMeta {};
    class TreeItem: public TreeItemContainerInterface, public inheritable_enable_shared_from_this<TreeItem> {
    public:
       static constexpr long long GENERATION_NULL = -1;
@@ -35,7 +37,11 @@ namespace ReyEngine{
       void setExpandable(bool _expandable){expandable = _expandable;}
       bool getEnabled(){return _enabled;}
       void setEnabled(bool enabled){_enabled = enabled;}
+      void clear(); //remove all children
+      std::optional<std::reference_wrapper<std::unique_ptr<TreeItemMeta>>> getMetaData(const std::string& key);
+      void setMetaData(const std::string& key, std::unique_ptr<TreeItemMeta> meta);
    protected:
+      std::map<std::string, std::unique_ptr<TreeItemMeta>> metaData;
       void setGeneration(long long generation);
       std::string _text;
       bool _enabled = true; //used to limit interaction and gray it out.
@@ -63,7 +69,7 @@ namespace ReyEngine{
          acceptsHover=true;
       }
    public:
-      REYENGINE_DEFAULT_BUILD;
+      REYENGINE_DEFAULT_BUILD(Tree);
       /////////////////////////////////////////////////////////////////////////////////////////
       /////////////////////////////////////////////////////////////////////////////////////////
       /////////////////////////////////////////////////////////////////////////////////////////
