@@ -51,7 +51,7 @@ namespace ReyEngine{
       void render() const override;
       StringProperty text;
    public:
-      REYENGINE_DEFAULT_BUILD
+      REYENGINE_DEFAULT_BUILD(PushButton)
       std::string getText(){return text.value;}
       void setText(const std::string& newText){text.value = newText;}
    protected:

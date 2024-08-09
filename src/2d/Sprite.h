@@ -12,7 +12,7 @@ namespace ReyEngine{
       , PROPERTY_DECLARE(region)
       {}
    public:
-      REYENGINE_DEFAULT_BUILD
+      REYENGINE_DEFAULT_BUILD(Sprite)
       void render() const override;
       void registerProperties() override;
       void _init() override;

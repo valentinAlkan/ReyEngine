@@ -30,7 +30,7 @@ namespace ReyEngine{
          tabTheme = std::static_pointer_cast<TabTheme>(theme); //so we dont have to bind to a temporary and can return a ref
       }
    public:
-      REYENGINE_DEFAULT_BUILD
+      REYENGINE_DEFAULT_BUILD(TabContainer)
       void render() const override;
       void registerProperties() override{};
       void _on_child_added(std::shared_ptr<BaseWidget>&) override;

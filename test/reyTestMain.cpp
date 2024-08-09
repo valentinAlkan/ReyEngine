@@ -142,7 +142,7 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--drawTest")){
-      auto control = Control::build<Control>("Drawbox");
+      auto control = Control::build("Drawbox");
       control->setAnchoring(BaseWidget::Anchor::FILL);
       root->addChild(control);
 
@@ -259,9 +259,9 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--inputPositionTest")){
-      auto control = Control::build<Control>("MainControl");
+      auto control = Control::build("MainControl");
       control->setRect(Rect<int>(40,40, 50,50));
-      auto subcontrol = Control::build<Control>("SubControl");
+      auto subcontrol = Control::build("SubControl");
       subcontrol->setRect(Rect<int>(100,100, 50,50));
       control->getTheme()->background.set(Style::Fill::SOLID);
       control->getTheme()->background.colorPrimary.set(COLORS::lightGray);
@@ -291,7 +291,7 @@ int main(int argc, char** argv)
 
    else if (args.getArg("--labelTest")){
       root->addChild(RootWidget::build<RootWidget>("Root"));
-      auto testLabel = Label::build<Label>("Label");
+      auto testLabel = Label::build("Label");
       testLabel->setRect({0,0,50,50});
       root->addChild(testLabel);
 //      testLabel->setOutlineType(Style::Outline::LINE);
@@ -299,8 +299,8 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--scissorTest")){
-      auto background = Control::build<Control>("background");
-      auto foreground = Control::build<Control>("foreground");
+      auto background = Control::build("background");
+      auto foreground = Control::build("foreground");
       root->addChild(background);
       background->addChild(foreground);
       background->setAnchoring(BaseWidget::Anchor::FILL);
@@ -321,18 +321,18 @@ int main(int argc, char** argv)
 
 
    else if (args.getArg("--scrollAreaTest")){
-      root->addChild(Control::build<Control>("Control"));
+      root->addChild(Control::build("Control"));
       root->setRect({0, 0, 2000, 2000});
 
       //add labels
-      auto labelLayout = HLayout::build<HLayout>("labelLayout");
+      auto labelLayout = HLayout::build("labelLayout");
       labelLayout->setRect(Rect<int>(50,20,350,20));
       root->addChild(labelLayout);
-      auto xlabel = Label::build<Label>("XLabel"); xlabel->setAnchoring(BaseWidget::Anchor::CENTER);
-      auto ylabel = Label::build<Label>("YLabel"); ylabel->setAnchoring(BaseWidget::Anchor::CENTER);
+      auto xlabel = Label::build("XLabel"); xlabel->setAnchoring(BaseWidget::Anchor::CENTER);
+      auto ylabel = Label::build("YLabel"); ylabel->setAnchoring(BaseWidget::Anchor::CENTER);
       auto xslider = make_shared<Slider>("XSlider", Slider::SliderType::HORIZONTAL);
       auto yslider = make_shared<Slider>("YSlider", Slider::SliderType::HORIZONTAL);
-      auto spacer = Control::build<Control>("spacer");
+      auto spacer = Control::build("spacer");
       labelLayout->addChild(xslider);
       labelLayout->addChild(spacer);
       labelLayout->addChild(yslider);
@@ -343,8 +343,8 @@ int main(int argc, char** argv)
       //add scroll area
       auto scrollArea = ScrollArea::build<ScrollArea>("ScrollArea");
       scrollArea->setRect(Rect<int>(50, 50, 500, 500));
-      auto label1 = Label::build<Label>("ScrollAreaLabel1");
-      auto label2 = Label::build<Label>("ScrollAreaLabel2");
+      auto label1 = Label::build("ScrollAreaLabel1");
+      auto label2 = Label::build("ScrollAreaLabel2");
       label1->setRect({40,40,0,0});
       label2->setRect({300,300,0,0});
       label1->setText("Hello from somewhere nearish to the top left!");
@@ -370,7 +370,7 @@ int main(int argc, char** argv)
       boxRect.y -= 1;
       boxRect.width += 1;
       boxRect.height += 1;
-      auto box = Control::build<Control>("OutlineControl");
+      auto box = Control::build("OutlineControl");
       box->setRect(boxRect);
       box->getTheme().get()->background.set(Style::Fill::SOLID);
       box->getTheme().get()->background.colorPrimary.set({125, 125, 125, 127});
@@ -389,14 +389,14 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--childBoundingBoxTest")){
-      auto boxBounder = Control::build<Control>("BoxBounder");
+      auto boxBounder = Control::build("BoxBounder");
       boxBounder->setRect({0, 0, 2000, 2000});
       root->addChild(boxBounder);
       //add some children
-      auto label1 = Label::build<Label>("Label1");
+      auto label1 = Label::build("Label1");
       label1->setPos(Pos<int>(40,40));
       boxBounder->addChild(label1);
-      auto label2 = Label::build<Label>("Label2");
+      auto label2 = Label::build("Label2");
       label2->setPos(Pos<int>(40,300));
       boxBounder->addChild(label2);
 
@@ -423,10 +423,10 @@ int main(int argc, char** argv)
 
 
    else if (args.getArg("--sliderTest")){
-      auto inputFilter = Control::build<Control>("InputFilter");
+      auto inputFilter = Control::build("InputFilter");
       inputFilter->setAnchoring(BaseWidget::Anchor::FILL);
       root->addChild(inputFilter);
-      auto control = Control::build<Control>("Control");
+      auto control = Control::build("Control");
       control->setSize({100, 100});
       control->getTheme()->background.colorPrimary = Colors::red;
 
@@ -498,13 +498,13 @@ int main(int argc, char** argv)
 
    else if (args.getArg("--layoutTestBasic")){
       Logger::debug() << "Layout test basic!" << endl;
-      auto mainVLayout = VLayout::build<VLayout>("MainVLayout");
+      auto mainVLayout = VLayout::build("MainVLayout");
       mainVLayout->setAnchoring(BaseWidget::Anchor::FILL);
       root->addChild(mainVLayout);
 
-      auto control1 = Control::build<Control>("Control1");
-      auto control2 = Control::build<Control>("Control2");
-      auto layout3 = HLayout::build<HLayout>("Layout3");
+      auto control1 = Control::build("Control1");
+      auto control2 = Control::build("Control2");
+      auto layout3 = HLayout::build("Layout3");
       control1->getTheme()->background = Style::Fill::SOLID;
       control1->getTheme()->background.colorPrimary.set(ReyEngine::Colors::red);
       control2->getTheme()->background = Style::Fill::SOLID;
@@ -516,7 +516,7 @@ int main(int argc, char** argv)
 
       //split layout 3
       for (int i=0; i<4; i++) {
-          auto subcontrol = Control::build<Control>("SubControl" + to_string(i));
+          auto subcontrol = Control::build("SubControl" + to_string(i));
           subcontrol->getTheme()->background = Style::Fill::SOLID;
           subcontrol->getTheme()->background.colorPrimary.set(ReyEngine::Colors::randColor());
           layout3->addChild(subcontrol);
@@ -525,7 +525,7 @@ int main(int argc, char** argv)
 
    else if (args.getArg("--layoutTest")){
       Logger::debug() << "Layout test!" << endl;
-      auto mainVLayout = VLayout::build<VLayout>("MainVLayout");
+      auto mainVLayout = VLayout::build("MainVLayout");
       mainVLayout->setAnchoring(BaseWidget::Anchor::FILL);
       mainVLayout->childScales = {1, 5};
       root->addChild(mainVLayout);
@@ -535,16 +535,16 @@ int main(int argc, char** argv)
          std::shared_ptr<Layout> newlayout1;
          std::shared_ptr<Layout> newlayout2;
          if (flipFlop){
-             newlayout1 = VLayout::build<VLayout>("Vlayout1_" + to_string(i));
-             newlayout2 = VLayout::build<VLayout>("Vlayout2_" + to_string(i));
+             newlayout1 = VLayout::build("Vlayout1_" + to_string(i));
+             newlayout2 = VLayout::build("Vlayout2_" + to_string(i));
          } else {
-             newlayout1 = HLayout::build<HLayout>("Hlayout1_" + to_string(i));
-             newlayout2 = HLayout::build<HLayout>("Hlayout2_" + to_string(i));
+             newlayout1 = HLayout::build("Hlayout1_" + to_string(i));
+             newlayout2 = HLayout::build("Hlayout2_" + to_string(i));
          }
          newlayout1->childScales = {1, 5};
          newlayout2->childScales = {1, 5};
          flipFlop = !flipFlop;
-         auto control = Control::build<Control>("control" + to_string(i));
+         auto control = Control::build("control" + to_string(i));
          control->getTheme()->background.set(Style::Fill::SOLID);
          control->getTheme()->background.colorPrimary.set(ColorRGBA::random(254));
          control->setAnchoring(ReyEngine::BaseWidget::Anchor::FILL);
@@ -557,24 +557,24 @@ int main(int argc, char** argv)
 
    else if (args.getArg("--panelTest")){
       //add a panel to the layout
-      auto panel = Panel::build<Panel>("Panel");
+      auto panel = Panel::build("Panel");
       panel->setRect({20, 20, 500, 500});
       //add a slider so we can adjust the roundness dynamically
       auto slider = make_shared<Slider>("Slider", Slider::SliderType::HORIZONTAL);
       slider->setRect(Rect<int>(40, 600, 100, 20));
       root->addChild(slider);
       //add an hlayout to fill the slider
-      auto sliderHLayout = HLayout::build<HLayout>("sliderLayout");
+      auto sliderHLayout = HLayout::build("sliderLayout");
       sliderHLayout->setRect(slider->getRect().toSizeRect());
       slider->addChild(sliderHLayout);
 
       //add a name label to the slider
-      auto fieldLabel = Label::build<Label>("FieldNameRoundness");
+      auto fieldLabel = Label::build("FieldNameRoundness");
       fieldLabel->setText("Roundness: ");
       //set alpha channel transparency so we can see the slider handle
       fieldLabel->getTheme()->background.colorPrimary.value.a = 127;
       //add a value label to the slider
-      auto valueLabel = Label::build<Label>("roundnessLabel");
+      auto valueLabel = Label::build("roundnessLabel");
       valueLabel->setText(panel->getTheme()->roundness, 3);
       valueLabel->setTheme(fieldLabel->getTheme());
 
@@ -597,28 +597,28 @@ int main(int argc, char** argv)
       root->addChild(panel);
 
       //add a button to toggle the panel visibility
-      auto btnShowPanel = PushButton::build<PushButton>("btnShowPanel");
+      auto btnShowPanel = PushButton::build("btnShowPanel");
       auto showPanel = [&](const PushButton::ButtonPressEvent& event){panel->setVisible(!panel->getVisible());};
       panel->subscribe<PushButton::ButtonPressEvent>(btnShowPanel, showPanel);
       btnShowPanel->setPos(800,100);
       root->addChild(btnShowPanel);
 
       //display some stuff in the panel
-      auto panelLabel = Label::build<Label>("panelLabel");
+      auto panelLabel = Label::build("panelLabel");
       panelLabel->setText("This label is a child of the panel");
       panel->addChildToPanel(panelLabel);
       panel->setResizable(true);
 
-      auto somebutton = PushButton::build<PushButton>("someButton");
+      auto somebutton = PushButton::build("someButton");
       panel->addChildToPanel(somebutton);
       somebutton->setRect({300,300,100,40});
 
-      auto internalPanel = Panel::build<Panel>("InternalPanel");
+      auto internalPanel = Panel::build("InternalPanel");
       panel->addChildToPanel(internalPanel);
       internalPanel->setResizable(true);
       internalPanel->setRect({5,50,100,100});
 
-      auto internalPanelLabel = Label::build<Label>("InternalPanelLabel");
+      auto internalPanelLabel = Label::build("InternalPanelLabel");
       internalPanel->addChildToPanel(internalPanelLabel);
 
       auto internalMoveCB = [](Control& internalpanel){};
@@ -635,7 +635,7 @@ int main(int argc, char** argv)
 
    else if (args.getArg("--treeTest")){
        auto treeRoot = std::make_shared<TreeItem>("Root");
-      auto tree = Tree::build<Tree>("Tree");
+      auto tree = Tree::build("Tree");
       tree->setAnchoring(BaseWidget::Anchor::FILL);
       tree->setRoot(treeRoot);
       root->addChild(tree);
@@ -719,7 +719,7 @@ int main(int argc, char** argv)
 
    else if (args.getArg("--tileMapTest")) {
       //load destination tilemap
-      auto tileMap = TileMap::build<TileMap>("destMap");
+      auto tileMap = TileMap::build("destMap");
       FileSystem::File spriteSheet = "test/spritesheet.png";
       auto layerOpt = tileMap->addLayer(spriteSheet);
       if (layerOpt) {
@@ -756,8 +756,8 @@ int main(int argc, char** argv)
       srcTexRect->setTexture(spriteSheet);
       srcTexRect->fitTexture();
       //input forwarderers
-      auto srcInputFwd = Control::build<Control>("srcInputFwd");
-      auto dstInputFwd = Control::build<Control>("dstInputFwd");
+      auto srcInputFwd = Control::build("srcInputFwd");
+      auto dstInputFwd = Control::build("dstInputFwd");
       srcTexRect->addChild(srcInputFwd);
       srcInputFwd->setAnchoring(BaseWidget::Anchor::FILL);
       tileMap->addChild(dstInputFwd);
@@ -847,12 +847,12 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--buttonTest")) {
-      auto label = Label::build<Label>("Label");
-      auto explainerLabel = Label::build<Label>("Explainer");
+      auto label = Label::build("Label");
+      auto explainerLabel = Label::build("Explainer");
       explainerLabel->setText("This will turn green when the button is PRESSED (as opposed to when it is toggled up or down)");
       label->setRect(Rect<int>(50,650,1000,50));
       root->addChild(label);
-      auto vlayout = VLayout::build<VLayout>("VLayout");
+      auto vlayout = VLayout::build("VLayout");
       vlayout->setRect({100, 100, 200, 300});
       root->addChild(vlayout);
 
@@ -881,9 +881,9 @@ int main(int argc, char** argv)
       for (int i=0; i<5; i++) {
          static constexpr int secret = 2;
          string istr =  to_string(i);
-         auto hlayout = HLayout::build<HLayout>("hlayout" + istr);
-         auto button = PushButton::build<PushButton>("PushButton" + istr);
-         auto control = Control::build<Control>("Control" + istr);
+         auto hlayout = HLayout::build("hlayout" + istr);
+         auto button = PushButton::build("PushButton" + istr);
+         auto control = Control::build("Control" + istr);
          //add the control as a property of the button
          auto widgetProperty = make_shared<BaseWidget::WidgetProperty>("control", control);
          auto pressCount = make_shared<IntProperty>("pressCount", 0);
@@ -913,21 +913,21 @@ int main(int argc, char** argv)
          }
       };
 
-      auto exitButton = PushButton::build<PushButton>("Exit");
+      auto exitButton = PushButton::build("Exit");
       vlayout->addChild(exitButton);
       exitButton->subscribe<BaseButton::ButtonToggleEvent>(exitButton, cbExit);
 
    }
 
    else if (args.getArg("--anchorTest")){
-      auto vLayout = VLayout::build<VLayout>("VLayout");
+      auto vLayout = VLayout::build("VLayout");
       vLayout->setAnchoring(BaseWidget::Anchor::FILL);
       
       //create the 4 Controls
-      auto controlTop = Control::build<Control>("TopControl");
-      auto controlMiddle = Control::build<Control>("MiddleControl");
-      auto controlBottom = Control::build<Control>("BottomControl");
-      auto controlFill = Control::build<Control>("FillControl");
+      auto controlTop = Control::build("TopControl");
+      auto controlMiddle = Control::build("MiddleControl");
+      auto controlBottom = Control::build("BottomControl");
+      auto controlFill = Control::build("FillControl");
 
       vLayout->addChild(controlTop);
       vLayout->addChild(controlMiddle);
@@ -940,57 +940,57 @@ int main(int argc, char** argv)
       }
 
       //create test labels for all anchoring
-      auto noneLabel = Label::build<Label>("NoneLabel");
+      auto noneLabel = Label::build("NoneLabel");
       noneLabel->setText("None");
       noneLabel->setAnchoring(BaseWidget::Anchor::NONE);
       controlTop->addChild(noneLabel);
 
-      auto leftLabel = Label::build<Label>("LeftLabel");
+      auto leftLabel = Label::build("LeftLabel");
       leftLabel->setText("Left");
       leftLabel->setAnchoring(BaseWidget::Anchor::LEFT);
       controlTop->addChild(leftLabel);
 
-      auto rightLabel = Label::build<Label>("RightLabel");
+      auto rightLabel = Label::build("RightLabel");
       rightLabel->setText("Right");
       rightLabel->setAnchoring(BaseWidget::Anchor::RIGHT);
       controlTop->addChild(rightLabel);
 
-      auto topLabel = Label::build<Label>("TopLabel");
+      auto topLabel = Label::build("TopLabel");
       topLabel->setText("Top");
       topLabel->setAnchoring(BaseWidget::Anchor::TOP);
       controlTop->addChild(topLabel);
 
-      auto bottomLabel = Label::build<Label>("BottomLabel");
+      auto bottomLabel = Label::build("BottomLabel");
       bottomLabel->setText("Bottom");
       bottomLabel->setAnchoring(BaseWidget::Anchor::BOTTOM);
       controlMiddle->addChild(bottomLabel);
 
-      auto bottomLeftLabel = Label::build<Label>("BottomLeftLabel");
+      auto bottomLeftLabel = Label::build("BottomLeftLabel");
       bottomLeftLabel->setText("Bottom Left");
       bottomLeftLabel->setAnchoring(BaseWidget::Anchor::BOTTOM_LEFT);
       controlMiddle->addChild(bottomLeftLabel);
 
-      auto bottomRightLabel = Label::build<Label>("BottomRightLabel");
+      auto bottomRightLabel = Label::build("BottomRightLabel");
       bottomRightLabel->setText("Bottom Right");
       bottomRightLabel->setAnchoring(BaseWidget::Anchor::BOTTOM_RIGHT);
       controlMiddle->addChild(bottomRightLabel);
 
-      auto topLeftLabel = Label::build<Label>("TopLeftLabel");
+      auto topLeftLabel = Label::build("TopLeftLabel");
       topLeftLabel->setText("Top Left");
       topLeftLabel->setAnchoring(BaseWidget::Anchor::TOP_LEFT);
       controlMiddle->addChild(topLeftLabel);
 
-      auto topRightLabel = Label::build<Label>("TopRightLabel");
+      auto topRightLabel = Label::build("TopRightLabel");
       topRightLabel->setText("Top Right");
       topRightLabel->setAnchoring(BaseWidget::Anchor::TOP_RIGHT);
       controlBottom->addChild(topLabel);
 
-      auto fillButton = PushButton::build<PushButton>("FillLabel");
+      auto fillButton = PushButton::build("FillLabel");
       fillButton->setText("Fill");
       fillButton->setAnchoring(BaseWidget::Anchor::FILL);
       controlFill->addChild(fillButton);
 
-      auto centerLabel = Label::build<Label>("CenterLabel");
+      auto centerLabel = Label::build("CenterLabel");
       centerLabel->setText("Center");
       centerLabel->setAnchoring(BaseWidget::Anchor::CENTER);
       controlBottom->addChild(centerLabel);
@@ -1005,31 +1005,31 @@ int main(int argc, char** argv)
 
    else if (args.getArg("--marginsTest")){
        //make a grid of layouts
-       auto mainvlayout = VLayout::build<VLayout>("MainVLayout");
+       auto mainvlayout = VLayout::build("MainVLayout");
        mainvlayout->setAnchoring(BaseWidget::Anchor::FILL);
        root->addChild(mainvlayout);
        static constexpr int ROWS = 10;
        static constexpr int COLUMNS = 10;
        mainvlayout->getTheme()->layoutMargins.setAll(5);
        for (int i=0; i<ROWS; i++){
-           auto row = HLayout::build<HLayout>("Row" + to_string(i));
+           auto row = HLayout::build("Row" + to_string(i));
            row->getTheme()->layoutMargins.setAll(5);
            mainvlayout->addChild(row);
            //add column to row
            for (int j=0; j<COLUMNS; j++){
-               auto column = VLayout::build<VLayout>("Row" + to_string(i) + "Column" + to_string(j));
+               auto column = VLayout::build("Row" + to_string(i) + "Column" + to_string(j));
                row->addChild(column);
                //set the margins
                column->getTheme()->layoutMargins.setAll(i+j);
                //add a control
-               auto control = Control::build<Control>("Control " + to_string(i+j));
+               auto control = Control::build("Control " + to_string(i+j));
                column->addChild(control);
                //give it a color
                control->getTheme()->background = Style::Fill::SOLID;
                control->getTheme()->background.colorPrimary = Colors::randColor();
 
               //add a label
-              auto label = Label::build<Label>("Label");
+              auto label = Label::build("Label");
               auto onEnter = [label, control](const Control&){
                   label->setVisible(true);
                   label->setText(control->localToGlobal(label->getPos()));
@@ -1048,11 +1048,11 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--hoverTest")){
-      auto mainVLayout = VLayout::build<VLayout>("VLayout");
+      auto mainVLayout = VLayout::build("VLayout");
       mainVLayout->setAnchoring(BaseWidget::Anchor::FILL);
       root->addChild(mainVLayout);
       for (int i=0; i<5; i++){
-         auto control = Control::build<Control>("Control" + to_string(i));
+         auto control = Control::build("Control" + to_string(i));
          auto onHover = [control](const Control&){
             std::cout << control->getName() << " got hover!" << endl;
             control->setVisible(true);
@@ -1069,7 +1069,7 @@ int main(int argc, char** argv)
 
    else if (args.getArg("--tabContainerTest")){
       Logger::debug() << "Starting tab container test!" << endl;
-      auto mainVLayout = VLayout::build<VLayout>("MainVLayout");
+      auto mainVLayout = VLayout::build("MainVLayout");
       auto tabContainer = TabContainer::build<TabContainer>("TabContainer");
       mainVLayout->setAnchoring(BaseWidget::Anchor::FILL);
       mainVLayout->addChild(tabContainer);
@@ -1079,7 +1079,7 @@ int main(int argc, char** argv)
       //create some widgets to dislpay in the tabcontainer
       static constexpr int TAB_COUNT = 4;
       for (int i=0; i<TAB_COUNT; i++){
-         auto control = Control::build<Control>("Control" + to_string(i));
+         auto control = Control::build("Control" + to_string(i));
          auto color = Colors::randColor();
          auto renderCB = [control, color](const Control&){
             ReyEngine::drawRectangle(control->getGlobalRect(), color);
@@ -1093,13 +1093,13 @@ int main(int argc, char** argv)
    else if (args.getArg("--xmlTest")){
       //parse xml file
       FileSystem::File xmlFile("test/xmltest.xml");
-      auto vlayout = VLayout::build<VLayout>("mainvlayout");
+      auto vlayout = VLayout::build("mainvlayout");
       vlayout->setAnchoring(BaseWidget::Anchor::FILL);
       root->addChild(vlayout);
 
       auto document = XML::Parser::loadFile(xmlFile);
       auto xmlRoot = document->getRoot();
-      auto rootLabel = Label::build<Label>("rootLabel");
+      auto rootLabel = Label::build("rootLabel");
       rootLabel->setText(xmlRoot->name() + " =" + xmlRoot->value());
       rootLabel->setMinSize({999, 30});
       rootLabel->setMaxSize({999, 30});
@@ -1108,7 +1108,7 @@ int main(int argc, char** argv)
       int i=0;
       int indentLevel=0;
       std::function<void(const std::shared_ptr<XML::Element>&)> catElement = [&](const std::shared_ptr<XML::Element>& element){
-         auto label = Label::build<Label>(to_string(i++));
+         auto label = Label::build(to_string(i++));
          std::string indent(4 * indentLevel, ' ');
          label->setText(indent + "<" + element->name());
          label->setMinSize({999, 30});
@@ -1185,7 +1185,7 @@ int main(int argc, char** argv)
 
    else if (args.getArg("--dragTest")){
       //make something we can draw on
-      auto canvasControl = Control::build<Control>("Control");
+      auto canvasControl = Control::build("Control");
       root->addChild(canvasControl);
       canvasControl->setAnchoring(BaseWidget::Anchor::FILL);
       Rect<int> rect(0,0,50,50);
@@ -1231,7 +1231,7 @@ int main(int argc, char** argv)
 
    else if (args.getArg("--comboBoxTest")){
       Size<int> maxSize = {200, 30};
-      auto mainvlayout = VLayout::build<VLayout>("MainVLayout");
+      auto mainvlayout = VLayout::build("MainVLayout");
       mainvlayout->getTheme()->layoutMargins.setAll(2);
       mainvlayout->setAnchoring(BaseWidget::Anchor::FILL);
       root->addChild(mainvlayout);
@@ -1291,13 +1291,13 @@ int main(int argc, char** argv)
 
    else if(args.getArg("--configTest")){
       Config::loadConfig("test/test.lua");
-      auto vlayout = VLayout::build<VLayout>("Layout");
+      auto vlayout = VLayout::build("Layout");
       vlayout->setAnchoring(BaseWidget::Anchor::FILL);
       root->addChild(vlayout);
       for (auto& label : {
-            Label::build<Label>(Config::getString("testmsg")),
-            Label::build<Label>(Config::getString("testtable", "value")),
-            Label::build<Label>("an integer = " + to_string(Config::getInt("an_integer"))),
+            Label::build(Config::getString("testmsg")),
+            Label::build(Config::getString("testtable", "value")),
+            Label::build("an integer = " + to_string(Config::getInt("an_integer"))),
       })
       {
          label->setMaxSize({9999, 30});
@@ -1308,13 +1308,13 @@ int main(int argc, char** argv)
    else if(args.getArg("--lineEditTest")){
       static constexpr int ROW_HEIGHT = 30;
       Size<int> maxSize = {200, ROW_HEIGHT};
-      auto vlayout = VLayout::build<VLayout>("Layout");
+      auto vlayout = VLayout::build("Layout");
       vlayout->setAnchoring(BaseWidget::Anchor::FILL);
       vlayout->getTheme()->layoutMargins.setAll(2);
       root->addChild(vlayout);
 
       for (int i=0;i<20;i++){
-         auto hlayout = HLayout::build<HLayout>("HLayout" + to_string(i));
+         auto hlayout = HLayout::build("HLayout" + to_string(i));
          hlayout->getTheme()->layoutMargins.setAll(2);
          hlayout->setMaxSize({9999,ROW_HEIGHT});
          vlayout->addChild(hlayout);
@@ -1324,7 +1324,7 @@ int main(int argc, char** argv)
          hlayout->addChild(linedit);
 
          //make a label to echo the contents of the linedit
-         auto label = Label::build<Label>("Label" + to_string(i));
+         auto label = Label::build("Label" + to_string(i));
          label->clear();
          //create callback
          auto cbTextChanged = [label](const LineEdit::EventLineEditTextChanged& event){
@@ -1340,7 +1340,7 @@ int main(int argc, char** argv)
       root->addChild(subCanvas);
       subCanvas->setRect({50, 50, 1000, 1000});
 
-      auto cursor = Control::build<Control>("Cursor");
+      auto cursor = Control::build("Cursor");
       auto cursorRender = [](const Control& thiz){
          thiz.drawCircle({thiz.getLocalMousePos(), 5}, Colors::black);
       };
@@ -1352,7 +1352,7 @@ int main(int argc, char** argv)
       };
 
       for (int i=0;i<3;i++) {
-         auto control = Control::build<Control>("Control" + to_string(i));
+         auto control = Control::build("Control" + to_string(i));
          auto enterCB = [control](const Control&){control->getTheme()->background.colorPrimary = Colors::green;};
          auto exitCB = [control](const Control&){control->getTheme()->background.colorPrimary = Colors::lightGray;};
 
@@ -1378,7 +1378,7 @@ int main(int argc, char** argv)
 
 //   else if (args.getArg("--astarTest")) {
 //      //generate a tilemap
-//      auto vlayout = VLayout::build<VLayout>("VLayout");
+//      auto vlayout = VLayout::build("VLayout");
 //      root->addChild(vlayout);
 //      vlayout->setAnchoring(BaseWidget::Anchor::FILL);
 //      auto tileMap = make_shared<TileMap>("tileMap");
@@ -1386,8 +1386,8 @@ int main(int argc, char** argv)
 //      vlayout->addChild(tileMap);
 //
 //      vlayout->childScales = {100,5};
-//      auto hlayout = HLayout::build<HLayout>("HLayout");
-//      auto btnNextStep = PushButton::build<PushButton>("btnNextStep");
+//      auto hlayout = HLayout::build("HLayout");
+//      auto btnNextStep = PushButton::build("btnNextStep");
 //      btnNextStep->setText("NextStep");
 //      hlayout->addChild(btnNextStep);
 //      vlayout->addChild(hlayout);
@@ -1438,7 +1438,7 @@ int main(int argc, char** argv)
 //
 //      btnNextStep->subscribe<PushButton::ButtonPressEvent>(btnNextStep, doNextStep);
 //
-//      auto clickLayer = Control::build<Control>("ClickLayer");
+//      auto clickLayer = Control::build("ClickLayer");
 //      tileMap->addChild(clickLayer);
 //      clickLayer->setAnchoring(BaseWidget::Anchor::FILL);
 //      clickLayer->getTheme()->background.colorPrimary = Colors::blue;
@@ -1543,9 +1543,9 @@ int main(int argc, char** argv)
    else if (args.getArg("--camera2dTest")) {
       //create nodes
       auto camera = ReyEngine::Camera2D::build<ReyEngine::Camera2D>("Camera2D");
-      auto cameraUI = Label::build<Label>("cameraUI");
-      auto background = Control::build<Control>("background");
-      auto backgroundLabel = Label::build<Label>("backgroundLabel");
+      auto cameraUI = Label::build("cameraUI");
+      auto background = Control::build("background");
+      auto backgroundLabel = Label::build("backgroundLabel");
 
       //setup background
       background->getTheme()->background.value = Style::Fill::GRADIENT;
@@ -1644,8 +1644,8 @@ int main(int argc, char** argv)
 
    else if (args.getArg("--inspector")){
       //make a vlayout - put a widget at the top and the inspector below it
-      root->addChild(VLayout::build<VLayout>("VLayout"));
-      auto someWidget = Label::build<Label>("SomeWidget");
+      root->addChild(VLayout::build("VLayout"));
+      auto someWidget = Label::build("SomeWidget");
       auto inspector = Inspector::build<Inspector>("Inspector");
       someWidget->getTheme()->background.set(Style::Fill::SOLID);
       someWidget->getTheme()->background.colorPrimary.set(Colors::blue);
@@ -1660,7 +1660,7 @@ int main(int argc, char** argv)
       auto viewport = Viewport::build<Viewport>("viewport");
       root->addChild(viewport);
 
-      auto vlayout = VLayout::build<VLayout>("mainvlayout");
+      auto vlayout = VLayout::build("mainvlayout");
       root->addChild(vlayout);
 
       vlayout->setAnchoring(ReyEngine::BaseWidget::Anchor::FILL);
@@ -1672,7 +1672,7 @@ int main(int argc, char** argv)
       };
 
       for (int i = 0; i<20; i++) {
-         auto button = PushButton::build<PushButton>("Btn" + to_string(i));
+         auto button = PushButton::build("Btn" + to_string(i));
          root->addChild(button);
          button->subscribe<PushButton::ButtonPressEvent>(button, btnCB);
          auto w = 100;
@@ -1680,7 +1680,7 @@ int main(int argc, char** argv)
          button->setRect({i*w, i*h, w,h});
       }
 
-      auto panel = Panel::build<Panel>("Panel");
+      auto panel = Panel::build("Panel");
       root->addChild(panel);
       panel->setResizable(true);
       panel->setRect({100,300,500,500});

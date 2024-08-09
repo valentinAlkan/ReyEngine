@@ -8,11 +8,11 @@ using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Editor::_init() {
-   auto mainPanel = Panel::build<Panel>("MainPanel");
+   auto mainPanel = Panel::build("MainPanel");
 ////   mainPanel->setLayout<VLayout>();
 ////   addChild(mainPanel);
 ////
-////   auto menuBarPanel= Panel::build<Panel>("menuBarPanel");
+////   auto menuBarPanel= Panel::build("menuBarPanel");
 ////   menuBarPanel->setLayout<HLayout>();
 ////   mainPanel->addToLayout(menuBarPanel);
 ////   //set blue background (you gotta color it hard...so they can *see* it)
@@ -25,12 +25,12 @@ void Editor::_init() {
 ////   menuBarPanel->addToLayout(fileButton);
 ////
 ////   //create the workspace
-////   auto mainHLayout = HLayout::build<HLayout>("mainHLayout");
+////   auto mainHLayout = HLayout::build("mainHLayout");
 ////   mainHLayout->getTheme()->background.colorPrimary.set(ReyEngine::Colors::lightGray);
 ////   mainPanel->addToLayout(mainHLayout);
 //
 //   //create left panel
-//   auto mainHLayoutLeftPanel = VLayout::build<VLayout>("mainHLayoutLeftPanel");
+//   auto mainHLayoutLeftPanel = VLayout::build("mainHLayoutLeftPanel");
 //   mainHLayout->addChild(mainHLayoutLeftPanel);
 //
 //   //create scene tree panel

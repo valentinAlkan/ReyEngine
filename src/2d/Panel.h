@@ -26,7 +26,7 @@ namespace ReyEngine{
          theme->background.colorPrimary = ReyEngine::ColorRGBA(94, 142, 181, 255);
       }
    public:
-      REYENGINE_DEFAULT_BUILD
+      REYENGINE_DEFAULT_BUILD(Panel)
       void _init() override;
       void _on_rect_changed() override;
       Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) override;

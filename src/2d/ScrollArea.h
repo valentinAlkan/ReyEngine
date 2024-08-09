@@ -9,7 +9,7 @@ namespace ReyEngine {
     }
 
     public:
-        REYENGINE_DEFAULT_BUILD
+        REYENGINE_DEFAULT_BUILD(ScrollArea)
         inline ReyEngine::Size<double> getScrollAreaSize() const {
             return {scrollOffsetX.getMax(), scrollOffsetY.getMax()};
         }

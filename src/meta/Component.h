@@ -17,10 +17,9 @@ std::string _get_static_constexpr_typename() override {return TYPE_NAME;}
 #define REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME) \
    CLASSNAME(const std::string& name, const std::string& typeName): PARENT_CLASSNAME(name, typeName), NamedInstance(name, typeName)
 /////////////////////////////////////////////////////////////////////////////////////////
-#define REYENGINE_DEFAULT_BUILD \
-   template <typename T>    \
-   static std::shared_ptr<T> build(const std::string& name) noexcept {  \
-      auto me = std::shared_ptr<T>(new T(name)); \
+#define REYENGINE_DEFAULT_BUILD(CLASSNAME) \
+   static std::shared_ptr<CLASSNAME> build(const std::string& name) noexcept {  \
+      auto me = std::shared_ptr<CLASSNAME>(new CLASSNAME(name)); \
       return me; }
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_DEFAULT_CTOR(CLASSNAME) \

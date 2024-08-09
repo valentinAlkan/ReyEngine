@@ -67,6 +67,7 @@ namespace ReyEngine {
 
    template <typename T>
    struct Vec2 : protected Vec<T> {
+      using Vec<T>::toString;
       inline Vec2(): Vec<T>(2), x(0), y(0){}
       inline Vec2(const T& x, const T& y) : Vec<T>(2), x(x), y(y){}
       inline Vec2(const Vector2& v)     : Vec<T>(2), x((T)v.x), y((T)v.y){}

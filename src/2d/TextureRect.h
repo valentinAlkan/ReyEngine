@@ -7,7 +7,7 @@ namespace ReyEngine {
    , PROPERTY_DECLARE(_texturePath)
    {}
    public:
-      REYENGINE_DEFAULT_BUILD
+      REYENGINE_DEFAULT_BUILD(TextureRect)
       void setTexture(const FileSystem::File&);
       void setTexture(std::shared_ptr<ReyTexture>&);
       void fitTexture();
