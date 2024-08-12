@@ -121,7 +121,7 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--eventTest")){
-       auto sprite = Sprite::build<Sprite>("sprite");
+       auto sprite = Sprite::build("sprite");
        static int j =0;
        auto cb = [&](const InputEventMouseMotion& event){
            std::cout << "got InputEvent" << j << endl; j++;
@@ -147,7 +147,8 @@ int main(int argc, char** argv)
       root->addChild(control);
 
       static constexpr int GRID_SIZE = 50;
-      auto drawcb = [control](const Control&){
+      static constexpr Rect<int> GRID = {0,0, 1920, 1080};
+      auto drawcb = [control](const Control& ctl){
          auto getDrawCell = [](int index){
             return Rect<int>(getScreenSize()).getSubRect(Size<int>(GRID_SIZE), index);
          };
@@ -253,6 +254,32 @@ int main(int argc, char** argv)
                index++;
             }
          }
+
+         //draw a rotating arrow
+         {
+             auto rect = GRID.getSubRect(GRID_SIZE, Rect<int>::SubRectCoords({0, 1}));
+             Line<int> l = {rect.leftSide().midpoint(), rect.rightSide().midpoint()};
+             auto sec = (double)Application::secondsSinceInit();
+             ctl.drawArrow(l.rotate(l.midpoint(), Degrees(360) * sec % 360), 2.0, Colors::blue);
+         }
+
+          auto factor = abs(sin(Application::secondsSinceInit()));
+         //draw a rotating line
+         {
+            auto rect = GRID.getSubRect(GRID_SIZE, Rect<int>::SubRectCoords({1, 1}));
+            Line<int> l = {rect.leftSide().midpoint(), rect.rightSide().midpoint()};
+            ctl.drawLine(l.rotate(l.midpoint(), Degrees(360 * factor)), 2.0, Colors::blue);
+         }
+
+          //draw a rotating point
+          {
+              auto rect = GRID.getSubRect(GRID_SIZE, Rect<int>::SubRectCoords({0, 2}));
+              Line<int> l = {rect.center(), rect.leftSide().midpoint()};
+              l = l.rotate(rect.center(), Degrees(360 * factor));
+              auto c1 = Circle(l.b, 2.0);
+              ctl.drawCircle(c1, Colors::blue);
+              ctl.drawLine(l.project(l.distance()*.5), 2.0, Colors::blue);
+          }
       };
 
       control->setRenderCallback(drawcb);
@@ -282,15 +309,15 @@ int main(int argc, char** argv)
    }
 
    else if (args.getArg("--renderTest")){
-      root->addChild(RootWidget::build<RootWidget>("Root"));
+      root->addChild(RootWidget::build("Root"));
       root->setRect({0,0,0,0});
-      auto textureTest = TextureTestWidget::build<TextureTestWidget>("TexTest");
+      auto textureTest = TextureTestWidget::build("TexTest");
       textureTest->setRect({0,0,100,100});
       root->addChild(textureTest);
    }
 
    else if (args.getArg("--labelTest")){
-      root->addChild(RootWidget::build<RootWidget>("Root"));
+      root->addChild(RootWidget::build("Root"));
       auto testLabel = Label::build("Label");
       testLabel->setRect({0,0,50,50});
       root->addChild(testLabel);
@@ -341,7 +368,7 @@ int main(int argc, char** argv)
       yslider->addChild(ylabel);
 
       //add scroll area
-      auto scrollArea = ScrollArea::build<ScrollArea>("ScrollArea");
+      auto scrollArea = ScrollArea::build("ScrollArea");
       scrollArea->setRect(Rect<int>(50, 50, 500, 500));
       auto label1 = Label::build("ScrollAreaLabel1");
       auto label2 = Label::build("ScrollAreaLabel2");
@@ -624,13 +651,13 @@ int main(int argc, char** argv)
       auto internalMoveCB = [](Control& internalpanel){};
       //create another panel that is an extension
 
-      auto internalSuperPanel = SuperPanel::build<SuperPanel>("superPanel");
+      auto internalSuperPanel = SuperPanel::build("superPanel");
       panel->addChildToPanel(internalSuperPanel);
       internalSuperPanel->setRect({30, 30, 100, 100});
    }
 
    else if (args.getArg("--editor")){
-      root->addChild(Editor::build<Editor>("Editor"));
+      root->addChild(Editor::build("Editor"));
    }
 
    else if (args.getArg("--treeTest")){
@@ -704,12 +731,12 @@ int main(int argc, char** argv)
       //make sure you've installed any sprite resources in the CMake file or they will not be visible to the engine.
       // The executable runs out of the build directory and not the src directory.
       // use install_file() in the cmake
-      auto spriteSheet = Sprite::build<Sprite>("SpriteSheet"); //either pass in a rect or do fit texture later
+      auto spriteSheet = Sprite::build("SpriteSheet"); //either pass in a rect or do fit texture later
       spriteSheet->setTexture("test\\characters.png"); //if no rect passed in, region = texture size
       spriteSheet->fitTexture();
       root->addChild(spriteSheet);
 
-      auto animatedSprite = Sprite::build<Sprite>("AnimatedSpriteSheet");
+      auto animatedSprite = Sprite::build("AnimatedSpriteSheet");
       animatedSprite->setRect(Rect<int>(550,0,0,0));
       animatedSprite->setTexture("test\\characters.png");
       animatedSprite->fitTexture();
@@ -751,7 +778,7 @@ int main(int argc, char** argv)
       tileMap->setRect({5, 5, gridSize.x * 20, gridSize.y * 20});
 
       //source texture
-      auto srcTexRect = TextureRect::build<TextureRect>("sourceTexRect");
+      auto srcTexRect = TextureRect::build("sourceTexRect");
       srcTexRect->setRect({tileMap->getPos().x + tileMap->getWidth() + 30,5,100,100});
       srcTexRect->setTexture(spriteSheet);
       srcTexRect->fitTexture();
@@ -1070,7 +1097,7 @@ int main(int argc, char** argv)
    else if (args.getArg("--tabContainerTest")){
       Logger::debug() << "Starting tab container test!" << endl;
       auto mainVLayout = VLayout::build("MainVLayout");
-      auto tabContainer = TabContainer::build<TabContainer>("TabContainer");
+      auto tabContainer = TabContainer::build("TabContainer");
       mainVLayout->setAnchoring(BaseWidget::Anchor::FILL);
       mainVLayout->addChild(tabContainer);
       mainVLayout->getTheme()->layoutMargins.setAll(5);
@@ -1237,7 +1264,7 @@ int main(int argc, char** argv)
       root->addChild(mainvlayout);
 
       for (int i=0;i<20;i++){
-         auto combobox = ComboBox::build<ComboBox>("Combobox" + to_string(i));
+         auto combobox = ComboBox::build("Combobox" + to_string(i));
          combobox->setMaxSize(maxSize);
          mainvlayout->addChild(combobox);
 
@@ -1318,7 +1345,7 @@ int main(int argc, char** argv)
          hlayout->getTheme()->layoutMargins.setAll(2);
          hlayout->setMaxSize({9999,ROW_HEIGHT});
          vlayout->addChild(hlayout);
-         auto linedit = LineEdit::build<LineEdit>("LineEdit" + to_string(i));
+         auto linedit = LineEdit::build("LineEdit" + to_string(i));
          linedit->setDefaultText("DefaultText");
          linedit->setMaxSize(maxSize);
          hlayout->addChild(linedit);
@@ -1336,7 +1363,7 @@ int main(int argc, char** argv)
    }
 
    else if(args.getArg("--canvasTest")){
-      auto subCanvas = Canvas::build<Canvas>("subCanvas");
+      auto subCanvas = Canvas::build("subCanvas");
       root->addChild(subCanvas);
       subCanvas->setRect({50, 50, 1000, 1000});
 
@@ -1542,7 +1569,7 @@ int main(int argc, char** argv)
 //   }
    else if (args.getArg("--camera2dTest")) {
       //create nodes
-      auto camera = ReyEngine::Camera2D::build<ReyEngine::Camera2D>("Camera2D");
+      auto camera = ReyEngine::Camera2D::build("Camera2D");
       auto cameraUI = Label::build("cameraUI");
       auto background = Control::build("background");
       auto backgroundLabel = Label::build("backgroundLabel");
@@ -1646,7 +1673,7 @@ int main(int argc, char** argv)
       //make a vlayout - put a widget at the top and the inspector below it
       root->addChild(VLayout::build("VLayout"));
       auto someWidget = Label::build("SomeWidget");
-      auto inspector = Inspector::build<Inspector>("Inspector");
+      auto inspector = Inspector::build("Inspector");
       someWidget->getTheme()->background.set(Style::Fill::SOLID);
       someWidget->getTheme()->background.colorPrimary.set(Colors::blue);
       root->addChild(someWidget);
@@ -1657,7 +1684,7 @@ int main(int argc, char** argv)
 
    else if (args.getArg("--3dTest")){
       //declare a viewport
-      auto viewport = Viewport::build<Viewport>("viewport");
+      auto viewport = Viewport::build("viewport");
       root->addChild(viewport);
 
       auto vlayout = VLayout::build("mainvlayout");

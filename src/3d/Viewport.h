@@ -15,9 +15,8 @@ namespace ReyEngine {
       , _showGrid("showGrid", true)
       {}
    public:
-      template <typename T>
-      static std::shared_ptr<T> build(const std::string& name){
-         auto me = std::shared_ptr<T>(new T(name));
+      static std::shared_ptr<Viewport> build(const std::string& name){
+         auto me = std::shared_ptr<Viewport>(new Viewport(name));
          return me;
       }
       void _init() override;

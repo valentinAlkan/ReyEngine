@@ -137,6 +137,8 @@ StrongType<T> make_named(T const& value)
 
 namespace StrongUnitParameters{
     struct SubRectCoords{};
+    struct RadiansParameter{};
+    struct PercentParameter{};
 }
 
 //our implementations
@@ -151,16 +153,22 @@ namespace StrongUnitParameters{
 //constexpr Kilometers operator"" _km(long double value){return {(double)value};}
 //constexpr Feet operator"" _ft(long double value){return {(double)value};}
 //
-//using Radians = NamedType<double, StrongUnitParameters::RadiansParameter, ToDouble>;
-//using Degrees = MultipleOf<Radians, std::ratio<31415926535897932, 1800000000000000000>>;
-//using Milliradians = MultipleOf<Radians, std::milli>;
+using Radians = NamedType<double, StrongUnitParameters::RadiansParameter, ToDouble>;
+using Degrees = MultipleOf<Radians, std::ratio<31415926535897932, 1800000000000000000>>;
+using Milliradians = MultipleOf<Radians, std::milli>;
+using Perunum = NamedType<double, StrongUnitParameters::PercentParameter, ToDouble>;
+using Perdeca = MultipleOf<Perunum, std::deci>;
+using Percent = MultipleOf<Perunum, std::centi>;
+using Permille = MultipleOf<Perunum, std::milli>;
 //
-//constexpr Radians       operator"" _rad(unsigned long long value){return {(double)value};}
-//constexpr Degrees       operator"" _deg(unsigned long long value){return {(double)value};}
-//constexpr Milliradians  operator"" _mrad(unsigned long long value){return {(double)value};}
-//constexpr Radians       operator"" _rad(long double value){return {(double)value};}
-//constexpr Degrees       operator"" _deg(long double value){return {(double)value};}
-//constexpr Milliradians  operator"" _mrad(long double value){return {(double)value};}
+constexpr Radians       operator"" _rad(unsigned long long value){return {(double)value};}
+constexpr Degrees       operator"" _deg(unsigned long long value){return {(double)value};}
+constexpr Milliradians  operator"" _mrad(unsigned long long value){return {(double)value};}
+constexpr Radians       operator"" _rad(long double value){return {(double)value};}
+constexpr Degrees       operator"" _deg(long double value){return {(double)value};}
+constexpr Milliradians  operator"" _mrad(long double value){return {(double)value};}
+constexpr Percent       operator"" _pct(unsigned long long value){return {(double)value};}
+constexpr Percent       operator"" _pct(long double value){return {(double)value};}
 //
 //using MetersMSL = NamedType<double, StrongUnitParameters::MetersMSLParameter, ToDouble>; //does not implicitly convert to meters
 //using KilometersMSL = MultipleOf<MetersMSL, std::kilo>;

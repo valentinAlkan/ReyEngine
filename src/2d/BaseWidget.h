@@ -198,6 +198,7 @@ namespace ReyEngine{
 
       //drawing functions
       void drawLine(const ReyEngine::Line<int>&, float lineThick, const ReyEngine::ColorRGBA&) const;
+      void drawArrow(const ReyEngine::Line<int>&, float lineThick, const ReyEngine::ColorRGBA&, float headSize=20) const;
       void drawText(const std::string& text, const ReyEngine::Pos<int>& pos, const ReyEngine::ReyEngineFont& font) const;
       void drawTextCentered(const std::string& text, const ReyEngine::Pos<int>& pos, const ReyEngine::ReyEngineFont& font) const;
       void drawRectangle(const ReyEngine::Rect<int>& rect, const ReyEngine::ColorRGBA& color) const;

@@ -93,6 +93,17 @@ void ReyEngine::drawLine(const Line<int>& line, float lineThick, const ReyEngine
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawArrow(const Line<int>& line, float lineThick, const ReyEngine::ColorRGBA &color, float headSize) {
+    DrawLineEx(line.a, line.b, lineThick, color);
+    static constexpr auto rotation = 25_deg;
+    auto pctLine = line.project(headSize);
+    auto headline = pctLine.rotate(pctLine.a, rotation);
+    DrawLineEx(headline.a, headline.b, lineThick, color);
+    headline = pctLine.rotate(pctLine.a, -rotation);
+    DrawLineEx(headline.a, headline.b, lineThick, color);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::drawTexture(const ReyTexture& texture, const Rect<int> &source, const Rect<int> &dest, float rotation, const ReyEngine::ColorRGBA &tint) {
    auto tex = texture.getTexture();
    Rectangle rSource =  {(float)source.x, (float)source.y, (float)source.width, (float)source.height};

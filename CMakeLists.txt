@@ -82,7 +82,6 @@ set(CUSTOM_SOURCES
 )
 
 add_library(ReyEngine2D STATIC
-    src/meta/AStar.cpp
     src/meta/ArgParse.cpp
     src/meta/FileSystem.cpp
     src/meta/StringTools.cpp

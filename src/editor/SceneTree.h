@@ -3,7 +3,7 @@
 
 namespace ReyEngine {
    class SceneTree : public Tree{
-      REYENGINE_DEFAULT_BUILD;
+      REYENGINE_DEFAULT_BUILD(SceneTree);
       REYENGINE_OBJECT_BUILD_ONLY(SceneTree, Tree){}
    public:
    };

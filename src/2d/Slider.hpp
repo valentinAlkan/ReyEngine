@@ -52,8 +52,8 @@ namespace ReyEngine{
       }
       inline double getSliderValue(){return sliderValue.value;}
       inline void setSliderValue(double value, bool noPublish=false){sliderValue.set(value);if (!noPublish)_publish_slider_val();_compute_appearance();}
-      inline double getSliderPct(){return _range.pct(sliderValue.value);}
-      inline void setSliderPct(double pct, bool noPublish=false){setSliderValue(_range.lerp(pct), noPublish);}
+      inline Perunum getSliderPct(){return _range.pct(sliderValue.value);}
+      inline void setSliderPct(Perunum pct, bool noPublish=false){setSliderValue(_range.lerp(pct), noPublish);}
    protected:
       void _register_parent_properties() override{ BaseWidget::_register_parent_properties(); BaseWidget::registerProperties();}
       Handled _unhandled_input(const InputEvent& e, const std::optional<UnhandledMouseInput>& mouse) override {
@@ -121,7 +121,7 @@ namespace ReyEngine{
       void _publish_slider_val(){
          auto event = EventSliderValueChanged(EventPublisher::shared_from_this());
          event.value = getSliderValue();
-         event.pct = getSliderPct();
+         event.pct = Perunum(getSliderPct()).get();
          publish<EventSliderValueChanged>(event);
       }
       void _compute_appearance(){

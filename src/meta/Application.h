@@ -46,11 +46,13 @@ namespace ReyEngine{
       static std::unique_lock<std::mutex> getLock(); //use this to syncrhonize with the engine
       static constexpr Platform getPlatform(){return PLATFORM;}
       static UniqueValue generateUniqueValue(){return instance()._nextUniqueValue++;}
-       static double generateRandom(double low, double high);
+      static double generateRandom(double low, double high);
+      static long double secondsSinceInit();
    protected:
       Window& createWindow(Internal::WindowPrototype&, std::optional<std::shared_ptr<Canvas>>);
       static uint64_t getNewRid(){return ++instance().newRid;}
       static void ready();
+      std::chrono::time_point<std::chrono::steady_clock> _startTime;
 
    private:
       UniqueValue _nextUniqueValue = 0;
