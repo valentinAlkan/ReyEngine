@@ -79,12 +79,10 @@ namespace ReyEngine {
       inline Vec2 operator-(const Vec2& rhs) const {Vec2<T> val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
       inline Vec2& operator+=(const Vec2& rhs){x += rhs.x; y += rhs.y; return *this;}
       inline Vec2& operator-=(const Vec2& rhs){x -= rhs.x; y -= rhs.y; return *this;}
-      inline Vec2 operator*(T rhs){Vec2 retval(*this); retval.x *= rhs; retval.y *= rhs; return retval;}
-      inline Vec2& operator*=(const Vec2& rhs){x *= rhs.x; y *= rhs.y; return *this;}
-      inline Vec2& operator*=(T rhs){x *= rhs; y *= rhs; return *this;}
+      inline Vec2 operator*(double rhs){Vec2 retval(*this); retval.x *= rhs; retval.y *= rhs; return retval;}
+//      inline Vec2& operator*=(const Vec2& rhs){x *= rhs.x; y *= rhs.y; return *this;}
+      inline Vec2& operator*=(double rhs){x *= rhs; y *= rhs; return *this;}
       inline Vec2<double> operator/(double rhs){Vec2<double> retval(*this); retval.x /= rhs; retval.y /= rhs; return retval;}
-      inline Vec2<float> operator/(float rhs){Vec2<float> retval(*this); retval.x /= rhs; retval.y /= rhs; return retval;}
-      inline Vec2<int> operator/(int rhs){Vec2<int> retval(*this); retval.x /= rhs; retval.y /= rhs; return retval;}
       inline Vec2& operator/=(const Vec2& rhs){x /= rhs.x; y /= rhs.y; return *this;}
       inline Vec2& operator=(const Vec2& rhs){x = rhs.x; y=rhs.y; return *this;}
       inline bool operator==(const Vec2& rhs){return x==rhs.x && y==rhs.y;}
@@ -96,8 +94,8 @@ namespace ReyEngine {
       inline Vec2 midpoint() const {return {x/2, y / 2};}
       inline Vec2 min(const Vec2& other) const {Vec2 r; r.x = Math::min(Vec2::x, other.x); r.y = Math::min(Vec2::y, other.y); return r;}
       inline Vec2 max(const Vec2& other) const {Vec2 r; r.x = Math::max(Vec2::x, other.x); r.y = Math::max(Vec2::y, other.y); return r;}
-      inline double pct(double input) const {return (input-x)/(y - x);} //given an input value, what percentage of the range is it from 0 to 1?
-      inline double lerp(double lerpVal) const {return lerpVal * (y - x) + x;} //given a value from 0 to 1, what is the value of the range that corresponds to it?
+      inline Perunum pct(double input) const {return (input-x)/(y - x);} //given an input value, what percentage of the range is it from 0 to 1?
+      inline double lerp(Perunum lerpVal) const {return lerpVal.get() * (y - x) + x;} //given a value from 0 to 1, what is the value of the range that corresponds to it?
       inline Vec2 lerp(Vec2 otherPoint, double xprm) const {return {xprm, y + (((xprm - x) * (otherPoint.y - y)) / (otherPoint.x - x))};}
       inline T clamp(T value) const {if (value < x) return x; if (value > y) return y; return value;}
       inline Vec2 clamp(Vec2 clampA, Vec2 clampB) const {
@@ -108,6 +106,8 @@ namespace ReyEngine {
          if (y > clampB.y) retval.y = clampB.y;
          return retval;
       }
+      inline double length(){return std::sqrt(x * x + y * y);}
+      inline Vec2<T> normalize(){double len = length();return {x / len, y / len};}
       inline static std::vector<T> fromString(const std::string& s){return Vec<T>::fromString(2, s);};
       friend std::ostream& operator<<(std::ostream& os, Vec2<T> v) {os << v.toString(); return os;}
       friend Vector2& operator+=(Vector2& in, Vec2<T> add) {in.x += add.x; in.y += add.y; return in;}
@@ -174,8 +174,8 @@ namespace ReyEngine {
       inline explicit Range(const Vec3<int>& v)   : Vec3<T>::Vec3(v){}
       inline explicit Range(const Vec3<float>& v) : Vec3<T>::Vec3(v){}
       inline explicit Range(const Vec3<double>& v): Vec3<T>::Vec3(v){}
-      inline double getpct(){return getRange().pct(getValue());};
-      inline void setLerp(double pct){setValue(getRange().lerp(pct));}
+      inline Perunum getpct(){return getRange().pct(getValue());};
+      inline void setLerp(Perunum pct){setValue(getRange().lerp(pct));}
       inline T getMin() const {return Vec3<T>::x;}
       inline T getMax() const {return Vec3<T>::y;}
       inline T getValue() const {return Vec3<T>::z;}
@@ -192,15 +192,33 @@ namespace ReyEngine {
 
    template <typename T>
    struct Line {
-      inline Line(): a(0,0), b(0,0){}
-      inline Line(Pos<T> a, Pos<T> b): a(a), b(b){}
-      inline Line(const T x1, const T y1, const T x2, const T y2): Line({x1, y1}, {x2, y2}){}
-      inline Line midpoint(){return {(a.x+b.x)/2, (a.y + b.y) / 2};}
-      inline Pos<T> lerp(double xprm){return a.lerp(b, xprm);}
-      inline double distance(){NOT_IMPLEMENTED;}
+      constexpr Line(): a(0,0), b(0,0){}
+      constexpr Line(Pos<T> a, Pos<T> b): a(a), b(b){}
+      constexpr Line(const T x1, const T y1, const T x2, const T y2): Line({x1, y1}, {x2, y2}){}
+      constexpr Pos<T> midpoint() const {return {a.x/2+b.x/2, a.y/2+b.y/2};}
+      constexpr Pos<T> lerp(double xprm) const {return a.lerp(b, xprm);}
+      constexpr double distance() const {return a.distanceTo(b);}
       inline std::string toString() const {return "{" + a.toString() + ", " + b.toString() + "}";}
-      inline Line& operator+=(const Pos<T>& pos){a += pos; b += pos; return *this;}
-      inline Line operator+(const Pos<T>& pos) const {Line<T> l(*this); l.a += pos; l.b += pos; return l;}
+      constexpr Line& operator+=(const Pos<T>& pos){a += pos; b += pos; return *this;}
+      constexpr Line operator+(const Pos<T>& pos) const {Line<T> l(*this); l.a += pos; l.b += pos; return l;}
+      //Find the angle from horizontal between points and a b
+      inline Radians angle() const {
+          auto dx = static_cast<double>(b.x - a.x);
+          auto dy = static_cast<double>(b.y - a.y);
+          return atan2(dy, dx);
+      }
+       //rotate the line around A by r radians
+      inline Line rotate(Pos<T> basis, Radians r) const {return {a.rotatePoint(basis, r), b.rotatePoint(basis, r)};}
+      inline Line pctOf(Percent pct) const {
+          // Calculate the direction vector from a to b
+          auto direction = b - a;
+          // Scale the direction vector by the percentage
+          auto extensionVector = direction *Perunum(pct).get();
+          auto newB = a + Pos(extensionVector.x, extensionVector.y);
+          return {a, newB};
+      }
+      //project a line a fixed amount from the start point
+      inline Line project(double amount) const {return {a, a.project(b, amount)};}
       friend std::ostream& operator<<(std::ostream& os, Line r) {os << r.toString(); return os;}
       Pos<T> a;
       Pos<T> b;
@@ -224,6 +242,34 @@ namespace ReyEngine {
       inline void operator=(const Size<T>&) = delete;
       inline Pos& operator=(const Pos<T>& other){Pos::x = other.x; Pos::y = other.y; return *this;}
       inline Pos& operator=(const Vec2<T>& other){Pos::x = other.x; Pos::y = other.y; return *this;}
+      //Rotate around a basis point
+      inline Pos rotatePoint(const Pos<int>& basis, Radians r) const {
+           double radians = r.get();
+           // Translate point to origin
+           double xTranslated = Pos::x - basis.x;
+           double yTranslated = Pos::y - basis.y;
+           // Apply rotation and translate back
+           Pos<int> p_rotated;
+           p_rotated.x = static_cast<int>(xTranslated * cos(radians) - yTranslated * sin(radians) + basis.x);
+           p_rotated.y = static_cast<int>(xTranslated * sin(radians) + yTranslated * cos(radians) + basis.y);
+           return p_rotated;
+       }
+      // Function to project a point distance d from point a along the line ab
+      inline Pos project(const Pos& b, double d) const {
+          // Calculate the direction vector from a to b
+          Pos direction = b - *this;
+          // Normalize the direction vector
+          Pos unitDirection = direction.normalize();
+          // Scale the normalized vector by distance d
+          Pos scaledDirection = unitDirection * d;
+          // Calculate the new point by adding the scaled direction to point a
+          Pos projectedPoint = *this + Pos(scaledDirection.x, scaledDirection.y);
+          return projectedPoint;
+      }
+      double distanceTo(const Pos& other) const {
+         auto diff = *this - other;
+         return std::sqrt(diff.x * diff.x + diff.y * diff.y);
+      }
       inline std::string toString() const {return Vec2<T>::toString();}
    };
 
@@ -628,6 +674,7 @@ namespace ReyEngine {
    void drawCircleSector(const CircleSector&, const ReyEngine::ColorRGBA&  color, int segments);
    void drawCircleSectorLines(const CircleSector&, const ReyEngine::ColorRGBA&  color, int segments);
    void drawLine(const Line<int>&, float lineThick, const ReyEngine::ColorRGBA& color);
+   void drawArrow(const Line<int>&, float lineThick, const ReyEngine::ColorRGBA& color, float headSize=20); //Head drawn at A
    void drawTexture(const ReyTexture& texture, const Rect<int>& source, const Rect<int>& dest, float rotation, const ReyEngine::ColorRGBA& tint);
    inline float getFrameDelta() {return GetFrameTime();}
    inline Size<int> measureText(const std::string& text, const ReyEngineFont& font){return MeasureTextEx(font.font, text.c_str(), font.size, font.spacing);}

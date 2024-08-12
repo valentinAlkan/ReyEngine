@@ -12,6 +12,7 @@ using namespace Internal;
 /////////////////////////////////////////////////////////////////////////////////////////
 Application::Application()
 {
+   _startTime = chrono::steady_clock::now();
    TypeManager::instance()._registerTypes();
 }
 
@@ -71,4 +72,9 @@ double Application::generateRandom(double low, double high) {
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> dis(low, high);
     return dis(gen);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+long double Application::secondsSinceInit() {
+    return std::chrono::duration<long double>(std::chrono::steady_clock::now() - instance()._startTime).count();
 }

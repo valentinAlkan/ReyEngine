@@ -8,9 +8,8 @@ namespace ReyEngine{
       , _activeCamera(_defaultCamera)
       {}
    public:
-      template<typename T>
-      static std::shared_ptr<T> build(const std::string &name) noexcept {
-         auto me = std::shared_ptr<T>(new T(name));
+      static std::shared_ptr<Canvas> build(const std::string &name) noexcept {
+         auto me = std::shared_ptr<Canvas>(new Canvas(name));
          return me;
       }
       //modality

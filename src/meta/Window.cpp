@@ -71,7 +71,7 @@ Window::Window(const std::string &title, int width, int height, const std::vecto
 void Window::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
     //Create canvas if not provided
     if (!optRoot) {
-        optRoot = Canvas::build<Canvas>("root");
+        optRoot = Canvas::build("root");
     }
     auto& root = optRoot.value();
     root->ReyEngine::Internal::TypeContainer<ReyEngine::BaseWidget>::setRoot(true);
@@ -377,7 +377,7 @@ Vec2<double> Window::getMousePct() {
    auto screenSize = ReyEngine::getScreenSize();
    auto xRange = Vec2<int>(0,(int)screenSize.x);
    auto yRange = Vec2<int>(0,(int)screenSize.y);
-   return {xRange.pct(pos.x), yRange.pct(pos.y)};
+   return {xRange.pct(pos.x).get(), yRange.pct(pos.y).get()};
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

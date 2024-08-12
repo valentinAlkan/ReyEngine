@@ -308,6 +308,11 @@ void BaseWidget::drawLine(const ReyEngine::Line<int>& line, float lineThick, con
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::drawArrow(const Line<int>& line, float lineThick, const ReyEngine::ColorRGBA& color, float headSize) const {
+    ReyEngine::drawArrow(line + getGlobalPos() + _renderOffset, lineThick, color, headSize);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawText(const std::string &text, const ReyEngine::Pos<int> &pos, const ReyEngine::ReyEngineFont& font) const{
    ReyEngine::drawText(text, pos + getGlobalPos() + _renderOffset, font);
 }
