@@ -2,6 +2,7 @@
 #include "Logger.h"
 #include "Application.h"
 #include "TypeContainer.h"
+#include "Viewport.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -36,4 +37,28 @@ void Internal::Renderable3D::renderable3DChain(){
    }
    render3DEnd();
    renderable3DEditorFeatures();
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
+std::optional<std::shared_ptr<Viewport>> Renderer3D::getViewport() {
+   auto weakPrt = getParent();
+   while (!weakPrt.expired()) {
+      auto parent = weakPrt.lock();
+      if (!parent) {
+         return nullopt;
+      }
+      if (parent->_get_static_constexpr_typename() == ReyEngine::Viewport::TYPE_NAME) {
+         return parent->getViewport();
+      }
+      weakPrt = parent->Renderer3D::getParent();
+   }
+   return nullopt;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+template <>
+void ReyEngine::Internal::TypeContainer<Renderable3D>::__on_child_added_immediate(std::shared_ptr<Renderable3D>& child){
+   child->__init();
+   _on_child_added(child);
 }
