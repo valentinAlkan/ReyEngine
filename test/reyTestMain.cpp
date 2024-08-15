@@ -30,6 +30,7 @@
 #include "CSVParser.h"
 #include "Camera2D.h"
 #include "Viewport.h"
+#include "MeshBody.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -1686,32 +1687,14 @@ int main(int argc, char** argv)
       //declare a viewport
       auto viewport = Viewport::build("viewport");
       root->addChild(viewport);
+      viewport->setAnchoring(ReyEngine::BaseWidget::Anchor::FILL);
 
       auto vlayout = VLayout::build("mainvlayout");
-      root->addChild(vlayout);
-
+      viewport->BaseWidget::addChild(vlayout);
       vlayout->setAnchoring(ReyEngine::BaseWidget::Anchor::FILL);
 
-      auto btnCB = [&](const PushButton::ButtonPressEvent& e){
-         auto button = e.publisher->toPublisherType<PushButton>();
-         cout << button->getName() << endl;
-         button->setText("Pressed!");
-      };
-
-      for (int i = 0; i<20; i++) {
-         auto button = PushButton::build("Btn" + to_string(i));
-         root->addChild(button);
-         button->subscribe<PushButton::ButtonPressEvent>(button, btnCB);
-         auto w = 100;
-         auto h = 30;
-         button->setRect({i*w, i*h, w,h});
-      }
-
-      auto panel = Panel::build("Panel");
-      root->addChild(panel);
-      panel->setResizable(true);
-      panel->setRect({100,300,500,500});
-//      panel->setTitle("Hi Tony!");
+      auto cube = MeshBody::build("TestBody");
+      viewport->Renderer3D::addChild(cube);
    }
 
    else {
