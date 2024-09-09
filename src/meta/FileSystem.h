@@ -25,6 +25,7 @@ namespace ReyEngine::FileSystem {
    struct Directory;
    struct Path {
       Path() = default;
+      Path(const char* path): _path(path){}
       Path(const std::string& path): _path(path){}
       Path(const Path& other): _path(other._path){}
       bool exists() const {return std::filesystem::exists(_path);};

@@ -30,7 +30,7 @@
 #include "CSVParser.h"
 #include "Camera2D.h"
 #include "Viewport.h"
-#include "MeshBody.h"
+#include "ModelBody.h"
 #include "Geodetic.h"
 
 using namespace std;
@@ -1773,9 +1773,34 @@ int main(int argc, char** argv)
       viewport->BaseWidget::addChild(vlayout);
       vlayout->setAnchoring(ReyEngine::BaseWidget::Anchor::FILL);
 
-      auto body = MeshBody::build("TestBody");
-      body->
-      viewport->Renderer3D::addChild(body);
+      auto label = Label::build("UI");
+      viewport->addChild2d(label);
+
+      auto body = ModelBody::build("TestBody");
+      auto modelOpt = Model3D::load("test/suzanne.obj");
+      if (!modelOpt) throw std::runtime_error("Unable to load suzanne");
+      body->setModel(modelOpt.value());
+      //map a random texture to it
+      auto tex = make_shared<ReyTexture>("test/spritesheet.png");
+      body->setTexture(tex);
+      viewport->addChild3d(body);
+      body->setVisible(true);
+
+      //add some mouse controls
+       auto inputCB = [&](const Control& control, const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) -> Handled {
+           if (!mouse) return false;
+           auto ray = viewport->castRayClosest(mouse.value().localPos);
+           //see if the ray hit anything;
+           if (!ray) return false;
+           cout << control.getName() << "->" << InputManager::getMousePos() << " : " << mouse->localPos << " = " <<  ray.value() << endl;
+           return false;
+       };
+
+      auto mouseOverlay = Control::build("MouseOverlay");
+      mouseOverlay->setAnchoring(ReyEngine::BaseWidget::Anchor::FILL);
+      mouseOverlay->getTheme()->background.value = Style::Fill::NONE;
+      mouseOverlay->setUnhandledInputCallback(inputCB);
+      viewport->addChild2d(mouseOverlay);
    }
 
    else {

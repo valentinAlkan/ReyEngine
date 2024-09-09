@@ -1,4 +1,6 @@
 #include "Camera3D.h"
+using namespace ReyEngine;
+using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::Camera3D::renderer3DBegin() {

@@ -35,7 +35,6 @@ void ReyEngine::Canvas::renderEnd() {
    }
   _activeCamera.get().pop();
    Application::instance().getWindow(0).popRenderTarget();
-   drawRenderTargetRect(_renderTarget, Rect<int>(_renderTarget.getSize()), {0,0});
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -27,6 +27,8 @@ int main(int argc, char** argv){
    Vector3 cubePosition = { 0.0f, 0.0f, 0.0f };
    RenderTexture2D canvasTarget = LoadRenderTexture(windowSize.x, windowSize.y);
 
+   auto suzanne = LoadModel("test/suzanne.obj");
+
    while(!WindowShouldClose()) {
       int moveSpeed = 5;
       Vec2<int> mvVec;
@@ -117,7 +119,7 @@ int main(int argc, char** argv){
 
          {
             BeginMode2D(foregroundCamera);
-            DrawText("This is the 2D background", 0, 0, 20, BLACK);
+            DrawText("This is the 2D background", 400, 300, 20, BLACK);
 
             {
                BeginMode3D(camera);
@@ -125,6 +127,7 @@ int main(int argc, char** argv){
                DrawSphere({1, 1, 1}, 0.5, BLUE);
                DrawCubeWires(cubePosition, 2.0f, 2.0f, 2.0f, MAROON);
                DrawGrid(10, 1.0f);
+               DrawModel(suzanne, {5,0,0}, 1, GREEN);
                EndMode3D();
             }
 

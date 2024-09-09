@@ -134,7 +134,7 @@ add_library(ReyEngine3D STATIC
     src/3d/BaseBody.cpp
     src/3d/Camera3D.cpp
     src/3d/Plane3D.cpp
-    src/3d/MeshBody.cpp
+        src/3d/ModelBody.cpp
 )
 
 add_library(editor STATIC
@@ -212,3 +212,4 @@ install_file(./test/test.lua ./test/test.lua)
 install_file(./test/xmltest.xml ./test/xmltest.xml)
 install_file(./test/spritesheet.png ./test/spritesheet.png)
 install_file(./test/csvTest.csv ./test/csvTest.csv)
+install_file(./test/3d/suzanne.obj ./test/suzanne.obj)

@@ -119,19 +119,24 @@ namespace ReyEngine {
 
    template <typename T>
    struct Vec3 : protected Vec<T> {
+      using Vec<T>::toString;
       inline Vec3(): Vec<T>(3), x(0), y(0), z(0){}
+      inline operator Vector3() const {return {(float)x,(float)y,(float)z};}
       inline Vec3(const T& _x, const T& y, const T& _z) : Vec<T>(3), x(_x), y(y),z(_z) {}
       inline explicit Vec3(const Vector3& v)     : Vec<T>(3), x((T)v.x), y((T)v.y), z((T)v.z){}
-      inline explicit Vec3(const Vec3<int>& v)   : Vec<T>(3), x((T)v.x), y((T)v.y), z((T)v.z){}
-      inline explicit Vec3(const Vec3<float>& v) : Vec<T>(3), x((T)v.x), y((T)v.y), z((T)v.z){}
-      inline explicit Vec3(const Vec3<double>& v): Vec<T>(3), x((T)v.x), y((T)v.y), z((T)v.z){}
-      inline operator Vector3() const {return {(float)x, (float)y, (float)z};}
+      inline Vec3(const Vec3& v): Vec<T>(3), x((T)v.x), y((T)v.y), z((T)v.z){}
+      inline double length(){return std::sqrt(x * x + y * y + z * z);}
+      inline Vec3 normalize(){
+          auto len = length();
+          if (len != 0){return {x/len, y/len, z/len};}
+          return {};
+      }
       inline Vec3& operator=(const Vec3& rhs){x = rhs.x; y=rhs.y; z=rhs.z; return *this;}
       inline Vec3& operator-(){x = -x; y =-y; z = -z; return *this;}
       inline Vec3 operator-(const Vec3& rhs) const {Vec3 retval; retval.x=x-rhs.x; retval.y=y-rhs.y; retval.z=z-rhs.z; return retval;}
       inline Vec3 operator+(const Vec3& rhs) const {Vec3 retval; retval.x=x+rhs.x; retval.y=y+rhs.y; retval.z=z+rhs.z; return retval;}
-      inline Vec3 operator-=(const Vec3& rhs){x-=rhs.x; y-=rhs.y; z-=rhs.z; return *this;}
-      inline Vec3 operator+=(const Vec3& rhs){x+=rhs.x; y+=rhs.y; z+=rhs.z; return *this;}
+      inline Vec3& operator-=(const Vec3& rhs){x-=rhs.x; y-=rhs.y; z-=rhs.z; return *this;}
+      inline Vec3& operator+=(const Vec3& rhs){x+=rhs.x; y+=rhs.y; z+=rhs.z; return *this;}
       inline static std::vector<T> fromString(const std::string& s){return Vec<T>::fromString(3, s);};
       [[nodiscard]] inline std::vector<T> getElements() const override {return {x,y,z};}
       inline std::optional<T> normalize() const {
@@ -144,7 +149,7 @@ namespace ReyEngine {
       inline static T dot(const Vec3& a, const Vec3& b){return a.dot(b);}
       inline Vec3<T> cross(const Vec3& rhs) const {return {y * rhs.z - z * rhs.y,z * rhs.x - x * rhs.z,x * rhs.y - y * rhs.x};}
       inline static Vec3<T> cross(const Vec3& a, const Vec3& b){return a.cross(b);}
-      friend std::ostream& operator<<(std::ostream& os, Vec3<T> v) {os << v.toString(); return os;}
+      friend std::ostream& operator<<(std::ostream& os, const Vec3& v) {os << v.toString(); return os;}
       T x;
       T y;
       T z;

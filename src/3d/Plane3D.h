@@ -2,7 +2,7 @@
 #include "BaseBody.h"
 
 namespace ReyEngine {
-   class Plane : public BaseBody {
-      REYENGINE_OBJECT_BUILD_ONLY(Plane, BaseBody) {}
+   class Plane3D : public BaseBody {
+      REYENGINE_OBJECT_BUILD_ONLY(Plane3D, BaseBody) {}
    };
 }

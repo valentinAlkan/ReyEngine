@@ -1,5 +1,5 @@
 #pragma once
-#include "DrawInterface.h"
+#include "DrawInterface3D.h"
 #include "Event.h"
 #include "Component.h"
 #include <mutex>
@@ -9,6 +9,7 @@ namespace ReyEngine {
    class Viewport;
    namespace Internal {
       struct Transform3D{
+          Vec3<float> position;
 
       };
 
@@ -27,6 +28,8 @@ namespace ReyEngine {
       public:
          using TypeContainer<Renderable3D>::getChildren;
          std::optional<std::shared_ptr<Viewport>> getViewport();
+         virtual std::optional<Collisions::RayHit3D> testRayClosest(const Collisions::Ray3D&);
+         virtual std::vector<Collisions::RayHit3D> testRayAll(const Collisions::Ray3D){};
       protected:
          Renderer3D(const std::string& name, const std::string& typeName)
          : TypeContainer<Renderable3D>(name, typeName)
@@ -42,21 +45,30 @@ namespace ReyEngine {
       class Renderable3D : public Internal::Component, public Renderer3D {
       public:
          using TypeContainer<Renderable3D>::getChildren;
+         void setVisible(bool visible){_visible = visible;}
       protected:
          Renderable3D(const std::string& name, const std::string& typeName)
          : Renderer3D(name, typeName)
          , Internal::Component(name, typeName)
          , NamedInstance(name, typeName)
          , _visible("visible")
+         , _scale("scale", 1)
+         , _tint("tint", Colors::none)
          {}
          virtual void render3DBegin(){};
-         virtual void render3D(){};
+         virtual void render3D() const;
          virtual void render3DEnd(){};
          virtual void renderable3DChain();
          virtual void renderable3DEditorFeatures(){}
          virtual void _init(){}
-         BoolProperty _visible;
+         std::optional<Collisions::RayHit3D> testRayClosest(const Collisions::Ray3D& ray) override;
+         std::vector<Collisions::RayHit3D> testRayAll(const Collisions::Ray3D) override{};
          Transform3D _transform;
+         BoolProperty _visible;
+         FloatProperty _scale;
+         std::shared_ptr<Model3D> _model;
+         std::shared_ptr<ReyTexture> _texture;
+         ColorProperty _tint;
          friend class Renderer3D;
          friend class TypeContainer<Renderable3D>;
       };

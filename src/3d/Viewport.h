@@ -23,8 +23,17 @@ namespace ReyEngine {
       void setUnhandledInputCallback(std::function<Handled(Viewport&, const InputEvent&, const std::optional<UnhandledMouseInput>&)> fx);
       void setActiveCamera(CameraTransform3D&);
       void deleteActiveCamera();
-//      static std::shared_ptr<Viewport> build(const std::string& instanceName);
+      inline void addChild3d(std::shared_ptr<BaseBody> child){ReyEngine::Internal::TypeContainer<ReyEngine::Internal::Renderable3D>::addChild(child);}
+      inline void addChild2d(std::shared_ptr<BaseWidget> child){ReyEngine::Internal::TypeContainer<ReyEngine::BaseWidget>::addChild(child);}
+      inline std::optional<Collisions::RayHit3D> castRayClosest(const Pos<double>& pos){
+          if (!_visible) return {};
+          return testRayClosest(_activeCamera.get().getRay(pos));
+      }
+      inline std::vector<Collisions::RayHit3D> castRayAll(const Pos<double>& pos){
+          if (!_visible) return {};
+          return testRayAll(_activeCamera.get().getRay(pos));}
    protected:
+      void addChild();
       void renderChain(ReyEngine::Pos<double>& textureOffset) override;
       void render() const override;
       void renderer3DBegin() override;
@@ -32,6 +41,7 @@ namespace ReyEngine {
       void _on_rect_changed() override;
       void _process(float dt) override {}
       void registerProperties() override{}
+
       Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
 
       CameraTransform3D _defaultCamera; //only exists to have something to point to in the event there is no camera defined in the scene tree

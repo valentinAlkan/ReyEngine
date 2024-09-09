@@ -11,11 +11,11 @@ namespace ReyEngine {
    public:
       using BaseBody::getChildren;
       void setRotation(double newRot);
-      double getRotation();
+      double getRotation() const;
       void setZoom(double newZoom);
-      double getZoom();
-      Pos3<double> nearToFar(const Pos3<double>&);
-      Pos3<double> farToNear(const Pos3<double>&);
+      double getZoom() const;
+      Collisions::Ray3D getRay(const Pos<double>& pos) const {return _camera.getRay(pos);}
+//      Pos<double> farToNear(const Pos3<double>&) const;
    protected:
       void renderer3DBegin() override;
       void renderer3DEnd() override;
