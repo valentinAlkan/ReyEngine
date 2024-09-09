@@ -24,9 +24,9 @@ public:
    float heuristic, baseCost, combinedCost;
    int x_coord, y_coord;
    bool isStart = false;
-   SearchNode* parent;
-   std::map<SearchNode*, float> connections;
-   std::set<SearchNode*> references; //nodes that connect TO this node - so we can let them know we've been deleted.
+   std::shared_ptr<SearchNode> parent;
+   std::map<std::shared_ptr<SearchNode>, float> connections;
+   std::set<std::shared_ptr<SearchNode>> references; //nodes that connect TO this node - so we can let them know we've been deleted.
 
    SearchNode(int x, int y): x_coord(x), y_coord(y){}
    ~SearchNode();
@@ -36,12 +36,12 @@ public:
     * @param _cost : the cost to get to the node from the new parent
     * @param connectionCost : the modifier to connect to this node
     */
-   void updateParent(SearchNode* _parent, float _cost, float connectionCost);
+   void updateParent(std::shared_ptr<SearchNode> _parent, float _cost, float connectionCost);
 
    /**
     * calculates the cost to get to this node from the start node
     * @param _cost : cost of the path to get to the parent node
-    * @param connectionCost : the cost modifer to enter the tile from this connection
+    * @param connectionCost : the cost modifier to enter the tile from this connection
     */
    void setCost(float _cost, float connectionCost = 1);
 
@@ -61,6 +61,6 @@ public:
     * @param cost : the cost modifier to connect to the connection
     * @param connection : the connection
     */
-   void addConnection(float cost, SearchNode* connection);
-   void removeConnection(SearchNode* connection);
+   void addConnection(float cost, std::shared_ptr<SearchNode> connection);
+   void removeConnection(std::shared_ptr<SearchNode> connection);
 };

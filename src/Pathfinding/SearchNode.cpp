@@ -6,7 +6,7 @@ SearchNode::~SearchNode() {
     }
 }
 
-void SearchNode::updateParent(SearchNode* _parent, float _cost, float connectionCost) {
+void SearchNode::updateParent(std::shared_ptr<SearchNode> _parent, float _cost, float connectionCost) {
    //old cost is greater than new cost - update parent
    if(cost > _cost + baseCost){
       parent = _parent;
@@ -27,13 +27,13 @@ void SearchNode::calculateCombinedCost() {
    combinedCost = cost + heuristic;
 }
 
-void SearchNode::addConnection(float cost, SearchNode* connection) {
+void SearchNode::addConnection(float cost, std::shared_ptr<SearchNode> connection) {
    //todo: check to see if the connection exists
    connections.insert({connection, cost});
    references.insert(connection);
 }
 
-void SearchNode::removeConnection(SearchNode* connection) {
+void SearchNode::removeConnection(std::shared_ptr<SearchNode> connection) {
     connections.erase(connection);
     references.erase(connection);
 }

@@ -1,10 +1,10 @@
 #include "AStar.h"
 #include <cmath>
 
-bool AStar::findPath(SearchNode* start, SearchNode* goal) {
+bool AStar::findPath(std::shared_ptr<SearchNode> start, std::shared_ptr<SearchNode> goal) {
    _start = start;
    _goal = goal;
-   SearchNode* currentNode = _start;
+   std::shared_ptr<SearchNode> currentNode = _start;
    _start->setHeuristic(calculateHeuristic(_start));
    _start->calculateCombinedCost();
    _start->parent = nullptr;
@@ -18,7 +18,7 @@ bool AStar::findPath(SearchNode* start, SearchNode* goal) {
    return true;
 }
 
-void AStar::expandNode(SearchNode* node) {
+void AStar::expandNode(std::shared_ptr<SearchNode> node) {
    for(auto it = node->connections.begin(); it != node->connections.end(); it++){
       auto openIt = _openSet.find(it->first->id);
       if(openIt != _openSet.end()){
@@ -36,7 +36,7 @@ void AStar::expandNode(SearchNode* node) {
    }
 }
 
-float AStar::calculateHeuristic(SearchNode* node) {
+float AStar::calculateHeuristic(std::shared_ptr<SearchNode> node) {
    float xTerm = (_goal->x_coord - node->x_coord) * (_goal->x_coord - node->x_coord);
    float yTerm = (_goal->y_coord - node->y_coord) * (_goal->y_coord - node->y_coord);
    return sqrt(xTerm + yTerm);
