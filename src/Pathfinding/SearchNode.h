@@ -3,7 +3,7 @@
 #include <set>
 
 //class to hold node info for a 2d map
-class SearchNode {
+class SearchNode : std::enable_shared_from_this<SearchNode> {
 public:
    //operators
    inline bool operator==(const SearchNode& other) const {

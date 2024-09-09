@@ -2,7 +2,7 @@
 
 SearchNode::~SearchNode() {
     for (auto reference : references){
-        reference->removeConnection(this);
+        reference->removeConnection(shared_from_this());
     }
 }
 
@@ -10,7 +10,7 @@ void SearchNode::updateParent(std::shared_ptr<SearchNode> _parent, float _cost, 
    //old cost is greater than new cost - update parent
    if(cost > _cost + baseCost){
       parent = _parent;
-      cost = _cost + baseCost*connectionCost;
+      cost = _cost + baseCost * connectionCost;
       calculateCombinedCost();
    }
 }
