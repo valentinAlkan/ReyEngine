@@ -200,6 +200,8 @@ namespace ReyEngine {
    struct Line {
       constexpr Line(): a(0,0), b(0,0){}
       constexpr Line(Pos<T> a, Pos<T> b): a(a), b(b){}
+      template <typename _t>
+      constexpr Line(const Line<_t>& other): Line(other.a, other.b){}
       constexpr Line(const T x1, const T y1, const T x2, const T y2): Line({x1, y1}, {x2, y2}){}
       constexpr Pos<T> midpoint() const {return {a.x/2+b.x/2, a.y/2+b.y/2};}
       constexpr Pos<T> lerp(double xprm) const {return a.lerp(b, xprm);}
@@ -383,7 +385,6 @@ namespace ReyEngine {
          auto& yth = y < other.y ? height : other.height;
          auto& ybh = y > other.y ? height : other.height;
 
-
          //a primary collision is when other bisects us (in a 2 point collision)
          int collisionType = getCollisionType(other);
          bool isSecondaryCollision = false;
@@ -540,7 +541,7 @@ namespace ReyEngine {
       inline Circle(const Pos<double>& center, double radius): center(center), radius(radius){}
       inline Circle(const Circle& rhs): center(rhs.center), radius(rhs.radius){}
       /// create the circle that comprises the three points
-      inline Circle(const Pos<double>& a, const Pos<double>& b, const Pos<double>& c){
+      static inline std::optional<Circle> fromPoints(const Pos<double>& a, const Pos<double>& b, const Pos<double>& c){
          // Convert input points to doubles for precise calculation
          double x1 = a.x, y1 = a.y;
          double x2 = b.x, y2 = b.y;
@@ -558,18 +559,56 @@ namespace ReyEngine {
          double det = ux * vy - uy * vx;
 
          if (std::abs(det) < 1e-6) {
-            throw std::runtime_error("Circle: The three points are collinear and do not form a unique circle.");
+            //colinear points. not a circle.
+            return {};
          }
-
          // Calculate center coordinates
          double cx = (u * vy - v * uy) / det;
          double cy = (v * ux - u * vx) / det;
-
-         // Calculate radius
-         radius = std::sqrt((cx - x1)*(cx - x1) + (cy - y1)*(cy - y1));
-
-         // Round center coordinates to nearest integer
-         center = Pos<double>(cx, cy);
+         return Circle({cx, cy}, std::sqrt((cx - x1)*(cx - x1) + (cy - y1)*(cy - y1)));
+      }
+      /// Return a point on the circle that corresponds to the given angular offset from right-handed horizontal
+      /// \param r
+      /// \return
+      inline Pos<int> getPoint(Radians r) const {return {center.x + radius * std::cos(r.get()), center.y + radius * std::sin(r.get())};}
+      /// Return the angular offset from the right-handed horizontal that corresponds to the given point.
+      ///
+      /// \param pos: A point along a normal
+      /// \return
+      inline Radians getRadians(const Pos<double>& pos) const {
+         double dx = pos.x - center.x;
+         double dy = pos.y - center.y;
+         double angle = std::atan2(dy, dx);
+         // Ensure the angle is in the range [0, 2π)
+         if (angle < 0) {
+            angle += 2 * M_PI;
+         }
+         return Radians(angle);
+      }
+      /// Returns the point that intersects with the circle and lies along the normal formed by the point and the circle.
+      /// \return
+      inline Pos<double> getTangentPoint(const Pos<double>& pos) const {return getPoint(getRadians(pos));}
+      /// Returns a line that is tangent to the circle at the given normal point.
+      /// \param pos: a point lying on a line that is normal to the circle.
+      /// \param length: the length of the tangent
+      /// \return: a tangent line that intersects the given normal
+      inline Line<double> getTangentLine(const Pos<double>& pos, double length) const {
+         auto point = getTangentPoint(pos);
+         // Calculate the vector from center to tangent point
+         double dx = point.x - center.x;
+         double dy = point.y - center.y;
+         // Calculate the perpendicular vector (rotate by 90 degrees)
+         double perpX = -dy;
+         double perpY = dx;
+         // Normalize the perpendicular vector
+         double magnitude = std::sqrt(perpX*perpX + perpY*perpY);
+         perpX /= magnitude;
+         perpY /= magnitude;
+         // Calculate the start and end points of the tangent line
+         double halfLength = length / 2.0;
+         Pos<double> start(point.x - perpX * halfLength, point.y - perpY * halfLength);
+         Pos<double> end(point.x + perpX * halfLength, point.y + perpY * halfLength);
+         return Line<double>(start, end);
       }
       inline Circle operator+(const Pos<int>& pos) const {Circle retval(*this); retval.center += pos; return retval;}
       Rect<double> circumscribe(){return {center.x-radius, center.y-radius, radius, radius};}
