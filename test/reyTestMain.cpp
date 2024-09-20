@@ -31,6 +31,7 @@
 #include "Camera2D.h"
 #include "Viewport.h"
 #include "MeshBody.h"
+#include "Geodetic.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -92,6 +93,7 @@ int main(int argc, char** argv)
    args.defineArg(RuntimeArg("--tabContainerTest", "Tab container test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--dragTest", "Dragging and relative movement test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--drawTest", "Test various drawing functions", 0, RuntimeArg::ArgType::FLAG));
+   args.defineArg(RuntimeArg("--circleEstimateTest", "Test drawing big circles", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--comboBoxTest", "Combo box test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--tileMapTest", "Config file test", 0, RuntimeArg::ArgType::FLAG));
    args.defineArg(RuntimeArg("--lineEditTest", "Line edit test", 0, RuntimeArg::ArgType::FLAG));
@@ -284,6 +286,49 @@ int main(int argc, char** argv)
       };
 
       control->setRenderCallback(drawcb);
+   }
+
+   else if (args.getArg("--circleEstimateTest")) {
+      auto control = Control::build("Drawbox");
+      control->setAnchoring(BaseWidget::Anchor::FILL);
+      root->addChild(control);
+
+      static constexpr ReyEngine::ColorRGBA circleColor = Colors::red;
+      static constexpr ReyEngine::ColorRGBA pointColor = Colors::blue;
+      static constexpr size_t POINTS_MAX = 3;
+      static constexpr int GRID_SIZE = 50;
+      static constexpr Rect<int> GRID = {0, 0, 1920, 1080};
+
+      vector<Pos<int>> points;
+
+      auto inputcb = [&](Control&, const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) -> Handled {
+         if (!mouse || !mouse.value().isInside) return false;
+         switch (event.eventId) {
+            case InputEventMouseButton::getUniqueEventId(): {
+               const auto &mbEvent = event.toEventType<InputEventMouseButton>();
+               if (!mbEvent.isDown){
+                  if (points.size() >= POINTS_MAX) points.pop_back();
+                  points.insert(points.begin(), mouse->localPos);
+                  return true;
+               }
+            }
+         }
+        return false;
+      };
+
+      auto drawcb = [&](const Control &ctl) {
+         for (const auto& p : points) {
+            ctl.drawCircle({p, 5}, pointColor);
+         }
+         if (points.size() == 3){
+            //draw the estimated circle
+            const auto& circle = Circle(points.at(0), points.at(1), points.at(2));
+            ctl.drawCircleLines(circle, circleColor);
+         }
+      };
+
+      control->setRenderCallback(drawcb);
+      control->setUnhandledInputCallback(inputcb);
    }
 
    else if (args.getArg("--inputPositionTest")){
