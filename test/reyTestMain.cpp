@@ -293,22 +293,41 @@ int main(int argc, char** argv)
       control->setAnchoring(BaseWidget::Anchor::FILL);
       root->addChild(control);
 
-      static constexpr ReyEngine::ColorRGBA circleColor = Colors::red;
-      static constexpr ReyEngine::ColorRGBA pointColor = Colors::blue;
+      static constexpr ReyEngine::ColorRGBA CIRCLE_COLOR = Colors::blue;
+      static constexpr ReyEngine::ColorRGBA NORMAL_COLOR = Colors::red;
       static constexpr size_t POINTS_MAX = 3;
-      static constexpr int GRID_SIZE = 50;
+      static constexpr int POINT_RADIUS = 3;
+      static constexpr int NORMAL_LEN = 200;
       static constexpr Rect<int> GRID = {0, 0, 1920, 1080};
 
-      vector<Pos<int>> points;
+      vector<Pos<int>> points = {{},{},{}};
+      std::optional<Pos<int>> normal;
+      std::optional<Circle> circle;
+      InputInterface::MouseButton btnDown = InputInterface::MouseButton::NONE;
+      size_t ptIndex = 0; //the index of hte point we are dragging
 
       auto inputcb = [&](Control&, const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) -> Handled {
          if (!mouse || !mouse.value().isInside) return false;
          switch (event.eventId) {
-            case InputEventMouseButton::getUniqueEventId(): {
+            case InputEventMouseButton::getUniqueEventId():{
                const auto &mbEvent = event.toEventType<InputEventMouseButton>();
                if (!mbEvent.isDown){
-                  if (points.size() >= POINTS_MAX) points.pop_back();
-                  points.insert(points.begin(), mouse->localPos);
+                  btnDown = InputInterface::MouseButton::NONE;
+                  return true;
+               }
+               btnDown = mbEvent.button;
+               ptIndex = (ptIndex + 1) % POINTS_MAX;
+               }
+               //fall through to the motion event!
+            case InputEventMouseMotion::getUniqueEventId(): {
+               if (btnDown == InputInterface::MouseButton::NONE) return false;
+               if (btnDown == InputInterface::MouseButton::LEFT){
+                  points.at(ptIndex) = mouse->localPos;
+                  circle = Circle::fromPoints(points.at(0), points.at(1), points.at(2));
+                  return true;
+               } else if (btnDown == InputInterface::MouseButton::RIGHT){
+                  //create a new normal point
+                  normal = mouse->localPos;
                   return true;
                }
             }
@@ -318,12 +337,28 @@ int main(int argc, char** argv)
 
       auto drawcb = [&](const Control &ctl) {
          for (const auto& p : points) {
-            ctl.drawCircle({p, 5}, pointColor);
+            ctl.drawCircle({p, POINT_RADIUS}, CIRCLE_COLOR);
          }
-         if (points.size() == 3){
+         if (circle){
             //draw the estimated circle
-            const auto& circle = Circle(points.at(0), points.at(1), points.at(2));
-            ctl.drawCircleLines(circle, circleColor);
+            ctl.drawCircleLines(circle.value(), CIRCLE_COLOR);
+         }
+
+         if (normal){
+            //draw normal point
+            ctl.drawCircle({normal.value(), POINT_RADIUS}, NORMAL_COLOR);
+         }
+
+         if (normal && circle){
+            //draw the normal line
+            const auto& normalLine = Line<int>(normal.value(), circle->center);
+            ctl.drawLine(normalLine, 1, NORMAL_COLOR);
+            //draw tangent point
+            const auto& tangentPoint = circle.value().getTangentPoint(normal.value());
+            ctl.drawCircleLines({tangentPoint, POINT_RADIUS}, NORMAL_COLOR);
+            //draw tangent line
+            const auto& tangentLine = circle.value().getTangentLine(tangentPoint, NORMAL_LEN);
+            ctl.drawLine(Line<double>(tangentLine), 1, NORMAL_COLOR);
          }
       };
 
