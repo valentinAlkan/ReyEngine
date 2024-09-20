@@ -187,6 +187,7 @@ Handled BaseWidget::_process_unhandled_input(const InputEvent& event, const std:
       default:
          throw std::runtime_error("INVALID INPUT FILTER STATE!");
    }
+   return false;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -359,6 +360,11 @@ void BaseWidget::drawRectangleGradientV(const ReyEngine::Rect<int> &rect, const 
 ///////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawCircle(const ReyEngine::Circle& circle, const ReyEngine::ColorRGBA& color) const {
    ReyEngine::drawCircle(circle + getGlobalPos() + _renderOffset, color);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::drawCircleLines(const ReyEngine::Circle& circle, const ReyEngine::ColorRGBA& color) const {
+   ReyEngine::drawCircleLines(circle + getGlobalPos() + _renderOffset, color);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////

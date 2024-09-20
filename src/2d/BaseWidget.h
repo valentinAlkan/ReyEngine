@@ -207,6 +207,7 @@ namespace ReyEngine{
       void drawRectangleRoundedLines(const ReyEngine::Rect<int>& rect, float roundness, int segments, float lineThick, const ReyEngine::ColorRGBA& color) const;
       void drawRectangleGradientV(const ReyEngine::Rect<int>& rect, const ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2) const;
       void drawCircle(const ReyEngine::Circle&, const ReyEngine::ColorRGBA&) const;
+      void drawCircleLines(const ReyEngine::Circle&, const ReyEngine::ColorRGBA&) const;
       void drawCircleSectorLines(const ReyEngine::CircleSector&, const ReyEngine::ColorRGBA&, int segments) const;
       void drawRenderTarget(const ReyEngine::RenderTarget&, const ReyEngine::Pos<int>&) const;
       void drawRenderTargetRect(const ReyEngine::RenderTarget&, const ReyEngine::Rect<int>&, const ReyEngine::Pos<int>&) const;

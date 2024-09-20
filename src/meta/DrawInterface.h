@@ -127,8 +127,14 @@ namespace ReyEngine {
       inline explicit Vec3(const Vec3<double>& v): Vec<T>(3), x((T)v.x), y((T)v.y), z((T)v.z){}
       inline Vec3& operator=(const Vec3& rhs){x = rhs.x; y=rhs.y; z=rhs.z; return *this;}
       inline Vec3& operator-(){x = -x; y =-y; z = -z; return *this;}
+      inline Vec3 operator-(const Vec3& rhs) const {Vec3 retval; retval.x=x-rhs.x; retval.y=y-rhs.y; retval.z=z-rhs.z; return retval;}
+      inline Vec3 operator+(const Vec3& rhs) const {Vec3 retval; retval.x=x+rhs.x; retval.y=y+rhs.y; retval.z=z+rhs.z; return retval;}
+      inline Vec3 operator-=(const Vec3& rhs){x-=rhs.x; y-=rhs.y; z-=rhs.z; return *this;}
+      inline Vec3 operator+=(const Vec3& rhs){x+=rhs.x; y+=rhs.y; z+=rhs.z; return *this;}
       inline static std::vector<T> fromString(const std::string& s){return Vec<T>::fromString(3, s);};
       [[nodiscard]] inline std::vector<T> getElements() const override {return {x,y,z};}
+      inline T magnitude() const {return std::sqrt(x * x + y * y + z * z);}
+      inline T dot(const Vec3& rhs) const {return x * rhs.x + y * rhs.y + z * rhs.z;}
       friend std::ostream& operator<<(std::ostream& os, Vec3<T> v) {os << v.toString(); return os;}
       T x;
       T y;
@@ -219,6 +225,15 @@ namespace ReyEngine {
       }
       //project a line a fixed amount from the start point
       inline Line project(double amount) const {return {a, a.project(b, amount)};}
+      inline T slope(){
+         if (a.x == b.x) throw std::runtime_error("Undefined slope (vertical line)");
+         return (b.y - a.y) / (b.x - a.x);
+      }
+      inline std::pair<Line, Line> normals(){
+         auto dx = b.x - a.x;
+         auto dy = b.y - a.y;
+         return {{-dy, dx}, {dy, -dx}};
+      }
       friend std::ostream& operator<<(std::ostream& os, Line r) {os << r.toString(); return os;}
       Pos<T> a;
       Pos<T> b;
@@ -522,11 +537,43 @@ namespace ReyEngine {
    };
 
    struct Circle{
-      inline Circle(Pos<int> center, double radius): center(center), radius(radius){}
+      inline Circle(const Pos<double>& center, double radius): center(center), radius(radius){}
       inline Circle(const Circle& rhs): center(rhs.center), radius(rhs.radius){}
+      /// create the circle that comprises the three points
+      inline Circle(const Pos<double>& a, const Pos<double>& b, const Pos<double>& c){
+         // Convert input points to doubles for precise calculation
+         double x1 = a.x, y1 = a.y;
+         double x2 = b.x, y2 = b.y;
+         double x3 = c.x, y3 = c.y;
+
+         // Calculate the perpendicular bisector of two chords
+         double ux = 2 * (x2 - x1);
+         double uy = 2 * (y2 - y1);
+         double vx = 2 * (x3 - x1);
+         double vy = 2 * (y3 - y1);
+         double u = (x2*x2 - x1*x1 + y2*y2 - y1*y1);
+         double v = (x3*x3 - x1*x1 + y3*y3 - y1*y1);
+
+         // Calculate determinant
+         double det = ux * vy - uy * vx;
+
+         if (std::abs(det) < 1e-6) {
+            throw std::runtime_error("Circle: The three points are collinear and do not form a unique circle.");
+         }
+
+         // Calculate center coordinates
+         double cx = (u * vy - v * uy) / det;
+         double cy = (v * ux - u * vx) / det;
+
+         // Calculate radius
+         radius = std::sqrt((cx - x1)*(cx - x1) + (cy - y1)*(cy - y1));
+
+         // Round center coordinates to nearest integer
+         center = Pos<double>(cx, cy);
+      }
       inline Circle operator+(const Pos<int>& pos) const {Circle retval(*this); retval.center += pos; return retval;}
       Rect<double> circumscribe(){return {center.x-radius, center.y-radius, radius, radius};}
-      Pos<int> center;
+      Pos<double> center;
       double radius;
    };
 
@@ -671,6 +718,7 @@ namespace ReyEngine {
    void drawRectangleRoundedLines(const Rect<float>&, float roundness, int segments, float lineThick, const ReyEngine::ColorRGBA& color);
    void drawRectangleGradientV(const Rect<int>&, const ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2);
    void drawCircle(const Circle&, const ReyEngine::ColorRGBA&  color);
+   void drawCircleLines(const Circle&, const ReyEngine::ColorRGBA&  color);
    void drawCircleSector(const CircleSector&, const ReyEngine::ColorRGBA&  color, int segments);
    void drawCircleSectorLines(const CircleSector&, const ReyEngine::ColorRGBA&  color, int segments);
    void drawLine(const Line<int>&, float lineThick, const ReyEngine::ColorRGBA& color);

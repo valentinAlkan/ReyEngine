@@ -78,6 +78,11 @@ void ReyEngine::drawCircle(const Circle& circle, const ReyEngine::ColorRGBA &col
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawCircleLines(const Circle& circle, const ReyEngine::ColorRGBA &color) {
+   DrawCircleLines(circle.center.x, circle.center.y, circle.radius, color);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::drawCircleSector(const CircleSector& sector, const ReyEngine::ColorRGBA &color, int segments) {
    DrawCircleSector(sector.center, sector.radius, sector.startAngle, sector.endAngle, segments, color);
 }
