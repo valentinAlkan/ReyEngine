@@ -107,7 +107,7 @@ namespace ReyEngine {
          return retval;
       }
       inline double length(){return std::sqrt(x * x + y * y);}
-      inline Vec2<T> normalize(){double len = length();return {x / len, y / len};}
+      inline Vec2<T> normalize(){double len = length();return {(T)(x / len), (T)(y / len)};}
       inline static std::vector<T> fromString(const std::string& s){return Vec<T>::fromString(2, s);};
       friend std::ostream& operator<<(std::ostream& os, Vec2<T> v) {os << v.toString(); return os;}
       friend Vector2& operator+=(Vector2& in, Vec2<T> add) {in.x += add.x; in.y += add.y; return in;}
@@ -579,7 +579,7 @@ namespace ReyEngine {
       /// Return a point on the circle that corresponds to the given angular offset from right-handed horizontal
       /// \param r
       /// \return
-      inline Pos<int> getPoint(Radians r) const {return {center.x + radius * std::cos(r.get()), center.y + radius * std::sin(r.get())};}
+      inline Pos<double> getPoint(Radians r) const {return {(int)center.x + radius * std::cos(r.get()), center.y + radius * std::sin(r.get())};}
       /// Return the angular offset from the right-handed horizontal that corresponds to the given point.
       ///
       /// \param pos: A point along a normal

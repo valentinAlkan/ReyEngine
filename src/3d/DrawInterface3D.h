@@ -128,7 +128,7 @@ namespace ReyEngine {
       void pop();
    };
 
-   void drawSphere(const Sphere<double>&s, int rings, int slices, const ColorRGBA& color){
+   inline void drawSphere(const Sphere<double>&s, int rings, int slices, const ColorRGBA& color){
       DrawSphereEx(s.center, s.radius, rings, slices, color);
    }
 }

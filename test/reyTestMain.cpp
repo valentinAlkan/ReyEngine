@@ -1773,8 +1773,9 @@ int main(int argc, char** argv)
       viewport->BaseWidget::addChild(vlayout);
       vlayout->setAnchoring(ReyEngine::BaseWidget::Anchor::FILL);
 
-      auto cube = MeshBody::build("TestBody");
-      viewport->Renderer3D::addChild(cube);
+      auto body = MeshBody::build("TestBody");
+      body->
+      viewport->Renderer3D::addChild(body);
    }
 
    else {

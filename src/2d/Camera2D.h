@@ -19,9 +19,9 @@ namespace ReyEngine {
       double getRotation(){return _camera.camera.rotation;}
       void setZoom(double newZoom){_camera.camera.zoom = newZoom;}
       double getZoom(){return _camera.camera.zoom;}
-      Pos<int> getOffset(){return {_camera.camera.offset.x, _camera.camera.offset.y};}
-      Pos<float> nearToFar(const Pos<float>&){};
-      Pos<float> farToNear(const Pos<float>&){};
+      Pos<double> getOffset(){return {_camera.camera.offset.x, _camera.camera.offset.y};}
+      Pos<double> nearToFar(const Pos<float>&){return {};}
+      Pos<double> farToNear(const Pos<float>&){return {};}
    protected:
       void renderBegin(ReyEngine::Pos<double>& textureOffset) override;
       void renderEnd() override;
