@@ -89,10 +89,15 @@ namespace ReyEngine{
       /////////////////////
       class ProcessList {
       public:
+          ~ProcessList(){clear();}
          std::optional<std::shared_ptr<BaseWidget>> add(std::shared_ptr<BaseWidget> widget);
          std::optional<std::shared_ptr<BaseWidget>> remove(std::shared_ptr<BaseWidget> widget);
          std::optional<std::shared_ptr<BaseWidget>> find(const std::shared_ptr<BaseWidget>& widget) const;
-         std::unordered_set<std::shared_ptr<BaseWidget>>& getList(){return _list;}
+         void processAll(double dt);
+         void clear(){
+             std::unique_lock<std::mutex> sl(_mtx);
+             _list.clear();
+         }
       private:
          std::unordered_set<std::shared_ptr<BaseWidget>> _list; //list of widgets that require processing. No specific order.
          std::mutex _mtx;

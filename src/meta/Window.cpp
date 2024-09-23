@@ -100,9 +100,7 @@ void Window::exec(){
    Time::RateLimiter rateLimit(targetFPS);
    while (!WindowShouldClose()){
       {
-         std::scoped_lock<std::mutex> sl(Application::instance()._busy);
-         //process widgets wanting to enter the tree for the first time
-//         auto nextPair = Internal::EnterTreeQueue::instance().getNextInQueue();
+         unique_lock<mutex> sl(Application::instance()._busy);
 
          //see if the window size has changed
          auto newSize = getSize();
@@ -303,9 +301,7 @@ void Window::exec(){
 
          float dt = getFrameDelta();
          //process widget logic
-         for (auto &widget: _processList.getList()) {
-            widget->_process(dt);
-         }
+         _processList.processAll(dt);
 
          //draw children on top of their parents
 
@@ -326,11 +322,12 @@ void Window::exec(){
       rateLimit.wait();
       _frameCounter++;
    }
+   _processList.clear();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Window::~Window(){
-   CloseWindow();
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -346,7 +343,7 @@ bool Window::isProcessed(const std::shared_ptr<BaseWidget>& widget) const {
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 std::optional<shared_ptr<BaseWidget>> Window::ProcessList::add(std::shared_ptr<BaseWidget> widget) {
-   lock_guard<mutex> lock(_mtx);
+   unique_lock<mutex> lock(_mtx);
    auto retval = _list.insert(widget);
    if (retval.second){
       return widget;
@@ -356,7 +353,7 @@ std::optional<shared_ptr<BaseWidget>> Window::ProcessList::add(std::shared_ptr<B
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 std::optional<std::shared_ptr<BaseWidget>> Window::ProcessList::remove(std::shared_ptr<BaseWidget> widget) {
-   const lock_guard<mutex> lock(_mtx);
+   unique_lock<mutex> lock(_mtx);
    auto it = _list.find(widget);
    if (it != _list.end()){
       //only remove if found;
@@ -364,6 +361,14 @@ std::optional<std::shared_ptr<BaseWidget>> Window::ProcessList::remove(std::shar
       return widget;
    }
    return nullopt;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void Window::ProcessList::processAll(double dt) {
+    unique_lock<mutex> lock(_mtx);
+    for (auto &widget : _list) {
+        widget->_process(dt);
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

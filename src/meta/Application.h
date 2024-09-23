@@ -8,6 +8,7 @@
 #include "Platform.h"
 #include "FileSystem.h"
 #include "Component.h"
+#include <thread>
 
 namespace ReyEngine{
    namespace Internal{
@@ -24,6 +25,7 @@ namespace ReyEngine{
    private:
       Application();
    public:
+      ~Application(){}
       enum class ExitReason{
          CLEAN = 0,
          INVALID_ARGS = 1,
