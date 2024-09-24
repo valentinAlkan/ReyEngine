@@ -939,7 +939,7 @@ namespace InputInterface{
    };
 
    //array of all mouse buttons
-   static constexpr MouseButton MouseButtons[] = {
+   static constexpr std::array<MouseButton, 7> MouseButtons = {
          MouseButton::LEFT,
          MouseButton::RIGHT,
          MouseButton::MIDDLE,

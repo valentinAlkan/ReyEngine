@@ -6,15 +6,9 @@ struct coord{
    int x, y;
 };
 
-struct compareNodes{
-   bool operator()(const std::shared_ptr<SearchNode> a, const std::shared_ptr<SearchNode> b) const{
-      return a->combinedCost > b->combinedCost;
-   }
-};
 class AStar {
 public:
    AStar(){};
-
    /**
     * Finds the best path from the start node to the end node using an A* algorithm.
     * The path can then be read by reading the parent of the _goal node and tracing the parents to the start
@@ -22,27 +16,42 @@ public:
     * @param _goal : The goal node of the path; Read the parent of this node up the tree to the start
     * @return : true if a path was found; false if no path was found;
     */
-   bool findPath(std::shared_ptr<SearchNode> start, std::shared_ptr<SearchNode> goal);
+   bool findPath(SearchNode& start, SearchNode& goal);
 
 private:
+    struct SearchNodeComparator {
+        bool operator()(const std::reference_wrapper<SearchNode>& lhs, const std::reference_wrapper<SearchNode>& rhs) const {
+            return lhs.get() < rhs.get();
+        }
+    };
 
-   std::priority_queue<std::shared_ptr<SearchNode>, std::vector<std::shared_ptr<SearchNode>>, compareNodes> _expandedNodes;
-   std::map<int, std::shared_ptr<SearchNode>> _openSet;
-
-   std::shared_ptr<SearchNode> _start;
-   std::shared_ptr<SearchNode> _goal;
+    struct CombinedCostComparator{
+        bool operator()(const std::reference_wrapper<SearchNode>& a, const std::reference_wrapper<SearchNode>& b) const{
+            return a.get().combinedCost > b.get().combinedCost;
+        }
+    };
+   /// The frontier represents the fog of war - that is to say, it should always return the most promising connected node that
+   /// has yet to be visited
+   std::priority_queue<std::reference_wrapper<SearchNode>, std::vector<std::reference_wrapper<SearchNode>>, CombinedCostComparator> _frontier;
+   /// The set of nodes that have already been visited and searched for connections
+   std::set<std::reference_wrapper<SearchNode>, SearchNodeComparator> _visitedNodes;
+   std::optional<std::reference_wrapper<SearchNode>> _goal; //where we're headed
 
    /**
     * places all of the connections in _expandedNodes;
     * Checks to see if the node already exists in _openSet and calls updateParent if so
-    * @param node : The node to expand
+    * @param openNode : The node to expand
     */
-   void expandNode(std::shared_ptr<SearchNode> node);
+   void expandNode(SearchNode& openNode);
 
    /**
     * calculates the Heuristic of the node with the distance formula
     * @param node : node to calculate for
     * @return : the heuristic
     */
-   float calculateHeuristic(std::shared_ptr<SearchNode> node);
+   static inline double calculateHeuristic(const SearchNode& start, const SearchNode& dest){
+       double xTerm = (dest.x_coord - start.x_coord) * (dest.x_coord - start.x_coord);
+       double yTerm = (dest.y_coord - start.y_coord) * (dest.y_coord - start.y_coord);
+       return sqrt(xTerm + yTerm);
+   }
 };

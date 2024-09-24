@@ -1,43 +1,36 @@
 #include "AStar.h"
 #include <cmath>
 
-bool AStar::findPath(std::shared_ptr<SearchNode> start, std::shared_ptr<SearchNode> goal) {
-   _start = start;
+bool AStar::findPath(SearchNode& start, SearchNode& goal) {
    _goal = goal;
-   std::shared_ptr<SearchNode> currentNode = _start;
-   _start->setHeuristic(calculateHeuristic(_start));
-   _start->calculateCombinedCost();
-   _start->parent = nullptr;
-   _start->isStart = true;
+   SearchNode& currentNode = start;
+   start.setHeuristic(calculateHeuristic(start, goal));
+   start.calculateCombinedCost();
+   start.parent = {};
    while(currentNode != _goal){
       expandNode(currentNode);
-      if(_expandedNodes.empty()) return false;
-      currentNode = _expandedNodes.top();
-      _expandedNodes.pop();
+      if(_frontier.empty()) return false;
+      currentNode = _frontier.top();
+      _frontier.pop();
    }
    return true;
 }
 
-void AStar::expandNode(std::shared_ptr<SearchNode> node) {
-   for(auto it = node->connections.begin(); it != node->connections.end(); it++){
-      auto openIt = _openSet.find(it->first->id);
-      if(openIt != _openSet.end()){
-         //Found the node in the openSet so need to update the parent
-         openIt->second->updateParent(node, node->cost, it->second);
+void AStar::expandNode(SearchNode& openNode) {
+   for (auto& [_connectedNode, pathCost] : openNode.connections){
+      auto& connectedNode = _connectedNode.get();
+      auto found = _visitedNodes.find(_connectedNode);
+      if(found != _visitedNodes.end()){
+         auto& existingNode = found->get();
+         //Found the node in the openSet/visited nodes so need to update the parent
+         existingNode.updateParent(openNode, openNode.cost, pathCost);
       } else {
-         //todo: create function to call all these in one line
-         it->first->setCost(node->cost, it->second);
-         it->first->setHeuristic(calculateHeuristic(it->first));
-         it->first->calculateCombinedCost();
-         it->first->parent = node;
-         _expandedNodes.push(it->first);
-         _openSet.insert({it->first->id, it->first});
+         connectedNode.setCost(openNode.cost, pathCost);
+         connectedNode.setHeuristic(calculateHeuristic(openNode, _goal->get()));
+         connectedNode.calculateCombinedCost();
+         connectedNode.parent = openNode;
+         _frontier.emplace(connectedNode);
+         _visitedNodes.insert(openNode);
       }
    }
-}
-
-float AStar::calculateHeuristic(std::shared_ptr<SearchNode> node) {
-   float xTerm = (_goal->x_coord - node->x_coord) * (_goal->x_coord - node->x_coord);
-   float yTerm = (_goal->y_coord - node->y_coord) * (_goal->y_coord - node->y_coord);
-   return sqrt(xTerm + yTerm);
 }

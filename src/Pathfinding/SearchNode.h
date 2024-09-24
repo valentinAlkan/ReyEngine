@@ -3,8 +3,9 @@
 #include <set>
 
 //class to hold node info for a 2d map
-class SearchNode : std::enable_shared_from_this<SearchNode> {
+class SearchNode {
 public:
+    using NodeId = unsigned long long;
    //operators
    inline bool operator==(const SearchNode& other) const {
       return id == other.id;
@@ -18,15 +19,20 @@ public:
    inline bool operator<(const SearchNode& other) const {
       return combinedCost < other.combinedCost;
    }
+    struct RefWrapperCompare {
+        template<typename T>
+        bool operator()(const std::reference_wrapper<T>& lhs, const std::reference_wrapper<T>& rhs) const {
+            return std::less<T>{}(lhs.get(), rhs.get());
+        }
+    };
 
-   unsigned long long id = ReyEngine::Application::generateUniqueValue();
-   float cost = 0;
-   float heuristic, baseCost, combinedCost;
+   NodeId id = ReyEngine::Application::generateUniqueValue();
+   double cost = 0;
+   double heuristic, baseCost, combinedCost;
    int x_coord, y_coord;
-   bool isStart = false;
-   std::shared_ptr<SearchNode> parent;
-   std::map<std::shared_ptr<SearchNode>, float> connections;
-   std::set<std::shared_ptr<SearchNode>> references; //nodes that connect TO this node - so we can let them know we've been deleted.
+   std::optional<std::reference_wrapper<SearchNode>> parent;
+   std::map<std::reference_wrapper<SearchNode>, double, RefWrapperCompare> connections;
+   std::set<std::reference_wrapper<SearchNode>, RefWrapperCompare> references; //nodes that connect TO this node - so we can let them know we've been deleted.
 
    SearchNode(int x, int y): x_coord(x), y_coord(y){}
    ~SearchNode();
@@ -36,20 +42,20 @@ public:
     * @param _cost : the cost to get to the node from the new parent
     * @param connectionCost : the modifier to connect to this node
     */
-   void updateParent(std::shared_ptr<SearchNode> _parent, float _cost, float connectionCost);
+   void updateParent(SearchNode& _parent, double _cost, double connectionCost);
 
    /**
     * calculates the cost to get to this node from the start node
     * @param _cost : cost of the path to get to the parent node
     * @param connectionCost : the cost modifier to enter the tile from this connection
     */
-   void setCost(float _cost, float connectionCost = 1);
+   void setCost(double _cost, double connectionCost = 1);
 
    /**
     * sets the Heuristic value
     * @param _heuristic : the heuristic
     */
-   void setHeuristic(float _heuristic);
+   void setHeuristic(double _heuristic);
 
    /**
     * adds the heuristic to the cost and saves in combinedCost
@@ -61,6 +67,6 @@ public:
     * @param cost : the cost modifier to connect to the connection
     * @param connection : the connection
     */
-   void addConnection(float cost, std::shared_ptr<SearchNode> connection);
-   void removeConnection(std::shared_ptr<SearchNode> connection);
+   void addConnection(std::reference_wrapper<SearchNode> connection, double cost);
+   void removeConnection(std::reference_wrapper<SearchNode> connection);
 };

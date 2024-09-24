@@ -123,6 +123,33 @@ void Window::exec(){
             publish(event);
          }
 
+         // programatically generated inputs
+         while(!_inputQueueKey.empty()){
+            // lock the queues so that we can generate input while generating input, dawg.
+            unique_ptr<InputEvent> event;
+             {
+                unique_lock<mutex> _sl(_inputMtx);
+                event = std::move(_inputQueueKey.front());
+                _inputQueueKey.pop();
+            }
+             processUnhandledInput(*event, {});
+         }
+
+         while(!_inputQueueMouse.empty()){
+            {
+                unique_ptr<InputEvent> event;
+                {
+                    unique_lock<mutex> _sl(_inputMtx);
+                    event = std::move(_inputQueueMouse.front());
+                    _inputQueueMouse.pop();
+                }
+               UnhandledMouseInput mouse;
+               mouse.localPos = getCanvas()->globalToLocal((*event).toEventType<InputEventMouse>().globalPos);
+               mouse.isInside = getCanvas()->isInside(mouse.localPos);
+               processUnhandledInput(*event, mouse);
+            }
+         }
+
          //collect char input (up to limit)
          // only downs for chars - no ups. Use keys for uppies.
          for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
