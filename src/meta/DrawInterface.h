@@ -85,8 +85,8 @@ namespace ReyEngine {
       inline Vec2<double> operator/(double rhs){Vec2<double> retval(*this); retval.x /= rhs; retval.y /= rhs; return retval;}
       inline Vec2& operator/=(const Vec2& rhs){x /= rhs.x; y /= rhs.y; return *this;}
       inline Vec2& operator=(const Vec2& rhs){x = rhs.x; y=rhs.y; return *this;}
-      inline bool operator==(const Vec2& rhs){return x==rhs.x && y==rhs.y;}
-      inline bool operator!=(const Vec2& rhs){return x!=rhs.x || y!=rhs.y;}
+      inline bool operator==(const Vec2& rhs) const {return x==rhs.x && y==rhs.y;}
+      inline bool operator!=(const Vec2& rhs) const {return x!=rhs.x || y!=rhs.y;}
       inline Vec2& operator-(){x = -x; y =-y; return *this;}
       inline void operator=(Size<T>&) = delete;
       inline void operator=(Pos<T>&) = delete;
@@ -212,10 +212,10 @@ namespace ReyEngine {
 
    template <typename T>
    struct Line {
-      constexpr Line(): a(0,0), b(0,0){}
-      constexpr Line(Pos<T> a, Pos<T> b): a(a), b(b){}
       template <typename _t>
       constexpr Line(const Line<_t>& other): Line(other.a, other.b){}
+      constexpr Line(): a(0,0), b(0,0){}
+      constexpr Line(Pos<T> a, Pos<T> b): a(a), b(b){}
       constexpr Line(const T x1, const T y1, const T x2, const T y2): Line({x1, y1}, {x2, y2}){}
       constexpr Pos<T> midpoint() const {return {a.x/2+b.x/2, a.y/2+b.y/2};}
       constexpr Pos<T> lerp(double xprm) const {return a.lerp(b, xprm);}
@@ -810,6 +810,7 @@ namespace ReyEngine {
 }
 
 namespace InputInterface{
+   //Corresponds to ascii table
    enum class KeyCodes{
       KEY_NULL            = 0,
       KEY_APOSTROPHE      = 39,       // Key: '
@@ -939,7 +940,7 @@ namespace InputInterface{
    };
 
    //array of all mouse buttons
-   static constexpr MouseButton MouseButtons[] = {
+   static constexpr std::array<MouseButton, 7> MouseButtons = {
          MouseButton::LEFT,
          MouseButton::RIGHT,
          MouseButton::MIDDLE,
@@ -963,7 +964,7 @@ namespace InputInterface{
       NOT_ALLOWED = MOUSE_CURSOR_NOT_ALLOWED
    };
 
-
+   inline std::optional<char> toChar(KeyCode keyCode){ return (static_cast<int>(keyCode) <= 127) ? std::optional<char>{static_cast<char>(static_cast<int>(keyCode))} : std::nullopt;}
    inline float getMouseWheelMove(){return GetMouseWheelMove();} //returns largest of x or y
    inline ReyEngine::Vec2<float> getMouseWheelMoveV(){return GetMouseWheelMoveV();} //returns both x and y
 

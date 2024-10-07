@@ -68,6 +68,21 @@ namespace ReyEngine{
       void pushRenderTarget(RenderTarget&);
       void popRenderTarget();
       std::optional<std::weak_ptr<BaseWidget>> getHovered();
+      /// Generates an inputEvent with the window as the publisher
+      /// \tparam T
+      /// \return
+      template <typename T>
+      std::unique_ptr<T> generateInputEvent(){
+         static_assert(std::is_base_of_v<InputEvent, T>);
+         return std::make_unique<T>(toEventPublisher());
+      }
+      template <typename T>
+      void mouseInput(std::unique_ptr<T>& event){
+         static_assert(std::is_base_of_v<InputEvent, T>);
+         std::unique_lock<std::mutex> sl(_inputMtx);
+         _inputQueueMouse.push(std::move(event));
+      }
+      inline void keyInput(InputInterface::KeyCode){};
    protected:
       Window(const std::string& title, int width, int height, const std::vector<Flags>& flags, int targetFPS);
       void initialize(std::optional<std::shared_ptr<Canvas>> root);
@@ -85,14 +100,22 @@ namespace ReyEngine{
       const int startingWidth;
       const int startingHeight;
       std::stack<RenderTarget*> renderStack;
+      std::queue<std::unique_ptr<InputEvent>> _inputQueueMouse; //a place to hold programatically generated input
+      std::queue<std::unique_ptr<InputEvent>> _inputQueueKey; //a place to hold programatically generated input
+      std::mutex _inputMtx;
       /////////////////////
       /////////////////////
       class ProcessList {
       public:
+         ~ProcessList(){clear();}
          std::optional<std::shared_ptr<BaseWidget>> add(std::shared_ptr<BaseWidget> widget);
          std::optional<std::shared_ptr<BaseWidget>> remove(std::shared_ptr<BaseWidget> widget);
          std::optional<std::shared_ptr<BaseWidget>> find(const std::shared_ptr<BaseWidget>& widget) const;
-         std::unordered_set<std::shared_ptr<BaseWidget>>& getList(){return _list;}
+         void processAll(double dt);
+         void clear(){
+             std::unique_lock<std::mutex> sl(_mtx);
+             _list.clear();
+         }
       private:
          std::unordered_set<std::shared_ptr<BaseWidget>> _list; //list of widgets that require processing. No specific order.
          std::mutex _mtx;

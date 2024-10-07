@@ -1,43 +1,64 @@
 #include "AStar.h"
 #include <cmath>
 
-bool AStar::findPath(SearchNode* start, SearchNode* goal) {
-   _start = start;
-   _goal = goal;
-   SearchNode* currentNode = _start;
-   _start->setHeuristic(calculateHeuristic(_start));
-   _start->calculateCombinedCost();
-   _start->parent = nullptr;
-   _start->isStart = true;
-   while(currentNode != _goal){
-      expandNode(currentNode);
-      if(_expandedNodes.empty()) return false;
-      currentNode = _expandedNodes.top();
-      _expandedNodes.pop();
-   }
-   return true;
-}
+using namespace ReyEngine;
+using namespace std;
 
-void AStar::expandNode(SearchNode* node) {
-   for(auto it = node->connections.begin(); it != node->connections.end(); it++){
-      auto openIt = _openSet.find(it->first->id);
-      if(openIt != _openSet.end()){
-         //Found the node in the openSet so need to update the parent
-         openIt->second->updateParent(node, node->cost, it->second);
-      } else {
-         //todo: create function to call all these in one line
-         it->first->setCost(node->cost, it->second);
-         it->first->setHeuristic(calculateHeuristic(it->first));
-         it->first->calculateCombinedCost();
-         it->first->parent = node;
-         _expandedNodes.push(it->first);
-         _openSet.insert({it->first->id, it->first});
+/*
+OPEN // the set of nodes to be evaluated
+CLOSED // the set of nodes already evaluated
+add the start node to OPEN
+
+loop
+	current = node in OPEN with the lowest f_cost
+	remove current from OPEN
+	add current to CLOSED
+
+	if current is the target node //path has been found
+		return
+
+	foreach neighbor of the current node
+		if neighbor is not traversable or neighbour is in CLOSED
+			skip to the next neighbor
+
+		if new path to neighbor is shorter or neighbor is not in OPEN
+			set f_cost of neighbor
+			set parent of neighbor to current
+			if neighbor is not in OPEN
+				add neighbor to OPEN
+ */
+
+std::optional<std::reference_wrapper<GraphNode>> AStar::findPath(GraphNode& graphStart, GraphNode& graphGoal) {
+   auto now = std::chrono::steady_clock::now();
+   GraphNode* currentNode = &graphStart;
+   _openSet.clear();
+   _closedSet.clear();
+   _openSet.emplace(&graphStart);
+   graphStart._parent = nullptr;
+   graphGoal._parent = nullptr;
+   while(currentNode != &graphGoal){
+      for (auto& connection : currentNode->getConnections()) {
+         auto &connectedNode = connection->b;
+         auto foundClosed = _closedSet.find(connectedNode);
+         if (foundClosed != _closedSet.end()) {
+            continue;
+         }
+         auto foundOpen = _openSet.find(connectedNode);
+         bool inOpen = foundOpen != _openSet.end();
+         //expand (or re-expand if shorter) this node
+         if (!inOpen || connectedNode->_fcost < currentNode->_fcost){
+            expandNode(*connection, currentNode, graphGoal);
+         }
+         _openSet.emplace(connectedNode);
+
       }
+      if(_openSet.empty()) return {};
+      _closedSet.emplace(currentNode);
+      auto it = getNodeLowestFCost();
+      currentNode = *it;
+      _openSet.erase(it);
    }
-}
-
-float AStar::calculateHeuristic(SearchNode* node) {
-   float xTerm = (_goal->x_coord - node->x_coord) * (_goal->x_coord - node->x_coord);
-   float yTerm = (_goal->y_coord - node->y_coord) * (_goal->y_coord - node->y_coord);
-   return sqrt(xTerm + yTerm);
+   //we found the goal
+   cout << "goal found in " << chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - now).count() << "us" << endl;
+   return graphGoal;
 }

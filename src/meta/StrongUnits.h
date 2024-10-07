@@ -118,7 +118,7 @@ public:
 
    constexpr bool isNan(){return std::isnan(_value);}
 protected:
-   T _value = 0;
+   T _value;
 };
 
 //add std::namespace junk here

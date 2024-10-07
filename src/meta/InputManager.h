@@ -12,13 +12,13 @@ namespace ReyEngine{
    struct InputEventKey : public InputEvent {
       EVENT_CTOR_SIMPLE(InputEventKey, InputEvent){}
       InputInterface::KeyCode key;
-      bool isDown;
-      bool isRepeat;
+      bool isDown = false;
+      bool isRepeat = false;
    };
 
    struct InputEventChar : public InputEvent {
       EVENT_CTOR_SIMPLE(InputEventChar, InputEvent){}
-      char ch;
+      char ch = 0;
    };
 
 
@@ -30,7 +30,7 @@ namespace ReyEngine{
    struct InputEventMouseButton : public InputEventMouse{
       EVENT_CTOR_SIMPLE(InputEventMouseButton, InputEventMouse){}
       InputInterface::MouseButton button;
-      bool isDown;
+      bool isDown = false;
    };
 
    struct InputEventMouseWheel : public InputEventMouse{
