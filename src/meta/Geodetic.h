@@ -30,7 +30,7 @@ namespace Geodetic {
    };
 
    struct ECEF : public Printable<ECEF> {
-      constexpr ECEF() = default;
+      constexpr ECEF(): x(0), y(0), z(0){};
       constexpr ECEF(const ReyEngine::Vec3<Meters>& v): x(x), y(y), z(z){}
       constexpr ECEF(Meters x, Meters y, Meters z): x(x), y(y), z(z){}
       Meters x, y, z;
@@ -51,7 +51,7 @@ namespace Geodetic {
    struct ENU;
    inline ECEF enu_to_ecef(const ENU &enu);
    struct ENU : public Printable<ENU> {
-      constexpr ENU(const LatLon& basis): origin(basis){}
+      constexpr ENU(const LatLon& basis): origin(basis), e(0), n(0), u(0){}
       constexpr ENU(const LatLon& basis, Meters east, Meters north, Meters up): origin(basis), e(east), n(north), u(up){}
       Meters e;
       Meters n;

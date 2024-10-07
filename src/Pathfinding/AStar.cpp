@@ -4,43 +4,61 @@
 using namespace ReyEngine;
 using namespace std;
 
-void visitNode(GraphNode& graphNode, const GraphNode& goal, optional<std::reference_wrapper<SearchNode>> parent){
-   cout << "Visiting open node " << graphNode._coord << endl;
-   auto& searchNode = graphNode.getSearchNode();
-   searchNode.setHeuristic(graphNode.getHeuristic(goal));
-   searchNode.setParent(parent);
-   searchNode.addCost(graphNode._cost);
-}
+/*
+OPEN // the set of nodes to be evaluated
+CLOSED // the set of nodes already evaluated
+add the start node to OPEN
 
-std::optional<std::reference_wrapper<SearchNode>> AStar::findPath(GraphNode &graphStart, GraphNode& graphGoal) {
-   std::reference_wrapper<SearchNode> currentNode = graphStart.getSearchNode();
-   graphStart.getSearchNode().reset();
-   visitNode(graphStart, graphGoal, {});
-   while(currentNode.get().getCoords() != graphGoal.getCoords()){
-      auto index = getIndex(currentNode.get()._coord);
-      queryGraph(_graph.at(index), graphGoal);
-      if(_frontier.empty()) return {};
-      currentNode = _frontier.top();
-      _frontier.pop();
+loop
+	current = node in OPEN with the lowest f_cost
+	remove current from OPEN
+	add current to CLOSED
+
+	if current is the target node //path has been found
+		return
+
+	foreach neighbor of the current node
+		if neighbor is not traversable or neighbour is in CLOSED
+			skip to the next neighbor
+
+		if new path to neighbor is shorter or neighbor is not in OPEN
+			set f_cost of neighbor
+			set parent of neighbor to current
+			if neighbor is not in OPEN
+				add neighbor to OPEN
+ */
+
+std::optional<std::reference_wrapper<GraphNode>> AStar::findPath(GraphNode& graphStart, GraphNode& graphGoal) {
+   auto now = std::chrono::steady_clock::now();
+   GraphNode* currentNode = &graphStart;
+   _openSet.clear();
+   _closedSet.clear();
+   _openSet.emplace(&graphStart);
+   graphStart._parent = nullptr;
+   graphGoal._parent = nullptr;
+   while(currentNode != &graphGoal){
+      for (auto& connection : currentNode->getConnections()) {
+         auto &connectedNode = connection->b;
+         auto foundClosed = _closedSet.find(connectedNode);
+         if (foundClosed != _closedSet.end()) {
+            continue;
+         }
+         auto foundOpen = _openSet.find(connectedNode);
+         bool inOpen = foundOpen != _openSet.end();
+         //expand (or re-expand if shorter) this node
+         if (!inOpen || connectedNode->_fcost < currentNode->_fcost){
+            expandNode(*connection, currentNode, graphGoal);
+         }
+         _openSet.emplace(connectedNode);
+
+      }
+      if(_openSet.empty()) return {};
+      _closedSet.emplace(currentNode);
+      auto it = getNodeLowestFCost();
+      currentNode = *it;
+      _openSet.erase(it);
    }
    //we found the goal
-   return graphGoal.getSearchNode();
-}
-
-void AStar::queryGraph(GraphNode& openNode, const GraphNode& goal) {
-   for (auto& [nodeCost, _connectedNode] : openNode._connections){
-      auto& connectedNode = _connectedNode.get();
-      auto found = _visitedNodes.find(connectedNode);
-      if(found != _visitedNodes.end()){
-         auto& existingNode = found->get();
-         //Found the node in the visited nodes so need to update the parent
-         visitNode(existingNode, goal, openNode.getSearchNode());
-      } else {
-         //add this node to the visited set
-         auto& searchNode = connectedNode.getSearchNode();
-         visitNode(connectedNode, goal, searchNode);
-         _frontier.emplace(searchNode);
-         _visitedNodes.insert(openNode);
-      }
-   }
+   cout << "goal found in " << chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - now).count() << "us" << endl;
+   return graphGoal;
 }

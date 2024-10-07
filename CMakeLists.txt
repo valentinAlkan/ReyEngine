@@ -124,7 +124,6 @@ add_library(ReyEngine2D STATIC
     src/2d/CustomTypes.cpp
     src/2d/Camera2D.cpp
     src/Pathfinding/AStar.cpp
-    src/Pathfinding/SearchNode.cpp
     src/Pathfinding/GraphNode.cpp
     ${CUSTOM_SOURCES}
 )
