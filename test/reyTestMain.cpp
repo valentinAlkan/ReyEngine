@@ -35,6 +35,7 @@
 
 using namespace std;
 using namespace ReyEngine;
+using namespace PathFinding;
 
 int screenWidth = 1500;
 int screenHeight = 800;
@@ -1477,7 +1478,7 @@ int main(int argc, char** argv) {
 
           static constexpr int CELL_SIZE = 64;
           //create graph
-          static AStar astar(window.getSize().x / CELL_SIZE + 1, window.getSize().y / CELL_SIZE + 1);
+          static PathFinding::AStar astar(window.getSize().x / CELL_SIZE + 1, window.getSize().y / CELL_SIZE + 1);
           //add connections
           for (auto& node : astar){
              for (auto& neighbor : astar.getNeighbors(node.getCoords())){
@@ -1507,8 +1508,8 @@ int main(int argc, char** argv) {
           };
           setModeString(mode);
           std::optional<Rect<int>> hoverCell;
-          std::optional<std::reference_wrapper<GraphNode>> start;
-          std::optional<std::reference_wrapper<GraphNode>> goal;
+          std::optional<std::reference_wrapper<AStar::GraphNode>> start;
+          std::optional<std::reference_wrapper<AStar::GraphNode>> goal;
           auto renderCB = [&](const Control& ctl){
              auto size = window.getSize();
              if (hoverCell){

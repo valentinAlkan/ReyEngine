@@ -2,31 +2,8 @@
 #include <cmath>
 
 using namespace ReyEngine;
+using namespace PathFinding;
 using namespace std;
-
-/*
-OPEN // the set of nodes to be evaluated
-CLOSED // the set of nodes already evaluated
-add the start node to OPEN
-
-loop
-	current = node in OPEN with the lowest f_cost
-	remove current from OPEN
-	add current to CLOSED
-
-	if current is the target node //path has been found
-		return
-
-	foreach neighbor of the current node
-		if neighbor is not traversable or neighbour is in CLOSED
-			skip to the next neighbor
-
-		if new path to neighbor is shorter or neighbor is not in OPEN
-			set f_cost of neighbor
-			set parent of neighbor to current
-			if neighbor is not in OPEN
-				add neighbor to OPEN
- */
 
 AStar::AStar(unsigned int sizeX, unsigned int sizeY)
 : _sizeX(sizeX)
@@ -42,7 +19,7 @@ AStar::AStar(unsigned int sizeX, unsigned int sizeY)
 }
 
 
-std::optional<std::reference_wrapper<GraphNode>> AStar::findPath(GraphNode& graphStart, GraphNode& graphGoal) {
+std::optional<std::reference_wrapper<AStar::GraphNode>> AStar::findPath(GraphNode& graphStart, GraphNode& graphGoal) {
    auto now = std::chrono::steady_clock::now();
    GraphNode* currentNode = &graphStart;
    _openSet.clear();
@@ -89,7 +66,7 @@ std::vector<Vec2<int>> AStar::extractPath(const GraphNode& goal) {
    return retval;
 }
 
-std::vector<std::reference_wrapper<GraphNode>> AStar::getNeighbors(const Vec2<int> &pos, bool includeCorners) {
+std::vector<std::reference_wrapper<AStar::GraphNode>> AStar::getNeighbors(const Vec2<int> &pos, bool includeCorners) {
    std::vector<std::reference_wrapper<GraphNode>> retval;
    std::optional<std::reference_wrapper<GraphNode>> node;
    for (auto _x : {-1,0,1}){
