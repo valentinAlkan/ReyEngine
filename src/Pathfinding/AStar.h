@@ -7,16 +7,7 @@ namespace ReyEngine {
    class AStar {
    public:
       AStar(const AStar&) = delete;
-      AStar(unsigned int sizeX, unsigned int sizeY): _sizeX(sizeX), _sizeY(sizeY){
-         for (int x=0; x<sizeX; x++){
-            for (int y=0; y<sizeY; y++){
-               const auto& coord = Vec2<int>(x,y);
-               auto node = std::make_unique<GraphNode>(coord);
-               _graph[getIndex(coord)] = std::move(node);
-            }
-         }
-      }
-
+      AStar(unsigned int sizeX, unsigned int sizeY);
       inline void addConnection(const Vec2<int>& src, const Vec2<int>& dst, double weight){
          auto found = _graph.find(getIndex(src));
          if (found == _graph.end()) throw std::runtime_error("AStar GraphNode src @ " + src.toString() + " Not found");
@@ -25,16 +16,14 @@ namespace ReyEngine {
          found = _graph.find(getIndex(dst));
          if (found == _graph.end()) throw std::runtime_error("AStar GraphNode dst @ " + dst.toString() + " Not found");
          auto& dstNode = found->second;
-         srcNode->addConnection(*dstNode, weight, true);
+         srcNode->addConnection(*dstNode, true);
       }
-      constexpr unsigned int getIndex(const Vec2<int>& coord){
-         return coord.y * _sizeX + coord.x;
-      }
-      GraphNode& operator[](const Vec2<int>& coords){
+      inline constexpr unsigned int getIndex(const Vec2<int>& coord) const {return coord.y * _sizeX + coord.x;}
+      inline GraphNode& operator[](const Vec2<int>& coords){
          return *(_graph.at(getIndex(coords)).get());
       };
 
-      std::optional<std::reference_wrapper<GraphNode>> at(const Vec2<int>& coords){
+      inline std::optional<std::reference_wrapper<GraphNode>> at (const Vec2<int>& coords){
          if (coords.x < _sizeX && coords.y < _sizeY){
             auto index = getIndex(coords);
             auto& ptr = _graph[index];
@@ -43,21 +32,24 @@ namespace ReyEngine {
          return {};
       };
 
-      std::vector<std::reference_wrapper<GraphNode>> getNeighbors(const Vec2<int>& pos, bool includeCorners=true){
-         std::vector<std::reference_wrapper<GraphNode>> retval;
-         std::optional<std::reference_wrapper<GraphNode>> node;
-         for (auto _x : {-1,0,1}){
-            for (auto _y : {-1,0,1}){
-               node = at({pos.x + _x, pos.y + _y});
-               if (node && node.value().get()._coord != pos){
-                  retval.push_back(node.value());
-               }
-            }
-         }
-         return retval;
-      }
-      //returns goal if path is valid
+      std::vector<std::reference_wrapper<GraphNode>> getNeighbors(const Vec2<int>& pos, bool includeCorners=true);
+      /// Find a valid astar path
+      /// \param graphStart
+      /// \param graphGoal
+      /// \return
       std::optional<std::reference_wrapper<GraphNode>> findPath(GraphNode& graphStart, GraphNode& graphGoal);
+      /// Extract path from goal node
+      /// \return path from start to goal
+      std::vector<Vec2<int>> extractPath(const GraphNode& goal);
+      /// Combines find and extract into one operation
+      /// \param graphStart : the start node
+      /// \param graphGoal : the end node
+      /// \return a vector representing the path from start to goal
+      inline std::vector<Vec2<int>> findAndExtractPath(GraphNode& graphStart, GraphNode& graphGoal) {
+         auto found = findPath(graphStart, graphGoal);
+         if (found) return extractPath(found.value());
+         return {};
+      };
 
       // Iterator class for AStar
       class Iterator {
@@ -76,7 +68,6 @@ namespace ReyEngine {
       private:
          std::unordered_map<unsigned int, std::unique_ptr<GraphNode>>::iterator _current;
       };
-
       Iterator begin() {return Iterator(_graph.begin());}
       Iterator end() {return Iterator(_graph.end());}
 
@@ -107,14 +98,14 @@ namespace ReyEngine {
       static inline void expandNode(GraphNode::Connection& connection, GraphNode* parent, const GraphNode& goal){
          auto& node = *(connection.b);
          node._hcost = getHeuristic(node, goal);
-         node._gcost = connection.weight + (parent ? parent->getGCost() : 0);
+         node._gcost = node._weight+ (parent ? parent->getGCost() : 0);
          node._fcost = node._hcost + node._gcost;
          node._parent = parent;
       }
       static inline double getHeuristic(const GraphNode& start, const GraphNode& dest){
-         double x = (dest._coord.x - start._coord.x) * (dest._coord.x - start._coord.x);
-         double y = (dest._coord.y - start._coord.y) * (dest._coord.y - start._coord.y);
-         return x + y;
+         double _x = dest._coord.x - start._coord.x;
+         double _y =  dest._coord.y - start._coord.y;
+         return sqrt(_x * _x + _y * _y);
       }
    };
 }

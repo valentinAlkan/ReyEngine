@@ -1475,13 +1475,18 @@ int main(int argc, char** argv) {
           auto control = Control::build("Control");
           vlayout->addChild(control);
 
-          static constexpr int CELL_SIZE = 32;
+          static constexpr int CELL_SIZE = 64;
           //create graph
           static AStar astar(window.getSize().x / CELL_SIZE + 1, window.getSize().y / CELL_SIZE + 1);
           //add connections
           for (auto& node : astar){
-             for (auto& neighbor : astar.getNeighbors(node._coord)){
-                node.addConnection(neighbor, Application::generateRandom(0, 500), false);
+             for (auto& neighbor : astar.getNeighbors(node.getCoords())){
+                if (neighbor.get().getCoords().x == 5){
+                   node.setWeight(0);
+                } else {
+                   node.setWeight(10);
+                }
+                node.addConnection(neighbor, false);
              }
           }
 
@@ -1558,7 +1563,9 @@ int main(int argc, char** argv) {
                    auto c = InputInterface::toChar(keyEvent.key);
                    if(!c) return false;
                    switch (c.value()){
-                      default: break;
+                      default:
+                         mode = Mode::PICK_PATH;
+                         break;
                       case 'G':
                          mode = Mode::SET_GOAL;
                          break;
@@ -1589,6 +1596,9 @@ int main(int argc, char** argv) {
                                goal = astar.at(cellCoords.get());
                                checkPath();
                                return true;
+                            case Mode::PICK_PATH:
+                               //change the weight of the connection(s)
+                               break;
                          }
                       default:
                          break;
