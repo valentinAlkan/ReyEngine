@@ -5,6 +5,34 @@
 #include "TypeContainer.h"
 #include "Event.h"
 
+namespace ReyEngine {
+// Helper to detect static build method returning shared_ptr<T>
+   template<typename T>
+   class has_build {
+   private:
+      template<typename C>
+      static auto test(int)
+      -> decltype(C::build(std::declval<std::string>()), std::true_type{});
+
+      template<typename>
+      static std::false_type test(...);
+
+      // Check if the return type of build() is shared_ptr<T>
+      template<typename C>
+      static auto check_return_type(int)
+      -> std::is_same<decltype(C::build(std::declval<std::string>())),
+            std::shared_ptr<T>>;
+
+      template<typename>
+      static std::false_type check_return_type(...);
+
+   public:
+      static constexpr bool value =
+            decltype(test<T>(0))::value &&
+            decltype(check_return_type<T>(0))::value;
+   };
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_DECLARE_COMPONENT_FRIEND friend class ReyEngine::Internal::Component;
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -18,9 +46,16 @@ std::string _get_static_constexpr_typename() override {return TYPE_NAME;}
    CLASSNAME(const std::string& name, const std::string& typeName): PARENT_CLASSNAME(name, typeName), NamedInstance(name, typeName)
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_DEFAULT_BUILD(CLASSNAME) \
-   static std::shared_ptr<CLASSNAME> build(const std::string& name) noexcept {  \
-      auto me = std::shared_ptr<CLASSNAME>(new CLASSNAME(name)); \
+   template <typename T=CLASSNAME>                                        \
+   static std::shared_ptr<CLASSNAME> build(const std::string& name) noexcept { \
+        static_assert(std::is_same_v<T, CLASSNAME>, "Template parameter T must be the same as the class name."); \
+        auto me = std::shared_ptr<CLASSNAME>(new CLASSNAME(name)); \
       return me; }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+#define REYENGINE_ENSURE_IS_STATICALLY_BUILDABLE(CLASSNAME) \
+   void _ensure_is_statically_buildable(){                                                         \
+   static_assert(ReyEngine::has_build<CLASSNAME>::value, "Error: Type must implement a public static build() method that returns a shared_ptr of its type!");}
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_DEFAULT_CTOR(CLASSNAME) \
    CLASSNAME(const std::string& name): CLASSNAME(name, _get_static_constexpr_typename()){}
@@ -34,7 +69,7 @@ protected:                                                \
 
 //to instantiate a virtual object with no deserializer
 #define REYENGINE_VIRTUAL_OBJECT(CLASSNAME, PARENT_CLASSNAME)  \
-public:                                                   \
+public:                                                        \
    REYENGINE_DECLARE_COMPONENT_FRIEND                             \
    REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(CLASSNAME)  \
    protected:                                                     \
@@ -44,10 +79,12 @@ public:                                                   \
 
 //to disallow building except via a factory function
 #define REYENGINE_OBJECT_BUILD_ONLY(CLASSNAME, PARENT_CLASSNAME)  \
+private:                                                          \
+   REYENGINE_ENSURE_IS_STATICALLY_BUILDABLE(CLASSNAME)                       \
 public:                                                           \
    REYENGINE_DECLARE_COMPONENT_FRIEND                             \
-   REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(CLASSNAME)  \
-   protected:                                                     \
+   REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(CLASSNAME)         \
+protected:                                                     \
    REYENGINE_DEFAULT_CTOR(CLASSNAME)                       \
    REYENGINE_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME)  \
    REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME)
