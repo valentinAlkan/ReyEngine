@@ -6,30 +6,17 @@
 #include "Event.h"
 
 namespace ReyEngine {
-// Helper to detect static build method returning shared_ptr<T>
    template<typename T>
    class has_build {
    private:
       template<typename C>
-      static auto test(int)
-      -> decltype(C::build(std::declval<std::string>()), std::true_type{});
-
-      template<typename>
+      static auto test(int)-> decltype(C::build(std::declval<std::string>()), std::true_type{});
       static std::false_type test(...);
-
-      // Check if the return type of build() is shared_ptr<T>
       template<typename C>
-      static auto check_return_type(int)
-      -> std::is_same<decltype(C::build(std::declval<std::string>())),
-            std::shared_ptr<T>>;
-
-      template<typename>
+      static auto check_return_type(int)-> std::is_same<decltype(C::build(std::declval<std::string>())),std::shared_ptr<T>>;
       static std::false_type check_return_type(...);
-
    public:
-      static constexpr bool value =
-            decltype(test<T>(0))::value &&
-            decltype(check_return_type<T>(0))::value;
+      static constexpr bool value = decltype(test<T>(0))::value && decltype(check_return_type<T>(0))::value;
    };
 }
 
@@ -53,7 +40,11 @@ std::string _get_static_constexpr_typename() override {return TYPE_NAME;}
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_ENSURE_IS_STATICALLY_BUILDABLE(CLASSNAME) \
    void _ensure_is_statically_buildable(){                                                         \
-   static_assert(ReyEngine::has_build<CLASSNAME>::value, "Error: Type must implement a public static build() method that returns a shared_ptr of its type!");}
+   static_assert(ReyEngine::has_build<CLASSNAME>::value,    \
+   "\nError: Type must implement a publicly accessible static build(const std::string& name) method that returns a shared_ptr of its type! \n" \
+   "You can resolve this by placing REYENGINE_DEFAULT_BUILD macro somewhere in the public section of your class definition. \n"               \
+   "You may also implement this functionality yourself if you desire more control over the build process. "); \
+   }
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_DEFAULT_CTOR(CLASSNAME) \
    CLASSNAME(const std::string& name): CLASSNAME(name, _get_static_constexpr_typename()){}
