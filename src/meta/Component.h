@@ -46,9 +46,7 @@ std::string _get_static_constexpr_typename() override {return TYPE_NAME;}
    CLASSNAME(const std::string& name, const std::string& typeName): PARENT_CLASSNAME(name, typeName), NamedInstance(name, typeName)
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_DEFAULT_BUILD(CLASSNAME) \
-   template <typename T=CLASSNAME>                                        \
    static std::shared_ptr<CLASSNAME> build(const std::string& name) noexcept { \
-        static_assert(std::is_same_v<T, CLASSNAME>, "Template parameter T must be the same as the class name."); \
         auto me = std::shared_ptr<CLASSNAME>(new CLASSNAME(name)); \
       return me; }
 
