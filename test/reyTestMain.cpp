@@ -98,12 +98,12 @@ int main(int argc, char** argv) {
         args.defineArg(RuntimeArg("--comboBoxTest", "Combo box test", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--tileMapTest", "Config file test", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--lineEditTest", "Line edit test", 0, RuntimeArg::ArgType::FLAG));
-        args.defineArg(RuntimeArg("--canvasTest", "Testing nested canvases to make sure they work right", 0,
-                                  RuntimeArg::ArgType::FLAG));
+        args.defineArg(RuntimeArg("--canvasTest", "Testing nested canvases to make sure they work right", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--scissorTest", "scissoring test", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--uniqueValueTest", "unique value test", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--readFileTest", "char reading test", 0, RuntimeArg::ArgType::FLAG));
-       args.defineArg(RuntimeArg("--astarTest", "a star test", 0, RuntimeArg::ArgType::FLAG));
+        args.defineArg(RuntimeArg("--astarTest", "a star test", 0, RuntimeArg::ArgType::FLAG));
+        args.defineArg(RuntimeArg("--astarTestAuto", "a star test", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--camera2dTest", "camera 2d test", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--3dTest", "Basic3DTest", 0, RuntimeArg::ArgType::FLAG));
         args.parseArgs(argc, argv);
@@ -1476,17 +1476,18 @@ int main(int argc, char** argv) {
           auto control = Control::build("Control");
           vlayout->addChild(control);
 
-          static constexpr int CELL_SIZE = 64;
+          static constexpr int CELL_SIZE = 8;
           //create graph
-          static PathFinding::AStar astar(window.getSize().x / CELL_SIZE + 1, window.getSize().y / CELL_SIZE + 1);
+          static PathFinding::AStar2D astar(window.getSize().x / CELL_SIZE + 1, window.getSize().y / CELL_SIZE + 1);
           //add connections
           for (auto& node : astar){
              for (auto& neighbor : astar.getNeighbors(node.getCoords())){
-                if (neighbor.get().getCoords().x == 5){
-                   node.setWeight(0);
-                } else {
-                   node.setWeight(10);
-                }
+                node.setWeight(Application::generateRandom(1,10));
+//                if (neighbor.get().getCoords().x == 5){
+//                   node.setWeight(0);
+//                } else {
+//                   node.setWeight(10);
+//                }
                 node.addConnection(neighbor, false);
              }
           }
@@ -1508,8 +1509,8 @@ int main(int argc, char** argv) {
           };
           setModeString(mode);
           std::optional<Rect<int>> hoverCell;
-          std::optional<std::reference_wrapper<AStar::GraphNode>> start;
-          std::optional<std::reference_wrapper<AStar::GraphNode>> goal;
+          std::optional<std::reference_wrapper<AStar2D::GraphNode>> start;
+          std::optional<std::reference_wrapper<AStar2D::GraphNode>> goal;
           auto renderCB = [&](const Control& ctl){
              auto size = window.getSize();
              if (hoverCell){
@@ -1586,6 +1587,7 @@ int main(int argc, char** argv) {
                    return true;
                 case InputEventMouseButton::getUniqueEventId():
                    const auto& mbEvent = event.toEventType<InputEventMouseButton>();
+                   if (mbEvent.isDown) return false;
                    switch (mbEvent.button){
                       case InputInterface::MouseButton::LEFT:
                          switch (mode){
@@ -1611,8 +1613,159 @@ int main(int argc, char** argv) {
 
           control->setRenderCallback(renderCB);
           control->setUnhandledInputCallback(unhandledInputCB);
-
        }
+
+        else if (args.getArg("--astarTestAuto")) {
+           //test a star stuff without any graphics
+           static constexpr int CELL_SIZE = 8;
+           //create graph
+           static PathFinding::AStar2D astar(100,100);
+           //add connections
+           for (auto& node : astar){
+              for (auto& neighbor : astar.getNeighbors(node.getCoords())){
+                 if (neighbor.get().getCoords().)
+                 neighbor.get().addConnection(node);
+              }
+           }
+
+//           auto vlayout = VLayout::build("VLayout");
+//           auto instrLabel = Label::build("instrLabel");
+//           instrLabel->setText("press G = set goal, S = set start");
+//           auto modeLabel = Label::build("modeLabel");
+//           auto labelLayout = VLayout::build("labelLayout");
+//           root->addChild(vlayout);
+//           root->addChild(labelLayout);
+//           labelLayout->addChild(instrLabel);
+//           labelLayout->addChild(modeLabel);
+//           vlayout->setAnchoring(BaseWidget::Anchor::FILL);
+//
+//           auto control = Control::build("Control");
+//           vlayout->addChild(control);
+//
+//           enum class Mode {PICK_PATH, SET_START, SET_GOAL};
+//           Mode mode = Mode::PICK_PATH;
+//           auto setModeString = [&](Mode m){
+//              switch(mode){
+//                 case Mode::PICK_PATH:
+//                    modeLabel->setText("PICK_PATH");
+//                    break;
+//                 case Mode::SET_START:
+//                    modeLabel->setText("SET_START");
+//                    break;
+//                 case Mode::SET_GOAL:
+//                    modeLabel->setText("SET_GOAL");
+//                    break;
+//              }
+//           };
+//           setModeString(mode);
+//           std::optional<Rect<int>> hoverCell;
+//           std::optional<std::reference_wrapper<AStar::GraphNode>> start;
+//           std::optional<std::reference_wrapper<AStar::GraphNode>> goal;
+//           auto renderCB = [&](const Control& ctl){
+//              auto size = window.getSize();
+//              if (hoverCell){
+//                 ctl.drawRectangle(hoverCell.value(), Colors::yellow);
+//              }
+//
+//              //draw start
+//              if (start){
+//                 auto rect = ctl.getRect().getSubRect({CELL_SIZE, CELL_SIZE}, Rect<int>::SubRectCoords(start.value().get().getCoords()));
+//                 ctl.drawRectangle(rect, Colors::blue);
+//              }
+//
+//              //draw goal
+//              if (goal){
+//                 auto rect = ctl.getRect().getSubRect({CELL_SIZE, CELL_SIZE}, Rect<int>::SubRectCoords(goal.value().get().getCoords()));
+//                 ctl.drawRectangle(rect, Colors::red);
+//              }
+//
+//              //draw path
+//              if (start && goal && goal.value().get().getParent()){
+//                 auto parent = goal.value().get().getParent();
+//                 while (parent){
+//                    if (parent.value().get().getCoords() != start.value().get().getCoords()) {
+//                       auto rect = ctl.getRect().getSubRect({CELL_SIZE, CELL_SIZE}, Rect<int>::SubRectCoords(parent.value().get().getCoords()));
+//                       ctl.drawRectangle(rect, Colors::green);
+//                    }
+//                    parent = parent.value().get().getParent();
+//                 }
+//              }
+//
+//              //draw grid lines
+//              for (int x=0;x<size.x/CELL_SIZE+1;x++) {
+//                 Line l(x * CELL_SIZE, 0, x * CELL_SIZE, size.y);
+//                 ctl.drawLine(l, 1, Colors::black);
+//              }
+//              for (int y=0;y<size.y/CELL_SIZE+1;y++) {
+//                 Line l(0, y * CELL_SIZE, size.x, y * CELL_SIZE);
+//                 ctl.drawLine(l, 1, Colors::black);
+//              }
+//           };
+//
+//           auto checkPath = [&](){
+//              if (start && goal){
+//                 astar.findPath(start.value(), goal.value());
+//              }
+//           };
+//
+//           auto unhandledInputCB = [&](Control& ctl, const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) -> Handled{
+//              switch(event.eventId){
+//                 case InputEventKey::getUniqueEventId():
+//                    const auto& keyEvent = event.toEventType<InputEventKey>();
+//                    auto c = InputInterface::toChar(keyEvent.key);
+//                    if(!c) return false;
+//                    switch (c.value()){
+//                       default:
+//                          mode = Mode::PICK_PATH;
+//                          break;
+//                       case 'G':
+//                          mode = Mode::SET_GOAL;
+//                          break;
+//                       case 'S':
+//                          mode = Mode::SET_START;
+//                          break;
+//                    }
+//                    setModeString(mode);
+//
+//              }
+//              if (!mouse) return false;
+//              auto cellCoords = ctl.getRect().getSubRectCoord({CELL_SIZE, CELL_SIZE}, mouse.value().localPos);
+//              auto cellRect = ctl.getRect().getSubRect({CELL_SIZE, CELL_SIZE}, mouse.value().localPos);
+//              switch (event.eventId){
+//                 case InputEventMouseMotion::getUniqueEventId():
+//                    hoverCell = cellRect;
+//                    return true;
+//                 case InputEventMouseButton::getUniqueEventId():
+//                    const auto& mbEvent = event.toEventType<InputEventMouseButton>();
+//                    if (mbEvent.isDown) return false;
+//                    switch (mbEvent.button){
+//                       case InputInterface::MouseButton::LEFT:
+//                          switch (mode){
+//                             case Mode::SET_START:
+//                                start = astar.at(cellCoords.get());
+//                                checkPath();
+//                                return true;
+//                             case Mode::SET_GOAL:
+//                                goal = astar.at(cellCoords.get());
+//                                checkPath();
+//                                return true;
+//                             case Mode::PICK_PATH:
+//                                //change the weight of the connection(s)
+//                                break;
+//                          }
+//                       default:
+//                          break;
+//                    }
+//
+//              }
+//              return false;
+//           };
+//
+//           control->setRenderCallback(renderCB);
+//           control->setUnhandledInputCallback(unhandledInputCB);
+
+        }
+
         else if (args.getArg("--camera2dTest")) {
             //create nodes
             auto camera = ReyEngine::Camera2D::build("Camera2D");

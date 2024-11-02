@@ -98,8 +98,8 @@ void Layout::arrangeChildren() {
              auto maxWidth = child->getMaxSize().x;
              auto minHeight = child->getMinSize().y;
              auto maxHeight = child->getMaxSize().y;
-             newRect.width = math_tools::clamp(minWidth, maxWidth, newRect.width);
-             newRect.height = math_tools::clamp(minHeight, maxHeight, newRect.height);
+             newRect.width = Math::clamp(minWidth, maxWidth, newRect.width);
+             newRect.height = Math::clamp(minHeight, maxHeight, newRect.height);
          };
 
          clampRect(actualRect);

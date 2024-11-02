@@ -5,7 +5,7 @@ using namespace ReyEngine;
 using namespace PathFinding;
 using namespace std;
 
-AStar::AStar(unsigned int sizeX, unsigned int sizeY)
+AStar2D::AStar2D(unsigned int sizeX, unsigned int sizeY)
 : _sizeX(sizeX)
 , _sizeY(sizeY)
 {
@@ -19,7 +19,7 @@ AStar::AStar(unsigned int sizeX, unsigned int sizeY)
 }
 
 
-std::optional<std::reference_wrapper<AStar::GraphNode>> AStar::findPath(GraphNode& graphStart, GraphNode& graphGoal) {
+std::optional<std::reference_wrapper<AStar2D::GraphNode>> AStar2D::findPath(GraphNode& graphStart, GraphNode& graphGoal) {
    auto now = std::chrono::steady_clock::now();
    GraphNode* currentNode = &graphStart;
    _openSet.clear();
@@ -54,7 +54,7 @@ std::optional<std::reference_wrapper<AStar::GraphNode>> AStar::findPath(GraphNod
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::vector<Vec2<int>> AStar::extractPath(const GraphNode& goal) {
+std::vector<Vec2<int>> AStar2D::extractPath(const GraphNode& goal) {
    if (!goal._parent) return {};
    std::vector<Vec2<int>> retval;
    auto node = &goal;
@@ -66,7 +66,7 @@ std::vector<Vec2<int>> AStar::extractPath(const GraphNode& goal) {
    return retval;
 }
 
-std::vector<std::reference_wrapper<AStar::GraphNode>> AStar::getNeighbors(const Vec2<int> &pos, bool includeCorners) {
+std::vector<std::reference_wrapper<AStar2D::GraphNode>> AStar2D::getNeighbors(const Vec2<int> &pos, bool includeCorners) {
    std::vector<std::reference_wrapper<GraphNode>> retval;
    std::optional<std::reference_wrapper<GraphNode>> node;
    for (auto _x : {-1,0,1}){

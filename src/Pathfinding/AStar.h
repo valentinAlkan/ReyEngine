@@ -2,14 +2,14 @@
 #include <queue>
 #include <set>
 #include "DrawInterface.h"
+#include "MathUtils.h"
 
 //class to preform an AStar algorithm
 namespace ReyEngine {
    namespace PathFinding{
-      class AStar {
+      class AStar2D {
       public:
          class GraphNode {
-            static constexpr double WEIGHT_BIAS = 10;
          public:
             struct Connection {
                Connection(GraphNode* a, GraphNode* b): a(a), b(b){}
@@ -35,7 +35,7 @@ namespace ReyEngine {
             inline Vec2<int> getCoords() const {return _coord;}
             const std::set<std::unique_ptr<Connection>>& getConnections() const {return _connections;}
             bool operator==(const GraphNode& other) const {return _coord == other._coord;}
-            inline void setWeight(double weight){_weight = weight + WEIGHT_BIAS;}
+            inline void setWeight(double weight){_weight = weight;}
          protected:
             FCost getFCost(){return _fcost;}
             HCost getHCost(){return _hcost;}
@@ -47,13 +47,13 @@ namespace ReyEngine {
             HCost _hcost; //heuristic cost
             FCost _fcost; //gcost + hcost
             const Vec2<int> _coord;
-            double _weight = WEIGHT_BIAS;
+            double _weight = 1.0;
          private:
-            friend class AStar;
+            friend class AStar2D;
          };
 
-         AStar(const AStar&) = delete;
-         AStar(unsigned int sizeX, unsigned int sizeY);
+         AStar2D(const AStar2D&) = delete;
+         AStar2D(unsigned int sizeX, unsigned int sizeY);
          inline void addConnection(const Vec2<int>& src, const Vec2<int>& dst, double weight){
             auto found = _graph.find(getIndex(src));
             if (found == _graph.end()) throw std::runtime_error("AStar GraphNode src @ " + src.toString() + " Not found");
@@ -122,9 +122,6 @@ namespace ReyEngine {
          const unsigned int _sizeY;
          /// The map that AStar considers as a space to search.
          std::unordered_map<unsigned int, std::unique_ptr<GraphNode>> _graph;
-         /// The frontier represents the fog of war - that is to say, it should always return the most promising connected node that
-         /// has yet to be visited
-
          /// The set of nodes that are eligible for searching. Parent and f_cost could be changed at any time.
          std::set<GraphNode*> _openSet;
          /// the set of nodes that have been searched already and will not be changed
@@ -151,7 +148,7 @@ namespace ReyEngine {
          static inline double getHeuristic(const GraphNode& start, const GraphNode& dest){
             double _x = dest._coord.x - start._coord.x;
             double _y =  dest._coord.y - start._coord.y;
-            return sqrt(_x * _x + _y * _y);
+            return ReyEngine::Math::fsqrt(_x * _x + _y * _y);
          }
       };
    }
