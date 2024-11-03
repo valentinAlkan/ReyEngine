@@ -18,8 +18,8 @@ Scene::Scene(std::shared_ptr<Internal::Component> root)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-optional<shared_ptr<Scene>> Scene::fromFile(const std::string& filePath) {
-   auto bytes = FileSystem::readFile(filePath);
+optional<shared_ptr<Scene>> Scene::fromFile(const FileSystem::File& file) {
+   auto bytes = file.open()->readFile();
    if (bytes.empty()){
       return nullptr;
    }
@@ -41,7 +41,7 @@ optional<shared_ptr<Scene>> Scene::fromFile(const std::string& filePath) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 optional<shared_ptr<Scene>> Scene::fromString() {
-   return nullptr;
+   return nullopt;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

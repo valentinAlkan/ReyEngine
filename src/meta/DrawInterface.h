@@ -735,21 +735,21 @@ namespace ReyEngine {
       , _texLoaded(other._texLoaded)
       {
          other._texLoaded = false;
-         _path = other._path;
+         _file = other._file;
       }
       void loadTexture(const FileSystem::File& file);
       ~ReyTexture(){
          if (_texLoaded) {
             UnloadTexture(_tex);
          }
-         _path.clear();
+         _file.clear();
       }
       const Texture2D& getTexture() const {return _tex;}
       operator bool() const {return _texLoaded;}
-      std::string getPath(){return _path;}
+      std::string getPath(){return _file;}
       Size<int> size;
    protected:
-      std::string _path;
+      FileSystem::File _file;
       Texture2D _tex;
       bool _texLoaded = false;
    };

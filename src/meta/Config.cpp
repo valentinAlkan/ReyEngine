@@ -17,12 +17,13 @@ Config &Config::instance() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Config::loadConfig(const FileSystem::File& f) {
+   instance()._handle = f.open();
    auto& L = instance()._LState;
    L = luaL_newstate();
    luaL_openlibs(L);
    auto error = luaL_dofile(L, f.str().c_str());
    if (error){
-      throw std::runtime_error("Lua error loading file " + (string)(f));
+      throw std::runtime_error("Lua error loading file " + f.str());
    }
 }
 

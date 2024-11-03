@@ -818,7 +818,7 @@ int main(int argc, char** argv) {
         } else if (args.getArg("--tileMapTest")) {
             //load destination tilemap
             auto tileMap = TileMap::build("destMap");
-            FileSystem::File spriteSheet = "test/spritesheet.png";
+            FileSystem::FileHandle spriteSheet = "test/spritesheet.png";
             auto layerOpt = tileMap->addLayer(spriteSheet);
             if (layerOpt) {
                 Logger::debug() << "Tilemap added layer " << layerOpt.value() << " using sprite sheet "
@@ -1187,7 +1187,7 @@ int main(int argc, char** argv) {
 
         } else if (args.getArg("--xmlTest")) {
             //parse xml file
-            FileSystem::File xmlFile("test/xmltest.xml");
+            FileSystem::FileHandle xmlFile("test/xmltest.xml");
             auto vlayout = VLayout::build("mainvlayout");
             vlayout->setAnchoring(BaseWidget::Anchor::FILL);
             root->addChild(vlayout);
@@ -1246,7 +1246,7 @@ int main(int argc, char** argv) {
             //rebuild tree
             catElement(xmlRoot);
         } else if (args.getArg("--csvTest")) {
-            FileSystem::File csvFile("test/csvTest.csv");
+            FileSystem::FileHandle csvFile("test/csvTest.csv");
             auto parser = CSVParser(csvFile, true);
             //cat out all the data
             if (auto hdr = parser.getHeader()) {
@@ -1843,7 +1843,7 @@ int main(int argc, char** argv) {
             background->setUnhandledInputCallback(cbBGUnhandledInput);
             background->setProcessCallback(cbBGProcess);
         } else if (args.getArg("--readFileTest")) {
-            auto file = FileSystem::File("test/test.scn");
+            auto file = FileSystem::FileHandle("test/test.scn");
             auto fileCopy = file;
             //cat out the contents of the file as a whole
             Logger::info() << "Catting out contents of " << file.abs() << " using readfile" << endl;

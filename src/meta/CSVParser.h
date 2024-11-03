@@ -9,7 +9,7 @@ class CSVParser {
 public:
    using Row = std::vector<std::string>;
    static constexpr char CSV_SEP = ',';
-   CSVParser(const ReyEngine::FileSystem::File& file, bool hasHeader = false);
+   CSVParser(const std::shared_ptr<ReyEngine::FileSystem::FileHandle>& file, bool hasHeader = false);
 
    /**
     * Returns a std::vector with all of the rows parsed from the file
@@ -38,7 +38,7 @@ public:
    bool hasHeader(){return !_header.empty();}
 
 private:
-   ReyEngine::FileSystem::File _file;
+   std::shared_ptr<ReyEngine::FileSystem::FileHandle> _file;
    std::vector<Row> _data;
    Row _header;
 

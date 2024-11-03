@@ -117,7 +117,7 @@ namespace ReyEngine{
       Scene(std::shared_ptr<Internal::Component> root);
       std::string toString();
       static std::optional<std::shared_ptr<Scene>> fromString();
-      static std::optional<std::shared_ptr<Scene>> fromFile(const std::string& filePath);
+      static std::optional<std::shared_ptr<Scene>> fromFile(const FileSystem::File& file);
       std::shared_ptr<Internal::Component> getRoot(){return _root;}
    protected:
       std::string name;

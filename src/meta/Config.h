@@ -6,6 +6,7 @@ class lua_State;
 namespace ReyEngine {
    class Config {
    public:
+      Config(const Config& other) = delete;
       static void loadConfig(const FileSystem::File&);
       static std::string getString(const std::string& element);
       static std::string getString(const std::string& table, const std::string& element);
@@ -20,6 +21,7 @@ namespace ReyEngine {
       Config(){};
       static Config& instance();
       static std::unique_ptr<Config> _self;
+      std::shared_ptr<FileSystem::FileHandle> _handle;
       lua_State* _LState = nullptr;
    };
 }

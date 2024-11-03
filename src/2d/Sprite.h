@@ -8,8 +8,14 @@ namespace ReyEngine{
    class Sprite : public BaseWidget {
    public:
    REYENGINE_OBJECT_BUILD_ONLY(Sprite, BaseWidget)
-      , PROPERTY_DECLARE(region)
-      {}
+   , PROPERTY_DECLARE(region)
+   {}
+   static std::shared_ptr<Sprite> build(const std::string& name, const FileSystem::File& texPath, const Rect<int>& region){
+      auto me = build(name);
+      me->texPath = texPath;
+      me->region = region;
+      return me;
+   }
    public:
       REYENGINE_DEFAULT_BUILD(Sprite)
       void render() const override;

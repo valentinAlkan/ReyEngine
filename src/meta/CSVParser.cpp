@@ -6,10 +6,10 @@ using namespace std;
 using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-CSVParser::CSVParser(const ReyEngine::FileSystem::File& file, bool header)
+CSVParser::CSVParser(const std::shared_ptr<ReyEngine::FileSystem::FileHandle>& file, bool header)
 : _file(file)
 {
-   auto it = _file.begin();
+   auto it = _file->begin();
    auto firstLine = *it;
    if (firstLine.empty()) return; //empty
    
@@ -24,10 +24,10 @@ CSVParser::CSVParser(const ReyEngine::FileSystem::File& file, bool header)
    Row r;
    r.reserve(expectedSize);
 
-   for (/**/; it!=_file.end(); ++it) {
+   for (/**/; it!=_file->end(); ++it) {
       split = string_tools::split(*it, CSV_SEP);
       auto rowSize = split.size();
-      if (rowSize < expectedSize) throw std::runtime_error("CSVParser: Not enough columns for row <" + to_string(it.getCurrentLineNo()) + "> in file " + _file.abs());
+      if (rowSize < expectedSize) throw std::runtime_error("CSVParser: Not enough columns for row <" + to_string(it.getCurrentLineNo()) + "> in file " + _file->file().abs());
       r.insert(r.begin(), split.begin(), split.begin() + expectedSize);
       _data.push_back(r);
       r.clear();

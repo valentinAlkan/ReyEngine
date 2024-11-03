@@ -213,7 +213,7 @@ namespace ReyEngine {
    private:
        Model3D(const FileSystem::Path& path);
        Model model;
-       const FileSystem::File filePath;
+       const FileSystem::FileHandle filePath;
        friend class ModelBody;
        friend class Internal::Renderable3D;
    };
