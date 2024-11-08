@@ -146,11 +146,17 @@ namespace ReyEngine{
       Anchor getAnchoring(){return _anchor.value;}
       bool isAnchored(){return _anchor.value != Anchor::NONE;}
       void setMaxSize(const ReyEngine::Size<int>& size);
+      void setMaxWidth(int maxWidth){maxSize.x = maxWidth;}
+      void setMaxHeight(int maxHeight){maxSize.y = maxHeight;}
       void setMinSize(const ReyEngine::Size<int>& size);
+      void setMinWidth(int minWidth){minSize.x = minWidth;}
+      void setMinHeight(int minHeight){minSize.y = minHeight;}
       void setRect(const ReyEngine::Rect<int>& r);
       void setPos(int x, int y);
       void setPos(const ReyEngine::Pos<int>& pos);
       void setPosRelative(const ReyEngine::Pos<int>& pos, const ReyEngine::Pos<int>& basis); //sets a new position relative to its current position
+      void setX(int x);
+      void setY(int y);
       void move(const ReyEngine::Pos<int>& amt);
       void setSize(const ReyEngine::Size<int>& size);
       void scale(const ReyEngine::Vec2<float>& scale);
@@ -160,6 +166,8 @@ namespace ReyEngine{
       ReyEngine::Pos<int> getLocalMousePos() const {return globalToLocal(InputManager::getMousePos());}
       ReyEngine::Pos<int> globalToLocal(const ReyEngine::Pos<int>& global) const;
       ReyEngine::Pos<int> localToGlobal(const ReyEngine::Pos<int>& local) const;
+      ReyEngine::Rect<int> globalToLocal(const ReyEngine::Rect<int>& global) const;
+      ReyEngine::Rect<int> localToGlobal(const ReyEngine::Rect<int>& local) const;
       void setGlobalPos(const iVec&);
       bool isInside(const iVec& point) const {return _rect.value.toSizeRect().isInside(point);}
       bool setName(const std::string& name, bool append_index=false);

@@ -39,6 +39,7 @@ namespace ReyEngine{
    class Workspace : public Panel {
       REYENGINE_OBJECT_BUILD_ONLY(Workspace, Panel){}
    public:
+      REYENGINE_DEFAULT_BUILD(Workspace)
       struct EventWidgetAdded : public Event<EventWidgetAdded> {
          EVENT_CTOR_SIMPLE(EventWidgetAdded, Event<EventWidgetAdded>){}
          std::shared_ptr<BaseWidget> widget;

@@ -3,9 +3,9 @@
 
 namespace ReyEngine {
    class SceneTree : public Tree{
-      REYENGINE_DEFAULT_BUILD(SceneTree);
       REYENGINE_OBJECT_BUILD_ONLY(SceneTree, Tree){}
    public:
+      REYENGINE_DEFAULT_BUILD(SceneTree);
    };
 
    class SceneTreeItem : public TreeItem {

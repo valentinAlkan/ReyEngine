@@ -54,7 +54,7 @@ namespace ReyEngine{
       static Vec2<double> getMousePct(); //returns global mouse position as a percentage of the window size from 0 to 1
       std::shared_ptr<Canvas> getCanvas();
       Size<int> getSize(){return getWindowSize();}
-      void setSize(Size<int> newSize){setWindowSize(newSize);}
+      void setSize(Size<int> newSize);
       Pos<int> getPosition(){return getWindowPosition();}
       void setPosition(Pos<int> newPos){setWindowPosition(newPos);}
       void maximize(){maximizeWindow();}

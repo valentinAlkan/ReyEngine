@@ -80,6 +80,8 @@ int main(int argc, char** argv) {
         args.defineArg(RuntimeArg("--layoutTest", "Test layouts", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--configTest", "Config file test", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--layoutTestBasic", "Basic Test layouts", 0, RuntimeArg::ArgType::FLAG));
+        args.defineArg(RuntimeArg("--layoutTestSuperBasic", "Super basic Test layouts", 0, RuntimeArg::ArgType::FLAG));
+        args.defineArg(RuntimeArg("--layoutTestConstrained", "Super basic Test layouts", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--panelTest", "Test panel", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--editor", "Editor", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--treeTest", "TreeTest", 0, RuntimeArg::ArgType::FLAG));
@@ -606,8 +608,22 @@ int main(int argc, char** argv) {
             inputFilter->subscribe<Slider::EventSliderValueChanged>(vslider, vSlidercb);
 
         } else if (args.getArg("--saveLoadSceneTest")) {
-    //      auto
+        } else if (args.getArg("--layoutTestSuperBasic")) {
+           Logger::debug() << "Layout test super basic!" << endl;
+           auto mainVLayout = HLayout::build("MainLayout");
+           mainVLayout->setAnchoring(BaseWidget::Anchor::FILL);
+           root->addChild(mainVLayout);
+           auto control1 = Control::build("Control1");
+           auto control2 = Control::build("Control2");
+           control1->getTheme()->background = Style::Fill::SOLID;
+           control1->getTheme()->background.colorPrimary.set(ReyEngine::Colors::red);
+           control2->getTheme()->background = Style::Fill::SOLID;
+           control2->getTheme()->background.colorPrimary.set(ReyEngine::Colors::green);
+           mainVLayout->addChild(control1);
+           Logger::debug() << "Layout " << mainVLayout->getName() << " child count = " << mainVLayout->getChildren().size() << endl;
+           mainVLayout->addChild(control2);
         } else if (args.getArg("--layoutTestBasic")) {
+            window.setSize({800, 600});
             Logger::debug() << "Layout test basic!" << endl;
             auto mainVLayout = VLayout::build("MainVLayout");
             mainVLayout->setAnchoring(BaseWidget::Anchor::FILL);
@@ -621,18 +637,67 @@ int main(int argc, char** argv) {
             control2->getTheme()->background = Style::Fill::SOLID;
             control2->getTheme()->background.colorPrimary.set(ReyEngine::Colors::green);
             mainVLayout->addChild(control1);
-            Logger::debug() << "Layout " << mainVLayout->getName() << " child count = " << mainVLayout->getChildren().size()
-                            << endl;
+            Logger::debug() << "Layout " << mainVLayout->getName() << " child count = " << mainVLayout->getChildren().size() << endl;
             mainVLayout->addChild(control2);
             mainVLayout->addChild(layout3);
 
+           bool passed = true;
             //split layout 3
-            for (int i = 0; i < 4; i++) {
+           static constexpr int SUBCONS = 4;
+            for (int i = 0; i < SUBCONS; i++) {
                 auto subcontrol = Control::build("SubControl" + to_string(i));
                 subcontrol->getTheme()->background = Style::Fill::SOLID;
                 subcontrol->getTheme()->background.colorPrimary.set(ReyEngine::Colors::randColor());
                 layout3->addChild(subcontrol);
             }
+
+           //assert sizes
+           auto assertRect = [&](const std::shared_ptr<BaseWidget>& widget, const Rect<int>& assertRect){
+              auto widgetRect = widget->getRect();
+              Logger::info() << "Widget " << widget->getName() << " has rect " << widgetRect;
+              auto match = widgetRect == assertRect;
+              if (match){
+                 Logger::info() << ", which is correct" << endl;
+              } else {
+                 Logger::info() << ", which is incorrect; it should be " << assertRect << endl;
+              }
+              return match;
+           };
+            for (int i=0;i<SUBCONS;i++){
+               passed &= assertRect(layout3->getChildren().at(i), {200 * i, 0, 200, 200});
+            }
+
+           passed &= assertRect(mainVLayout, {0,0,800,600});
+           passed &= assertRect(control1, {0, 0, 800, 200});
+           passed &= assertRect(control2, {0, 200, 800, 200});
+           passed &= assertRect(layout3, {0, 400, 800, 200});
+           if (passed){
+              Logger::info() << "All is well with this layout" << endl;
+           } else {
+              Logger::error() << "Layout is incorrect" << endl;
+           }
+        } else if (args.getArg("--layoutTestConstrained")) {
+           Logger::debug() << "Layout test constrained!" << endl;
+           auto mainLayout = HLayout::build("MainLayout");
+           mainLayout->setAnchoring(BaseWidget::Anchor::FILL);
+           root->addChild(mainLayout);
+           auto left = Control::build("Left");
+           auto center = Control::build("Center");
+           auto right = Control::build("Right");
+           left->getTheme()->background = Style::Fill::SOLID;
+           left->getTheme()->background.colorPrimary.set(ReyEngine::Colors::red);
+           center->getTheme()->background = Style::Fill::SOLID;
+           center->getTheme()->background.colorPrimary.set(ReyEngine::Colors::green);
+           right->getTheme()->background = Style::Fill::SOLID;
+           right->getTheme()->background.colorPrimary.set(ReyEngine::Colors::blue);
+           static constexpr int CONSTRAINT = 100;
+           left->setMaxWidth(CONSTRAINT);
+           right->setMaxWidth(CONSTRAINT);
+           left->setMinWidth(CONSTRAINT);
+           right->setMinWidth(CONSTRAINT);
+           mainLayout->addChild(left);
+           mainLayout->addChild(center);
+           mainLayout->addChild(right);
         } else if (args.getArg("--layoutTest")) {
             Logger::debug() << "Layout test!" << endl;
             auto mainVLayout = VLayout::build("MainVLayout");
@@ -818,7 +883,7 @@ int main(int argc, char** argv) {
         } else if (args.getArg("--tileMapTest")) {
             //load destination tilemap
             auto tileMap = TileMap::build("destMap");
-            FileSystem::FileHandle spriteSheet = "test/spritesheet.png";
+            FileSystem::File spriteSheet = "test/spritesheet.png";
             auto layerOpt = tileMap->addLayer(spriteSheet);
             if (layerOpt) {
                 Logger::debug() << "Tilemap added layer " << layerOpt.value() << " using sprite sheet "
@@ -1187,7 +1252,7 @@ int main(int argc, char** argv) {
 
         } else if (args.getArg("--xmlTest")) {
             //parse xml file
-            FileSystem::FileHandle xmlFile("test/xmltest.xml");
+            FileSystem::File xmlFile("test/xmltest.xml");
             auto vlayout = VLayout::build("mainvlayout");
             vlayout->setAnchoring(BaseWidget::Anchor::FILL);
             root->addChild(vlayout);
@@ -1246,8 +1311,8 @@ int main(int argc, char** argv) {
             //rebuild tree
             catElement(xmlRoot);
         } else if (args.getArg("--csvTest")) {
-            FileSystem::FileHandle csvFile("test/csvTest.csv");
-            auto parser = CSVParser(csvFile, true);
+            FileSystem::File csvFile("test/csvTest.csv");
+            auto parser = CSVParser(csvFile.open(), true);
             //cat out all the data
             if (auto hdr = parser.getHeader()) {
                 stringstream ss;
@@ -1623,8 +1688,8 @@ int main(int argc, char** argv) {
            //add connections
            for (auto& node : astar){
               for (auto& neighbor : astar.getNeighbors(node.getCoords())){
-                 if (neighbor.get().getCoords().)
-                 neighbor.get().addConnection(node);
+//                 if (neighbor.get().getCoords().)
+//                 neighbor.get().addConnection(node);
               }
            }
 
@@ -1843,24 +1908,23 @@ int main(int argc, char** argv) {
             background->setUnhandledInputCallback(cbBGUnhandledInput);
             background->setProcessCallback(cbBGProcess);
         } else if (args.getArg("--readFileTest")) {
-            auto file = FileSystem::FileHandle("test/test.scn");
+            auto file = FileSystem::File("test/test.scn").open();
             auto fileCopy = file;
             //cat out the contents of the file as a whole
-            Logger::info() << "Catting out contents of " << file.abs() << " using readfile" << endl;
+            Logger::info() << "Catting out contents of " << file->file().abs() << " using readfile" << endl;
             stringstream ss;
-            for (auto c: file.readFile()) {
+            for (auto c: file->readFile()) {
                 ss << c;
             }
             std::cout << ss.str() << endl;
 
             //cat out the contents of the file byte by byte
-            Logger::info() << "Catting out contents of " << fileCopy.abs() << " using getByte" << endl;
+            Logger::info() << "Catting out contents of " << fileCopy->file().abs() << " using getByte" << endl;
             bool done = false;
-            fileCopy.open();
             ss.clear();
-            while (!fileCopy.eof()) {
+            while (!fileCopy->isEof()) {
                 static constexpr int strsize = 10;
-                for (auto c: fileCopy.readBytes(strsize)) {
+                for (auto c: fileCopy->readBytes(strsize)) {
                     ss << c;
                 }
             }

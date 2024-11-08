@@ -1,4 +1,6 @@
 #include "Layout.h"
+#include "MiscTools.h"
+#include "numeric"
 
 using namespace std;
 using namespace ReyEngine;
@@ -69,63 +71,124 @@ void Layout::arrangeChildren() {
       }
    } else {
       //how much space we have to allocate
-      auto totalSpace = dir == LayoutDir::HORIZONTAL ? getWidth() : getHeight();
-      ReyEngine::Pos<int> pos;
+      auto totalSpace = dir == LayoutDir::HORIZONTAL ? _rect.value.width : _rect.value.height;
       //how much space we will allocate to each child
-      unsigned int childIndex = 0;
-      auto calcRatio = [this](int startIndex) -> float {
-          float sum = 0;
-          for (int i = startIndex; i < childScales.size(); i++) {
-             sum += childScales.get(i);
-          }
-          if (!childScales.size()){
-             childScales.append(1.0); //always ensure we have a child scale
-             sum = 1;
-          }
-          return childScales.value[startIndex] / sum;
+      auto totalSizeToAllocate = totalSpace;
+      Logger::debug() << "Layout " << getName() << " has " << getChildren().size() << " children" << endl;
+
+      //new method
+      //determine which children we are giving space to. Children which are maxed out will not be considered
+      // in this calculation. Start with a vector of all children, and remove them as we need to.
+      struct LayoutHelper {
+         LayoutHelper(LayoutDir layoutDir, int index, std::shared_ptr<BaseWidget>& child)
+         : childIndex(index)
+         , layoutDir(layoutDir)
+         , child(child)
+         {}
+         ~LayoutHelper(){
+            //apply the rect
+            Logger::info() << "Parent " << child->getParent().lock()->getName() << " applying rectangle " << pendingRect << " to child " << child->getName() << endl;
+            //apply margins - this should always be the very last thing we do
+            auto theme = child->getParent().lock()->getTheme();
+            pendingRect.x += theme->layoutMargins.left();
+            pendingRect.y += theme->layoutMargins.top();
+            pendingRect.width -= (theme->layoutMargins.right() + theme->layoutMargins.left());
+            pendingRect.height -= (theme->layoutMargins.bottom() + theme->layoutMargins.top());
+            child->setRect(pendingRect);
+         }
+         /// Accounts for min/max
+         std::optional<int> setPendingRect(const Rect<int>& newRect){
+            Tools::AnonymousDtor dtor([&](){Logger::info() << "Child " << child->getName() << " will be allowed " << pendingRect.size() << " space" << endl;});
+            pendingRect = newRect;
+            auto maxSize = layoutDir == LayoutDir::HORIZONTAL ? child->getMaxSize().x : child->getMaxSize().y;
+            auto minSize = layoutDir == LayoutDir::HORIZONTAL ? child->getMinSize().x : child->getMinSize().y;
+            auto& releventDimension = layoutDir == LayoutDir::HORIZONTAL ? pendingRect.width : pendingRect.height;
+
+            bool isConstrainedMax = releventDimension >= maxSize;
+            bool isConstrainedMin = releventDimension <= minSize;
+            if (isConstrainedMax) {
+               releventDimension = maxSize;
+               return maxSize;
+            }
+            if (isConstrainedMin) {
+               releventDimension = minSize;
+               return minSize;
+            }
+            return nullopt;
+         }
+         /// Sets the x or y value appropriately based on the layout - one value should always be 0
+         void setReleventPosition(int pos) {
+            switch (layoutDir) {
+               case LayoutDir::HORIZONTAL:
+                  pendingRect.x = pos;
+                  break;
+               case LayoutDir::VERTICAL:
+                  pendingRect.y = pos;
+                  break;
+            }
+         }
+         /// returns height for vertical layouts and width for horizontal layouts
+         int getReleventDimension(){return layoutDir == LayoutDir::VERTICAL ? pendingRect.height : pendingRect.width;}
+         bool operator==(const LayoutHelper& rhs) const {return child == rhs.child;}
+         const int childIndex;
+         const LayoutDir layoutDir;
+         std::shared_ptr<BaseWidget>& child;
+      private:
+         Rect<int> pendingRect;
+      };
+      std::vector<std::unique_ptr<LayoutHelper>> childLayoutsAll;
+      std::vector<std::reference_wrapper<LayoutHelper>> childLayoutsAvailable;
+      for (int i=0; i<getChildren().size(); i++){
+         childLayoutsAll.emplace_back(make_unique<LayoutHelper>(dir, i, getChildren().at(i)));
+         childLayoutsAvailable.emplace_back(*childLayoutsAll.back());
+      }
+      auto removeLayoutFromConsideration = [&](LayoutHelper& layout){
+         for (auto it = childLayoutsAvailable.begin(); it != childLayoutsAvailable.end(); it++){
+            if (layout == *it){
+               childLayoutsAvailable.erase(it);
+               return;
+            }
+         }
       };
 
-      auto sizeLeft = totalSpace;
-      Logger::debug() << "Layout " << getName() << " has " << getChildren().size() << " children" << endl;
-      for (auto &child: getChildren()) {
-         int allowedSpace = (int) (sizeLeft * calcRatio(childIndex));
-         auto actualRect = dir == LayoutDir::HORIZONTAL ? ReyEngine::Rect<int>(pos, {allowedSpace, _rect.value.height})
-                                                        : ReyEngine::Rect<int>(pos, {_rect.value.width, allowedSpace});
-
-         //enforce min/max bounds
-         auto clampRect = [=](ReyEngine::Rect<int> &newRect) {
-             auto minWidth = child->getMinSize().x;
-             auto maxWidth = child->getMaxSize().x;
-             auto minHeight = child->getMinSize().y;
-             auto maxHeight = child->getMaxSize().y;
-             newRect.width = Math::clamp(minWidth, maxWidth, newRect.width);
-             newRect.height = Math::clamp(minHeight, maxHeight, newRect.height);
-         };
-
-         clampRect(actualRect);
-         auto virtualRect = actualRect; //the space the widget _would_ take up if margins didnt exist
-         //apply margins
-         actualRect.x += theme->layoutMargins.left();
-         actualRect.y += theme->layoutMargins.top();
-         actualRect.width -= (theme->layoutMargins.right() + theme->layoutMargins.left());
-         actualRect.height -= (theme->layoutMargins.bottom() + theme->layoutMargins.top());
-
-         int consumedSpace;
-         switch (dir) {
-            case LayoutDir::HORIZONTAL:
-               pos.x += virtualRect.width;
-                 consumedSpace = virtualRect.width;
-                 break;
-            case LayoutDir::VERTICAL:
-               pos.y += virtualRect.height;
-                 consumedSpace = virtualRect.height;
-                 break;
+      bool startOver = false;
+      Logger::info() << "Parent " << getName() << " allocating " << getSize() << " pixels to children!" << endl;
+      do {
+         for (auto& _layout: childLayoutsAvailable){
+            auto& layout = _layout.get();
+            auto& child = layout.child;
+            startOver = false;
+//            Logger::info() << "Child " << layout.childIndex + 1 << " of " << childLayoutsAvailable.size() << " will have a position of " << currentPos << endl;
+            int allocatedSpace;
+            {
+               double denominator = 0;
+               double numerator = childScales.value.at(layout.childIndex);
+               for (int i=0; i<childLayoutsAvailable.size(); i++) {
+                  denominator += childScales.value.at(childLayoutsAvailable.at(i).get().childIndex);
+               }
+               allocatedSpace = (int) (totalSizeToAllocate * numerator / denominator);
+               Logger::info() << "Child " << child->getName() << " with scale of " << numerator << "/" << denominator << " can potentially be allocated " << allocatedSpace << " pixels" << endl;
+            }
+            std::optional<int> isConstrained;
+            if (dir == LayoutDir::HORIZONTAL) {
+               isConstrained = layout.setPendingRect({{0, 0},{allocatedSpace, _rect.value.height}});
+            } else {
+               isConstrained = layout.setPendingRect({{0, 0}, {_rect.value.width, allocatedSpace}});
+            }
+            if (isConstrained) {
+               removeLayoutFromConsideration(layout);
+               totalSizeToAllocate -= isConstrained.value();
+               startOver = true;
+            }
+            if (startOver) break;
          }
-         child->setRect(actualRect);
-         Logger::debug() << "Parent " << getName() << ":" << getRect() << " applying rectangle " << actualRect << " to child " << child->getName() << endl;
-         childIndex++;
-         //recalculate size each if we didn't use all available space
-         sizeLeft -= consumedSpace;
+      } while (startOver && !childLayoutsAvailable.empty());
+
+      // Now that the sizes of the children are correctly determined, we must place them at their appropriate positions
+      int currentPos = 0;
+      for (auto& layout : childLayoutsAll) {
+         layout->setReleventPosition(currentPos);
+         currentPos += layout->getReleventDimension();
       }
    }
 }

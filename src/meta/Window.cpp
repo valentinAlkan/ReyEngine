@@ -425,6 +425,11 @@ std::optional<std::shared_ptr<BaseWidget>> Window::ProcessList::find(const std::
 //   makeRoot(newRoot, getSize());
 //}
 
+///////////////////////////////////////////////////////////////////////////////////////////
+void Window::setSize(Size<int> newSize) {
+   setWindowSize(newSize);
+   getCanvas()->setSize(newSize);
+}
 /////////////////////////////////////////////////////////////////////////////////////////
 void Window::clearHover() {
    auto locked =  _hovered.lock();

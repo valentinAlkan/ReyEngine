@@ -340,7 +340,8 @@ namespace ReyEngine {
       constexpr inline explicit Rect(const Size<T>& v): x(0), y(0), width((T)v.x), height((T)v.y){}
       constexpr inline operator bool(){return x || y || width || height;}
       constexpr inline Rect(const Pos<T>& pos, const Size<T>& size): x((T)pos.x), y((T)pos.y), width((T)size.x), height((T)size.y){}
-      constexpr inline bool operator!=(const Rect<T>& rhs) const {return rhs.x != x || rhs.y != y || rhs.width != width || rhs.height != height;}
+      constexpr inline bool operator==(const Rect<T>& rhs) const {return rhs.x == x && rhs.y == y && rhs.width == width && rhs.height == height;}
+      constexpr inline bool operator!=(const Rect<T>& rhs) const {return !(*this == rhs);}
       constexpr inline Rect operator+(const Pos<T>& rhs) const {Rect<T> val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
       constexpr inline Rect operator-(const Pos<T>& rhs) const {Rect<T> val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
       constexpr inline Rect& operator+=(const Pos<T>& rhs){x += rhs.x; y += rhs.y; return *this;}

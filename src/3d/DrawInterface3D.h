@@ -168,29 +168,29 @@ namespace ReyEngine {
        Collisions::RayHit3D collides(const Collisions::Ray3D& ray);                       // Get collision info between ray and mesh
 
        //------------------
-       class MeshIterator {
+       class iterator {
        public:
            using iterator_category = std::forward_iterator_tag;
            using value_type = Mesh;
            using difference_type = std::ptrdiff_t;
            using pointer = Mesh*;
            using reference = Mesh&;
-           MeshIterator(pointer ptr) : current(ptr) {}
+           iterator(pointer ptr) : current(ptr) {}
            reference operator*() const { return *current; }
            pointer operator->() { return current; }
            // Pre-increment
-           MeshIterator& operator++() {
+           iterator& operator++() {
                current++;
                return *this;
            }
            // Post-increment
-           MeshIterator operator++(int) {
-               MeshIterator tmp = *this;
+           iterator operator++(int) {
+               iterator tmp = *this;
                ++(*this);
                return tmp;
            }
-           friend bool operator==(const MeshIterator& a, const MeshIterator& b) {return a.current == b.current;}
-           friend bool operator!=(const MeshIterator& a, const MeshIterator& b) {return a.current != b.current;}
+           friend bool operator==(const iterator& a, const iterator& b) {return a.current == b.current;}
+           friend bool operator!=(const iterator& a, const iterator& b) {return a.current != b.current;}
        private:
            pointer current;
        };
@@ -198,8 +198,8 @@ namespace ReyEngine {
        class MeshRange {
        public:
            MeshRange(Mesh* start, Mesh* end) : m_begin(start), m_end(end) {}
-           MeshIterator begin() { return {m_begin}; }
-           MeshIterator end() { return {m_end}; }
+           iterator begin() { return {m_begin}; }
+           iterator end() { return {m_end}; }
        private:
            Mesh* m_begin;
            Mesh* m_end;
@@ -213,7 +213,7 @@ namespace ReyEngine {
    private:
        Model3D(const FileSystem::Path& path);
        Model model;
-       const FileSystem::FileHandle filePath;
+       const FileSystem::File filePath;
        friend class ModelBody;
        friend class Internal::Renderable3D;
    };

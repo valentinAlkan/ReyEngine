@@ -81,7 +81,19 @@ Pos<int> BaseWidget::globalToLocal(const Pos<int>& global) const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyEngine::Pos<int> BaseWidget::localToGlobal(const ReyEngine::Pos<int> &local) const {
+Pos<int> BaseWidget::localToGlobal(const Pos<int> &local) const {
+   return local + getGlobalPos();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Rect<int> BaseWidget::globalToLocal(const Rect<int> &global) const {
+   auto globalPos = getGlobalPos();
+   auto retval = global - globalPos;
+   return retval;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Rect<int> BaseWidget::localToGlobal(const Rect<int> &local) const {
    return local + getGlobalPos();
 }
 
@@ -96,7 +108,7 @@ ReyEngine::Size<int> BaseWidget::getChildBoundingBox() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::renderChain(ReyEngine::Pos<double>& parentOffset) {
+void BaseWidget::renderChain(Pos<double>& parentOffset) {
    if (!_visible) return;
    Pos<double> localOffset;
    renderBegin(localOffset);
@@ -264,7 +276,7 @@ Handled BaseWidget::_process_unhandled_editor_input(const InputEvent& event, con
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-UnhandledMouseInput BaseWidget::toMouseInput(const ReyEngine::Pos<int> &global) const {
+UnhandledMouseInput BaseWidget::toMouseInput(const Pos<int> &global) const {
     UnhandledMouseInput childmouse;
     childmouse.localPos = globalToLocal(global);
     childmouse.isInside = isInside(childmouse.localPos);
@@ -314,12 +326,12 @@ void BaseWidget::drawArrow(const Line<int>& line, float lineThick, const ReyEngi
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawText(const std::string &text, const ReyEngine::Pos<int> &pos, const ReyEngine::ReyEngineFont& font) const{
+void BaseWidget::drawText(const std::string &text, const Pos<int> &pos, const ReyEngine::ReyEngineFont& font) const{
    ReyEngine::drawText(text, pos + getGlobalPos() + _renderOffset, font);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawTextCentered(const std::string &text, const ReyEngine::Pos<int> &pos, const ReyEngine::ReyEngineFont& font) const{
+void BaseWidget::drawTextCentered(const std::string &text, const Pos<int> &pos, const ReyEngine::ReyEngineFont& font) const{
    ReyEngine::drawTextCentered(text, pos + getGlobalPos() + _renderOffset, font);
 }
 
@@ -375,13 +387,13 @@ void BaseWidget::drawCircleSectorLines(const ReyEngine::CircleSector& sector, co
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawRenderTargetRect(const ReyEngine::RenderTarget& target, const ReyEngine::Rect<int>& src, const ReyEngine::Pos<int>& dst) const {
+void BaseWidget::drawRenderTargetRect(const ReyEngine::RenderTarget& target, const ReyEngine::Rect<int>& src, const Pos<int>& dst) const {
    auto _dst = dst + getGlobalPos();
    DrawTextureRec(target.getRenderTexture(), {(float)src.x, (float)src.y, (float) src.width, -(float)src.height}, {(float)_dst.x + (float)_renderOffset.x, (float)_dst.y + (float)_renderOffset.y}, Colors::none);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawRenderTarget(const ReyEngine::RenderTarget& target, const ReyEngine::Pos<int>& dst) const {
+void BaseWidget::drawRenderTarget(const ReyEngine::RenderTarget& target, const Pos<int>& dst) const {
    DrawTextureRec(target.getRenderTexture(), {0,0, (float)target.getSize().x, -(float)target.getSize().y}, {(float)dst.x + (float)_renderOffset.x, (float)dst.y + (float)_renderOffset.y}, Colors::none);
 }
 
@@ -429,7 +441,7 @@ ReyEngine::Rect<int> BaseWidget::_getGrabHandle(int index) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-std::optional<std::shared_ptr<BaseWidget>> BaseWidget::getWidgetAt(ReyEngine::Pos<int> pos) {
+std::optional<std::shared_ptr<BaseWidget>> BaseWidget::getWidgetAt(Pos<int> pos) {
    //query the widget and figure out which of its children is the topmost widget at the position
    std::shared_ptr<BaseWidget> widgetAt;
    std::function<std::shared_ptr<BaseWidget>(std::shared_ptr<BaseWidget>)> findWidget = [&](std::shared_ptr<BaseWidget> currentWidget){
@@ -548,18 +560,30 @@ void BaseWidget::setPos(int x, int y){
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::setPos(const ReyEngine::Pos<int>& pos) {
+void BaseWidget::setPos(const Pos<int>& pos) {
    ReyEngine::Rect<int> r(pos, _rect.value.size());
    setRect(r);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::setPosRelative(const ReyEngine::Pos<int>& pos, const ReyEngine::Pos<int>& basis) {
+void BaseWidget::setX(int x) {
+   Rect<int> r({x, _rect.value.pos().y}, _rect.value.size());
+   setRect(r);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::setY(int y){
+   Rect<int> r({_rect.value.pos().x, y}, _rect.value.size());
+   setRect(r);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::setPosRelative(const Pos<int>& pos, const Pos<int>& basis) {
    setPos(pos - basis);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::move(const ReyEngine::Pos<int> &amt) {
+void BaseWidget::move(const Pos<int> &amt) {
    setPos(_rect.value.pos() + amt);
 }
 
