@@ -37,7 +37,7 @@ namespace ReyEngine::Internal{
     public:
         using ChildIndex = unsigned long;
         using ChildPtr = std::shared_ptr<T>;
-        using ChildMap = std::map<std::string, std::pair<ChildIndex, std::shared_ptr<T>>>;
+        using ChildMap = std::map<std::string, std::pair<ChildIndex, T*>>;
         using ChildOrder = std::vector<ChildPtr>;
 
         struct ChildAddedEvent : public Event<ChildAddedEvent> {
@@ -76,7 +76,7 @@ namespace ReyEngine::Internal{
         T& toContainedType(){
             return (T&)(*this);
         };
-        virtual ~TypeContainer(){std::cout << "typoecontainer deleting " << getName() << std::endl;}
+        virtual ~TypeContainer() = default;
         ChildPtr toContainedTypePtr(){
             return inheritable_enable_shared_from_this<TypeContainer<T>>::template downcasted_shared_from_this<T>();
         };
@@ -89,7 +89,7 @@ namespace ReyEngine::Internal{
                 Logger::error() << ss.str();
                 throw std::runtime_error(ss.str());
             }
-            auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
+            auto lock = std::unique_lock<std::recursive_mutex>(_childLock);
             auto found = getChild(child->getName());
             if (found){
                 std::stringstream ss;
@@ -109,7 +109,7 @@ namespace ReyEngine::Internal{
 
             auto newIndex = getChildren().size(); //index of new child's location in ordered vector
             _childOrder.push_back(childTypePtr);
-            _childMap[getName()] = std::pair<int, ChildPtr>(newIndex, me);
+            _childMap[childTypePtr->getName()] = std::pair<int, T*>(newIndex, me.get());
             __on_child_added_immediate(childTypePtr);
             if (isInTree()){
                child->doEnterTree();
@@ -128,9 +128,10 @@ namespace ReyEngine::Internal{
             return std::nullopt;
         }
 
-        std::optional<ChildPtr>removeChild(ChildPtr& child, bool quiet){
-            auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
+        std::optional<ChildPtr>removeChild(ChildPtr&& child, bool quiet=false){
+            auto lock = std::unique_lock<std::recursive_mutex>(_childLock);
             auto found = _childMap.find(child->getName());
+            std::cout << "Searching for child " << child->getName() << std::endl;
             if (found == _childMap.end()){
                 if (!quiet) {
                     std::stringstream ss;
@@ -172,18 +173,19 @@ namespace ReyEngine::Internal{
         }
 
         inline void removeAllChildren() {
-            auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
+            auto lock = std::unique_lock<std::recursive_mutex>(_childLock);
             _childOrder.clear();
             _childMap.clear();
         }
 
         inline std::optional<ChildPtr> getChild(const std::string& name){
-            auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
+            auto lock = std::unique_lock<std::recursive_mutex>(_childLock);
             auto found = _childMap.find(name);
             if (found == _childMap.end()) {
                 return std::nullopt;
             }
-            return {found->second.second};
+            auto index = found->second.first;
+            return {_childOrder.at(index)};
         }
         std::weak_ptr<T> getParent(){return _parent;}
         const std::weak_ptr<T> getParent() const {return _parent;}
@@ -191,12 +193,12 @@ namespace ReyEngine::Internal{
         inline const ChildOrder& getChildren() const {return _childOrder;}
         inline bool hasChild(const std::string& name){
             //cant be const because it locks
-            auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
+            auto lock = std::unique_lock<std::recursive_mutex>(_childLock);
             return _childMap.find(name) != _childMap.end();
         }
 
         inline std::optional<ChildPtr>findChild(const std::string& name){
-           auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
+           auto lock = std::unique_lock<std::recursive_mutex>(_childLock);
            for (auto& child : getChildren()){
               if (child->getName() == name){
                  return child;
@@ -208,7 +210,7 @@ namespace ReyEngine::Internal{
         inline std::vector<std::weak_ptr<T>> findDescendents(const std::string& name, bool exact=false){
             std::vector<std::weak_ptr<T>> retval;
             std::vector<std::weak_ptr<T>> descendents;
-            auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
+            auto lock = std::unique_lock<std::recursive_mutex>(_childLock);
             for (auto& child : getChildren()){
                 for (auto& found : child->TypeContainer<T>::findDescendents(name, exact)){
                     descendents.push_back(found);
@@ -229,7 +231,7 @@ namespace ReyEngine::Internal{
        /////////////////////////////////////////////////////////////////////////////////////////
         bool setName(const std::string& newName, bool append_index) {
            FIXME(TypeContainer::setName);
-//            auto lock = std::scoped_lock<std::recursive_mutex>(_childLock);
+//            auto lock = std::unique_lock<std::recursive_mutex>(_childLock);
 //            //if the child has a sibling by the same name, it cannot be renamed
 //            if (!_parent.expired()) {
 //                //has a parent

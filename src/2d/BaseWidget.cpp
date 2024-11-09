@@ -22,8 +22,8 @@ BaseWidget::BaseWidget(const std::string& name, std::string  typeName)
 {}
 
 BaseWidget::~BaseWidget() {
-   std::cout << "goodbye from " << getPath() << std::endl;
-};
+   Logger::debug() << "Deleting widget " << getPath() << std::endl;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::FileSystem::ComponentPath BaseWidget::getPath() {

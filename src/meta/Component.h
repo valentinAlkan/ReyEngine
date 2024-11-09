@@ -33,15 +33,16 @@ std::string _get_static_constexpr_typename() override {return TYPE_NAME;}
    CLASSNAME(const std::string& name, const std::string& typeName): PARENT_CLASSNAME(name, typeName), NamedInstance(name, typeName), Component(name, typeName)
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_DEFAULT_BUILD(CLASSNAME) \
-   static std::shared_ptr<CLASSNAME> build(const std::string& name) noexcept {   \
+   template<typename... Args> \
+   static std::shared_ptr<CLASSNAME> build(Args&&... args) noexcept {   \
         auto mem = ReyEngine::Internal::AllocationTools::malloc(sizeof(CLASSNAME)); \
-        auto obj = new (mem) CLASSNAME(name);                                       \
-        std::shared_ptr<CLASSNAME> me(obj, [](CLASSNAME* ptr) {                   \
-            std::cout << "Calling custome deleter" << std::endl;                               \
-            ptr->~CLASSNAME();                                                   \
-            ReyEngine::Internal::AllocationTools::free(ptr);                     \
-         });                                                                     \
-      return me;}
+        auto obj = new (mem) CLASSNAME(std::forward<Args>(args)...);  \
+        std::shared_ptr<CLASSNAME> ptr(obj, [](CLASSNAME* ptr) {   \
+            using T = CLASSNAME; \
+            ptr->~T();           \
+            ReyEngine::Internal::AllocationTools::free(ptr);  \
+         });                      \
+      return ptr;}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_ENSURE_IS_STATICALLY_BUILDABLE(CLASSNAME) \
@@ -93,7 +94,8 @@ namespace ReyEngine{
             return ::operator new(nBytes);
          }
          inline void free(void* ptr){
-            Logger::debug() << "free!" << std::endl;
+            Logger::debug() << "freeing ptr @ " << ptr << std::endl;
+
             ::operator delete(ptr);
          }
       }
