@@ -308,7 +308,7 @@ namespace ReyEngine {
    struct Size : public Vec2<T>{
       inline Size(): Vec2<T>(){}
       inline Size(const T& x, const T& y) : Vec2<T>(x, y){}
-      inline Size(const T edge): Size(edge, edge){}
+      explicit inline Size(const T edge): Size(edge, edge){}
       inline Size(const Vector2& v)     : Vec2<T>(v.x,v.y){}
       inline Size(const Vec2<int>& v)   : Vec2<T>(v.x,v.y){}
       inline Size(const Size<int>& v)   : Vec2<T>(v){}

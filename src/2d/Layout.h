@@ -19,9 +19,11 @@ namespace ReyEngine{
          };
          void registerProperties() override {}
       };
-       ReyEngine::Size<int> calculateIdealBoundingBox();
+      ReyEngine::Size<int> calculateIdealBoundingBox();
+      FloatListProperty childScales;
       /////////////////////////////////////////////////////////////////////////////////////////
    protected:
+      struct LayoutHelper;
       Layout(const std::string &name, const std::string &typeName, LayoutDir layoutDir);
       void _register_parent_properties() override;
       void _on_child_added(std::shared_ptr<BaseWidget>& child) override;
@@ -30,9 +32,6 @@ namespace ReyEngine{
       void renderEnd() override;
       virtual void arrangeChildren();
       void render() const override {};
-   public:
-      FloatListProperty childScales;
-   protected:
       const LayoutDir dir;
    };
 
@@ -70,9 +69,6 @@ namespace ReyEngine{
        REYENGINE_DEFAULT_BUILD(GridLayout);
        REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(GridLayout);
        REYENGINE_SERIALIZER(GridLayout, Layout)
-//       static std::shared_ptr<GridLayout> build(const std::string& name) noexcept {
-//          return std::shared_ptr<GridLayout> (new GridLayout(name));
-//       }
    protected:
        GridLayout(const std::string& instanceName)
        : Layout(instanceName, _get_static_constexpr_typename(), Layout::LayoutDir::HORIZONTAL)

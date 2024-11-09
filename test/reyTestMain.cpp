@@ -262,7 +262,7 @@ int main(int argc, char** argv) {
 
                 //draw a rotating arrow
                 {
-                    auto rect = GRID.getSubRect(GRID_SIZE, Rect<int>::SubRectCoords({0, 1}));
+                    auto rect = GRID.getSubRect(Size(GRID_SIZE), Rect<int>::SubRectCoords({0, 1}));
                     Line<int> l = {rect.leftSide().midpoint(), rect.rightSide().midpoint()};
                     auto sec = (double) Application::secondsSinceInit();
                     ctl.drawArrow(l.rotate(l.midpoint(), Degrees(360) * sec % 360), 2.0, Colors::blue);
@@ -271,14 +271,14 @@ int main(int argc, char** argv) {
                 auto factor = abs(sin(Application::secondsSinceInit()));
                 //draw a rotating line
                 {
-                    auto rect = GRID.getSubRect(GRID_SIZE, Rect<int>::SubRectCoords({1, 1}));
+                    auto rect = GRID.getSubRect(Size(GRID_SIZE), Rect<int>::SubRectCoords({1, 1}));
                     Line<int> l = {rect.leftSide().midpoint(), rect.rightSide().midpoint()};
                     ctl.drawLine(l.rotate(l.midpoint(), Degrees(360 * factor)), 2.0, Colors::blue);
                 }
 
                 //draw a rotating point
                 {
-                    auto rect = GRID.getSubRect(GRID_SIZE, Rect<int>::SubRectCoords({0, 2}));
+                    auto rect = GRID.getSubRect(Size(GRID_SIZE), Rect<int>::SubRectCoords({0, 2}));
                     Line<int> l = {rect.center(), rect.leftSide().midpoint()};
                     l = l.rotate(rect.center(), Degrees(360 * factor));
                     auto c1 = Circle(l.b, 2.0);

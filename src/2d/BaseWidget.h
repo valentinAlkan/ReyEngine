@@ -120,7 +120,7 @@ namespace ReyEngine{
 
       static constexpr char TYPE_NAME[] = "BaseWidget";
       BaseWidget(const std::string& name, std::string  typeName);
-      ~BaseWidget();
+      ~BaseWidget() override;
       //this will eventually move to component
       ReyEngine::FileSystem::ComponentPath getPath();
 

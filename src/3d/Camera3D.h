@@ -8,7 +8,7 @@ namespace ReyEngine {
    class Camera3D : public BaseBody {
       REYENGINE_OBJECT_BUILD_ONLY(Camera3D, BaseBody), PROPERTY_DECLARE(active, true){}
    public:
-      REYENGINE_DEFAULT_BUILD(ReyEngine::Camera3D)
+      REYENGINE_DEFAULT_BUILD(Camera3D)
       using BaseBody::getChildren;
       void setRotation(double newRot);
       double getRotation() const;

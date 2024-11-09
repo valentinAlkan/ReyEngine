@@ -33,9 +33,14 @@ std::string _get_static_constexpr_typename() override {return TYPE_NAME;}
    CLASSNAME(const std::string& name, const std::string& typeName): PARENT_CLASSNAME(name, typeName), NamedInstance(name, typeName)
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_DEFAULT_BUILD(CLASSNAME) \
-   static std::shared_ptr<CLASSNAME> build(const std::string& name) noexcept { \
-        auto me = std::shared_ptr<CLASSNAME>(new CLASSNAME(name)); \
-      return me; }
+   static std::shared_ptr<CLASSNAME> build(const std::string& name) noexcept {   \
+        auto mem = ReyEngine::Internal::AllocationTools::malloc(sizeof(CLASSNAME)); \
+        auto obj = new (mem) CLASSNAME(name);                                       \
+        std::shared_ptr<CLASSNAME> me(obj, [](CLASSNAME* ptr) {                   \
+            ptr->~CLASSNAME();                                                   \
+            ReyEngine::Internal::AllocationTools::free(ptr);                     \
+         });                                                                     \
+      return me;}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_ENSURE_IS_STATICALLY_BUILDABLE(CLASSNAME) \
@@ -81,7 +86,15 @@ protected:                                                     \
 namespace ReyEngine{
    class Application;
       namespace Internal{
-
+      namespace AllocationTools {
+         inline void* malloc(size_t nBytes){
+            //placement new allocation - use a memory pool to minimize cache misses - one day - but not now.
+            return ::operator new(nBytes);
+         }
+         inline void free(void* ptr){
+            ::operator delete(ptr);
+         }
+      }
       // A thing which does stuff.
       class Component
       : public inheritable_enable_shared_from_this<Component>

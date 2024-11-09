@@ -79,14 +79,14 @@ namespace ReyEngine {
         /// \param distance
         /// \return
         Pos3<double> pointAlongSphere(Pos3<double> start, Vec3<double> direction, double distance){
-
+           return {};
         }
         /// Returns the point that is in the given direction *though* the sphere.
         /// \param start
         /// \param direction
         /// \return
         std::optional<Pos<double>> pointThroughSphere(Pos3<double> start, Vec3<double> direction){
-
+           return {};
         }
     };
 

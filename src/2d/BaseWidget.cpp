@@ -22,8 +22,6 @@ BaseWidget::BaseWidget(const std::string& name, std::string  typeName)
 {}
 
 BaseWidget::~BaseWidget() {
-//   auto thiz = shared_from_this();
-//   EventManager::unsubscribe(thiz);
    std::cout << "goodbye from " << getPath() << std::endl;
 };
 

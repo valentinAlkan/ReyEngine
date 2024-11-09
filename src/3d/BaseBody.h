@@ -29,7 +29,7 @@ namespace ReyEngine {
          using TypeContainer<Renderable3D>::getChildren;
          std::optional<std::shared_ptr<Viewport>> getViewport();
          virtual std::optional<Collisions::RayHit3D> testRayClosest(const Collisions::Ray3D&);
-         virtual std::vector<Collisions::RayHit3D> testRayAll(const Collisions::Ray3D){};
+         virtual std::vector<Collisions::RayHit3D> testRayAll(const Collisions::Ray3D){return {};};
       protected:
          Renderer3D(const std::string& name, const std::string& typeName)
          : TypeContainer<Renderable3D>(name, typeName)
@@ -62,7 +62,7 @@ namespace ReyEngine {
          virtual void renderable3DEditorFeatures(){}
          virtual void _init(){}
          std::optional<Collisions::RayHit3D> testRayClosest(const Collisions::Ray3D& ray) override;
-         std::vector<Collisions::RayHit3D> testRayAll(const Collisions::Ray3D) override{};
+         std::vector<Collisions::RayHit3D> testRayAll(const Collisions::Ray3D) override{return {};};
          Transform3D _transform;
          BoolProperty _visible;
          FloatProperty _scale;

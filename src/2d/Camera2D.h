@@ -14,7 +14,7 @@ namespace ReyEngine {
 
       }
    public:
-      REYENGINE_DEFAULT_BUILD(ReyEngine::Camera2D)
+      REYENGINE_DEFAULT_BUILD(Camera2D)
       void setRotation(double newRot){_camera.camera.rotation = newRot;}
       double getRotation(){return _camera.camera.rotation;}
       void setZoom(double newZoom){_camera.camera.zoom = newZoom;}
