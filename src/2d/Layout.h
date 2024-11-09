@@ -43,8 +43,11 @@ namespace ReyEngine{
       REYENGINE_DEFAULT_BUILD(VLayout);
    protected:
       VLayout(const std::string& instanceName)
-      : Layout(instanceName, _get_static_constexpr_typename(), LayoutDir::VERTICAL), NamedInstance(instanceName, _get_static_constexpr_typename()){}
-      VLayout(const std::string& name, const std::string& typeName): Layout(name, typeName, LayoutDir::VERTICAL), NamedInstance(name, _get_static_constexpr_typename()){}
+      : Layout(instanceName, _get_static_constexpr_typename(), LayoutDir::VERTICAL)
+      , NamedInstance(instanceName, _get_static_constexpr_typename())
+      , Component(instanceName, _get_static_constexpr_typename()){}
+      VLayout(const std::string& name, const std::string& typeName): Layout(name, typeName, LayoutDir::VERTICAL)
+      , NamedInstance(name, _get_static_constexpr_typename()), Internal::Component(name, _get_static_constexpr_typename()){}
    };
 
    /////////////////////////////////////////////////////////////////////////////////////////
@@ -57,9 +60,11 @@ namespace ReyEngine{
       HLayout(const std::string& instanceName)
       : Layout(instanceName, _get_static_constexpr_typename(), Layout::LayoutDir::HORIZONTAL)
       , NamedInstance(instanceName, _get_static_constexpr_typename())
+      , Component(instanceName, _get_static_constexpr_typename())
       {}
-      HLayout(const std::string& name, const std::string& typeName): Layout(name, typeName, LayoutDir::HORIZONTAL)
-      , NamedInstance(name, typeName)
+      HLayout(const std::string& instanceName, const std::string& typeName): Layout(instanceName, typeName, LayoutDir::HORIZONTAL)
+      , NamedInstance(instanceName, typeName)
+      , Component(instanceName, _get_static_constexpr_typename())
       {}
    };
 
@@ -73,10 +78,12 @@ namespace ReyEngine{
        GridLayout(const std::string& instanceName)
        : Layout(instanceName, _get_static_constexpr_typename(), Layout::LayoutDir::HORIZONTAL)
        , NamedInstance(instanceName, _get_static_constexpr_typename())
+       , Component(instanceName, _get_static_constexpr_typename())
        {}
-       GridLayout(const std::string& name, const std::string& typeName)
-       : Layout(name, typeName, LayoutDir::GRID)
-       , NamedInstance(name, typeName)
+       GridLayout(const std::string& instanceName, const std::string& typeName)
+       : Layout(instanceName, typeName, LayoutDir::GRID)
+       , NamedInstance(instanceName, typeName)
+       , Component(instanceName, _get_static_constexpr_typename())
        {}
    };
 }

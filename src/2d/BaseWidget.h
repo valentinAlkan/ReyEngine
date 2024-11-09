@@ -28,7 +28,7 @@ namespace ReyEngine{
    class Draggable;
    class Canvas;
    class BaseWidget
-   : public Internal::Component
+   : public virtual Internal::Component
    , public Internal::TypeContainer<BaseWidget>
    {
       using ChildIndex = unsigned long;

@@ -354,7 +354,7 @@ void Window::exec(){
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Window::~Window(){
-
+   Logger::debug() << "Deleting Window" << endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -369,7 +369,7 @@ bool Window::isProcessed(const std::shared_ptr<BaseWidget>& widget) const {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-std::optional<shared_ptr<BaseWidget>> Window::ProcessList::add(std::shared_ptr<BaseWidget> widget) {
+std::optional<shared_ptr<BaseWidget>> Window::ProcessList::add(std::shared_ptr<BaseWidget>& widget) {
    unique_lock<mutex> lock(_mtx);
    auto retval = _list.insert(widget);
    if (retval.second){
@@ -379,7 +379,7 @@ std::optional<shared_ptr<BaseWidget>> Window::ProcessList::add(std::shared_ptr<B
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-std::optional<std::shared_ptr<BaseWidget>> Window::ProcessList::remove(std::shared_ptr<BaseWidget> widget) {
+std::optional<std::shared_ptr<BaseWidget>> Window::ProcessList::remove(std::shared_ptr<BaseWidget>& widget) {
    unique_lock<mutex> lock(_mtx);
    auto it = _list.find(widget);
    if (it != _list.end()){

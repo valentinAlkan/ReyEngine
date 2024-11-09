@@ -45,7 +45,7 @@ namespace ReyEngine{
       static std::string getFront();
       static bool hasHistory();
       static Logger& getInstance();
-      ~Logger() = default;
+      ~Logger();
    private:
       Logger() = default;
       Logger(const Logger&) = delete;

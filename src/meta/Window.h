@@ -44,7 +44,7 @@ namespace ReyEngine{
       };
       enum Flags{RESIZE, IS_EDITOR};
       virtual void exec();
-      virtual ~Window();
+      ~Window() override;
       template <typename T> void addChild(std::shared_ptr<TypeContainer<T>> child) = delete;
       bool isProcessed(const std::shared_ptr<BaseWidget>&) const;
       bool isEditor(){return _isEditor;}
@@ -108,8 +108,8 @@ namespace ReyEngine{
       class ProcessList {
       public:
          ~ProcessList(){clear();}
-         std::optional<std::shared_ptr<BaseWidget>> add(std::shared_ptr<BaseWidget> widget);
-         std::optional<std::shared_ptr<BaseWidget>> remove(std::shared_ptr<BaseWidget> widget);
+         std::optional<std::shared_ptr<BaseWidget>> add(std::shared_ptr<BaseWidget>& widget);
+         std::optional<std::shared_ptr<BaseWidget>> remove(std::shared_ptr<BaseWidget>& widget);
          std::optional<std::shared_ptr<BaseWidget>> find(const std::shared_ptr<BaseWidget>& widget) const;
          void processAll(double dt);
          void clear(){

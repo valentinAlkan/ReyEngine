@@ -24,6 +24,7 @@ namespace ReyEngine{
       REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(TabContainer)
       TabContainer(const std::string& instanceName): Layout(instanceName, TYPE_NAME, LayoutDir::OTHER)
       , NamedInstance(instanceName, TYPE_NAME)
+      , Component(instanceName, TYPE_NAME)
       , PROPERTY_DECLARE(currentTab, 0){
          //replace generic style with tab style
          theme = std::make_shared<TabTheme>();

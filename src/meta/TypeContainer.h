@@ -76,6 +76,7 @@ namespace ReyEngine::Internal{
         T& toContainedType(){
             return (T&)(*this);
         };
+        virtual ~TypeContainer(){std::cout << "typoecontainer deleting " << getName() << std::endl;}
         ChildPtr toContainedTypePtr(){
             return inheritable_enable_shared_from_this<TypeContainer<T>>::template downcasted_shared_from_this<T>();
         };

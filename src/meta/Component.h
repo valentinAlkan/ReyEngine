@@ -30,13 +30,14 @@ std::string _get_static_constexpr_typename() override {return TYPE_NAME;}
 #define REYENGINE_SERIALIZER(CLASSNAME, PARENT_CLASSNAME)
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME) \
-   CLASSNAME(const std::string& name, const std::string& typeName): PARENT_CLASSNAME(name, typeName), NamedInstance(name, typeName)
+   CLASSNAME(const std::string& name, const std::string& typeName): PARENT_CLASSNAME(name, typeName), NamedInstance(name, typeName), Component(name, typeName)
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_DEFAULT_BUILD(CLASSNAME) \
    static std::shared_ptr<CLASSNAME> build(const std::string& name) noexcept {   \
         auto mem = ReyEngine::Internal::AllocationTools::malloc(sizeof(CLASSNAME)); \
         auto obj = new (mem) CLASSNAME(name);                                       \
         std::shared_ptr<CLASSNAME> me(obj, [](CLASSNAME* ptr) {                   \
+            std::cout << "Calling custome deleter" << std::endl;                               \
             ptr->~CLASSNAME();                                                   \
             ReyEngine::Internal::AllocationTools::free(ptr);                     \
          });                                                                     \
@@ -92,6 +93,7 @@ namespace ReyEngine{
             return ::operator new(nBytes);
          }
          inline void free(void* ptr){
+            Logger::debug() << "free!" << std::endl;
             ::operator delete(ptr);
          }
       }
