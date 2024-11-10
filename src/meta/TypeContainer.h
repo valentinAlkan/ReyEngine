@@ -72,6 +72,7 @@ namespace ReyEngine::Internal{
 
         TypeContainer(const std::string& instanceName, const std::string& typeName)
         : NamedInstance(instanceName, typeName)
+        , _scenePath(FileSystem::FILESYSTEM_PATH_SEP + instanceName)
         {}
         T& toContainedType(){
             return (T&)(*this);
@@ -112,7 +113,7 @@ namespace ReyEngine::Internal{
             _childMap[childTypePtr->getName()] = std::pair<int, T*>(newIndex, me.get());
             __on_child_added_immediate(childTypePtr);
             if (isInTree()){
-               child->doEnterTree();
+               child->doEnterTree(*this);
             }
         }
 
@@ -227,6 +228,8 @@ namespace ReyEngine::Internal{
             return retval;
         }
 
+       std::string getScenePath(){return _scenePath;}
+
 
        /////////////////////////////////////////////////////////////////////////////////////////
         bool setName(const std::string& newName, bool append_index) {
@@ -264,12 +267,12 @@ namespace ReyEngine::Internal{
            FIXME(TypeContainer::setName);
             //rename but not move
             //find the existing reference to the child
-//    auto& children = getChildren();
-//    auto childIter = children[child->_name];
-//    auto oldName = child->_name;
-//    _children[newName] = childIter;
-//    _children.erase(oldName);
-//    child->_name = newName;
+//             auto& children = getChildren();
+//             auto childIter = children[child->_name];
+//             auto oldName = child->_name;
+//             _children[newName] = childIter;
+//             _children.erase(oldName);
+//             child->_name = newName;
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////
@@ -345,13 +348,16 @@ namespace ReyEngine::Internal{
         } //called right after a type leaves the tree
        bool _isRoot = false;
     private:
-       void doEnterTree(){
+       /// Called by parent when added to tree
+       void doEnterTree(TypeContainer<T>& parent){
+          _scenePath = parent._scenePath + FileSystem::SCENE_PATH_SEP + getName();
            __on_enter_tree();
            _on_enter_tree();
            for (auto& child : _childOrder) {
-              child->TypeContainer<T>::doEnterTree();
+              child->TypeContainer<T>::doEnterTree(*this);
            }
        }
+       std::string _scenePath;
        std::weak_ptr<T> _parent;
        std::recursive_mutex _childLock;
        ChildMap _childMap;

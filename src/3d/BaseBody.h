@@ -42,14 +42,14 @@ namespace ReyEngine {
       };
 
       // Something which has volume is able to be rendered in 3D along with its children.
-      class Renderable3D : public Internal::Component, public Renderer3D {
+      class Renderable3D : public virtual Internal::Component, public Renderer3D {
       public:
          using TypeContainer<Renderable3D>::getChildren;
          void setVisible(bool visible){_visible = visible;}
       protected:
          Renderable3D(const std::string& name, const std::string& typeName)
          : Renderer3D(name, typeName)
-         , Internal::Component(name, typeName)
+         , Component(name, typeName)
          , NamedInstance(name, typeName)
          , _visible("visible")
          , _scale("scale", 1)
@@ -90,7 +90,10 @@ protected:
       Internal::Component::_register_parent_properties();
       Internal::Component::registerProperties();
    }
-   BaseBody(const std::string &name, const std::string &typeName) : Internal::Renderable3D(name, typeName), NamedInstance(name, typeName)
+   BaseBody(const std::string &name, const std::string &typeName)
+   : Internal::Renderable3D(name, typeName)
+   , NamedInstance(name, typeName)
+   , Component(name, typeName)
    {}
    protected:
       void _on_application_ready() override{}

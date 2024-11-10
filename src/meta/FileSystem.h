@@ -11,8 +11,7 @@ namespace ReyEngine::FileSystem {
 //   std::vector<char> readFile(const std::string& filePath);
 //   void writeFile(const std::string& filePath, const std::vector<char>&);
 
-   using ComponentPath = std::string;
-   static constexpr char COMPONENT_PATH_SEP = '/';
+   static constexpr char SCENE_PATH_SEP = '/';
    static constexpr char _PATH_SEP_WIN = '\\';
    static constexpr char _PATH_SEP_OTHER = '/';
    static constexpr char FILESYSTEM_PATH_SEP =

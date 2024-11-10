@@ -32,15 +32,14 @@ std::string _get_static_constexpr_typename() override {return TYPE_NAME;}
 #define REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME) \
    CLASSNAME(const std::string& name, const std::string& typeName): PARENT_CLASSNAME(name, typeName), NamedInstance(name, typeName), Component(name, typeName)
 /////////////////////////////////////////////////////////////////////////////////////////
-#define REYENGINE_DEFAULT_BUILD(CLASSNAME) \
+#define REYENGINE_DEFAULT_BUILD(T) \
    template<typename... Args> \
-   static std::shared_ptr<CLASSNAME> build(Args&&... args) noexcept {   \
-        auto mem = ReyEngine::Internal::AllocationTools::malloc(sizeof(CLASSNAME)); \
-        auto obj = new (mem) CLASSNAME(std::forward<Args>(args)...);  \
-        std::shared_ptr<CLASSNAME> ptr(obj, [](CLASSNAME* ptr) {   \
-            using T = CLASSNAME; \
+   static std::shared_ptr<T> build(Args&&... args) noexcept {   \
+        auto mem = ReyEngine::Internal::AllocationTools::malloc(sizeof(T)); \
+        auto obj = new (mem) T(std::forward<Args>(args)...);  \
+        std::shared_ptr<T> ptr(obj, [](T* ptr) {   \
             ptr->~T();           \
-            ReyEngine::Internal::AllocationTools::free(ptr);  \
+            ReyEngine::Internal::AllocationTools::free(ptr, sizeof(T));  \
          });                      \
       return ptr;}
 
@@ -89,14 +88,20 @@ namespace ReyEngine{
    class Application;
       namespace Internal{
       namespace AllocationTools {
+         static size_t currentMemoryBytes = 0;
          inline void* malloc(size_t nBytes){
             //placement new allocation - use a memory pool to minimize cache misses - one day - but not now.
-            return ::operator new(nBytes);
+            auto ptr = ::operator new(nBytes);
+            Logger::debug() << "Allocating " << nBytes << " bytes @ " << ptr << std::endl;
+            currentMemoryBytes += nBytes;
+            Logger::debug() << "Total memory usage is now " << currentMemoryBytes << std::endl;
+            return ptr;
          }
-         inline void free(void* ptr){
-            Logger::debug() << "freeing ptr @ " << ptr << std::endl;
-
+         inline void free(void* ptr, size_t nBytes){
+            Logger::debug() << "Freeing " << nBytes << "bytes @ " << ptr << std::endl;
             ::operator delete(ptr);
+            currentMemoryBytes -= nBytes;
+            Logger::debug() << "Total memory usage is now " << currentMemoryBytes << std::endl;
          }
       }
       // A thing which does stuff.
@@ -141,8 +146,6 @@ namespace ReyEngine{
          BoolProperty _isProcessed;
          IntProperty _resourceId;
 
-//         friend class TypeContainer<Component>;
-//         friend class TypeContainer<BaseWidget>;
          friend class TypeManager;
          friend class ReyEngine::Application;
       };

@@ -22,22 +22,7 @@ BaseWidget::BaseWidget(const std::string& name, std::string  typeName)
 {}
 
 BaseWidget::~BaseWidget() {
-   Logger::debug() << "Deleting widget " << getPath() << std::endl;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
-ReyEngine::FileSystem::ComponentPath BaseWidget::getPath() {
-   //return the lookup path to the widget by backtracking to the root
-   std::vector<ComponentPath> reversePath;
-   reversePath.push_back(getName());
-   auto parent = getParent().lock();
-   while (parent){
-      reversePath.push_back(parent->getName());
-      parent = parent->getParent().lock();
-   }
-   //reverse the reverse path, then join it by the name separator
-   std::reverse(reversePath.begin(), reversePath.end());
-   return string_tools::join(COMPONENT_PATH_SEP, reversePath);
+   Logger::debug() << "Deleting widget " << getScenePath() << std::endl;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -594,7 +579,7 @@ void BaseWidget::setSize(const ReyEngine::Size<int>& size){
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setAnchoring(Anchor newAnchor) {
    if (isInLayout){
-      Logger::error() << getPath() << ": Children of layouts cannot have anchoring!";
+      Logger::error() << getScenePath() << ": Children of layouts cannot have anchoring!";
       return;
    }
    _anchor.value = newAnchor;

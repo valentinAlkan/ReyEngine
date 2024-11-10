@@ -46,25 +46,25 @@ int screenHeight = 800;
 int main(int argc, char** argv) {
     {
         SetTraceLogLevel(LOG_ERROR);
-    //   class EventTester : public EventSubscriber, public EventPublisher{
-    //
-    //   };
-    //   auto cb1 = [](const TestEvent1& testEvent){
-    //      cout << "My event ID is " << testEvent.eventId << endl;
-    //   };
-    //   auto cb2 = [](const TestEvent2& testEvent){
-    //      cout << "My event ID is " << testEvent.eventId << endl;
-    //   };
-    //   auto tester = std::make_shared<EventTester>();
-    //   tester->subscribe<TestEvent1>(tester, cb1);
-    //   tester->subscribe<TestEvent2>(tester, cb2);
-    //   TestEvent1 tevent1(tester);
-    //   TestEvent2 tevent2(tester);
-    //   tester->publish(tevent1);
-    //   tester->publish(tevent1);
-    //   tester->publish(tevent1);
-    //   tester->publish(tevent2);
+#define HOWSIZE(CLASSNAME) Logger::debug() << "Type " << #CLASSNAME << " = " << sizeof(CLASSNAME) << " bytes" << endl;
 
+        HOWSIZE(Internal::TypeContainer<Internal::NamedInstance>)
+        HOWSIZE(Internal::TypeContainer<Internal::Component>)
+        HOWSIZE(Internal::TypeContainer<BaseWidget>)
+        HOWSIZE(inheritable_enable_shared_from_this<Internal::Component>)
+        HOWSIZE(PropertyMap)
+        HOWSIZE(OwnedPropertyMap)
+        HOWSIZE(PropertyContainer)
+        HOWSIZE(BoolProperty)
+        HOWSIZE(IntProperty)
+        HOWSIZE(Internal::Component);
+        HOWSIZE(BaseWidget)
+        HOWSIZE(Layout)
+        HOWSIZE(HLayout)
+        HOWSIZE(VLayout)
+        HOWSIZE(GridLayout)
+        HOWSIZE(Control)
+        HOWSIZE(Label)
 
         Application::instance(); //initialize the application
         ArgParse args;

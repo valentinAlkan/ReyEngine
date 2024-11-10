@@ -53,6 +53,7 @@ namespace ReyEngine{
       using Internal::TypeContainer<BaseWidget>::ChildPtr;
       using Internal::TypeContainer<BaseWidget>::isRoot;
       using Internal::TypeContainer<BaseWidget>::setRoot;
+      using Internal::TypeContainer<BaseWidget>::getScenePath;
 
       struct WidgetResizeEvent : public Event<WidgetResizeEvent> {
          EVENT_CTOR_SIMPLE(WidgetResizeEvent, Event<WidgetResizeEvent>){
@@ -121,8 +122,6 @@ namespace ReyEngine{
       static constexpr char TYPE_NAME[] = "BaseWidget";
       BaseWidget(const std::string& name, std::string  typeName);
       ~BaseWidget() override;
-      //this will eventually move to component
-      ReyEngine::FileSystem::ComponentPath getPath();
 
       //rect stuff
       ReyEngine::Rect<int> getRect() const {return _rect.value;}
