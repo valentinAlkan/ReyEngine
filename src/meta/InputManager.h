@@ -75,7 +75,7 @@ namespace ReyEngine{
       static inline bool isKeyDown(InputInterface::KeyCode key){return InputInterface::isKeyDown(key);}
       static inline bool isKeyUp(InputInterface::KeyCode key){return InputInterface::isKeyUp(key);}
       static inline void setExitKey(InputInterface::KeyCode key){return InputInterface::setExitKey(key);}
-      static inline bool isShiftKeyDown(){return InputInterface::isKeyDown(InputInterface::KeyCodes::KEY_LEFT_SHIFT) || InputInterface::isKeyDown(InputInterface::KeyCodes::KEY_RIGHT_SHIFT);}
+      static inline bool isShiftKeyDown(){return InputInterface::isKeyDown(InputInterface::KeyCode::KEY_LEFT_SHIFT) || InputInterface::isKeyDown(InputInterface::KeyCode::KEY_RIGHT_SHIFT);}
       static inline InputInterface::KeyCode getLastKeyPressed(){return instance()._lastKey;}
       static inline ReyEngine::Pos<int> getMousePos(){return InputInterface::getMousePos();}
       static inline ReyEngine::Vec2<int> getMouseDelta(){return InputInterface::getMouseDelta();}
@@ -90,7 +90,7 @@ namespace ReyEngine{
       static inline Vec2<double> getMouseWheel(){return InputInterface::getMouseWheel();}
 
       std::vector<InputInterface::KeyCode> keyQueue; //holds keys that were pressed so we can check if they're still down
-      InputInterface::KeyCode _lastKey = InputInterface::KeyCodes::KEY_NULL;
+      InputInterface::KeyCode _lastKey = InputInterface::KeyCode::KEY_NULL;
       std::vector<InputInterface::MouseButton> mouseButtonQueue; //holds mousebuttons that were pressed so we can check if they're still down
       template <typename T, typename R>
       bool isInQueue(std::vector<T> queue, R button){

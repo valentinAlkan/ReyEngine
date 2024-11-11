@@ -123,7 +123,7 @@ Handled LineEdit::_unhandled_input(const InputEvent& event, const std::optional<
          }
          case InputEventKey::getUniqueEventId(): {
             const auto& keyEvent = event.toEventType<InputEventKey>();
-            if (keyEvent.isDown && keyEvent.key == InputInterface::KeyCodes::KEY_BACKSPACE) {
+            if (keyEvent.isDown && keyEvent.key == InputInterface::KeyCode::KEY_BACKSPACE) {
                if (!_text.value.empty()) {
                   _text.value.pop_back();
                   publishText();

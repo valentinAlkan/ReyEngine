@@ -192,6 +192,12 @@ void TileMap::TileMapLayer::setTileIndex(const TileCoord& coords, TileIndex inde
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void TileMap::TileMapLayer::setTileByCoords(const TileCoord& target, const TileCoord& source) {
+   tiles[target.x][target.y] = source.x * getAtlas().columnCount * source.x + source.y;
+   _needsUpdate = true;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void TileMap::registerProperties() {
    registerProperty(_showGrid);
    registerProperty(_gridType);

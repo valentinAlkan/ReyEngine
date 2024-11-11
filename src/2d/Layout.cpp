@@ -4,7 +4,7 @@
 using namespace std;
 using namespace ReyEngine;
 
-static constexpr bool VERBOSE = true;
+static constexpr bool VERBOSE = false;
 /// A struct that helps us layout widgets. Applies changes on dtor.
 struct Layout::LayoutHelper {
    LayoutHelper(LayoutDir layoutDir, int index, std::shared_ptr<BaseWidget>& child)

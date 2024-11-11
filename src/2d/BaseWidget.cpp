@@ -10,6 +10,8 @@ using namespace std;
 using namespace ReyEngine;
 using namespace FileSystem;
 
+static constexpr bool verbose = false;
+
 /////////////////////////////////////////////////////////////////////////////////////////
 BaseWidget::BaseWidget(const std::string& name, std::string  typeName)
 : Component(name, typeName)
@@ -721,6 +723,7 @@ void BaseWidget::__on_enter_tree() {
       parent->_backRenderList.push_back(me);
    } else {
       parent->_frontRenderList.push_back(me);
+      if (verbose)
       Logger::debug() << "Child " << getName() << " added to parent " << parent->getName() << "'s front render list" << endl;
    }
 

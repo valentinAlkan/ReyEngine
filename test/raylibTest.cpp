@@ -33,22 +33,22 @@ int main(int argc, char** argv){
       int moveSpeed = 5;
       Vec2<int> mvVec;
       double rotation = 0;
-      if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_W)) {
+      if (InputManager::isKeyDown(InputInterface::KeyCode::KEY_W)) {
          mvVec += {0, -1};
       }
-      if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_A)) {
+      if (InputManager::isKeyDown(InputInterface::KeyCode::KEY_A)) {
          mvVec += {-1, 0};
       }
-      if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_S)) {
+      if (InputManager::isKeyDown(InputInterface::KeyCode::KEY_S)) {
          mvVec += {0, 1};
       }
-      if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_D)) {
+      if (InputManager::isKeyDown(InputInterface::KeyCode::KEY_D)) {
          mvVec += {1, 0};
       }
-      if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_Q)) {
+      if (InputManager::isKeyDown(InputInterface::KeyCode::KEY_Q)) {
          rotation += 1;
       }
-      if (InputManager::isKeyDown(InputInterface::KeyCodes::KEY_E)) {
+      if (InputManager::isKeyDown(InputInterface::KeyCode::KEY_E)) {
          rotation -= 1;
       }
       if (InputManager::isMouseButtonDown(InputInterface::MouseButton::LEFT)) {

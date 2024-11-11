@@ -5,6 +5,7 @@
 #include <string>
 #include <array>
 #include <iostream>
+#include "Logger.h"
 #include "FileSystem.h"
 #include "Property.h"
 #include "StrongUnits.h"
@@ -28,7 +29,7 @@ namespace ReyEngine {
    template <typename T> struct Pos;
    template <typename T>
    struct Vec {
-      explicit Vec(size_t size): size(size){}
+      constexpr explicit Vec(size_t size): size(size){}
       inline static std::vector<T> fromString(size_t size, const std::string& s) {
          std::string sanitized;
          for (const auto &c: s) {
@@ -68,12 +69,12 @@ namespace ReyEngine {
    template <typename T>
    struct Vec2 : protected Vec<T> {
       using Vec<T>::toString;
-      inline Vec2(): Vec<T>(2), x(0), y(0){}
-      inline Vec2(const T& x, const T& y) : Vec<T>(2), x(x), y(y){}
-      inline Vec2(const Vector2& v)     : Vec<T>(2), x((T)v.x), y((T)v.y){}
-      inline Vec2(const Vec2<int>& v)   : Vec<T>(2), x((T)v.x), y((T)v.y){}
-      inline Vec2(const Vec2<float>& v) : Vec<T>(2), x((T)v.x), y((T)v.y){}
-      inline Vec2(const Vec2<double>& v): Vec<T>(2), x((T)v.x), y((T)v.y){}
+      constexpr inline Vec2(): Vec<T>(2), x(0), y(0){}
+      constexpr inline Vec2(const T& x, const T& y) : Vec<T>(2), x(x), y(y){}
+      constexpr inline Vec2(const Vector2& v)     : Vec<T>(2), x((T)v.x), y((T)v.y){}
+      constexpr inline Vec2(const Vec2<int>& v)   : Vec<T>(2), x((T)v.x), y((T)v.y){}
+      constexpr inline Vec2(const Vec2<float>& v) : Vec<T>(2), x((T)v.x), y((T)v.y){}
+      constexpr inline Vec2(const Vec2<double>& v): Vec<T>(2), x((T)v.x), y((T)v.y){}
       inline explicit operator bool() const {return x || y;}
       inline Vec2 operator+(const Vec2& rhs) const {Vec2<T> val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
       inline Vec2 operator-(const Vec2& rhs) const {Vec2<T> val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
@@ -306,13 +307,13 @@ namespace ReyEngine {
 
    template <typename T>
    struct Size : public Vec2<T>{
-      inline Size(): Vec2<T>(){}
-      inline Size(const T& x, const T& y) : Vec2<T>(x, y){}
+      constexpr inline Size(): Vec2<T>(){}
+      constexpr inline Size(const T& x, const T& y) : Vec2<T>(x, y){}
       explicit inline Size(const T edge): Size(edge, edge){}
-      inline Size(const Vector2& v)     : Vec2<T>(v.x,v.y){}
-      inline Size(const Vec2<int>& v)   : Vec2<T>(v.x,v.y){}
-      inline Size(const Size<int>& v)   : Vec2<T>(v){}
-      inline Size(const Size<double>& v): Vec2<T>(v){}
+      constexpr inline Size(const Vector2& v)     : Vec2<T>(v.x,v.y){}
+      constexpr inline Size(const Vec2<int>& v)   : Vec2<T>(v.x,v.y){}
+      constexpr inline Size(const Size<int>& v)   : Vec2<T>(v){}
+      constexpr inline Size(const Size<double>& v): Vec2<T>(v){}
       inline Size(const Size<float>& v) : Vec2<T>(v){}
       inline void operator=(Pos<T>&) = delete;
       inline bool operator==(const Size<T>& rhs){return Size::x==rhs.x && Size::y==rhs.y;}
@@ -812,7 +813,7 @@ namespace ReyEngine {
 
 namespace InputInterface{
    //Corresponds to ascii table
-   enum class KeyCodes{
+   enum class KeyCode{
       KEY_NULL            = 0,
       KEY_APOSTROPHE      = 39,       // Key: '
       KEY_COMMA           = 44,       // Key: ,
@@ -928,7 +929,7 @@ namespace InputInterface{
       KEY_VOLUME_DOWN     = 25        // Key: Android volume down button
    };
 
-   using KeyCode = KeyCodes;
+//   using KeyCode = KeyCode;
    enum class MouseButton{
       NONE = -1,
       LEFT = MOUSE_BUTTON_LEFT,
@@ -965,7 +966,14 @@ namespace InputInterface{
       NOT_ALLOWED = MOUSE_CURSOR_NOT_ALLOWED
    };
 
-   inline std::optional<char> toChar(KeyCode keyCode){ return (static_cast<int>(keyCode) <= 127) ? std::optional<char>{static_cast<char>(static_cast<int>(keyCode))} : std::nullopt;}
+   inline constexpr std::optional<char> toChar(KeyCode keyCode){ return (static_cast<int>(keyCode) <= 127) ? std::optional<char>{static_cast<char>(static_cast<int>(keyCode))} : std::nullopt;}
+
+//   // Define the friend function
+//   ReyEngine::Logger::Stream& operator<<(const InputInterface::KeyCode& keyCode, ReyEngine::Logger& logger) {
+//      auto optKey = toChar(keyCode);
+//      logger << (optKey ? std::string(optKey.value(), 1) : std::string("Unsupported Char")) << std::endl;
+//   }
+
    inline float getMouseWheelMove(){return GetMouseWheelMove();} //returns largest of x or y
    inline ReyEngine::Vec2<float> getMouseWheelMoveV(){return GetMouseWheelMoveV();} //returns both x and y
 

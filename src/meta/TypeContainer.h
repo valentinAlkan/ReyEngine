@@ -106,8 +106,6 @@ namespace ReyEngine::Internal{
             }
             //set the parent
             child->_parent = me;
-            Logger::debug() << "Registering child " << child->getName() << " to parent " << getName() << std::endl;
-
             auto newIndex = getChildren().size(); //index of new child's location in ordered vector
             _childOrder.push_back(childTypePtr);
             _childMap[childTypePtr->getName()] = std::pair<int, T*>(newIndex, me.get());
@@ -115,6 +113,7 @@ namespace ReyEngine::Internal{
             if (isInTree()){
                child->doEnterTree(*this);
             }
+           Logger::debug() << "Registering child " << child->_scenePath << std::endl;
         }
 
         std::optional<ChildPtr>removeChild(const std::string& name, bool quiet=false){

@@ -10,6 +10,8 @@ using namespace std;
 using namespace ReyEngine;
 using namespace SceneFileParser;
 
+static constexpr bool verbose = false;
+
 bool allWhite(const std::string &s) { return string_tools::countwhite(s) == (int) s.size(); }
 /////////////////////////////////////////////////////////////////////////////////////////
 Scene::Scene(std::shared_ptr<Internal::Component> root)
@@ -196,6 +198,7 @@ std::shared_ptr<TreeObject> SceneFileParser::TreeStruct::parse(){
       auto newObj = TreeObject::make_shared(string_tools::lrstrip(line));
       parentStack.top()->addChild(newObj);
       parentStack.push(newObj);
+      if (verbose)
       Logger::debug() << "Scene: TreeObject " << newObj->instanceName << " added to parent " << newObj->parent.lock()->instanceName << endl;
 
       currentIndentLevel = newIndentLevel;

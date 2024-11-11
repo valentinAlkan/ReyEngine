@@ -22,13 +22,13 @@ template <typename T> struct ToDouble : Units::crtp<T, ToDouble> {explicit const
 template <typename T> struct ToInt : Units::crtp<T, ToInt>       {explicit constexpr operator double() const { return static_cast<int>(this->underlying().get());}};
 template <typename T> struct ToFloat : Units::crtp<T, ToFloat>   {explicit constexpr operator double() const { return static_cast<float>(this->underlying().get());}};
 
-template <typename T, typename Parameter, template<typename> class... Skills>
-std::ostream& operator<<(std::ostream& os, NamedType<T, Parameter, Skills...> const& object)
-{
-   os << object.get();
-   return os;
+namespace Units {
+   template<typename T, typename Parameter, template<typename> class... Skills>
+   std::ostream &operator<<(std::ostream &os, NamedType<T, Parameter, Skills...> const &object) {
+      os << object.get();
+      return os;
+   }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 template <typename T, typename Parameter, typename Ratio, template<typename> class... Skills>

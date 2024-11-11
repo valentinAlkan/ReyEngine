@@ -7,8 +7,8 @@ namespace ReyEngine {
    public:
       REYENGINE_DEFAULT_BUILD(TileMap)
       struct TileCoord : public Vec2<int> {
-           TileCoord(int x, int y): Vec2(x,y){}
-           TileCoord(const Vec2<int>& other): Vec2(other){}
+           constexpr TileCoord(int x, int y): Vec2(x,y){}
+           constexpr TileCoord(const Vec2<int>& other): Vec2(other){}
       };
       using TileIndex = uint64_t;
       using LayerIndex = uint64_t;
@@ -46,6 +46,7 @@ namespace ReyEngine {
             return rect.getSubRect(_tileSize, index);
          }
          inline Size<int> getTileSize() const {return _tileSize;}
+         inline Size<int> getSheetSize() const {return {texture.size.x, texture.size.y};}
          inline const FileSystem::File getFile() const {return _file;}
       private:
          ReyTexture texture;
@@ -61,6 +62,7 @@ namespace ReyEngine {
          TileMapLayer(const FileSystem::File& file): atlas(file){}
          TileMapLayer(TileMapLayer&& other) noexcept: atlas(std::move(other.atlas)){}
          void setTileIndex(const TileCoord&, TileIndex);
+         void setTileByCoords(const TileCoord& target, const TileCoord& source);
          std::optional<TileIndex> getTileIndex(const TileCoord& pos); //slow
          void removeTileIndex(const TileCoord& pos);
          inline SpriteAtlas& getAtlas(){return atlas;}
@@ -100,7 +102,7 @@ namespace ReyEngine {
       };
 
       REYENGINE_OBJECT_BUILD_ONLY(TileMap, BaseWidget)
-      , PROPERTY_DECLARE(_showGrid, true)
+      , PROPERTY_DECLARE(_showGrid, false)
       , PROPERTY_DECLARE(_gridType, GridType::SQUARE)
       , PROPERTY_DECLARE(_gridHeight, 32)
       , PROPERTY_DECLARE(_gridWidth, 32)
