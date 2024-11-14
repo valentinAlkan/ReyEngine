@@ -31,8 +31,8 @@ void ReyTexture::loadTexture(const FileSystem::File &file) {
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
-Pos<double> ReyEngine::getScreenCenter() {
-   return {((float)GetScreenWidth())/2, ((float)GetScreenHeight())/2};
+Pos<R_FLOAT> ReyEngine::getScreenCenter() {
+   return {(GetScreenWidth())/2, (GetScreenHeight())/2};
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -41,7 +41,7 @@ Size<int> ReyEngine::getScreenSize() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawText(const std::string &text, const ReyEngine::Pos<double>& pos, const ReyEngineFont& font) {
+void ReyEngine::drawText(const std::string &text, const ReyEngine::Pos<R_FLOAT>& pos, const ReyEngineFont& font) {
 //   void DrawTextPro(Font font, const char *text, Vector2 position, Vector2 origin, float rotation, float fontSize, float spacing, Color tint);
    DrawTextPro(font.font, text.c_str(), {(float)pos.x, (float)pos.y}, {0, 0}, 0, font.size, font.spacing, font.color);
 }
@@ -117,7 +117,7 @@ void ReyEngine::drawTexture(const ReyTexture& texture, const Rect<double> &sourc
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawTextCentered(const std::string& text, const Pos<double>& pos, const ReyEngineFont& font){
+void ReyEngine::drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font){
    auto textWidth = MeasureText(text.c_str(), font.size);
    float newX = (float)pos.x - (float)textWidth / 2;
    float newY = (float)pos.y - (float)font.size / 2;
@@ -125,7 +125,7 @@ void ReyEngine::drawTextCentered(const std::string& text, const Pos<double>& pos
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawTextRelative(const std::string& text, const Pos<double>& relPos, const ReyEngineFont& font){
+void ReyEngine::drawTextRelative(const std::string& text, const Pos<R_FLOAT>& relPos, const ReyEngineFont& font){
    //draw text relative as a percentage of the screen
    Vector2 screenSize = {(float)GetScreenWidth(), (float)GetScreenHeight()};
    auto newX = screenSize.x * relPos.x / 100.0;

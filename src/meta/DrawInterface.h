@@ -13,7 +13,7 @@
 #include <limits.h>
 #endif
 
-
+#define R_FLOAT float
 #define NOT_IMPLEMENTED throw std::runtime_error("Not implemented!")
 
 namespace ReyEngine {
@@ -255,7 +255,7 @@ namespace ReyEngine {
       Pos<T> b;
    };
 
-   template <typename T>
+   template <typename T=R_FLOAT>
    struct Pos : public Vec2<T>{
       inline Pos(): Vec2<T>(){}
       inline Pos(const T& x, const T& y) : Vec2<T>(x, y){}
@@ -549,10 +549,10 @@ namespace ReyEngine {
    };
 
    struct Circle{
-      inline Circle(const Pos<double>& center, double radius): center(center), radius(radius){}
+      inline Circle(const Pos<R_FLOAT>& center, double radius): center(center), radius(radius){}
       inline Circle(const Circle& rhs): center(rhs.center), radius(rhs.radius){}
       /// create the circle that comprises the three points
-      static inline std::optional<Circle> fromPoints(const Pos<double>& a, const Pos<double>& b, const Pos<double>& c){
+      static inline std::optional<Circle> fromPoints(const Pos<R_FLOAT>& a, const Pos<R_FLOAT>& b, const Pos<R_FLOAT>& c){
          // Convert input points to doubles for precise calculation
          double x1 = a.x, y1 = a.y;
          double x2 = b.x, y2 = b.y;
@@ -581,12 +581,12 @@ namespace ReyEngine {
       /// Return a point on the circle that corresponds to the given angular offset from right-handed horizontal
       /// \param r
       /// \return
-      inline Pos<double> getPoint(Radians r) const {return {(int)center.x + radius * std::cos(r.get()), center.y + radius * std::sin(r.get())};}
+      inline Pos<R_FLOAT> getPoint(Radians r) const {return {center.x + radius * std::cos(r.get()), center.y + radius * std::sin(r.get())};}
       /// Return the angular offset from the right-handed horizontal that corresponds to the given point.
       ///
       /// \param pos: A point along a normal
       /// \return
-      inline Radians getRadians(const Pos<double>& pos) const {
+      inline Radians getRadians(const Pos<R_FLOAT>& pos) const {
          double dx = pos.x - center.x;
          double dy = pos.y - center.y;
          double angle = std::atan2(dy, dx);
@@ -598,12 +598,12 @@ namespace ReyEngine {
       }
       /// Returns the point that intersects with the circle and lies along the normal formed by the point and the circle.
       /// \return
-      inline Pos<double> getTangentPoint(const Pos<double>& pos) const {return getPoint(getRadians(pos));}
+      inline Pos<R_FLOAT> getTangentPoint(const Pos<R_FLOAT>& pos) const {return getPoint(getRadians(pos));}
       /// Returns a line that is tangent to the circle at the given normal point.
       /// \param pos: a point lying on a line that is normal to the circle.
       /// \param length: the length of the tangent
       /// \return: a tangent line that intersects the given normal
-      inline Line<double> getTangentLine(const Pos<double>& pos, double length) const {
+      inline Line<double> getTangentLine(const Pos<R_FLOAT>& pos, double length) const {
          auto point = getTangentPoint(pos);
          // Calculate the vector from center to tangent point
          double dx = point.x - center.x;
@@ -617,13 +617,13 @@ namespace ReyEngine {
          perpY /= magnitude;
          // Calculate the start and end points of the tangent line
          double halfLength = length / 2.0;
-         Pos<double> start(point.x - perpX * halfLength, point.y - perpY * halfLength);
-         Pos<double> end(point.x + perpX * halfLength, point.y + perpY * halfLength);
+         Pos start(point.x - perpX * halfLength, point.y - perpY * halfLength);
+         Pos end(point.x + perpX * halfLength, point.y + perpY * halfLength);
          return Line<double>(start, end);
       }
-      inline Circle operator+(const Pos<int>& pos) const {Circle retval(*this); retval.center += pos; return retval;}
+      inline Circle operator+(const Pos<R_FLOAT>& pos) const {Circle retval(*this); retval.center += pos; return retval;}
       Rect<double> circumscribe(){return {center.x-radius, center.y-radius, radius, radius};}
-      Pos<double> center;
+      Pos<R_FLOAT> center;
       double radius;
    };
 
@@ -751,7 +751,7 @@ namespace ReyEngine {
       bool _texLoaded = false;
    };
 
-   Pos<double> getScreenCenter();
+   Pos<R_FLOAT> getScreenCenter();
    Size<int> getScreenSize();
    ReyEngine::Size<int> getWindowSize();
    void setWindowSize(ReyEngine::Size<int>);
@@ -759,9 +759,9 @@ namespace ReyEngine {
    void setWindowPosition(ReyEngine::Pos<int>);
    void maximizeWindow();
    void minimizeWindow();
-   void drawText(const std::string& text, const ReyEngine::Pos<double>& pos, const ReyEngineFont& font);
-   void drawTextCentered(const std::string& text, const ReyEngine::Pos<double>& pos, const ReyEngineFont& font);
-   void drawTextRelative(const std::string& text, const ReyEngine::Pos<double>& relPos, const ReyEngineFont& font);
+   void drawText(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font);
+   void drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font);
+   void drawTextRelative(const std::string& text, const Pos<R_FLOAT>& relPos, const ReyEngineFont& font);
    void drawRectangle(const Rect<double>&, const ReyEngine::ColorRGBA& color);
    void drawRectangleRounded(const Rect<float>&, float roundness, int segments, const ReyEngine::ColorRGBA& color);
    void drawRectangleLines(const Rect<float>&, float lineThick, const ReyEngine::ColorRGBA& color);
