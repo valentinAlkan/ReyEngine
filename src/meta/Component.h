@@ -94,11 +94,10 @@ PARENT_CLASSNAME(NAME, TYPE_NAME)                  \
 #define BUILD_ARGS_TO_TUPLE(...) std::tuple<__VA_ARGS__>
 #define REYENGINE_ENSURE_IS_STATICALLY_BUILDABLE(T, ...) \
    void _ensure_is_statically_buildable()          {                                        \
-   static_assert( has_required_builds<T, BUILD_ARGS_TO_TUPLE(__VA_ARGS__)>::value,"This static assert should succeed"); }
-//static_assert(has_required_builds<T, std::tuple<std::tuple<const std::string&>>>::value,  \
-//   "\nError: Type must implement a publicly accessible static build(const std::string& name) method that returns a shared_ptr of its type! \n" \
-//   "You can resolve this by placing REYENGINE_DEFAULT_BUILD macro somewhere in the public section of your class definition. \n"               \
-//   "You may also implement this functionality yourself if you desire more control over the build process. ");   \
+   static_assert( has_required_builds<T, BUILD_ARGS_TO_TUPLE(__VA_ARGS__)>::value, \
+  "Type must publicly implement all static build functions specified to the build system. \n" \
+  "If you are using the REYENGINE_OBJECT_BUILD_ONLY macro, then you can place REYENGINE_DEFAULT_BUILD macro somewhere in the public section of your class definition. \n"               \
+  "You may also implement this functionality yourself if you desire more control over the build process. ");}   \
 ///////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_DEFAULT_CTOR(CLASSNAME) \
 CLASSNAME(const std::string& name): CLASSNAME(name, _get_static_constexpr_typename()){}
