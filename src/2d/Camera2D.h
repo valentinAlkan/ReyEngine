@@ -8,13 +8,9 @@ namespace ReyEngine {
 
    //Each canvas can have excatly 1 active camera at a time!!!!
    class Camera2D : public BaseWidget {
-      REYENGINE_OBJECT_BUILD_ONLY(Camera2D, BaseWidget)
-      , active("active", true)
-      {
-
-      }
+      REYENGINE_OBJECT_CUSTOM_BUILD(Camera2D, BaseWidget, std::tuple<const std::string&, const Size<int>&>)
    public:
-      REYENGINE_DEFAULT_BUILD(Camera2D)
+//      REYENGINE_DEFAULT_BUILD(Camera2D)
       void setRotation(double newRot){_camera.camera.rotation = newRot;}
       double getRotation(){return _camera.camera.rotation;}
       void setZoom(double newZoom){_camera.camera.zoom = newZoom;}
@@ -25,8 +21,8 @@ namespace ReyEngine {
       Pos<double> getOffset(){return {_camera.camera.offset.x, _camera.camera.offset.y};}
       Pos<double> nearToFar(const Pos<float>&){return {};}
       Pos<double> farToNear(const Pos<float>&){return {};}
-      static std::shared_ptr<Camera2D> build(const std::string& name, const Size<int>& ScreenSize) {
-         return std::shared_ptr<Camera2D>(new Camera2D(name));
+      static std::shared_ptr<Camera2D> build(const std::string& name, const Size<int>& screenSize) {
+         return Camera2D::_reyengine_make_shared(name, screenSize);
       }
    protected:
       Camera2D(const std::string& instanceName, const Size<int>& ScreenSize)

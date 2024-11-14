@@ -120,16 +120,19 @@ public:                                                        \
    REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME)
 
 //to disallow building except via a factory function
-#define REYENGINE_OBJECT_BUILD_ONLY(CLASSNAME, PARENT_CLASSNAME, ...)  \
+#define REYENGINE_OBJECT_CUSTOM_BUILD(CLASSNAME, PARENT_CLASSNAME, ...)  \
 private:                                                               \
-   REYENGINE_ENSURE_IS_STATICALLY_BUILDABLE(CLASSNAME, std::tuple<const std::string&>)    \
+   REYENGINE_ENSURE_IS_STATICALLY_BUILDABLE(CLASSNAME, __VA_ARGS__)    \
    REYENGINE_PRIVATE_MAKE_SHARED(CLASSNAME)                                       \
 public:                                                           \
    REYENGINE_DECLARE_COMPONENT_FRIEND                             \
    REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(CLASSNAME)         \
 protected:                                                     \
+   REYENGINE_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME)                \
+
+#define REYENGINE_OBJECT_BUILD_ONLY(CLASSNAME, PARENT_CLASSNAME) \
+REYENGINE_OBJECT_CUSTOM_BUILD(CLASSNAME, PARENT_CLASSNAME, std::tuple<const std::string&>) \
    REYENGINE_DEFAULT_CTOR(CLASSNAME)                       \
-   REYENGINE_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME)  \
    REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME)
 
 namespace ReyEngine{
