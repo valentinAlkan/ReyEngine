@@ -10,7 +10,6 @@ namespace ReyEngine {
    class Camera2D : public BaseWidget {
       REYENGINE_OBJECT_CUSTOM_BUILD(Camera2D, BaseWidget, std::tuple<const std::string&, const Size<int>&>)
    public:
-//      REYENGINE_DEFAULT_BUILD(Camera2D)
       void setRotation(double newRot){_camera.camera.rotation = newRot;}
       double getRotation(){return _camera.camera.rotation;}
       void setZoom(double newZoom){_camera.camera.zoom = newZoom;}
