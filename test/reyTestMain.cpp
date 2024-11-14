@@ -497,12 +497,12 @@ int main(int argc, char** argv) {
 
             root->addChild(scrollArea);
     //
-            auto displaySize = [&](const BaseWidget::WidgetResizeEvent &) {
+            auto displaySize = [&](const BaseWidget::WidgetRectChangedEvent &) {
                 xlabel->setText(scrollArea->getWidth());
                 ylabel->setText(scrollArea->getHeight());
                 box->setRect(scrollArea->getRect());
             };
-            labelLayout->subscribe<BaseWidget::WidgetResizeEvent>(scrollArea, displaySize);
+            labelLayout->subscribe<BaseWidget::WidgetRectChangedEvent>(scrollArea, displaySize);
             scrollArea->setInEditor(true);
             scrollArea->setEditorSelected(true);
         } else if (args.getArg("--childBoundingBoxTest")) {
@@ -1833,7 +1833,7 @@ int main(int argc, char** argv) {
 
         else if (args.getArg("--camera2dTest")) {
             //create nodes
-            auto camera = ReyEngine::Camera2D::build("Camera2D");
+            auto camera = ReyEngine::Camera2D::build("Camera2D", getScreenSize());
             auto cameraUI = Label::build("cameraUI");
             auto background = Control::build("background");
             auto backgroundLabel = Label::build("backgroundLabel");
@@ -1856,11 +1856,12 @@ int main(int argc, char** argv) {
                                                            const std::optional<UnhandledMouseInput> &mouse) -> Handled {
                 if (event.isEvent<InputEventMouseWheel>()) {
                     auto wheelEvent = event.toEventType<InputEventMouseWheel>();
-                    auto zoom = wheelEvent.wheelMove.y;
-                    if (zoom) {
+                    double wheel = wheelEvent.wheelMove.y;
+                    if (wheel) {
                         auto camera = wkCamera.lock();
                         if (camera) {
-                            camera->setZoom(camera->getZoom() * zoom / 10);
+                           Logger::info() << "Wheel value = " << wheel << endl;
+                            camera->setZoom(camera->getZoom() * (1 + wheel / 10));
                             Logger::info() << "New camera zoom level = " << camera->getZoom() << endl;
                             return true;
                         }
@@ -1901,7 +1902,10 @@ int main(int argc, char** argv) {
                 if (rotation) {
                     camera->setRotation(camera->getRotation() + rotation);
                 }
-                cameraUI->setText("Label: " + string(cameraUI->getPos()) + ": Camera = " + string(camera->getPos()));
+                cameraUI->setText("Label: " + string(cameraUI->getPos())
+                  + "\nCamera Pos = " + string(camera->getPos())
+                  + "\nCamera Target = " + string(camera->getTarget())
+                );
                 backgroundLabel->setText(backgroundLabel->getPos());
 
             };

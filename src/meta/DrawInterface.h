@@ -72,18 +72,17 @@ namespace ReyEngine {
       constexpr inline Vec2(): Vec<T>(2), x(0), y(0){}
       constexpr inline Vec2(const T& x, const T& y) : Vec<T>(2), x(x), y(y){}
       constexpr inline Vec2(const Vector2& v)     : Vec<T>(2), x((T)v.x), y((T)v.y){}
-      constexpr inline Vec2(const Vec2<int>& v)   : Vec<T>(2), x((T)v.x), y((T)v.y){}
-      constexpr inline Vec2(const Vec2<float>& v) : Vec<T>(2), x((T)v.x), y((T)v.y){}
-      constexpr inline Vec2(const Vec2<double>& v): Vec<T>(2), x((T)v.x), y((T)v.y){}
+      template <typename R>
+      constexpr inline Vec2(const Vec2<R>& v): Vec<T>(2), x((T)v.x), y((T)v.y){}
       inline explicit operator bool() const {return x || y;}
       inline Vec2 operator+(const Vec2& rhs) const {Vec2<T> val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
       inline Vec2 operator-(const Vec2& rhs) const {Vec2<T> val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
       inline Vec2& operator+=(const Vec2& rhs){x += rhs.x; y += rhs.y; return *this;}
       inline Vec2& operator-=(const Vec2& rhs){x -= rhs.x; y -= rhs.y; return *this;}
-      inline Vec2 operator*(double rhs){Vec2 retval(*this); retval.x *= rhs; retval.y *= rhs; return retval;}
+      inline Vec2 operator*(double rhs) const {Vec2 retval(*this); retval.x *= rhs; retval.y *= rhs; return retval;}
 //      inline Vec2& operator*=(const Vec2& rhs){x *= rhs.x; y *= rhs.y; return *this;}
       inline Vec2& operator*=(double rhs){x *= rhs; y *= rhs; return *this;}
-      inline Vec2<double> operator/(double rhs){Vec2<double> retval(*this); retval.x /= rhs; retval.y /= rhs; return retval;}
+      inline Vec2<double> operator/(double rhs) const {Vec2<double> retval(*this); retval.x /= rhs; retval.y /= rhs; return retval;}
       inline Vec2& operator/=(const Vec2& rhs){x /= rhs.x; y /= rhs.y; return *this;}
       inline Vec2& operator=(const Vec2& rhs){x = rhs.x; y=rhs.y; return *this;}
       inline bool operator==(const Vec2& rhs) const {return x==rhs.x && y==rhs.y;}
@@ -91,7 +90,7 @@ namespace ReyEngine {
       inline Vec2& operator-(){x = -x; y =-y; return *this;}
       inline void operator=(Size<T>&) = delete;
       inline void operator=(Pos<T>&) = delete;
-      inline operator Vector2() const {return {(float)x,(float)y};}
+      inline explicit operator Vector2() const {return {(float)x,(float)y};}
       inline Vec2 midpoint() const {return {x/2, y / 2};}
       inline Vec2 min(const Vec2& other) const {Vec2 r; r.x = Math::min(Vec2::x, other.x); r.y = Math::min(Vec2::y, other.y); return r;}
       inline Vec2 max(const Vec2& other) const {Vec2 r; r.x = Math::max(Vec2::x, other.x); r.y = Math::max(Vec2::y, other.y); return r;}
@@ -260,10 +259,9 @@ namespace ReyEngine {
    struct Pos : public Vec2<T>{
       inline Pos(): Vec2<T>(){}
       inline Pos(const T& x, const T& y) : Vec2<T>(x, y){}
-      inline Pos(const Vector2& v)     : Vec2<T>(v){}
-      inline Pos(const Vec2<int>& v)   : Vec2<T>(v){}
-      inline Pos(const Vec2<double>& v): Vec2<T>(v){}
-      inline Pos(const Vec2<float>& v) : Vec2<T>(v){}
+      inline Pos(const Vector2& v) : Vec2<T>(v){}
+      template <typename R>
+      inline Pos(const Vec2<R>& v) : Vec2<T>(v){}
       inline void operator=(Size<T>&) = delete;
       inline Pos operator+(const Pos& rhs) const {auto val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
       inline Pos operator-(const Pos& rhs) const {auto val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
@@ -272,9 +270,8 @@ namespace ReyEngine {
       inline bool operator!=(const Pos& rhs){return this->x != rhs.x || this->y != rhs.y;}
       inline operator std::string() const {return Vec2<T>::toString();}
       inline void operator=(const Size<T>&) = delete;
-      inline Pos& operator=(const Pos<T>& other){Pos::x = other.x; Pos::y = other.y; return *this;}
-      inline Pos& operator=(const Vec2<T>& other){Pos::x = other.x; Pos::y = other.y; return *this;}
-      //Rotate around a basis point
+//      inline Pos& operator=(const Vec2<T>& other){Pos::x = other.x; Pos::y = other.y; return *this;}
+//      Rotate around a basis point
       inline Pos rotatePoint(const Pos<int>& basis, Radians r) const {
            double radians = r.get();
            // Translate point to origin
@@ -311,9 +308,8 @@ namespace ReyEngine {
       constexpr inline Size(const T& x, const T& y) : Vec2<T>(x, y){}
       explicit inline Size(const T edge): Size(edge, edge){}
       constexpr inline Size(const Vector2& v)     : Vec2<T>(v.x,v.y){}
-      constexpr inline Size(const Vec2<int>& v)   : Vec2<T>(v.x,v.y){}
-      constexpr inline Size(const Size<int>& v)   : Vec2<T>(v){}
-      constexpr inline Size(const Size<double>& v): Vec2<T>(v){}
+      template <typename R>
+      constexpr inline Size(const Vec2<R>& v)   : Vec2<T>(v.x,v.y){}
       inline Size(const Size<float>& v) : Vec2<T>(v){}
       inline void operator=(Pos<T>&) = delete;
       inline bool operator==(const Size<T>& rhs){return Size::x==rhs.x && Size::y==rhs.y;}
@@ -333,9 +329,8 @@ namespace ReyEngine {
       constexpr inline Rect(): x(0), y(0), width(0), height(0){}
       constexpr inline Rect(const T x, const T y, const T width, const T height) : x(x), y(y), width(width), height(height){}
       constexpr inline explicit Rect(const Rectangle& r): x((T)r.x), y((T)r.y), width((T)r.width), height((T)r.height){}
-      constexpr inline Rect(const Rect<int>& r): x((T)r.x), y((T)r.y), width((T)r.width), height((T)r.height){}
-      constexpr inline Rect(const Rect<float>& r): x((T)r.x), y((T)r.y), width((T)r.width), height((T)r.height){}
-      constexpr inline Rect(const Rect<double>& r): x((T)r.x), y((T)r.y), width((T)r.width), height((T)r.height){}
+      template <typename R>
+      constexpr inline Rect(const Rect<R>& r): x((T)r.x), y((T)r.y), width((T)r.width), height((T)r.height){}
       inline explicit Rect(const Vec2<T>&) = delete;
       constexpr inline explicit Rect(const Pos<T>& v): x((T)v.x), y((T)v.y), width(0), height(0){}
       constexpr inline explicit Rect(const Size<T>& v): x(0), y(0), width((T)v.x), height((T)v.y){}
@@ -529,8 +524,8 @@ namespace ReyEngine {
          return coord.get().y * columnCount + coord.get().x;
       }
       //get an actual subrect given a subrect size and an index
-      constexpr inline Rect getSubRect(const Size<int>& size, int index) const {
-         auto columnCount = width / size.x;
+      constexpr inline Rect getSubRect(const Size<double>& size, int index) const {
+         int columnCount = width / size.x;
          int coordY = index / columnCount;
          int coordX = index % columnCount;
          auto posX = coordX * size.x;
@@ -713,19 +708,19 @@ namespace ReyEngine {
    struct ReyEngineFont{
       ReyEngineFont(const std::string& fontFile="");
       Font font;
-      float size = 20;
-      float spacing = 1;
+      double size = 20;
+      double spacing = 1;
       bool isDefault = false;
       FontAlignment fontAlignment;
       ReyEngine::ColorRGBA color = COLORS::black;
       std::string fileName;
-      Size<int> measure(const std::string& text) const;
+      Size<double> measure(const std::string& text) const;
       ReyEngineFont& operator=(const ReyEngineFont& rhs);
 //      inline ReyEngineFont& operator=(const ReyEngineFont& rhs){font = rhs.font; size = rhs.size; spacing = rhs.spacing; color = rhs.color; fileName = rhs.fileName; isDefault = rhs.isDefault; return *this;}
 //      std::string toString();
 //      static ReyEngineFont fromString(const std::string& str);
    };
-   ReyEngineFont getDefaultFont(std::optional<float> fontSize = std::nullopt);
+   ReyEngineFont getDefaultFont(std::optional<double> fontSize = std::nullopt);
    ReyEngineFont getFont(const std::string& fileName);
 
    struct ReyTexture{
@@ -764,23 +759,23 @@ namespace ReyEngine {
    void setWindowPosition(ReyEngine::Pos<int>);
    void maximizeWindow();
    void minimizeWindow();
-   void drawText(const std::string& text, const ReyEngine::Pos<int>& pos, const ReyEngineFont& font);
-   void drawTextCentered(const std::string& text, const ReyEngine::Pos<int>& pos, const ReyEngineFont& font);
-   void drawTextRelative(const std::string& text, const ReyEngine::Pos<int>& relPos, const ReyEngineFont& font);
-   void drawRectangle(const Rect<int>&, const ReyEngine::ColorRGBA& color);
+   void drawText(const std::string& text, const ReyEngine::Pos<double>& pos, const ReyEngineFont& font);
+   void drawTextCentered(const std::string& text, const ReyEngine::Pos<double>& pos, const ReyEngineFont& font);
+   void drawTextRelative(const std::string& text, const ReyEngine::Pos<double>& relPos, const ReyEngineFont& font);
+   void drawRectangle(const Rect<double>&, const ReyEngine::ColorRGBA& color);
    void drawRectangleRounded(const Rect<float>&, float roundness, int segments, const ReyEngine::ColorRGBA& color);
    void drawRectangleLines(const Rect<float>&, float lineThick, const ReyEngine::ColorRGBA& color);
    void drawRectangleRoundedLines(const Rect<float>&, float roundness, int segments, float lineThick, const ReyEngine::ColorRGBA& color);
-   void drawRectangleGradientV(const Rect<int>&, const ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2);
+   void drawRectangleGradientV(const Rect<double>&, const ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2);
    void drawCircle(const Circle&, const ReyEngine::ColorRGBA&  color);
    void drawCircleLines(const Circle&, const ReyEngine::ColorRGBA&  color);
    void drawCircleSector(const CircleSector&, const ReyEngine::ColorRGBA&  color, int segments);
    void drawCircleSectorLines(const CircleSector&, const ReyEngine::ColorRGBA&  color, int segments);
-   void drawLine(const Line<int>&, float lineThick, const ReyEngine::ColorRGBA& color);
-   void drawArrow(const Line<int>&, float lineThick, const ReyEngine::ColorRGBA& color, float headSize=20); //Head drawn at A
-   void drawTexture(const ReyTexture& texture, const Rect<int>& source, const Rect<int>& dest, float rotation, const ReyEngine::ColorRGBA& tint);
+   void drawLine(const Line<double>&, float lineThick, const ReyEngine::ColorRGBA& color);
+   void drawArrow(const Line<double>&, float lineThick, const ReyEngine::ColorRGBA& color, float headSize=20); //Head drawn at A
+   void drawTexture(const ReyTexture& texture, const Rect<double>& source, const Rect<double>& dest, float rotation, const ReyEngine::ColorRGBA& tint);
    inline float getFrameDelta() {return GetFrameTime();}
-   inline Size<int> measureText(const std::string& text, const ReyEngineFont& font){return MeasureTextEx(font.font, text.c_str(), font.size, font.spacing);}
+   inline Size<double> measureText(const std::string& text, const ReyEngineFont& font){return MeasureTextEx(font.font, text.c_str(), font.size, font.spacing);}
 
    class RenderTarget{
       public:
@@ -975,7 +970,7 @@ namespace InputInterface{
 //   }
 
    inline float getMouseWheelMove(){return GetMouseWheelMove();} //returns largest of x or y
-   inline ReyEngine::Vec2<float> getMouseWheelMoveV(){return GetMouseWheelMoveV();} //returns both x and y
+   inline ReyEngine::Vec2<double> getMouseWheelMoveV(){return GetMouseWheelMoveV();} //returns both x and y
 
    inline bool isKeyPressed(KeyCode key){return IsKeyPressed((int)key);}
    inline bool isKeyDown(KeyCode key){return IsKeyDown((int)key);}
@@ -988,8 +983,8 @@ namespace InputInterface{
    inline bool isMouseButtonDown(MouseButton btn){return IsMouseButtonDown(static_cast<int>(btn));}
    inline bool isMouseButtonUp(MouseButton btn){return IsMouseButtonUp(static_cast<int>(btn));}
    inline bool isMouseButtonReleased(MouseButton btn){return IsMouseButtonReleased(static_cast<int>(btn));}
-   inline ReyEngine::Vec2<int> getMousePos(){return GetMousePosition();}
-   inline ReyEngine::Vec2<int> getMouseDelta(){return GetMouseDelta();}
+   inline ReyEngine::Vec2<double> getMousePos(){return GetMousePosition();}
+   inline ReyEngine::Vec2<double> getMouseDelta(){return GetMouseDelta();}
    inline ReyEngine::Vec2<double> getMouseWheel(){return GetMouseWheelMoveV();}
 
    inline void setCursor(MouseCursor crsr){ SetMouseCursor((int)crsr);}

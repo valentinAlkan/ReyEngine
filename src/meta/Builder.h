@@ -7,20 +7,21 @@
 namespace ReyEngine {
    namespace Internal{
       namespace AllocationTools {
+         static constexpr bool verbose = false;
          static size_t currentMemoryBytes = 0;
          inline void* malloc(size_t nBytes){
             //placement new allocation - use a memory pool to minimize cache misses - one day - but not now.
             auto ptr = ::operator new(nBytes);
-            Logger::debug() << "Allocating " << nBytes << " bytes @ " << ptr << std::endl;
+            if (verbose) Logger::debug() << "Allocating " << nBytes << " bytes @ " << ptr << std::endl;
             currentMemoryBytes += nBytes;
-            Logger::debug() << "Total memory usage is now " << currentMemoryBytes << std::endl;
+            if (verbose)Logger::debug() << "Total memory usage is now " << currentMemoryBytes << std::endl;
             return ptr;
          }
          inline void free(void* ptr, size_t nBytes){
-            Logger::debug() << "Freeing " << nBytes << "bytes @ " << ptr << std::endl;
+            if (verbose)Logger::debug() << "Freeing " << nBytes << "bytes @ " << ptr << std::endl;
             ::operator delete(ptr);
             currentMemoryBytes -= nBytes;
-            Logger::debug() << "Total memory usage is now " << currentMemoryBytes << std::endl;
+            if (verbose)Logger::debug() << "Total memory usage is now " << currentMemoryBytes << std::endl;
          }
       }
    }

@@ -25,7 +25,7 @@ bool Sprite::setTexture(const ReyEngine::FileSystem::File& path) {
          region.value.setSize(texture->size);
          _rect = region;
       } else if (_fitNextTexture){
-         region = Rect<int>({0, 0}, texture->size);
+         region = Rect<double>({0, 0}, texture->size);
          _fitNextTexture = false;
       }
    } else {
@@ -43,7 +43,7 @@ std::optional<const std::reference_wrapper<ReyTexture>> Sprite::getTexture() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Sprite::setRegion(const Rect<int>& newRegion) {
+void Sprite::setRegion(const Rect<double>& newRegion) {
    region = newRegion;
 }
 /////////////////////////////////////////////////////////////////////////////////////////

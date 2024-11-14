@@ -76,7 +76,7 @@ namespace ReyEngine{
       std::string getText(){return text.value;}
 
    protected:
-      inline ReyEngine::Rect<int> calculateBoundingRect(){
+      inline ReyEngine::Rect<double> calculateBoundingRect(){
          auto textSize = measureText();
          auto newSize = getClampedSize(textSize);
          if (newSize.x > getSize().x || newSize.y > getSize().y){
@@ -85,7 +85,7 @@ namespace ReyEngine{
          return _rect.value.toSizeRect();
       }
 
-      inline std::optional<ReyEngine::Size<int>> needsExpand(){
+      inline std::optional<ReyEngine::Size<double>> needsExpand(){
          auto boundingBox = calculateBoundingRect();
          auto thisBox = getRect();
          if (boundingBox.width > thisBox.width || boundingBox.height > thisBox.height) {
@@ -93,7 +93,7 @@ namespace ReyEngine{
          }
          return std::nullopt;
       };
-      inline ReyEngine::Size<int> measureText() const {return theme->font.value.measure(text.value);}
+      inline ReyEngine::Size<double> measureText() const {return theme->font.value.measure(text.value);}
       StringProperty text;
    };
 }

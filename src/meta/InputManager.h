@@ -35,12 +35,12 @@ namespace ReyEngine{
 
    struct InputEventMouseWheel : public InputEventMouse{
       EVENT_CTOR_SIMPLE(InputEventMouseWheel, InputEventMouse){}
-      ReyEngine::Vec2<int> wheelMove;
+      ReyEngine::Vec2<double> wheelMove;
    };
 
    struct InputEventMouseMotion : public InputEventMouse{
       EVENT_CTOR_SIMPLE(InputEventMouseMotion, InputEventMouse){}
-      ReyEngine::Vec2<int> mouseDelta;
+      ReyEngine::Vec2<double> mouseDelta;
    };
 
    enum class InputFilter {

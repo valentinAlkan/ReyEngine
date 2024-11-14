@@ -63,7 +63,7 @@ void Panel::_init() {
    vlayout->addChild(window);
 
    //cap menu bar size
-   menuBar->setMaxSize({ReyEngine::MaxInt, (int)theme->font.value.size+4});
+   menuBar->setMaxSize({ReyEngine::MaxInt, theme->font.value.size+4});
    menuBar->getTheme()->background = Style::Fill::SOLID;
 
    //add a spacer
@@ -209,7 +209,7 @@ Handled Panel::_unhandled_input(const InputEvent& event, const std::optional<Unh
          if (mbEvent.isDown && !mouse->isInside) break; //ingore downs that occur outside the rect
          dragStart = InputManager::getMousePos();
          resizeStartRect = _rect.value;
-         offset = mousePos - getPos(); //record position
+         offset = (Pos<double>)mousePos - getPos(); //record position
 
          if (!_isMinimized && _isResizable && _resizeDir == ResizeDir::NONE){
             //if we're resizing, stop here and return
@@ -297,7 +297,7 @@ void Panel::registerProperties(){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyEngine::Rect<int> Panel::getScissorArea() {
+ReyEngine::Rect<double> Panel::getScissorArea() {
    if (_isMinimized){
       return menuBar->getRect();
    }

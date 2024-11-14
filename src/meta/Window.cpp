@@ -144,7 +144,7 @@ void Window::exec(){
                     _inputQueueMouse.pop();
                 }
                UnhandledMouseInput mouse;
-               mouse.localPos = getCanvas()->globalToLocal((*event).toEventType<InputEventMouse>().globalPos);
+               mouse.localPos = (Pos<int>)getCanvas()->globalToLocal((*event).toEventType<InputEventMouse>().globalPos);
                mouse.isInside = getCanvas()->isInside(mouse.localPos);
                processUnhandledInput(*event, mouse);
             }
@@ -239,7 +239,7 @@ void Window::exec(){
                event.isDown = false;
                event.globalPos = pos;
                UnhandledMouseInput mouse;
-               mouse.localPos = getCanvas()->globalToLocal(pos);
+               mouse.localPos = (Pos<int>)getCanvas()->globalToLocal(pos);
                mouse.isInside = getCanvas()->isInside(mouse.localPos);
                processUnhandledInput(event, mouse);
             }
@@ -269,7 +269,7 @@ void Window::exec(){
                event.isDown = true;
                event.globalPos = pos;
                UnhandledMouseInput mouse;
-               mouse.localPos = getCanvas()->globalToLocal(pos);
+               mouse.localPos = (Pos<int>)getCanvas()->globalToLocal(pos);
                mouse.isInside = getCanvas()->isInside(mouse.localPos);
                processUnhandledInput(event, mouse);
             } else {
@@ -285,7 +285,7 @@ void Window::exec(){
                event.globalPos = pos;
                event.wheelMove = wheel;
                UnhandledMouseInput mouse;
-               mouse.localPos = getCanvas()->globalToLocal(event.globalPos);
+               mouse.localPos = (Pos<int>)getCanvas()->globalToLocal(event.globalPos);
                mouse.isInside = getCanvas()->isInside(mouse.localPos);
                processUnhandledInput(event, mouse);
             }
@@ -317,7 +317,7 @@ void Window::exec(){
                }
 //            if (_isEditor) continue;
                UnhandledMouseInput mouse;
-               mouse.localPos = getCanvas()->globalToLocal(event.globalPos);
+               mouse.localPos = (Pos<int>)getCanvas()->globalToLocal(event.globalPos);
                mouse.isInside = getCanvas()->isInside(mouse.localPos);
                getCanvas()->_process_unhandled_input(event, mouse);
             }

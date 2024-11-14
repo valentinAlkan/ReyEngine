@@ -135,7 +135,7 @@ add_library(ReyEngine3D STATIC
         src/3d/ModelBody.cpp
 )
 
-add_library(editor STATIC
+add_library(Editor STATIC
     src/editor/Editor.cpp
     src/editor/WidgetTree.cpp
     src/editor/SceneTree.cpp
@@ -169,17 +169,15 @@ endif (UNIX)
 target_link_libraries(ReyEngine3D ReyEngine2D)
 
 
-target_include_directories(editor PUBLIC
+target_include_directories(Editor PUBLIC
     src/editor
 )
 
-target_link_libraries(editor PUBLIC ReyEngine2D ReyEngine3D)
+target_link_libraries(Editor PUBLIC ReyEngine2D ReyEngine3D)
 
 # Test Project
-set(TEST_PROJECT ReyEngineTest)
-add_executable( ${TEST_PROJECT}
-    test/reyTestMain.cpp
-)
+add_executable( ReyEngineTest test/reyTestMain.cpp)
+target_link_libraries(ReyEngineTest Editor)
 
 # Project for testing the build system
 add_executable( ReyEngineBuildTest test/buildTest.cpp)

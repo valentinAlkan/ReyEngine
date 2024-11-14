@@ -8,7 +8,7 @@ using namespace ReyEngine;
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::Canvas::_init() {
    if (!_renderTarget.ready()) {
-      _renderTarget.setSize(getSize()); //todo: make protected
+      _renderTarget.setSize(Size<int>(getSize())); //todo: make protected
    }
 }
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -47,7 +47,7 @@ Handled ReyEngine::Canvas::_unhandled_input(const InputEvent& inputEvent, const 
          //translate to local for mouse input
          if (modalMouseInput){
             auto& mouseEvent = inputEvent.toEventType<InputEventMouse>();
-            modalMouseInput.value().localPos = widget->globalToLocal(mouseEvent.globalPos);
+            modalMouseInput.value().localPos = Pos<int>(widget->globalToLocal(mouseEvent.globalPos));
             modalMouseInput->isInside = widget->isInside(modalMouseInput->localPos);
          }
          if (widget->_process_unhandled_input(inputEvent, modalMouseInput)){
@@ -94,12 +94,12 @@ void Canvas::_on_rect_changed() {
 //   _defaultCamera.setTarget(Vec2<float>(getSize().x/2, getSize().y/2));
 //   _defaultCamera.target = _defaultCamera.offset;
 //   auto gpos = getGlobalPos();
-//   _virtualInputOffset = Pos<int>(gpos.x, gpos.y);
+//   _virtualInputOffset = Pos<double>(gpos.x, gpos.y);
 }
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Canvas::pushScissor(const ReyEngine::Rect<int>& newArea) {
+void Canvas::pushScissor(const ReyEngine::Rect<double>& newArea) {
    bool hastop = !_scissorStack.empty();
    if (hastop) {
       _scissorStack.push(_scissorStack.top().getOverlap(newArea));

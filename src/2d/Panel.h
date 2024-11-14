@@ -43,7 +43,7 @@ namespace ReyEngine{
 
    protected:
       void _on_mouse_exit() override;
-      ReyEngine::Rect<int> getScissorArea();
+      ReyEngine::Rect<double> getScissorArea();
       enum class ResizeDir{NONE, N, E, S, W, NE, SE, SW, NW};
 
       StringProperty panelTitle;
@@ -52,11 +52,11 @@ namespace ReyEngine{
       std::shared_ptr<HLayout> menuBar;
       std::shared_ptr<Control> window;
       std::shared_ptr<Label> titleLabel;
-      ReyEngine::Pos<int> offset;
+      ReyEngine::Pos<double> offset;
       ReyEngine::Pos<int> mousePos;
       ReyEngine::Pos<int> dragStart;
-      ReyEngine::Rect<int> resizeStartRect;
-      ReyEngine::Rect<int> cacheRect; //for caching size before maximize
+      ReyEngine::Rect<double> resizeStartRect;
+      ReyEngine::Rect<double> cacheRect; //for caching size before maximize
       bool _isDragging = false;
       BoolProperty _isResizable;
       BoolProperty _isMinimized;
@@ -65,7 +65,7 @@ namespace ReyEngine{
       InputFilter _filterCache;
 
       ResizeDir _resizeDir = ResizeDir::NONE;
-      std::array<ReyEngine::Rect<int>, 4> stretchRegion; //top/right/bottom/left
-      ReyEngine::Rect<int> _scissorArea;
+      std::array<ReyEngine::Rect<double>, 4> stretchRegion; //top/right/bottom/left
+      ReyEngine::Rect<double> _scissorArea;
    };
 }

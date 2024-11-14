@@ -10,8 +10,6 @@ using namespace std;
 using namespace ReyEngine;
 using namespace FileSystem;
 
-static constexpr bool verbose = false;
-
 /////////////////////////////////////////////////////////////////////////////////////////
 BaseWidget::BaseWidget(const std::string& name, std::string  typeName)
 : Component(name, typeName)
@@ -28,27 +26,27 @@ BaseWidget::~BaseWidget() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::setGlobalPos(const Vec2<int>& newPos) {
+void BaseWidget::setGlobalPos(const Vec2<double>& newPos) {
    auto newLocalPos = globalToLocal(newPos);
    setPos(newLocalPos);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyEngine::Size<int> BaseWidget::getClampedSize(ReyEngine::Size<int> size){
-   auto newX = ReyEngine::Vec2<int>(minSize.x, maxSize.x).clamp(size.x);
-   auto newY = ReyEngine::Vec2<int>(minSize.y, maxSize.y).clamp(size.y);
+ReyEngine::Size<double> BaseWidget::getClampedSize(ReyEngine::Size<double> size){
+   auto newX = ReyEngine::Vec2<double>(minSize.x, maxSize.x).clamp(size.x);
+   auto newY = ReyEngine::Vec2<double>(minSize.y, maxSize.y).clamp(size.y);
    return {newX, newY};
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyEngine::Size<int> BaseWidget::getClampedSize(){
+ReyEngine::Size<double> BaseWidget::getClampedSize(){
    return getClampedSize(getSize());
 }
 
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Pos<int> BaseWidget::getGlobalPos() const {
+Pos<double> BaseWidget::getGlobalPos() const {
    //sum up all our ancestors' positions and add our own to it
    auto offset = getPos();
 //   if (getTypeName() != Canvas::TYPE_NAME && !_parent.expired()){ //todo: Race conditions?
@@ -59,34 +57,34 @@ Pos<int> BaseWidget::getGlobalPos() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Pos<int> BaseWidget::globalToLocal(const Pos<int>& global) const {
+Pos<double> BaseWidget::globalToLocal(const Pos<double>& global) const {
    auto globalPos = getGlobalPos();
    auto retval = global - globalPos;
    return retval;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Pos<int> BaseWidget::localToGlobal(const Pos<int> &local) const {
+Pos<double> BaseWidget::localToGlobal(const Pos<double> &local) const {
    return local + getGlobalPos();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Rect<int> BaseWidget::globalToLocal(const Rect<int> &global) const {
+Rect<double> BaseWidget::globalToLocal(const Rect<double> &global) const {
    auto globalPos = getGlobalPos();
    auto retval = global - globalPos;
    return retval;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Rect<int> BaseWidget::localToGlobal(const Rect<int> &local) const {
+Rect<double> BaseWidget::localToGlobal(const Rect<double> &local) const {
    return local + getGlobalPos();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyEngine::Size<int> BaseWidget::getChildBoundingBox() const {
-   Size<int> childRect;
+ReyEngine::Size<double> BaseWidget::getChildBoundingBox() const {
+   Size<double> childRect;
    for (const auto& childIter : getChildMap()){
-      auto totalOffset = childIter.second.second->getRect().size() + Size<double>(childIter.second.second->getPos());
+      auto totalOffset = childIter.second.second->getRect().size() + Size<double>(childIter.second.second->getPos().x, childIter.second.second->getPos().y);
       childRect = childRect.max(totalOffset);
    }
    return childRect;
@@ -261,9 +259,9 @@ Handled BaseWidget::_process_unhandled_editor_input(const InputEvent& event, con
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-UnhandledMouseInput BaseWidget::toMouseInput(const Pos<int> &global) const {
+UnhandledMouseInput BaseWidget::toMouseInput(const Pos<double> &global) const {
     UnhandledMouseInput childmouse;
-    childmouse.localPos = globalToLocal(global);
+    childmouse.localPos = Pos<int>(globalToLocal(global));
     childmouse.isInside = isInside(childmouse.localPos);
     return childmouse;
 }
@@ -301,54 +299,54 @@ void BaseWidget::setBackRender(bool _isBackrender) {
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawLine(const ReyEngine::Line<int>& line, float lineThick, const ReyEngine::ColorRGBA& color) const {
+void BaseWidget::drawLine(const ReyEngine::Line<double>& line, float lineThick, const ReyEngine::ColorRGBA& color) const {
    ReyEngine::drawLine(line + getGlobalPos() + _renderOffset, lineThick, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawArrow(const Line<int>& line, float lineThick, const ReyEngine::ColorRGBA& color, float headSize) const {
+void BaseWidget::drawArrow(const Line<double>& line, float lineThick, const ReyEngine::ColorRGBA& color, float headSize) const {
     ReyEngine::drawArrow(line + getGlobalPos() + _renderOffset, lineThick, color, headSize);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawText(const std::string &text, const Pos<int> &pos, const ReyEngine::ReyEngineFont& font) const{
+void BaseWidget::drawText(const std::string &text, const Pos<double> &pos, const ReyEngine::ReyEngineFont& font) const{
    ReyEngine::drawText(text, pos + getGlobalPos() + _renderOffset, font);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawTextCentered(const std::string &text, const Pos<int> &pos, const ReyEngine::ReyEngineFont& font) const{
+void BaseWidget::drawTextCentered(const std::string &text, const Pos<double> &pos, const ReyEngine::ReyEngineFont& font) const{
    ReyEngine::drawTextCentered(text, pos + getGlobalPos() + _renderOffset, font);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawRectangle(const ReyEngine::Rect<int> &rect, const ReyEngine::ColorRGBA &color) const {
+void BaseWidget::drawRectangle(const ReyEngine::Rect<double> &rect, const ReyEngine::ColorRGBA &color) const {
    //use the size of the param rect but use the position of our rect + the param rect
-   Rect<int> newRect(rect + getGlobalPos() + _renderOffset);
+   Rect<double> newRect(rect + getGlobalPos() + _renderOffset);
    ReyEngine::drawRectangle(newRect, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawRectangleLines(const ReyEngine::Rect<int> &rect, float lineThick, const ReyEngine::ColorRGBA &color) const {
-   Rect<int> newRect(rect + getGlobalPos() + _renderOffset);
+void BaseWidget::drawRectangleLines(const ReyEngine::Rect<double> &rect, float lineThick, const ReyEngine::ColorRGBA &color) const {
+   Rect<double> newRect(rect + getGlobalPos() + _renderOffset);
    ReyEngine::drawRectangleLines(newRect, lineThick, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawRectangleRounded(const ReyEngine::Rect<int> &rect, float roundness, int segments, const ReyEngine::ColorRGBA &color) const {
+void BaseWidget::drawRectangleRounded(const ReyEngine::Rect<double> &rect, float roundness, int segments, const ReyEngine::ColorRGBA &color) const {
    //use the size of the param rect but use the position of our rect + the param rect
-   Rect<double> newRect(rect + Pos<int>(getGlobalPos()) + Pos<int>(_renderOffset));
+   Rect<double> newRect(rect + Pos<double>(getGlobalPos()) + Pos<double>(_renderOffset));
    ReyEngine::drawRectangleRounded(newRect, roundness, segments, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawRectangleRoundedLines(const ReyEngine::Rect<int> &rect, float roundness, int segments, float lineThick, const ReyEngine::ColorRGBA &color) const {
+void BaseWidget::drawRectangleRoundedLines(const ReyEngine::Rect<double> &rect, float roundness, int segments, float lineThick, const ReyEngine::ColorRGBA &color) const {
    //use the size of the param rect but use the position of our rect + the param rect
    Rect<float> newRect(rect + Pos<double>(getGlobalPos()) + Pos<double>(_renderOffset));
    ReyEngine::drawRectangleRoundedLines(newRect, roundness, segments, lineThick, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawRectangleGradientV(const ReyEngine::Rect<int> &rect, const ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA &color2) const {
+void BaseWidget::drawRectangleGradientV(const ReyEngine::Rect<double> &rect, const ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA &color2) const {
    //use the size of the param rect but use the position of our rect + the param rect
    Rect<float> newRect(rect + getGlobalPos() + _renderOffset);
    ReyEngine::drawRectangleGradientV(newRect, color1, color2);
@@ -372,21 +370,21 @@ void BaseWidget::drawCircleSectorLines(const ReyEngine::CircleSector& sector, co
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawRenderTargetRect(const ReyEngine::RenderTarget& target, const ReyEngine::Rect<int>& src, const Pos<int>& dst) const {
+void BaseWidget::drawRenderTargetRect(const ReyEngine::RenderTarget& target, const ReyEngine::Rect<double>& src, const Pos<double>& dst) const {
    auto _dst = dst + getGlobalPos();
    DrawTextureRec(target.getRenderTexture(), {(float)src.x, (float)src.y, (float) src.width, -(float)src.height}, {(float)_dst.x + (float)_renderOffset.x, (float)_dst.y + (float)_renderOffset.y}, Colors::none);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawRenderTarget(const ReyEngine::RenderTarget& target, const Pos<int>& dst) const {
+void BaseWidget::drawRenderTarget(const ReyEngine::RenderTarget& target, const Pos<double>& dst) const {
    DrawTextureRec(target.getRenderTexture(), {0,0, (float)target.getSize().x, -(float)target.getSize().y}, {(float)dst.x + (float)_renderOffset.x, (float)dst.y + (float)_renderOffset.y}, Colors::none);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawTextureRect(const ReyEngine::ReyTexture& rtex, const ReyEngine::Rect<int> &src, const ReyEngine::Rect<int> &dst, float rotation, const ReyEngine::ColorRGBA &tint) const {
+void BaseWidget::drawTextureRect(const ReyEngine::ReyTexture& rtex, const ReyEngine::Rect<double> &src, const ReyEngine::Rect<double> &dst, float rotation, const ReyEngine::ColorRGBA &tint) const {
    auto gpos = getGlobalPos();
    Rectangle _src  = {(float)src.x, (float)src.y, (float)src.width, (float)src.height};
-   Rectangle _dst = {(float)dst.x + (float)_renderOffset.x + gpos.x, (float)dst.y + (float)_renderOffset.y + gpos.y, (float)dst.width, (float)dst.height};
+   Rectangle _dst = {static_cast<float>((float)dst.x + (float)_renderOffset.x + gpos.x), static_cast<float>((float)dst.y + (float)_renderOffset.y + gpos.y), (float)dst.width, (float)dst.height};
    DrawTexturePro(rtex.getTexture(), _src, _dst, {0,0}, rotation, Colors::none);
 }
 
@@ -410,7 +408,7 @@ void BaseWidget::renderEditorFeatures(){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyEngine::Rect<int> BaseWidget::_getGrabHandle(int index) {
+ReyEngine::Rect<double> BaseWidget::_getGrabHandle(int index) {
    switch(index){
       case 0:
          return {-GRAB_HANDLE_SIZE,-GRAB_HANDLE_SIZE,GRAB_HANDLE_SIZE,GRAB_HANDLE_SIZE};
@@ -426,7 +424,7 @@ ReyEngine::Rect<int> BaseWidget::_getGrabHandle(int index) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-std::optional<std::shared_ptr<BaseWidget>> BaseWidget::getWidgetAt(Pos<int> pos) {
+std::optional<std::shared_ptr<BaseWidget>> BaseWidget::getWidgetAt(Pos<double> pos) {
    //query the widget and figure out which of its children is the topmost widget at the position
    std::shared_ptr<BaseWidget> widgetAt;
    std::function<std::shared_ptr<BaseWidget>(std::shared_ptr<BaseWidget>)> findWidget = [&](std::shared_ptr<BaseWidget> currentWidget){
@@ -443,8 +441,8 @@ std::optional<std::shared_ptr<BaseWidget>> BaseWidget::getWidgetAt(Pos<int> pos)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::setRect(const ReyEngine::Rect<int>& r){
-   ReyEngine::Rect<int> newRect(r);
+void BaseWidget::setRect(const ReyEngine::Rect<double>& r){
+   ReyEngine::Rect<double> newRect(r);
    auto parent = getParent().lock();
    int parentHeight, parentWidth;
    if(parent && getAnchoring() != Anchor::NONE) {
@@ -529,52 +527,52 @@ void BaseWidget::setRect(const ReyEngine::Rect<int>& r){
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::setMinSize(const ReyEngine::Size<int>& size) {
+void BaseWidget::setMinSize(const ReyEngine::Size<double>& size) {
     minSize = size;
     setRect(_rect.value);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::setMaxSize(const ReyEngine::Size<int>& size) {
+void BaseWidget::setMaxSize(const ReyEngine::Size<double>& size) {
     maxSize = size;
     setRect(_rect.value);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setPos(int x, int y){
-   ReyEngine::Rect<int> r(x, y, _rect.value.width, _rect.value.height);
+   ReyEngine::Rect<double> r(x, y, _rect.value.width, _rect.value.height);
    setRect(r);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::setPos(const Pos<int>& pos) {
-   ReyEngine::Rect<int> r(pos, _rect.value.size());
+void BaseWidget::setPos(const Pos<double>& pos) {
+   ReyEngine::Rect<double> r(pos, _rect.value.size());
    setRect(r);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setX(int x) {
-   Rect<int> r({x, _rect.value.pos().y}, _rect.value.size());
+   Rect<double> r({x, _rect.value.pos().y}, _rect.value.size());
    setRect(r);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setY(int y){
-   Rect<int> r({_rect.value.pos().x, y}, _rect.value.size());
+   Rect<double> r({_rect.value.pos().x, y}, _rect.value.size());
    setRect(r);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::setPosRelative(const Pos<int>& pos, const Pos<int>& basis) {
+void BaseWidget::setPosRelative(const Pos<double>& pos, const Pos<double>& basis) {
    setPos(pos - basis);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::move(const Pos<int> &amt) {
+void BaseWidget::move(const Pos<double> &amt) {
    setPos(_rect.value.pos() + amt);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::setSize(const ReyEngine::Size<int>& size){
-   ReyEngine::Rect<int> r(_rect.value.pos(), size);
+void BaseWidget::setSize(const ReyEngine::Size<double>& size){
+   ReyEngine::Rect<double> r(_rect.value.pos(), size);
    setRect(r);
 }
 
@@ -599,13 +597,13 @@ void BaseWidget::scale(const Vec2<float> &scale) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setWidth(int width){
-   ReyEngine::Rect<int> r(_rect.value.pos(), {width, _rect.value.height});
+   ReyEngine::Rect<double> r(_rect.value.pos(), {width, _rect.value.height});
    setRect(r);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setHeight(int height){
-   ReyEngine::Rect<int> r(_rect.value.pos(), {_rect.value.width, height});
+   ReyEngine::Rect<double> r(_rect.value.pos(), {_rect.value.width, height});
    setRect(r);
 }
 
@@ -652,7 +650,7 @@ std::optional<std::shared_ptr<ReyEngine::Canvas>> BaseWidget::getCanvas() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::startScissor(const ReyEngine::Rect<int>& area) const {
+void BaseWidget::startScissor(const ReyEngine::Rect<double>& area) const {
    auto& thiz = const_cast<BaseWidget&>(*this);
    auto canvasOpt = thiz.getCanvas();
    if (canvasOpt){
@@ -673,7 +671,7 @@ void BaseWidget::stopScissor() const {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-std::optional<std::shared_ptr<BaseWidget>> BaseWidget::askHover(const Pos<int>& globalPos) {
+std::optional<std::shared_ptr<BaseWidget>> BaseWidget::askHover(const Pos<double>& globalPos) {
     //ask this widget to accept the hover
 
     auto process = [&]() -> std::optional<std::shared_ptr<BaseWidget>> {
@@ -723,7 +721,7 @@ void BaseWidget::__on_enter_tree() {
       parent->_backRenderList.push_back(me);
    } else {
       parent->_frontRenderList.push_back(me);
-      if (verbose)
+      if (BaseWidget::verbose)
       Logger::debug() << "Child " << getName() << " added to parent " << parent->getName() << "'s front render list" << endl;
    }
 

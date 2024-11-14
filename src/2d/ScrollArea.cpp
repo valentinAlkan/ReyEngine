@@ -58,10 +58,10 @@ void ScrollArea::_on_child_added(std::shared_ptr<BaseWidget>& child){
     //expand scroll size to fit children
 
     // reconfigure ourselves when our children's size changes (but ignore the sliders)
-    auto cb = [&](const WidgetResizeEvent &e) { _on_rect_changed(); };
+    auto cb = [&](const WidgetRectChangedEvent &e) { _on_rect_changed(); };
 
     if (child != vslider && child != hslider) {
-        subscribe<WidgetResizeEvent>(child, cb);
+        subscribe<WidgetRectChangedEvent>(child, cb);
     }
     //recalculate
     _on_rect_changed();
@@ -92,7 +92,7 @@ void ScrollArea::_init(){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyEngine::Size<int> ScrollArea::getScrollAreaChildBoundingBox() {
+ReyEngine::Size<double> ScrollArea::getScrollAreaChildBoundingBox() {
     ReyEngine::Size<int> childRect;
     for (const auto &child: getChildren()) {
         if (child->getName() == VSLIDER_NAME) {
@@ -125,7 +125,7 @@ Handled ScrollArea::_unhandled_input(const InputEvent& event, const std::optiona
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::optional<std::shared_ptr<BaseWidget>> ScrollArea::askHover(const ReyEngine::Pos<int>& globalPos) {
+std::optional<std::shared_ptr<BaseWidget>> ScrollArea::askHover(const ReyEngine::Pos<double>& globalPos) {
     //pass to childwidgets
     if (vslider && vslider->askHover(globalPos)) return vslider;
     if (hslider && hslider->askHover(globalPos)) return hslider;

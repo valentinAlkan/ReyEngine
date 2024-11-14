@@ -34,6 +34,7 @@ namespace ReyEngine::Internal{
     : public virtual NamedInstance
     , public inheritable_enable_shared_from_this<TypeContainer<T>>
     {
+       static constexpr bool verbose = false;
     public:
         using ChildIndex = unsigned long;
         using ChildPtr = std::shared_ptr<T>;
@@ -113,7 +114,7 @@ namespace ReyEngine::Internal{
             if (isInTree()){
                child->doEnterTree(*this);
             }
-           Logger::debug() << "Registering child " << child->_scenePath << std::endl;
+           if (verbose) Logger::debug() << "Registering child " << child->_scenePath << std::endl;
         }
 
         std::optional<ChildPtr>removeChild(const std::string& name, bool quiet=false){
