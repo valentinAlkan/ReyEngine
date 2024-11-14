@@ -6,17 +6,56 @@
 #include "Event.h"
 
 namespace ReyEngine {
-   template<typename T>
-   class has_build {
+#include <type_traits>
+#include <tuple>
+#include <memory>
+
+   // Check if build exists with correct signature and return type
+   template<typename T, typename... Args>
+   struct has_build {
    private:
       template<typename C>
-      static auto test(int)-> decltype(C::build(std::declval<std::string>()), std::true_type{});
-      static std::false_type test(...);
+      static auto test(int) -> decltype(
+      C::build(std::declval<Args>()...),
+            std::true_type{}
+      );
+
       template<typename C>
-      static auto check_return_type(int)-> std::is_same<decltype(C::build(std::declval<std::string>())),std::shared_ptr<T>>;
+      static std::false_type test(...);
+
+      template<typename C>
+      static auto check_return_type(int) -> std::bool_constant<
+            std::is_same_v<
+                  decltype(C::build(std::declval<Args>()...)),
+                  std::shared_ptr<C>
+            >
+      >;
+      template<typename C>
       static std::false_type check_return_type(...);
+
    public:
-      static constexpr bool value = decltype(test<T>(0))::value && decltype(check_return_type<T>(0))::value;
+      // Both conditions must be true: build exists and returns correct type
+      static constexpr bool value =
+            decltype(test<T>(0))::value &&
+            decltype(check_return_type<T>(0))::value;
+   };
+
+   // Helper to unpack tuple into arguments
+   template<typename T, typename Tuple>
+   struct has_build_from_tuple;
+
+   template<typename T, typename... Args>
+   struct has_build_from_tuple<T, std::tuple<Args...>> {
+      static constexpr bool value = has_build<T, Args...>::value;
+   };
+
+   // Check all required build signatures
+   template<typename T, typename Tuple>
+   struct has_required_builds;
+
+   template<typename T, typename... Tuples>
+   struct has_required_builds<T, std::tuple<Tuples...>> {
+      static constexpr bool value = (has_build_from_tuple<T, Tuples>::value && ...);
    };
 }
 
@@ -27,14 +66,22 @@ namespace ReyEngine {
 static constexpr char TYPE_NAME[] = #TYPENAME;               \
 std::string _get_static_constexpr_typename() override {return TYPE_NAME;}
 /////////////////////////////////////////////////////////////////////////////////////////
+#define REYENGINE_CTOR_INIT_LIST(NAME, PARENT_CLASSNAME) \
+PARENT_CLASSNAME(NAME, TYPE_NAME)                  \
+, NamedInstance(NAME, TYPE_NAME)                     \
+, Internal::Component(NAME, TYPE_NAME)                \
+/////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_SERIALIZER(CLASSNAME, PARENT_CLASSNAME)
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME) \
    CLASSNAME(const std::string& name, const std::string& typeName): PARENT_CLASSNAME(name, typeName), NamedInstance(name, typeName), Component(name, typeName)
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_DEFAULT_BUILD(T) \
+   static std::shared_ptr<T> build(const std::string& instanceName){ return T::_reyengine_make_shared(instanceName); }
+/////////////////////////////////////////////////////////////////////////////////////////
+#define REYENGINE_PRIVATE_MAKE_SHARED(T) \
    template<typename... Args> \
-   static std::shared_ptr<T> build(Args&&... args) noexcept {   \
+   static std::shared_ptr<T> _reyengine_make_shared(Args&&... args) noexcept {   \
         auto mem = ReyEngine::Internal::AllocationTools::malloc(sizeof(T)); \
         auto obj = new (mem) T(std::forward<Args>(args)...);  \
         std::shared_ptr<T> ptr(obj, [](T* ptr) {   \
@@ -44,16 +91,17 @@ std::string _get_static_constexpr_typename() override {return TYPE_NAME;}
       return ptr;}
 
 /////////////////////////////////////////////////////////////////////////////////////////
-#define REYENGINE_ENSURE_IS_STATICALLY_BUILDABLE(CLASSNAME) \
-   void _ensure_is_statically_buildable(){                                                         \
-   static_assert(ReyEngine::has_build<CLASSNAME>::value,    \
-   "\nError: Type must implement a publicly accessible static build(const std::string& name) method that returns a shared_ptr of its type! \n" \
-   "You can resolve this by placing REYENGINE_DEFAULT_BUILD macro somewhere in the public section of your class definition. \n"               \
-   "You may also implement this functionality yourself if you desire more control over the build process. "); \
-   }
-/////////////////////////////////////////////////////////////////////////////////////////
+#define BUILD_ARGS_TO_TUPLE(...) std::tuple<__VA_ARGS__>
+#define REYENGINE_ENSURE_IS_STATICALLY_BUILDABLE(T, ...) \
+   void _ensure_is_statically_buildable()          {                                        \
+   static_assert( has_required_builds<T, BUILD_ARGS_TO_TUPLE(__VA_ARGS__)>::value,"This static assert should succeed"); }
+//static_assert(has_required_builds<T, std::tuple<std::tuple<const std::string&>>>::value,  \
+//   "\nError: Type must implement a publicly accessible static build(const std::string& name) method that returns a shared_ptr of its type! \n" \
+//   "You can resolve this by placing REYENGINE_DEFAULT_BUILD macro somewhere in the public section of your class definition. \n"               \
+//   "You may also implement this functionality yourself if you desire more control over the build process. ");   \
+///////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_DEFAULT_CTOR(CLASSNAME) \
-   CLASSNAME(const std::string& name): CLASSNAME(name, _get_static_constexpr_typename()){}
+CLASSNAME(const std::string& name): CLASSNAME(name, _get_static_constexpr_typename()){}
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME) \
 protected:                                                \
@@ -73,9 +121,10 @@ public:                                                        \
    REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME)
 
 //to disallow building except via a factory function
-#define REYENGINE_OBJECT_BUILD_ONLY(CLASSNAME, PARENT_CLASSNAME)  \
-private:                                                          \
-   REYENGINE_ENSURE_IS_STATICALLY_BUILDABLE(CLASSNAME)                       \
+#define REYENGINE_OBJECT_BUILD_ONLY(CLASSNAME, PARENT_CLASSNAME, ...)  \
+private:                                                               \
+   REYENGINE_ENSURE_IS_STATICALLY_BUILDABLE(CLASSNAME, std::tuple<const std::string&>)    \
+   REYENGINE_PRIVATE_MAKE_SHARED(CLASSNAME)                                       \
 public:                                                           \
    REYENGINE_DECLARE_COMPONENT_FRIEND                             \
    REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(CLASSNAME)         \

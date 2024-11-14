@@ -19,10 +19,22 @@ namespace ReyEngine {
       double getRotation(){return _camera.camera.rotation;}
       void setZoom(double newZoom){_camera.camera.zoom = newZoom;}
       double getZoom(){return _camera.camera.zoom;}
+      /// Makes the camera 'look' at a specific point by centering its view on it
+      void setTarget(const Pos<double>& target){ setPos(getPos() + getOffset());}
+      void setOffset(const Pos<double>& offset){_camera.camera.offset = offset;}
       Pos<double> getOffset(){return {_camera.camera.offset.x, _camera.camera.offset.y};}
       Pos<double> nearToFar(const Pos<float>&){return {};}
       Pos<double> farToNear(const Pos<float>&){return {};}
+      static std::shared_ptr<Camera2D> build(const std::string& name, const Size<int>& ScreenSize) {
+         return std::shared_ptr<Camera2D>(new Camera2D(name));
+      }
    protected:
+      Camera2D(const std::string& instanceName, const Size<int>& ScreenSize)
+      : REYENGINE_CTOR_INIT_LIST(instanceName, BaseWidget)
+      , active(PROP_ACTIVE_NAME, true)
+      {
+
+      }
       void renderBegin(ReyEngine::Pos<double>& textureOffset) override;
       void renderEnd() override;
       void render() const override {};
@@ -54,6 +66,7 @@ namespace ReyEngine {
       }
       BoolProperty active;
    private:
+      static constexpr char PROP_ACTIVE_NAME[] = "active";
       CameraTransform2D _camera;
    };
 }

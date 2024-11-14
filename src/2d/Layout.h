@@ -48,6 +48,8 @@ namespace ReyEngine{
       , Component(instanceName, _get_static_constexpr_typename()){}
       VLayout(const std::string& name, const std::string& typeName): Layout(name, typeName, LayoutDir::VERTICAL)
       , NamedInstance(name, _get_static_constexpr_typename()), Internal::Component(name, _get_static_constexpr_typename()){}
+   private:
+      REYENGINE_PRIVATE_MAKE_SHARED(VLayout)
    };
 
    /////////////////////////////////////////////////////////////////////////////////////////
@@ -66,6 +68,8 @@ namespace ReyEngine{
       , NamedInstance(instanceName, typeName)
       , Component(instanceName, _get_static_constexpr_typename())
       {}
+   private:
+      REYENGINE_PRIVATE_MAKE_SHARED(HLayout)
    };
 
    /////////////////////////////////////////////////////////////////////////////////////////
@@ -85,5 +89,7 @@ namespace ReyEngine{
        , NamedInstance(instanceName, typeName)
        , Component(instanceName, _get_static_constexpr_typename())
        {}
+   private:
+      REYENGINE_PRIVATE_MAKE_SHARED(GridLayout)
    };
 }

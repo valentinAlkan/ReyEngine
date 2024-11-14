@@ -43,6 +43,7 @@ namespace ReyEngine{
       void arrangeChildren() override;
       IntProperty currentTab;
    private:
+      REYENGINE_PRIVATE_MAKE_SHARED(TabContainer)
       std::shared_ptr<TabTheme> tabTheme;
       ReyEngine::Rect<int> _childBoundingRect;
       std::vector<ReyEngine::Rect<int>> _tabRects;
