@@ -15,10 +15,10 @@ namespace ReyEngine {
       void setZoom(double newZoom){_camera.camera.zoom = newZoom;}
       double getZoom(){return _camera.camera.zoom;}
       ///
-      void setTarget(const Pos<double>& target){ setPos(target - getOffset());}
-      Pos<int> getTarget() const {return getOffset() - getPos();}
-      void setOffset(const Pos<double>& offset){_camera.camera.offset = (Vector2)offset;}
-      Pos<double> getOffset() const {return {_camera.camera.offset.x, _camera.camera.offset.y};}
+      void setTarget(const Pos<double>& target){ setPos(target - getSize()/2);}
+      Pos<int> getTarget() const {return Vec2<double>(_camera.camera.offset) - getPos();}
+//      void setOffset(const Pos<double>& offset){_camera.camera.offset = (Vector2)offset;}
+//      Pos<double> getOffset() const {return {_camera.camera.offset.x, _camera.camera.offset.y};}
       Pos<double> nearToFar(const Pos<float>&){return {};}
       Pos<double> farToNear(const Pos<float>&){return {};}
       static std::shared_ptr<Camera2D> build(const std::string& name, const Size<int>& screenSize) {
@@ -30,6 +30,7 @@ namespace ReyEngine {
       , active(PROP_ACTIVE_NAME, true)
       {
          _camera.camera.offset = (Vector2)(screenSize/2);
+         _rect.value.setSize(screenSize);
       }
       void renderBegin(ReyEngine::Pos<R_FLOAT>& textureOffset) override;
       void renderEnd() override;

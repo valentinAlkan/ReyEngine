@@ -38,8 +38,8 @@ namespace ReyEngine{
       void operator=(Application const&) = delete;
 
       static Internal::WindowPrototype createWindowPrototype(const std::string& title, int width, int height, const std::vector<ReyEngine::Window::Flags>& flags, int targetFPS=60);
-      Window& getWindow(int windowIndex){return *_windows.at(windowIndex);}
-      size_t windowCount(){return _windows.size();}
+      static Window& getWindow(int windowIndex){return *(instance()._windows.at(windowIndex));}
+      static size_t windowCount(){return instance()._windows.size();}
 
       static void exitError(std::string msg, ExitReason rsn){Logger::error() << msg << std::endl; ::exit((int)rsn);}
       static void exit(ExitReason rsn){::exit((int)rsn);}

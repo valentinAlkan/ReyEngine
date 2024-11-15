@@ -24,6 +24,7 @@ using Handled = bool;
 
 namespace ReyEngine{
 
+   class Window;
    class Scene;
    class Draggable;
    class Canvas;
@@ -174,10 +175,6 @@ namespace ReyEngine{
       std::string getTypeName() const {return _typeName;}
 
       std::optional<std::shared_ptr<BaseWidget>> getWidgetAt(ReyEngine::Pos<R_FLOAT> pos);
-//      std::weak_ptr<BaseWidget> getParent(){return _parent;}
-//      const ChildOrder& getChildren() const {return _childrenOrdered;}
-//      std::optional<WidgetPtr> getChild(const std::string& name);
-//      std::vector<std::weak_ptr<BaseWidget>> findChild(const std::string& name, bool exact=false);
       bool isHovered() const {return _hovered;}
       void setInputFilter(InputFilter newFilter){ _inputFilter = newFilter;}
       InputFilter getInputFilter(){return _inputFilter;}

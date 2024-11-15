@@ -307,6 +307,14 @@ namespace ReyEngine::Internal{
             if (!parent) return false;
             return parent->TypeContainer<T>::isInTree();
         }
+        TypeContainer<T>& getRoot(){
+          if (TypeContainer<T>::_isRoot){
+             return *this;
+          }
+          auto parent = getParent().lock();
+          if (!parent) return *this;
+          return parent->TypeContainer<T>::getRoot();
+       }
     protected:
         void setRoot(bool isRoot){_isRoot = isRoot;}
         const ChildMap& getChildMap() const {return _childMap;}
