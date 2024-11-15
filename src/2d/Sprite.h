@@ -29,7 +29,7 @@ namespace ReyEngine{
    protected:
       FileSystem::File texPath;
       std::unique_ptr<ReyTexture> texture;
-      RectProperty<double> region;
+      RectProperty<R_FLOAT> region;
 
    private:
       bool _fitNextTexture = false; //if we dont' yet have a texture (because window isn't loaded), then fit the texture when we do have one

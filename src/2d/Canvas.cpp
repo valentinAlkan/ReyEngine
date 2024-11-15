@@ -12,7 +12,7 @@ void ReyEngine::Canvas::_init() {
    }
 }
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::Canvas::renderBegin(ReyEngine::Pos<double>& textureOffset) {
+void ReyEngine::Canvas::renderBegin(ReyEngine::Pos<R_FLOAT>& textureOffset) {
    Application::instance().getWindow(0).pushRenderTarget(_renderTarget);
    _renderTarget.clear();
    textureOffset -= _rect.value.pos();
@@ -30,7 +30,7 @@ void ReyEngine::Canvas::renderEnd() {
    auto modal = getModal();
    if (modal){
        auto modalWidget = modal.value().lock();
-       Pos<double> toffset;
+       Pos<R_FLOAT> toffset;
        if (modalWidget->_visible) modalWidget->renderChain(toffset);
    }
   _activeCamera.get().pop();
@@ -94,12 +94,12 @@ void Canvas::_on_rect_changed() {
 //   _defaultCamera.setTarget(Vec2<float>(getSize().x/2, getSize().y/2));
 //   _defaultCamera.target = _defaultCamera.offset;
 //   auto gpos = getGlobalPos();
-//   _virtualInputOffset = Pos<double>(gpos.x, gpos.y);
+//   _virtualInputOffset = Pos<R_FLOAT>(gpos.x, gpos.y);
 }
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Canvas::pushScissor(const ReyEngine::Rect<double>& newArea) {
+void Canvas::pushScissor(const ReyEngine::Rect<R_FLOAT>& newArea) {
    bool hastop = !_scissorStack.empty();
    if (hastop) {
       _scissorStack.push(_scissorStack.top().getOverlap(newArea));

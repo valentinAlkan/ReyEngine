@@ -59,7 +59,7 @@ namespace ReyEngine{
          EVENT_CTOR_SIMPLE(WidgetRectChangedEvent, Event<WidgetRectChangedEvent>){
             rect = publisher->toPublisherType<BaseWidget>()->getRect();
          }
-         ReyEngine::Rect<double> rect;
+         ReyEngine::Rect<R_FLOAT> rect;
       };
 
       //Input masking controls whether input inside the rect is masked (ignored)
@@ -82,7 +82,7 @@ namespace ReyEngine{
            InputMask fromString(const std::string& str) override {
                auto split = string_tools::split(",");
                EnumProperty::fromString(split.at(0));
-               mask = ReyEngine::Rect<double>::fromString(split.at(1));
+               mask = ReyEngine::Rect<R_FLOAT>::fromString(split.at(1));
                return *this;
            }
        };
@@ -124,56 +124,56 @@ namespace ReyEngine{
       ~BaseWidget() override;
 
       //rect stuff
-      ReyEngine::Rect<double> getRect() const {return _rect.value;}
-      ReyEngine::Rect<double> getGlobalRect() const {auto globalPos = getGlobalPos(); return {globalPos.x, globalPos.y, getSize().x, getSize().y};}
-      ReyEngine::Pos<double> getGlobalPos() const;
-      ReyEngine::Size<double> getChildBoundingBox() const; //get the smallest rectangle that contains all children, starting from 0,0. Does not include grandchildren.
-      ReyEngine::Pos<double> getPos() const {return {_rect.value.x, _rect.value.y};}
-      ReyEngine::Size<double> getSize() const {return getRect().size();}
-      double getWidth() const {return _rect.value.width;}
-      double getHeight() const {return _rect.value.height;}
-      Vec2<double> getHeightRange() const {return {0, getRect().size().y};}
-      Vec2<double> getWidthtRange() const {return {0, getRect().size().x};}
-      ReyEngine::Size<double> getMinSize(){return minSize;}
-      ReyEngine::Size<double> getMaxSize(){return maxSize;}
-      ReyEngine::Size<double> getClampedSize();
-      ReyEngine::Size<double> getClampedSize(ReyEngine::Size<double>);
+      ReyEngine::Rect<R_FLOAT> getRect() const {return _rect.value;}
+      ReyEngine::Rect<R_FLOAT> getGlobalRect() const {auto globalPos = getGlobalPos(); return {globalPos.x, globalPos.y, getSize().x, getSize().y};}
+      ReyEngine::Pos<R_FLOAT> getGlobalPos() const;
+      ReyEngine::Size<R_FLOAT> getChildBoundingBox() const; //get the smallest rectangle that contains all children, starting from 0,0. Does not include grandchildren.
+      ReyEngine::Pos<R_FLOAT> getPos() const {return {_rect.value.x, _rect.value.y};}
+      ReyEngine::Size<R_FLOAT> getSize() const {return getRect().size();}
+      R_FLOAT getWidth() const {return _rect.value.width;}
+      R_FLOAT getHeight() const {return _rect.value.height;}
+      Vec2<R_FLOAT> getHeightRange() const {return {0, getRect().size().y};}
+      Vec2<R_FLOAT> getWidthtRange() const {return {0, getRect().size().x};}
+      ReyEngine::Size<R_FLOAT> getMinSize(){return minSize;}
+      ReyEngine::Size<R_FLOAT> getMaxSize(){return maxSize;}
+      ReyEngine::Size<R_FLOAT> getClampedSize();
+      ReyEngine::Size<R_FLOAT> getClampedSize(ReyEngine::Size<R_FLOAT>);
       void setVisible(bool visible){_visible = visible;}
       bool getVisible() const {return _visible;}
       //sizing
       void setAnchoring(Anchor newAnchor);
       Anchor getAnchoring(){return _anchor.value;}
       bool isAnchored(){return _anchor.value != Anchor::NONE;}
-      void setMaxSize(const ReyEngine::Size<double>& size);
+      void setMaxSize(const ReyEngine::Size<R_FLOAT>& size);
       void setMaxWidth(int maxWidth){maxSize.x = maxWidth;}
       void setMaxHeight(int maxHeight){maxSize.y = maxHeight;}
-      void setMinSize(const ReyEngine::Size<double>& size);
+      void setMinSize(const ReyEngine::Size<R_FLOAT>& size);
       void setMinWidth(int minWidth){minSize.x = minWidth;}
       void setMinHeight(int minHeight){minSize.y = minHeight;}
-      void setRect(const ReyEngine::Rect<double>& r);
+      void setRect(const ReyEngine::Rect<R_FLOAT>& r);
       void setPos(int x, int y);
-      void setPos(const ReyEngine::Pos<double>& pos);
-      void setPosRelative(const ReyEngine::Pos<double>& pos, const ReyEngine::Pos<double>& basis); //sets a new position relative to its current position
+      void setPos(const ReyEngine::Pos<R_FLOAT>& pos);
+      void setPosRelative(const ReyEngine::Pos<R_FLOAT>& pos, const ReyEngine::Pos<R_FLOAT>& basis); //sets a new position relative to its current position
       void setX(int x);
       void setY(int y);
-      void move(const ReyEngine::Pos<double>& amt);
-      void setSize(const ReyEngine::Size<double>& size);
+      void move(const ReyEngine::Pos<R_FLOAT>& amt);
+      void setSize(const ReyEngine::Size<R_FLOAT>& size);
       void scale(const ReyEngine::Vec2<float>& scale);
       void setWidth(int width);
       void setHeight(int height);
 
-      ReyEngine::Pos<double> getLocalMousePos() const {return globalToLocal(InputManager::getMousePos());}
-      ReyEngine::Pos<double> globalToLocal(const ReyEngine::Pos<double>& global) const;
-      ReyEngine::Pos<double> localToGlobal(const ReyEngine::Pos<double>& local) const;
-      ReyEngine::Rect<double> globalToLocal(const ReyEngine::Rect<double>& global) const;
-      ReyEngine::Rect<double> localToGlobal(const ReyEngine::Rect<double>& local) const;
-      void setGlobalPos(const Vec2<double>&);
-      bool isInside(const Vec2<double>& point) const {return _rect.value.toSizeRect().isInside(point);}
+      ReyEngine::Pos<R_FLOAT> getLocalMousePos() const {return globalToLocal(InputManager::getMousePos());}
+      ReyEngine::Pos<R_FLOAT> globalToLocal(const ReyEngine::Pos<R_FLOAT>& global) const;
+      ReyEngine::Pos<R_FLOAT> localToGlobal(const ReyEngine::Pos<R_FLOAT>& local) const;
+      ReyEngine::Rect<R_FLOAT> globalToLocal(const ReyEngine::Rect<R_FLOAT>& global) const;
+      ReyEngine::Rect<R_FLOAT> localToGlobal(const ReyEngine::Rect<R_FLOAT>& local) const;
+      void setGlobalPos(const Vec2<R_FLOAT>&);
+      bool isInside(const Vec2<R_FLOAT>& point) const {return _rect.value.toSizeRect().isInside(point);}
       bool setName(const std::string& name, bool append_index=false);
       bool setIndex(unsigned int newIndex);
       std::string getTypeName() const {return _typeName;}
 
-      std::optional<std::shared_ptr<BaseWidget>> getWidgetAt(ReyEngine::Pos<double> pos);
+      std::optional<std::shared_ptr<BaseWidget>> getWidgetAt(ReyEngine::Pos<R_FLOAT> pos);
 //      std::weak_ptr<BaseWidget> getParent(){return _parent;}
 //      const ChildOrder& getChildren() const {return _childrenOrdered;}
 //      std::optional<WidgetPtr> getChild(const std::string& name);
@@ -204,22 +204,22 @@ namespace ReyEngine{
       inline void setTheme(std::shared_ptr<Style::Theme>& newTheme){theme = newTheme;}
 
       //drawing functions
-      void drawLine(const ReyEngine::Line<double>&, float lineThick, const ReyEngine::ColorRGBA&) const;
-      void drawArrow(const ReyEngine::Line<double>&, float lineThick, const ReyEngine::ColorRGBA&, float headSize=20) const;
-      void drawText(const std::string& text, const ReyEngine::Pos<double>& pos, const ReyEngine::ReyEngineFont& font) const;
-      void drawTextCentered(const std::string& text, const ReyEngine::Pos<double>& pos, const ReyEngine::ReyEngineFont& font) const;
-      void drawRectangle(const ReyEngine::Rect<double>& rect, const ReyEngine::ColorRGBA& color) const;
-      void drawRectangleLines(const ReyEngine::Rect<double>& rect, float lineThick, const ReyEngine::ColorRGBA& color) const;
-      void drawRectangleRounded(const ReyEngine::Rect<double>& rect,  float roundness, int segments, const ReyEngine::ColorRGBA& color) const;
-      void drawRectangleRoundedLines(const ReyEngine::Rect<double>& rect, float roundness, int segments, float lineThick, const ReyEngine::ColorRGBA& color) const;
-      void drawRectangleGradientV(const ReyEngine::Rect<double>& rect, const ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2) const;
+      void drawLine(const ReyEngine::Line<R_FLOAT>&, float lineThick, const ReyEngine::ColorRGBA&) const;
+      void drawArrow(const ReyEngine::Line<R_FLOAT>&, float lineThick, const ReyEngine::ColorRGBA&, float headSize=20) const;
+      void drawText(const std::string& text, const ReyEngine::Pos<R_FLOAT>& pos, const ReyEngine::ReyEngineFont& font) const;
+      void drawTextCentered(const std::string& text, const ReyEngine::Pos<R_FLOAT>& pos, const ReyEngine::ReyEngineFont& font) const;
+      void drawRectangle(const ReyEngine::Rect<R_FLOAT>& rect, const ReyEngine::ColorRGBA& color) const;
+      void drawRectangleLines(const ReyEngine::Rect<R_FLOAT>& rect, float lineThick, const ReyEngine::ColorRGBA& color) const;
+      void drawRectangleRounded(const ReyEngine::Rect<R_FLOAT>& rect,  float roundness, int segments, const ReyEngine::ColorRGBA& color) const;
+      void drawRectangleRoundedLines(const ReyEngine::Rect<R_FLOAT>& rect, float roundness, int segments, float lineThick, const ReyEngine::ColorRGBA& color) const;
+      void drawRectangleGradientV(const ReyEngine::Rect<R_FLOAT>& rect, const ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2) const;
       void drawCircle(const ReyEngine::Circle&, const ReyEngine::ColorRGBA&) const;
       void drawCircleLines(const ReyEngine::Circle&, const ReyEngine::ColorRGBA&) const;
       void drawCircleSectorLines(const ReyEngine::CircleSector&, const ReyEngine::ColorRGBA&, int segments) const;
-      void drawRenderTarget(const ReyEngine::RenderTarget&, const ReyEngine::Pos<double>&) const;
-      void drawRenderTargetRect(const ReyEngine::RenderTarget&, const ReyEngine::Rect<double>&, const ReyEngine::Pos<double>&) const;
-      void drawTextureRect(const ReyEngine::ReyTexture&, const ReyEngine::Rect<double>& src, const ReyEngine::Rect<double>& dst, float rotation, const ReyEngine::ColorRGBA& tint) const;
-      void startScissor(const ReyEngine::Rect<double>&) const;
+      void drawRenderTarget(const ReyEngine::RenderTarget&, const ReyEngine::Pos<R_FLOAT>&) const;
+      void drawRenderTargetRect(const ReyEngine::RenderTarget&, const ReyEngine::Rect<R_FLOAT>&, const ReyEngine::Pos<R_FLOAT>&) const;
+      void drawTextureRect(const ReyEngine::ReyTexture&, const ReyEngine::Rect<R_FLOAT>& src, const ReyEngine::Rect<R_FLOAT>& dst, float rotation, const ReyEngine::ColorRGBA& tint) const;
+      void startScissor(const ReyEngine::Rect<R_FLOAT>&) const;
       void stopScissor() const;
    protected:
 
@@ -236,31 +236,31 @@ namespace ReyEngine{
          child->isInLayout = false;
       }
       void __on_child_added_immediate(ChildPtr&);
-      virtual std::optional<std::shared_ptr<Draggable>> _on_drag_start(ReyEngine::Pos<double> globalPos){return std::nullopt;} //override and return something to implement drag and drop
+      virtual std::optional<std::shared_ptr<Draggable>> _on_drag_start(ReyEngine::Pos<R_FLOAT> globalPos){return std::nullopt;} //override and return something to implement drag and drop
       virtual Handled _on_drag_drop(std::shared_ptr<Draggable>){return false;}
 
       //override and setProcess(true) to allow processing
       virtual void _process(float dt){};
 
       // Drawing functions
-      virtual void renderBegin(ReyEngine::Pos<double>& textureOffset){}
+      virtual void renderBegin(ReyEngine::Pos<R_FLOAT>& textureOffset){}
       virtual void renderEnd(){}
 
       virtual void renderEditorFeatures();
-      virtual void renderChain(ReyEngine::Pos<double>& textureOffset);
+      virtual void renderChain(ReyEngine::Pos<R_FLOAT>& textureOffset);
       ReyEngine::Vec2<float> getRenderOffset() const {return _renderOffset;}
-      void setRenderOffset(ReyEngine::Pos<double> offset){_renderOffset = offset;}
+      void setRenderOffset(ReyEngine::Pos<R_FLOAT> offset){_renderOffset = offset;}
    //   void renderTextureOffsetApply(ReyEngine::Pos<float>& textureOffset){}
    //   void renderTextureOffsetReset(ReyEngine::Pos<float>& textureOffset){}
       void registerProperties() override;
-      RectProperty<double> _rect;
-      InputMaskProperty<double> _inputMask; //Only input inside this rectangle will be handled;
+      RectProperty<R_FLOAT> _rect;
+      InputMaskProperty<R_FLOAT> _inputMask; //Only input inside this rectangle will be handled;
 
       //input
    public:
       virtual Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&){return false;}
       virtual Handled _unhandled_masked_input(const InputEventMouse&, const std::optional<UnhandledMouseInput>&){return true;} //masked input is handled by default
-      virtual std::optional<std::shared_ptr<BaseWidget>> askHover(const ReyEngine::Pos<double>& globalPos);
+      virtual std::optional<std::shared_ptr<BaseWidget>> askHover(const ReyEngine::Pos<R_FLOAT>& globalPos);
    protected:
       void _is_extendable(){static_assert(true);}
       virtual std::string _get_static_constexpr_typename(){return TYPE_NAME;}
@@ -271,8 +271,8 @@ namespace ReyEngine{
       bool isLayout = false;
       bool isInLayout = false;
       bool acceptsHover = false;
-      ReyEngine::Size<double> maxSize = {ReyEngine::MaxInt, ReyEngine::MaxInt};
-      ReyEngine::Size<double> minSize = {0, 0};
+      ReyEngine::Size<R_FLOAT> maxSize = {ReyEngine::MaxFloat, ReyEngine::MaxFloat};
+      ReyEngine::Size<R_FLOAT> minSize = {0, 0};
       BoolProperty isBackRender;
 
    public:
@@ -290,7 +290,7 @@ namespace ReyEngine{
       bool _isEditorWidget = false; //true if this is a widget THE USER HAS PLACED IN THE EDITOR WORKSPACE (not a widget that the editor uses for normal stuff)
       bool _editor_selected = false; // true when the object is *selected* in the editor
       static constexpr int GRAB_HANDLE_SIZE = 10;
-      ReyEngine::Rect<double> _getGrabHandle(int index);// 0-3 clockwise starting in top left (TL,TR,BR,BL)
+      ReyEngine::Rect<R_FLOAT> _getGrabHandle(int index);// 0-3 clockwise starting in top left (TL,TR,BR,BL)
       int _editor_grab_handles_dragging = -1; //which grab handle is being drug around
       ChildOrder _frontRenderList; //children to be rendered IN FRONT of this widget (normal behavior)
       ChildOrder _backRenderList; //children to be rendered BEHIND this widget
@@ -304,13 +304,13 @@ namespace ReyEngine{
       bool _visible = true; //whether to show the widget (and its children)
       bool _isModal = false;
       bool _scheduled_for_deletion = false; // true when the widget has been scheduled for deletion but is not yet deleted.
-      ReyEngine::Pos<double> _renderOffset; //used for different rendering modes. does not offset position.
+      ReyEngine::Pos<R_FLOAT> _renderOffset; //used for different rendering modes. does not offset position.
       InputInterface::MouseCursor cursor = InputInterface::MouseCursor::DEFAULT;
 
       //input
       Handled _process_unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&); //pass input to children if they want it and then process it for ourselves if necessary
       Handled _process_unhandled_editor_input(const InputEvent&, const std::optional<UnhandledMouseInput>&); //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)
-      UnhandledMouseInput toMouseInput(const ReyEngine::Pos<double>& global) const;
+      UnhandledMouseInput toMouseInput(const ReyEngine::Pos<R_FLOAT>& global) const;
       InputFilter _inputFilter = InputFilter::INPUT_FILTER_PASS_AND_PROCESS;
 
       //theme

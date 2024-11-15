@@ -17,13 +17,13 @@ namespace ReyEngine{
       void clearModal();
       inline std::optional<std::weak_ptr<BaseWidget>> getModal() { if (_modal) { return _modal;} return std::nullopt;}
       void _init() override;
-      void pushScissor(const Rect<double>&);
+      void pushScissor(const Rect<R_FLOAT>&);
       void popScissor();
       void setUnhandledInputCallback(std::function<Handled(Canvas&, const InputEvent&, const std::optional<UnhandledMouseInput>&)> fx){unhandledInputCallback = fx;}
       void setActiveCamera(CameraTransform2D&);
       void deleteActiveCamera();
    protected:
-      void renderBegin(Pos<double>& textureOffset) override;
+      void renderBegin(Pos<R_FLOAT>& textureOffset) override;
       void render() const override;
       void renderEnd() override;
       void _on_rect_changed() override;
@@ -33,7 +33,7 @@ namespace ReyEngine{
       RenderTarget _renderTarget;
       std::optional<std::weak_ptr<BaseWidget>> _modal; //if a widget wishes to collect all input, it can be modal. Only one allowed at a time.
 
-      std::stack<Rect<double>> _scissorStack;
+      std::stack<Rect<R_FLOAT>> _scissorStack;
       CameraTransform2D _defaultCamera; //only exists to have something to point to in the event there is no camera defined in the scene tree
       std::reference_wrapper<CameraTransform2D> _activeCamera; //the currently active camera
       std::function<Handled(Canvas&, const InputEvent&, const std::optional<UnhandledMouseInput>&)> unhandledInputCallback;

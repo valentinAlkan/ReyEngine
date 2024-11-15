@@ -10,22 +10,22 @@ namespace ReyEngine {
 
     public:
         REYENGINE_DEFAULT_BUILD(ScrollArea)
-        inline ReyEngine::Size<double> getScrollAreaSize() const {
+        inline ReyEngine::Size<R_FLOAT> getScrollAreaSize() const {
             return {scrollOffsetX.getMax(), scrollOffsetY.getMax()};
         }
 
-        inline ReyEngine::Pos<double> getScrollOffset() const {
+        inline ReyEngine::Pos<R_FLOAT> getScrollOffset() const {
             return {scrollOffsetX.getValue(), scrollOffsetY.getValue()};
         }
 
         void hideVSlider(bool hidden);
         void hideHSlider(bool hidden);
-        Pos<double> getViewportSize(){return _viewport.size();};
+        Pos<R_FLOAT> getViewportSize(){return _viewport.size();};
     protected:
         static constexpr std::string_view VSLIDER_NAME = "__vslider";
         static constexpr std::string_view HSLIDER_NAME = "__hslider";
 
-        void renderBegin(ReyEngine::Pos<double> &textureOffset) override;
+        void renderBegin(ReyEngine::Pos<R_FLOAT> &textureOffset) override;
         void render() const {}
         void renderEnd() override;
         void _process(float dt) override {}
@@ -36,17 +36,17 @@ namespace ReyEngine {
         void _on_child_added(std::shared_ptr<BaseWidget> &child) override;
         void _init() override;
         Handled _unhandled_input (const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
-        std::optional<std::shared_ptr<BaseWidget>> askHover(const ReyEngine::Pos<double>& globalPos) override;
+        std::optional<std::shared_ptr<BaseWidget>> askHover(const ReyEngine::Pos<R_FLOAT>& globalPos) override;
 //        Handled _unhandled_masked_input(const InputEventMouse&, const std::optional<UnhandledMouseInput>&) override;
         ///Ignores scroll bars, but adds their widths if they are visible
-        ReyEngine::Size<double> getScrollAreaChildBoundingBox();
+        ReyEngine::Size<R_FLOAT> getScrollAreaChildBoundingBox();
 
-        ReyEngine::Range<double> scrollOffsetX;
-        ReyEngine::Range<double> scrollOffsetY;
+        ReyEngine::Range<R_FLOAT> scrollOffsetX;
+        ReyEngine::Range<R_FLOAT> scrollOffsetY;
         std::shared_ptr<Slider> vslider;
         std::shared_ptr<Slider> hslider;
-        ReyEngine::Size<double> _childBoundingBox;
-        Rect<double> _viewport; //the area that isn't obscured by sliders
+        ReyEngine::Size<R_FLOAT> _childBoundingBox;
+        Rect<R_FLOAT> _viewport; //the area that isn't obscured by sliders
         bool _hideVSlider = false;
         bool _hideHSlider = false;
     };

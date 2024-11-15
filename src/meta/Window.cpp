@@ -332,7 +332,7 @@ void Window::exec(){
 
          //draw children on top of their parents
 
-         ReyEngine::Pos<double> texOffset;
+         ReyEngine::Pos<R_FLOAT> texOffset;
          getCanvas()->renderChain(texOffset);
 
          //draw the drag and drop preview (if any)

@@ -31,7 +31,7 @@ namespace ReyEngine{
       void _on_rect_changed() override;
       Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
       void addChild(std::shared_ptr<BaseWidget> child) = delete;
-      void renderBegin(ReyEngine::Pos<double>& textureOffset) override;
+      void renderBegin(ReyEngine::Pos<R_FLOAT>& textureOffset) override;
       void renderEnd() override;
       void render() const override;
       void registerProperties() override;
@@ -43,7 +43,7 @@ namespace ReyEngine{
 
    protected:
       void _on_mouse_exit() override;
-      ReyEngine::Rect<double> getScissorArea();
+      ReyEngine::Rect<R_FLOAT> getScissorArea();
       enum class ResizeDir{NONE, N, E, S, W, NE, SE, SW, NW};
 
       StringProperty panelTitle;
@@ -52,11 +52,11 @@ namespace ReyEngine{
       std::shared_ptr<HLayout> menuBar;
       std::shared_ptr<Control> window;
       std::shared_ptr<Label> titleLabel;
-      ReyEngine::Pos<double> offset;
+      ReyEngine::Pos<R_FLOAT> offset;
       ReyEngine::Pos<int> mousePos;
       ReyEngine::Pos<int> dragStart;
-      ReyEngine::Rect<double> resizeStartRect;
-      ReyEngine::Rect<double> cacheRect; //for caching size before maximize
+      ReyEngine::Rect<R_FLOAT> resizeStartRect;
+      ReyEngine::Rect<R_FLOAT> cacheRect; //for caching size before maximize
       bool _isDragging = false;
       BoolProperty _isResizable;
       BoolProperty _isMinimized;
@@ -65,7 +65,7 @@ namespace ReyEngine{
       InputFilter _filterCache;
 
       ResizeDir _resizeDir = ResizeDir::NONE;
-      std::array<ReyEngine::Rect<double>, 4> stretchRegion; //top/right/bottom/left
-      ReyEngine::Rect<double> _scissorArea;
+      std::array<ReyEngine::Rect<R_FLOAT>, 4> stretchRegion; //top/right/bottom/left
+      ReyEngine::Rect<R_FLOAT> _scissorArea;
    };
 }

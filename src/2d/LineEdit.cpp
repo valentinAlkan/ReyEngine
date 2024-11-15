@@ -29,7 +29,7 @@ void LineEdit::render() const {
    //draw default text
    if (_text.value.empty() && !_defaultText.value.empty()) {
       if (_highlight_start || _highlight_end) {
-         auto highlightRect = _rect.value - Size<double>(2, 2) + Pos<double>(1, 1);
+         auto highlightRect = _rect.value - Size<R_FLOAT>(2, 2) + Pos<R_FLOAT>(1, 1);
          drawRectangle(highlightRect, theme->highlight);
       }
       renderText(_defaultText);

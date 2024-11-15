@@ -1,6 +1,7 @@
 #pragma once
 #include "raylib.h"
 #include <stdexcept>
+#include <cfloat>
 #include "StringTools.h"
 #include <string>
 #include <array>
@@ -19,6 +20,8 @@
 namespace ReyEngine {
    static constexpr long long MaxInt = INT_MAX;
    static constexpr long long MinInt = INT_MIN;
+   static constexpr R_FLOAT MaxFloat = FLT_MAX;
+   static constexpr R_FLOAT MinFloat = FLT_MIN;
 
     namespace Math {
         template <typename T> T min(T a, T b){return a <= b ? a : b;}
@@ -82,7 +85,7 @@ namespace ReyEngine {
       inline Vec2 operator*(double rhs) const {Vec2 retval(*this); retval.x *= rhs; retval.y *= rhs; return retval;}
 //      inline Vec2& operator*=(const Vec2& rhs){x *= rhs.x; y *= rhs.y; return *this;}
       inline Vec2& operator*=(double rhs){x *= rhs; y *= rhs; return *this;}
-      inline Vec2<double> operator/(double rhs) const {Vec2<double> retval(*this); retval.x /= rhs; retval.y /= rhs; return retval;}
+      inline Vec2<R_FLOAT> operator/(double rhs) const {Vec2<R_FLOAT> retval(*this); retval.x /= rhs; retval.y /= rhs; return retval;}
       inline Vec2& operator/=(const Vec2& rhs){x /= rhs.x; y /= rhs.y; return *this;}
       inline Vec2& operator=(const Vec2& rhs){x = rhs.x; y=rhs.y; return *this;}
       inline bool operator==(const Vec2& rhs) const {return x==rhs.x && y==rhs.y;}
@@ -167,9 +170,8 @@ namespace ReyEngine {
         }
         inline Vec4(const T& _w, const T& _x, const T& y, const T& _z) : Vec<T>(4), w(_w), x(_x), y(y),z(_z) {}
         inline explicit Vec4(const Vector4& v) : Vec<T>(4), w((T)v.w), x((T)v.x), y((T)v.y), z((T)v.z){}
-        inline Vec4(const Vec4<int>& v)        : Vec<T>(4), w((T)v.w), x((T)v.x), y((T)v.y), z((T)v.z){}
-        inline Vec4(const Vec4<float>& v)      : Vec<T>(4), w((T)v.w), x((T)v.x), y((T)v.y), z((T)v.z){}
-        inline Vec4(const Vec4<double>& v)     : Vec<T>(4), w((T)v.w), x((T)v.x), y((T)v.y), z((T)v.z){}
+        template <typename R>
+        inline Vec4(const Vec4<R>& v)        : Vec<T>(4), w((T)v.w), x((T)v.x), y((T)v.y), z((T)v.z){}
         inline Vec4& operator=(const Vec4& rhs){w = rhs.w, x = rhs.x; y=rhs.y; z=rhs.z; return *this;}
         inline Vec4& operator-(){w = -w; x = -x; y =-y; z = -z; return *this;}
         inline static std::vector<T> fromString(const std::string& s){return Vec<T>::fromString(4, s);};
@@ -191,9 +193,8 @@ namespace ReyEngine {
       inline Range(): Vec3<T>::Vec3(){}
       inline Range(const T& min, const T& max, const T& defaultValue) : Vec3<T>::Vec3(min, max, defaultValue){}
       inline explicit Range(const Vector3& v)     : Vec3<T>::Vec3(v){}
-      inline explicit Range(const Vec3<int>& v)   : Vec3<T>::Vec3(v){}
-      inline explicit Range(const Vec3<float>& v) : Vec3<T>::Vec3(v){}
-      inline explicit Range(const Vec3<double>& v): Vec3<T>::Vec3(v){}
+      template <typename R>
+      inline explicit Range(const Vec3<R>& v)   : Vec3<T>::Vec3(v){}
       inline Perunum getpct(){return getRange().pct(getValue());};
       inline void setLerp(Perunum pct){setValue(getRange().lerp(pct));}
       inline T getMin() const {return Vec3<T>::x;}
@@ -225,8 +226,8 @@ namespace ReyEngine {
       constexpr Line operator+(const Pos<T>& pos) const {Line<T> l(*this); l.a += pos; l.b += pos; return l;}
       //Find the angle from horizontal between points and a b
       inline Radians angle() const {
-          auto dx = static_cast<double>(b.x - a.x);
-          auto dy = static_cast<double>(b.y - a.y);
+          auto dx = static_cast<R_FLOAT>(b.x - a.x);
+          auto dy = static_cast<R_FLOAT>(b.y - a.y);
           return atan2(dy, dx);
       }
        //rotate the line around A by r radians
@@ -524,12 +525,12 @@ namespace ReyEngine {
          return coord.get().y * columnCount + coord.get().x;
       }
       //get an actual subrect given a subrect size and an index
-      constexpr inline Rect getSubRect(const Size<double>& size, int index) const {
+      constexpr inline Rect getSubRect(const Size<R_FLOAT>& size, int index) const {
          int columnCount = width / size.x;
          int coordY = index / columnCount;
          int coordX = index % columnCount;
-         auto posX = coordX * size.x;
-         auto posY = coordY * size.y;
+         R_FLOAT posX = (float)coordX * size.x;
+         R_FLOAT posY = (float)coordY * size.y;
          return {posX, posY, size.x, size.y};
       }
       //get the rectangle that contains the subrects at start and stop indices (as topleft and bottom right respectively)
@@ -574,8 +575,8 @@ namespace ReyEngine {
             return {};
          }
          // Calculate center coordinates
-         double cx = (u * vy - v * uy) / det;
-         double cy = (v * ux - u * vx) / det;
+         R_FLOAT cx = (u * vy - v * uy) / det;
+         R_FLOAT cy = (v * ux - u * vx) / det;
          return Circle({cx, cy}, std::sqrt((cx - x1)*(cx - x1) + (cy - y1)*(cy - y1)));
       }
       /// Return a point on the circle that corresponds to the given angular offset from right-handed horizontal
@@ -603,7 +604,7 @@ namespace ReyEngine {
       /// \param pos: a point lying on a line that is normal to the circle.
       /// \param length: the length of the tangent
       /// \return: a tangent line that intersects the given normal
-      inline Line<double> getTangentLine(const Pos<R_FLOAT>& pos, double length) const {
+      inline Line<R_FLOAT> getTangentLine(const Pos<R_FLOAT>& pos, double length) const {
          auto point = getTangentPoint(pos);
          // Calculate the vector from center to tangent point
          double dx = point.x - center.x;
@@ -619,12 +620,12 @@ namespace ReyEngine {
          double halfLength = length / 2.0;
          Pos start(point.x - perpX * halfLength, point.y - perpY * halfLength);
          Pos end(point.x + perpX * halfLength, point.y + perpY * halfLength);
-         return Line<double>(start, end);
+         return Line<R_FLOAT>(start, end);
       }
       inline Circle operator+(const Pos<R_FLOAT>& pos) const {Circle retval(*this); retval.center += pos; return retval;}
-      Rect<double> circumscribe(){return {center.x-radius, center.y-radius, radius, radius};}
+      Rect<R_FLOAT> circumscribe(){return {center.x-radius, center.y-radius, radius, radius};}
       Pos<R_FLOAT> center;
-      double radius;
+      R_FLOAT radius;
    };
 
    struct CircleSector : public Circle {
@@ -714,13 +715,13 @@ namespace ReyEngine {
       FontAlignment fontAlignment;
       ReyEngine::ColorRGBA color = COLORS::black;
       std::string fileName;
-      Size<double> measure(const std::string& text) const;
+      Size<R_FLOAT> measure(const std::string& text) const;
       ReyEngineFont& operator=(const ReyEngineFont& rhs);
 //      inline ReyEngineFont& operator=(const ReyEngineFont& rhs){font = rhs.font; size = rhs.size; spacing = rhs.spacing; color = rhs.color; fileName = rhs.fileName; isDefault = rhs.isDefault; return *this;}
 //      std::string toString();
 //      static ReyEngineFont fromString(const std::string& str);
    };
-   ReyEngineFont getDefaultFont(std::optional<double> fontSize = std::nullopt);
+   ReyEngineFont getDefaultFont(std::optional<R_FLOAT> fontSize = std::nullopt);
    ReyEngineFont getFont(const std::string& fileName);
 
    struct ReyTexture{
@@ -762,20 +763,20 @@ namespace ReyEngine {
    void drawText(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font);
    void drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font);
    void drawTextRelative(const std::string& text, const Pos<R_FLOAT>& relPos, const ReyEngineFont& font);
-   void drawRectangle(const Rect<double>&, const ReyEngine::ColorRGBA& color);
+   void drawRectangle(const Rect<R_FLOAT>&, const ReyEngine::ColorRGBA& color);
    void drawRectangleRounded(const Rect<float>&, float roundness, int segments, const ReyEngine::ColorRGBA& color);
    void drawRectangleLines(const Rect<float>&, float lineThick, const ReyEngine::ColorRGBA& color);
    void drawRectangleRoundedLines(const Rect<float>&, float roundness, int segments, float lineThick, const ReyEngine::ColorRGBA& color);
-   void drawRectangleGradientV(const Rect<double>&, const ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2);
+   void drawRectangleGradientV(const Rect<R_FLOAT>&, const ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2);
    void drawCircle(const Circle&, const ReyEngine::ColorRGBA&  color);
    void drawCircleLines(const Circle&, const ReyEngine::ColorRGBA&  color);
    void drawCircleSector(const CircleSector&, const ReyEngine::ColorRGBA&  color, int segments);
    void drawCircleSectorLines(const CircleSector&, const ReyEngine::ColorRGBA&  color, int segments);
-   void drawLine(const Line<double>&, float lineThick, const ReyEngine::ColorRGBA& color);
-   void drawArrow(const Line<double>&, float lineThick, const ReyEngine::ColorRGBA& color, float headSize=20); //Head drawn at A
-   void drawTexture(const ReyTexture& texture, const Rect<double>& source, const Rect<double>& dest, float rotation, const ReyEngine::ColorRGBA& tint);
+   void drawLine(const Line<R_FLOAT>&, float lineThick, const ReyEngine::ColorRGBA& color);
+   void drawArrow(const Line<R_FLOAT>&, float lineThick, const ReyEngine::ColorRGBA& color, float headSize=20); //Head drawn at A
+   void drawTexture(const ReyTexture& texture, const Rect<R_FLOAT>& source, const Rect<R_FLOAT>& dest, float rotation, const ReyEngine::ColorRGBA& tint);
    inline float getFrameDelta() {return GetFrameTime();}
-   inline Size<double> measureText(const std::string& text, const ReyEngineFont& font){return MeasureTextEx(font.font, text.c_str(), font.size, font.spacing);}
+   inline Size<R_FLOAT> measureText(const std::string& text, const ReyEngineFont& font){return MeasureTextEx(font.font, text.c_str(), font.size, font.spacing);}
 
    class RenderTarget{
       public:
@@ -970,7 +971,7 @@ namespace InputInterface{
 //   }
 
    inline float getMouseWheelMove(){return GetMouseWheelMove();} //returns largest of x or y
-   inline ReyEngine::Vec2<double> getMouseWheelMoveV(){return GetMouseWheelMoveV();} //returns both x and y
+   inline ReyEngine::Vec2<R_FLOAT> getMouseWheelMoveV(){return GetMouseWheelMoveV();} //returns both x and y
 
    inline bool isKeyPressed(KeyCode key){return IsKeyPressed((int)key);}
    inline bool isKeyDown(KeyCode key){return IsKeyDown((int)key);}
@@ -983,9 +984,9 @@ namespace InputInterface{
    inline bool isMouseButtonDown(MouseButton btn){return IsMouseButtonDown(static_cast<int>(btn));}
    inline bool isMouseButtonUp(MouseButton btn){return IsMouseButtonUp(static_cast<int>(btn));}
    inline bool isMouseButtonReleased(MouseButton btn){return IsMouseButtonReleased(static_cast<int>(btn));}
-   inline ReyEngine::Vec2<double> getMousePos(){return GetMousePosition();}
-   inline ReyEngine::Vec2<double> getMouseDelta(){return GetMouseDelta();}
-   inline ReyEngine::Vec2<double> getMouseWheel(){return GetMouseWheelMoveV();}
+   inline ReyEngine::Vec2<R_FLOAT> getMousePos(){return GetMousePosition();}
+   inline ReyEngine::Vec2<R_FLOAT> getMouseDelta(){return GetMouseDelta();}
+   inline ReyEngine::Vec2<R_FLOAT> getMouseWheel(){return GetMouseWheelMoveV();}
 
    inline void setCursor(MouseCursor crsr){ SetMouseCursor((int)crsr);}
    inline void hideCursor(){HideCursor();}

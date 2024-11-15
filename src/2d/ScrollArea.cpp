@@ -17,7 +17,7 @@ void ScrollArea::hideHSlider(bool hidden) {
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ScrollArea::renderBegin(ReyEngine::Pos<double>& textureOffset){
+void ScrollArea::renderBegin(ReyEngine::Pos<R_FLOAT>& textureOffset){
     textureOffset -= getScrollOffset();
     startScissor(_rect.value.toSizeRect());
 }
@@ -92,7 +92,7 @@ void ScrollArea::_init(){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyEngine::Size<double> ScrollArea::getScrollAreaChildBoundingBox() {
+ReyEngine::Size<R_FLOAT> ScrollArea::getScrollAreaChildBoundingBox() {
     ReyEngine::Size<int> childRect;
     for (const auto &child: getChildren()) {
         if (child->getName() == VSLIDER_NAME) {
@@ -102,7 +102,7 @@ ReyEngine::Size<double> ScrollArea::getScrollAreaChildBoundingBox() {
             if (hslider->getVisible()) childRect.y += hslider->getHeight();
             continue;
         }
-        auto totalOffset = child->getRect().size() + ReyEngine::Size<double>(child->getPos());
+        auto totalOffset = child->getRect().size() + ReyEngine::Size<R_FLOAT>(child->getPos());
         childRect = childRect.max(totalOffset);
     }
     return childRect;
@@ -125,7 +125,7 @@ Handled ScrollArea::_unhandled_input(const InputEvent& event, const std::optiona
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::optional<std::shared_ptr<BaseWidget>> ScrollArea::askHover(const ReyEngine::Pos<double>& globalPos) {
+std::optional<std::shared_ptr<BaseWidget>> ScrollArea::askHover(const ReyEngine::Pos<R_FLOAT>& globalPos) {
     //pass to childwidgets
     if (vslider && vslider->askHover(globalPos)) return vslider;
     if (hslider && hslider->askHover(globalPos)) return hslider;

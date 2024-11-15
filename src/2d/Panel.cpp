@@ -36,7 +36,7 @@ void Panel::render() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Panel::renderBegin(ReyEngine::Pos<double> &textureOffset) {
+void Panel::renderBegin(ReyEngine::Pos<R_FLOAT> &textureOffset) {
    startScissor(_scissorArea);
 }
 
@@ -63,7 +63,7 @@ void Panel::_init() {
    vlayout->addChild(window);
 
    //cap menu bar size
-   menuBar->setMaxSize({ReyEngine::MaxInt, theme->font.value.size+4});
+   menuBar->setMaxSize({ReyEngine::MaxFloat, theme->font.value.size+4});
    menuBar->getTheme()->background = Style::Fill::SOLID;
 
    //add a spacer
@@ -209,7 +209,7 @@ Handled Panel::_unhandled_input(const InputEvent& event, const std::optional<Unh
          if (mbEvent.isDown && !mouse->isInside) break; //ingore downs that occur outside the rect
          dragStart = InputManager::getMousePos();
          resizeStartRect = _rect.value;
-         offset = (Pos<double>)mousePos - getPos(); //record position
+         offset = (Pos<R_FLOAT>)mousePos - getPos(); //record position
 
          if (!_isMinimized && _isResizable && _resizeDir == ResizeDir::NONE){
             //if we're resizing, stop here and return
@@ -297,7 +297,7 @@ void Panel::registerProperties(){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyEngine::Rect<double> Panel::getScissorArea() {
+ReyEngine::Rect<R_FLOAT> Panel::getScissorArea() {
    if (_isMinimized){
       return menuBar->getRect();
    }

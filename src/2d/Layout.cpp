@@ -199,7 +199,7 @@ void Layout::arrangeChildren() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::Size<int> Layout::calculateIdealBoundingBox() {
-   Size<double> idealBoundingBox;
+   Size<R_FLOAT> idealBoundingBox;
    if (dir == LayoutDir::GRID){
       throw std::runtime_error("not implemented!");
 //      //divide the space into boxes, each box being large enough to exactly contain the largest child (in either dimension)

@@ -31,7 +31,7 @@ namespace ReyEngine {
       {
          _camera.camera.offset = (Vector2)(screenSize/2);
       }
-      void renderBegin(ReyEngine::Pos<double>& textureOffset) override;
+      void renderBegin(ReyEngine::Pos<R_FLOAT>& textureOffset) override;
       void renderEnd() override;
       void render() const override {};
       void _on_enter_tree() override{

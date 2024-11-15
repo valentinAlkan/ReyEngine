@@ -39,9 +39,9 @@ namespace ReyEngine {
             if (!rect.isInside(pos)) return std::nullopt;
             return rect.getSubRectIndex(_tileSize, pos);
          }
-         inline std::optional<Rect<int>> getTile(const LayerIndex index) const {
+         inline std::optional<Rect<R_FLOAT>> getTile(const LayerIndex index) const {
             //find the rect of the tile at the index
-            auto rect = Rect<int>(texture.size);
+            auto rect = Rect<R_FLOAT>((Size<R_FLOAT>)texture.size);
 //            if (!rect.isInside(pos)) return std::nullopt;
             return rect.getSubRect(_tileSize, index);
          }

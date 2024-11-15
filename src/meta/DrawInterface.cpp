@@ -47,28 +47,28 @@ void ReyEngine::drawText(const std::string &text, const ReyEngine::Pos<R_FLOAT>&
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawRectangle(const ReyEngine::Rect<double>& r, const ReyEngine::ColorRGBA& color) {
+void ReyEngine::drawRectangle(const ReyEngine::Rect<R_FLOAT>& r, const ReyEngine::ColorRGBA& color) {
    DrawRectangle(r.x, r.y, r.width, r.height, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawRectangleRounded(const ReyEngine::Rect<float>& r, float roundness, int segments, const ReyEngine::ColorRGBA& color) {
+void ReyEngine::drawRectangleRounded(const ReyEngine::Rect<R_FLOAT>& r, float roundness, int segments, const ReyEngine::ColorRGBA& color) {
    DrawRectangleRounded({r.x, r.y, r.width, r.height}, roundness, segments, color);
 }
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawRectangleLines(const Rect<float>& r, float lineThick, const ReyEngine::ColorRGBA& color) {
+void ReyEngine::drawRectangleLines(const Rect<R_FLOAT>& r, float lineThick, const ReyEngine::ColorRGBA& color) {
    DrawRectangleLinesEx({r.x, r.y, r.width, r.height}, lineThick, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawRectangleRoundedLines(const ReyEngine::Rect<float>& r, float roundness, int segments, float lineThick, const ReyEngine::ColorRGBA& color) {
+void ReyEngine::drawRectangleRoundedLines(const ReyEngine::Rect<R_FLOAT>& r, float roundness, int segments, float lineThick, const ReyEngine::ColorRGBA& color) {
    DrawRectangleRoundedLines({r.x, r.y, r.width, r.height}, roundness, segments, lineThick, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawRectangleGradientV(const ReyEngine::Rect<double>& rect, const ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2) {
+void ReyEngine::drawRectangleGradientV(const ReyEngine::Rect<R_FLOAT>& rect, const ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2) {
    DrawRectangleGradientV(rect.x, rect.y, rect.width, rect.height, color1, color2);
 }
 
@@ -93,12 +93,12 @@ void ReyEngine::drawCircleSectorLines(const CircleSector& sector, const ReyEngin
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawLine(const Line<double>& line, float lineThick, const ReyEngine::ColorRGBA& color) {
+void ReyEngine::drawLine(const Line<R_FLOAT>& line, float lineThick, const ReyEngine::ColorRGBA& color) {
    DrawLineEx((Vector2)line.a, (Vector2)line.b, lineThick, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawArrow(const Line<double>& line, float lineThick, const ReyEngine::ColorRGBA &color, float headSize) {
+void ReyEngine::drawArrow(const Line<R_FLOAT>& line, float lineThick, const ReyEngine::ColorRGBA &color, float headSize) {
     DrawLineEx((Vector2)line.a, (Vector2)line.b, lineThick, color);
     static constexpr auto rotation = 25_deg;
     auto pctLine = line.project(headSize);
@@ -109,7 +109,7 @@ void ReyEngine::drawArrow(const Line<double>& line, float lineThick, const ReyEn
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawTexture(const ReyTexture& texture, const Rect<double> &source, const Rect<double> &dest, float rotation, const ReyEngine::ColorRGBA &tint) {
+void ReyEngine::drawTexture(const ReyTexture& texture, const Rect<R_FLOAT> &source, const Rect<R_FLOAT> &dest, float rotation, const ReyEngine::ColorRGBA &tint) {
    auto tex = texture.getTexture();
    Rectangle rSource =  {(float)source.x, (float)source.y, (float)source.width, (float)source.height};
    Rectangle rDest =  {(float)dest.x, (float)dest.y, (float)dest.width, (float)dest.height};
@@ -121,7 +121,7 @@ void ReyEngine::drawTextCentered(const std::string& text, const Pos<R_FLOAT>& po
    auto textWidth = MeasureText(text.c_str(), font.size);
    float newX = (float)pos.x - (float)textWidth / 2;
    float newY = (float)pos.y - (float)font.size / 2;
-   drawText(text, Vec2<double>((int)newX, (int)newY), font);
+   drawText(text, Vec2<R_FLOAT>((int)newX, (int)newY), font);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -183,8 +183,8 @@ void ReyEngine::minimizeWindow() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-template<> Circle ReyEngine::Rect<double>::circumscribe() {return {{(double)(x + width / 2), (double)(y+height/2)}, (double)height/0.70710678118/2};}
-template<> Circle ReyEngine::Rect<double>::inscribe() {return {{(double)(x + width / 2), (double)(y+height/2)}, (double)height/2};}
+template<> Circle ReyEngine::Rect<R_FLOAT>::circumscribe() {return {{(double)(x + width / 2), (double)(y+height/2)}, (double)height/0.70710678118/2};}
+template<> Circle ReyEngine::Rect<R_FLOAT>::inscribe() {return {{(double)(x + width / 2), (double)(y+height/2)}, (double)height/2};}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -198,7 +198,7 @@ ReyEngine::ReyEngineFont::ReyEngineFont(const std::string& fontFile){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyEngineFont ReyEngine::getDefaultFont(std::optional<double> fontSize) {
+ReyEngineFont ReyEngine::getDefaultFont(std::optional<R_FLOAT> fontSize) {
    auto retval = ReyEngineFont();
    if (fontSize){
       retval.size = fontSize.value();
@@ -218,7 +218,7 @@ ReyEngineFont &ReyEngineFont::operator=(const ReyEngineFont &rhs)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Size<double> ReyEngineFont::measure(const std::string &text) const {
+Size<R_FLOAT> ReyEngineFont::measure(const std::string &text) const {
    return ReyEngine::measureText(text, *this);
 }
 
