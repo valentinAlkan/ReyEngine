@@ -34,7 +34,7 @@ namespace ReyEngine {
           return testRayAll(_activeCamera.get().getRay(pos));}
    protected:
       void addChild();
-      void renderChain(ReyEngine::Pos<double>& textureOffset) override;
+      void renderChain(ReyEngine::Pos<R_FLOAT>& textureOffset) override;
       void render() const override;
       void renderer3DBegin() override;
       void renderer3DEnd() override;

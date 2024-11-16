@@ -9,7 +9,7 @@ void Viewport::_init() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Viewport::renderChain(Pos<double> &textureOffset) {
+void Viewport::renderChain(Pos<R_FLOAT> &textureOffset) {
    //draw 3D first
    renderer3DChain();
    //draw 2D on top of 3D

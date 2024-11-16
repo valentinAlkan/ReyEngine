@@ -31,8 +31,8 @@ void CameraTransform3D::setFOV(float newFOV) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Collisions::Ray3D ReyEngine::CameraTransform3D::getRay(const Pos<double>& pos) const {
-    return GetMouseRay(pos, camera);
+Collisions::Ray3D ReyEngine::CameraTransform3D::getRay(const Pos<R_FLOAT>& pos) const {
+    return GetMouseRay((Vector2)pos, camera);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

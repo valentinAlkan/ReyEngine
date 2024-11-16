@@ -5,6 +5,7 @@
 #include "Canvas.h"
 #include "SystemTime.h"
 #include "TypeContainer.h"
+#include "Physics.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -322,6 +323,9 @@ void Window::exec(){
                getCanvas()->_process_unhandled_input(event, mouse);
             }
          }
+
+         //do physics synchronously for now
+         Physics::PhysicsSystem::process();
 
          //process timers and call their callbacks
          SystemTime::processTimers();

@@ -29,6 +29,7 @@ namespace PropertyTypes{
    PROP_TYPE(Vec3)
    PROP_TYPE(Vec4)
    PROP_TYPE(Rect)
+   PROP_TYPE(Circle)
    PROP_TYPE(Timer)
    PROP_TYPE(Enum)
    PROP_TYPE(Color)
@@ -52,8 +53,9 @@ namespace ReyEngine{
    template<typename T>
    class Vec4;
    template<typename T>
-   class Rect;
+   struct Rect;
    class ColorRGBA;
+   struct Circle;
 }
 
 namespace PropertyMeta{

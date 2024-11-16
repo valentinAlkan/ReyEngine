@@ -139,7 +139,7 @@ namespace ReyEngine {
       void setFOV(float newFOV);
       void push() const;
       void pop();
-      Collisions::Ray3D getRay(const Pos<double>& pos) const;
+      Collisions::Ray3D getRay(const Pos<R_FLOAT>& pos) const;
    };
 
    struct BoundingBox3D{

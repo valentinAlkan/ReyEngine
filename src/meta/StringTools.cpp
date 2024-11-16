@@ -329,6 +329,7 @@ std::string string_tools::join(char c, const std::vector<std::string>& v) {
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
+template <>
 std::string string_tools::listJoin(const std::vector<std::string> &v) {
    return "{" + join(", ", v) + "}";
 }

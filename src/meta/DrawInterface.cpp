@@ -183,9 +183,12 @@ void ReyEngine::minimizeWindow() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-template<> Circle ReyEngine::Rect<R_FLOAT>::circumscribe() {return {{(double)(x + width / 2), (double)(y+height/2)}, (double)height/0.70710678118/2};}
-template<> Circle ReyEngine::Rect<R_FLOAT>::inscribe() {return {{(double)(x + width / 2), (double)(y+height/2)}, (double)height/2};}
-
+template<> Circle ReyEngine::Rect<double>::circumscribe() {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/0.70710678118/2};}
+template<> Circle ReyEngine::Rect<int>::circumscribe() {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/0.70710678118/2};}
+template<> Circle ReyEngine::Rect<float>::circumscribe() {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/0.70710678118/2};}
+template<> Circle ReyEngine::Rect<double>::inscribe() {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/2};}
+template<> Circle ReyEngine::Rect<int>::inscribe() {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/2};}
+template<> Circle ReyEngine::Rect<float>::inscribe() {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/2};}
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////

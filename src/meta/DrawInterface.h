@@ -14,7 +14,8 @@
 #include <limits.h>
 #endif
 
-#define R_FLOAT float
+#define R_FLOAT float //float or double?
+#define STOF std::stof
 #define NOT_IMPLEMENTED throw std::runtime_error("Not implemented!")
 
 namespace ReyEngine {
@@ -116,7 +117,6 @@ namespace ReyEngine {
       friend Vector2& operator+=(Vector2& in, Vec2<T> add) {in.x += add.x; in.y += add.y; return in;}
       T x;
       T y;
-   protected:
       [[nodiscard]] inline std::vector<T> getElements() const override {return {x,y};}
    };
 
@@ -271,6 +271,7 @@ namespace ReyEngine {
       inline bool operator!=(const Pos& rhs){return this->x != rhs.x || this->y != rhs.y;}
       inline operator std::string() const {return Vec2<T>::toString();}
       inline void operator=(const Size<T>&) = delete;
+      inline Pos clamp(Pos clampA, Pos clampB) const { return Pos(Vec2<T>::clamp(clampA, clampB));}
 //      inline Pos& operator=(const Vec2<T>& other){Pos::x = other.x; Pos::y = other.y; return *this;}
 //      Rotate around a basis point
       inline Pos rotatePoint(const Pos<int>& basis, Radians r) const {
@@ -325,7 +326,7 @@ namespace ReyEngine {
    struct Circle;
    template <typename T>
    struct Rect {
-      using SubRectCoords = NamedType<Vec2<T>, StrongUnitParameters::SubRectCoords>;
+      using SubRectCoords = NamedType<Vec2<int>, StrongUnitParameters::SubRectCoords>;
       enum class Corner{TOP_LEFT=1, TOP_RIGHT=2, BOTTOM_RIGHT=4, BOTTOM_LEFT=8};
       constexpr inline Rect(): x(0), y(0), width(0), height(0){}
       constexpr inline Rect(const T x, const T y, const T width, const T height) : x(x), y(y), width(width), height(height){}
@@ -375,7 +376,7 @@ namespace ReyEngine {
       constexpr inline Line<T> rightSide() const {return {topRight(), bottomRight()};}
       constexpr inline Line<T> top() const {return {topLeft(), topRight()};}
       constexpr inline Line<T> bottom() const {return {bottomLeft(), bottomRight()};}
-      constexpr inline bool collides(const Rect& other){return (x < other.x + other.width) && (x+width > other.x) && (y > other.y + other.height) && (other.y + other.height < y);}
+      constexpr inline bool collides(const Rect& other) const {return (x < other.x + other.width) && (x+width > other.x) && (y > other.y + other.height) && (other.y + other.height < y);}
       constexpr inline int getCollisionType(const Rect& other) const {
          int pointCount = 0;
          if (isInside(other.topLeft())) pointCount++;
@@ -493,37 +494,39 @@ namespace ReyEngine {
          int _width = std::max(0, _right - _left);
          int _height = std::max(0, _bottom - _top);
          // Return a new Rect with top-left corner and dimensions
-         return Rect{_left, _top, _width, _height};
+         return Rect(_left, _top, _width, _height);
       }
       constexpr inline Rect getBoundingRect(const Rect& a, const Rect& b) const {
          return a.getBoundingRect(b);
       }
 
+      //returns the 'index' of a subrect, as if it were read left-to-right, top-to-bottom
+      constexpr inline int getSubRectIndex(const Size<R_FLOAT>& size, const Pos<R_FLOAT>& pos) const {
+         auto coord = getSubRectCoord(size, pos);
+         auto columnCount = width / size.x;
+         return coord.get().y * columnCount + coord.get().x;
+      }
+
       //Get the sub-rectangle (of size Size) that contains pos Pos. Think tilemaps.
-      constexpr inline Rect getSubRect(const Size<int>& size, const Pos<int>& pos) const {
+      constexpr inline Rect getSubRectAtPos(const Size<R_FLOAT>& size, const Pos<R_FLOAT>& pos) const {
          auto subx = pos.x / size.x;
          auto suby = pos.y / size.y;
-         return {subx * size.x, suby*size.y, size.x, size.y};
+         return Rect(subx * size.x, suby*size.y, size.x, size.y);
       }
 
        //Get the sub-rectangle (of size Size) at SubRectCoords coords.
-       constexpr inline Rect getSubRect(const Size<int>& size, const SubRectCoords& coords) const {
-           return {coords.get().x * size.x, coords.get().y*size.y, size.x, size.y};
+       constexpr inline Rect getSubRectAtCoords(const Size<R_FLOAT>& size, const SubRectCoords& coords) const {
+           return Rect(coords.get().x * size.x, coords.get().y*size.y, size.x, size.y);
        }
 
       //returns the coordinates of the above subrect in grid-form (ie the 3rd subrect from the left would be {3,0}
-      constexpr inline SubRectCoords getSubRectCoord(const Size<int>& size, const Pos<int>& pos) const {
+      constexpr inline SubRectCoords getSubRectCoord(const Size<R_FLOAT>& size, const Pos<R_FLOAT>& pos) const {
          //divide by 0?
          auto subx = pos.x / size.x;
          auto suby = pos.y / size.y;
          return SubRectCoords({subx, suby});
       }
-      //returns the 'index' of a subrect, as if it were read left-to-right, top-to-bottom
-      constexpr inline int getSubRectIndex(const Size<int>& size, const Pos<int>& pos) const {
-         auto coord = getSubRectCoord(size, pos);
-         auto columnCount = width / size.x;
-         return coord.get().y * columnCount + coord.get().x;
-      }
+
       //get an actual subrect given a subrect size and an index
       constexpr inline Rect getSubRect(const Size<R_FLOAT>& size, int index) const {
          int columnCount = width / size.x;
@@ -531,10 +534,10 @@ namespace ReyEngine {
          int coordX = index % columnCount;
          R_FLOAT posX = (float)coordX * size.x;
          R_FLOAT posY = (float)coordY * size.y;
-         return {posX, posY, size.x, size.y};
+         return Rect(posX, posY, size.x, size.y);
       }
       //get the rectangle that contains the subrects at start and stop indices (as topleft and bottom right respectively)
-      constexpr inline Rect getSubRect(const Size<int>& size, int indexStart, int indexStop) const {
+      constexpr inline Rect getSubRect(const Size<R_FLOAT>& size, int indexStart, int indexStop) const {
          auto a = getSubRect(size, indexStart);
          auto b = getSubRect(size, indexStop);
          return getBoundingRect(a,b);
@@ -622,10 +625,42 @@ namespace ReyEngine {
          Pos end(point.x + perpX * halfLength, point.y + perpY * halfLength);
          return Line<R_FLOAT>(start, end);
       }
+      bool collides(const Circle& other) const {
+         return (center - other.center).length() < radius + other.radius;
+      }
+      bool collides(const Rect<R_FLOAT>& rect) const {
+         // Find the closest point on the rectangle to the circle's center
+         R_FLOAT closestX = std::max(rect.x, std::min(center.x, rect.x + rect.width));
+         R_FLOAT closestY = std::max(rect.y, std::min(center.y, rect.y + rect.height));
+
+         // Calculate the distance between the circle's center and the closest point
+         R_FLOAT distanceX = center.x - closestX;
+         R_FLOAT distanceY = center.y - closestY;
+
+         // Check if the distance is less than or equal to the circle's radius
+         return (distanceX * distanceX + distanceY * distanceY) <= (radius * radius);
+      }
       inline Circle operator+(const Pos<R_FLOAT>& pos) const {Circle retval(*this); retval.center += pos; return retval;}
       Rect<R_FLOAT> circumscribe(){return {center.x-radius, center.y-radius, radius, radius};}
       Pos<R_FLOAT> center;
       R_FLOAT radius;
+   };
+
+
+   struct CircleProperty : public Property<Circle>{
+      using Property<ReyEngine::Circle>::operator=;
+      CircleProperty(const std::string& instanceName,  ReyEngine::Circle&& defaultvalue=Circle({},0))
+      : Property<ReyEngine::Circle>(instanceName, PropertyTypes::Color, std::move(defaultvalue))
+      {}
+      std::string toString() const override {
+         auto fvec = value.center.getElements();
+         fvec.push_back(value.radius);
+         return string_tools::listJoin(fvec);
+      }
+      ReyEngine::Circle fromString(const std::string& str) override {
+         auto split = string_tools::fromList(str);
+         return {Pos<R_FLOAT>(STOF(split.at(0)), STOF(split.at(1))), STOF(split.at(2))};
+      }
    };
 
    struct CircleSector : public Circle {
@@ -643,6 +678,8 @@ namespace ReyEngine {
       double startAngle;
       double endAngle;
    };
+
+
 
    struct ColorRGBA {
       ColorRGBA(): r(0), g(0), b(0), a(255){}

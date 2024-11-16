@@ -262,7 +262,7 @@ int main(int argc, char** argv) {
 
                 //draw a rotating arrow
                 {
-                    auto rect = GRID.getSubRect(Size(GRID_SIZE), Rect<int>::SubRectCoords({0, 1}));
+                    auto rect = GRID.getSubRectAtCoords(Size(GRID_SIZE), Rect<int>::SubRectCoords({0, 1}));
                     Line<int> l = {rect.leftSide().midpoint(), rect.rightSide().midpoint()};
                     auto sec = (double) Application::secondsSinceInit();
                     ctl.drawArrow(l.rotate(l.midpoint(), Degrees(360) * sec % 360), 2.0, Colors::blue);
@@ -271,14 +271,14 @@ int main(int argc, char** argv) {
                 auto factor = abs(sin(Application::secondsSinceInit()));
                 //draw a rotating line
                 {
-                    auto rect = GRID.getSubRect(Size(GRID_SIZE), Rect<int>::SubRectCoords({1, 1}));
+                    auto rect = GRID.getSubRectAtCoords(Size(GRID_SIZE), Rect<int>::SubRectCoords({1, 1}));
                     Line<int> l = {rect.leftSide().midpoint(), rect.rightSide().midpoint()};
                     ctl.drawLine(l.rotate(l.midpoint(), Degrees(360 * factor)), 2.0, Colors::blue);
                 }
 
                 //draw a rotating point
                 {
-                    auto rect = GRID.getSubRect(Size(GRID_SIZE), Rect<int>::SubRectCoords({0, 2}));
+                    auto rect = GRID.getSubRectAtCoords(Size(GRID_SIZE), Rect<int>::SubRectCoords({0, 2}));
                     Line<int> l = {rect.center(), rect.leftSide().midpoint()};
                     l = l.rotate(rect.center(), Degrees(360 * factor));
                     auto c1 = Circle(l.b, 2.0);
@@ -580,7 +580,7 @@ int main(int argc, char** argv) {
                             if (xpct > 1) xpct = 1;
                             if (ypct < 0) ypct = 0;
                             if (ypct > 1) ypct = 1;
-                            mouseLocal = mouseLocal.clamp(Vec2<int>(0, 0), inputFilter->getSize());
+                            mouseLocal = mouseLocal.clamp(Pos<int>(0, 0), inputFilter->getSize());
                             control->setPosRelative(mouseLocal, offset);
                             hslider->setSliderPct(xpct, true);
                             vslider->setSliderPct(ypct, true);
@@ -909,7 +909,7 @@ int main(int argc, char** argv) {
 
             //set tilemap tile size (dest tile size)
             auto squareEdge = 32;
-            Size<int> gridSize = {squareEdge, squareEdge};
+            Size<R_FLOAT> gridSize = {squareEdge, squareEdge};
             tileMap->setTileSize(gridSize);
 
             root->addChild(tileMap);
@@ -938,8 +938,8 @@ int main(int argc, char** argv) {
             root->addChild(srcTexRect);
 
             //some globals
-            Rect<int> hoverRect;
-            Rect<int> selectRect;
+            Rect<R_FLOAT> hoverRect;
+            Rect<R_FLOAT> selectRect;
             static constexpr int SRC_TILE_SIZE = 16;
             TileMap::TileIndex selectedIndex = -1;
 
@@ -947,7 +947,7 @@ int main(int argc, char** argv) {
             auto cbSrcInput = [&](const Control &, const InputEvent &event,
                                   const std::optional<UnhandledMouseInput> &mouse) -> bool {
                 if (mouse && mouse->isInside) {
-                    auto subrect = srcTexRect->getRect().getSubRect({SRC_TILE_SIZE, SRC_TILE_SIZE}, mouse->localPos);
+                    auto subrect = srcTexRect->getRect().getSubRectAtPos({SRC_TILE_SIZE, SRC_TILE_SIZE}, mouse->localPos);
                     switch (event.eventId) {
                         case InputEventMouseMotion::getUniqueEventId(): {
                             hoverRect = subrect;
@@ -1511,7 +1511,7 @@ int main(int argc, char** argv) {
                 control->setMouseEnterCallback(enterCB);
                 control->setMouseExitCallback(exitCB);
                 subCanvas->addChild(control);
-                control->setRect({i * 100, i * 100, 100, 100});
+                control->setRect({(float)(i * 100), (float)(i * 100), 100, 100});
                 control->setUnhandledInputCallback(inputCB);
             }
             subCanvas->addChild(cursor);
@@ -1541,7 +1541,7 @@ int main(int argc, char** argv) {
           auto control = Control::build("Control");
           vlayout->addChild(control);
 
-          static constexpr int CELL_SIZE = 8;
+          static constexpr R_FLOAT CELL_SIZE = 8;
           //create graph
           static PathFinding::AStar2D astar(window.getSize().x / CELL_SIZE + 1, window.getSize().y / CELL_SIZE + 1);
           //add connections
@@ -1584,13 +1584,13 @@ int main(int argc, char** argv) {
 
              //draw start
              if (start){
-                auto rect = ctl.getRect().getSubRect({CELL_SIZE, CELL_SIZE}, Rect<int>::SubRectCoords(start.value().get().getCoords()));
+                auto rect = ctl.getRect().getSubRectAtCoords(Size<R_FLOAT>(CELL_SIZE, CELL_SIZE), Rect<int>::SubRectCoords(start.value().get().getCoords()));
                 ctl.drawRectangle(rect, Colors::blue);
              }
 
              //draw goal
              if (goal){
-                auto rect = ctl.getRect().getSubRect({CELL_SIZE, CELL_SIZE}, Rect<int>::SubRectCoords(goal.value().get().getCoords()));
+                auto rect = ctl.getRect().getSubRectAtCoords(Size<R_FLOAT>(CELL_SIZE, CELL_SIZE), Rect<int>::SubRectCoords(goal.value().get().getCoords()));
                 ctl.drawRectangle(rect, Colors::red);
              }
 
@@ -1599,7 +1599,7 @@ int main(int argc, char** argv) {
                 auto parent = goal.value().get().getParent();
                 while (parent){
                    if (parent.value().get().getCoords() != start.value().get().getCoords()) {
-                      auto rect = ctl.getRect().getSubRect({CELL_SIZE, CELL_SIZE}, Rect<int>::SubRectCoords(parent.value().get().getCoords()));
+                      auto rect = ctl.getRect().getSubRectAtCoords(Size<R_FLOAT>(CELL_SIZE, CELL_SIZE), Rect<int>::SubRectCoords(parent.value().get().getCoords()));
                       ctl.drawRectangle(rect, Colors::green);
                    }
                    parent = parent.value().get().getParent();
@@ -1608,11 +1608,11 @@ int main(int argc, char** argv) {
 
              //draw grid lines
              for (int x=0;x<size.x/CELL_SIZE+1;x++) {
-                Line l(x * CELL_SIZE, 0, x * CELL_SIZE, size.y);
+                Line<R_FLOAT> l(x * CELL_SIZE, 0, x * CELL_SIZE, size.y);
                 ctl.drawLine(l, 1, Colors::black);
              }
              for (int y=0;y<size.y/CELL_SIZE+1;y++) {
-                Line l(0, y * CELL_SIZE, size.x, y * CELL_SIZE);
+                Line<R_FLOAT> l(0, y * CELL_SIZE, size.x, y * CELL_SIZE);
                 ctl.drawLine(l, 1, Colors::black);
              }
           };
@@ -1645,7 +1645,7 @@ int main(int argc, char** argv) {
              }
              if (!mouse) return false;
              auto cellCoords = ctl.getRect().getSubRectCoord({CELL_SIZE, CELL_SIZE}, mouse.value().localPos);
-             auto cellRect = ctl.getRect().getSubRect({CELL_SIZE, CELL_SIZE}, mouse.value().localPos);
+             auto cellRect = ctl.getRect().getSubRectAtPos({CELL_SIZE, CELL_SIZE}, mouse.value().localPos);
              switch (event.eventId){
                 case InputEventMouseMotion::getUniqueEventId():
                    hoverCell = cellRect;

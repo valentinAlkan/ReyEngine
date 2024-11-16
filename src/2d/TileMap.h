@@ -92,13 +92,13 @@ namespace ReyEngine {
       struct EventTileMapCellClicked : public Event<EventTileMapCellClicked>{
          EVENT_CTOR_SIMPLE(EventTileMapCellClicked, Event<EventTileMapCellClicked>, const TileCoord& cellCoord, const Rect<int>& cellRect), cellCoord(cellCoord), cellRect(cellRect){}
          const TileCoord& cellCoord;
-         const Rect<int>& cellRect;
+         const Rect<R_FLOAT>& cellRect;
       };
 
       struct EventTileMapCellHovered : public Event<EventTileMapCellHovered>{
          EVENT_CTOR_SIMPLE(EventTileMapCellHovered, Event<EventTileMapCellHovered>, const TileCoord& cellCoord, const Rect<int>& cellRect), cellCoord(cellCoord), cellRect(cellRect){}
          const TileCoord& cellCoord;
-         const Rect<int>& cellRect;
+         const Rect<R_FLOAT>& cellRect;
       };
 
       REYENGINE_OBJECT_BUILD_ONLY(TileMap, BaseWidget)
@@ -111,10 +111,10 @@ namespace ReyEngine {
    public:
       std::optional<LayerIndex> addLayer(const FileSystem::File&);
       TileMapLayer& getLayer(LayerIndex);
-      TileCoord getCell(const Pos<int>&) const;
-      Pos<int> getCellPos(const TileCoord&) const;
-      Rect<int> getCellRect(const TileCoord&) const;
-      Pos<int> getCellPosCenter(const TileCoord&) const;
+      TileCoord getCell(const Pos<R_FLOAT>&) const;
+      Pos<R_FLOAT> getCellPos(const TileCoord&) const;
+      Rect<R_FLOAT> getCellRect(const TileCoord&) const;
+      Pos<R_FLOAT> getCellPosCenter(const TileCoord&) const;
       int getCellIndex(const TileCoord&) const;
       ///Set the size of each tile
       void setTileSize(const Size<int>&);

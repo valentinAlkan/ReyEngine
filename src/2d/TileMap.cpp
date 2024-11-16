@@ -11,11 +11,10 @@ void TileMap::render() const {
       for (auto& [x, yMap] : layer.second.tiles){
          for (auto& [y, index] : yMap){
             auto pos = getCellPos({x,y});
-            const auto& srcSize = layer.second.atlas.getTileSize();
             auto srcRectOpt = layer.second.atlas.getTile(index);
             if (srcRectOpt) {
                auto& srcRect = srcRectOpt.value();
-               auto dstRect = Rect<int>(pos, {_gridWidth, _gridHeight});
+               auto dstRect = Rect<R_FLOAT>(pos, {(R_FLOAT)_gridWidth, (R_FLOAT)_gridHeight});
                auto &tex = layer.second.atlas.texture;
                drawTextureRect(tex, srcRect, dstRect, 0.0, Colors::none);
             }
@@ -36,7 +35,7 @@ void TileMap::render() const {
                drawLine(linex, 1, theme->background.colorSecondary);
                for (int y = 1; y < yLineCount +1; y++){
                   auto _y = y*_gridHeight;
-                  auto liney = Line<int>({0, _y}, {getWidth(), _y});
+                  auto liney = Line<R_FLOAT>({0, _y}, {getWidth(), _y});
                   drawLine(liney, 1, theme->background.colorSecondary);
                }
             }
@@ -87,20 +86,20 @@ TileMap::TileMapLayer& TileMap::getLayer(ReyEngine::TileMap::LayerIndex idx) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-TileMap::TileCoord TileMap::getCell(const Pos<int>& localPos) const {
+TileMap::TileCoord TileMap::getCell(const Pos<R_FLOAT>& localPos) const {
    auto vec2 = _rect.value.toSizeRect().getSubRectCoord({_gridWidth.value, _gridHeight.value}, localPos);
-   return {vec2.get().x, vec2.get().y};
+   return {(int)vec2.get().x, (int)vec2.get().y};
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Pos<int> TileMap::getCellPos(const TileCoord& coord) const {
+Pos<R_FLOAT> TileMap::getCellPos(const TileCoord& coord) const {
    auto x = coord.x * _gridWidth.value;
    auto y = coord.y * _gridHeight.value;
    return {x,y};
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Pos<int> TileMap::getCellPosCenter(const TileCoord& coord) const {
+Pos<R_FLOAT> TileMap::getCellPosCenter(const TileCoord& coord) const {
    auto pos = getCellPos(coord);
    return pos + getTileSize()/2;
 }
@@ -111,7 +110,7 @@ int TileMap::getCellIndex(const TileCoord& coord) const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Rect<int> TileMap::getCellRect(const TileCoord& coord) const {
+Rect<R_FLOAT> TileMap::getCellRect(const TileCoord& coord) const {
    return {getCellPos(coord), getTileSize()};
 }
 

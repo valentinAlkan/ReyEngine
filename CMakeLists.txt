@@ -122,7 +122,9 @@ add_library(ReyEngine2D STATIC
     src/2d/TextureRect.cpp
     src/2d/CustomTypes.cpp
     src/2d/Camera2D.cpp
-    src/Pathfinding/AStar.cpp
+    src/pathfinding/AStar.cpp
+    src/physics/CollisionShape.cpp
+    src/physics/Physics.cpp
     ${CUSTOM_SOURCES}
 )
 
@@ -151,7 +153,8 @@ target_include_directories(ReyEngine2D PUBLIC
     test
     src/thirdParty/xml
     src/thirdParty/uuid
-    src/Pathfinding
+    src/pathfinding
+    src/physics
 )
 
 # most stuff is linked against and included with ReyEngine2D already. Since ReyEngine3D is linked against ReyEngine2D,
