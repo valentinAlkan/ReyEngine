@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include <thread>
+#include <stdexcept>
 
 namespace ReyEngine{
    class Timer;
@@ -43,39 +44,55 @@ namespace ReyEngine{
   namespace Time{
      ///////////////////////////////////////////////////////////////
      //Ensures we run at the desired rate
-     class RateLimiter{
+     class RateLimiter {
      public:
         using us = std::chrono::microseconds;
-        RateLimiter(double hz)
-        : _targetHz(hz)
-        , _targetPeriod((long long)(1.0 / hz * 1000000))
+        explicit RateLimiter(double hz)
+              : _targetHz(hz)
+              , _targetPeriod(std::chrono::microseconds(static_cast<long long>(1000000.0 / hz)))
         {
            _timestamp = std::chrono::steady_clock::now();
         }
-        void wait(){
-           auto now = std::chrono::steady_clock::now();
-           auto elapsed = now-_timestamp;
-           auto timeToWait = _targetPeriod - elapsed;
-           //slow down if necessary to achieve target loop rate
-           if (elapsed < _targetPeriod){
-              std::this_thread::sleep_until(now + timeToWait);
+
+        void wait() {
+           // Calculate how long we need to wait to hit our target period
+           while (true) {
+              auto now = std::chrono::steady_clock::now();
+              auto elapsed = std::chrono::duration_cast<us>(now - _timestamp);
+
+              if (elapsed >= _targetPeriod) {
+                 break;
+              }
+
+              auto remaining = _targetPeriod - elapsed;
+              if (remaining > us(1000)) {  // If more than 1ms remaining
+                 std::this_thread::sleep_for(remaining - us(500));  // Sleep for slightly less than needed
+              } else {
+                 std::this_thread::yield();  // Busy-wait for fine-grained control
+              }
            }
-           now = std::chrono::steady_clock::now();
-           elapsed = now-_timestamp;
-           _actualPeriod = std::chrono::microseconds(elapsed.count());
-           _actualHz = 1.0 / std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() * 1000000.0;
-           _timestamp = std::chrono::steady_clock::now();
+
+           // Update measurements
+           auto now = std::chrono::steady_clock::now();
+           _actualPeriod = std::chrono::duration_cast<us>(now - _timestamp);
+           if (_actualPeriod.count() > 0) {
+              _actualHz = 1000000.0 / static_cast<double>(_actualPeriod.count());
+           }
+
+           _timestamp = now;
         }
-        us getTargetPeriod(){return _targetPeriod;}
-        double getTargetHz(){return _targetHz;}
-        us getActualPeriod(){return _actualPeriod;}
-        double getActualHz(){return _actualHz;}
+
+        us getTargetPeriod() const { return _targetPeriod; }
+        double getTargetHz() const { return _targetHz; }
+        us getActualPeriod() const { return _actualPeriod; }
+        double getActualHz() const { return _actualHz; }
+
      private:
-        const us _targetPeriod;
         const double _targetHz;
-        double _actualHz;
-        us _actualPeriod;
+        const us _targetPeriod;
         std::chrono::steady_clock::time_point _timestamp;
+        us _actualPeriod{};
+        double _actualHz{};
      };
   }
 

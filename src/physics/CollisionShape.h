@@ -33,11 +33,11 @@ namespace ReyEngine {
 //            return std::shared_ptr<T>(new T(std::forward<Args>(args)...), colliderDtor<T>);
 //         }
          template <typename T, typename R=R_FLOAT>
-         static std::shared_ptr<T> make_collider(const std::string& name, Rect<R>& target) {
-            std::cout << "make_Collider: address of target is " << &target << std::endl;
-            auto ptr = std::shared_ptr<T>(new T(name, target), colliderDtor<T>);
+         static std::shared_ptr<T> make_collider(const std::string& name, const Positionable2D<R>& positionable) {
+            std::cout << "make_Collider: address of target is " << &positionable.target << std::endl;
+            auto ptr = std::shared_ptr<T>(new T(name, positionable), colliderDtor<T>);
             std::cout << "make_Collider: address of collider target is " << &ptr->positionable.target << std::endl;
-            std::cout << "make_Collider: value of positioanolbeTarge is " << target << std::endl;
+            std::cout << "make_Collider: value of positioanolbeTarge is " << positionable.target << std::endl;
             return ptr;
          }
 

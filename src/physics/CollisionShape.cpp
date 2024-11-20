@@ -9,7 +9,10 @@ using namespace Collision;
 template<>
 struct Collision::CollisionChecker<CollisionRect, CollisionRect> {
    static bool collide(const CollisionRect& a, const CollisionRect& b) {
-      return a.positionable.getGlobalRect().collides(b.positionable.getGlobalRect());
+      if (&a == &b) return false; //no self collisions
+      auto rectA = a.positionable.getGlobalRect();
+      auto rectB = b.positionable.getGlobalRect();
+      return rectA.collides(rectB);
    }
 };
 
@@ -78,8 +81,15 @@ void Collision::CollisionLayer::checkLayer(int layer) const {
    auto checkSecond = [](auto& first, const auto& seconds, int layer){
       for (const auto& second : seconds){
          if (first.collidesWith(*second)){
-            Collider::CollisionEvent event(first.EventPublisher::shared_from_this(), *second, layer);
-            first.publish(event);
+            //publish events for each collider
+            {
+               Collider::CollisionEvent event(first.EventPublisher::shared_from_this(), *second, layer);
+               first.publish(event);
+            }
+            {
+               Collider::CollisionEvent event(second->EventPublisher::shared_from_this(), first, layer);
+               second->publish(event);
+            }
          }
       }
    };

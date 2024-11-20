@@ -49,6 +49,7 @@ namespace ReyEngine{
       using Internal::TypeContainer<BaseWidget>::getChildren;
       using Internal::TypeContainer<BaseWidget>::getParent;
       using Internal::TypeContainer<BaseWidget>::addChild;
+      using Internal::TypeContainer<BaseWidget>::free;
       using Internal::TypeContainer<BaseWidget>::removeChild;
       using Internal::TypeContainer<BaseWidget>::removeAllChildren;
       using Internal::TypeContainer<BaseWidget>::toContainedType;

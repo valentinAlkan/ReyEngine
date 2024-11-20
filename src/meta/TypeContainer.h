@@ -117,7 +117,15 @@ namespace ReyEngine::Internal{
            if (verbose) Logger::debug() << "Registering child " << child->_scenePath << std::endl;
         }
 
-        std::optional<ChildPtr>removeChild(const std::string& name, bool quiet=false){
+        //direct remove
+        void free(){
+           auto parent = getParent().lock();
+           if (!parent){
+              return;
+           }
+           parent->removeChild(getName(), true);
+        }
+        void removeChild(const std::string& name, bool quiet=false){
             auto found = findChild(name);
             if (found){
                removeChild(found.value(), quiet);
@@ -126,10 +134,9 @@ namespace ReyEngine::Internal{
                ss << getType() << "::" << getName() << " does not have a child with name <" << name << ">";
                Logger::error() << ss.str() << std::endl;
             }
-            return std::nullopt;
         }
 
-        std::optional<ChildPtr>removeChild(ChildPtr&& child, bool quiet=false){
+        void removeChild(ChildPtr& child, bool quiet=false){
             auto lock = std::unique_lock<std::recursive_mutex>(_childLock);
             auto found = _childMap.find(child->getName());
             std::cout << "Searching for child " << child->getName() << std::endl;
@@ -139,7 +146,6 @@ namespace ReyEngine::Internal{
                     ss << getType() << "::" << getName() << " does not have a child with name <" << getName() << ">";
                     Logger::error() << ss.str() << std::endl;
                 }
-                return std::nullopt;
             }
 
             auto me = toContainedTypePtr();
@@ -170,7 +176,6 @@ namespace ReyEngine::Internal{
                 }
             }
             __on_exit_tree(child, false);
-            return child;
         }
 
         inline void removeAllChildren() {

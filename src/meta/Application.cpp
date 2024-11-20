@@ -18,6 +18,7 @@ Application::Application()
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Internal::WindowPrototype Application::createWindowPrototype(const std::string &title, int width, int height, const std::vector<ReyEngine::Window::Flags> &flags, int targetFPS) {
+   Application::instance(); //initalize application at least once
     return WindowPrototype(title, width, height, flags, targetFPS);
 }
 /////////////////////////////////////////////////////////////////////////////////////////

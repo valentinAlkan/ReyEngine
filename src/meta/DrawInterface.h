@@ -376,7 +376,10 @@ namespace ReyEngine {
       constexpr inline Line<T> rightSide() const {return {topRight(), bottomRight()};}
       constexpr inline Line<T> top() const {return {topLeft(), topRight()};}
       constexpr inline Line<T> bottom() const {return {bottomLeft(), bottomRight()};}
-      constexpr inline bool collides(const Rect& other) const {return (x < other.x + other.width) && (x+width > other.x) && (y > other.y + other.height) && (other.y + other.height < y);}
+      constexpr inline bool collides(const Rect& other) const {
+         return ((x < (other.x + other.width) && (x + width) > other.x) &&
+             (y < (other.y + other.height) && (y + height) > other.y));
+      }
       constexpr inline int getCollisionType(const Rect& other) const {
          int pointCount = 0;
          if (isInside(other.topLeft())) pointCount++;

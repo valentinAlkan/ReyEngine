@@ -33,6 +33,7 @@ namespace ReyEngine{
 
    private:
       bool _fitNextTexture = false; //if we dont' yet have a texture (because window isn't loaded), then fit the texture when we do have one
+      bool _drawDebugRect = true; //true if we want to see what the box looks like
    };
 
 

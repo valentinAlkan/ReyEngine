@@ -77,7 +77,6 @@ void Window::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
     auto& root = optRoot.value();
     root->ReyEngine::Internal::TypeContainer<ReyEngine::BaseWidget>::setRoot(true);
     root->setAnchoring(BaseWidget::Anchor::FILL); //canvas is filled by default
-    root->ReyEngine::Internal::TypeContainer<ReyEngine::BaseWidget>::setRoot(true);
     //make sure we init the root
     root->_has_inited = true;
     root->setRect(Rect<int>(0, 0, startingWidth, startingHeight)); //initialize to be the same size as the window
@@ -98,9 +97,10 @@ void Window::exec(){
    applyProcess(getCanvas());
    ReyEngine::Size<int> size = getSize();
    ReyEngine::Pos<int> position;
-   Time::RateLimiter rateLimit(targetFPS);
+   SetTargetFPS(targetFPS);
    while (!WindowShouldClose()){
       {
+
          unique_lock<mutex> sl(Application::instance()._busy);
 
          //see if the window size has changed
@@ -349,8 +349,6 @@ void Window::exec(){
          DrawTextureRec(getCanvas()->_renderTarget.getRenderTexture(), {0,0,(float)getCanvas()->_renderTarget.getSize().x, -(float)getCanvas()->_renderTarget.getSize().y},{0, 0}, WHITE);
          EndDrawing();
       } // release scoped lock here
-      //wait some time
-      rateLimit.wait();
       _frameCounter++;
    }
    _processList.clear();

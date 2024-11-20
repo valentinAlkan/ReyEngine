@@ -28,6 +28,10 @@ namespace ReyEngine{
          std::shared_ptr<Component> toComponent();
          static void registerType(const std::string& typeName, const std::string& parentType, bool isVirtual, Deserializer fx){TypeManager::registerType(typeName, parentType, isVirtual, fx);}
          std::string serialize();
+         template<typename T>
+         std::shared_ptr<T> toType(){
+            return std::dynamic_pointer_cast<T>(inheritable_enable_shared_from_this<Component>::shared_from_this());
+         }
          void __init(){
             _init();
             _has_inited = true;

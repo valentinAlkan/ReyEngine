@@ -34,7 +34,7 @@ namespace ReyEngine{
       template <typename C>
       std::shared_ptr<C> createCollider(const std::string& instanceName){
          std::cout << "Positionable: final address of positioanbnle rect.value hsould be: " << &target << std::endl;
-         auto collider = C::template make_collider<C>(instanceName, target);
+         auto collider = C::template make_collider<C>(instanceName, *this);
          std::cout << "Positionable: however, the address of collider rect.value rect is " << &collider->positionable.target << std::endl;
          assert(&target == &collider->positionable.target);
          return collider;
@@ -43,9 +43,9 @@ namespace ReyEngine{
 //      std::shared_ptr<Collision::CollisionRect> make_collider(const std::string& instanceName);
       Rect<R_FLOAT>& target; //always valid, never changes
    protected:
-      void setParent(const Positionable2D* newParent){newParent=parent;}
+      void setParent(Positionable2D* newParent){parent=newParent;}
    private:
-      Positionable2D* parent; //potentially invalid if orphaned - non-owning
+      Positionable2D* parent = nullptr; //potentially invalid if orphaned - non-owning
    };
 
 

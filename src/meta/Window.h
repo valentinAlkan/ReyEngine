@@ -45,6 +45,8 @@ namespace ReyEngine{
       enum Flags{RESIZE, IS_EDITOR};
       virtual void exec();
       ~Window() override;
+
+      REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(Window)
       template <typename T> void addChild(std::shared_ptr<TypeContainer<T>> child) = delete;
       bool isProcessed(const std::shared_ptr<BaseWidget>&) const;
       bool isEditor(){return _isEditor;}
@@ -83,6 +85,7 @@ namespace ReyEngine{
          _inputQueueMouse.push(std::move(event));
       }
       inline void keyInput(InputInterface::KeyCode){};
+      int getFPS() const {return GetFPS();}
    protected:
       Window(const std::string& title, int width, int height, const std::vector<Flags>& flags, int targetFPS);
       void initialize(std::optional<std::shared_ptr<Canvas>> root);
