@@ -12,7 +12,8 @@ using namespace FileSystem;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 BaseWidget::BaseWidget(const std::string& name, std::string  typeName)
-: Component(name, typeName)
+: Positionable2D<R_FLOAT>(_rect.value)
+, Component(name, typeName)
 , Internal::TypeContainer<BaseWidget>(name, typeName)
 , PROPERTY_DECLARE(isBackRender, false)
 , PROPERTY_DECLARE(_rect)
@@ -41,19 +42,6 @@ ReyEngine::Size<R_FLOAT> BaseWidget::getClampedSize(ReyEngine::Size<R_FLOAT> siz
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::Size<R_FLOAT> BaseWidget::getClampedSize(){
    return getClampedSize(getSize());
-}
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////
-Pos<R_FLOAT> BaseWidget::getGlobalPos() const {
-   //sum up all our ancestors' positions and add our own to it
-   auto offset = getPos();
-//   if (getTypeName() != Canvas::TYPE_NAME && !_parent.expired()){ //todo: Race conditions?
-   if (!getParent().expired()){ //todo: Race conditions?
-      offset += getParent().lock()->getGlobalPos();
-   }
-   return offset;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -742,21 +730,23 @@ void BaseWidget::__on_enter_tree() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::__on_child_removed(Internal::TypeContainer<BaseWidget>::ChildPtr&) {
+void BaseWidget::__on_child_removed(Internal::TypeContainer<BaseWidget>::ChildPtr& child) {
    //remove from renderlist
-   auto frontRenderFound = std::find(_frontRenderList.begin(), _frontRenderList.end(), toBaseWidget());
-   auto backRenderFound = std::find(_backRenderList.begin(), _backRenderList.end(), toBaseWidget());
+   auto frontRenderFound = std::find(_frontRenderList.begin(), _frontRenderList.end(), child->toBaseWidget());
+   auto backRenderFound = std::find(_backRenderList.begin(), _backRenderList.end(), child->toBaseWidget());
    if (frontRenderFound != _frontRenderList.end()){
       _frontRenderList.erase(frontRenderFound);
    }
    if (backRenderFound != _backRenderList.end()){
       _backRenderList.erase(backRenderFound);
    }
+   child->toContainedType().Positionable2D<R_FLOAT>::setParent(nullptr);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 template <>
 void ReyEngine::Internal::TypeContainer<BaseWidget>::__on_child_added_immediate(std::shared_ptr<BaseWidget>& child){
+   child->toContainedType().Positionable2D<R_FLOAT>::setParent(child.get());
    child->__init();
    _on_child_added(child);
 }

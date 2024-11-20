@@ -2,10 +2,10 @@
 #include "raylib.h"
 #include <stdexcept>
 #include <cfloat>
-#include "StringTools.h"
 #include <string>
 #include <array>
 #include <iostream>
+#include "StringTools.h"
 #include "Logger.h"
 #include "FileSystem.h"
 #include "Property.h"
@@ -678,8 +678,6 @@ namespace ReyEngine {
       double startAngle;
       double endAngle;
    };
-
-
 
    struct ColorRGBA {
       ColorRGBA(): r(0), g(0), b(0), a(255){}

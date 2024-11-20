@@ -8,6 +8,7 @@
 #include "Theme.h"
 #include "Component.h"
 #include "FileSystem.h"
+#include "CollisionShape.h"
 #include <iostream>
 #include <stack>
 #include <utility>
@@ -31,6 +32,7 @@ namespace ReyEngine{
    class BaseWidget
    : public virtual Internal::Component
    , public Internal::TypeContainer<BaseWidget>
+   , public Positionable2D<R_FLOAT>
    {
       using ChildIndex = unsigned long;
       using WidgetPtr = std::shared_ptr<BaseWidget>;
@@ -125,16 +127,7 @@ namespace ReyEngine{
       ~BaseWidget() override;
 
       //rect stuff
-      ReyEngine::Rect<R_FLOAT> getRect() const {return _rect.value;}
-      ReyEngine::Rect<R_FLOAT> getGlobalRect() const {auto globalPos = getGlobalPos(); return {globalPos.x, globalPos.y, getSize().x, getSize().y};}
-      ReyEngine::Pos<R_FLOAT> getGlobalPos() const;
       ReyEngine::Size<R_FLOAT> getChildBoundingBox() const; //get the smallest rectangle that contains all children, starting from 0,0. Does not include grandchildren.
-      ReyEngine::Pos<R_FLOAT> getPos() const {return {_rect.value.x, _rect.value.y};}
-      ReyEngine::Size<R_FLOAT> getSize() const {return getRect().size();}
-      R_FLOAT getWidth() const {return _rect.value.width;}
-      R_FLOAT getHeight() const {return _rect.value.height;}
-      Vec2<R_FLOAT> getHeightRange() const {return {0, getRect().size().y};}
-      Vec2<R_FLOAT> getWidthtRange() const {return {0, getRect().size().x};}
       ReyEngine::Size<R_FLOAT> getMinSize(){return minSize;}
       ReyEngine::Size<R_FLOAT> getMaxSize(){return maxSize;}
       ReyEngine::Size<R_FLOAT> getClampedSize();
@@ -260,7 +253,7 @@ namespace ReyEngine{
       virtual std::optional<std::shared_ptr<BaseWidget>> askHover(const ReyEngine::Pos<R_FLOAT>& globalPos);
    protected:
       void _is_extendable(){static_assert(true);}
-      virtual std::string _get_static_constexpr_typename(){return TYPE_NAME;}
+      virtual std::string _ge_t_static_constexpr_typename(){return TYPE_NAME;}
 
       //convenience
       void _publishSize(){WidgetRectChangedEvent event(toEventPublisher()); publish<WidgetRectChangedEvent>(event);}
@@ -316,5 +309,6 @@ namespace ReyEngine{
       friend class Canvas;
       friend class Application;
       friend class ScrollArea;
+      friend class Internal::TypeContainer<BaseWidget>;
    };
 }

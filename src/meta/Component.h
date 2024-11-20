@@ -42,11 +42,7 @@ namespace ReyEngine{
 
          virtual void _on_application_ready(){};
          virtual void _register_parent_properties(){};
-         void __on_child_added_immediate(ChildPtr&) {
-            Logger::debug() << "component init" << std::endl;
-            _init();
-            _has_inited = true;
-         };
+         void __on_child_added_immediate(ChildPtr&);
 
          BoolProperty _isProcessed;
          IntProperty _resourceId;

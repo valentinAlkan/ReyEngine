@@ -122,6 +122,7 @@ add_library(ReyEngine2D STATIC
     src/2d/TextureRect.cpp
     src/2d/CustomTypes.cpp
     src/2d/Camera2D.cpp
+    src/2d/Positionable2D.cpp
     src/pathfinding/AStar.cpp
     src/physics/CollisionShape.cpp
     src/physics/Physics.cpp

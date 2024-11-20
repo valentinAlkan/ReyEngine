@@ -20,8 +20,9 @@ namespace ReyEngine{
       };
    protected:
       REYENGINE_VIRTUAL_OBJECT(BaseButton, BaseWidget)
-      , PROPERTY_DECLARE(down){
-         _rect.value = ReyEngine::Rect<double>(0,0,200,50);
+      , PROPERTY_DECLARE(down)
+      {
+         _rect.value = ReyEngine::Rect<double>(0, 0, 200, 50);
          acceptsHover = true;
       }
    public:
