@@ -60,6 +60,7 @@ FetchContent_Declare(
 # you should put this code in a add_subdirectory to avoid to change
 # BUILD_TESTING for your own project too since variables are directory
 # scoped
+
 set(BUILD_TESTING OFF)
 set(EIGEN_BUILD_TESTING OFF)
 set(EIGEN_MPL2_ONLY ON)
@@ -74,6 +75,17 @@ list(APPEND CMAKE_MESSAGE_INDENT "  ")
 #list(POP_BACK CMAKE_MESSAGE_INDENT)
 #message(CHECK_PASS "fetched")
 # /eigen
+
+# set up yaml-cpp
+include(FetchContent)
+FetchContent_Declare(
+        yaml-cpp
+        GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+        GIT_TAG 0.8.0
+)
+FetchContent_MakeAvailable(yaml-cpp)
+
+#####################################################################################
 
 set(CUSTOM_SOURCES
     test/TestWidgets.cpp
@@ -164,7 +176,7 @@ target_include_directories( ReyEngine3D PUBLIC
     src/3d
 )
 
-target_link_libraries(ReyEngine2D raylib lua Threads::Threads Eigen3::Eigen)
+target_link_libraries(ReyEngine2D raylib lua Threads::Threads Eigen3::Eigen yaml-cpp::yaml-cpp)
 
 if (UNIX)
     target_link_libraries(ReyEngine2D stdc++fs)
