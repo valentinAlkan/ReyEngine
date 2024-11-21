@@ -108,6 +108,7 @@ int main(int argc, char** argv) {
         args.defineArg(RuntimeArg("--astarTestAuto", "a star test", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--camera2dTest", "camera 2d test", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--3dTest", "Basic3DTest", 0, RuntimeArg::ArgType::FLAG));
+        args.defineArg(RuntimeArg("--freeTest", "Resource freeing test", 0, RuntimeArg::ArgType::FLAG));
         args.parseArgs(argc, argv);
 
         //create window (or don't idk)
@@ -1983,6 +1984,21 @@ int main(int argc, char** argv) {
             mouseOverlay->getTheme()->background.value = Style::Fill::NONE;
             mouseOverlay->setUnhandledInputCallback(inputCB);
             viewport->addChild2d(mouseOverlay);
+
+        } else if (args.getArg("--freeTest")) {
+           auto label = Label::build("Label");
+           auto btn = PushButton::build("Free!");
+           btn->setPos(500,500);
+           root->addChild(label);
+           root->addChild(btn);
+
+           auto pbCallback = [&](const PushButton::ButtonPressEvent& event){
+              Logger::info() << "Removing child label" << endl;
+              root->removeChild("Label", true);
+           };
+
+           btn->subscribe<PushButton::ButtonPressEvent>(btn, pbCallback);
+
         } else {
             cout << args.getDocString() << endl;
             return 0;

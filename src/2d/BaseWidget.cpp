@@ -262,23 +262,24 @@ void BaseWidget::setProcess(bool process) {
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setBackRender(bool _isBackrender) {
    //see if we're in the front render list
+   auto ptr = toBaseWidget().get();
    if (_isBackrender) {
-      auto found = std::find(_frontRenderList.begin(), _frontRenderList.end(), toBaseWidget());
+      auto found = std::find(_frontRenderList.begin(), _frontRenderList.end(), ptr);
       if (found != _frontRenderList.end()) {
          //remove from front render list
          _frontRenderList.erase(found);
          //add to backrender list
          //TODO: respect sibling order
-         _backRenderList.push_back(toBaseWidget());
+         _backRenderList.push_back(ptr);
       }
    } else {
-      auto found = std::find(_backRenderList.begin(), _backRenderList.end(), toBaseWidget());
+      auto found = std::find(_backRenderList.begin(), _backRenderList.end(), ptr);
       if (found != _backRenderList.end()) {
          //remove from front render list
          _backRenderList.erase(found);
          //add to backrender list
          //TODO: respect sibling order
-         _frontRenderList.push_back(toBaseWidget());
+         _frontRenderList.push_back(ptr);
       }
    }
    //nothing to do
@@ -703,7 +704,7 @@ std::optional<std::shared_ptr<BaseWidget>> BaseWidget::askHover(const Pos<R_FLOA
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::__on_enter_tree() {
-   auto me = inheritable_enable_shared_from_this<Component>::downcasted_shared_from_this<BaseWidget>();
+   auto me = inheritable_enable_shared_from_this<Component>::downcasted_shared_from_this<BaseWidget>().get();
    auto parent = getParent().lock();
    if (me->isBackRender.value){
       parent->_backRenderList.push_back(me);
@@ -732,13 +733,14 @@ void BaseWidget::__on_enter_tree() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::__on_child_removed(Internal::TypeContainer<BaseWidget>::ChildPtr& child) {
    //remove from renderlist
-   auto frontRenderFound = std::find(_frontRenderList.begin(), _frontRenderList.end(), child->toBaseWidget());
-   auto backRenderFound = std::find(_backRenderList.begin(), _backRenderList.end(), child->toBaseWidget());
-   if (frontRenderFound != _frontRenderList.end()){
+   auto frontRenderFound = std::find(_frontRenderList.begin(), _frontRenderList.end(), child->toBaseWidget().get());
+   if (frontRenderFound != _frontRenderList.end()) {
       _frontRenderList.erase(frontRenderFound);
-   }
-   if (backRenderFound != _backRenderList.end()){
-      _backRenderList.erase(backRenderFound);
+   } else {
+      auto backRenderFound = std::find(_backRenderList.begin(), _backRenderList.end(), child->toBaseWidget().get());
+      if (backRenderFound != _backRenderList.end()){
+         _backRenderList.erase(backRenderFound);
+      }
    }
    child->toContainedType().Positionable2D<R_FLOAT>::setParent(nullptr);
 }

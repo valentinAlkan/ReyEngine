@@ -283,8 +283,8 @@ namespace ReyEngine{
       static constexpr int GRAB_HANDLE_SIZE = 10;
       ReyEngine::Rect<R_FLOAT> _getGrabHandle(int index);// 0-3 clockwise starting in top left (TL,TR,BR,BL)
       int _editor_grab_handles_dragging = -1; //which grab handle is being drug around
-      ChildOrder _frontRenderList; //children to be rendered IN FRONT of this widget (normal behavior)
-      ChildOrder _backRenderList; //children to be rendered BEHIND this widget
+      std::vector<BaseWidget*> _frontRenderList; //children to be rendered IN FRONT of this widget (normal behavior)
+      std::vector<BaseWidget*> _backRenderList; //children to be rendered BEHIND this widget
 
       AnchorProperty _anchor;
       void rename(WidgetPtr& child, const std::string& newName);

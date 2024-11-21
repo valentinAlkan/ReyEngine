@@ -60,6 +60,16 @@ namespace ReyEngine::Internal{
             ChildPtr& descendent;
         };
 
+       struct DescendentAboutToBeRemovedEvent : public Event<DescendentAboutToBeRemovedEvent> {
+          EVENT_GENERATE_UNIQUE_ID(DescendentAboutToBeRemovedEvent, Event_DescendentAboutToBeRemovedEvent)
+          EVENT_GET_NAME(DescendentAboutToBeRemovedEvent)
+          explicit DescendentAboutToBeRemovedEvent(std::shared_ptr<EventPublisher> publisher, ChildPtr& descendent)
+          : Event<DescendentAboutToBeRemovedEvent>(DescendentAboutToBeRemovedEvent_UNIQUE_ID, publisher)
+          , descendent(descendent)
+          {}
+          ChildPtr& descendent;
+       };
+
         struct DescendentRemovedEvent : public Event<DescendentRemovedEvent> {
             EVENT_GENERATE_UNIQUE_ID(DescendentRemovedEvent, Event_DescendentRemovedEvent)
             EVENT_GET_NAME(DescendentRemovedEvent)
@@ -125,21 +135,12 @@ namespace ReyEngine::Internal{
            }
            parent->removeChild(getName(), true);
         }
-        void removeChild(const std::string& name, bool quiet=false){
-            auto found = findChild(name);
-            if (found){
-               removeChild(found.value(), quiet);
-            } else if(!quiet) {
-               std::stringstream ss;
-               ss << getType() << "::" << getName() << " does not have a child with name <" << name << ">";
-               Logger::error() << ss.str() << std::endl;
-            }
-        }
 
-        void removeChild(ChildPtr& child, bool quiet=false){
+        void removeChild(ChildPtr& child, bool quiet=false){removeChild(child->getName(), quiet);}
+        void removeChild(const std::string& name, bool quiet=false){
             auto lock = std::unique_lock<std::recursive_mutex>(_childLock);
-            auto found = _childMap.find(child->getName());
-            std::cout << "Searching for child " << child->getName() << std::endl;
+            auto found = _childMap.find(name);
+            std::cout << "Searching for child " << name << std::endl;
             if (found == _childMap.end()){
                 if (!quiet) {
                     std::stringstream ss;
@@ -148,11 +149,12 @@ namespace ReyEngine::Internal{
                 }
             }
 
+            auto child = _childOrder[found->second.first];
             auto me = toContainedTypePtr();
             {
                 auto parent = me;
                 while (parent) {
-                    DescendentRemovedEvent event(toEventPublisher(), child);
+                    DescendentAboutToBeRemovedEvent event(toEventPublisher(), child);
                     parent->publish(event);
                     parent->TypeContainer<T>::_on_descendent_about_to_be_removed(child);
                     parent = parent->getParent().lock();
@@ -163,9 +165,9 @@ namespace ReyEngine::Internal{
             auto orderIndex = found->second.first;
             _childMap.erase(found);
             _childOrder.erase(_childOrder.begin() + orderIndex);
+            __on_child_removed(child);
             _on_child_removed(child);
 
-            //do this again
             {
                 auto parent = me;
                 while (parent) {
@@ -176,6 +178,9 @@ namespace ReyEngine::Internal{
                 }
             }
             __on_exit_tree(child, false);
+           //TODO: we need to reorder the childindices. When a child is added to a typecontainer, it's index in the vector is
+           // stored in the childmap, but once any child is removed, that order is invalidated
+           Logger::warn() << "TypeContainer Warning: don't forget, you need to re-index the childmap! Like, you need to implement that. In code. You lazy shit" << std::endl;
         }
 
         inline void removeAllChildren() {
