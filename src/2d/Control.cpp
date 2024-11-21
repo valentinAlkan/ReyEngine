@@ -25,6 +25,13 @@ void Control::render() const {
          default:
             break;
       }
+      switch(theme->outline.value){
+         case Style::Outline::LINE:
+            drawRectangleLines(_rect.value.toSizeRect(), theme->outline.thickness, theme->outline.color);
+            break;
+         default:
+            break;
+      }
    }
 }
 

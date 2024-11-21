@@ -16,7 +16,7 @@ namespace ReyEngine::Internal{
     , public EventSubscriber
     {
     public:
-        NamedInstance(const std::string& instanceName, const std::string& typeName)
+        NamedInstance(  const std::string& instanceName, const std::string& typeName)
         : _name(instanceName)
         , _type(typeName)
         {}
@@ -36,7 +36,7 @@ namespace ReyEngine::Internal{
     {
        static constexpr bool verbose = false;
     public:
-        using ChildIndex = unsigned long;
+        using ChildIndex = size_t;
         using ChildPtr = std::shared_ptr<T>;
         using ChildMap = std::map<std::string, std::pair<ChildIndex, T*>>;
         using ChildOrder = std::vector<ChildPtr>;
@@ -121,7 +121,7 @@ namespace ReyEngine::Internal{
             _childOrder.push_back(childTypePtr);
             _childMap[childTypePtr->getName()] = std::pair<int, T*>(newIndex, me.get());
             __on_child_added_immediate(childTypePtr);
-            childTypePtr->__on_added_to_parent();
+            childTypePtr->TypeContainer<T>::__on_added_to_parent();
             if (isInTree()){
                child->doEnterTree(*this);
             }
@@ -141,7 +141,6 @@ namespace ReyEngine::Internal{
         void removeChild(const std::string& name, bool quiet=false){
             auto lock = std::unique_lock<std::recursive_mutex>(_childLock);
             auto found = _childMap.find(name);
-            std::cout << "Searching for child " << name << std::endl;
             if (found == _childMap.end()){
                 if (!quiet) {
                     std::stringstream ss;
@@ -179,10 +178,8 @@ namespace ReyEngine::Internal{
                     parent = parent->getParent().lock();
                 }
             }
-            __on_exit_tree(child, false);
-           //TODO: we need to reorder the childindices. When a child is added to a typecontainer, it's index in the vector is
-           // stored in the childmap, but once any child is removed, that order is invalidated
-           Logger::warn() << "TypeContainer Warning: don't forget, you need to re-index the childmap! Like, you need to implement that. In code. You lazy shit" << std::endl;
+           reindexChildMap();
+           __on_exit_tree(child, false);
         }
 
         inline void removeAllChildren() {
@@ -379,10 +376,19 @@ namespace ReyEngine::Internal{
               child->TypeContainer<T>::doEnterTree(*this);
            }
        }
+
+       void reindexChildMap(){
+          _childMap.clear();
+          for (size_t i=0; i<_childOrder.size(); i++){
+             auto& child = _childOrder[i];
+             _childMap[child->getName()] = {i, child.get()};
+          }
+       }
        std::string _scenePath;
        std::weak_ptr<T> _parent;
        std::recursive_mutex _childLock;
        ChildMap _childMap;
        ChildOrder _childOrder;
+
     };
 }

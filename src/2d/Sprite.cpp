@@ -10,7 +10,7 @@ void Sprite::render() const {
       drawTexture(*texture, region, rect, 0.0, Colors::none);
    }
    if (_drawDebugRect){
-      drawRectangleLines(getRect().toSizeRect(), 1.0, Colors::red);
+      drawRectangleLines(getRect().toSizeRect(), 1.0, Colors::blue);
    }
 }
 

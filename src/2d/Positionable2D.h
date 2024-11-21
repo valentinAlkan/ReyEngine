@@ -14,6 +14,7 @@ namespace ReyEngine{
       : target(target)
       {}
       Pos<T> getPos() const {return target.pos();}
+      Pos<T> getCenter() const {return target.pos() + target.size()/2;}
       Pos<T> getGlobalPos() const {
          //sum up all our ancestors' positions and add our own to it
          auto offset = getPos();
@@ -31,11 +32,7 @@ namespace ReyEngine{
       Vec2<T> getWidthtRange() const {return {0, target.size().x};}
       template <typename C>
       std::shared_ptr<C> createCollider(const std::string& instanceName){
-         std::cout << "Positionable: final address of positioanbnle rect.value hsould be: " << &target << std::endl;
-         auto collider = C::template make_collider<C>(instanceName, *this);
-         std::cout << "Positionable: however, the address of collider rect.value rect is " << &collider->positionable.target << std::endl;
-         assert(&target == &collider->positionable.target);
-         return collider;
+         return C::template make_collider<C>(instanceName, *this);
       }
       void* getAddr() const {return (void*)&target;}
 //      std::shared_ptr<Collision::CollisionRect> make_collider(const std::string& instanceName);

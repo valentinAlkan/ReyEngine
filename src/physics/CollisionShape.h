@@ -28,17 +28,9 @@ namespace ReyEngine {
          void addToLayer(int collisionLayer);
          std::vector<int> layers;
 
-//         template <typename T, typename... Args>
-//         static std::shared_ptr<T> make_collider(Args &&... args) {
-//            return std::shared_ptr<T>(new T(std::forward<Args>(args)...), colliderDtor<T>);
-//         }
          template <typename T, typename R=R_FLOAT>
          static std::shared_ptr<T> make_collider(const std::string& name, const Positionable2D<R>& positionable) {
-            std::cout << "make_Collider: address of target is " << &positionable.target << std::endl;
-            auto ptr = std::shared_ptr<T>(new T(name, positionable), colliderDtor<T>);
-            std::cout << "make_Collider: address of collider target is " << &ptr->positionable.target << std::endl;
-            std::cout << "make_Collider: value of positioanolbeTarge is " << positionable.target << std::endl;
-            return ptr;
+            return std::shared_ptr<T>(new T(name, positionable), colliderDtor<T>);
          }
 
          static std::shared_ptr<Collision::CollisionRect> make_rect(const std::string& instanceName, const Positionable2D<R_FLOAT>& positionable);
@@ -46,7 +38,7 @@ namespace ReyEngine {
             return (void*)&positionable.target;
          }
 
-//      protected:
+      protected:
          template<typename T>
          static void colliderDtor(T* ptr);
 
@@ -68,9 +60,7 @@ namespace ReyEngine {
          CollisionRect(const std::string& instanceName, const Positionable2D<R_FLOAT>& positionable)
          : Collider(instanceName, TYPE_NAME, positionable)
          , NamedInstance(instanceName, TYPE_NAME)
-         {
-            std::cout << "Hello from collision rect ctor! target rect address is " << positionable.getAddr() << std::endl;
-         }
+         {}
       protected:
          friend class Collider;
       };
