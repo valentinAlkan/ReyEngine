@@ -32,8 +32,8 @@ struct Layout::LayoutHelper {
       auto minSize = layoutDir == LayoutDir::HORIZONTAL ? child->getMinSize().x : child->getMinSize().y;
       auto& releventDimension = layoutDir == LayoutDir::HORIZONTAL ? pendingRect.width : pendingRect.height;
 
-      bool isConstrainedMax = releventDimension >= maxSize;
-      bool isConstrainedMin = releventDimension <= minSize;
+      bool isConstrainedMax = releventDimension > maxSize;
+      bool isConstrainedMin = releventDimension < minSize;
       if (isConstrainedMax) {
          releventDimension = maxSize;
          return maxSize;
@@ -141,7 +141,7 @@ void Layout::arrangeChildren() {
                //just make the thing as small as possible - setpendingrect will spit back its minimum size
                LayoutHelper helper(dir, i, getChildren()[i]);
                helper.setReleventPosition(pos);
-               auto pendingRect = dir == LayoutDir::HORIZONTAL ? Rect<R_FLOAT>(0,0,0,_rect.value.height) : Rect<R_FLOAT>(0,0,_rect.value.width,0);
+               auto pendingRect = dir == LayoutDir::HORIZONTAL ? Rect<R_FLOAT>(pos,0,0,_rect.value.height) : Rect<R_FLOAT>(0,pos,_rect.value.width,0);
                auto minSizeOpt = helper.setPendingRect(pendingRect);
                //will either be constrained, or be 0, so we don't need to check other conditions
                if (minSizeOpt && minSizeOpt.value()){
@@ -154,7 +154,8 @@ void Layout::arrangeChildren() {
             for (int i=0; i<getChildren().size(); i++){
                //just make the thing as small as possible - setpendingrect will spit back its minimum size
                LayoutHelper helper(dir, i, getChildren()[i]);
-               auto minSizeOpt = helper.setPendingRect({});
+               auto pendingRect = dir == LayoutDir::HORIZONTAL ? Rect<R_FLOAT>(0,0,0,_rect.value.height) : Rect<R_FLOAT>(0,0,_rect.value.width,0);
+               auto minSizeOpt = helper.setPendingRect(pendingRect);
                //will either be constrained, or be 0, so we don't need to check other conditions
                if (minSizeOpt){
                   pos -= minSizeOpt.value();

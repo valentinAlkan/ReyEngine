@@ -46,11 +46,9 @@ namespace ReyEngine{
       void clear(){text.value.clear();}
       void setText(const std::string& newText){
          text.set(newText);
-         if (!isInLayout) {
-            auto expandOpt = needsExpand();
-            if (expandOpt) {
-               setMinSize(expandOpt.value());
-            }
+         auto expandOpt = needsExpand();
+         if (expandOpt) {
+            setMinSize(expandOpt.value());
          }
       }
       void appendText(const std::string& newText){
