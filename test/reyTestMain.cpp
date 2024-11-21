@@ -456,7 +456,7 @@ int main(int argc, char** argv) {
             labelLayout->addChild(xslider);
             labelLayout->addChild(spacer);
             labelLayout->addChild(yslider);
-            labelLayout->childScales = {1, .1, 1};
+            labelLayout->layoutRatios = {1, .1, 1};
             xslider->addChild(xlabel);
             yslider->addChild(ylabel);
 
@@ -703,7 +703,7 @@ int main(int argc, char** argv) {
             Logger::debug() << "Layout test!" << endl;
             auto mainVLayout = VLayout::build("MainVLayout");
             mainVLayout->setAnchoring(BaseWidget::Anchor::FILL);
-            mainVLayout->childScales = {1, 5};
+            mainVLayout->layoutRatios = {1, 5};
             root->addChild(mainVLayout);
             bool flipFlop = false;
             std::shared_ptr<Layout> prevlayout = mainVLayout;
@@ -717,8 +717,8 @@ int main(int argc, char** argv) {
                     newlayout1 = HLayout::build("Hlayout1_" + to_string(i));
                     newlayout2 = HLayout::build("Hlayout2_" + to_string(i));
                 }
-                newlayout1->childScales = {1, 5};
-                newlayout2->childScales = {1, 5};
+                newlayout1->layoutRatios = {1, 5};
+                newlayout2->layoutRatios = {1, 5};
                 flipFlop = !flipFlop;
                 auto control = Control::build("control" + to_string(i));
                 control->getTheme()->background.set(Style::Fill::SOLID);
@@ -757,7 +757,7 @@ int main(int argc, char** argv) {
             sliderHLayout->setWidth(fieldLabel->getWidth() + valueLabel->getWidth());
 
             //set the layout ratio so everything can be displayed nicely
-            sliderHLayout->childScales = {1.5};
+            sliderHLayout->layoutRatios = {1.5};
 
             //resize slider so it fits all our text
             slider->setWidth(sliderHLayout->getWidth());
@@ -1057,7 +1057,7 @@ int main(int argc, char** argv) {
                 control->moveProperty(pressCount);
                 button->moveProperty(widgetProperty);
                 button->subscribe<PushButton::ButtonPressEvent>(button, cbPress);
-                hlayout->childScales.value = {0.85, 0.15};
+                hlayout->layoutRatios.value = {0.85, 0.15};
                 hlayout->addChild(button);
                 hlayout->addChild(control);
                 vlayout->addChild(hlayout);

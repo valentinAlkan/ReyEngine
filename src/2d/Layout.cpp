@@ -14,7 +14,6 @@ struct Layout::LayoutHelper {
    {}
    ~LayoutHelper(){
       //apply the rect
-
       if constexpr (VERBOSE) Logger::debug() << "Parent " << child->getParent().lock()->getName() << " applying rectangle " << pendingRect << " to child " << child->getName() << endl;
 
       //apply margins - this should always be the very last thing we do
@@ -26,7 +25,7 @@ struct Layout::LayoutHelper {
       child->setRect(pendingRect);
    }
    /// Accounts for min/max
-   std::optional<int> setPendingRect(const Rect<int>& newRect){
+   std::optional<R_FLOAT> setPendingRect(const Rect<int>& newRect){
       Tools::AnonymousDtor dtor([&](){if constexpr (VERBOSE) Logger::debug() << "Child " << child->getName() << " will be allowed " << pendingRect.size() << " space" << endl;});
       pendingRect = newRect;
       auto maxSize = layoutDir == LayoutDir::HORIZONTAL ? child->getMaxSize().x : child->getMaxSize().y;
@@ -46,7 +45,7 @@ struct Layout::LayoutHelper {
       return nullopt;
    }
    /// Sets the x or y value appropriately based on the layout - one value should always be 0
-   void setReleventPosition(int pos) {
+   void setReleventPosition(R_FLOAT pos) {
       switch (layoutDir) {
          case LayoutDir::HORIZONTAL:
             pendingRect.x = pos;
@@ -63,7 +62,7 @@ struct Layout::LayoutHelper {
    const LayoutDir layoutDir;
    std::shared_ptr<BaseWidget>& child;
 private:
-   Rect<int> pendingRect;
+   Rect<R_FLOAT> pendingRect;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -71,7 +70,8 @@ Layout::Layout(const std::string &name, const std::string &typeName, LayoutDir l
 : BaseWidget(name, typeName)
 , NamedInstance(name, typeName)
 , Component(name, typeName)
-, childScales("layoutRatios")
+, layoutRatios("layoutRatios")
+, alignment("alignment", Alignment::EVEN)
 , dir(layoutDir)
 {
    isLayout = true;
@@ -86,8 +86,8 @@ void Layout::_register_parent_properties() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void Layout::_on_child_added(std::shared_ptr<BaseWidget> &child) {
    if constexpr (VERBOSE) Logger::debug() << child->getName() << " added to layout " << getName() << std::endl;
-   if (childScales.size() < getChildren().size()){
-      childScales.append(1.0);
+   if (layoutRatios.size() < getChildren().size()){
+      layoutRatios.append(1.0);
    }
    arrangeChildren();
 }
@@ -100,8 +100,8 @@ void Layout::_on_child_added(std::shared_ptr<BaseWidget> &child) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Layout::_on_child_removed(std::shared_ptr<BaseWidget>& child){
-   if (childScales.size() > getChildren().size()){
-      childScales.pop_back();
+   if (layoutRatios.size() > getChildren().size()){
+      layoutRatios.pop_back();
    }
 }
 
@@ -132,67 +132,96 @@ void Layout::arrangeChildren() {
          }
       }
    } else {
-      //how much space we have to allocate
-      const auto totalSpace = dir == LayoutDir::HORIZONTAL ? _rect.value.width : _rect.value.height;
-      //how much space we will allocate to each child
-      auto totalSizeToAllocate = totalSpace;
-      if constexpr (VERBOSE) Logger::debug() << "Layout " << getName() << " has " << getChildren().size() << " children" << endl;
-
-      //determine which children we are giving space to. Children which are maxed out will not be considered
-      // in this calculation. Start with a vector of all children, and remove them as we need to.
-      std::vector<std::unique_ptr<LayoutHelper>> childLayoutsAll;
-      std::vector<std::reference_wrapper<LayoutHelper>> childLayoutsAvailable;
-      for (int i=0; i<getChildren().size(); i++){
-         childLayoutsAll.emplace_back(make_unique<LayoutHelper>(dir, i, getChildren().at(i)));
-         childLayoutsAvailable.emplace_back(*childLayoutsAll.back());
-      }
-      auto removeLayoutFromConsideration = [&](LayoutHelper& layout){
-         for (auto it = childLayoutsAvailable.begin(); it != childLayoutsAvailable.end(); it++){
-            if (layout == *it){
-               childLayoutsAvailable.erase(it);
-               return;
-            }
-         }
-      };
-
-      bool startOver = false;
-      if constexpr (VERBOSE) Logger::debug() << "Parent " << getName() << " allocating " << getSize() << " pixels to children!" << endl;
-      do {
-         for (auto& _layout: childLayoutsAvailable){
-            auto& layout = _layout.get();
-            auto& child = layout.child;
-            startOver = false;
-//            Logger::debug() << "Child " << layout.childIndex + 1 << " of " << childLayoutsAvailable.size() << " will have a position of " << currentPos << endl;
-            int allocatedSpace;
-            {
-               double denominator = 0;
-               double numerator = childScales.value.at(layout.childIndex);
-               for (int i=0; i<childLayoutsAvailable.size(); i++) {
-                  denominator += childScales.value.at(childLayoutsAvailable.at(i).get().childIndex);
+      auto& expandingDimension = dir == LayoutDir::HORIZONTAL ? _rect.value.width : _rect.value.height;
+      // For front and back alignment, set all widgets to their minimum/maximum size, then allocate the leftover space to nothing.
+      switch (alignment.value){
+         case Alignment::FRONT:{
+            R_FLOAT pos = 0;
+            for (int i=0; i<getChildren().size(); i++){
+               //just make the thing as small as possible - setpendingrect will spit back its minimum size
+               LayoutHelper helper(dir, i, getChildren()[i]);
+               helper.setReleventPosition(pos);
+               auto pendingRect = dir == LayoutDir::HORIZONTAL ? Rect<R_FLOAT>(0,0,0,_rect.value.height) : Rect<R_FLOAT>(0,0,_rect.value.width,0);
+               auto minSizeOpt = helper.setPendingRect(pendingRect);
+               //will either be constrained, or be 0, so we don't need to check other conditions
+               if (minSizeOpt && minSizeOpt.value()){
+                  pos += minSizeOpt.value();
                }
-               allocatedSpace = (int) (totalSizeToAllocate * numerator / denominator);
-               if constexpr (VERBOSE) Logger::debug() << "Child " << child->getName() << " with scale of " << numerator << "/" << denominator << " can potentially be allocated " << allocatedSpace << " pixels" << endl;
             }
-            std::optional<int> isConstrained;
-            if (dir == LayoutDir::HORIZONTAL) {
-               isConstrained = layout.setPendingRect({{0, 0},{allocatedSpace, _rect.value.height}});
-            } else {
-               isConstrained = layout.setPendingRect({{0, 0}, {_rect.value.width, allocatedSpace}});
+            break;}
+         case Alignment::BACK:{
+            R_FLOAT pos = dir == LayoutDir::HORIZONTAL ? getWidth() : getHeight();
+            for (int i=0; i<getChildren().size(); i++){
+               //just make the thing as small as possible - setpendingrect will spit back its minimum size
+               LayoutHelper helper(dir, i, getChildren()[i]);
+               auto minSizeOpt = helper.setPendingRect({});
+               //will either be constrained, or be 0, so we don't need to check other conditions
+               if (minSizeOpt){
+                  pos -= minSizeOpt.value();
+               }
+               helper.setReleventPosition(pos);
             }
-            if (isConstrained) {
-               removeLayoutFromConsideration(layout);
-               totalSizeToAllocate -= isConstrained.value();
-               startOver = true;
-            }
-            if (startOver) break;
-         }
-      } while (startOver && !childLayoutsAvailable.empty());
+            break;}
+         case Alignment::EVEN:{
+            //how much space we will allocate to each child
+            auto totalSizeToAllocate = expandingDimension;
+            if constexpr (VERBOSE) Logger::debug() << "Layout " << getName() << " has " << getChildren().size() << " children" << endl;
 
-      // Now that the sizes of the children are correctly determined, we must place them at their appropriate positions
-      int currentPos = 0;
-      for (auto& layout : childLayoutsAll) {
-         layout->setReleventPosition(currentPos);
-         currentPos += layout->getReleventDimension();
+            //determine which children we are giving space to. Children which are maxed out will not be considered
+            // in this calculation. Start with a vector of all children, and remove them as we need to.
+            std::vector<std::unique_ptr<LayoutHelper>> childLayoutsAll;
+            std::vector<std::reference_wrapper<LayoutHelper>> childLayoutsAvailable;
+            for (int i=0; i<getChildren().size(); i++){
+               childLayoutsAll.emplace_back(make_unique<LayoutHelper>(dir, i, getChildren().at(i)));
+               childLayoutsAvailable.emplace_back(*childLayoutsAll.back());
+            }
+            auto removeLayoutFromConsideration = [&](LayoutHelper& layout){
+               for (auto it = childLayoutsAvailable.begin(); it != childLayoutsAvailable.end(); it++){
+                  if (layout == *it){
+                     childLayoutsAvailable.erase(it);
+                     return;
+                  }
+               }
+            };
+
+            bool startOver = false;
+            if constexpr (VERBOSE) Logger::debug() << "Parent " << getName() << " allocating " << getSize() << " pixels to children!" << endl;
+            do {
+               for (auto& _layout: childLayoutsAvailable){
+                  auto& layout = _layout.get();
+                  startOver = false;
+                  int allocatedSpace;
+                  {
+                     double denominator = 0;
+                     double numerator = layoutRatios.value.at(layout.childIndex);
+                     for (int i=0; i<childLayoutsAvailable.size(); i++) {
+                        denominator += layoutRatios.value.at(childLayoutsAvailable.at(i).get().childIndex);
+                     }
+                     allocatedSpace = (int) (totalSizeToAllocate * numerator / denominator);
+                     if constexpr (VERBOSE) Logger::debug() << "Child " << layout.child->getName() << " with scale of " << numerator << "/" << denominator << " can potentially be allocated " << allocatedSpace << " pixels" << endl;
+                  }
+                  std::optional<int> isConstrained;
+                  if (dir == LayoutDir::HORIZONTAL) {
+                     isConstrained = layout.setPendingRect({{0, 0},{allocatedSpace, _rect.value.height}});
+                  } else {
+                     isConstrained = layout.setPendingRect({{0, 0}, {_rect.value.width, allocatedSpace}});
+                  }
+                  if (isConstrained) {
+                     removeLayoutFromConsideration(layout);
+                     totalSizeToAllocate -= isConstrained.value();
+                     startOver = true;
+                  }
+                  if (startOver) break;
+               }
+            } while (startOver && !childLayoutsAvailable.empty());
+
+            // Now that the sizes of the children are correctly determined, we must place them at their appropriate positions
+            int currentPos = 0;
+            for (auto& layout : childLayoutsAll) {
+               layout->setReleventPosition(currentPos);
+               currentPos += layout->getReleventDimension();
+            }
+         break;}
       }
    }
 }

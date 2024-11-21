@@ -312,10 +312,10 @@ namespace ReyEngine {
       constexpr inline Size(const Vector2& v)     : Vec2<T>(v.x,v.y){}
       template <typename R>
       constexpr inline Size(const Vec2<R>& v)   : Vec2<T>(v.x,v.y){}
-      inline Size(const Size<float>& v) : Vec2<T>(v){}
+      inline Size(const Size<T>& v) : Vec2<T>(v){}
       inline void operator=(Pos<T>&) = delete;
-      inline bool operator==(const Size<T>& rhs){return Size::x==rhs.x && Size::y==rhs.y;}
-      inline bool operator!=(const Size<T>& rhs){return Size::x!=rhs.x || Size::y!=rhs.y;}
+      inline bool operator==(const Size<T>& rhs) const {return Size::x==rhs.x && Size::y==rhs.y;}
+      inline bool operator!=(const Size<T>& rhs) const {return Size::x!=rhs.x || Size::y!=rhs.y;}
       inline Size operator+(const Size& rhs) const {auto val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
       inline Size operator-(const Size& rhs) const {auto val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
       inline Size& operator+=(const Size& rhs){this->x += rhs.x; this->y += rhs.y; return *this;}

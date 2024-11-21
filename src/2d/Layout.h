@@ -10,17 +10,33 @@ namespace ReyEngine{
       /////////////////////////////////////////////////////////////////////////////////////////
       struct LayoutProperty : public EnumProperty<LayoutDir, 3>{
          LayoutProperty(const std::string& instanceName,  LayoutDir defaultvalue)
-               : EnumProperty<LayoutDir, 3>(instanceName, std::move(defaultvalue)){}
+         : EnumProperty<LayoutDir, 3>(instanceName, std::move(defaultvalue)){}
          const EnumPair<LayoutDir, 3>& getDict() const override {return dict;}
          static constexpr EnumPair<LayoutDir, 3> dict = {
-               ENUM_PAIR_DECLARE(LayoutDir, VERTICAL),
-               ENUM_PAIR_DECLARE(LayoutDir, HORIZONTAL),
-               ENUM_PAIR_DECLARE(LayoutDir, GRID),
+            ENUM_PAIR_DECLARE(LayoutDir, VERTICAL),
+            ENUM_PAIR_DECLARE(LayoutDir, HORIZONTAL),
+            ENUM_PAIR_DECLARE(LayoutDir, GRID),
          };
          void registerProperties() override {}
       };
+
+      enum class Alignment{EVEN, FRONT, BACK};
+      /////////////////////////////////////////////////////////////////////////////////////////
+      struct AlignmentProperty : public EnumProperty<Alignment, 3>{
+         AlignmentProperty(const std::string& instanceName,  Alignment defaultvalue)
+         : EnumProperty<Alignment, 3>(instanceName, std::move(defaultvalue)){}
+         const EnumPair<Alignment, 3>& getDict() const override {return dict;}
+         static constexpr EnumPair<Alignment, 3> dict = {
+            ENUM_PAIR_DECLARE(Alignment, EVEN),
+            ENUM_PAIR_DECLARE(Alignment, FRONT),
+            ENUM_PAIR_DECLARE(Alignment, BACK),
+         };
+         void registerProperties() override {}
+      };
+
       ReyEngine::Size<int> calculateIdealBoundingBox();
-      FloatListProperty childScales;
+      FloatListProperty layoutRatios;
+      AlignmentProperty alignment;
       /////////////////////////////////////////////////////////////////////////////////////////
    protected:
       struct LayoutHelper;
@@ -33,6 +49,7 @@ namespace ReyEngine{
       virtual void arrangeChildren();
       void render() const override {};
       const LayoutDir dir;
+
    };
 
    /////////////////////////////////////////////////////////////////////////////////////////

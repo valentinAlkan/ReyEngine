@@ -214,7 +214,7 @@ namespace ReyEngine{
       void stopScissor() const;
    protected:
 
-      void __on_rect_changed(); //internal. Trigger resize for anchored widgets.
+      void __on_rect_changed(const Rect<R_FLOAT>& oldRect); //internal. Trigger resize for anchored widgets.
       void __on_child_removed(ChildPtr&) override;
       void __on_exit_tree() override {}
       void __on_enter_tree() override;

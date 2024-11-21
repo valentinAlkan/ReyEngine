@@ -84,7 +84,7 @@ void Panel::_init() {
    //add a button cluster on the right side of the menu bar
    auto btnClusterRight = HLayout::build("__btnClusterRight");
    menuBar->addChild(btnClusterRight);
-   menuBar->childScales = {1,1,1,.5};
+   menuBar->layoutRatios = {1, 1, 1, .5};
 
    //add some buttons
    auto btnMin = PushButton::build(BTN_MIN_NAME); btnMin->setText("_");

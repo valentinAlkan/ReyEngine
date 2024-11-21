@@ -195,8 +195,18 @@ namespace ReyEngine::Internal{
                 return std::nullopt;
             }
             auto index = found->second.first;
-            return {_childOrder.at(index)};
+            return {_childOrder[index]};
         }
+
+       inline std::optional<const ChildPtr> getChild(const std::string& name) const {
+          auto found = _childMap.find(name);
+          if (found == _childMap.end()) {
+             return std::nullopt;
+          }
+          auto index = found->second.first;
+          return {_childOrder[index]};
+       }
+
         std::weak_ptr<T> getParent(){return _parent;}
         const std::weak_ptr<T> getParent() const {return _parent;}
         inline ChildOrder& getChildren() {return _childOrder;}

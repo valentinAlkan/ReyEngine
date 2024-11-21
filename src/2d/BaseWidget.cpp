@@ -443,7 +443,7 @@ void BaseWidget::setRect(const ReyEngine::Rect<R_FLOAT>& r){
       newRect = {{0, 0}, windowSize};
    } else {
       _rect.set(r);
-      __on_rect_changed();
+      __on_rect_changed(r);
       _publishSize();
       return;
       //todo: this is weird, find a way to make this flow better
@@ -510,8 +510,9 @@ void BaseWidget::setRect(const ReyEngine::Rect<R_FLOAT>& r){
    //enforce min/max sizes
    newRect.setSize(newRect.size().max(minSize));
    newRect.setSize(newRect.size().min(maxSize));
+   const auto& oldRect = _rect;
    _rect.set(newRect);
-   __on_rect_changed();
+   __on_rect_changed(oldRect);
    _publishSize();
 }
 
@@ -597,8 +598,8 @@ void BaseWidget::setHeight(int height){
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::__on_rect_changed(){
-   if (!isLayout) {
+void BaseWidget::__on_rect_changed(const Rect<R_FLOAT>& oldRect){
+   if (isLayout && oldRect.size() != getSize()) {
       for (auto &child: getChildren()) {
          if (child->isAnchored()) {
             child->setRect(child->_rect);
