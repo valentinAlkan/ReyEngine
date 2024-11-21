@@ -218,6 +218,7 @@ namespace ReyEngine{
       void __on_child_removed(ChildPtr&) override;
       void __on_exit_tree() override {}
       void __on_enter_tree() override;
+      void __on_added_to_parent() override;
       virtual void _on_rect_changed(){} //called when the rect is manipulated
       virtual void _on_mouse_enter(){};
       virtual void _on_mouse_exit(){};
@@ -227,6 +228,7 @@ namespace ReyEngine{
          child->isInLayout = false;
       }
       void __on_child_added_immediate(ChildPtr&);
+      void __on_child_added_immediate_basewidget(ChildPtr&);
       virtual std::optional<std::shared_ptr<Draggable>> _on_drag_start(ReyEngine::Pos<R_FLOAT> globalPos){return std::nullopt;} //override and return something to implement drag and drop
       virtual Handled _on_drag_drop(std::shared_ptr<Draggable>){return false;}
 

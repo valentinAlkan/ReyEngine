@@ -12,9 +12,7 @@ namespace ReyEngine{
    public:
       Positionable2D(Rect<T>& target) //don't make this const, want to reject temporaries
       : target(target)
-      {
-         std::cout << "parent == " << std::endl;
-      }
+      {}
       Pos<T> getPos() const {return target.pos();}
       Pos<T> getGlobalPos() const {
          //sum up all our ancestors' positions and add our own to it

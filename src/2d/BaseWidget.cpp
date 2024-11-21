@@ -701,19 +701,13 @@ std::optional<std::shared_ptr<BaseWidget>> BaseWidget::askHover(const Pos<R_FLOA
             return nullopt;
     }
 };
+///////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::__on_added_to_parent() {}
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::__on_enter_tree() {
    auto me = inheritable_enable_shared_from_this<Component>::downcasted_shared_from_this<BaseWidget>().get();
    auto parent = getParent().lock();
-   if (me->isBackRender.value){
-      parent->_backRenderList.push_back(me);
-   } else {
-      parent->_frontRenderList.push_back(me);
-      if (BaseWidget::verbose)
-      Logger::debug() << "Child " << getName() << " added to parent " << parent->getName() << "'s front render list" << endl;
-   }
-
    isInLayout = parent->isLayout;
    //recalculate the size rect if need to
    //todo: fix size published twice (setrect and later _publishSize
@@ -746,13 +740,29 @@ void BaseWidget::__on_child_removed(Internal::TypeContainer<BaseWidget>::ChildPt
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::__on_child_added_immediate_basewidget(ChildPtr& child) {
+   if (child->isBackRender.value){
+      _backRenderList.push_back(child.get());
+      if (BaseWidget::verbose)
+         Logger::debug() << "Child " << child->getName() << " added to parent " << getName() << "'s backrender list" << endl;
+   } else {
+      _frontRenderList.push_back(child.get());
+      if (BaseWidget::verbose)
+         Logger::debug() << "Child " << child->getName() << " added to parent " << getName() << "'s frontrender list" << endl;
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 template <>
 void ReyEngine::Internal::TypeContainer<BaseWidget>::__on_child_added_immediate(std::shared_ptr<BaseWidget>& child){
-   if(_get_static_constexpr_typename() != "Window"){
+   if(_get_static_constexpr_typename() != Window::TYPE_NAME){
       //window will be typecontainer root, so we don't want to make it the parent since its not truly a positionable
       auto mypositionable = static_cast<Positionable2D<R_FLOAT>*>(&toContainedType());
       child->toContainedType().Positionable2D<R_FLOAT>::setParent(mypositionable);
    }
    child->__init();
+   if (_get_static_constexpr_typename() != Window::TYPE_NAME) {
+      toContainedType().__on_child_added_immediate_basewidget(child);
+   }
    _on_child_added(child);
 }

@@ -121,6 +121,7 @@ namespace ReyEngine::Internal{
             _childOrder.push_back(childTypePtr);
             _childMap[childTypePtr->getName()] = std::pair<int, T*>(newIndex, me.get());
             __on_child_added_immediate(childTypePtr);
+            childTypePtr->__on_added_to_parent();
             if (isInTree()){
                child->doEnterTree(*this);
             }
@@ -146,6 +147,7 @@ namespace ReyEngine::Internal{
                     std::stringstream ss;
                     ss << getType() << "::" << getName() << " does not have a child with name <" << getName() << ">";
                     Logger::error() << ss.str() << std::endl;
+                    return;
                 }
             }
 
@@ -340,7 +342,9 @@ namespace ReyEngine::Internal{
         virtual void __on_descendent_removed(ChildPtr&){} // Internal
         virtual void _on_descendent_about_to_be_removed(ChildPtr&){} // All parents up the chain will emit this signal. Emits along with _on_child_removed when this node is the parent.
         virtual void __on_descendent_about_to_be_removed(ChildPtr&){}
-       //called EVERY TIME a type enters the tree
+        //called every time a type is added to a parent
+        virtual void __on_added_to_parent(){}
+        //called EVERY TIME a type enters the tree, no matter from where
         virtual void _on_enter_tree(){}
         virtual void __on_enter_tree(){}
         virtual void _on_exit_tree(ChildPtr&, bool aboutToExit){};
