@@ -94,7 +94,8 @@ void Window::exec(){
       }
       if (widget->_isProcessed.value) widget->setProcess(true);
    };
-   applyProcess(getCanvas());
+   auto canvas = getCanvas();
+   applyProcess(canvas);
    ReyEngine::Size<int> size = getSize();
    ReyEngine::Pos<int> position;
    SetTargetFPS(targetFPS);
@@ -110,8 +111,8 @@ void Window::exec(){
             size = newSize;
             publish(event);
             //see if our root needs to resize
-            if (getCanvas()->getAnchoring() != BaseWidget::Anchor::NONE) {
-               getCanvas()->setSize(size);
+            if (canvas->getAnchoring() != BaseWidget::Anchor::NONE) {
+               canvas->setSize(size);
             }
          }
          //see if the window has moved
@@ -145,8 +146,8 @@ void Window::exec(){
                     _inputQueueMouse.pop();
                 }
                UnhandledMouseInput mouse;
-               mouse.localPos = (Pos<int>)getCanvas()->globalToLocal((*event).toEventType<InputEventMouse>().globalPos);
-               mouse.isInside = getCanvas()->isInside(mouse.localPos);
+               mouse.localPos = (Pos<int>)canvas->globalToLocal((*event).toEventType<InputEventMouse>().globalPos);
+               mouse.isInside = canvas->isInside(mouse.localPos);
                processUnhandledInput(*event, mouse);
             }
          }
@@ -225,7 +226,7 @@ void Window::exec(){
                   if (_dragNDrop.has_value() && _isDragging) {
                      //we have a widget being dragged, lets try to drop it
                      bool handled = false;
-                     auto widgetAt = getCanvas()->getWidgetAt(pos);
+                     auto widgetAt = canvas->getWidgetAt(pos);
                      if (widgetAt) {
                         handled = widgetAt.value()->_on_drag_drop(_dragNDrop.value());
                      }
@@ -240,8 +241,8 @@ void Window::exec(){
                event.isDown = false;
                event.globalPos = pos;
                UnhandledMouseInput mouse;
-               mouse.localPos = (Pos<int>)getCanvas()->globalToLocal(pos);
-               mouse.isInside = getCanvas()->isInside(mouse.localPos);
+               mouse.localPos = (Pos<int>)canvas->globalToLocal(pos);
+               mouse.isInside = canvas->isInside(mouse.localPos);
                processUnhandledInput(event, mouse);
             }
          }
@@ -253,7 +254,7 @@ void Window::exec(){
                auto pos = InputManager::getMousePos();
                //check for dragndrops
                if (btnDown == InputInterface::MouseButton::LEFT) {
-                  auto widgetAt = getCanvas()->getWidgetAt(pos);
+                  auto widgetAt = canvas->getWidgetAt(pos);
                   if (widgetAt) {
                      auto willDrag = widgetAt.value()->_on_drag_start(pos);
                      if (willDrag) {
@@ -270,8 +271,8 @@ void Window::exec(){
                event.isDown = true;
                event.globalPos = pos;
                UnhandledMouseInput mouse;
-               mouse.localPos = (Pos<int>)getCanvas()->globalToLocal(pos);
-               mouse.isInside = getCanvas()->isInside(mouse.localPos);
+               mouse.localPos = (Pos<int>)canvas->globalToLocal(pos);
+               mouse.isInside = canvas->isInside(mouse.localPos);
                processUnhandledInput(event, mouse);
             } else {
                break;
@@ -286,8 +287,8 @@ void Window::exec(){
                event.globalPos = pos;
                event.wheelMove = wheel;
                UnhandledMouseInput mouse;
-               mouse.localPos = (Pos<int>)getCanvas()->globalToLocal(event.globalPos);
-               mouse.isInside = getCanvas()->isInside(mouse.localPos);
+               mouse.localPos = (Pos<int>)canvas->globalToLocal(event.globalPos);
+               mouse.isInside = canvas->isInside(mouse.localPos);
                processUnhandledInput(event, mouse);
             }
          }
@@ -310,7 +311,7 @@ void Window::exec(){
                }
             } else {
                //find out which widget will accept the mouse motion as focus
-               auto hovered = getCanvas()->askHover(event.globalPos);
+               auto hovered = canvas->askHover(event.globalPos);
                if (hovered) {
                   setHover(hovered.value());
                } else {
@@ -318,9 +319,9 @@ void Window::exec(){
                }
 //            if (_isEditor) continue;
                UnhandledMouseInput mouse;
-               mouse.localPos = (Pos<int>)getCanvas()->globalToLocal(event.globalPos);
-               mouse.isInside = getCanvas()->isInside(mouse.localPos);
-               getCanvas()->_process_unhandled_input(event, mouse);
+               mouse.localPos = (Pos<int>)canvas->globalToLocal(event.globalPos);
+               mouse.isInside = canvas->isInside(mouse.localPos);
+               canvas->_process_unhandled_input(event, mouse);
             }
          }
 
@@ -337,7 +338,7 @@ void Window::exec(){
          //draw children on top of their parents
 
          ReyEngine::Pos<R_FLOAT> texOffset;
-         getCanvas()->renderChain(texOffset);
+         canvas->renderChain(texOffset);
 
          //draw the drag and drop preview (if any)
          if (_isDragging && _dragNDrop && _dragNDrop.value()->preview) {
@@ -346,7 +347,7 @@ void Window::exec(){
          }
          //render the canvas
          BeginDrawing();
-         DrawTextureRec(getCanvas()->_renderTarget.getRenderTexture(), {0,0,(float)getCanvas()->_renderTarget.getSize().x, -(float)getCanvas()->_renderTarget.getSize().y},{0, 0}, WHITE);
+         DrawTextureRec(canvas->_renderTarget.getRenderTexture(), {0,0,(float)canvas->_renderTarget.getSize().x, -(float)canvas->_renderTarget.getSize().y},{0, 0}, WHITE);
          EndDrawing();
       } // release scoped lock here
       _frameCounter++;

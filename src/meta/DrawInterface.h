@@ -835,13 +835,11 @@ namespace ReyEngine {
          Size<int> _size;
       };
 
-   struct CameraTransform2D{
-      CameraTransform2D();
+   struct CameraStack2D{
+      CameraStack2D();
       Camera2D camera;
-      void setRotation(float newRot);
-      void setOffset(Vec2<float> newOffset);
-      void setTarget(Vec2<float> newTarget);
-      void setZoom(float newZoom);
+      Pos<R_FLOAT> screenToWorld(const Pos<R_FLOAT>& pos) const {return GetScreenToWorld2D((Vector2)pos, camera);}
+      Pos<R_FLOAT> worldToScreen(const Pos<R_FLOAT>& pos) const {return GetWorldToScreen2D((Vector2)pos, camera);}
       void push() const;
       void pop();
    };

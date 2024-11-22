@@ -66,6 +66,6 @@ namespace ReyEngine {
       BoolProperty active;
    private:
       static constexpr char PROP_ACTIVE_NAME[] = "active";
-      CameraTransform2D _camera;
+      CameraStack2D _camera;
    };
 }

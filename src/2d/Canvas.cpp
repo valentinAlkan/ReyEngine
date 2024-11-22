@@ -38,6 +38,37 @@ void ReyEngine::Canvas::renderEnd() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+Handled Canvas::_process_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
+   //for mouse events, convert global coordinates to world space, then pass along the normal chain
+   std::optional<UnhandledMouseInput> worldSpaceMouse = mouse;
+   if (mouse){
+      worldSpaceMouse.value().localPos = screenToWorld(globalToLocal(mouse.value().localPos));
+      worldSpaceMouse->isInside = isInside(worldSpaceMouse.value().localPos);
+   }
+
+   switch (event.eventId){
+      case InputEventMouseMotion::getUniqueEventId():
+      case InputEventMouseButton::getUniqueEventId():
+      case InputEventMouseWheel::getUniqueEventId():{
+         //have to make sure we store enough memory to copy correctly - we won't know the size in advance
+         union InputEventUnion {
+            InputEventMouseMotion motion;
+            InputEventMouseButton button;
+            InputEventMouseWheel wheel;
+         };
+         char raw[sizeof(InputEventUnion)];
+         //just go ahead and copy off the end, we don't really care what's there
+         memcpy(raw, &event, sizeof(InputEventUnion));
+         const auto& _event = event.toEventType<InputEventMouse>();
+         auto& _worldSpaceEvent = reinterpret_cast<InputEventMouse&>(raw);
+         _worldSpaceEvent.globalPos = screenToWorld(_event.globalPos);
+         return BaseWidget::_process_unhandled_input(reinterpret_cast<InputEvent&>(raw), worldSpaceMouse);
+         }
+   }
+   return BaseWidget::_process_unhandled_input(event, mouse);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 Handled ReyEngine::Canvas::_unhandled_input(const InputEvent& inputEvent, const std::optional<UnhandledMouseInput>& mouseInput) {
    //offer up input to modal widget first
    if (_modal){
@@ -60,6 +91,11 @@ Handled ReyEngine::Canvas::_unhandled_input(const InputEvent& inputEvent, const 
        if (unhandledInputCallback(*this, inputEvent, mouseInput)) return true;
    }
    return false;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<std::shared_ptr<BaseWidget>> Canvas::askHover(const ReyEngine::Pos<float> &globalPos) {
+   return BaseWidget::askHover(screenToWorld(globalPos));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -122,7 +158,7 @@ void Canvas::popScissor() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void Canvas::setActiveCamera(CameraTransform2D& newCamera) {
+void Canvas::setActiveCamera(CameraStack2D& newCamera) {
    _activeCamera = std::ref(newCamera);
 }
 

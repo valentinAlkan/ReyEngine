@@ -62,6 +62,8 @@ namespace ReyEngine{
       : publisher(publisher)
       , eventId(eventId)
       {}
+      BaseEvent(const BaseEvent& other): BaseEvent(other.eventId, other.publisher)
+      {}
       const std::shared_ptr<EventPublisher>& publisher;
       const EventId eventId;
       std::shared_ptr<EventSubscriber> subscriber;
@@ -72,10 +74,7 @@ namespace ReyEngine{
    public:
       Event(EventId eventId, const std::shared_ptr<EventPublisher>& publisher)
       : BaseEvent(eventId, publisher)
-      {
-   //      std::cout << T::getEventName() << " has eventId " << T::getUniqueEventId() << std::endl;
-   //      std::cout << "Event has typeid " << getTy
-      }
+      {}
       template <typename Other>
       bool isEvent() const {
          static_assert(std::is_base_of_v<T, Other>);
@@ -85,6 +84,12 @@ namespace ReyEngine{
       const Other& toEventType() const {
          static_assert(std::is_base_of_v<T, Other>);
          return static_cast<const Other&>(*this);
+      }
+
+      template <typename Other>
+      Other& toEventType() {
+         static_assert(std::is_base_of_v<T, Other>);
+         return static_cast<Other&>(*this);
       }
    };
    /////////////////////////////////////////////////////////////////////////////////////////

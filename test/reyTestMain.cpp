@@ -1915,7 +1915,7 @@ int main(int argc, char** argv) {
                                        + "\nBckgnd Mouse Pos = " + camera->screenToWorld(InputManager::getMousePos()).toString()
                 );
                 backgroundLabel->setText("BG pos = " + backgroundLabel->getPos().toString()
-                                           + "\nLocal Mouse Pos = " + background->globalToLocal(InputManager::getMousePos()).toString()
+                                        + "\nLocal Mouse Pos = " + background->globalToLocal(camera->screenToWorld(InputManager::getMousePos())).toString()
                 );
 
             };
