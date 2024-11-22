@@ -101,7 +101,8 @@ PARENT_CLASSNAME(NAME, TYPE_NAME)                  \
    static_assert( ReyEngine::has_required_builds<T, BUILD_ARGS_TO_TUPLE(__VA_ARGS__)>::value, \
   "Type must publicly implement all static build functions specified to the build system. \n" \
   "If you are using the REYENGINE_OBJECT_BUILD_ONLY macro, then you can place REYENGINE_DEFAULT_BUILD macro somewhere in the public section of your class definition. \n"               \
-  "You may also implement this functionality yourself if you desire more control over the build process. ");}   \
+  "You may also implement this functionality yourself if you desire more control over the build process. If you are seeing this error despite \n" \
+  "having declared build functions that accept all the necessary properties, ensure the functions are publicly accessible.");}   \
 ///////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_DEFAULT_CTOR(CLASSNAME) \
 CLASSNAME(const std::string& name): CLASSNAME(name, _get_static_constexpr_typename()){}
@@ -135,6 +136,6 @@ protected:                                                     \
    REYENGINE_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME)                \
 
 #define REYENGINE_OBJECT_BUILD_ONLY(CLASSNAME, PARENT_CLASSNAME) \
-REYENGINE_OBJECT_CUSTOM_BUILD(CLASSNAME, PARENT_CLASSNAME, std::tuple<const std::string&>) \
+   REYENGINE_OBJECT_CUSTOM_BUILD(CLASSNAME, PARENT_CLASSNAME, std::tuple<const std::string&>) \
    REYENGINE_DEFAULT_CTOR(CLASSNAME)                       \
    REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME)

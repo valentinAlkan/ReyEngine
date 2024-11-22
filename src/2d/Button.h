@@ -38,10 +38,12 @@ namespace ReyEngine{
 
    /////////////////////////////////////////////////////////////////////////////////////////
    class PushButton : public BaseButton{
-      REYENGINE_OBJECT_BUILD_ONLY(PushButton, BaseButton)
+   REYENGINE_OBJECT_CUSTOM_BUILD(PushButton, BaseButton, std::tuple<const std::string&>, std::tuple<const std::string&, const std::string&>)
+      //must implement all necessary constructors yourself
+      PushButton(const std::string& name)
+      : REYENGINE_CTOR_INIT_LIST(name, BaseButton)
       , PROPERTY_DECLARE(text)
       {
-         text.value = getName();
          theme->background.colorPrimary.set(COLORS::gray);
          theme->background.colorSecondary.set(COLORS::lightGray);
          theme->background.colorTertiary.set(COLORS::blue);
@@ -52,9 +54,17 @@ namespace ReyEngine{
       void render() const override;
       StringProperty text;
    public:
-      REYENGINE_DEFAULT_BUILD(PushButton)
+      static std::shared_ptr<PushButton> build(const std::string& name){return PushButton::build(name, name);}
+      static std::shared_ptr<PushButton> build(const std::string& name, const std::string& text){
+         auto ptr = _reyengine_make_shared(name);
+         ptr->setText(text);
+         return ptr;
+      }
       std::string getText(){return text.value;}
-      void setText(const std::string& newText){text.value = newText;}
+      void setText(const std::string& newText){
+         text.value = newText;
+         setMinSize(measureText(newText, getTheme()->font));
+      }
    protected:
 
    };

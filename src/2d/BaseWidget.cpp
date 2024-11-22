@@ -448,7 +448,6 @@ void BaseWidget::setRect(const ReyEngine::Rect<R_FLOAT>& r){
       return;
       //todo: this is weird, find a way to make this flow better
    }
-
    // enum class Anchor{NONE, LEFT, RIGHT, TOP, BOTTOM, FILL, TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, CENTER};
    switch (_anchor.value) {
       case Anchor::NONE:
