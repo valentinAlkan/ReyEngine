@@ -264,6 +264,8 @@ namespace ReyEngine {
       template <typename R>
       inline Pos(const Vec2<R>& v) : Vec2<T>(v){}
       inline void operator=(Size<T>&) = delete;
+      template <typename R>
+      inline Pos& operator=(const Pos<R>& other){Vec2<T>::x = other.x; Vec2<T>::y=other.y; return *this;}
       inline Pos operator+(const Pos& rhs) const {auto val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
       inline Pos operator-(const Pos& rhs) const {auto val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
       inline Pos& operator+=(const Pos& rhs){this->x += rhs.x; this->y += rhs.y; return *this;}

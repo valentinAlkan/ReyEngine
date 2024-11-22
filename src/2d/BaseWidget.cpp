@@ -249,7 +249,7 @@ Handled BaseWidget::_process_unhandled_editor_input(const InputEvent& event, con
 /////////////////////////////////////////////////////////////////////////////////////////
 UnhandledMouseInput BaseWidget::toMouseInput(const Pos<R_FLOAT> &global) const {
     UnhandledMouseInput childmouse;
-    childmouse.localPos = Pos<int>(globalToLocal(global));
+    childmouse.localPos = globalToLocal(global);
     childmouse.isInside = isInside(childmouse.localPos);
     return childmouse;
 }
@@ -672,7 +672,6 @@ std::optional<std::shared_ptr<BaseWidget>> BaseWidget::askHover(const Pos<R_FLOA
     };
 
     auto pass = [&]() -> std::optional<std::shared_ptr<BaseWidget>>{
-
             for (auto it = getChildren().rbegin(); it != getChildren().rend(); ++it) {
                 const auto &child = *it;
                 auto handled = child->askHover(globalPos);

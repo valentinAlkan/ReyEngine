@@ -17,8 +17,11 @@ namespace ReyEngine {
       ///
       void setTarget(const Pos<double>& target){ setPos(target - getSize()/2);}
       Pos<int> getTarget() const {return Vec2<double>(_camera.camera.offset) - getPos();}
-//      void setOffset(const Pos<double>& offset){_camera.camera.offset = (Vector2)offset;}
-//      Pos<double> getOffset() const {return {_camera.camera.offset.x, _camera.camera.offset.y};}
+      /// Translates the coordinates on the camera's lens to a point on the world it is viewing
+      Pos<R_FLOAT> screenToWorld(const Pos<R_FLOAT>& pos){return GetScreenToWorld2D((Vector2)pos, _camera.camera);}
+      Pos<R_FLOAT> worldToscreen(const Pos<R_FLOAT>& pos){return GetWorldToScreen2D((Vector2)pos, _camera.camera);}
+      /// We don't set the offset directly, however sometimes it's handy to know what it is. This would be mostly used for debugging purposes.
+      Pos<double> getOffset() const {return {_camera.camera.offset.x, _camera.camera.offset.y};}
       Pos<double> nearToFar(const Pos<float>&){return {};}
       Pos<double> farToNear(const Pos<float>&){return {};}
       static std::shared_ptr<Camera2D> build(const std::string& name, const Size<int>& screenSize) {

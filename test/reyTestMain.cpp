@@ -1835,9 +1835,10 @@ int main(int argc, char** argv) {
         else if (args.getArg("--camera2dTest")) {
             //create nodes
             auto camera = ReyEngine::Camera2D::build("Camera2D", getScreenSize());
-            auto cameraUI = Label::build("cameraUI");
+            auto cameraUILabel = Label::build("cameraUI");
             auto background = Control::build("background");
             auto backgroundLabel = Label::build("backgroundLabel");
+            auto pushButton = PushButton::build("PushButton");
 
             //setup background
             background->getTheme()->background.value = Style::Fill::GRADIENT;
@@ -1845,16 +1846,19 @@ int main(int argc, char** argv) {
             background->getTheme()->background.colorSecondary.value = Colors::red;
             background->setRect({0, 0, 1000, 1000});
 
+            pushButton->setPos({300,300});
+
             // add nodes in correct order
             root->addChild(background);
             background->addChild(backgroundLabel);
             background->addChild(camera);
-            camera->addChild(cameraUI);
+            camera->addChild(cameraUILabel);
+            background->addChild(pushButton);
 
             //controls
             auto wkCamera = std::weak_ptr<ReyEngine::Camera2D>(camera);
-            auto cbBGUnhandledInput = [wkCamera, cameraUI](Control &, const InputEvent &event,
-                                                           const std::optional<UnhandledMouseInput> &mouse) -> Handled {
+            auto cbBGUnhandledInput = [wkCamera, cameraUILabel](Control &, const InputEvent &event,
+                                                                const std::optional<UnhandledMouseInput> &mouse) -> Handled {
                 if (event.isEvent<InputEventMouseWheel>()) {
                     auto wheelEvent = event.toEventType<InputEventMouseWheel>();
                     double wheel = wheelEvent.wheelMove.y;
@@ -1871,7 +1875,7 @@ int main(int argc, char** argv) {
                 return false;
             };
 
-            auto cbBGProcess = [wkCamera, cameraUI, backgroundLabel](Control &ctl, double dt) {
+            auto cbBGProcess = [wkCamera, cameraUILabel, backgroundLabel, background](Control &ctl, double dt) {
                 //make sure camera still exists
                 auto camera = wkCamera.lock();
                 if (!camera) return;
@@ -1903,11 +1907,16 @@ int main(int argc, char** argv) {
                 if (rotation) {
                     camera->setRotation(camera->getRotation() + rotation);
                 }
-                cameraUI->setText("Label: " + string(cameraUI->getPos())
-                  + "\nCamera Pos = " + string(camera->getPos())
-                  + "\nCamera Target = " + string(camera->getTarget())
+                cameraUILabel->setText("Label: " + string(cameraUILabel->getPos())
+                                       + "\nCamera Pos = " + string(camera->getPos())
+                                       + "\nCamera Target = " + string(camera->getTarget())
+                                       + "\nCamera Offset = " + string(camera->getOffset())
+                                       + "\nWindow Mouse Pos = " + InputManager::getMousePos().toString()
+                                       + "\nBckgnd Mouse Pos = " + camera->screenToWorld(InputManager::getMousePos()).toString()
                 );
-                backgroundLabel->setText(backgroundLabel->getPos());
+                backgroundLabel->setText("BG pos = " + backgroundLabel->getPos().toString()
+                                           + "\nLocal Mouse Pos = " + background->globalToLocal(InputManager::getMousePos()).toString()
+                );
 
             };
             background->setUnhandledInputCallback(cbBGUnhandledInput);
