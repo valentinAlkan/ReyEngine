@@ -5,6 +5,7 @@
 #include <iostream>
 #include <utility>
 #include "Canvas.h"
+#include "rlgl.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -12,11 +13,12 @@ using namespace FileSystem;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 BaseWidget::BaseWidget(const std::string& name, std::string  typeName)
-: Positionable2D<R_FLOAT>(_rect.value)
+: Positionable2D<R_FLOAT>(_size.value, _transform.value)
 , Component(name, typeName)
 , Internal::TypeContainer<BaseWidget>(name, typeName)
 , PROPERTY_DECLARE(isBackRender, false)
-, PROPERTY_DECLARE(_rect)
+, PROPERTY_DECLARE(_size)
+, PROPERTY_DECLARE(_transform)
 , PROPERTY_DECLARE(_anchor, Anchor::NONE)
 , PROPERTY_DECLARE(_inputMask, InputMask::NONE)
 , theme(make_shared<Style::Theme>())
@@ -82,19 +84,25 @@ ReyEngine::Size<R_FLOAT> BaseWidget::getChildBoundingBox() const {
 void BaseWidget::renderChain(Pos<R_FLOAT>& parentOffset) {
    if (!_visible) return;
    Pos<R_FLOAT> localOffset;
-   renderBegin(localOffset);
-   auto prevOffset = _renderOffset;
-   _renderOffset += (localOffset + parentOffset);
-   //backrender
-   for (const auto& child : _backRenderList){
-      child->renderChain(_renderOffset);
+   rlPushMatrix();
+   {
+      rlTranslatef(_transform.value.translation.x, _transform.value.translation.y, 0);
+      rlRotatef(_transform.value.rotation, 0, 0 , 1.0);
+      renderBegin(localOffset);
+      auto prevOffset = _renderOffset;
+      _renderOffset += (localOffset + parentOffset);
+      //backrender
+      for (const auto &child: _backRenderList) {
+         child->renderChain(_renderOffset);
+      }
+      render();
+      //front render
+      for (const auto &child: _frontRenderList) {
+         child->renderChain(_renderOffset);
+      }
+      _renderOffset = prevOffset; //reset to local offset when we are done
    }
-   render();
-   //front render
-   for (const auto& child : _frontRenderList){
-      child->renderChain(_renderOffset);
-   }
-   _renderOffset = prevOffset; //reset to local offset when we are done
+   rlPopMatrix();
    renderEnd();
    renderEditorFeatures();
 }
@@ -379,7 +387,6 @@ void BaseWidget::drawTextureRect(const ReyEngine::ReyTexture& rtex, const ReyEng
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::registerProperties() {
-   registerProperty(_rect);
    registerProperty(_isProcessed);
    registerProperty(_anchor);
 }
@@ -442,7 +449,7 @@ void BaseWidget::setRect(const ReyEngine::Rect<R_FLOAT>& r){
       auto windowSize = Application::instance().windowCount() ? Application::instance().getWindow(0).getSize() : Size<int>(0,0);
       newRect = {{0, 0}, windowSize};
    } else {
-      _rect.set(r);
+      applyRect(r);
       __on_rect_changed(r);
       _publishSize();
       return;
@@ -509,8 +516,8 @@ void BaseWidget::setRect(const ReyEngine::Rect<R_FLOAT>& r){
    //enforce min/max sizes
    newRect.setSize(newRect.size().max(minSize));
    newRect.setSize(newRect.size().min(maxSize));
-   const auto& oldRect = _rect;
-   _rect.set(newRect);
+   const auto& oldRect = getRect();
+   applyRect(newRect);
    __on_rect_changed(oldRect);
    _publishSize();
 }
@@ -518,34 +525,34 @@ void BaseWidget::setRect(const ReyEngine::Rect<R_FLOAT>& r){
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setMinSize(const ReyEngine::Size<R_FLOAT>& size) {
     minSize = size;
-    setRect(_rect.value);
+    setRect(getRect());
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setMaxSize(const ReyEngine::Size<R_FLOAT>& size) {
     maxSize = size;
-    setRect(_rect.value);
+    setRect(getRect());
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::setPos(int x, int y){
-   ReyEngine::Rect<R_FLOAT> r(x, y, _rect.value.width, _rect.value.height);
+void BaseWidget::setPos(R_FLOAT x, R_FLOAT y){
+   ReyEngine::Rect<R_FLOAT> r(x, y, getRect().width, getRect().height);
    setRect(r);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setPos(const Pos<R_FLOAT>& pos) {
-   ReyEngine::Rect<R_FLOAT> r(pos, _rect.value.size());
+   ReyEngine::Rect<R_FLOAT> r(pos, getRect().size());
    setRect(r);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::setX(int x) {
-   Rect<R_FLOAT> r({x, _rect.value.pos().y}, _rect.value.size());
+void BaseWidget::setX(R_FLOAT x) {
+   Rect<R_FLOAT> r({x, getRect().pos().y}, getRect().size());
    setRect(r);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::setY(int y){
-   Rect<R_FLOAT> r({_rect.value.pos().x, y}, _rect.value.size());
+void BaseWidget::setY(R_FLOAT y){
+   Rect<R_FLOAT> r({getRect().pos().x, y}, getRect().size());
    setRect(r);
 }
 
@@ -556,12 +563,12 @@ void BaseWidget::setPosRelative(const Pos<R_FLOAT>& pos, const Pos<R_FLOAT>& bas
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::move(const Pos<R_FLOAT> &amt) {
-   setPos(_rect.value.pos() + amt);
+   setPos(getRect().pos() + amt);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setSize(const ReyEngine::Size<R_FLOAT>& size){
-   ReyEngine::Rect<R_FLOAT> r(_rect.value.pos(), size);
+   ReyEngine::Rect<R_FLOAT> r(getRect().pos(), size);
    setRect(r);
 }
 
@@ -574,25 +581,25 @@ void BaseWidget::setAnchoring(Anchor newAnchor) {
    _anchor.value = newAnchor;
    auto parent = getParent().lock();
    if (parent){
-      setRect(_rect.value);
+      setRect(getRect());
    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::scale(const Vec2<float> &scale) {
-   _rect.value.width = (int)((float)_rect.value.width * scale.x);
-   _rect.value.height = (int)((float)_rect.value.height * scale.y);
+void BaseWidget::scale(const Vec2<R_FLOAT> &scale) {
+   Size<R_FLOAT> newSize = {getWidth() * scale.x, getHeight() * scale.y};
+   setSize(newSize);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::setWidth(int width){
-   ReyEngine::Rect<R_FLOAT> r(_rect.value.pos(), {width, _rect.value.height});
+void BaseWidget::setWidth(R_FLOAT width){
+   ReyEngine::Rect<R_FLOAT> r(getRect().pos(), {width, getRect().height});
    setRect(r);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::setHeight(int height){
-   ReyEngine::Rect<R_FLOAT> r(_rect.value.pos(), {_rect.value.width, height});
+void BaseWidget::setHeight(R_FLOAT height){
+   ReyEngine::Rect<R_FLOAT> r(getRect().pos(), {getRect().width, height});
    setRect(r);
 }
 
@@ -601,7 +608,7 @@ void BaseWidget::__on_rect_changed(const Rect<R_FLOAT>& oldRect){
    if (isLayout && oldRect.size() != getSize()) {
       for (auto &child: getChildren()) {
          if (child->isAnchored()) {
-            child->setRect(child->_rect);
+            child->setRect(child->getRect());
          }
       }
    }
@@ -712,11 +719,11 @@ void BaseWidget::__on_enter_tree() {
    //todo: fix size published twice (setrect and later _publishSize
    if (isAnchored() || isLayout){
       //anchoring and layout of children managed by this component
-      setRect(_rect.value);
+      setRect(getRect());
    }
    if (isInLayout){
       //placement of layout managed by parent
-      parent->setRect(parent->_rect.value);
+      parent->setRect(parent->getRect());
    }
    if (_has_inited) {
       _publishSize();

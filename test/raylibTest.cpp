@@ -85,6 +85,7 @@ int main(int argc, char** argv){
          foregroundCamera.rotation += rotation;
       }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //      2d camera
 //      BeginDrawing();
 //      ClearBackground(WHITE);
@@ -110,8 +111,43 @@ int main(int argc, char** argv){
 //      EndDrawing();
 
       // Draw somebackground
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       // Rendering3D to a (nested) texture
+//      BeginTextureMode(canvasTarget);              // Begin drawing to render texture
+//      {
+//         ClearBackground(WHITE);
+//         DrawText("This is the Camera UI", 0, windowSize.y - 20, 20, BLACK);
+//
+//         {
+//            BeginMode2D(foregroundCamera);
+//            DrawText("This is the 2D background", 400, 300, 20, BLACK);
+//
+//            {
+//               BeginMode3D(camera);
+//               DrawCube(cubePosition, 2.0f, 2.0f, 2.0f, RED);
+//               DrawSphere({1, 1, 1}, 0.5, BLUE);
+//               DrawCubeWires(cubePosition, 2.0f, 2.0f, 2.0f, MAROON);
+//               DrawGrid(10, 1.0f);
+//               DrawModel(suzanne, {5,0,0}, 1, GREEN);
+//               EndMode3D();
+//            }
+//
+//            EndMode2D();
+//         }
+//         EndTextureMode();
+//      }
+//      //window
+//      BeginDrawing();
+//      ClearBackground(WHITE);
+//      //DRaw the texture
+//      DrawTextureRec(canvasTarget.texture, {0, 0, (float)windowSize.x, -(float)windowSize.y}, {0, 0}, WHITE);
+//      EndDrawing();
+      //end window
+
+
+
+      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//      2d rotations
       BeginTextureMode(canvasTarget);              // Begin drawing to render texture
       {
          ClearBackground(WHITE);
@@ -119,18 +155,10 @@ int main(int argc, char** argv){
 
          {
             BeginMode2D(foregroundCamera);
+            rlPushMatrix();
+            rlRotatef(5, 0.0f, 0.0f, 1.0f);        // Rotate around Z axis
             DrawText("This is the 2D background", 400, 300, 20, BLACK);
-
-            {
-               BeginMode3D(camera);
-               DrawCube(cubePosition, 2.0f, 2.0f, 2.0f, RED);
-               DrawSphere({1, 1, 1}, 0.5, BLUE);
-               DrawCubeWires(cubePosition, 2.0f, 2.0f, 2.0f, MAROON);
-               DrawGrid(10, 1.0f);
-               DrawModel(suzanne, {5,0,0}, 1, GREEN);
-               EndMode3D();
-            }
-
+            rlPopMatrix();
             EndMode2D();
          }
          EndTextureMode();
@@ -141,7 +169,7 @@ int main(int argc, char** argv){
       //DRaw the texture
       DrawTextureRec(canvasTarget.texture, {0, 0, (float)windowSize.x, -(float)windowSize.y}, {0, 0}, WHITE);
       EndDrawing();
-      //end window
+
    }
 
    return 0;

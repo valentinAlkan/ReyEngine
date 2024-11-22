@@ -26,7 +26,7 @@ bool Sprite::setTexture(const ReyEngine::FileSystem::File& path) {
       texture = make_unique<ReyTexture>(path);
       if (!region){
          region.value.setSize(texture->size);
-         _rect = region;
+         applyRect(region);
       } else if (_fitNextTexture){
          region = Rect<double>({0, 0}, texture->size);
          _fitNextTexture = false;
@@ -52,7 +52,7 @@ void Sprite::setRegion(const Rect<double>& newRegion) {
 /////////////////////////////////////////////////////////////////////////////////////////
 void Sprite::fitTexture(){
    if (texture){
-      _rect.value.setSize(region.value.size());
+      applySize(region.value.size());
    } else {
       _fitNextTexture = true;
    }

@@ -34,10 +34,6 @@ namespace ReyEngine {
          }
 
          static std::shared_ptr<Collision::CollisionRect> make_rect(const std::string& instanceName, const Positionable2D<R_FLOAT>& positionable);
-         void* getPositionableTargetAddr() const {
-            return (void*)&positionable.target;
-         }
-
       protected:
          template<typename T>
          static void colliderDtor(T* ptr);

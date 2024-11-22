@@ -142,22 +142,22 @@ namespace ReyEngine{
       Anchor getAnchoring(){return _anchor.value;}
       bool isAnchored(){return _anchor.value != Anchor::NONE;}
       void setMaxSize(const ReyEngine::Size<R_FLOAT>& size);
-      void setMaxWidth(int maxWidth){maxSize.x = maxWidth;}
-      void setMaxHeight(int maxHeight){maxSize.y = maxHeight;}
+      void setMaxWidth(R_FLOAT maxWidth){maxSize.x = maxWidth;}
+      void setMaxHeight(R_FLOAT maxHeight){maxSize.y = maxHeight;}
       void setMinSize(const ReyEngine::Size<R_FLOAT>& size);
-      void setMinWidth(int minWidth){minSize.x = minWidth;}
-      void setMinHeight(int minHeight){minSize.y = minHeight;}
+      void setMinWidth(R_FLOAT minWidth){minSize.x = minWidth;}
+      void setMinHeight(R_FLOAT minHeight){minSize.y = minHeight;}
       void setRect(const ReyEngine::Rect<R_FLOAT>& r);
-      void setPos(int x, int y);
+      void setPos(R_FLOAT x, R_FLOAT y);
       void setPos(const ReyEngine::Pos<R_FLOAT>& pos);
       void setPosRelative(const ReyEngine::Pos<R_FLOAT>& pos, const ReyEngine::Pos<R_FLOAT>& basis); //sets a new position relative to its current position
-      void setX(int x);
-      void setY(int y);
+      void setX(R_FLOAT x);
+      void setY(R_FLOAT y);
       void move(const ReyEngine::Pos<R_FLOAT>& amt);
       void setSize(const ReyEngine::Size<R_FLOAT>& size);
       void scale(const ReyEngine::Vec2<float>& scale);
-      void setWidth(int width);
-      void setHeight(int height);
+      void setWidth(R_FLOAT width);
+      void setHeight(R_FLOAT height);
 
       ReyEngine::Pos<R_FLOAT> getLocalMousePos() const {return globalToLocal(InputManager::getMousePos());}
       ReyEngine::Pos<R_FLOAT> globalToLocal(const ReyEngine::Pos<R_FLOAT>& global) const;
@@ -165,7 +165,7 @@ namespace ReyEngine{
       ReyEngine::Rect<R_FLOAT> globalToLocal(const ReyEngine::Rect<R_FLOAT>& global) const;
       ReyEngine::Rect<R_FLOAT> localToGlobal(const ReyEngine::Rect<R_FLOAT>& local) const;
       void setGlobalPos(const Vec2<R_FLOAT>&);
-      bool isInside(const Vec2<R_FLOAT>& point) const {return _rect.value.toSizeRect().isInside(point);}
+      bool isInside(const Vec2<R_FLOAT>& point) const {return getRect().toSizeRect().isInside(point);}
       bool setName(const std::string& name, bool append_index=false);
       bool setIndex(unsigned int newIndex);
       std::string getTypeName() const {return _typeName;}
@@ -248,7 +248,8 @@ namespace ReyEngine{
    //   void renderTextureOffsetApply(ReyEngine::Pos<float>& textureOffset){}
    //   void renderTextureOffsetReset(ReyEngine::Pos<float>& textureOffset){}
       void registerProperties() override;
-      RectProperty<R_FLOAT> _rect;
+      SizeProperty<R_FLOAT> _size;
+      Transform2DProperty _transform;
       InputMaskProperty<R_FLOAT> _inputMask; //Only input inside this rectangle will be handled;
 
       //input

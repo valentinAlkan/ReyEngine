@@ -24,7 +24,7 @@ void TileMap::render() const {
 
    //draw grid on top of tiles
    if (_showGrid){
-      drawRectangleLines(_rect.value.toSizeRect(), 1.0, theme->background.colorSecondary);
+      drawRectangleLines(getRect().toSizeRect(), 1.0, theme->background.colorSecondary);
       switch (_gridType.value){
          case GridType::SQUARE:{
             auto xLineCount = getWidth() / _gridWidth;
@@ -87,7 +87,7 @@ TileMap::TileMapLayer& TileMap::getLayer(ReyEngine::TileMap::LayerIndex idx) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 TileMap::TileCoord TileMap::getCell(const Pos<R_FLOAT>& localPos) const {
-   auto vec2 = _rect.value.toSizeRect().getSubRectCoord({_gridWidth.value, _gridHeight.value}, localPos);
+   auto vec2= getRect().toSizeRect().getSubRectCoord({_gridWidth.value, _gridHeight.value}, localPos);
    return {(int)vec2.get().x, (int)vec2.get().y};
 }
 
@@ -106,7 +106,7 @@ Pos<R_FLOAT> TileMap::getCellPosCenter(const TileCoord& coord) const {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 int TileMap::getCellIndex(const TileCoord& coord) const {
-   return _rect.value.getSubRectIndex(getTileSize(), getCellPos(coord));
+   return getRect().getSubRectIndex(getTileSize(), getCellPos(coord));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

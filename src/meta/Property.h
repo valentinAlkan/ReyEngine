@@ -29,6 +29,7 @@ namespace PropertyTypes{
    PROP_TYPE(Vec3)
    PROP_TYPE(Vec4)
    PROP_TYPE(Rect)
+   PROP_TYPE(Size)
    PROP_TYPE(Circle)
    PROP_TYPE(Timer)
    PROP_TYPE(Enum)

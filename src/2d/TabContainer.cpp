@@ -13,7 +13,7 @@ void TabContainer::render() const {
    auto& lineThick = tabTheme->lineThick;
 
    //draw the background
-   drawRectangle(_rect, backgroundPrimary);
+   drawRectangle(getRect(), backgroundPrimary);
 
    //draw the border
    drawRectangleLines(_childBoundingRect, lineThick, backgroundSecondary);
@@ -55,7 +55,7 @@ void TabContainer::setCurrentTab(int index) {
 /////////////////////////////////////////////////////////////////////////////////////////
 void TabContainer::arrangeChildren() {
    //make each child the same size as the tab rect
-   _childBoundingRect = _rect.value.toSizeRect();
+   _childBoundingRect= getRect().toSizeRect();
    //make it shorter, allow room for tabs
    _childBoundingRect.y += tabTheme->tabHeight.value;
    _childBoundingRect.height -= tabTheme->tabHeight.value;

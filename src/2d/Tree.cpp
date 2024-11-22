@@ -106,7 +106,7 @@ Handled Tree::_unhandled_input(const InputEvent& event, const std::optional<Unha
        case InputEventMouseButton::getUniqueEventId():
           auto mouseEvent = event.toEventType<InputEventMouse>();
           auto localPos = globalToLocal(mouseEvent.globalPos);
-          if (!_rect.value.toSizeRect().isInside(localPos)){
+          if (!getRect().toSizeRect().isInside(localPos)){
              return false;
           }
 

@@ -325,6 +325,16 @@ namespace ReyEngine {
       inline operator std::string() const {return Vec2<T>::toString();}
    };
 
+   template <typename T>
+   struct SizeProperty : public Property<Size<T>>{
+      using Property<Size<T>>::operator=;
+      SizeProperty(const std::string& instanceName,  Size<T>&& defaultvalue={})
+      : Property<Size<T>>(instanceName, PropertyTypes::Size, std::move(defaultvalue))
+      {}
+      std::string toString() const override {return "";}
+      Size<T> fromString(const std::string& str) override {return {};}
+   };
+
    struct Circle;
    template <typename T>
    struct Rect {
@@ -651,7 +661,6 @@ namespace ReyEngine {
       R_FLOAT radius;
    };
 
-
    struct CircleProperty : public Property<Circle>{
       using Property<ReyEngine::Circle>::operator=;
       CircleProperty(const std::string& instanceName,  ReyEngine::Circle&& defaultvalue=Circle({},0))
@@ -683,6 +692,55 @@ namespace ReyEngine {
       double startAngle;
       double endAngle;
    };
+
+   //should maybe use eigen transforms. one day.
+   struct Transform2D {
+      R_FLOAT rotation; // In radians
+      Vec2<float> translation;
+
+      // Compose two transforms, returning the equivalent single transform
+      Transform2D operator*(const Transform2D& rhs) const {
+         // First rotate rhs translation by our rotation
+         float cos_a = std::cos(rotation);
+         float sin_a = std::sin(rotation);
+         Vec2<float> rotated_translation{
+               rhs.translation.x * cos_a - rhs.translation.y * sin_a,
+               rhs.translation.x * sin_a + rhs.translation.y * cos_a
+         };
+
+         return Transform2D{
+               rotation + rhs.rotation,
+               translation + rotated_translation
+         };
+      }
+      Transform2D& operator*=(const Transform2D& rhs) {*this = *this * rhs; return *this;}
+      Transform2D& operator=(const Transform2D& rhs) {
+         if (this != &rhs) {
+            rotation = rhs.rotation;
+            translation = rhs.translation;
+         }
+         return *this;
+      }
+
+      // Get final position of a point after transform
+      Vec2<float> transform(const Vec2<float>& point) const {
+         float cos_a = std::cos(rotation);
+         float sin_a = std::sin(rotation);
+         return Vec2<float>{
+               point.x * cos_a - point.y * sin_a + translation.x,
+               point.x * sin_a + point.y * cos_a + translation.y
+         };
+      }
+   };
+
+   struct Transform2DProperty : public Property<Transform2D>{
+      using Property<Transform2D>::operator=;
+      Transform2DProperty(const std::string& instanceName,  Transform2D&& defaultvalue={})
+      : Property<Transform2D>(instanceName, PropertyTypes::Color, std::move(defaultvalue))
+      {}
+      std::string toString() const override {return "{}";}
+      Transform2D fromString(const std::string& str) override {return Transform2D();}
+   }; 
 
    struct ColorRGBA {
       ColorRGBA(): r(0), g(0), b(0), a(255){}

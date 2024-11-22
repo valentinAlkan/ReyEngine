@@ -19,7 +19,7 @@ void ScrollArea::hideHSlider(bool hidden) {
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::renderBegin(ReyEngine::Pos<R_FLOAT>& textureOffset){
     textureOffset -= getScrollOffset();
-    startScissor(_rect.value.toSizeRect());
+    startScissor(getRect().toSizeRect());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -31,7 +31,7 @@ void ScrollArea::_on_rect_changed(){
     //reset to 0 so we don't get weird bugs
     scrollOffsetX.setValue(0);
     scrollOffsetY.setValue(0);
-    auto ourSize = _rect.value.size();
+    auto ourSize= getRect().size();
     static constexpr int sliderSize = 20;
     //get the box that contains all our children, except for the sliders
     _childBoundingBox = getScrollAreaChildBoundingBox();
@@ -39,16 +39,16 @@ void ScrollArea::_on_rect_changed(){
     scrollOffsetY.setMax(_childBoundingBox.y - getHeight());
     auto vsliderNewRect = ReyEngine::Rect<int>((ourSize.x - sliderSize), 0, sliderSize, ourSize.y);
     auto hsliderNewRect = ReyEngine::Rect<int>(0,(ourSize.y - sliderSize), (ourSize.x - sliderSize), sliderSize);
-    _viewport = _rect.value;
+    _viewport= getRect();
     if (vslider) {
         vslider->setRect(vsliderNewRect);
-        vslider->setVisible(!_hideVSlider && _childBoundingBox.y > _rect.value.height);
+        vslider->setVisible(!_hideVSlider && _childBoundingBox.y > getHeight());
         _viewport.width -= vsliderNewRect.width;
     }
     if (hslider) {
         //add in the width of the vslider if it is not visible
         hslider->setRect(hsliderNewRect + (vslider->getVisible() ? Size<int>() : Size<int>{sliderSize, 0}));
-        hslider->setVisible(!_hideHSlider && _childBoundingBox.x > _rect.value.width);
+        hslider->setVisible(!_hideHSlider && _childBoundingBox.x > getWidth());
         _viewport.height -= hsliderNewRect.height;
     }
 }

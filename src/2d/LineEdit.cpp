@@ -6,12 +6,12 @@ using namespace ReyEngine;
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void LineEdit::render() const {
-   drawRectangle(_rect.value.toSizeRect(), theme->background.colorTertiary);
+   drawRectangle(getRect().toSizeRect(), theme->background.colorTertiary);
 
    auto& font = theme->font;
    auto textheight = font.value.size;
    //available vertical height
-   auto availableHeight = _rect.value.height;
+   auto availableHeight= getRect().height;
    auto textPosV = (int)((availableHeight - textheight) / 2);
 
    static constexpr int textStartHPos = 1;
@@ -29,7 +29,7 @@ void LineEdit::render() const {
    //draw default text
    if (_text.value.empty() && !_defaultText.value.empty()) {
       if (_highlight_start || _highlight_end) {
-         auto highlightRect = _rect.value - Size<R_FLOAT>(2, 2) + Pos<R_FLOAT>(1, 1);
+         auto highlightRect= getRect() - Size<R_FLOAT>(2, 2) + Pos<R_FLOAT>(1, 1);
          drawRectangle(highlightRect, theme->highlight);
       }
       renderText(_defaultText);

@@ -33,7 +33,7 @@ namespace ReyEngine {
       , active(PROP_ACTIVE_NAME, true)
       {
          _camera.camera.offset = (Vector2)(screenSize/2);
-         _rect.value.setSize(screenSize);
+         applyRect({{0, 0},screenSize});
       }
       void renderBegin(ReyEngine::Pos<R_FLOAT>& textureOffset) override;
       void renderEnd() override;
@@ -51,8 +51,8 @@ namespace ReyEngine {
       };
       void _on_rect_changed() override {
          // Target is what the camera is zooming/rotating around
-         _camera.camera.target.x = _rect.value.x + _camera.camera.offset.x;
-         _camera.camera.target.y = _rect.value.y + _camera.camera.offset.y;
+         _camera.camera.target.x= getRect().x + _camera.camera.offset.x;
+         _camera.camera.target.y= getRect().y + _camera.camera.offset.y;
       }
       void _on_about_to_exit_tree() override{
          ////center of screen

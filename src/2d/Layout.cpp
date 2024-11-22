@@ -107,7 +107,7 @@ void Layout::_on_child_removed(std::shared_ptr<BaseWidget>& child){
 
 void Layout::renderEnd() {
    //debug
-//   drawRectangleLines({0, 0, _rect.value.width, _rect.value.height}, 1.0, COLORS::black);
+//   drawRectangleLines({0, 0, getWidth(), getHeight()}, 1.0, COLORS::black);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -124,15 +124,15 @@ void Layout::arrangeChildren() {
       }
       if (!boundingBox.x || !boundingBox.y) return; //invalid rect
       //create subrects to lay out the children
-      if (_rect.value.size().x && _rect.value.size().y) {
+      if (getWidth() && getHeight()) {
          for (int i = 0; i < getChildren().size(); i++) {
             auto &child = getChildren().at(i);
-            auto subrect = _rect.value.toSizeRect().getSubRect(boundingBox, i);
+            auto subrect= getRect().toSizeRect().getSubRect(boundingBox, i);
             child->setRect(subrect);
          }
       }
    } else {
-      auto& expandingDimension = dir == LayoutDir::HORIZONTAL ? _rect.value.width : _rect.value.height;
+      const auto expandingDimension = dir == LayoutDir::HORIZONTAL ? getWidth() : getHeight();
       // For front and back alignment, set all widgets to their minimum/maximum size, then allocate the leftover space to nothing.
       switch (alignment.value){
          case Alignment::FRONT:{
@@ -141,7 +141,7 @@ void Layout::arrangeChildren() {
                //just make the thing as small as possible - setpendingrect will spit back its minimum size
                LayoutHelper helper(dir, i, getChildren()[i]);
                helper.setReleventPosition(pos);
-               auto pendingRect = dir == LayoutDir::HORIZONTAL ? Rect<R_FLOAT>(pos,0,0,_rect.value.height) : Rect<R_FLOAT>(0,pos,_rect.value.width,0);
+               auto pendingRect = dir == LayoutDir::HORIZONTAL ? Rect<R_FLOAT>(pos,0,0,getHeight()) : Rect<R_FLOAT>(0,pos,getWidth(),0);
                auto minSizeOpt = helper.setPendingRect(pendingRect);
                //will either be constrained, or be 0, so we don't need to check other conditions
                if (minSizeOpt && minSizeOpt.value()){
@@ -154,7 +154,7 @@ void Layout::arrangeChildren() {
             for (int i=0; i<getChildren().size(); i++){
                //just make the thing as small as possible - setpendingrect will spit back its minimum size
                LayoutHelper helper(dir, i, getChildren()[i]);
-               auto pendingRect = dir == LayoutDir::HORIZONTAL ? Rect<R_FLOAT>(0,0,0,_rect.value.height) : Rect<R_FLOAT>(0,0,_rect.value.width,0);
+               auto pendingRect = dir == LayoutDir::HORIZONTAL ? Rect<R_FLOAT>(0,0,0,getHeight()) : Rect<R_FLOAT>(0,0,getWidth(),0);
                auto minSizeOpt = helper.setPendingRect(pendingRect);
                //will either be constrained, or be 0, so we don't need to check other conditions
                if (minSizeOpt){
@@ -203,9 +203,9 @@ void Layout::arrangeChildren() {
                   }
                   std::optional<int> isConstrained;
                   if (dir == LayoutDir::HORIZONTAL) {
-                     isConstrained = layout.setPendingRect({{0, 0},{allocatedSpace, _rect.value.height}});
+                     isConstrained = layout.setPendingRect({{0, 0},{allocatedSpace, getHeight()}});
                   } else {
-                     isConstrained = layout.setPendingRect({{0, 0}, {_rect.value.width, allocatedSpace}});
+                     isConstrained = layout.setPendingRect({{0, 0}, {getWidth(), allocatedSpace}});
                   }
                   if (isConstrained) {
                      removeLayoutFromConsideration(layout);
@@ -244,7 +244,7 @@ ReyEngine::Size<int> Layout::calculateIdealBoundingBox() {
 //      if (_rect.value.size().x && _rect.value.size().y) {
 //         for (int i = 0; i < getChildren().size(); i++) {
 //            auto &child = getChildren().at(i);
-//            auto subrect = _rect.value.toSizeRect().getSubRect(boundingBox, i);
+//            auto subrect= getRect().toSizeRect().getSubRect(boundingBox, i);
 //            child->setRect(subrect);
 //         }
 //      }

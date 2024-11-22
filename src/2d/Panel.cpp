@@ -17,14 +17,14 @@ void Panel::render() const {
       //dont need to draw these if we're minimized
 
       //draw the rounded bottom portion
-      drawRectangle(_rect.value.toSizeRect().chopTop(menuBarHeight), theme->background.colorPrimary);
-      drawRectangleLines(_rect.value.toSizeRect().chopTop(menuBarHeight), 1.0, theme->background.colorSecondary);
-//      drawRectangleRounded(_rect.value.toSizeRect().chopTop(menuBarHeight), roundness, 1, theme->background.colorPrimary);
-//      drawRectangleRoundedLines(_rect.value.toSizeRect().chopBottom(menuBarHeight), roundness, 1, 1.0, Colors::black);
+      drawRectangle(getRect().toSizeRect().chopTop(menuBarHeight), theme->background.colorPrimary);
+      drawRectangleLines(getRect().toSizeRect().chopTop(menuBarHeight), 1.0, theme->background.colorSecondary);
+//      drawRectangleRounded(getRect().toSizeRect().chopTop(menuBarHeight), roundness, 1, theme->background.colorPrimary);
+//      drawRectangleRoundedLines(getRect().toSizeRect().chopBottom(menuBarHeight), roundness, 1, 1.0, Colors::black);
 
       //draw the non-rounded band
-//      drawRectangle(_rect.value.toSizeRect().chopBottom(50) + Pos<int>(0, menuBarHeight), theme->background.colorPrimary);
-//      drawRectangleRoundedLines(_rect.value.toSizeRect().chopBottom(menuBarHeight), roundness, 1, 1.0, Colors::black);
+//      drawRectangle(getRect().toSizeRect().chopBottom(50) + Pos<int>(0, menuBarHeight), theme->background.colorPrimary);
+//      drawRectangleRoundedLines(getRect().toSizeRect().chopBottom(menuBarHeight), roundness, 1, 1.0, Colors::black);
 
       //debug:
       //draw the stretch regions
@@ -126,7 +126,7 @@ void Panel::_init() {
       _isMaximized = !_isMaximized;
       if (_isMaximized){
          //maximize
-         cacheRect = _rect;
+         cacheRect = getRect();
          auto parent = getParent().lock();
          if (parent) {
             setRect({{0, 0}, parent->getSize()});
@@ -152,10 +152,10 @@ void Panel::_init() {
 void Panel::_on_rect_changed(){
    //adjust stretch regions
    static constexpr int STRETCH_REGION_SIZE = 5;
-   stretchRegion.at(0) = _rect.value.toSizeRect().chopBottom(getHeight() - STRETCH_REGION_SIZE);
-   stretchRegion.at(1) = _rect.value.toSizeRect().chopLeft(getWidth() - STRETCH_REGION_SIZE);
-   stretchRegion.at(2) = _rect.value.toSizeRect().chopTop(getHeight() - STRETCH_REGION_SIZE);
-   stretchRegion.at(3) = _rect.value.toSizeRect().chopRight(getWidth() - STRETCH_REGION_SIZE);
+   stretchRegion.at(0)= getRect().toSizeRect().chopBottom(getHeight() - STRETCH_REGION_SIZE);
+   stretchRegion.at(1)= getRect().toSizeRect().chopLeft(getWidth() - STRETCH_REGION_SIZE);
+   stretchRegion.at(2)= getRect().toSizeRect().chopTop(getHeight() - STRETCH_REGION_SIZE);
+   stretchRegion.at(3)= getRect().toSizeRect().chopRight(getWidth() - STRETCH_REGION_SIZE);
    _scissorArea = getScissorArea();
 }
 
@@ -208,7 +208,7 @@ Handled Panel::_unhandled_input(const InputEvent& event, const std::optional<Unh
          if (mbEvent.button != InputInterface::MouseButton::LEFT) break;
          if (mbEvent.isDown && !mouse->isInside) break; //ingore downs that occur outside the rect
          dragStart = InputManager::getMousePos();
-         resizeStartRect = _rect.value;
+         resizeStartRect= getRect();
          offset = (Pos<R_FLOAT>)mousePos - getPos(); //record position
 
          if (!_isMinimized && _isResizable && _resizeDir == ResizeDir::NONE){

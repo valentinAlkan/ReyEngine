@@ -17,17 +17,17 @@ void Control::render() const {
    } else {
       switch(theme->background.value){
          case Style::Fill::SOLID:
-            drawRectangle(_rect.value.toSizeRect(), theme->background.colorPrimary.value);
+            drawRectangle(getRect().toSizeRect(), theme->background.colorPrimary.value);
             break;
          case Style::Fill::GRADIENT:
-            drawRectangleGradientV(_rect.value.toSizeRect(), theme->background.colorPrimary.value, theme->background.colorSecondary.value);
+            drawRectangleGradientV(getRect().toSizeRect(), theme->background.colorPrimary.value, theme->background.colorSecondary.value);
             break;
          default:
             break;
       }
       switch(theme->outline.value){
          case Style::Outline::LINE:
-            drawRectangleLines(_rect.value.toSizeRect(), theme->outline.thickness, theme->outline.color);
+            drawRectangleLines(getRect().toSizeRect(), theme->outline.thickness, theme->outline.color);
             break;
          default:
             break;

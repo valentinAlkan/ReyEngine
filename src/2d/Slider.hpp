@@ -104,7 +104,7 @@ namespace ReyEngine{
       }
       void render() const override {
          //draw slider
-         drawRectangle(_rect.value.toSizeRect(), _cursor_in_slider || _is_dragging? ReyEngine::Colors::green : ReyEngine::Colors::red);
+         drawRectangle(getRect().toSizeRect(), _cursor_in_slider || _is_dragging? ReyEngine::Colors::green : ReyEngine::Colors::red);
          //draw grabber
          drawRectangle(_grabber, _cursor_down && _cursor_in_grabber || _is_dragging ? ReyEngine::Colors::yellow : ReyEngine::Colors::blue);
       }
@@ -128,16 +128,16 @@ namespace ReyEngine{
       void _compute_appearance(){
          switch(sliderType.value){
             case SliderType::VERTICAL: {
-               _grabber.width = _rect.value.width;
-               _grabber.height = _rect.value.height / 10;
-               ReyEngine::Vec2<double> adjustedRange = {0, _rect.value.height - _grabber.height};
+               _grabber.width= getRect().width;
+               _grabber.height= getRect().height / 10;
+               ReyEngine::Vec2<double> adjustedRange = {0, getHeight() - _grabber.height};
                _grabber.y = adjustedRange.lerp(getSliderPct());
             }
             break;
             case SliderType::HORIZONTAL: {
-               _grabber.width = _rect.value.width/10;
-               _grabber.height = _rect.value.height;
-               ReyEngine::Vec2<double> adjustedRange = {0, _rect.value.width - _grabber.width};
+               _grabber.width= getRect().width/10;
+               _grabber.height= getRect().height;
+               ReyEngine::Vec2<double> adjustedRange = {0, getWidth() - _grabber.width};
                _grabber.x = adjustedRange.lerp(getSliderPct());
             }
             break;

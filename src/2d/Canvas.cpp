@@ -15,13 +15,13 @@ void ReyEngine::Canvas::_init() {
 void ReyEngine::Canvas::renderBegin(ReyEngine::Pos<R_FLOAT>& textureOffset) {
    Application::getWindow(0).pushRenderTarget(_renderTarget);
    _renderTarget.clear();
-   textureOffset -= _rect.value.pos();
+   textureOffset -= getPos();
    _activeCamera.get().push();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::Canvas::render() const{
-   drawRectangleLines(_rect.value.toSizeRect(), 2.0, Colors::red);
+   drawRectangleLines(getRect().toSizeRect(), 2.0, Colors::red);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -121,7 +121,7 @@ void Canvas::clearModal() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::_on_rect_changed() {
-   _renderTarget.setSize(_rect.value.size());
+   _renderTarget.setSize(getSize());
 //   _defaultCamera.setTarget(Vec2<float>(getSize().x/2, getSize().y/2));
 //   _defaultCamera.target = _defaultCamera.offset;
 //   auto gpos = getGlobalPos();

@@ -109,6 +109,7 @@ int main(int argc, char** argv) {
         args.defineArg(RuntimeArg("--camera2dTest", "camera 2d test", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--3dTest", "Basic3DTest", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--freeTest", "Resource freeing test", 0, RuntimeArg::ArgType::FLAG));
+        args.defineArg(RuntimeArg("--rotationTest", "Test of rotation 2dpositionables", 0, RuntimeArg::ArgType::FLAG));
         args.parseArgs(argc, argv);
 
         //create window (or don't idk)
@@ -2007,7 +2008,19 @@ int main(int argc, char** argv) {
            };
 
            btn->subscribe<PushButton::ButtonPressEvent>(btn, pbCallback);
+        } else if (args.getArg("--rotationTest")) {
+           auto label0 = Label::build("0");
+           label0->setPos(400,400);
+           auto label45 = Label::build("45");
+           label45->setPos(50,0);
+           label45->setRotation(45);
+           auto label45_2 = Label::build("90");
+           label45_2->setPos(50,0);
+           label45_2->setRotation(45);
 
+           root->addChild(label0);
+           label0->addChild(label45);
+           label45->addChild(label45_2);
         } else {
             cout << args.getDocString() << endl;
             return 0;

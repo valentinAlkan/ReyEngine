@@ -6,13 +6,13 @@ using namespace ReyEngine;
 /////////////////////////////////////////////////////////////////////////////////////////
 void ComboBox::render() const {
    //draw the background
-   drawRectangle(_rect.value.toSizeRect(), theme->background.colorPrimary);
+   drawRectangle(getRect().toSizeRect(), theme->background.colorPrimary);
 
    auto& font = theme->font;
 
    auto textheight = font.value.size;
    //available vertical height
-   auto availableHeight = _rect.value.height;
+   auto availableHeight= getRect().height;
    auto textPosV = (int)((availableHeight - textheight) / 2);
 
    //draw current item
@@ -46,13 +46,13 @@ Handled ComboBox::_unhandled_input(const InputEvent& event, const std::optional<
       setModal(true);
       auto textSize = theme->font.value.size;
       //build the menu rect
-      _selectionMenuRect = Rect<int>(0, _rect.value.height, _rect.value.width, textSize * fields.size());
+      _selectionMenuRect = Rect<int>(0, getHeight(), getWidth(), textSize * fields.size());
       //build the item rects
       _selectionMenuItemRects.clear();
       for (int i=0; i < fields.size(); i++) {
          fieldSelectionRectHeight = theme->font.value.size;
-         auto itemWidth = _rect.value.width;
-         auto itemY = _rect.value.height + (i * fieldSelectionRectHeight);
+         auto itemWidth= getRect().width;
+         auto itemY= getRect().height + (i * fieldSelectionRectHeight);
          _selectionMenuItemRects.emplace_back(0, itemY, itemWidth, fieldSelectionRectHeight);
       }
    };
@@ -136,7 +136,7 @@ void ComboBox::setItems(const std::vector<std::string>& v) {
 /////////////////////////////////////////////////////////////////////////////////////////
 void ComboBox::clear() {
    fields.clear();
-   _selectionMenuRect = Rect<int>(0, theme->font.value.size, _rect.value.width, 5);
+   _selectionMenuRect = Rect<int>(0, theme->font.value.size, getWidth(), 5);
    _selectionMenuItemRects.clear();
 }
 /////////////////////////////////////////////////////////////////////////////////////////

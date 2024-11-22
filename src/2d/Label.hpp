@@ -11,7 +11,7 @@ namespace ReyEngine{
       {
          auto expandOpt = needsExpand();
          if (expandOpt){
-            _rect.value = {_rect.value.pos(), expandOpt.value()};
+            applyRect({getPos(), expandOpt.value()});
             minSize = expandOpt.value();
          }
          theme->background = Style::Fill::NONE;
@@ -25,7 +25,7 @@ namespace ReyEngine{
 //         auto& foreground = theme->foreground;
          switch (background.value){
             case Style::Fill::SOLID:
-               drawRectangle(_rect.value.toSizeRect(), background.colorPrimary.value);
+               drawRectangle(getRect().toSizeRect(), background.colorPrimary.value);
             default:
                break;
          }
@@ -80,7 +80,7 @@ namespace ReyEngine{
          if (newSize.x > getSize().x || newSize.y > getSize().y){
             return {{0, 0}, newSize};
          }
-         return _rect.value.toSizeRect();
+         return getRect().toSizeRect();
       }
 
       inline std::optional<ReyEngine::Size<double>> needsExpand(){
