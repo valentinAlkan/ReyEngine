@@ -29,6 +29,7 @@ namespace ReyEngine{
    class Scene;
    class Draggable;
    class Canvas;
+   class Camera2D;
    class BaseWidget
    : public virtual Internal::Component
    , public Internal::TypeContainer<BaseWidget>
@@ -303,6 +304,7 @@ namespace ReyEngine{
 
       //input
       Handled _process_unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&); //pass input to children if they want it and then process it for ourselves if necessary
+      virtual Handled __process_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse){ return _process_unhandled_input(event, mouse);}
       Handled _process_unhandled_editor_input(const InputEvent&, const std::optional<UnhandledMouseInput>&); //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)
       UnhandledMouseInput toMouseInput(const ReyEngine::Pos<R_FLOAT>& global) const;
       InputFilter _inputFilter = InputFilter::INPUT_FILTER_PASS_AND_PROCESS;
@@ -313,6 +315,7 @@ namespace ReyEngine{
       friend class Canvas;
       friend class Application;
       friend class ScrollArea;
+      friend class ReyEngine::Camera2D;
       friend class Internal::TypeContainer<BaseWidget>;
    };
 }

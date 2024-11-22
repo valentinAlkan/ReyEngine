@@ -321,7 +321,7 @@ void Window::exec(){
                UnhandledMouseInput mouse;
                mouse.localPos = (Pos<int>)canvas->globalToLocal(event.globalPos);
                mouse.isInside = canvas->isInside(mouse.localPos);
-               canvas->_process_unhandled_input(event, mouse);
+               processUnhandledInput(event, mouse);
             }
          }
 
@@ -470,7 +470,7 @@ std::optional<std::weak_ptr<BaseWidget>> Window::getHovered() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void Window::processUnhandledInput(InputEvent& inputEvent, std::optional<UnhandledMouseInput> mouseInput){
    //first offer up input to modal widget (if any)
-   getCanvas()->_process_unhandled_input(inputEvent, mouseInput);
+   getCanvas()->__process_unhandled_input(inputEvent, mouseInput);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

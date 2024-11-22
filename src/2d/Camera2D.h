@@ -63,6 +63,8 @@ namespace ReyEngine {
          auto& canvas = canvasOpt.value();
          canvas->deleteActiveCamera();
       }
+      std::optional<std::shared_ptr<BaseWidget>> askHover(const ReyEngine::Pos<R_FLOAT>& globalPos) override;
+      Handled __process_unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) final;
       BoolProperty active;
    private:
       static constexpr char PROP_ACTIVE_NAME[] = "active";

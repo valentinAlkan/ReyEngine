@@ -13,7 +13,7 @@ void ReyEngine::Canvas::_init() {
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::Canvas::renderBegin(ReyEngine::Pos<R_FLOAT>& textureOffset) {
-   Application::instance().getWindow(0).pushRenderTarget(_renderTarget);
+   Application::getWindow(0).pushRenderTarget(_renderTarget);
    _renderTarget.clear();
    textureOffset -= _rect.value.pos();
    _activeCamera.get().push();
@@ -34,11 +34,11 @@ void ReyEngine::Canvas::renderEnd() {
        if (modalWidget->_visible) modalWidget->renderChain(toffset);
    }
   _activeCamera.get().pop();
-   Application::instance().getWindow(0).popRenderTarget();
+   Application::getWindow(0).popRenderTarget();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled Canvas::_process_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
+Handled Canvas::__process_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
    //for mouse events, convert global coordinates to world space, then pass along the normal chain
    std::optional<UnhandledMouseInput> worldSpaceMouse = mouse;
    if (mouse){
@@ -62,10 +62,10 @@ Handled Canvas::_process_unhandled_input(const InputEvent& event, const std::opt
          const auto& _event = event.toEventType<InputEventMouse>();
          auto& _worldSpaceEvent = reinterpret_cast<InputEventMouse&>(raw);
          _worldSpaceEvent.globalPos = screenToWorld(_event.globalPos);
-         return BaseWidget::_process_unhandled_input(reinterpret_cast<InputEvent&>(raw), worldSpaceMouse);
+         return _process_unhandled_input(reinterpret_cast<InputEvent&>(raw), worldSpaceMouse);
          }
    }
-   return BaseWidget::_process_unhandled_input(event, mouse);
+   return _process_unhandled_input(event, mouse);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -91,11 +91,6 @@ Handled ReyEngine::Canvas::_unhandled_input(const InputEvent& inputEvent, const 
        if (unhandledInputCallback(*this, inputEvent, mouseInput)) return true;
    }
    return false;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-std::optional<std::shared_ptr<BaseWidget>> Canvas::askHover(const ReyEngine::Pos<float> &globalPos) {
-   return BaseWidget::askHover(screenToWorld(globalPos));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

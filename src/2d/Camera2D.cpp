@@ -14,6 +14,41 @@ void ReyEngine::Camera2D::renderBegin(ReyEngine::Pos<R_FLOAT> &textureOffset) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::Camera2D::renderEnd() {
-   //return to trasnformation mode
+   //return to transformation mode
    _camera.push();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<std::shared_ptr<BaseWidget>> ReyEngine::Camera2D::askHover(const ReyEngine::Pos<float> &globalPos) {
+   return BaseWidget::askHover(InputManager::getMousePos() + getGlobalPos());
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Handled ReyEngine::Camera2D::__process_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse){
+   //for mouse events, convert global coordinates to world space, then pass along the normal chain
+   std::optional<UnhandledMouseInput> screenSpaceMouse = mouse;
+   if (mouse){
+      screenSpaceMouse.value().localPos = InputManager::getMousePos();
+      screenSpaceMouse->isInside = isInside(screenSpaceMouse.value().localPos);
+   }
+
+   switch (event.eventId){
+      case InputEventMouseMotion::getUniqueEventId():
+      case InputEventMouseButton::getUniqueEventId():
+      case InputEventMouseWheel::getUniqueEventId():{
+         //have to make sure we store enough memory to copy correctly - we won't know the size in advance
+         union InputEventUnion {
+            InputEventMouseMotion motion;
+            InputEventMouseButton button;
+            InputEventMouseWheel wheel;
+         };
+         char raw[sizeof(InputEventUnion)];
+         //just go ahead and copy off the end, we don't really care what's there
+         memcpy(raw, &event, sizeof(InputEventUnion));
+         auto& _screenSpaceEvent = reinterpret_cast<InputEventMouse&>(raw);
+         _screenSpaceEvent.globalPos = InputManager::getMousePos() + getGlobalPos();
+         return _process_unhandled_input(reinterpret_cast<InputEvent&>(raw), screenSpaceMouse);
+      }
+   }
+   return _process_unhandled_input(event, mouse);
 }

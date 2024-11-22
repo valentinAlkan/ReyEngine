@@ -118,7 +118,7 @@ Handled BaseWidget::_process_unhandled_input(const InputEvent& event, const std:
             }
          }
 
-         if (child->_process_unhandled_input(_event, _mouse)) {
+         if (child->__process_unhandled_input(_event, _mouse)) {
             return true;
          }
       }

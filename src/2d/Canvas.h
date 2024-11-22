@@ -28,11 +28,10 @@ namespace ReyEngine{
       void renderBegin(Pos<R_FLOAT>& textureOffset) override;
       void render() const override;
       void renderEnd() override;
-      std::optional<std::shared_ptr<BaseWidget>> askHover(const ReyEngine::Pos<R_FLOAT>& globalPos) override;
       void _on_rect_changed() override;
       void _process(float dt) override {}
       void registerProperties() override{}
-      Handled _process_unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&);
+      Handled __process_unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) final;
       Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
       RenderTarget _renderTarget;
       std::optional<std::weak_ptr<BaseWidget>> _modal; //if a widget wishes to collect all input, it can be modal. Only one allowed at a time.
