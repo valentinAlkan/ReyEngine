@@ -2009,18 +2009,20 @@ int main(int argc, char** argv) {
 
            btn->subscribe<PushButton::ButtonPressEvent>(btn, pbCallback);
         } else if (args.getArg("--rotationTest")) {
-           auto label0 = Label::build("A");
+           auto label0 = Label::build("label0");
+           label0->setRotation(22.5);
            label0->setPos(50, 0);
-           auto label45 = Label::build("B");
-           label45->setPos(50,0);
-           label45->setRotation(22.5);
-           auto label45_2 = Label::build("C");
-           label45_2->setPos(50,0);
-           label45_2->setRotation(22.5);
+           label0->setText("This label should be located at {50,0} and rotated slightly");
+           auto label1 = Label::build("label1");
+           label1->setPos(50, 0);
+           label1->setRotation(22.5);
+           auto label2 = Label::build("label2");
+           label2->setPos(50, 0);
+           label2->setRotation(22.5);
 
            root->addChild(label0);
-           label0->addChild(label45);
-           label45->addChild(label45_2);
+           label0->addChild(label1);
+           label1->addChild(label2);
         } else {
             cout << args.getDocString() << endl;
             return 0;

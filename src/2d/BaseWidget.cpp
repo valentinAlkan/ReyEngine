@@ -108,10 +108,11 @@ void BaseWidget::renderChain(Pos<R_FLOAT>& parentOffset) {
 
    auto rotation = Degrees(getRotation()).get();
    rlPushMatrix();
-//   rlTranslatef(pos.x, pos.y, 0);
+   rlTranslatef(pos.x, pos.y, 0);
    rlRotatef(rotation, 0,0,1);
+   rlTranslatef(-pos.x, -pos.y, 0);
    if (pos.x || pos.y || rotation) {
-      frameStack.push_back(rlGetMatrixTransform());
+      frameStack.push_back(MatrixRotate({0,0,1}, rotation));
       cout << printMat(frameStack.back()) << endl;
    }
    for (const auto &child: _backRenderList) {
@@ -122,18 +123,11 @@ void BaseWidget::renderChain(Pos<R_FLOAT>& parentOffset) {
       Logger::info() << "Rotating " << getName() << " by " << rotation << " degrees!" << std::endl;
    }
    if (!frameStack.empty()) {
-      Vector3 origin;
-      if (frameStack.size() == 1){
-         origin = getPointInFrame({0, 0, 0}, frameStack.back());
-      } else if (frameStack.size() > 1) {
-         origin = (Vector3Transform(getPointInFrame({0, 0, 0}, frameStack.back()), *(frameStack.end() - 2)));
-      }
-      cout << "Previous stack origin is " << Vec3<float>(origin) << endl;
-      drawLine({globalToLocal({origin.x, origin.y}), {0, 0}}, 2.0, Colors::red);
+      drawLine({{-pos.x, -pos.y}, {0, 0}}, 2.0, Colors::red);
    }
    render();
    rlDrawRenderBatchActive();
-//   rlDrawRenderBatchActive();
+
    //front render
    for (const auto &child: _frontRenderList) {
       child->renderChain(_renderOffset);
