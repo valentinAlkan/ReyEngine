@@ -6,6 +6,7 @@
 #include "SystemTime.h"
 #include "TypeContainer.h"
 #include "Physics.h"
+#include "rlgl.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -338,7 +339,9 @@ void Window::exec(){
          //draw children on top of their parents
 
          ReyEngine::Pos<R_FLOAT> texOffset;
+         rlPushMatrix();
          canvas->renderChain(texOffset);
+         rlPopMatrix();
 
          //draw the drag and drop preview (if any)
          if (_isDragging && _dragNDrop && _dragNDrop.value()->preview) {

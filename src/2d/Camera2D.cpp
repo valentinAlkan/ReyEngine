@@ -10,12 +10,14 @@ void ReyEngine::Camera2D::renderBegin(ReyEngine::Pos<R_FLOAT> &textureOffset) {
    textureOffset -= getPos();
    //pop the active camera - that is to say, return to a 'no camera' scenario
    _camera.pop();
+   rlPopMatrix();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::Camera2D::renderEnd() {
    //return to transformation mode
    _camera.push();
+   rlPushMatrix();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

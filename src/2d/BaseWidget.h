@@ -245,9 +245,10 @@ namespace ReyEngine{
       virtual void renderChain(ReyEngine::Pos<R_FLOAT>& textureOffset);
       ReyEngine::Vec2<float> getRenderOffset() const {return _renderOffset;}
       void setRenderOffset(ReyEngine::Pos<R_FLOAT> offset){_renderOffset = offset;}
-   //   void renderTextureOffsetApply(ReyEngine::Pos<float>& textureOffset){}
+      //   void renderTextureOffsetApply(ReyEngine::Pos<float>& textureOffset){}
    //   void renderTextureOffsetReset(ReyEngine::Pos<float>& textureOffset){}
       void registerProperties() override;
+      PosProperty<R_FLOAT> _pos;
       SizeProperty<R_FLOAT> _size;
       Transform2DProperty _transform;
       InputMaskProperty<R_FLOAT> _inputMask; //Only input inside this rectangle will be handled;

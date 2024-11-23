@@ -6,6 +6,7 @@
 #include <utility>
 #include "Canvas.h"
 #include "rlgl.h"
+#include "raymath.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -13,10 +14,11 @@ using namespace FileSystem;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 BaseWidget::BaseWidget(const std::string& name, std::string  typeName)
-: Positionable2D<R_FLOAT>(_size.value, _transform.value)
+: Positionable2D<R_FLOAT>(_pos.value, _size.value, _transform.value)
 , Component(name, typeName)
 , Internal::TypeContainer<BaseWidget>(name, typeName)
 , PROPERTY_DECLARE(isBackRender, false)
+, PROPERTY_DECLARE(_pos)
 , PROPERTY_DECLARE(_size)
 , PROPERTY_DECLARE(_transform)
 , PROPERTY_DECLARE(_anchor, Anchor::NONE)
@@ -82,27 +84,65 @@ ReyEngine::Size<R_FLOAT> BaseWidget::getChildBoundingBox() const {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::renderChain(Pos<R_FLOAT>& parentOffset) {
+   static std::vector<Matrix> frameStack;
+   auto printMat = [](const Matrix& m) {
+      std::stringstream ss;
+      ss << "Matrix:\n";
+      ss << m.m0 << ", " << m.m4 << ", " << m.m8 << ", " << m.m12 << "\n";
+      ss << m.m1 << ", " << m.m5 << ", " << m.m9 << ", " << m.m13 << "\n";
+      ss << m.m2 << ", " << m.m6 << ", " << m.m10 << ", " << m.m14 << "\n";
+      ss << m.m3 << ", " << m.m7 << ", " << m.m11 << ", " << m.m15;
+      return ss.str();
+   };
+
+   auto getPointInFrame = [](Vector3 point, const Matrix& frameMatrix) {
+      return Vector3Transform(point, MatrixInvert(frameMatrix));
+   };
+
    if (!_visible) return;
    Pos<R_FLOAT> localOffset;
+   renderBegin(localOffset);
+   auto prevOffset = _renderOffset;
+   _renderOffset += (localOffset + parentOffset);
+   //backrender
+
+   auto rotation = Degrees(getRotation()).get();
    rlPushMatrix();
-   {
-      rlTranslatef(_transform.value.translation.x, _transform.value.translation.y, 0);
-      rlRotatef(_transform.value.rotation, 0, 0 , 1.0);
-      renderBegin(localOffset);
-      auto prevOffset = _renderOffset;
-      _renderOffset += (localOffset + parentOffset);
-      //backrender
-      for (const auto &child: _backRenderList) {
-         child->renderChain(_renderOffset);
+//   rlTranslatef(pos.x, pos.y, 0);
+   rlRotatef(rotation, 0,0,1);
+   if (pos.x || pos.y || rotation) {
+      frameStack.push_back(rlGetMatrixTransform());
+      cout << printMat(frameStack.back()) << endl;
+   }
+   for (const auto &child: _backRenderList) {
+      child->renderChain(_renderOffset);
+   }
+
+   if (rotation) {
+      Logger::info() << "Rotating " << getName() << " by " << rotation << " degrees!" << std::endl;
+   }
+   if (!frameStack.empty()) {
+      Vector3 origin;
+      if (frameStack.size() == 1){
+         origin = getPointInFrame({0, 0, 0}, frameStack.back());
+      } else if (frameStack.size() > 1) {
+         origin = (Vector3Transform(getPointInFrame({0, 0, 0}, frameStack.back()), *(frameStack.end() - 2)));
       }
-      render();
-      //front render
-      for (const auto &child: _frontRenderList) {
-         child->renderChain(_renderOffset);
-      }
-      _renderOffset = prevOffset; //reset to local offset when we are done
+      cout << "Previous stack origin is " << Vec3<float>(origin) << endl;
+      drawLine({globalToLocal({origin.x, origin.y}), {0, 0}}, 2.0, Colors::red);
+   }
+   render();
+   rlDrawRenderBatchActive();
+//   rlDrawRenderBatchActive();
+   //front render
+   for (const auto &child: _frontRenderList) {
+      child->renderChain(_renderOffset);
+   }
+   if (!frameStack.empty()) {
+      frameStack.pop_back();
    }
    rlPopMatrix();
+   _renderOffset = prevOffset; //reset to local offset when we are done
    renderEnd();
    renderEditorFeatures();
 }

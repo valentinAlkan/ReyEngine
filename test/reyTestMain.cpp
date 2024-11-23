@@ -2009,14 +2009,14 @@ int main(int argc, char** argv) {
 
            btn->subscribe<PushButton::ButtonPressEvent>(btn, pbCallback);
         } else if (args.getArg("--rotationTest")) {
-           auto label0 = Label::build("0");
-           label0->setPos(400,400);
-           auto label45 = Label::build("45");
+           auto label0 = Label::build("A");
+           label0->setPos(50, 0);
+           auto label45 = Label::build("B");
            label45->setPos(50,0);
-           label45->setRotation(45);
-           auto label45_2 = Label::build("90");
+           label45->setRotation(22.5);
+           auto label45_2 = Label::build("C");
            label45_2->setPos(50,0);
-           label45_2->setRotation(45);
+           label45_2->setRotation(22.5);
 
            root->addChild(label0);
            label0->addChild(label45);

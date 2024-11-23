@@ -307,6 +307,16 @@ namespace ReyEngine {
    };
 
    template <typename T>
+   struct PosProperty : public Property<Pos<T>>{
+      using Property<Pos<T>>::operator=;
+      PosProperty(const std::string& instanceName,  Pos<T>&& defaultvalue={})
+      : Property<Pos<T>>(instanceName, PropertyTypes::Pos, std::move(defaultvalue))
+      {}
+      std::string toString() const override {return "";}
+      Pos<T> fromString(const std::string& str) override {return {};}
+   };
+
+   template <typename T>
    struct Size : public Vec2<T>{
       constexpr inline Size(): Vec2<T>(){}
       constexpr inline Size(const T& x, const T& y) : Vec2<T>(x, y){}
@@ -730,6 +740,21 @@ namespace ReyEngine {
                point.x * cos_a - point.y * sin_a + translation.x,
                point.x * sin_a + point.y * cos_a + translation.y
          };
+      }
+
+      Transform2D inverse() const {
+         // For rotation, we negate the angle
+         float inv_rotation = -rotation;
+
+         // For translation, we need to rotate it by -angle and negate it
+         float cos_a = std::cos(inv_rotation);
+         float sin_a = std::sin(inv_rotation);
+         Vec2<float> inv_translation{
+               -(translation.x * cos_a - translation.y * sin_a),
+               -(translation.x * sin_a + translation.y * cos_a)
+         };
+
+         return Transform2D{inv_rotation, inv_translation};
       }
    };
 

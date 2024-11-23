@@ -2,11 +2,42 @@
 //#include "DrawInterface.h"
 #include "InputManager.h"
 #include "rlgl.h"
+#include "raymath.h"
 #include <stack>
 //#include <Eigen/Dense>
 
 using namespace std;
 using namespace ReyEngine;
+
+
+
+// Let's also verify the Vector3Transform implementation:
+Vector3 myVector3Transform(Vector3 v, Matrix mat) {
+   Vector3 result = { 0 };
+
+   float x = v.x;
+   float y = v.y;
+   float z = v.z;
+
+   result.x = mat.m0*x + mat.m4*y + mat.m8*z + mat.m12;    // First row
+   result.y = mat.m1*x + mat.m5*y + mat.m9*z + mat.m13;    // Second row
+   result.z = mat.m2*x + mat.m6*y + mat.m10*z + mat.m14;   // Third row
+
+   return result;
+}
+
+
+// And let's verify our MatrixToFloatV implementation:
+auto MatrixToFloatV(const Matrix& m) {
+   float16 result;
+   // Matrix is stored in column-major order
+   result.v[0] = m.m0;   result.v[4] = m.m4;   result.v[8] = m.m8;    result.v[12] = m.m12;
+   result.v[1] = m.m1;   result.v[5] = m.m5;   result.v[9] = m.m9;    result.v[13] = m.m13;
+   result.v[2] = m.m2;   result.v[6] = m.m6;   result.v[10] = m.m10;  result.v[14] = m.m14;
+   result.v[3] = m.m3;   result.v[7] = m.m7;   result.v[11] = m.m11;  result.v[15] = m.m15;
+   return result;
+}
+
 
 int main(int argc, char** argv){
    Camera2D foregroundCamera = {0}; //BEGIN to draw background
@@ -29,61 +60,72 @@ int main(int argc, char** argv){
 
    auto suzanne = LoadModel("test/suzanne.obj");
 
+   // And let's modify how we print the matrix to verify its structure:
+   auto printMat = [](const Matrix& m) {
+      std::stringstream ss;
+      ss << "Matrix:\n";
+      ss << m.m0 << ", " << m.m4 << ", " << m.m8 << ", " << m.m12 << "\n";
+      ss << m.m1 << ", " << m.m5 << ", " << m.m9 << ", " << m.m13 << "\n";
+      ss << m.m2 << ", " << m.m6 << ", " << m.m10 << ", " << m.m14 << "\n";
+      ss << m.m3 << ", " << m.m7 << ", " << m.m11 << ", " << m.m15;
+      return ss.str();
+   };
+
    while(!WindowShouldClose()) {
       int moveSpeed = 5;
       Vec2<int> mvVec;
-      double rotation = 0;
-      if (InputManager::isKeyDown(InputInterface::KeyCode::KEY_W)) {
-         mvVec += {0, -1};
-      }
-      if (InputManager::isKeyDown(InputInterface::KeyCode::KEY_A)) {
-         mvVec += {-1, 0};
-      }
-      if (InputManager::isKeyDown(InputInterface::KeyCode::KEY_S)) {
-         mvVec += {0, 1};
-      }
-      if (InputManager::isKeyDown(InputInterface::KeyCode::KEY_D)) {
-         mvVec += {1, 0};
-      }
-      if (InputManager::isKeyDown(InputInterface::KeyCode::KEY_Q)) {
-         rotation += 1;
-      }
-      if (InputManager::isKeyDown(InputInterface::KeyCode::KEY_E)) {
-         rotation -= 1;
-      }
-      if (InputManager::isMouseButtonDown(InputInterface::MouseButton::LEFT)) {
-         //see what the mouse delta is
-         auto delta = InputManager::getMouseDelta();
-         // Define the camera's initial position
-//         Eigen::Vector3d cameraPosition(camera.position.x, camera.position.y, camera.position.z);
+//      double rotation = 0;
+//      if (InputManager::isKeyDown(InputInterface::KeyCode::KEY_W)) {
+//         mvVec += {0, -1};
+//      }
+//      if (InputManager::isKeyDown(InputInterface::KeyCode::KEY_A)) {
+//         mvVec += {-1, 0};
+//      }
+//      if (InputManager::isKeyDown(InputInterface::KeyCode::KEY_S)) {
+//         mvVec += {0, 1};
+//      }
+//      if (InputManager::isKeyDown(InputInterface::KeyCode::KEY_D)) {
+//         mvVec += {1, 0};
+//      }
+//      if (InputManager::isKeyDown(InputInterface::KeyCode::KEY_Q)) {
+//         rotation += 1;
+//      }
+//      if (InputManager::isKeyDown(InputInterface::KeyCode::KEY_E)) {
+//         rotation -= 1;
+//      }
+//      if (InputManager::isMouseButtonDown(InputInterface::MouseButton::LEFT)) {
+//         //see what the mouse delta is
+//         auto delta = InputManager::getMouseDelta();
+//         // Define the camera's initial position
+////         Eigen::Vector3d cameraPosition(camera.position.x, camera.position.y, camera.position.z);
+////
+////         // Define the angle of rotation in degrees and convert it to radians
+////         double angleDegrees = delta.x;
+////         double angleRadians = angleDegrees * M_PI / 180.0;
+////
+////         // Define the rotation matrix around the y-axis
+////         Eigen::Matrix3d rotationMatrix;
+////         rotationMatrix = Eigen::AngleAxisd(angleRadians, Eigen::Vector3d::UnitY());
+////
+////         // Apply the rotation to the camera position
+////         Eigen::Vector3d rotatedPosition = rotationMatrix * cameraPosition;
+////
+////         // Output the result
+////         std::cout << "Original position: " << cameraPosition.transpose() << std::endl;
+////         std::cout << "Rotated position: " << rotatedPosition.transpose() << std::endl;
+////         camera.position.x = rotatedPosition.x();
+////         camera.position.y = rotatedPosition.y();
+////         camera.position.z = rotatedPosition.z();
+//      }
 //
-//         // Define the angle of rotation in degrees and convert it to radians
-//         double angleDegrees = delta.x;
-//         double angleRadians = angleDegrees * M_PI / 180.0;
-//
-//         // Define the rotation matrix around the y-axis
-//         Eigen::Matrix3d rotationMatrix;
-//         rotationMatrix = Eigen::AngleAxisd(angleRadians, Eigen::Vector3d::UnitY());
-//
-//         // Apply the rotation to the camera position
-//         Eigen::Vector3d rotatedPosition = rotationMatrix * cameraPosition;
-//
-//         // Output the result
-//         std::cout << "Original position: " << cameraPosition.transpose() << std::endl;
-//         std::cout << "Rotated position: " << rotatedPosition.transpose() << std::endl;
-//         camera.position.x = rotatedPosition.x();
-//         camera.position.y = rotatedPosition.y();
-//         camera.position.z = rotatedPosition.z();
-      }
-
-      if (mvVec) {
-         auto newVec = mvVec * moveSpeed;
-         foregroundCamera.offset += newVec;
-         cout << Vec2<float>(foregroundCamera.offset) << endl;
-      }
-      if (rotation) {
-         foregroundCamera.rotation += rotation;
-      }
+//      if (mvVec) {
+//         auto newVec = mvVec * moveSpeed;
+//         foregroundCamera.offset += newVec;
+//         cout << Vec2<float>(foregroundCamera.offset) << endl;
+//      }
+//      if (rotation) {
+//         foregroundCamera.rotation += rotation;
+//      }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //      2d camera
@@ -144,7 +186,9 @@ int main(int argc, char** argv){
 //      EndDrawing();
       //end window
 
-
+      auto getPointInFrame = [](Vector3 point, const Matrix& frameMatrix) {
+         return Vector3Transform(point, MatrixInvert(frameMatrix));
+      };
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //      2d rotations
@@ -156,8 +200,31 @@ int main(int argc, char** argv){
          {
             BeginMode2D(foregroundCamera);
             rlPushMatrix();
-            rlRotatef(5, 0.0f, 0.0f, 1.0f);        // Rotate around Z axis
-            DrawText("This is the 2D background", 400, 300, 20, BLACK);
+               rlTranslatef(100,100,0);
+               rlRotatef(20, 0.0f, 0.0f, 1.0f);        // Rotate around Z axis
+               auto frame1 = rlGetMatrixTransform();
+               cout << printMat(frame1) << endl;
+               DrawText("RotatedOnce!", 0, 0, 20, BLACK);
+               auto origin = getPointInFrame({0,0,0}, frame1);
+               DrawLine(origin.x, origin.y, 50,0, Colors::red);
+
+                  rlTranslatef(100,100,0);
+                  rlRotatef(20, 0.0f, 0.0f, 1.0f);
+                  auto frame2 = rlGetMatrixTransform();
+                  cout << printMat(frame2) << endl;
+                  DrawText("RotatedTwice!", 0, 0, 20, BLACK);
+                  origin = Vector3Transform(getPointInFrame({0,0,0}, frame2), frame1);
+                  DrawLine(origin.x, origin.y, 50,0, Colors::red);
+
+                     rlTranslatef(100,100,0);
+                     rlRotatef(20, 0.0f, 0.0f, 1.0f);
+                     auto frame3 = rlGetMatrixTransform();
+                     cout << printMat(frame3) << endl;
+                     DrawText("RotatedNotOnceNotTwiceButThrice!", 0, 0, 20, BLACK);
+                     origin = (Vector3Transform(getPointInFrame({0,0,0}, frame3), frame2));
+                     DrawLine(origin.x, origin.y, 50,0, Colors::red);
+
+
             rlPopMatrix();
             EndMode2D();
          }
