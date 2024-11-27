@@ -25,18 +25,18 @@ namespace ReyEngine{
          }
          return sum;
       }
-      Transform2D getGlobalTransform() const {
-         //sum up all our ancestors' rotations and add our own to it
-         auto sum = transform;
-         if (parent){ //todo: Race conditions?
-            sum *= parent->transform;
-         }
-         return sum;
-      }
+//      Transform2D getGlobalTransform() const {
+//         //sum up all our ancestors' rotations and add our own to it
+//         auto sum = transform;
+//         if (parent){ //todo: Race conditions?
+//            sum *= parent->transform;
+//         }
+//         return sum;
+//      }
       ReyEngine::Rect<T> getGlobalRect() const {auto globalPos = getGlobalPos(); return {globalPos.x, globalPos.y, getSize().x, getSize().y};}
       ReyEngine::Rect<T> getRect() const {return {pos, size};}
       ReyEngine::Size<T> getSize() const {return size;}
-      Transform2D getTransform(){return transform;}
+      Transform2D& getTransform(){return transform;}
       Degrees getRotation(){return Radians(transform.rotation);}
       void setRotation(Degrees newRotation){transform.rotation = Radians(newRotation).get();}
       T getWidth() const {return size.x;}

@@ -234,7 +234,10 @@ int main(int argc, char** argv){
       BeginDrawing();
       ClearBackground(WHITE);
       //DRaw the texture
+      rlPushMatrix();
+      rlScalef(2,2,0);
       DrawTextureRec(canvasTarget.texture, {0, 0, (float)windowSize.x, -(float)windowSize.y}, {0, 0}, WHITE);
+      rlPopMatrix();
       EndDrawing();
 
    }

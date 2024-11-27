@@ -1913,10 +1913,10 @@ int main(int argc, char** argv) {
                                        + "\nCamera Target = " + string(camera->getTarget())
                                        + "\nCamera Offset = " + string(camera->getOffset())
                                        + "\nWindow Mouse Pos = " + InputManager::getMousePos().toString()
-                                       + "\nBckgnd Mouse Pos = " + camera->screenToWorld(InputManager::getMousePos()).toString()
+                                       + "\nBckgnd Mouse Pos = " + camera->nearToFar(InputManager::getMousePos()).toString()
                 );
                 backgroundLabel->setText("BG pos = " + backgroundLabel->getPos().toString()
-                                        + "\nLocal Mouse Pos = " + background->globalToLocal(camera->screenToWorld(InputManager::getMousePos())).toString()
+                                        + "\nLocal Mouse Pos = " + background->globalToLocal(camera->farToNear(InputManager::getMousePos())).toString()
                 );
 
             };

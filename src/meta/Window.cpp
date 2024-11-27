@@ -336,8 +336,7 @@ void Window::exec(){
          //process widget logic
          _processList.processAll(dt);
 
-         //draw children on top of their parents
-
+         //draw the canvas
          ReyEngine::Pos<R_FLOAT> texOffset;
          rlPushMatrix();
          canvas->renderChain(texOffset);

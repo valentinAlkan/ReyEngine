@@ -85,17 +85,7 @@ ReyEngine::Size<R_FLOAT> BaseWidget::getChildBoundingBox() const {
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::renderChain(Pos<R_FLOAT>& parentOffset) {
    static std::vector<Matrix> frameStack;
-   auto printMat = [](const Matrix& m) {
-      std::stringstream ss;
-      ss << "Matrix:\n";
-      ss << m.m0 << ", " << m.m4 << ", " << m.m8 << ", " << m.m12 << "\n";
-      ss << m.m1 << ", " << m.m5 << ", " << m.m9 << ", " << m.m13 << "\n";
-      ss << m.m2 << ", " << m.m6 << ", " << m.m10 << ", " << m.m14 << "\n";
-      ss << m.m3 << ", " << m.m7 << ", " << m.m11 << ", " << m.m15;
-      return ss.str();
-   };
-
-   auto getPointInFrame = [](Vector3 point, const Matrix& frameMatrix) {
+    auto getPointInFrame = [](Vector3 point, const Matrix& frameMatrix) {
       return Vector3Transform(point, MatrixInvert(frameMatrix));
    };
 
@@ -111,17 +101,14 @@ void BaseWidget::renderChain(Pos<R_FLOAT>& parentOffset) {
    rlTranslatef(pos.x, pos.y, 0);
    rlRotatef(rotation, 0,0,1);
    rlTranslatef(-pos.x, -pos.y, 0);
+   rlTranslatef(-transform.translation.x, -transform.translation.y, 0);
    if (pos.x || pos.y || rotation) {
       frameStack.push_back(MatrixRotate({0,0,1}, rotation));
-      cout << printMat(frameStack.back()) << endl;
    }
    for (const auto &child: _backRenderList) {
       child->renderChain(_renderOffset);
    }
 
-   if (rotation) {
-      Logger::info() << "Rotating " << getName() << " by " << rotation << " degrees!" << std::endl;
-   }
    if (!frameStack.empty()) {
       drawLine({{-pos.x, -pos.y}, {0, 0}}, 2.0, Colors::red);
    }

@@ -1,5 +1,6 @@
 #pragma once
 #include "raylib.h"
+#include "raymath.h"
 #include <stdexcept>
 #include <cfloat>
 #include <string>
@@ -91,7 +92,7 @@ namespace ReyEngine {
       inline Vec2& operator=(const Vec2& rhs){x = rhs.x; y=rhs.y; return *this;}
       inline bool operator==(const Vec2& rhs) const {return x==rhs.x && y==rhs.y;}
       inline bool operator!=(const Vec2& rhs) const {return x!=rhs.x || y!=rhs.y;}
-      inline Vec2& operator-(){x = -x; y =-y; return *this;}
+      inline Vec2 operator-() const {return {-x, -y};}
       inline void operator=(Size<T>&) = delete;
       inline void operator=(Pos<T>&) = delete;
       inline explicit operator Vector2() const {return {(float)x,(float)y};}
@@ -268,6 +269,7 @@ namespace ReyEngine {
       inline Pos& operator=(const Pos<R>& other){Vec2<T>::x = other.x; Vec2<T>::y=other.y; return *this;}
       inline Pos operator+(const Pos& rhs) const {auto val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
       inline Pos operator-(const Pos& rhs) const {auto val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
+      inline Pos operator-() const {return {-Vec2<T>::x, -Vec2<T>::y};}
       inline Pos& operator+=(const Pos& rhs){this->x += rhs.x; this->y += rhs.y; return *this;}
       inline Pos& operator-=(const Pos& rhs){this->x -= rhs.x; this->y -= rhs.y; return *this;}
       inline bool operator!=(const Pos& rhs){return this->x != rhs.x || this->y != rhs.y;}
@@ -705,32 +707,9 @@ namespace ReyEngine {
 
    //should maybe use eigen transforms. one day.
    struct Transform2D {
+      Vec2<R_FLOAT> translation;
       R_FLOAT rotation; // In radians
-      Vec2<float> translation;
-
-      // Compose two transforms, returning the equivalent single transform
-      Transform2D operator*(const Transform2D& rhs) const {
-         // First rotate rhs translation by our rotation
-         float cos_a = std::cos(rotation);
-         float sin_a = std::sin(rotation);
-         Vec2<float> rotated_translation{
-               rhs.translation.x * cos_a - rhs.translation.y * sin_a,
-               rhs.translation.x * sin_a + rhs.translation.y * cos_a
-         };
-
-         return Transform2D{
-               rotation + rhs.rotation,
-               translation + rotated_translation
-         };
-      }
-      Transform2D& operator*=(const Transform2D& rhs) {*this = *this * rhs; return *this;}
-      Transform2D& operator=(const Transform2D& rhs) {
-         if (this != &rhs) {
-            rotation = rhs.rotation;
-            translation = rhs.translation;
-         }
-         return *this;
-      }
+      Vec2<R_FLOAT> scale;
 
       // Get final position of a point after transform
       Vec2<float> transform(const Vec2<float>& point) const {
@@ -742,19 +721,61 @@ namespace ReyEngine {
          };
       }
 
-      Transform2D inverse() const {
-         // For rotation, we negate the angle
-         float inv_rotation = -rotation;
+      // Compose two transforms, returning the equivalent single transform
+//      Transform2D operator*(const Transform2D& rhs) const {
+//         // First rotate rhs translation by our rotation
+//         float cos_a = std::cos(rotation);
+//         float sin_a = std::sin(rotation);
+//         Vec2<float> rotated_translation{
+//               rhs.translation.x * cos_a - rhs.translation.y * sin_a,
+//               rhs.translation.x * sin_a + rhs.translation.y * cos_a
+//         };
+//
+//         return Transform2D{
+//               rotation + rhs.rotation,
+//               translation + rotated_translation
+//         };
+//      }
+//      Transform2D& operator*=(const Transform2D& rhs) {*this = *this * rhs; return *this;}
+//      Transform2D& operator=(const Transform2D& rhs) {
+//         if (this != &rhs) {
+//            rotation = rhs.rotation;
+//            translation = rhs.translation;
+//         }
+//         return *this;
+//      }
+//      Transform2D inverse() const {
+//         // For rotation, we negate the angle
+//         float inv_rotation = -rotation;
+//
+//         // For translation, we need to rotate it by -angle and negate it
+//         float cos_a = std::cos(inv_rotation);
+//         float sin_a = std::sin(inv_rotation);
+//         Vec2<float> inv_translation{
+//               -(translation.x * cos_a - translation.y * sin_a),
+//               -(translation.x * sin_a + translation.y * cos_a)
+//         };
+//
+//         return Transform2D{inv_rotation, inv_translation, {0}};
+//      }
 
-         // For translation, we need to rotate it by -angle and negate it
-         float cos_a = std::cos(inv_rotation);
-         float sin_a = std::sin(inv_rotation);
-         Vec2<float> inv_translation{
-               -(translation.x * cos_a - translation.y * sin_a),
-               -(translation.x * sin_a + translation.y * cos_a)
-         };
+      Matrix getMatrix() const {
+         Matrix m = MatrixIdentity();
+         m = MatrixTranslate(translation.x, translation.y, 0);
+         m = MatrixRotate({0, 0, 1}, rotation);
+         m = MatrixScale(scale.x, scale.y, 0);
+         return m;
+      };
 
-         return Transform2D{inv_rotation, inv_translation};
+      //applies the transform to a point
+      Pos<R_FLOAT> transformPoint(const Pos<R_FLOAT>& point) const {
+         auto res = Vector3Transform({point.x, point.y, 0}, getMatrix());
+         return {res.x, res.y};
+      }
+      //de-applies the transform to a point
+      Pos<R_FLOAT> invertPoint(const Pos<R_FLOAT>& point) const {
+         auto res = Vector3Transform({point.x, point.y, 0}, MatrixInvert(getMatrix()));
+         return {res.x, res.y};
       }
    };
 
@@ -918,14 +939,14 @@ namespace ReyEngine {
          Size<int> _size;
       };
 
-   struct CameraStack2D{
-      CameraStack2D();
-      Camera2D camera;
-      Pos<R_FLOAT> screenToWorld(const Pos<R_FLOAT>& pos) const {return GetScreenToWorld2D((Vector2)pos, camera);}
-      Pos<R_FLOAT> worldToScreen(const Pos<R_FLOAT>& pos) const {return GetWorldToScreen2D((Vector2)pos, camera);}
-      void push() const;
-      void pop();
-   };
+//   struct CameraStack2D{
+//      CameraStack2D();
+//      Camera2D camera;
+//      Pos<R_FLOAT> screenToWorld(const Pos<R_FLOAT>& pos) const {return GetScreenToWorld2D((Vector2)pos, camera);}
+//      Pos<R_FLOAT> worldToScreen(const Pos<R_FLOAT>& pos) const {return GetWorldToScreen2D((Vector2)pos, camera);}
+//      void push() const;
+//      void pop();
+//   };
 }
 
 namespace InputInterface{

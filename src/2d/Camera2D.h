@@ -10,20 +10,17 @@ namespace ReyEngine {
    class Camera2D : public BaseWidget {
       REYENGINE_OBJECT_CUSTOM_BUILD(Camera2D, BaseWidget, std::tuple<const std::string&, const Size<int>&>)
    public:
-      void setRotation(double newRot){_camera.camera.rotation = newRot;}
-      double getRotation(){return _camera.camera.rotation;}
-      void setZoom(double newZoom){_camera.camera.zoom = newZoom;}
-      double getZoom(){return _camera.camera.zoom;}
-      ///
+      void setZoom(double newZoom){transform.scale = {newZoom, newZoom};}
+      double getZoom() const {return transform.scale.x;}
       void setTarget(const Pos<double>& target){ setPos(target - getSize()/2);}
-      Pos<int> getTarget() const {return Vec2<double>(_camera.camera.offset) - getPos();}
+      Pos<int> getTarget() const{return pos + getSize()/2;}
       /// Translates the coordinates on the camera's lens to a point on the world it is viewing
-      Pos<R_FLOAT> screenToWorld(const Pos<R_FLOAT>& pos){return GetScreenToWorld2D((Vector2)pos, _camera.camera);}
-      Pos<R_FLOAT> worldToscreen(const Pos<R_FLOAT>& pos){return GetWorldToScreen2D((Vector2)pos, _camera.camera);}
+      Pos<R_FLOAT> screenToWorld(const Pos<R_FLOAT>& pos) const {return transform.transformPoint(pos);}
+      Pos<R_FLOAT> worldToscreen(const Pos<R_FLOAT>& pos) const {return transform.invertPoint(pos);}
       /// We don't set the offset directly, however sometimes it's handy to know what it is. This would be mostly used for debugging purposes.
-      Pos<double> getOffset() const {return {_camera.camera.offset.x, _camera.camera.offset.y};}
-      Pos<double> nearToFar(const Pos<float>&){return {};}
-      Pos<double> farToNear(const Pos<float>&){return {};}
+      Pos<double> getOffset() const {return transform.translation;}
+//      Pos<double> nearToFar(const Pos<float>&){return {};}
+//      Pos<double> farToNear(const Pos<float>&){return {};}
       static std::shared_ptr<Camera2D> build(const std::string& name, const Size<int>& screenSize) {
          return Camera2D::_reyengine_make_shared(name, screenSize);
       }
@@ -32,7 +29,7 @@ namespace ReyEngine {
       : REYENGINE_CTOR_INIT_LIST(instanceName, BaseWidget)
       , active(PROP_ACTIVE_NAME, true)
       {
-         _camera.camera.offset = (Vector2)(screenSize/2);
+//         _camera.camera.offset = (Vector2)(screenSize/2);
          applyRect({{0, 0},screenSize});
       }
       void renderBegin(ReyEngine::Pos<R_FLOAT>& textureOffset) override;
@@ -45,14 +42,16 @@ namespace ReyEngine {
             throw std::runtime_error("Camera " + getName() + " does not have a canvas to render to! That's not good! I'm curious how you managed to do that.");
          }
          auto& canvas = canvasOpt.value();
-         _camera.camera.zoom = 1.0f;
-         canvas->setActiveCamera(_camera);
+         auto me = BaseWidget::toType<ReyEngine::Camera2D>();
+         canvas->setActiveCamera(me);
          _on_rect_changed();
       };
       void _on_rect_changed() override {
          // Target is what the camera is zooming/rotating around
-         _camera.camera.target.x= getRect().x + _camera.camera.offset.x;
-         _camera.camera.target.y= getRect().y + _camera.camera.offset.y;
+//         _camera.camera.target.x= getRect().x + _camera.camera.offset.x;
+//         _camera.camera.target.y= getRect().y + _camera.camera.offset.y;
+         //update the transform
+         transform.translation = -getRect().pos();
       }
       void _on_about_to_exit_tree() override{
          ////center of screen
@@ -61,13 +60,13 @@ namespace ReyEngine {
             throw std::runtime_error("Camera " + getName() + " does not have a canvas to render to! That's not good! I'm curious how you managed to do that.");
          }
          auto& canvas = canvasOpt.value();
-         canvas->deleteActiveCamera();
       }
       std::optional<std::shared_ptr<BaseWidget>> askHover(const ReyEngine::Pos<R_FLOAT>& globalPos) override;
       Handled __process_unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) final;
       BoolProperty active;
    private:
       static constexpr char PROP_ACTIVE_NAME[] = "active";
-      CameraStack2D _camera;
+//      CameraStack2D _camera;
+      friend class Canvas;
    };
 }

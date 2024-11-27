@@ -1,6 +1,7 @@
 #include "Canvas.h"
 #include "Application.h"
 #include "rlgl.h"
+#include "Camera2D.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -10,13 +11,22 @@ void ReyEngine::Canvas::_init() {
    if (!_renderTarget.ready()) {
       _renderTarget.setSize(Size<int>(getSize())); //todo: make protected
    }
+
+   // the canvas' own transform acts as the default camera
+//   _cameraStack.push(&_transform.value);
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::Canvas::renderBegin(ReyEngine::Pos<R_FLOAT>& textureOffset) {
    Application::getWindow(0).pushRenderTarget(_renderTarget);
    _renderTarget.clear();
    textureOffset -= getPos();
-   _activeCamera.get().push();
+   //apply the active camera transform
+   auto camera = _activeCamera.lock();
+   if (camera){
+      auto xform = camera->getTransform();
+      rlPushMatrix();
+      rlTranslatef(xform.translation.x, xform.translation.y, 0);
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -33,7 +43,10 @@ void ReyEngine::Canvas::renderEnd() {
        Pos<R_FLOAT> toffset;
        if (modalWidget->_visible) modalWidget->renderChain(toffset);
    }
-  _activeCamera.get().pop();
+   auto camera = _activeCamera.lock();
+   if (camera){
+      rlPopMatrix();
+   }
    Application::getWindow(0).popRenderTarget();
 }
 
@@ -42,7 +55,7 @@ Handled Canvas::__process_unhandled_input(const InputEvent& event, const std::op
    //for mouse events, convert global coordinates to world space, then pass along the normal chain
    std::optional<UnhandledMouseInput> worldSpaceMouse = mouse;
    if (mouse){
-      worldSpaceMouse.value().localPos = screenToWorld(globalToLocal(mouse.value().localPos));
+//      worldSpaceMouse.value().localPos = screenToWorld(globalToLocal(mouse.value().localPos));
       worldSpaceMouse->isInside = isInside(worldSpaceMouse.value().localPos);
    }
 
@@ -61,7 +74,7 @@ Handled Canvas::__process_unhandled_input(const InputEvent& event, const std::op
          memcpy(raw, &event, sizeof(InputEventUnion));
          const auto& _event = event.toEventType<InputEventMouse>();
          auto& _worldSpaceEvent = reinterpret_cast<InputEventMouse&>(raw);
-         _worldSpaceEvent.globalPos = screenToWorld(_event.globalPos);
+//         _worldSpaceEvent.globalPos = screenToWorld(_event.globalPos);
          return _process_unhandled_input(reinterpret_cast<InputEvent&>(raw), worldSpaceMouse);
          }
    }
@@ -153,11 +166,25 @@ void Canvas::popScissor() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void Canvas::setActiveCamera(CameraStack2D& newCamera) {
-   _activeCamera = std::ref(newCamera);
+void Canvas::setActiveCamera(std::shared_ptr<ReyEngine::Camera2D>& camera) {
+   _activeCamera = camera;
+//   _cameraStack.push(newCamera);
+//   rlPushMatrix();
+//   rlTranslatef(-newCamera->translation.x, -newCamera->translation.y, 0);
+//   rlRotatef(newCamera->rotation * M_PI/180, 0,0,1);
+
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
-void Canvas::deleteActiveCamera() {
-   _activeCamera = _defaultCamera;
+///////////////////////////////////////////////////////////////////////////////////////
+Pos<R_FLOAT> Canvas::screenToWorld(const Pos<R_FLOAT>& pos) const {
+   auto camera = _activeCamera.lock();
+   if (!camera) return pos;
+   return camera->screenToWorld(pos);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+Pos<R_FLOAT> Canvas::worldToScreen(const Pos<R_FLOAT>& pos) const {
+   auto camera = _activeCamera.lock();
+   if (!camera) return pos;
+   return camera->worldToscreen(pos);
 }
