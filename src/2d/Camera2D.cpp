@@ -9,12 +9,16 @@ void ReyEngine::Camera2D::renderBegin(ReyEngine::Pos<R_FLOAT> &textureOffset) {
    //zero out our position on the texture offset
    textureOffset -= getPos();
    //pop the active camera - that is to say, return to a 'no camera' scenario
+   rlDrawRenderBatchActive();
    rlPushMatrix();
+//   auto m = rlGetMatrixTransform();
+//   cout << "got matrix" << endl;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::Camera2D::renderEnd() {
    //return to transformation mode;
+   rlDrawRenderBatchActive();
    rlPopMatrix();
 }
 
@@ -51,4 +55,49 @@ Handled ReyEngine::Camera2D::__process_unhandled_input(const InputEvent& event, 
       }
    }
    return _process_unhandled_input(event, mouse);
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::Camera2D ::renderChain(Pos<R_FLOAT>& parentOffset) {
+   static std::vector<Matrix> frameStack;
+   auto getPointInFrame = [](Vector3 point, const Matrix& frameMatrix) {
+      return Vector3Transform(point, MatrixInvert(frameMatrix));
+   };
+
+   if (!_visible) return;
+   Pos<R_FLOAT> localOffset;
+   renderBegin(localOffset);
+   auto prevOffset = _renderOffset;
+   _renderOffset += (localOffset + parentOffset);
+   //backrender
+
+   auto rotation = Degrees(getRotation()).get();
+   rlDrawRenderBatchActive();
+   auto m = rlGetMatrixTransform();
+   rlLoadIdentity();
+   if (pos.x || pos.y || rotation) {
+      frameStack.push_back(MatrixRotate({0,0,1}, rotation));
+   }
+   for (const auto &child: _backRenderList) {
+      child->renderChain(_renderOffset);
+   }
+
+   if (!frameStack.empty()) {
+      drawLine({{-pos.x, -pos.y}, {0, 0}}, 2.0, Colors::red);
+   }
+   render();
+
+   //front render
+   for (const auto &child: _frontRenderList) {
+      child->renderChain(_renderOffset);
+   }
+   if (!frameStack.empty()) {
+      frameStack.pop_back();
+   }
+   rlDrawRenderBatchActive();
+   rlSetMatrixModelview(m);
+   _renderOffset = prevOffset; //reset to local offset when we are done
+   renderEnd();
+   renderEditorFeatures();
 }

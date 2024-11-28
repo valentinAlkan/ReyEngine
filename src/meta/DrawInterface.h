@@ -709,7 +709,7 @@ namespace ReyEngine {
    struct Transform2D {
       Vec2<R_FLOAT> translation;
       R_FLOAT rotation; // In radians
-      Vec2<R_FLOAT> scale;
+      Vec2<R_FLOAT> scale = {1.0f, 1.0f};
 
       // Get final position of a point after transform
       Vec2<float> transform(const Vec2<float>& point) const {
@@ -760,10 +760,9 @@ namespace ReyEngine {
 //      }
 
       Matrix getMatrix() const {
-         Matrix m = MatrixIdentity();
-         m = MatrixTranslate(translation.x, translation.y, 0);
-         m = MatrixRotate({0, 0, 1}, rotation);
-         m = MatrixScale(scale.x, scale.y, 0);
+         auto m = MatrixTranslate(translation.x, translation.y, 0);
+         m = MatrixMultiply(m, MatrixRotate({0, 0, 1}, rotation));
+         m = MatrixMultiply(m, MatrixScale(scale.x, scale.y, 1));
          return m;
       };
 

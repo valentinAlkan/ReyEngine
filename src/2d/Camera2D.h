@@ -19,19 +19,22 @@ namespace ReyEngine {
       Pos<R_FLOAT> worldToscreen(const Pos<R_FLOAT>& pos) const {return transform.invertPoint(pos);}
       /// We don't set the offset directly, however sometimes it's handy to know what it is. This would be mostly used for debugging purposes.
       Pos<double> getOffset() const {return transform.translation;}
-//      Pos<double> nearToFar(const Pos<float>&){return {};}
-//      Pos<double> farToNear(const Pos<float>&){return {};}
+      Pos<double> nearToFar(const Pos<float>& pos) const {return screenToWorld(pos);}
+      Pos<double> farToNear(const Pos<float>& pos) const {return worldToscreen(pos);}
       static std::shared_ptr<Camera2D> build(const std::string& name, const Size<int>& screenSize) {
          return Camera2D::_reyengine_make_shared(name, screenSize);
       }
    protected:
       Camera2D(const std::string& instanceName, const Size<int>& screenSize)
       : REYENGINE_CTOR_INIT_LIST(instanceName, BaseWidget)
+//      , PROPERTY_DECLARE(_cameraTransform)
       , active(PROP_ACTIVE_NAME, true)
       {
+         _isCamera = true;
 //         _camera.camera.offset = (Vector2)(screenSize/2);
          applyRect({{0, 0},screenSize});
       }
+      void renderChain(Pos<R_FLOAT>& parentOffset);
       void renderBegin(ReyEngine::Pos<R_FLOAT>& textureOffset) override;
       void renderEnd() override;
       void render() const override {};
@@ -64,6 +67,7 @@ namespace ReyEngine {
       std::optional<std::shared_ptr<BaseWidget>> askHover(const ReyEngine::Pos<R_FLOAT>& globalPos) override;
       Handled __process_unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) final;
       BoolProperty active;
+//      Transform2DProperty _cameraTransform; //the transform that is used to scale the background - distinct from the camera's widget transform.
    private:
       static constexpr char PROP_ACTIVE_NAME[] = "active";
 //      CameraStack2D _camera;

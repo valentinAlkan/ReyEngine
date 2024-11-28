@@ -102,6 +102,7 @@ void BaseWidget::renderChain(Pos<R_FLOAT>& parentOffset) {
    rlRotatef(rotation, 0,0,1);
    rlTranslatef(-pos.x, -pos.y, 0);
    rlTranslatef(-transform.translation.x, -transform.translation.y, 0);
+   rlScalef(1/transform.scale.x, 1/transform.scale.y, 1);
    if (pos.x || pos.y || rotation) {
       frameStack.push_back(MatrixRotate({0,0,1}, rotation));
    }
@@ -113,7 +114,6 @@ void BaseWidget::renderChain(Pos<R_FLOAT>& parentOffset) {
       drawLine({{-pos.x, -pos.y}, {0, 0}}, 2.0, Colors::red);
    }
    render();
-   rlDrawRenderBatchActive();
 
    //front render
    for (const auto &child: _frontRenderList) {

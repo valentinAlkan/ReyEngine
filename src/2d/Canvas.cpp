@@ -26,6 +26,8 @@ void ReyEngine::Canvas::renderBegin(ReyEngine::Pos<R_FLOAT>& textureOffset) {
       auto xform = camera->getTransform();
       rlPushMatrix();
       rlTranslatef(xform.translation.x, xform.translation.y, 0);
+      rlRotatef(xform.rotation, 0, 0, 1);
+      rlScalef(xform.scale.x, xform.scale.y, 1);
    }
 }
 
@@ -55,7 +57,7 @@ Handled Canvas::__process_unhandled_input(const InputEvent& event, const std::op
    //for mouse events, convert global coordinates to world space, then pass along the normal chain
    std::optional<UnhandledMouseInput> worldSpaceMouse = mouse;
    if (mouse){
-//      worldSpaceMouse.value().localPos = screenToWorld(globalToLocal(mouse.value().localPos));
+      worldSpaceMouse.value().localPos = screenToWorld(globalToLocal(mouse.value().localPos));
       worldSpaceMouse->isInside = isInside(worldSpaceMouse.value().localPos);
    }
 
@@ -74,7 +76,7 @@ Handled Canvas::__process_unhandled_input(const InputEvent& event, const std::op
          memcpy(raw, &event, sizeof(InputEventUnion));
          const auto& _event = event.toEventType<InputEventMouse>();
          auto& _worldSpaceEvent = reinterpret_cast<InputEventMouse&>(raw);
-//         _worldSpaceEvent.globalPos = screenToWorld(_event.globalPos);
+         _worldSpaceEvent.globalPos = screenToWorld(_event.globalPos);
          return _process_unhandled_input(reinterpret_cast<InputEvent&>(raw), worldSpaceMouse);
          }
    }
@@ -168,23 +170,19 @@ void Canvas::popScissor() {
 ///////////////////////////////////////////////////////////////////////////////////////
 void Canvas::setActiveCamera(std::shared_ptr<ReyEngine::Camera2D>& camera) {
    _activeCamera = camera;
-//   _cameraStack.push(newCamera);
-//   rlPushMatrix();
-//   rlTranslatef(-newCamera->translation.x, -newCamera->translation.y, 0);
-//   rlRotatef(newCamera->rotation * M_PI/180, 0,0,1);
-
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
 Pos<R_FLOAT> Canvas::screenToWorld(const Pos<R_FLOAT>& pos) const {
    auto camera = _activeCamera.lock();
    if (!camera) return pos;
-   return camera->screenToWorld(pos);
+   std::cout << "Camera global position = " << camera->getGlobalPos() << endl;
+   return camera->screenToWorld(camera->getGlobalPos() + pos);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
 Pos<R_FLOAT> Canvas::worldToScreen(const Pos<R_FLOAT>& pos) const {
    auto camera = _activeCamera.lock();
    if (!camera) return pos;
-   return camera->worldToscreen(pos);
+   return camera->worldToscreen(camera->getGlobalPos() + pos);
 }

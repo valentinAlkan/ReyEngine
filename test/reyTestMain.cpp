@@ -1852,7 +1852,7 @@ int main(int argc, char** argv) {
             // add nodes in correct order
             root->addChild(background);
             background->addChild(backgroundLabel);
-            background->addChild(camera);
+            root->addChild(camera);
             camera->addChild(cameraUILabel);
             background->addChild(pushButton);
 
@@ -1908,15 +1908,16 @@ int main(int argc, char** argv) {
                 if (rotation) {
                     camera->setRotation(camera->getRotation() + rotation);
                 }
+                auto bgPos = camera->localToGlobal(camera->nearToFar(InputManager::getMousePos()));
                 cameraUILabel->setText("Label: " + string(cameraUILabel->getPos())
                                        + "\nCamera Pos = " + string(camera->getPos())
                                        + "\nCamera Target = " + string(camera->getTarget())
                                        + "\nCamera Offset = " + string(camera->getOffset())
                                        + "\nWindow Mouse Pos = " + InputManager::getMousePos().toString()
-                                       + "\nBckgnd Mouse Pos = " + camera->nearToFar(InputManager::getMousePos()).toString()
+                                       + "\nBckgnd Mouse Pos = " + bgPos.toString()
                 );
                 backgroundLabel->setText("BG pos = " + backgroundLabel->getPos().toString()
-                                        + "\nLocal Mouse Pos = " + background->globalToLocal(camera->farToNear(InputManager::getMousePos())).toString()
+                                        + "\nLocal Mouse Pos = " + bgPos.toString()
                 );
 
             };

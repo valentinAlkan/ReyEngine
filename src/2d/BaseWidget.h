@@ -284,6 +284,7 @@ namespace ReyEngine{
       inline void setEditorSelected(bool selected){_editor_selected = selected;}
       inline bool isEditorSelected() const {return _editor_selected;}
    protected:
+      bool _isCamera = false;
       bool _isEditorWidget = false; //true if this is a widget THE USER HAS PLACED IN THE EDITOR WORKSPACE (not a widget that the editor uses for normal stuff)
       bool _editor_selected = false; // true when the object is *selected* in the editor
       static constexpr int GRAB_HANDLE_SIZE = 10;
