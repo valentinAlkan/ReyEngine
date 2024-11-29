@@ -101,8 +101,8 @@ void BaseWidget::renderChain(Pos<R_FLOAT>& parentOffset) {
    rlTranslatef(pos.x, pos.y, 0);
    rlRotatef(rotation, 0,0,1);
    rlTranslatef(-pos.x, -pos.y, 0);
-   rlTranslatef(-transform.translation.x, -transform.translation.y, 0);
-   rlScalef(1/transform.scale.x, 1/transform.scale.y, 1);
+   rlTranslatef(transform.translation.x, transform.translation.y, 0);
+   rlScalef(transform.scale.x, transform.scale.y, 1);
    if (pos.x || pos.y || rotation) {
       frameStack.push_back(MatrixRotate({0,0,1}, rotation));
    }

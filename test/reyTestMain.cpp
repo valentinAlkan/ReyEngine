@@ -1864,22 +1864,27 @@ int main(int argc, char** argv) {
             root->addChild(camera);
             root->addChild(stableLabel2);
 
+            static Pos<R_FLOAT> inputEventMousePosLocal;
             //controls
             auto wkCamera = std::weak_ptr<ReyEngine::Camera2D>(camera);
-            auto cbBGUnhandledInput = [wkCamera, cameraUILabel](Control &, const InputEvent &event,
-                                                                const std::optional<UnhandledMouseInput> &mouse) -> Handled {
-                if (event.isEvent<InputEventMouseWheel>()) {
-                    auto wheelEvent = event.toEventType<InputEventMouseWheel>();
-                    double wheel = wheelEvent.wheelMove.y;
-                    if (wheel) {
-                        auto camera = wkCamera.lock();
-                        if (camera) {
-                           Logger::info() << "Wheel value = " << wheel << endl;
+            auto cbBGUnhandledInput = [wkCamera, cameraUILabel, backgroundLabel](Control &, const InputEvent &event, const std::optional<UnhandledMouseInput> &mouse) -> Handled {
+                switch (event.eventId) {
+                   case InputEventMouseWheel::getUniqueEventId(): {
+                      auto wheelEvent = event.toEventType<InputEventMouseWheel>();
+                      double wheel = wheelEvent.wheelMove.y;
+                      if (wheel) {
+                         auto camera = wkCamera.lock();
+                         if (camera) {
+                            Logger::info() << "Wheel value = " << wheel << endl;
                             camera->setZoom(camera->getZoom() * (1 + wheel / 10));
                             Logger::info() << "New camera zoom level = " << camera->getZoom() << endl;
                             return true;
-                        }
-                    }
+                         }
+                      }
+                   }
+                   case InputEventMouseMotion::getUniqueEventId():
+                      inputEventMousePosLocal = mouse->localPos;
+                      break;
                 }
                 return false;
             };
@@ -1925,7 +1930,7 @@ int main(int argc, char** argv) {
                                        + "\nBckgnd Mouse Pos = " + bgPos.toString()
                 );
                 backgroundLabel->setText("BG pos = " + backgroundLabel->getPos().toString()
-                                        + "\nLocal Mouse Pos = " + bgPos.toString()
+                                        + "\nLocal Mouse Pos = " + inputEventMousePosLocal.toString()
                 );
 
             };

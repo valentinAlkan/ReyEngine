@@ -73,8 +73,7 @@ void ReyEngine::Camera2D ::renderChain(Pos<R_FLOAT>& parentOffset) {
    //backrender
 
    auto rotation = Degrees(getRotation()).get();
-   rlDrawRenderBatchActive();
-   auto m = rlGetMatrixTransform();
+
    rlLoadIdentity();
    if (pos.x || pos.y || rotation) {
       frameStack.push_back(MatrixRotate({0,0,1}, rotation));
@@ -95,9 +94,7 @@ void ReyEngine::Camera2D ::renderChain(Pos<R_FLOAT>& parentOffset) {
    if (!frameStack.empty()) {
       frameStack.pop_back();
    }
-   rlDrawRenderBatchActive();
-   //revert back to matrix view
-//   rlSetMatrixModelview(m);
+
    _renderOffset = prevOffset; //reset to local offset when we are done
    renderEnd();
    renderEditorFeatures();
