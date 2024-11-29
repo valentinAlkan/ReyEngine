@@ -96,7 +96,8 @@ void ReyEngine::Camera2D ::renderChain(Pos<R_FLOAT>& parentOffset) {
       frameStack.pop_back();
    }
    rlDrawRenderBatchActive();
-   rlSetMatrixModelview(m);
+   //revert back to matrix view
+//   rlSetMatrixModelview(m);
    _renderOffset = prevOffset; //reset to local offset when we are done
    renderEnd();
    renderEditorFeatures();

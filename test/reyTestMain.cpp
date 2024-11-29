@@ -1841,7 +1841,11 @@ int main(int argc, char** argv) {
             auto backgroundLabel = Label::build("backgroundLabel");
             auto pushButton = PushButton::build("PushButton");
             auto stableLabel = PushButton::build("StableLabel");
+            auto stableLabel2 = PushButton::build("StableLabel2");
             stableLabel->setText("This label should not be moving");
+            stableLabel2->setText("This label should also not be moving");
+            stableLabel->setPos({0, 100});
+            stableLabel2->setPos({0, 120});
 
             //setup background
             background->getTheme()->background.value = Style::Fill::GRADIENT;
@@ -1853,11 +1857,12 @@ int main(int argc, char** argv) {
 
             // add nodes in correct order
             root->addChild(background);
-            background->addChild(backgroundLabel);
-            root->addChild(camera);
             root->addChild(stableLabel);
+            background->addChild(backgroundLabel);
             camera->addChild(cameraUILabel);
             background->addChild(pushButton);
+            root->addChild(camera);
+            root->addChild(stableLabel2);
 
             //controls
             auto wkCamera = std::weak_ptr<ReyEngine::Camera2D>(camera);
