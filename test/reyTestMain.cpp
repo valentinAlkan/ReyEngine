@@ -1840,6 +1840,8 @@ int main(int argc, char** argv) {
             auto background = Control::build("background");
             auto backgroundLabel = Label::build("backgroundLabel");
             auto pushButton = PushButton::build("PushButton");
+            auto stableLabel = PushButton::build("StableLabel");
+            stableLabel->setText("This label should not be moving");
 
             //setup background
             background->getTheme()->background.value = Style::Fill::GRADIENT;
@@ -1847,12 +1849,13 @@ int main(int argc, char** argv) {
             background->getTheme()->background.colorSecondary.value = Colors::red;
             background->setRect({0, 0, 1000, 1000});
 
-            pushButton->setPos({300,300});
+            pushButton->setRect({300,300, 200,200});
 
             // add nodes in correct order
             root->addChild(background);
             background->addChild(backgroundLabel);
             root->addChild(camera);
+            root->addChild(stableLabel);
             camera->addChild(cameraUILabel);
             background->addChild(pushButton);
 
