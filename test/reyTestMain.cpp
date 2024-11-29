@@ -1921,7 +1921,7 @@ int main(int argc, char** argv) {
                 if (rotation) {
                     camera->setRotation(camera->getRotation() + rotation);
                 }
-                auto bgPos = camera->localToGlobal(camera->nearToFar(InputManager::getMousePos()));
+                auto bgPos = camera->nearToFar(InputManager::getMousePos());
                 cameraUILabel->setText("Label: " + string(cameraUILabel->getPos())
                                        + "\nCamera Pos = " + string(camera->getPos())
                                        + "\nCamera Target = " + string(camera->getTarget())

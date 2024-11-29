@@ -312,7 +312,7 @@ void Window::exec(){
                }
             } else {
                //find out which widget will accept the mouse motion as focus
-               auto hovered = canvas->askHover(event.globalPos);
+               auto hovered = canvas->askHover(canvas->screenToWorld(event.globalPos));
                if (hovered) {
                   setHover(hovered.value());
                } else {

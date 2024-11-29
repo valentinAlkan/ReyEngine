@@ -11,8 +11,6 @@ void ReyEngine::Camera2D::renderBegin(ReyEngine::Pos<R_FLOAT> &textureOffset) {
    //pop the active camera - that is to say, return to a 'no camera' scenario
    rlDrawRenderBatchActive();
    rlPushMatrix();
-//   auto m = rlGetMatrixTransform();
-//   cout << "got matrix" << endl;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
