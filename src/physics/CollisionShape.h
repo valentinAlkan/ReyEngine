@@ -1,6 +1,7 @@
 #pragma once
 #include "Component.h"
 #include "Positionable2D.h"
+#include <set>
 
 namespace ReyEngine {
    namespace Collision{
@@ -34,6 +35,7 @@ namespace ReyEngine {
          }
 
          static std::shared_ptr<Collision::CollisionRect> make_rect(const std::string& instanceName, const Positionable2D<R_FLOAT>& positionable);
+         bool getIsColliding(){return _isColliding;}
       protected:
          template<typename T>
          static void colliderDtor(T* ptr);
@@ -45,9 +47,10 @@ namespace ReyEngine {
          {}
 
          const Positionable2D<R_FLOAT>& positionable;
-
+         bool _isColliding = false;
          template<typename T, typename U>
          friend class CollisionChecker;
+         friend class CollisionLayer;
       };
 
       class CollisionRect : public Collider {
@@ -78,8 +81,10 @@ namespace ReyEngine {
       struct CollisionLayer{
          std::vector<CollisionRect*> rects;
 //         std::vector<CollisionCircle*> circles;
-         void checkLayer(int layer) const;
+         void checkLayer(int layer);
+         std::map<CollisionRect*, std::set<CollisionRect*>> collisions;
+         bool isColliding(CollisionRect* a, CollisionRect* b) const; //check if a is currently colliding with b
+         bool isColliding(CollisionRect* a) const; //check if a is currently colliding with anything
       };
-
    }
 }

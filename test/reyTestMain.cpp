@@ -110,6 +110,7 @@ int main(int argc, char** argv) {
         args.defineArg(RuntimeArg("--3dTest", "Basic3DTest", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--freeTest", "Resource freeing test", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--transformTest", "Test of 2d transformations", 0, RuntimeArg::ArgType::FLAG));
+        args.defineArg(RuntimeArg("--collisionTest", "Test of 2d collisions", 0, RuntimeArg::ArgType::FLAG));
         args.parseArgs(argc, argv);
 
         //create window (or don't idk)
@@ -2038,7 +2039,52 @@ int main(int argc, char** argv) {
            root->addChild(label0);
            label0->addChild(label1);
            label1->addChild(label2);
-        } else {
+        } else if (args.getArg("--collisionTest")) {
+           static constexpr R_FLOAT X_POS = 100;
+           static constexpr R_FLOAT Y_POS = 100;
+           auto ctl1 = Control::build("ctl1");
+           auto ctl2 = Control::build("ctl2");
+           auto ctl3 = Control::build("ctl3");
+           auto ctl4 = Control::build("ctl4");
+           ctl1->setRect({0, Y_POS,100,100});
+           ctl2->setRect({X_POS + 200,Y_POS,100,100});
+           ctl3->setRect({X_POS,Y_POS + 200,100,100});
+           ctl4->setRect({0,0,0,0});
+           auto collider1 = ctl1->createCollider<Collision::CollisionRect>("collider1");
+           auto collider2 = ctl2->createCollider<Collision::CollisionRect>("collider2");
+           auto collider3 = ctl3->createCollider<Collision::CollisionRect>("collider3");
+           auto collider4 = ctl4->createCollider<Collision::CollisionRect>("collider4");
+           root->addChild(ctl1);
+           root->addChild(ctl2);
+           root->addChild(ctl3);
+           root->addChild(ctl4);
+           ctl1->Component::addChild(collider1);
+           ctl2->Component::addChild(collider2);
+           ctl3->Component::addChild(collider3);
+           ctl4->Component::addChild(collider4);
+           collider1->addToLayer<Collision::CollisionRect>(0);
+           collider2->addToLayer<Collision::CollisionRect>(0);
+           collider3->addToLayer<Collision::CollisionRect>(0);
+           collider4->addToLayer<Collision::CollisionRect>(0);
+
+           static float _dt = 0;
+           auto proc = [&](Control& ctl, float dt){
+              ctl1->setPos({X_POS * sin(_dt += dt) * 2.5, ctl1->getPos().y});
+              ctl3->setPos({ctl3->getPos().x, Y_POS * sin(_dt += dt) * 2.5});
+               for (auto& collider : {collider1, collider2, collider3, collider4}){
+                  auto parentCtl = collider->getParent().lock()->toType<Control>();
+                  if (collider->getIsColliding()){
+                     parentCtl->getTheme()->background.colorPrimary.value = Colors::green;
+                  } else {
+                     parentCtl->getTheme()->background.colorPrimary.value = Colors::red;
+                  }
+               }
+               //move ctl 4
+               ctl4->setRect({InputManager::getMousePos(), {20,20}});
+           };
+
+           ctl1->setProcessCallback(proc);
+      } else {
             cout << args.getDocString() << endl;
             return 0;
         }

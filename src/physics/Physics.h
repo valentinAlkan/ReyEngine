@@ -10,7 +10,7 @@ namespace ReyEngine {
       public:
          //process phsyics events
          inline static void process(){
-            for (const auto& [id, layer] : instance().collisionLayers){
+            for (auto& [id, layer] : instance().collisionLayers){
                layer.checkLayer(id);
             }
          }
