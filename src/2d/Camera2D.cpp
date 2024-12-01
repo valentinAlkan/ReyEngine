@@ -73,7 +73,7 @@ void ReyEngine::Camera2D ::renderChain(Pos<R_FLOAT>& parentOffset) {
    auto rotation = Degrees(getRotation()).get();
 
    rlLoadIdentity();
-   if (pos.x || pos.y || rotation) {
+   if (transform.position.x || transform.position.y || rotation) {
       frameStack.push_back(MatrixRotate({0,0,1}, rotation));
    }
    for (const auto &child: _backRenderList) {
@@ -81,7 +81,7 @@ void ReyEngine::Camera2D ::renderChain(Pos<R_FLOAT>& parentOffset) {
    }
 
    if (!frameStack.empty()) {
-      drawLine({{-pos.x, -pos.y}, {0, 0}}, 2.0, Colors::red);
+      drawLine({{-transform.position.x, -transform.position.y}, {0, 0}}, 2.0, Colors::red);
    }
    render();
 

@@ -109,7 +109,7 @@ int main(int argc, char** argv) {
         args.defineArg(RuntimeArg("--camera2dTest", "camera 2d test", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--3dTest", "Basic3DTest", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--freeTest", "Resource freeing test", 0, RuntimeArg::ArgType::FLAG));
-        args.defineArg(RuntimeArg("--rotationTest", "Test of rotation 2dpositionables", 0, RuntimeArg::ArgType::FLAG));
+        args.defineArg(RuntimeArg("--transformTest", "Test of 2d transformations", 0, RuntimeArg::ArgType::FLAG));
         args.parseArgs(argc, argv);
 
         //create window (or don't idk)
@@ -612,6 +612,7 @@ int main(int argc, char** argv) {
         } else if (args.getArg("--saveLoadSceneTest")) {
         } else if (args.getArg("--layoutTestSuperBasic")) {
            Logger::debug() << "Layout test super basic!" << endl;
+           Logger::debug() << "Screen size is " << getScreenSize() << endl;
            auto mainVLayout = HLayout::build("MainLayout");
            mainVLayout->setAnchoring(BaseWidget::Anchor::FILL);
            root->addChild(mainVLayout);
@@ -2022,7 +2023,7 @@ int main(int argc, char** argv) {
            };
 
            btn->subscribe<PushButton::ButtonPressEvent>(btn, pbCallback);
-        } else if (args.getArg("--rotationTest")) {
+        } else if (args.getArg("--transformTest")) {
            auto label0 = Label::build("label0");
            label0->setRotation(22.5);
            label0->setPos(50, 0);

@@ -14,11 +14,10 @@ using namespace FileSystem;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 BaseWidget::BaseWidget(const std::string& name, std::string  typeName)
-: Positionable2D<R_FLOAT>(_pos.value, _size.value, _transform.value)
+: Positionable2D<R_FLOAT>(_size.value, _transform.value)
 , Component(name, typeName)
 , Internal::TypeContainer<BaseWidget>(name, typeName)
 , PROPERTY_DECLARE(isBackRender, false)
-, PROPERTY_DECLARE(_pos)
 , PROPERTY_DECLARE(_size)
 , PROPERTY_DECLARE(_transform)
 , PROPERTY_DECLARE(_anchor, Anchor::NONE)
@@ -98,12 +97,12 @@ void BaseWidget::renderChain(Pos<R_FLOAT>& parentOffset) {
 
    auto rotation = Degrees(getRotation()).get();
    rlPushMatrix();
-   rlTranslatef(pos.x, pos.y, 0);
+   rlTranslatef(transform.position.x, transform.position.y, 0);
    rlRotatef(rotation, 0,0,1);
-   rlTranslatef(-pos.x, -pos.y, 0);
-   rlTranslatef(transform.translation.x, transform.translation.y, 0);
+   rlTranslatef(-transform.position.x, -transform.position.y, 0);
+   rlTranslatef(transform.position.x, transform.position.y, 0);
    rlScalef(transform.scale.x, transform.scale.y, 1);
-   if (pos.x || pos.y || rotation) {
+   if (transform.position.x || transform.position.y || rotation) {
       frameStack.push_back(MatrixRotate({0,0,1}, rotation));
    }
    for (const auto &child: _backRenderList) {
@@ -111,7 +110,7 @@ void BaseWidget::renderChain(Pos<R_FLOAT>& parentOffset) {
    }
 
    if (!frameStack.empty()) {
-      drawLine({{-pos.x, -pos.y}, {0, 0}}, 2.0, Colors::red);
+      drawLine({{-transform.position.x, -transform.position.y}, {0, 0}}, 2.0, Colors::red);
    }
    render();
 
@@ -318,91 +317,85 @@ void BaseWidget::setBackRender(bool _isBackrender) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawLine(const ReyEngine::Line<R_FLOAT>& line, float lineThick, const ReyEngine::ColorRGBA& color) const {
-   ReyEngine::drawLine(line + getGlobalPos() + _renderOffset, lineThick, color);
+   ReyEngine::drawLine(line, lineThick, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawArrow(const Line<R_FLOAT>& line, float lineThick, const ReyEngine::ColorRGBA& color, float headSize) const {
-    ReyEngine::drawArrow(line + getGlobalPos() + _renderOffset, lineThick, color, headSize);
+    ReyEngine::drawArrow(line, lineThick, color, headSize);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawText(const std::string &text, const Pos<R_FLOAT> &pos, const ReyEngine::ReyEngineFont& font) const{
-   ReyEngine::drawText(text, pos + getGlobalPos() + _renderOffset, font);
+   ReyEngine::drawText(text, pos, font);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawTextCentered(const std::string &text, const Pos<R_FLOAT> &pos, const ReyEngine::ReyEngineFont& font) const{
-   ReyEngine::drawTextCentered(text, pos + getGlobalPos() + _renderOffset, font);
+   ReyEngine::drawTextCentered(text, pos, font);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawRectangle(const ReyEngine::Rect<R_FLOAT> &rect, const ReyEngine::ColorRGBA &color) const {
-   //use the size of the param rect but use the position of our rect + the param rect
-   Rect<R_FLOAT> newRect(rect + getGlobalPos() + _renderOffset);
-   ReyEngine::drawRectangle(newRect, color);
+   ReyEngine::drawRectangle(rect, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawRectangleLines(const ReyEngine::Rect<R_FLOAT> &rect, float lineThick, const ReyEngine::ColorRGBA &color) const {
-   Rect<R_FLOAT> newRect(rect + getGlobalPos() + _renderOffset);
-   ReyEngine::drawRectangleLines(newRect, lineThick, color);
+   ReyEngine::drawRectangleLines(rect, lineThick, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawRectangleRounded(const ReyEngine::Rect<R_FLOAT> &rect, float roundness, int segments, const ReyEngine::ColorRGBA &color) const {
    //use the size of the param rect but use the position of our rect + the param rect
-   Rect<R_FLOAT> newRect(rect + Pos<R_FLOAT>(getGlobalPos()) + Pos<R_FLOAT>(_renderOffset));
-   ReyEngine::drawRectangleRounded(newRect, roundness, segments, color);
+//   Rect<R_FLOAT> newRect(rect + Pos<R_FLOAT>(getGlobalPos()) + Pos<R_FLOAT>(_renderOffset));
+   ReyEngine::drawRectangleRounded(rect, roundness, segments, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawRectangleRoundedLines(const ReyEngine::Rect<R_FLOAT> &rect, float roundness, int segments, float lineThick, const ReyEngine::ColorRGBA &color) const {
    //use the size of the param rect but use the position of our rect + the param rect
-   Rect<float> newRect(rect + Pos<R_FLOAT>(getGlobalPos()) + Pos<R_FLOAT>(_renderOffset));
-   ReyEngine::drawRectangleRoundedLines(newRect, roundness, segments, lineThick, color);
+//   Rect<float> newRect(rect + Pos<R_FLOAT>(getGlobalPos()) + Pos<R_FLOAT>(_renderOffset));
+   ReyEngine::drawRectangleRoundedLines(rect, roundness, segments, lineThick, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawRectangleGradientV(const ReyEngine::Rect<R_FLOAT> &rect, const ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA &color2) const {
    //use the size of the param rect but use the position of our rect + the param rect
-   Rect<float> newRect(rect + getGlobalPos() + _renderOffset);
-   ReyEngine::drawRectangleGradientV(newRect, color1, color2);
+//   Rect<float> newRect(rect + getGlobalPos() + _renderOffset);
+   ReyEngine::drawRectangleGradientV(rect, color1, color2);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawCircle(const ReyEngine::Circle& circle, const ReyEngine::ColorRGBA& color) const {
-   ReyEngine::drawCircle(circle + getGlobalPos() + _renderOffset, color);
+   ReyEngine::drawCircle(circle, color);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawCircleLines(const ReyEngine::Circle& circle, const ReyEngine::ColorRGBA& color) const {
-   ReyEngine::drawCircleLines(circle + getGlobalPos() + _renderOffset, color);
+   ReyEngine::drawCircleLines(circle, color);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawCircleSectorLines(const ReyEngine::CircleSector& sector, const ReyEngine::ColorRGBA& color, int segments) const {
-   CircleSector newSector = sector;
-   newSector.center += getGlobalPos() + _renderOffset;
-   ReyEngine::drawCircleSectorLines(newSector, color, segments);
+   ReyEngine::drawCircleSectorLines(sector, color, segments);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawRenderTargetRect(const ReyEngine::RenderTarget& target, const ReyEngine::Rect<R_FLOAT>& src, const Pos<R_FLOAT>& dst) const {
-   auto _dst = dst + getGlobalPos();
-   DrawTextureRec(target.getRenderTexture(), {(float)src.x, (float)src.y, (float) src.width, -(float)src.height}, {(float)_dst.x + (float)_renderOffset.x, (float)_dst.y + (float)_renderOffset.y}, Colors::none);
+   DrawTextureRec(target.getRenderTexture(), {(float)src.x, (float)src.y, (float) src.width, -src.height}, {dst.x + _renderOffset.x, dst.y + _renderOffset.y}, Colors::none);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawRenderTarget(const ReyEngine::RenderTarget& target, const Pos<R_FLOAT>& dst) const {
-   DrawTextureRec(target.getRenderTexture(), {0,0, (float)target.getSize().x, -(float)target.getSize().y}, {(float)dst.x + (float)_renderOffset.x, (float)dst.y + (float)_renderOffset.y}, Colors::none);
+   DrawTextureRec(target.getRenderTexture(), {0,0, (float)target.getSize().x, -(float)target.getSize().y}, {dst.x + _renderOffset.x, dst.y + _renderOffset.y}, Colors::none);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawTextureRect(const ReyEngine::ReyTexture& rtex, const ReyEngine::Rect<R_FLOAT> &src, const ReyEngine::Rect<R_FLOAT> &dst, float rotation, const ReyEngine::ColorRGBA &tint) const {
    auto gpos = getGlobalPos();
-   Rectangle _src  = {(float)src.x, (float)src.y, (float)src.width, (float)src.height};
-   Rectangle _dst = {static_cast<float>((float)dst.x + (float)_renderOffset.x + gpos.x), static_cast<float>((float)dst.y + (float)_renderOffset.y + gpos.y), (float)dst.width, (float)dst.height};
+   Rectangle _src  = {src.x, src.y, src.width, src.height};
+   Rectangle _dst = {static_cast<float>(dst.x + _renderOffset.x + gpos.x), static_cast<float>(dst.y + _renderOffset.y + gpos.y), dst.width, dst.height};
    DrawTexturePro(rtex.getTexture(), _src, _dst, {0,0}, rotation, Colors::none);
 }
 
@@ -626,7 +619,7 @@ void BaseWidget::setHeight(R_FLOAT height){
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::__on_rect_changed(const Rect<R_FLOAT>& oldRect){
-   if (isLayout && oldRect.size() != getSize()) {
+   if (oldRect.size() != getSize()) {
       for (auto &child: getChildren()) {
          if (child->isAnchored()) {
             child->setRect(child->getRect());

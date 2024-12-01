@@ -707,7 +707,7 @@ namespace ReyEngine {
 
    //should maybe use eigen transforms. one day.
    struct Transform2D {
-      Vec2<R_FLOAT> translation;
+      Pos<R_FLOAT> position;
       R_FLOAT rotation; // In radians
       Vec2<R_FLOAT> scale = {1.0f, 1.0f};
 
@@ -716,8 +716,8 @@ namespace ReyEngine {
          float cos_a = std::cos(rotation);
          float sin_a = std::sin(rotation);
          return Vec2<float>{
-               point.x * cos_a - point.y * sin_a + translation.x,
-               point.x * sin_a + point.y * cos_a + translation.y
+               point.x * cos_a - point.y * sin_a + position.x,
+               point.x * sin_a + point.y * cos_a + position.y
          };
       }
 
@@ -760,7 +760,7 @@ namespace ReyEngine {
 //      }
 
       Matrix getMatrix() const {
-         auto m = MatrixTranslate(translation.x, translation.y, 0);
+         auto m = MatrixTranslate(position.x, position.y, 0);
          m = MatrixMultiply(m, MatrixRotate({0, 0, 1}, rotation));
          m = MatrixMultiply(m, MatrixScale(scale.x, scale.y, 1));
          return m;

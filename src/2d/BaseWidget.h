@@ -248,7 +248,7 @@ namespace ReyEngine{
       //   void renderTextureOffsetApply(ReyEngine::Pos<float>& textureOffset){}
    //   void renderTextureOffsetReset(ReyEngine::Pos<float>& textureOffset){}
       void registerProperties() override;
-      PosProperty<R_FLOAT> _pos;
+//      PosProperty<R_FLOAT> _pos;
       SizeProperty<R_FLOAT> _size;
       Transform2DProperty _transform;
       InputMaskProperty<R_FLOAT> _inputMask; //Only input inside this rectangle will be handled;

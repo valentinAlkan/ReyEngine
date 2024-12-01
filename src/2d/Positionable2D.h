@@ -10,13 +10,12 @@ namespace ReyEngine{
    template <typename T>
    class Positionable2D {
    public:
-      Positionable2D(Pos<R_FLOAT>& pos, Size<R_FLOAT>& size, Transform2D& targetTransform) //don't make this const, want to reject temporaries
-      : pos(pos)
-      , size(size)
+      Positionable2D(Size<R_FLOAT>& size, Transform2D& targetTransform) //don't make this const, want to reject temporaries
+      : size(size)
       , transform(targetTransform)
       {}
-      Pos<T> getPos() const {return pos;}
-      Pos<T> getCenter() const {return pos + size / 2;}
+      Pos<T> getPos() const {return transform.position;}
+      Pos<T> getCenter() const {return transform.position + size / 2;}
       Pos<T> getGlobalPos() const {
          //sum up all our ancestors' positions and add our own to it
          auto sum = getPos();
@@ -34,7 +33,7 @@ namespace ReyEngine{
 //         return sum;
 //      }
       ReyEngine::Rect<T> getGlobalRect() const {auto globalPos = getGlobalPos(); return {globalPos.x, globalPos.y, getSize().x, getSize().y};}
-      ReyEngine::Rect<T> getRect() const {return {pos, size};}
+      ReyEngine::Rect<T> getRect() const {return {transform.position, size};}
       ReyEngine::Size<T> getSize() const {return size;}
       Transform2D& getTransform(){return transform;}
       Degrees getRotation(){return Radians(transform.rotation);}
@@ -48,14 +47,13 @@ namespace ReyEngine{
          return C::template make_collider<C>(instanceName, *this);
       }
 //      std::shared_ptr<Collision::CollisionRect> make_collider(const std::string& instanceName);
-      Pos<R_FLOAT>& pos;
       Size<R_FLOAT>& size;
       Transform2D& transform;
    protected:
       /// Bypasses normal mechanisms and just directly sets a rect
       void applySize(const Size<R_FLOAT>& newSize){size = newSize;}
       void applyRect(const Rect<R_FLOAT>& rect){
-         pos = rect.pos();
+         transform.position = rect.pos();
          size = rect.size();
       }
       void setParent(Positionable2D* newParent){parent=newParent;}

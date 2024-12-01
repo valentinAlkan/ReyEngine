@@ -16,6 +16,7 @@ struct Collision::CollisionChecker<CollisionRect, CollisionRect> {
    }
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<Collision::CollisionRect> Collider::make_rect(const std::string &instanceName, const Positionable2D<float> &positionable) {
    auto dtor = [&](CollisionRect* ptr) {
       for (auto layer: ptr->layers) {
