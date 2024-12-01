@@ -11,7 +11,7 @@ namespace ReyEngine {
       REYENGINE_OBJECT_CUSTOM_BUILD(Camera2D, BaseWidget, std::tuple<const std::string&, const Size<int>&>)
    public:
       void setZoom(R_FLOAT newZoom){_cameraTransform.zoom = newZoom;}
-      double getZoom() const {return _cameraTransform.zoom;}
+      R_FLOAT getZoom() const {return _cameraTransform.zoom;}
       void setTarget(const Pos<R_FLOAT>& newTarget){ setPos(newTarget - getSize()/2);}
       Pos<R_FLOAT> getTarget() const{return _cameraTransform.target;}
       /// Translates the coordinates on the camera's lens to a point on the world it is viewing

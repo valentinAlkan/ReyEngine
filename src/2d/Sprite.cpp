@@ -6,8 +6,7 @@ using namespace std;
 /////////////////////////////////////////////////////////////////////////////////////////
 void Sprite::render() const {
    if (texture) {
-      auto rect = getGlobalRect();
-      drawTexture(*texture, region, rect, 0.0, Colors::none);
+      drawTexture(*texture, region, getRect().toSizeRect(), 0.0, Colors::none);
    }
    if (_drawDebugRect){
       drawRectangleLines(getRect().toSizeRect(), 1.0, Colors::blue);
