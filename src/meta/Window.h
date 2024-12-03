@@ -106,6 +106,7 @@ namespace ReyEngine{
       std::queue<std::unique_ptr<InputEvent>> _inputQueueMouse; //a place to hold programatically generated input
       std::queue<std::unique_ptr<InputEvent>> _inputQueueKey; //a place to hold programatically generated input
       std::mutex _inputMtx;
+      RenderTarget _physicsRender; //used for debugging purposes
       /////////////////////
       /////////////////////
       class ProcessList {

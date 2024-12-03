@@ -61,6 +61,18 @@ namespace ReyEngine {
          , NamedInstance(instanceName, TYPE_NAME)
          {}
       protected:
+         // Get corners of a rectangle after transformation
+
+
+
+
+         // Check if ranges overlap
+         static bool rangesOverlap(float minA, float maxA, float minB, float maxB) {
+            return minA <= maxB && maxA >= minB;
+         }
+
+
+
          friend class Collider;
       };
 

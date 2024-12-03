@@ -36,6 +36,22 @@ namespace ReyEngine{
       ReyEngine::Rect<T> getRect() const {return {transform.position, size};}
       ReyEngine::Size<T> getSize() const {return size;}
       Transform2D& getTransform(){return transform;}
+      Matrix getTransformationMatrix() const {
+         //Rotate around the position, do not rotate around {0,0}
+         //column ordered translation
+         Matrix f = MatrixIdentity();
+         f = MatrixMultiply(f, MatrixScale(transform.scale.x, transform.scale.y, 1));
+         f = MatrixMultiply(f, MatrixRotate({0,0,1}, transform.rotation));
+         f = MatrixMultiply(f, MatrixTranslate(transform.position.x, transform.position.y, 0));
+         return f;
+      }
+      Matrix getGlobalTransformationMatrix() const {
+         auto f = getTransformationMatrix();
+         if (parent){
+            f = MatrixMultiply(f, parent->getGlobalTransformationMatrix());
+         }
+         return f;
+      }
       Degrees getRotation(){return Radians(transform.rotation);}
       void setRotation(Degrees newRotation){transform.rotation = Radians(newRotation).get();}
       T getWidth() const {return size.x;}

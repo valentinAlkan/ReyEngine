@@ -52,7 +52,6 @@ namespace ReyEngine {
             return {};
          }
       private:
-         void processCollisionLayer(int layer, const Collision::CollisionLayer&);
          static PhysicsSystem& instance();
          static std::unique_ptr<PhysicsSystem> _self;
          std::map<int, Collision::CollisionLayer> collisionLayers;

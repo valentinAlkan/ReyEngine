@@ -183,12 +183,12 @@ void ReyEngine::minimizeWindow() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-template<> Circle ReyEngine::Rect<double>::circumscribe() {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/0.70710678118/2};}
-template<> Circle ReyEngine::Rect<int>::circumscribe() {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/0.70710678118/2};}
-template<> Circle ReyEngine::Rect<float>::circumscribe() {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/0.70710678118/2};}
-template<> Circle ReyEngine::Rect<double>::inscribe() {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/2};}
-template<> Circle ReyEngine::Rect<int>::inscribe() {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/2};}
-template<> Circle ReyEngine::Rect<float>::inscribe() {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/2};}
+template<> Circle ReyEngine::Rect<double>::circumscribe() const {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/0.70710678118/2};}
+template<> Circle ReyEngine::Rect<int>::circumscribe() const {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/0.70710678118/2};}
+template<> Circle ReyEngine::Rect<float>::circumscribe() const {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/0.70710678118/2};}
+template<> Circle ReyEngine::Rect<double>::inscribe() const {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/2};}
+template<> Circle ReyEngine::Rect<int>::inscribe() const {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/2};}
+template<> Circle ReyEngine::Rect<float>::inscribe() const {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/2};}
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -88,6 +88,8 @@ void BaseWidget::renderChain(Pos<R_FLOAT>& parentOffset) {
       return Vector3Transform(point, MatrixInvert(frameMatrix));
    };
 
+
+
    if (!_visible) return;
    Pos<R_FLOAT> localOffset;
    renderBegin(localOffset);
@@ -97,11 +99,14 @@ void BaseWidget::renderChain(Pos<R_FLOAT>& parentOffset) {
 
    auto rotation = Degrees(getRotation()).get();
    rlPushMatrix();
-   rlTranslatef(transform.position.x, transform.position.y, 0);
-   rlRotatef(rotation, 0,0,1);
-   rlTranslatef(-transform.position.x, -transform.position.y, 0);
-   rlTranslatef(transform.position.x, transform.position.y, 0);
-   rlScalef(transform.scale.x, transform.scale.y, 1);
+   auto xform = MatrixTranspose(getTransformationMatrix());
+   rlMultMatrixf((const float*)&xform);
+   cout << "Widget " << getName() << " global transformation matrix" << endl;
+   printMatrix(rlGetMatrixTransform());
+   auto a = Vec2<R_FLOAT>{10,10};
+   auto b = Vec2<R_FLOAT>{5,20};
+   cout << "Point " << a << " transformed to " << a.transform(rlGetMatrixTransform()) << endl;
+   cout << "Point " << b << " transformed to " << b.transform(rlGetMatrixTransform()) << endl;
    if (transform.position.x || transform.position.y || rotation) {
       frameStack.push_back(MatrixRotate({0,0,1}, rotation));
    }

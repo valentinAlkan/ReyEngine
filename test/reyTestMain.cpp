@@ -2046,32 +2046,38 @@ int main(int argc, char** argv) {
            auto ctl2 = Control::build("ctl2");
            auto ctl3 = Control::build("ctl3");
            auto ctl4 = Control::build("ctl4");
+           auto ctl5 = Control::build("ctl5");
            ctl1->setRect({0, Y_POS,100,100});
            ctl2->setRect({X_POS + 200,Y_POS,100,100});
            ctl3->setRect({X_POS,Y_POS + 200,100,100});
            ctl4->setRect({0,0,0,0});
-           auto collider1 = ctl1->createCollider<Collision::CollisionRect>("collider1");
-           auto collider2 = ctl2->createCollider<Collision::CollisionRect>("collider2");
-           auto collider3 = ctl3->createCollider<Collision::CollisionRect>("collider3");
-           auto collider4 = ctl4->createCollider<Collision::CollisionRect>("collider4");
+           ctl5->setRect({800,400, 100, 100});
+           auto collider1 = ctl1->createCollider<Collision::CollisionRect>("collider");
+           auto collider2 = ctl2->createCollider<Collision::CollisionRect>("collider");
+           auto collider3 = ctl3->createCollider<Collision::CollisionRect>("collider");
+           auto collider4 = ctl4->createCollider<Collision::CollisionRect>("collider");
+           auto collider5 = ctl5->createCollider<Collision::CollisionRect>("collider");
            root->addChild(ctl1);
            root->addChild(ctl2);
            root->addChild(ctl3);
            root->addChild(ctl4);
+           root->addChild(ctl5);
            ctl1->Component::addChild(collider1);
            ctl2->Component::addChild(collider2);
            ctl3->Component::addChild(collider3);
            ctl4->Component::addChild(collider4);
+           ctl5->Component::addChild(collider5);
            collider1->addToLayer<Collision::CollisionRect>(0);
            collider2->addToLayer<Collision::CollisionRect>(0);
            collider3->addToLayer<Collision::CollisionRect>(0);
            collider4->addToLayer<Collision::CollisionRect>(0);
+           collider5->addToLayer<Collision::CollisionRect>(0);
 
            static float _dt = 0;
            auto proc = [&](Control& ctl, float dt){
               ctl1->setPos({X_POS * sin(_dt += dt) * 2.5, ctl1->getPos().y});
               ctl3->setPos({ctl3->getPos().x, Y_POS * sin(_dt += dt) * 2.5});
-               for (auto& collider : {collider1, collider2, collider3, collider4}){
+               for (auto& collider : {collider1, collider2, collider3, collider4, collider5}){
                   auto parentCtl = collider->getParent().lock()->toType<Control>();
                   if (collider->getIsColliding()){
                      parentCtl->getTheme()->background.colorPrimary.value = Colors::green;
@@ -2081,9 +2087,21 @@ int main(int argc, char** argv) {
                }
                //move ctl 4
                ctl4->setRect({InputManager::getMousePos(), {20,20}});
+               ctl5->setRotation(ctl5->getRotation()+0.1);
+           };
+
+           auto ctlRender = [&](const Control& ctl){
+              auto rect = ctl.getRect().toSizeRect();
+              ctl.drawRectangle(rect, ctl.getTheme()->background.colorPrimary.value);
+              ctl.drawRectangleLines(rect, 2.0, Colors::blue);
            };
 
            ctl1->setProcessCallback(proc);
+
+           for (auto ctl : {ctl1, ctl2, ctl3, ctl4, ctl5}){
+              ctl->setRenderCallback(ctlRender);
+           }
+
       } else {
             cout << args.getDocString() << endl;
             return 0;

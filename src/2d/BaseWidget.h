@@ -194,6 +194,7 @@ namespace ReyEngine{
 
       template <typename T> bool is_base_of(){return std::is_base_of_v<BaseWidget, T>;}
       inline std::shared_ptr<Style::Theme>& getTheme(){return theme;}
+      inline const std::shared_ptr<Style::Theme>& getTheme() const {return theme;}
       inline void setTheme(std::shared_ptr<Style::Theme>& newTheme){theme = newTheme;}
 
       //drawing functions

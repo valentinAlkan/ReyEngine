@@ -111,11 +111,18 @@ namespace ReyEngine {
          if (y > clampB.y) retval.y = clampB.y;
          return retval;
       }
-      inline double length(){return std::sqrt(x * x + y * y);}
-      inline Vec2<T> normalize(){double len = length();return {(T)(x / len), (T)(y / len)};}
+      inline double length() const {return std::sqrt(x * x + y * y);}
+      inline Vec2<T> normalize() const {double len = length();return {(T)(x / len), (T)(y / len)};}
       inline static std::vector<T> fromString(const std::string& s){return Vec<T>::fromString(2, s);};
       friend std::ostream& operator<<(std::ostream& os, Vec2<T> v) {os << v.toString(); return os;}
       friend Vector2& operator+=(Vector2& in, Vec2<T> add) {in.x += add.x; in.y += add.y; return in;}
+      inline Vec2 transform(const Matrix& m) const {
+//         auto wx = m.m0 * x - m.m1 * y;  // Negating m.m1
+//         auto wy = -m.m4 * x + m.m5 * y; // Negating m.m4
+//         return {wx, wy};
+         auto retval = Vector3Transform({x, y, 0}, m);
+         return Vec2(retval.x, retval.y);
+      }
       T x;
       T y;
       [[nodiscard]] inline std::vector<T> getElements() const override {return {x,y};}
@@ -259,26 +266,26 @@ namespace ReyEngine {
 
    template <typename T=R_FLOAT>
    struct Pos : public Vec2<T>{
-      inline Pos(): Vec2<T>(){}
-      inline Pos(const T& x, const T& y) : Vec2<T>(x, y){}
-      inline Pos(const Vector2& v) : Vec2<T>(v){}
+      constexpr inline Pos(): Vec2<T>(){}
+      constexpr inline Pos(const T& x, const T& y) : Vec2<T>(x, y){}
+      constexpr inline Pos(const Vector2& v) : Vec2<T>(v){}
       template <typename R>
-      inline Pos(const Vec2<R>& v) : Vec2<T>(v){}
-      inline void operator=(Size<T>&) = delete;
+      constexpr inline Pos(const Vec2<R>& v) : Vec2<T>(v){}
+      constexpr inline void operator=(Size<T>&) = delete;
       template <typename R>
-      inline Pos& operator=(const Pos<R>& other){Vec2<T>::x = other.x; Vec2<T>::y=other.y; return *this;}
-      inline Pos operator+(const Pos& rhs) const {auto val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
-      inline Pos operator-(const Pos& rhs) const {auto val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
-      inline Pos operator-() const {return {-Vec2<T>::x, -Vec2<T>::y};}
-      inline Pos& operator+=(const Pos& rhs){this->x += rhs.x; this->y += rhs.y; return *this;}
-      inline Pos& operator-=(const Pos& rhs){this->x -= rhs.x; this->y -= rhs.y; return *this;}
-      inline bool operator!=(const Pos& rhs){return this->x != rhs.x || this->y != rhs.y;}
+      constexpr inline Pos& operator=(const Pos<R>& other){Vec2<T>::x = other.x; Vec2<T>::y=other.y; return *this;}
+      constexpr inline Pos operator+(const Pos& rhs) const {auto val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
+      constexpr inline Pos operator-(const Pos& rhs) const {auto val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
+      constexpr inline Pos operator-() const {return {-Vec2<T>::x, -Vec2<T>::y};}
+      constexpr inline Pos& operator+=(const Pos& rhs){this->x += rhs.x; this->y += rhs.y; return *this;}
+      constexpr inline Pos& operator-=(const Pos& rhs){this->x -= rhs.x; this->y -= rhs.y; return *this;}
+      constexpr inline bool operator!=(const Pos& rhs){return this->x != rhs.x || this->y != rhs.y;}
       inline operator std::string() const {return Vec2<T>::toString();}
-      inline void operator=(const Size<T>&) = delete;
-      inline Pos clamp(Pos clampA, Pos clampB) const { return Pos(Vec2<T>::clamp(clampA, clampB));}
+      constexpr inline void operator=(const Size<T>&) = delete;
+      constexpr inline Pos clamp(Pos clampA, Pos clampB) const { return Pos(Vec2<T>::clamp(clampA, clampB));}
 //      inline Pos& operator=(const Vec2<T>& other){Pos::x = other.x; Pos::y = other.y; return *this;}
 //      Rotate around a basis point
-      inline Pos rotatePoint(const Pos<int>& basis, Radians r) const {
+      constexpr inline Pos rotatePoint(const Pos<int>& basis, Radians r) const {
            double radians = r.get();
            // Translate point to origin
            double xTranslated = Pos::x - basis.x;
@@ -290,7 +297,7 @@ namespace ReyEngine {
            return p_rotated;
        }
       // Function to project a point distance d from point a along the line ab
-      inline Pos project(const Pos& b, double d) const {
+      constexpr inline Pos project(const Pos& b, double d) const {
           // Calculate the direction vector from a to b
           Pos direction = b - *this;
           // Normalize the direction vector
@@ -301,7 +308,7 @@ namespace ReyEngine {
           Pos projectedPoint = *this + Pos(scaledDirection.x, scaledDirection.y);
           return projectedPoint;
       }
-      double distanceTo(const Pos& other) const {
+      constexpr double distanceTo(const Pos& other) const {
          auto diff = *this - other;
          return std::sqrt(diff.x * diff.x + diff.y * diff.y);
       }
@@ -569,10 +576,19 @@ namespace ReyEngine {
          auto b = getSubRect(size, indexStop);
          return getBoundingRect(a,b);
       }
-      Circle circumscribe();
-      Circle inscribe();
-
+      Circle circumscribe() const;
+      Circle inscribe() const;
       constexpr inline void clear(){x=0,y=0,width=0;height=0;}
+      constexpr inline std::array<Vec2<R_FLOAT>, 4> transform(const Matrix& m) const {
+         std::array<Vec2<R_FLOAT>, 4> corners;
+         corners[0] = topLeft().transform(m);
+         corners[1] = topRight().transform(m);
+         corners[2] = bottomLeft().transform(m);
+         corners[3] = bottomRight().transform(m);
+         return corners;
+      }
+
+
       T x;
       T y;
       T width;
@@ -707,6 +723,7 @@ namespace ReyEngine {
 
    //should maybe use eigen transforms. one day.
    struct Transform2D {
+      //todo: This should be a matrix, and functions should decompose it
       Pos<R_FLOAT> position;
       R_FLOAT rotation; // In radians
       Vec2<R_FLOAT> scale = {1.0f, 1.0f};
@@ -938,14 +955,16 @@ namespace ReyEngine {
          Size<int> _size;
       };
 
-//   struct CameraStack2D{
-//      CameraStack2D();
-//      Camera2D camera;
-//      Pos<R_FLOAT> screenToWorld(const Pos<R_FLOAT>& pos) const {return GetScreenToWorld2D((Vector2)pos, camera);}
-//      Pos<R_FLOAT> worldToScreen(const Pos<R_FLOAT>& pos) const {return GetWorldToScreen2D((Vector2)pos, camera);}
-//      void push() const;
-//      void pop();
-//   };
+   inline void printMatrix(const Matrix& m) {
+      // Print in row-major format for readability
+      printf("Matrix (column-major):\n");
+      printf("[%.3f  %.3f  %.3f  %.3f]\n", m.m0, m.m1, m.m2,  m.m3);
+      printf("[%.3f  %.3f  %.3f  %.3f]\n", m.m4, m.m5, m.m6,  m.m7);
+      printf("[%.3f  %.3f  %.3f  %.3f]\n", m.m8, m.m9, m.m10, m.m11);
+      printf("[%.3f  %.3f  %.3f  %.3f]\n", m.m12, m.m13, m.m14, m.m15);
+      fflush(stdout);
+   }
+
 }
 
 namespace InputInterface{
