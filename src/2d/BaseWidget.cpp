@@ -100,7 +100,9 @@ void BaseWidget::renderChain(Pos<R_FLOAT>& parentOffset) {
    auto rotation = Degrees(getRotation()).get();
    rlPushMatrix();
    auto xform = MatrixTranspose(getTransformationMatrix());
-   rlMultMatrixf((const float*)&xform);
+   rlTranslatef(transform.position.x, transform.position.y, 0);
+   rlRotatef(transform.rotation, 0,0,1);
+   rlScalef(transform.scale.x, transform.scale.y, 1);
    if (getName() == "ctl5") {
       // Get the actual global transform matrix for comparison
       auto globalXform = getGlobalTransformationMatrix();

@@ -32,9 +32,9 @@ namespace ReyEngine{
          //Rotate around the position, do not rotate around {0,0}
          //column ordered translation
          Matrix f = MatrixIdentity();
-         f = MatrixMultiply(f, MatrixScale(transform.scale.x, transform.scale.y, 1));
-         f = MatrixMultiply(f, MatrixRotate({0,0,1}, transform.rotation));
          f = MatrixMultiply(f, MatrixTranslate(transform.position.x, transform.position.y, 0));
+         f = MatrixMultiply(f, MatrixRotate({0,0,1}, transform.rotation));
+         f = MatrixMultiply(f, MatrixScale(transform.scale.x, transform.scale.y, 1));
          return f;
       }
       Matrix getGlobalTransformationMatrix() const {
