@@ -106,7 +106,9 @@ namespace ReyEngine{
       std::queue<std::unique_ptr<InputEvent>> _inputQueueMouse; //a place to hold programatically generated input
       std::queue<std::unique_ptr<InputEvent>> _inputQueueKey; //a place to hold programatically generated input
       std::mutex _inputMtx;
-      RenderTarget _physicsRender; //used for debugging purposes
+      RenderTarget _renderTarget; //don't use canvas' built in render target. This lets us pass it around to other
+                                 // parts of the system that might want to draw on the main canvas for some reason.
+                                 // helpful for debugging.
       /////////////////////
       /////////////////////
       class ProcessList {

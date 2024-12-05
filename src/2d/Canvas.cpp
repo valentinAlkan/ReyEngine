@@ -17,8 +17,12 @@ void ReyEngine::Canvas::_init() {
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::Canvas::renderBegin(ReyEngine::Pos<R_FLOAT>& textureOffset) {
-   Application::getWindow(0).pushRenderTarget(_renderTarget);
-   _renderTarget.clear();
+   //only clear owned render target.
+   // otherwise we will assume that is being managed externally (by window, for instance)
+   if (_renderTargetPtr) {
+      Application::getWindow(0).pushRenderTarget(_renderTarget);
+      _renderTarget.clear();
+   }
    textureOffset -= getPos();
    //apply the active camera transform
    auto camera = _activeCamera.lock();
@@ -31,7 +35,7 @@ void ReyEngine::Canvas::renderBegin(ReyEngine::Pos<R_FLOAT>& textureOffset) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::Canvas::render() const{
-   drawRectangleLines(getRect().toSizeRect(), 2.0, Colors::red);
+//   drawRectangleLines(getRect().toSizeRect(), 2.0, Colors::red);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -47,7 +51,9 @@ void ReyEngine::Canvas::renderEnd() {
    if (camera){
       rlPopMatrix();
    }
-   Application::getWindow(0).popRenderTarget();
+   if (_renderTargetPtr) {
+      Application::getWindow(0).popRenderTarget();
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

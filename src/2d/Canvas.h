@@ -7,7 +7,7 @@ namespace ReyEngine{
    public:
       REYENGINE_DEFAULT_BUILD(Canvas);
       static std::shared_ptr<Canvas> build(const std::string &name, RenderTarget& renderTarget) noexcept {
-         auto me = std::shared_ptr<Canvas>(new Canvas(name));
+         auto me = std::shared_ptr<Canvas>(new Canvas(name, renderTarget));
          return me;
       }
       //modality
@@ -26,12 +26,11 @@ namespace ReyEngine{
       : REYENGINE_CTOR_INIT_LIST(instanceName, BaseWidget)
       , _renderTargetPtr(std::make_unique<RenderTarget>())
       , _renderTarget(*_renderTargetPtr)
-      {
-         std::cout << &(*_renderTargetPtr) << std::endl;
-      }
-      Canvas(const std::string& instanceName, RenderTarget& renderTarget): Canvas(instanceName){
-         _renderTarget = renderTarget;
-      }
+      {}
+      Canvas(const std::string& instanceName, RenderTarget& renderTarget)
+      : REYENGINE_CTOR_INIT_LIST(instanceName, BaseWidget)
+      , _renderTarget(renderTarget)
+      {}
       void renderBegin(Pos<R_FLOAT>& textureOffset) override;
       void render() const override;
       void renderActiveCamera(Pos<R_FLOAT>& textureOffset);

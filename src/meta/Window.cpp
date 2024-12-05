@@ -73,7 +73,7 @@ Window::Window(const std::string &title, int width, int height, const std::vecto
 void Window::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
     //Create canvas if not provided
     if (!optRoot) {
-        optRoot = Canvas::build("root");
+        optRoot = Canvas::build("root", _renderTarget);
     }
     auto& root = optRoot.value();
     root->ReyEngine::Internal::TypeContainer<ReyEngine::BaseWidget>::setRoot(true);
@@ -101,7 +101,7 @@ void Window::exec(){
    ReyEngine::Size<int> size = getSize();
    ReyEngine::Pos<int> position;
    SetTargetFPS(targetFPS);
-   _physicsRender.setSize(size);
+   _renderTarget.setSize(size);
    while (!WindowShouldClose()){
       {
 
@@ -117,8 +117,8 @@ void Window::exec(){
             if (canvas->getAnchoring() != BaseWidget::Anchor::NONE) {
                canvas->setSize(size);
             }
-            if (newSize != _physicsRender.getSize()){
-               _physicsRender.setSize(newSize);
+            if (newSize != _renderTarget.getSize()){
+               _renderTarget.setSize(newSize);
             }
          }
          //see if the window has moved
@@ -331,13 +331,6 @@ void Window::exec(){
             }
          }
 
-         //do physics synchronously for now
-         rlLoadIdentity();
-         Application::getWindow(0).pushRenderTarget(_physicsRender); //debug
-         _physicsRender.clear();
-         Physics::PhysicsSystem::process();
-         Application::getWindow(0).popRenderTarget(); //debug
-
          //process timers and call their callbacks
          SystemTime::processTimers();
 
@@ -348,7 +341,16 @@ void Window::exec(){
          //draw the canvas
          rlLoadIdentity();
          ReyEngine::Pos<R_FLOAT> texOffset;
+         Application::getWindow(0).pushRenderTarget(_renderTarget);
+         _renderTarget.clear();
          canvas->renderChain(texOffset);
+         Application::getWindow(0).popRenderTarget(); //debug
+
+         //do physics synchronously for now
+         rlLoadIdentity();
+         Application::getWindow(0).pushRenderTarget(_renderTarget); //debug
+         Physics::PhysicsSystem::process();
+         Application::getWindow(0).popRenderTarget(); //debug
 
 
          //draw the drag and drop preview (if any)
@@ -356,15 +358,10 @@ void Window::exec(){
             _dragNDrop.value()->preview.value()->setPos(InputManager::getMousePos());
             _dragNDrop.value()->preview.value()->renderChain(texOffset);
          }
-         //render the canvas
+         //render the canvas to the window
          BeginDrawing();
-         if (_frameCounter % 2 == 0) {
-            const auto &target = canvas->_renderTarget;
-            DrawTextureRec(target.getRenderTexture(), {0, 0, (float) target.getSize().x, -(float) target.getSize().y},{0, 0}, WHITE);
-         } else {
-            const auto &target = _physicsRender;
-            DrawTextureRec(target.getRenderTexture(), {0, 0, (float) target.getSize().x, -(float) target.getSize().y},{0, 0}, WHITE);
-         }
+         const auto &target = canvas->_renderTarget;
+         DrawTextureRec(target.getRenderTexture(), {0, 0, (float) target.getSize().x, -(float) target.getSize().y},{0, 0}, WHITE);
          EndDrawing();
       } // release scoped lock here
       _frameCounter++;
