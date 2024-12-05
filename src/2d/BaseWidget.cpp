@@ -83,58 +83,24 @@ ReyEngine::Size<R_FLOAT> BaseWidget::getChildBoundingBox() const {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::renderChain(Pos<R_FLOAT>& parentOffset) {
-   static std::vector<Matrix> frameStack;
-    auto getPointInFrame = [](Vector3 point, const Matrix& frameMatrix) {
-      return Vector3Transform(point, MatrixInvert(frameMatrix));
-   };
-
-
-
    if (!_visible) return;
    Pos<R_FLOAT> localOffset;
    renderBegin(localOffset);
    auto prevOffset = _renderOffset;
    _renderOffset += (localOffset + parentOffset);
-   //backrender
 
-   auto rotation = Degrees(getRotation()).get();
    rlPushMatrix();
-   auto xform = MatrixTranspose(getTransformationMatrix());
    rlTranslatef(transform.position.x, transform.position.y, 0);
-   rlRotatef(transform.rotation, 0,0,1);
+   rlRotatef(transform.rotation * 180/M_PI, 0,0,1);
    rlScalef(transform.scale.x, transform.scale.y, 1);
-   if (getName() == "ctl5") {
-      // Get the actual global transform matrix for comparison
-      auto globalXform = getGlobalTransformationMatrix();
-      cout << "Main Thread:" << getName() << " global transformation matrix : " << endl;
-      printMatrix(globalXform);
-      cout << "Main Thread: RayLib's cumulative matrix:";
-      printMatrix(rlGetMatrixTransform());
-      cout << "Main Thread: Rect = " << getRect() << endl;
-      cout << "Main Thread: Ctl5 transformed corners using global transform = ";
-      for (auto corner : getRect().transform(rlGetMatrixTransform())){
-         cout << corner << ", ";
-      }
-      cout << endl;
-   }
-   if (transform.position.x || transform.position.y || rotation) {
-      frameStack.push_back(MatrixRotate({0,0,1}, rotation));
-   }
    for (const auto &child: _backRenderList) {
       child->renderChain(_renderOffset);
-   }
-
-   if (!frameStack.empty()) {
-      drawLine({{-transform.position.x, -transform.position.y}, {0, 0}}, 2.0, Colors::red);
    }
    render();
 
    //front render
    for (const auto &child: _frontRenderList) {
       child->renderChain(_renderOffset);
-   }
-   if (!frameStack.empty()) {
-      frameStack.pop_back();
    }
    rlPopMatrix();
    _renderOffset = prevOffset; //reset to local offset when we are done
