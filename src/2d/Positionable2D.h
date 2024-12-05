@@ -24,14 +24,6 @@ namespace ReyEngine{
          }
          return sum;
       }
-//      Transform2D getGlobalTransform() const {
-//         //sum up all our ancestors' rotations and add our own to it
-//         auto sum = transform;
-//         if (parent){ //todo: Race conditions?
-//            sum *= parent->transform;
-//         }
-//         return sum;
-//      }
       ReyEngine::Rect<T> getGlobalRect() const {auto globalPos = getGlobalPos(); return {globalPos.x, globalPos.y, getSize().x, getSize().y};}
       ReyEngine::Rect<T> getRect() const {return {transform.position, size};}
       ReyEngine::Size<T> getSize() const {return size;}

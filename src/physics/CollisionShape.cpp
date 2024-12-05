@@ -130,10 +130,10 @@ struct Collision::CollisionChecker<CollisionRect, CollisionRect> {
    static bool collide(const CollisionRect& a, const CollisionRect& b) {
       if (&a == &b) return false;
 
-      auto xformA = MatrixTranspose(a.positionable.getGlobalTransformationMatrix());
-      auto xformB = MatrixTranspose(b.positionable.getGlobalTransformationMatrix());
-      auto rectA = a.positionable.getRect();
-      auto rectB = b.positionable.getRect();
+      auto xformA = a.positionable.getGlobalTransformationMatrix();
+      auto xformB = b.positionable.getGlobalTransformationMatrix();
+      auto rectA = a.positionable.getRect().toSizeRect();
+      auto rectB = b.positionable.getRect().toSizeRect();
 
       if (b.getName() == "collider5") {
          // Get the actual global transform matrix for comparison
