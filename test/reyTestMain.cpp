@@ -2052,11 +2052,11 @@ int main(int argc, char** argv) {
            ctl3->setRect({X_POS,Y_POS + 200,100,100});
            ctl4->setRect({0,0,0,0});
            ctl5->setRect({800,400, 100, 100});
-           auto collider1 = ctl1->createCollider<Collision::CollisionRect>("collider");
-           auto collider2 = ctl2->createCollider<Collision::CollisionRect>("collider");
-           auto collider3 = ctl3->createCollider<Collision::CollisionRect>("collider");
-           auto collider4 = ctl4->createCollider<Collision::CollisionRect>("collider");
-           auto collider5 = ctl5->createCollider<Collision::CollisionRect>("collider");
+           auto collider1 = ctl1->createCollider<Collision::CollisionRect>("collider1");
+           auto collider2 = ctl2->createCollider<Collision::CollisionRect>("collider2");
+           auto collider3 = ctl3->createCollider<Collision::CollisionRect>("collider3");
+           auto collider4 = ctl4->createCollider<Collision::CollisionRect>("collider4");
+           auto collider5 = ctl5->createCollider<Collision::CollisionRect>("collider5");
            root->addChild(ctl1);
            root->addChild(ctl2);
            root->addChild(ctl3);
@@ -2087,7 +2087,7 @@ int main(int argc, char** argv) {
                }
                //move ctl 4
                ctl4->setRect({InputManager::getMousePos(), {20,20}});
-               ctl5->setRotation(ctl5->getRotation()+0.1);
+               ctl5->setRotation(ctl5->getRotation()+0.01);
            };
 
            auto ctlRender = [&](const Control& ctl){

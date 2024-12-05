@@ -23,7 +23,6 @@ void ReyEngine::Canvas::renderBegin(ReyEngine::Pos<R_FLOAT>& textureOffset) {
    //apply the active camera transform
    auto camera = _activeCamera.lock();
    if (camera){
-      auto xform = camera->getTransform();
       rlPushMatrix();
       // Apply 2d camera transformation to modelview
       rlMultMatrixf(MatrixToFloat(camera->getCameraMatrix2D()));
@@ -135,7 +134,10 @@ void Canvas::clearModal() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::_on_rect_changed() {
-   _renderTarget.setSize(getSize());
+   //only resize the render target if we are the owner
+   if (_renderTargetPtr) {
+      _renderTarget.setSize(getSize());
+   }
 //   _defaultCamera.setTarget(Vec2<float>(getSize().x/2, getSize().y/2));
 //   _defaultCamera.target = _defaultCamera.offset;
 //   auto gpos = getGlobalPos();

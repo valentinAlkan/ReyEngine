@@ -1,5 +1,6 @@
 #include "CollisionShape.h"
 #include "Physics.h"
+#include "rlgl.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -68,53 +69,113 @@ static void drawProjection(const Vec2<R_FLOAT>& axis, float min, float max, floa
 // Specialize for each pair
 template<>
 struct Collision::CollisionChecker<CollisionRect, CollisionRect> {
+   static void drawCorners(const std::array<Vec2<R_FLOAT>, 4>& corners, Color color) {
+      for(int i = 0; i < 4; i++) {
+         DrawCircle(corners[i].x, corners[i].y, 3.0f, color);
+         DrawLineV(
+               {corners[i].x, corners[i].y},
+               {corners[(i+1)%4].x, corners[(i+1)%4].y},
+               color
+         );
+      }
+   }
+
+   static void drawAxis(const Vec2<R_FLOAT>& origin, const Vec2<R_FLOAT>& axis, float length, Color color) {
+      auto normalized = axis;
+      normalized = normalized.normalize();
+      auto endPoint = origin + normalized * length;
+
+      DrawLineV({origin.x, origin.y}, {endPoint.x, endPoint.y}, color);
+
+      // Draw arrow head
+      Vec2<R_FLOAT> perpendicular(-normalized.y, normalized.x);
+      float arrowSize = 10.0f;
+
+      auto arrowLeft = endPoint - normalized * arrowSize + perpendicular * (arrowSize * 0.5f);
+      auto arrowRight = endPoint - normalized * arrowSize - perpendicular * (arrowSize * 0.5f);
+
+      DrawLineV({endPoint.x, endPoint.y}, {arrowLeft.x, arrowLeft.y}, color);
+      DrawLineV({endPoint.x, endPoint.y}, {arrowRight.x, arrowRight.y}, color);
+   }
+
+   static void drawProjection(const Vec2<R_FLOAT>& axis, float min, float max, float yOffset, Color color) {
+      auto normalized = axis.normalize();
+      Vec2<R_FLOAT> perpendicular(-normalized.y, normalized.x);
+
+      auto start = normalized * min + perpendicular * yOffset;
+      auto end = normalized * max + perpendicular * yOffset;
+
+      DrawLineV({start.x, start.y}, {end.x, end.y}, color);
+      DrawCircle(start.x, start.y, 3.0f, color);
+      DrawCircle(end.x, end.y, 3.0f, color);
+   }
+
+   static void projectPoints(const std::array<Vec2<R_FLOAT>, 4>& points, const Vec2<R_FLOAT>& axis, float& min, float& max) {
+      // Get normalized axis for projection
+      auto normalized = axis.normalize();
+
+      min = max = (points[0].x * normalized.x + points[0].y * normalized.y);
+
+      for(int i = 1; i < 4; i++) {
+         float projection = points[i].x * normalized.x + points[i].y * normalized.y;
+         min = std::min(min, projection);
+         max = std::max(max, projection);
+      }
+   }
+
+   static bool rangesOverlap(float minA, float maxA, float minB, float maxB) {
+      return minA <= maxB && maxA >= minB;
+   }
+
    static bool collide(const CollisionRect& a, const CollisionRect& b) {
       if (&a == &b) return false;
 
-      cout << "Physics collision A matrix: " << endl;
-      auto xformA = a.positionable.getGlobalTransformationMatrix();
-      printMatrix(xformA);
-      cout << "Physics collision B matrix: " << endl;
-      auto xformB = b.positionable.getGlobalTransformationMatrix();
-      printMatrix(xformB);
-
-      auto _a = Vec2<R_FLOAT>{10,10};
-      auto _b = Vec2<R_FLOAT>{5,20};
-      cout << "Point " << _a << " transformed to " << _a.transform(xformA) << endl;
-      cout << "Point " << _b << " transformed to " << _b.transform(xformB) << endl;
-
+      auto xformA = MatrixTranspose(a.positionable.getGlobalTransformationMatrix());
+      auto xformB = MatrixTranspose(b.positionable.getGlobalTransformationMatrix());
       auto rectA = a.positionable.getRect();
       auto rectB = b.positionable.getRect();
 
-      // Get transformed corners using your transform method
+      if (b.getName() == "collider5") {
+         // Get the actual global transform matrix for comparison
+         cout << "Physics thread: " << b.getName() << " global transformation matrix : " << endl;
+         printMatrix(xformB);
+
+         cout << "Physics thread: " << "Rect = " << b.positionable.getRect() << endl;
+         cout << "Physics thread: " << "Ctl5 transformed corners using global transform = ";
+         for (auto corner : b.positionable.getRect().transform(xformB)){
+            cout << corner << ", ";
+         }
+         cout << endl;
+      }
+
+      // Get transformed corners as Vec2 instead of Pos
       auto cornersA = rectA.transform(xformA);
       auto cornersB = rectB.transform(xformB);
+
 
       // Debug visualization of corners
       drawCorners(cornersA, RED);
       drawCorners(cornersB, BLUE);
 
-      // Get axes to test
-      std::array<Vec2<R_FLOAT>, 4> axes = {
-            Vec2<R_FLOAT>(xformA.m0, xformA.m1),  // First column = x axis of A
-            Vec2<R_FLOAT>(xformA.m4, xformA.m5),  // Second column = y axis of A
-            Vec2<R_FLOAT>(xformB.m0, xformB.m1),  // First column = x axis of B
-            Vec2<R_FLOAT>(xformB.m4, xformB.m5)   // Second column = y axis of B
-      };
+//       Calculate axes from the edges of the transformed rectangles
+      std::array<Vec2<R_FLOAT>, 4> axes;
 
-      // Normalize axes
-      for(auto& axis : axes) {
-         axis = axis.normalize();
-      }
+      // Rectangle A axes
+      axes[0] = cornersA[1] - cornersA[0]; // Top edge
+      axes[1] = cornersA[2] - cornersA[0]; // Left edge
 
-      // Test each axis
-      Vec2<R_FLOAT> center(
-            (cornersA[0].x + cornersA[2].x) * 0.5f,
-            (cornersA[0].y + cornersA[2].y) * 0.5f
-      );
+      // Rectangle B axes
+      axes[2] = cornersB[1] - cornersB[0]; // Top edge
+      axes[3] = cornersB[2] - cornersB[0]; // Left edge
+
+      // Calculate center for debug visualization
+      Vec2<R_FLOAT> center = (cornersA[0] + cornersA[2]) * 0.5f;
 
       for(int i = 0; i < 4; i++) {
-         const auto& axis = axes[i];
+         auto& axis = axes[i];
+
+         // Skip degenerate axes
+         if (axis.x == 0 && axis.y == 0) continue;
 
          // Draw the current axis being tested
          drawAxis(center, axis, 100.0f, GREEN);

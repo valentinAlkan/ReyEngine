@@ -101,12 +101,20 @@ void BaseWidget::renderChain(Pos<R_FLOAT>& parentOffset) {
    rlPushMatrix();
    auto xform = MatrixTranspose(getTransformationMatrix());
    rlMultMatrixf((const float*)&xform);
-   cout << "Widget " << getName() << " global transformation matrix" << endl;
-   printMatrix(rlGetMatrixTransform());
-   auto a = Vec2<R_FLOAT>{10,10};
-   auto b = Vec2<R_FLOAT>{5,20};
-   cout << "Point " << a << " transformed to " << a.transform(rlGetMatrixTransform()) << endl;
-   cout << "Point " << b << " transformed to " << b.transform(rlGetMatrixTransform()) << endl;
+   if (getName() == "ctl5") {
+      // Get the actual global transform matrix for comparison
+      auto globalXform = getGlobalTransformationMatrix();
+      cout << "Main Thread:" << getName() << " global transformation matrix : " << endl;
+      printMatrix(globalXform);
+      cout << "Main Thread: RayLib's cumulative matrix:";
+      printMatrix(rlGetMatrixTransform());
+      cout << "Main Thread: Rect = " << getRect() << endl;
+      cout << "Main Thread: Ctl5 transformed corners using global transform = ";
+      for (auto corner : getRect().transform(rlGetMatrixTransform())){
+         cout << corner << ", ";
+      }
+      cout << endl;
+   }
    if (transform.position.x || transform.position.y || rotation) {
       frameStack.push_back(MatrixRotate({0,0,1}, rotation));
    }

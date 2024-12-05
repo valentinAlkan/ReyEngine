@@ -79,6 +79,7 @@ void Window::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
     root->ReyEngine::Internal::TypeContainer<ReyEngine::BaseWidget>::setRoot(true);
     root->setAnchoring(BaseWidget::Anchor::FILL); //canvas is filled by default
     //make sure we init the root
+    root->_init();
     root->_has_inited = true;
     root->setRect(Rect<int>(0, 0, startingWidth, startingHeight)); //initialize to be the same size as the window
     TypeContainer<BaseWidget>::addChild(root);
