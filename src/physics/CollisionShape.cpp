@@ -6,65 +6,6 @@ using namespace std;
 using namespace ReyEngine;
 using namespace Collision;
 
-//-------------------
-// Get axis projection range of a set of points
-void projectPoints(const std::array<Vec2<R_FLOAT>, 4>& points, const Vec2<R_FLOAT>& axis, float& min, float& max) {
-   min = max = (points[0].x * axis.x + points[0].y * axis.y);
-
-   for(int i = 1; i < 4; i++) {
-      float projection = points[i].x * axis.x + points[i].y * axis.y;
-      min = std::min(min, projection);
-      max = std::max(max, projection);
-   }
-}
-
-//-------------------
-bool rangesOverlap(float minA, float maxA, float minB, float maxB) {
-   return minA <= maxB && maxA >= minB;
-}
-
-static void drawCorners(const std::array<Vec2<R_FLOAT>, 4>& corners, Color color) {
-   for(int i = 0; i < 4; i++) {
-      // Draw corner points
-      DrawCircle(corners[i].x, corners[i].y, 3.0f, color);
-
-      // Draw edges
-      DrawLineV(
-            {corners[i].x, corners[i].y},
-            {corners[(i+1)%4].x, corners[(i+1)%4].y},
-            color
-      );
-   }
-}
-
-static void drawAxis(const Vec2<R_FLOAT>& origin, const Vec2<R_FLOAT>& axis, float length, Color color) {
-   auto endPoint = origin + axis * length;
-   DrawLineV({origin.x, origin.y}, {endPoint.x, endPoint.y}, color);
-
-   // Draw arrow head
-   auto normalized = axis.normalize();
-   Vec2<R_FLOAT> perpendicular(-normalized.y, normalized.x);
-   float arrowSize = 10.0f;
-
-   auto arrowLeft = endPoint - normalized * arrowSize + perpendicular * (arrowSize * 0.5f);
-   auto arrowRight = endPoint - normalized * arrowSize - perpendicular * (arrowSize * 0.5f);
-
-   DrawLineV({endPoint.x, endPoint.y}, {arrowLeft.x, arrowLeft.y}, color);
-   DrawLineV({endPoint.x, endPoint.y}, {arrowRight.x, arrowRight.y}, color);
-}
-
-static void drawProjection(const Vec2<R_FLOAT>& axis, float min, float max, float yOffset, Color color) {
-   auto normalized = axis.normalize();
-   auto perpendicular = Vec2<R_FLOAT>(-normalized.y, normalized.x);
-
-   auto start = normalized * min + perpendicular * yOffset;
-   auto end = normalized * max + perpendicular * yOffset;
-
-   DrawLineV({start.x, start.y}, {end.x, end.y}, color);
-   DrawCircle(start.x, start.y, 3.0f, color);
-   DrawCircle(end.x, end.y, 3.0f, color);
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////
 // Specialize for each pair
 template<>
@@ -135,27 +76,14 @@ struct Collision::CollisionChecker<CollisionRect, CollisionRect> {
       auto rectA = a.positionable.getRect().toSizeRect();
       auto rectB = b.positionable.getRect().toSizeRect();
 
-      if (b.getName() == "collider5") {
-         // Get the actual global transform matrix for comparison
-         cout << "Physics thread: " << b.getName() << " global transformation matrix : " << endl;
-         printMatrix(xformB);
-
-         cout << "Physics thread: " << "Rect = " << b.positionable.getRect() << endl;
-         cout << "Physics thread: " << "Ctl5 transformed corners using global transform = ";
-         for (auto corner : b.positionable.getRect().transform(xformB)){
-            cout << corner << ", ";
-         }
-         cout << endl;
-      }
-
       // Get transformed corners as Vec2 instead of Pos
       auto cornersA = rectA.transform(xformA);
       auto cornersB = rectB.transform(xformB);
 
 
       // Debug visualization of corners
-      drawCorners(cornersA, RED);
-      drawCorners(cornersB, BLUE);
+//      drawCorners(cornersA, RED);
+//      drawCorners(cornersB, BLUE);
 
 //       Calculate axes from the edges of the transformed rectangles
       std::array<Vec2<R_FLOAT>, 4> axes;
@@ -169,7 +97,7 @@ struct Collision::CollisionChecker<CollisionRect, CollisionRect> {
       axes[3] = cornersB[2] - cornersB[0]; // Left edge
 
       // Calculate center for debug visualization
-      Vec2<R_FLOAT> center = (cornersA[0] + cornersA[2]) * 0.5f;
+//      Vec2<R_FLOAT> center = (cornersA[0] + cornersA[2]) * 0.5f;
 
       for(int i = 0; i < 4; i++) {
          auto& axis = axes[i];
@@ -178,15 +106,15 @@ struct Collision::CollisionChecker<CollisionRect, CollisionRect> {
          if (axis.x == 0 && axis.y == 0) continue;
 
          // Draw the current axis being tested
-         drawAxis(center, axis, 100.0f, GREEN);
+//         drawAxis(center, axis, 100.0f, GREEN);
 
          float minA, maxA, minB, maxB;
          projectPoints(cornersA, axis, minA, maxA);
          projectPoints(cornersB, axis, minB, maxB);
 
          // Draw projections with different offsets for visibility
-         drawProjection(axis, minA, maxA, 20.0f, RED);
-         drawProjection(axis, minB, maxB, -20.0f, BLUE);
+//         drawProjection(axis, minA, maxA, 20.0f, RED);
+//         drawProjection(axis, minB, maxB, -20.0f, BLUE);
 
          if(!rangesOverlap(minA, maxA, minB, maxB)) {
             return false;
