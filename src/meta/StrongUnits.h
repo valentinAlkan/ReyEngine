@@ -146,7 +146,7 @@ namespace StrongUnitParameters{
    struct MetersHAEParameter{};
    struct MetersMSLParameter{};
    struct MetersPerSecondParameter{};
-   struct PercentParameter{};
+   struct Perunit{};
 }
 
 //our implementations
@@ -185,7 +185,7 @@ constexpr MetersMSL  operator"" _m_msl(long double value){return {(double)value}
 using MetersPerSecond = NamedType<double, StrongUnitParameters::MetersPerSecondParameter, ToDouble>;
 using Knots = MultipleOf<MetersPerSecond, std::ratio<100000000000, 194384449244>>;
 
-using Perunum = NamedType<double, StrongUnitParameters::PercentParameter, ToDouble>;
+using Perunum = NamedType<double, StrongUnitParameters::Perunit, ToDouble>;
 using Perdeca = MultipleOf<Perunum, std::deci>;
 using Percent = MultipleOf<Perunum, std::centi>;
 using Permille = MultipleOf<Perunum, std::milli>;

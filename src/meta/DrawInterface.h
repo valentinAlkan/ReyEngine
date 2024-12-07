@@ -70,7 +70,7 @@ namespace ReyEngine {
       const size_t size;
    };
 
-
+   struct UnitVector2;
    template <typename T>
    struct Vec2 : protected Vec<T> {
       using Vec<T>::toString;
@@ -96,7 +96,9 @@ namespace ReyEngine {
       inline void operator=(Size<T>&) = delete;
       inline void operator=(Pos<T>&) = delete;
       inline explicit operator Vector2() const {return {(float)x,(float)y};}
-      inline Vec2 midpoint() const {return {x/2, y / 2};}
+      inline constexpr T magnitude() const {return std::sqrt(x * x + y * y);}
+      static inline constexpr T magnitude(T x, T y) {return std::sqrt(x * x + y * y);}
+      inline constexpr Vec2 midpoint() const {return {x/2, y / 2};}
       inline Vec2 min(const Vec2& other) const {Vec2 r; r.x = Math::min(Vec2::x, other.x); r.y = Math::min(Vec2::y, other.y); return r;}
       inline Vec2 max(const Vec2& other) const {Vec2 r; r.x = Math::max(Vec2::x, other.x); r.y = Math::max(Vec2::y, other.y); return r;}
       inline Perunum pct(double input) const {return (input-x)/(y - x);} //given an input value, what percentage of the range is it from 0 to 1?
@@ -111,8 +113,19 @@ namespace ReyEngine {
          if (y > clampB.y) retval.y = clampB.y;
          return retval;
       }
-      inline double length() const {return std::sqrt(x * x + y * y);}
-      inline Vec2<T> normalize() const {double len = length();return {(T)(x / len), (T)(y / len)};}
+      constexpr inline Vec2<T> rotate(const Radians& r) const {
+         T cosA = std::cos(r.get());
+         T sinA = std::sin(r.get());
+         return Vec2<T>(x * cosA - y * sinA,x * sinA + y * cosA);
+      }
+      constexpr inline R_FLOAT length() const {return length(x, y);}
+      static constexpr inline double length(T x, T y) {return std::sqrt(x * x + y * y);}
+      static constexpr inline Vec2<T> normalize(T x, T y) {
+         T magnitude = std::sqrt(x * x + y * y);
+         if (magnitude == 0) {return Vec2<T>(0, 0);}
+         return Vec2<T>(x / magnitude, y / magnitude);
+      }
+      inline Vec2<T> normalize() const {return normalize(x, y);}
       inline static std::vector<T> fromString(const std::string& s){return Vec<T>::fromString(2, s);};
       friend std::ostream& operator<<(std::ostream& os, Vec2<T> v) {os << v.toString(); return os;}
       friend Vector2& operator+=(Vector2& in, Vec2<T> add) {in.x += add.x; in.y += add.y; return in;}
@@ -126,6 +139,47 @@ namespace ReyEngine {
       T x;
       T y;
       [[nodiscard]] inline std::vector<T> getElements() const override {return {x,y};}
+   };
+
+   // A unit vector. If the magnitude is not 1, then the vector is invalid.
+   struct UnitVector2 {
+      constexpr UnitVector2()=default;
+      constexpr UnitVector2(const Vec2<R_FLOAT>& v): UnitVector2(v.x, v.y){}
+      constexpr UnitVector2(R_FLOAT x, R_FLOAT y){
+         auto normalized = Vec2<R_FLOAT>::normalize(x, y);
+         _x = normalized.x;
+         _y = normalized.y;
+      }
+      constexpr UnitVector2& operator=(const Vec2<R_FLOAT>& v){*this = UnitVector2(v); return *this;}
+      constexpr operator Vec2<R_FLOAT>() const {return {_x,_y};}
+      constexpr Vec2<R_FLOAT> toVec2() const {return (Vec2<R_FLOAT>)(*this);}
+      bool valid() const  {FloatEquals(toVec2().magnitude(), 1.0);}
+      constexpr R_FLOAT x() const {return _x;}
+      constexpr R_FLOAT y() const {return _y;}
+      Vec2<int> ortho4() const {
+         if (std::abs(_x) > std::abs(_y)) {
+            return {_x > 0 ? 1 : -1, 0};
+         } else {
+            return {0, _y > 0 ? 1 : -1};
+         }
+      }
+      Vec2<int> ortho8() const {
+         constexpr float DIAGONAL_THRESHOLD = 0.9239f; //22.5 degrees
+         float absX = std::abs(_x);
+         float absY = std::abs(_y);
+         if (absX / absY > DIAGONAL_THRESHOLD && absY / absX > DIAGONAL_THRESHOLD) {
+            //diagnoals
+            return Vec2<int>(_x > 0 ? 1 : -1,_y > 0 ? 1 : -1);
+         }
+         //fallback to cardinal directions
+         return ortho4();
+      }
+      void rotate(const Radians& r){
+         toVec2().rotate(r);
+      }
+   private:
+      R_FLOAT _x=0;
+      R_FLOAT _y=0;
    };
 
    template <typename T>
@@ -193,7 +247,7 @@ namespace ReyEngine {
     };
 
    template <typename T>
-   class Range : private Vec3<T> {
+   struct Range : private Vec3<T> {
    public:
       //Vec3, but x represents min, y represents max, and z represents value; Can lerp and set pct.
       //When creating from Vec3, vec3 shall be considered x=min, y=max, z=default value.
