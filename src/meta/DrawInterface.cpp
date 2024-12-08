@@ -224,3 +224,9 @@ ReyEngineFont &ReyEngineFont::operator=(const ReyEngineFont &rhs)
 Size<R_FLOAT> ReyEngineFont::measure(const std::string &text) const {
    return ReyEngine::measureText(text, *this);
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+template <>
+UnitVector2 Vec2<R_FLOAT>::direction(const Vec2<float> &dest) const {
+   return {dest - *this};
+}

@@ -111,6 +111,7 @@ int main(int argc, char** argv) {
         args.defineArg(RuntimeArg("--freeTest", "Resource freeing test", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--transformTest", "Test of 2d transformations", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--collisionTest", "Test of 2d collisions", 0, RuntimeArg::ArgType::FLAG));
+        args.defineArg(RuntimeArg("--unitVectorTest", "Test of 2d unit vector", 0, RuntimeArg::ArgType::FLAG));
         args.parseArgs(argc, argv);
 
         //create window (or don't idk)
@@ -2101,6 +2102,44 @@ int main(int argc, char** argv) {
            for (auto ctl : {ctl1, ctl2, ctl3, ctl4, ctl5}){
               ctl->setRenderCallback(ctlRender);
            }
+
+      } else if (args.getArg("--unitVectorTest")) {
+         auto ctl = Control::build("Control");
+         ctl->setSize({100, 100});
+         root->addChild(ctl);
+         struct UnitVectorProperty : public DynamicProperty {
+            UnitVectorProperty(const std::string& name): DynamicProperty(name){};
+            UnitVector2 facingDir;
+         };
+         auto propPtr = std::make_shared<UnitVectorProperty>("facingDir");
+         ctl->moveProperty(propPtr);
+         auto& facingdir = ctl->getProperty<UnitVectorProperty>("facingDir").facingDir;
+
+         auto procCB = [&](const Control&, R_FLOAT dt) {
+            ctl->setRect(ctl->getRect().centerOnPoint(getScreenCenter()));
+         };
+
+         auto renderCB = [&](const Control& ctl) {
+            Rect<R_FLOAT> rect = ctl.getRect().toSizeRect();
+            ctl.drawRectangle(rect, Colors::red);
+            ctl.drawLine({rect.center(), {facingdir * 30 + rect.size() / 2}}, 2, Colors::black);
+         };
+
+         auto unhandledInputCB = [&](Control& ctl, const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) -> Handled {
+            if (!mouse) return false;
+            switch (event.eventId){
+               case InputEventMouseMotion::getUniqueEventId():{
+                  const auto& mmEvent = event.toEventType<InputEventMouseMotion>();
+                  auto localPos = ctl.globalToLocal(mmEvent.globalPos, ctl.getSize()/2);
+                  facingdir = UnitVector2(localPos);
+                  cout << localPos << endl;
+                  cout << facingdir << endl;
+                  break;}
+            }
+         };
+         ctl->setRenderCallback(renderCB);
+         ctl->setProcessCallback(procCB);
+         ctl->setUnhandledInputCallback(unhandledInputCB);
 
       } else {
             cout << args.getDocString() << endl;

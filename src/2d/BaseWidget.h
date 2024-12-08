@@ -160,10 +160,10 @@ namespace ReyEngine{
       void setHeight(R_FLOAT height);
 
       ReyEngine::Pos<R_FLOAT> getLocalMousePos() const {return globalToLocal(InputManager::getMousePos());}
-      ReyEngine::Pos<R_FLOAT> globalToLocal(const ReyEngine::Pos<R_FLOAT>& global) const;
-      ReyEngine::Pos<R_FLOAT> localToGlobal(const ReyEngine::Pos<R_FLOAT>& local) const;
-      ReyEngine::Rect<R_FLOAT> globalToLocal(const ReyEngine::Rect<R_FLOAT>& global) const;
-      ReyEngine::Rect<R_FLOAT> localToGlobal(const ReyEngine::Rect<R_FLOAT>& local) const;
+      ReyEngine::Pos<R_FLOAT> globalToLocal(const Pos<R_FLOAT>& global, const Pos<R_FLOAT>& localBase = {0,0}) const;
+      ReyEngine::Pos<R_FLOAT> localToGlobal(const Pos<R_FLOAT>& local, const Pos<R_FLOAT>& globalBase = {0,0}) const;
+      ReyEngine::Rect<R_FLOAT> globalToLocal(const Rect<R_FLOAT>& global) const;
+      ReyEngine::Rect<R_FLOAT> localToGlobal(const Rect<R_FLOAT>& local) const;
       void setGlobalPos(const Vec2<R_FLOAT>&);
       bool isInside(const Vec2<R_FLOAT>& point) const {return getRect().toSizeRect().isInside(point);}
       bool setName(const std::string& name, bool append_index=false);

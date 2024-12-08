@@ -48,15 +48,15 @@ ReyEngine::Size<R_FLOAT> BaseWidget::getClampedSize(){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Pos<R_FLOAT> BaseWidget::globalToLocal(const Pos<R_FLOAT>& global) const {
-   auto globalPos = getGlobalPos();
+Pos<R_FLOAT> BaseWidget::globalToLocal(const Pos<R_FLOAT>& global, const Pos<R_FLOAT>& localBase) const {
+   auto globalPos = getGlobalPos() + localBase;
    auto retval = global - globalPos;
    return retval;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Pos<R_FLOAT> BaseWidget::localToGlobal(const Pos<R_FLOAT> &local) const {
-   return local + getGlobalPos();
+Pos<R_FLOAT> BaseWidget::localToGlobal(const Pos<R_FLOAT>& local, const Pos<R_FLOAT>& globalBase) const {
+   return local + getGlobalPos() + globalBase;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

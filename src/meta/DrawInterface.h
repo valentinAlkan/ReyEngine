@@ -98,12 +98,14 @@ namespace ReyEngine {
       inline explicit operator Vector2() const {return {(float)x,(float)y};}
       inline constexpr T magnitude() const {return std::sqrt(x * x + y * y);}
       static inline constexpr T magnitude(T x, T y) {return std::sqrt(x * x + y * y);}
+      UnitVector2 direction(const Vec2<T>& dest) const; //get the unit vector that points at dest from this point's perspective
       inline constexpr Vec2 midpoint() const {return {x/2, y / 2};}
       inline Vec2 min(const Vec2& other) const {Vec2 r; r.x = Math::min(Vec2::x, other.x); r.y = Math::min(Vec2::y, other.y); return r;}
       inline Vec2 max(const Vec2& other) const {Vec2 r; r.x = Math::max(Vec2::x, other.x); r.y = Math::max(Vec2::y, other.y); return r;}
       inline Perunum pct(double input) const {return (input-x)/(y - x);} //given an input value, what percentage of the range is it from 0 to 1?
       inline double lerp(Perunum lerpVal) const {return lerpVal.get() * (y - x) + x;} //given a value from 0 to 1, what is the value of the range that corresponds to it?
       inline Vec2 lerp(Vec2 otherPoint, double xprm) const {return {xprm, y + (((xprm - x) * (otherPoint.y - y)) / (otherPoint.x - x))};}
+      inline Vec2 extend(R_FLOAT distance) const {Vec2<T> normalized = normalize();return normalized * distance;}
       inline T clamp(T value) const {if (value < x) return x; if (value > y) return y; return value;}
       inline Vec2 clamp(Vec2 clampA, Vec2 clampB) const {
          Vec2 retval = {x, y};
@@ -150,6 +152,7 @@ namespace ReyEngine {
          _x = normalized.x;
          _y = normalized.y;
       }
+      constexpr Vec2<R_FLOAT> operator*(R_FLOAT distance) const {return {_x*distance, _y*distance};}
       constexpr UnitVector2& operator=(const Vec2<R_FLOAT>& v){*this = UnitVector2(v); return *this;}
       constexpr operator Vec2<R_FLOAT>() const {return {_x,_y};}
       constexpr Vec2<R_FLOAT> toVec2() const {return (Vec2<R_FLOAT>)(*this);}
@@ -177,6 +180,7 @@ namespace ReyEngine {
       void rotate(const Radians& r){
          toVec2().rotate(r);
       }
+      friend std::ostream& operator<<(std::ostream& os, const UnitVector2& v) {os << v.toVec2().toString(); return os;}
    private:
       R_FLOAT _x=0;
       R_FLOAT _y=0;
@@ -444,6 +448,7 @@ namespace ReyEngine {
       constexpr inline Rect& operator*=(const Rect<T>& rhs){x *= rhs.x; y *= rhs.y; width *= rhs.width; height *= rhs.height; return *this;}
       constexpr inline Rect& operator/=(const Rect<T>& rhs){x /= rhs.x; y /= rhs.y; width /= rhs.width; height /= rhs.height; return *this;}
       constexpr inline operator Rectangle() {return {x,y,width,height};}
+      constexpr inline Rect centerOnPoint(const Pos<R_FLOAT>& p) const {return {{p - size() / 2}, {size()}};} /// Return the pos of the rect such that it would be centered on point p
       constexpr inline Rect embiggen(T amt) const {return *this + Rect<T>(-amt, -amt, 2*amt, 2*amt);} //shrink/expand borders evenly
       constexpr inline Rect emtallen(T amt) const {return  *this + Rect<T>(0, -amt, 0, 2*amt);}//embiggen tallness
       constexpr inline Rect emwiden(T amt) const {return  *this + Rect<T>(-amt, 0, 2*amt, 0);}//embiggen wideness
