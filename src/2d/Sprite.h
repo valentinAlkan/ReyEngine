@@ -18,17 +18,19 @@ namespace ReyEngine{
    }
    public:
       REYENGINE_DEFAULT_BUILD(Sprite)
+      Sprite& operator=(const Sprite& other);
       void render() const override;
       void registerProperties() override;
       void _init() override;
       bool setTexture(const FileSystem::File&);
-      std::optional<const std::reference_wrapper<ReyTexture>> getTexture();
+      bool setTexture(const std::shared_ptr<ReyTexture>&);
+      inline std::optional<const std::shared_ptr<ReyTexture>> getTexture();
       void setRegion(const Rect<double>&);
       void fitTexture(); //makes the sprite the same size as the texture REGION (not necessarily the texture SIZE, in the case of a sprite sheet!)
 
    protected:
       FileSystem::File texPath;
-      std::unique_ptr<ReyTexture> texture;
+      std::shared_ptr<ReyTexture> texture;
       RectProperty<R_FLOAT> region;
 
    private:

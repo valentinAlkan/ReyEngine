@@ -40,41 +40,59 @@ void ReyEngine::FileSystem::FileHandle::open() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 std::vector<char> ReyEngine::FileSystem::FileHandle::readBytes(long long count) {
-   auto size = std::size_t(_end - _ptr);
-   if (size == 0) return {};
-   if (count > size) count = size;
-   std::vector<char> buffer(count);
-   _ifs.seekg(_ptr, std::ios::beg);
-   if (!_ifs.read((char *) buffer.data(), buffer.size()))
-      throw std::runtime_error(_file.str() + ": " + std::strerror(errno));
-   _ptr += count;
-   return buffer;
+   std::vector<char> retval(count);
+   readBytesInPlace(count, retval);
+   return retval;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+size_t ReyEngine::FileSystem::FileHandle::readBytesInPlace(long long count, std::vector<char> &buffer) {
+   if (count < 0) {throw std::invalid_argument("Count cannot be negative");}
+   auto remaining = _end - _ptr;
+   if (remaining == 0) return 0;
+   auto bytesToRead = std::min(count, remaining);
+   if (buffer.size() < bytesToRead) {
+      buffer.resize(bytesToRead);
+   }
+   if (!_ifs.seekg(_ptr, std::ios::beg)) {
+      throw std::runtime_error(_file.str() + ": Seek operation failed");
+   }
+   if (!_ifs.read(buffer.data(), bytesToRead) || _ifs.gcount() != static_cast<std::streamsize>(bytesToRead)) {
+      throw std::runtime_error(_file.str() + ": Read operation failed");
+   }
+
+   _ptr += bytesToRead;
+   return bytesToRead;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
 string ReyEngine::FileSystem::FileHandle::readLine() {
-   if (_end - _ptr == 0) return{}; //empty file
-   bool carriageReturn = false;
+   if (_end - _ptr == 0) return {};  // empty file
    string retval;
+   retval.reserve(128);  // Reserve reasonable initial capacity
+   bool carriageReturn = false;
    char c;
-   while (std::size_t(_end - _ptr)){
-      if (!_ifs.read((char *) &c, 1)) {
-         throw std::runtime_error(_file.str() + ": " + std::strerror(errno));
+   while (std::size_t(_end - _ptr) > 0) {
+      if (!_ifs.get(c)) {
+         if (_ifs.eof()) break;
+         throw std::runtime_error(_file.str() + ": Read failed");
       }
       _ptr += 1;
       if (c == '\n') {
          break;
       }
       if (c == '\r') {
-         //steal the carriage return for now
-         carriageReturn = true;
-         continue;
-      } else if (carriageReturn) {
-         //add back in the carriage return we stole since it didn't precede a lf char
-         c = '\r';
-         carriageReturn = false;
+         // Peek at next character without consuming it
+         if (_ptr < _end && _ifs.peek() == '\n') {
+            carriageReturn = false;
+            continue;  // Skip '\r' when it's part of '\r\n'
+         }
+         // Single '\r' should be preserved
+         retval += c;
+      } else {
+         retval += c;
       }
-      retval += c;
    }
    return retval;
 }

@@ -73,6 +73,7 @@ namespace ReyEngine::FileSystem {
       ~FileHandle(){close();}
       std::vector<char> readFile();
       std::vector<char> readBytes(long long count);
+      size_t readBytesInPlace(long long count, std::vector<char>& buffer);
       std::string readLine(); //read until we get to a new line (treats cr/nl as single newline).
       std::optional<char> peek() const;
       void seek(uint64_t i){ _ptr = i;}

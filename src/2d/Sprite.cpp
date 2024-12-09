@@ -4,6 +4,15 @@ using namespace ReyEngine;
 using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////
+Sprite &Sprite::operator=(const Sprite &other) {
+   region = other.region;
+   texture = other.texture;
+   texPath = other.texPath;
+   _fitNextTexture = other._fitNextTexture;
+   _drawDebugRect = other._drawDebugRect;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void Sprite::render() const {
    if (texture) {
       drawTexture(*texture, region, getRect().toSizeRect(), 0.0, Colors::none);
@@ -22,7 +31,7 @@ void Sprite::registerProperties() {
 bool Sprite::setTexture(const ReyEngine::FileSystem::File& path) {
    //try load
    if (path.exists()){
-      texture = make_unique<ReyTexture>(path);
+      texture = make_shared<ReyTexture>(path);
       if (!region){
          region.value.setSize(texture->size);
          applyRect(region);
@@ -36,12 +45,27 @@ bool Sprite::setTexture(const ReyEngine::FileSystem::File& path) {
    }
    return true;
 }
+
 /////////////////////////////////////////////////////////////////////////////////////////
-std::optional<const std::reference_wrapper<ReyTexture>> Sprite::getTexture() {
+std::optional<const std::shared_ptr<ReyTexture>> Sprite::getTexture() {
    if (texture){
-      return *texture;
+      return texture;
    }
    return nullopt;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+bool Sprite::setTexture(const std::shared_ptr<ReyTexture>& other) {
+   //try load
+   texture = other;
+   if (!region){
+      region.value.setSize(texture->size);
+      applyRect(region);
+   } else if (_fitNextTexture){
+      region = Rect<double>({0, 0}, texture->size);
+      _fitNextTexture = false;
+   }
+   return true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
