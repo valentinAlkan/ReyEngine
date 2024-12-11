@@ -230,3 +230,12 @@ template <>
 UnitVector2 Vec2<R_FLOAT>::direction(const Vec2<float> &dest) const {
    return {dest - *this};
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+CircleSector UnitVector2::toCircleSector(Degrees totalAngle, double radius, const Pos<R_FLOAT> &pos) const {
+   const double startAngle = std::fmod(((std::atan2(_x, _y) * 180.0 / M_PI) - (totalAngle.get() / 2) + 360.0),360.0);
+   const double tempEndAngle = std::fmod(((std::atan2(_x, _y) * 180.0 / M_PI) + (totalAngle.get() / 2) + 360.0),360.0);
+   //wrap around 360
+   const double endAngle = tempEndAngle + (tempEndAngle < startAngle ? 360.0 : 0.0);
+   return {pos, radius, startAngle, endAngle};
+}

@@ -144,6 +144,7 @@ namespace ReyEngine {
    };
 
    // A unit vector. If the magnitude is not 1, then the vector is invalid.
+   struct CircleSector;
    struct UnitVector2 {
       constexpr UnitVector2()=default;
       constexpr UnitVector2(const Vec2<R_FLOAT>& v): UnitVector2(v.x, v.y){}
@@ -180,6 +181,7 @@ namespace ReyEngine {
       void rotate(const Radians& r){
          toVec2().rotate(r);
       }
+      CircleSector toCircleSector(Degrees totalAngle, double radius, const Pos<R_FLOAT>& pos) const;
       friend std::ostream& operator<<(std::ostream& os, const UnitVector2& v) {os << v.toVec2().toString(); return os;}
    private:
       R_FLOAT _x=0;
@@ -655,8 +657,8 @@ namespace ReyEngine {
    };
 
    struct Circle{
-      inline Circle(const Pos<R_FLOAT>& center, double radius): center(center), radius(radius){}
-      inline Circle(const Circle& rhs): center(rhs.center), radius(rhs.radius){}
+      inline constexpr Circle(const Pos<R_FLOAT>& center, double radius): center(center), radius(radius){}
+      inline constexpr Circle(const Circle& rhs): center(rhs.center), radius(rhs.radius){}
       /// create the circle that comprises the three points
       static inline std::optional<Circle> fromPoints(const Pos<R_FLOAT>& a, const Pos<R_FLOAT>& b, const Pos<R_FLOAT>& c){
          // Convert input points to doubles for precise calculation
@@ -769,15 +771,26 @@ namespace ReyEngine {
       static constexpr double SECOND_QUADRANT_ANGLE = 90;
       static constexpr double THIRD_QUADRANT_ANGLE = 180;
       static constexpr double FOURTH_QUADRANT_ANGLE = 270;
-      static CircleSector firstQuadrant(Pos<int> center, double radius){return CircleSector(center, radius, FIRST_QUADRANT_ANGLE, FIRST_QUADRANT_ANGLE+90);}
-      static CircleSector secondQuadrant(Pos<int> center, double radius){return CircleSector(center, radius, SECOND_QUADRANT_ANGLE, SECOND_QUADRANT_ANGLE+90);}
-      static CircleSector thirdQuadrant(Pos<int> center, double radius){return CircleSector(center, radius, THIRD_QUADRANT_ANGLE, THIRD_QUADRANT_ANGLE+90);}
-      static CircleSector fourthQuadrant(Pos<int> center, double radius){return CircleSector(center, radius, FOURTH_QUADRANT_ANGLE, FOURTH_QUADRANT_ANGLE+90);}
-      inline CircleSector(const Pos<int>& center, double radius, double startAngle, double endAngle): Circle(center, radius), startAngle(startAngle), endAngle(endAngle){}
-      inline CircleSector(const Circle& c, double startAngle, double endAngle): Circle(c), startAngle(startAngle), endAngle(endAngle){}
-      inline CircleSector(const CircleSector& rhs): Circle(rhs), startAngle(rhs.startAngle), endAngle(rhs.endAngle){}
-      double startAngle;
-      double endAngle;
+      static CircleSector firstQuadrant(Pos<R_FLOAT> center, double radius){return CircleSector(center, radius, FIRST_QUADRANT_ANGLE, FIRST_QUADRANT_ANGLE+90);}
+      static CircleSector secondQuadrant(Pos<R_FLOAT> center, double radius){return CircleSector(center, radius, SECOND_QUADRANT_ANGLE, SECOND_QUADRANT_ANGLE+90);}
+      static CircleSector thirdQuadrant(Pos<R_FLOAT> center, double radius){return CircleSector(center, radius, THIRD_QUADRANT_ANGLE, THIRD_QUADRANT_ANGLE+90);}
+      static CircleSector fourthQuadrant(Pos<R_FLOAT> center, double radius){return CircleSector(center, radius, FOURTH_QUADRANT_ANGLE, FOURTH_QUADRANT_ANGLE+90);}
+      inline constexpr CircleSector(): Circle({},0), startAngle(0), endAngle(0){}
+      inline constexpr CircleSector(const Pos<R_FLOAT>& center, double radius, double startAngle, double endAngle): Circle(center, radius), startAngle(startAngle), endAngle(endAngle){}
+      inline constexpr CircleSector(const Circle& c, double startAngle, double endAngle): Circle(c), startAngle(startAngle), endAngle(endAngle){}
+      inline constexpr CircleSector(const CircleSector& rhs): Circle(rhs), startAngle(rhs.startAngle), endAngle(rhs.endAngle){}
+      inline UnitVector2 direction(){
+         // Calculate the center angle in degrees
+         double centerAngle = startAngle + (endAngle - startAngle) / 2.0;
+         // Convert to radians
+         double angleRadians = centerAngle * M_PI / 180.0;
+         // Calculate the direction vector components
+         R_FLOAT dirX = std::cos(angleRadians);
+         R_FLOAT dirY = std::sin(angleRadians);
+         return {dirX, dirY};
+      }
+      double startAngle; //degrees
+      double endAngle; //degrees
    };
 
    //should maybe use eigen transforms. one day.
