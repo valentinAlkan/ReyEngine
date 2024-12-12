@@ -203,7 +203,6 @@ target_link_libraries(ReyEngineTest Editor)
 # Project for testing the build system
 add_executable( ReyEngineBuildTest test/buildTest.cpp)
 target_link_libraries(ReyEngineBuildTest ReyEngine2D)
-
 ##########################################
 # for testing basic raylib stuff
 add_executable( raylibTest

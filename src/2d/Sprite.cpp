@@ -28,7 +28,7 @@ void Sprite::registerProperties() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-bool Sprite::setTexture(const ReyEngine::FileSystem::File& path) {
+bool Sprite::setTexture(ReyEngine::FileSystem::File& path) {
    //try load
    if (path.exists()){
       texture = make_shared<ReyTexture>(path);

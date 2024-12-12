@@ -22,7 +22,11 @@ namespace ReyEngine{
       void render() const override;
       void registerProperties() override;
       void _init() override;
-      bool setTexture(const FileSystem::File&);
+      bool setTexture(FileSystem::File&); //no temporaries
+      bool setTexture(const char* filePath){
+         ReyEngine::FileSystem::File f(filePath);
+         setTexture(f);
+      };
       bool setTexture(const std::shared_ptr<ReyTexture>&);
       inline std::optional<const std::shared_ptr<ReyTexture>> getTexture();
       void setRegion(const Rect<double>&);

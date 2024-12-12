@@ -59,6 +59,7 @@ namespace ReyEngine::FileSystem {
       // A file that has been opened and is available to read from.
       File(){}
       File(const std::string& path): Path(path){}
+      File(std::string_view path): File(std::string(path)){}
       File(const char* path): Path(path){}
       File(const File& other): Path(other){}
       void clear(){_path.clear();}
