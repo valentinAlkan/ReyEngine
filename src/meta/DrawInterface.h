@@ -779,6 +779,27 @@ namespace ReyEngine {
       inline constexpr CircleSector(const Pos<R_FLOAT>& center, double radius, double startAngle, double endAngle): Circle(center, radius), startAngle(startAngle), endAngle(endAngle){}
       inline constexpr CircleSector(const Circle& c, double startAngle, double endAngle): Circle(c), startAngle(startAngle), endAngle(endAngle){}
       inline constexpr CircleSector(const CircleSector& rhs): Circle(rhs), startAngle(rhs.startAngle), endAngle(rhs.endAngle){}
+      inline void setDirection(const UnitVector2& newDirection){
+         // Calculate the new center angle from the direction vector
+         double newCenterAngle = std::atan2(newDirection.y(), newDirection.x()) * 180.0 / M_PI;
+
+         // Ensure the angle is in the range [0, 360)
+         while (newCenterAngle < 0) newCenterAngle += 360;
+         while (newCenterAngle >= 360) newCenterAngle -= 360;
+
+         // Calculate the current arc size
+         double arcSize = endAngle - startAngle;
+
+         // Calculate new start and end angles
+         // Place the new center angle in the middle of the arc
+         startAngle = newCenterAngle - arcSize / 2.0;
+         endAngle = newCenterAngle + arcSize / 2.0;
+      }
+      /// Return the angle at pct percent of the arc from "left" to "right"
+      inline Degrees getPctOfArc(const Percent& pct){
+         return ((endAngle - startAngle) * pct.get()/100) + startAngle;
+      }
+      Degrees arcDegrees(){return endAngle - startAngle;}
       inline UnitVector2 direction(){
          // Calculate the center angle in degrees
          double centerAngle = startAngle + (endAngle - startAngle) / 2.0;
