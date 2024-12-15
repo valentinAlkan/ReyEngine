@@ -401,6 +401,7 @@ namespace ReyEngine {
       inline Size operator-(const Size& rhs) const {auto val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
       inline Size& operator+=(const Size& rhs){this->x += rhs.x; this->y += rhs.y; return *this;}
       inline Size& operator-=(const Size& rhs){this->x -= rhs.x; this->y -= rhs.y; return *this;}
+      inline Pos<T> center() const {return {this->x/2.0f,this->y/2.0f};}
       inline operator std::string() const {return Vec2<T>::toString();}
    };
 
@@ -781,7 +782,7 @@ namespace ReyEngine {
       inline constexpr CircleSector(const CircleSector& rhs): Circle(rhs), startAngle(rhs.startAngle), endAngle(rhs.endAngle){}
       inline void setDirection(const UnitVector2& newDirection){
          // Calculate the new center angle from the direction vector
-         double newCenterAngle = std::atan2(newDirection.y(), newDirection.x()) * 180.0 / M_PI;
+         double newCenterAngle = std::atan2(newDirection.x(), newDirection.y()) * 180.0 / M_PI ;
 
          // Ensure the angle is in the range [0, 360)
          while (newCenterAngle < 0) newCenterAngle += 360;
