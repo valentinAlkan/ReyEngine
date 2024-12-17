@@ -13,8 +13,9 @@ using namespace ReyEngine;
 using namespace FileSystem;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-BaseWidget::BaseWidget(const std::string& name, std::string  typeName)
+BaseWidget::BaseWidget(const std::string& name, std::string typeName)
 : Positionable2D<R_FLOAT>(_size.value, _transform.value)
+, NamedInstance(name, typeName)
 , Component(name, typeName)
 , Internal::TypeContainer<BaseWidget>(name, typeName)
 , PROPERTY_DECLARE(isBackRender, false)

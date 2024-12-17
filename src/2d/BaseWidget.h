@@ -21,6 +21,8 @@
 #include <unordered_map>
 #include <variant>
 
+#define DEBUG_FILL 1
+
 using Handled = bool;
 
 namespace ReyEngine{

@@ -8,11 +8,13 @@ namespace ReyEngine{
       : Style::Theme("DefaultTabTheme")
       , PROPERTY_DECLARE(tabMargin, 0)
       , PROPERTY_DECLARE(tabHeight, 20)
-      , PROPERTY_DECLARE(tabWidth, 100)
+      , PROPERTY_DECLARE(tabWidthMinimum, 100)
+      , PROPERTY_DECLARE(tabPadding, 3)
       {}
       IntProperty tabMargin; //distance from left/right edge to first tab
       IntProperty tabHeight;
-      IntProperty tabWidth;
+      IntProperty tabWidthMinimum;
+      IntProperty tabPadding;
    protected:
       void registerProperties() override{
          Style::Theme::registerProperties();

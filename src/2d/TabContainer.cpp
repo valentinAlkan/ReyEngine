@@ -61,15 +61,15 @@ void TabContainer::arrangeChildren() {
    _childBoundingRect.height -= tabTheme->tabHeight.value;
 
    _tabRects.clear();
-   int startXpos = tabTheme->tabMargin;
+   R_FLOAT x = 0;
    for (int childIndex=0; childIndex < getChildren().size(); childIndex++){
       auto& child = getChildren()[childIndex];
       child->setRect(_childBoundingRect);
       //create a tab rect for the child
-      auto x = startXpos + (childIndex * tabTheme->tabWidth.value);
-      auto width = tabTheme->tabWidth;
+      auto width = measureText(child->getName(), getTheme()->font).x + getTabTheme()->tabPadding;
       auto height = tabTheme->tabHeight;
-      Rect<int> rect(x, 0, width, height);
+      Rect<R_FLOAT> rect(x, 0, width, height);
+      x += width;
       _tabRects.push_back(rect);
    }
 }

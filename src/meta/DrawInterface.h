@@ -157,7 +157,7 @@ namespace ReyEngine {
       constexpr UnitVector2& operator=(const Vec2<R_FLOAT>& v){*this = UnitVector2(v); return *this;}
       constexpr operator Vec2<R_FLOAT>() const {return {_x,_y};}
       constexpr Vec2<R_FLOAT> toVec2() const {return (Vec2<R_FLOAT>)(*this);}
-      bool valid() const  {FloatEquals(toVec2().magnitude(), 1.0);}
+      bool valid() const  {return FloatEquals(toVec2().magnitude(), 1.0);}
       constexpr R_FLOAT x() const {return _x;}
       constexpr R_FLOAT y() const {return _y;}
       Vec2<int> ortho4() const {
