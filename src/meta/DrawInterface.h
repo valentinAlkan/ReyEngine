@@ -418,7 +418,7 @@ namespace ReyEngine {
    struct Circle;
    template <typename T>
    struct Rect {
-      using SubRectCoords = NamedType<Vec2<int>, StrongUnitParameters::SubRectCoords>;
+      using SubRectCoords = Vec2<int>;
       enum class Corner{TOP_LEFT=1, TOP_RIGHT=2, BOTTOM_RIGHT=4, BOTTOM_LEFT=8};
       constexpr inline Rect(): x(0), y(0), width(0), height(0){}
       constexpr inline Rect(const T x, const T y, const T width, const T height) : x(x), y(y), width(width), height(height){}
@@ -600,7 +600,7 @@ namespace ReyEngine {
       constexpr inline int getSubRectIndex(const Size<R_FLOAT>& size, const Pos<R_FLOAT>& pos) const {
          auto coord = getSubRectCoord(size, pos);
          auto columnCount = width / size.x;
-         return coord.get().y * columnCount + coord.get().x;
+         return coord.y * columnCount + coord.x;
       }
 
       //Get the sub-rectangle (of size Size) that contains pos Pos. Think tilemaps.
@@ -612,7 +612,7 @@ namespace ReyEngine {
 
        //Get the sub-rectangle (of size Size) at SubRectCoords coords.
        constexpr inline Rect getSubRectAtCoords(const Size<R_FLOAT>& size, const SubRectCoords& coords) const {
-           return Rect(coords.get().x * size.x, coords.get().y*size.y, size.x, size.y);
+           return Rect(coords.x * size.x, coords.y*size.y, size.x, size.y);
        }
 
       //returns the coordinates of the above subrect in grid-form (ie the 3rd subrect from the left would be {3,0}
@@ -620,7 +620,7 @@ namespace ReyEngine {
          //divide by 0?
          auto subx = pos.x / size.x;
          auto suby = pos.y / size.y;
-         return SubRectCoords({subx, suby});
+         return {subx, suby};
       }
 
       //get an actual subrect given a subrect size and an index
@@ -963,8 +963,8 @@ namespace ReyEngine {
    struct ReyEngineFont{
       ReyEngineFont(const std::string& fontFile="");
       Font font;
-      double size = 20;
-      double spacing = 1;
+      R_FLOAT size = 20;
+      R_FLOAT spacing = 1;
       bool isDefault = false;
       FontAlignment fontAlignment;
       ReyEngine::ColorRGBA color = COLORS::black;

@@ -308,6 +308,11 @@ void BaseWidget::drawArrow(const Line<R_FLOAT>& line, float lineThick, const Rey
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::drawText(const std::string &text, const Pos<R_FLOAT> &pos) const{
+   ReyEngine::drawText(text, pos, getTheme()->font);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawText(const std::string &text, const Pos<R_FLOAT> &pos, const ReyEngine::ReyEngineFont& font) const{
    ReyEngine::drawText(text, pos, font);
 }

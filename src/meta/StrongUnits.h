@@ -140,7 +140,6 @@ StrongType<T> make_named(T const& value)
 }
 
 namespace StrongUnitParameters{
-   struct SubRectCoords{};
    struct MeterParameter{};
    struct RadiansParameter{};
    struct MetersHAEParameter{};

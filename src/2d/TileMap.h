@@ -115,7 +115,7 @@ namespace ReyEngine {
       Pos<R_FLOAT> getCellPos(const TileCoord&) const;
       Rect<R_FLOAT> getCellRect(const TileCoord&) const;
       Pos<R_FLOAT> getCellPosCenter(const TileCoord&) const;
-      TileCoord getTileCoords(const Pos<R_FLOAT>& pos) const {return getRect().getSubRectCoord(getTileSize(), pos).get();}
+      TileCoord getTileCoords(const Pos<R_FLOAT>& pos) const {return getRect().getSubRectCoord(getTileSize(), pos);}
       int getCellIndex(const TileCoord&) const;
       ///Set the size of each tile
       void setTileSize(const Size<int>&);

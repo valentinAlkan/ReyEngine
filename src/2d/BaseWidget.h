@@ -26,7 +26,6 @@
 using Handled = bool;
 
 namespace ReyEngine{
-
    class Window;
    class Scene;
    class Draggable;
@@ -202,6 +201,7 @@ namespace ReyEngine{
       //drawing functions
       void drawLine(const ReyEngine::Line<R_FLOAT>&, float lineThick, const ReyEngine::ColorRGBA&) const;
       void drawArrow(const ReyEngine::Line<R_FLOAT>&, float lineThick, const ReyEngine::ColorRGBA&, float headSize=20) const;
+      void drawText(const std::string& text, const ReyEngine::Pos<R_FLOAT>& pos) const;
       void drawText(const std::string& text, const ReyEngine::Pos<R_FLOAT>& pos, const ReyEngine::ReyEngineFont& font) const;
       void drawTextCentered(const std::string& text, const ReyEngine::Pos<R_FLOAT>& pos, const ReyEngine::ReyEngineFont& font) const;
       void drawRectangle(const ReyEngine::Rect<R_FLOAT>& rect, const ReyEngine::ColorRGBA& color) const;

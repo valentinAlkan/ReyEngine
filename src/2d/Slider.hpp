@@ -4,6 +4,7 @@
 
 namespace ReyEngine{
    class Slider : public BaseWidget {
+      REYENGINE_OBJECT_CUSTOM_BUILD(Slider, BaseWidget);
    public:
       class EventSliderValueChanged : public Event<EventSliderValueChanged> {
       public:
@@ -21,30 +22,11 @@ namespace ReyEngine{
          SliderType fromString(const std::string& str) override {return (str == "VERTICAL" ? SliderType::VERTICAL : SliderType::HORIZONTAL);}
       };
 
-      template<typename T>
-      static std::shared_ptr<T> build(const std::string &name, SliderType sliderType) noexcept {
-         auto me = std::shared_ptr<T>(new T(name, sliderType));
+      static std::shared_ptr<Slider> build(const std::string &name, SliderType sliderType) noexcept {
+         auto me = _reyengine_make_shared(name, sliderType);
          return me;
       }
-      REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(Slider)
-      Slider(const std::string &name, SliderType sliderDir)
-            : BaseWidget(name, _get_static_constexpr_typename())
-            , NamedInstance(name, _get_static_constexpr_typename())
-            , Component(name, _get_static_constexpr_typename())
-            , sliderValue("sliderValue", 0.0)
-            , minSliderValue("minSliderValue", 0.0)
-            , maxSlidervalue("maxSliderValue", 100.0)
-            , sliderType("sliderType", sliderDir)
-      {
-         _range = {minSliderValue.value, maxSlidervalue.value};
-      }
 
-      static std::shared_ptr<BaseWidget> deserialize(const std::string &instanceName, PropertyPrototypeMap &properties) {
-         SliderTypeProperty temp("temp");
-         auto retval = std::make_shared<Slider>(instanceName, temp.fromString(properties["sliderType"].data));
-         retval->BaseWidget::_deserialize(properties);
-         return retval;
-      }
       ReyEngine::Vec2<double> getRange(){return _range;}
       void setRange(ReyEngine::Vec2<double> newRange){
          minSliderValue.set(newRange.x);
@@ -55,8 +37,19 @@ namespace ReyEngine{
       inline void setSliderValue(double value, bool noPublish=false){sliderValue.set(value);if (!noPublish)_publish_slider_val();_compute_appearance();}
       inline Perunum getSliderPct(){return _range.pct(sliderValue.value);}
       inline void setSliderPct(Perunum pct, bool noPublish=false){setSliderValue(_range.lerp(pct), noPublish);}
+
+      Slider(const std::string &name, SliderType sliderDir)
+      : BaseWidget(name, _get_static_constexpr_typename())
+      , NamedInstance(name, _get_static_constexpr_typename())
+      , Component(name, _get_static_constexpr_typename())
+      , sliderValue("sliderValue", 0.0)
+      , minSliderValue("minSliderValue", 0.0)
+      , maxSlidervalue("maxSliderValue", 100.0)
+      , sliderType("sliderType", sliderDir)
+      {
+         _range = {minSliderValue.value, maxSlidervalue.value};
+      }
    protected:
-      void _register_parent_properties() override{ BaseWidget::_register_parent_properties(); BaseWidget::registerProperties();}
       Handled _unhandled_input(const InputEvent& e, const std::optional<UnhandledMouseInput>& mouse) override {
          auto& mouseEvent = (InputEventMouseMotion&)(e);
          auto localPos = globalToLocal(mouseEvent.globalPos);
