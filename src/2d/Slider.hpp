@@ -10,7 +10,7 @@ namespace ReyEngine{
       public:
          EVENT_CTOR_SIMPLE(EventSliderValueChanged, Event<EventSliderValueChanged>){}
          double value;
-         double pct;
+         Perunum pct;
       };
 
       enum class SliderType{VERTICAL, HORIZONTAL};

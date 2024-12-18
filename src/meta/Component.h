@@ -5,6 +5,7 @@
 #include "TypeContainer.h"
 #include "Event.h"
 #include "Builder.h"
+#include "MetaData.h"
 
 namespace ReyEngine{
    class Application;
@@ -13,6 +14,7 @@ namespace ReyEngine{
       class Component
       : public inheritable_enable_shared_from_this<Component>
       , public PropertyContainer
+      , public MetaDataOwner
       , public TypeContainer<Component>
       {
       public:
