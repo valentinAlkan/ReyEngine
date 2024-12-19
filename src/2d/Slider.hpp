@@ -34,9 +34,9 @@ namespace ReyEngine{
          _range = {minSliderValue.value, maxSlidervalue.value};
       }
       inline double getSliderValue(){return sliderValue.value;}
-      inline void setSliderValue(double value, bool noPublish=false){sliderValue.set(value);if (!noPublish)_publish_slider_val();_compute_appearance();}
+      inline void setSliderValue(float value, bool publish=true){sliderValue.set(value);if (publish)_publish_slider_val();_compute_appearance();}
       inline Perunum getSliderPct(){return _range.pct(sliderValue.value);}
-      inline void setSliderPct(Perunum pct, bool noPublish=false){setSliderValue(_range.lerp(pct), noPublish);}
+      inline void setSliderPct(Perunum pct, bool publish=true){setSliderValue(_range.lerp(pct), publish);}
 
       Slider(const std::string &name, SliderType sliderDir)
       : BaseWidget(name, _get_static_constexpr_typename())
@@ -137,7 +137,7 @@ namespace ReyEngine{
          }
       }
 
-      FloatProperty sliderValue;
+      FloatProperty sliderValue; //0 to 1
       FloatProperty minSliderValue;
       FloatProperty maxSlidervalue;
       SliderTypeProperty sliderType;
