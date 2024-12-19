@@ -186,9 +186,6 @@ namespace ReyEngine{
       void setAcceptsHover(bool accepts){acceptsHover = accepts;} //only way to get mouse_enter and mouse_exit
       bool getAcceptsHover() const {return acceptsHover;}
       void setProcess(bool process);
-//      WidgetPtr setFree(); //request to remove this widget from the tree at next available opportunity. Does not immediately delete it
-                      // if you need your object to stop being processed immediately, use setFreeImmediately(), which could pause to syncrhonize threads.
-//      WidgetPtr setFreeImmediately(); // Pauses other threads and immediately removes objects from the tree.
 
       virtual void render() const = 0; //draw the widget
       void setBackRender(bool);
@@ -203,7 +200,9 @@ namespace ReyEngine{
       void drawArrow(const ReyEngine::Line<R_FLOAT>&, float lineThick, const ReyEngine::ColorRGBA&, float headSize=20) const;
       void drawText(const std::string& text, const ReyEngine::Pos<R_FLOAT>& pos) const;
       void drawText(const std::string& text, const ReyEngine::Pos<R_FLOAT>& pos, const ReyEngine::ReyEngineFont& font) const;
+      void drawText(const std::string& text, const ReyEngine::Pos<R_FLOAT>& pos, const ReyEngine::ReyEngineFont& font, const ReyEngine::ColorRGBA& color, R_FLOAT size, R_FLOAT spacing) const;
       void drawTextCentered(const std::string& text, const ReyEngine::Pos<R_FLOAT>& pos, const ReyEngine::ReyEngineFont& font) const;
+      void drawTextCentered(const std::string& text, const ReyEngine::Pos<R_FLOAT>& pos, const ReyEngine::ReyEngineFont& font, const ReyEngine::ColorRGBA& color, R_FLOAT size, R_FLOAT spacing) const;
       void drawRectangle(const ReyEngine::Rect<R_FLOAT>& rect, const ReyEngine::ColorRGBA& color) const;
       void drawRectangleLines(const ReyEngine::Rect<R_FLOAT>& rect, float lineThick, const ReyEngine::ColorRGBA& color) const;
       void drawRectangleRounded(const ReyEngine::Rect<R_FLOAT>& rect,  float roundness, int segments, const ReyEngine::ColorRGBA& color) const;
@@ -217,6 +216,10 @@ namespace ReyEngine{
       void drawTextureRect(const ReyEngine::ReyTexture&, const ReyEngine::Rect<R_FLOAT>& src, const ReyEngine::Rect<R_FLOAT>& dst, float rotation, const ReyEngine::ColorRGBA& tint) const;
       void startScissor(const ReyEngine::Rect<R_FLOAT>&) const;
       void stopScissor() const;
+
+      //misc
+      void setEnabled(bool newEnabled){ enabled.value = newEnabled;}
+      bool getEnabled(bool newEnabled){ return enabled.value;}
    protected:
 
       void __on_rect_changed(const Rect<R_FLOAT>& oldRect); //internal. Trigger resize for anchored widgets.
@@ -248,13 +251,12 @@ namespace ReyEngine{
       virtual void renderChain(ReyEngine::Pos<R_FLOAT>& textureOffset);
       ReyEngine::Vec2<float> getRenderOffset() const {return _renderOffset;}
       void setRenderOffset(ReyEngine::Pos<R_FLOAT> offset){_renderOffset = offset;}
-      //   void renderTextureOffsetApply(ReyEngine::Pos<float>& textureOffset){}
-   //   void renderTextureOffsetReset(ReyEngine::Pos<float>& textureOffset){}
       void registerProperties() override;
-//      PosProperty<R_FLOAT> _pos;
       SizeProperty<R_FLOAT> _size;
       Transform2DProperty _transform;
       InputMaskProperty<R_FLOAT> _inputMask; //Only input inside this rectangle will be handled;
+      BoolProperty enabled;
+
 
       //input
    public:

@@ -23,6 +23,7 @@ BaseWidget::BaseWidget(const std::string& name, std::string typeName)
 , PROPERTY_DECLARE(_transform)
 , PROPERTY_DECLARE(_anchor, Anchor::NONE)
 , PROPERTY_DECLARE(_inputMask, InputMask::NONE)
+, PROPERTY_DECLARE(enabled, false)
 , theme(make_shared<Style::Theme>())
 {}
 
@@ -318,9 +319,21 @@ void BaseWidget::drawText(const std::string &text, const Pos<R_FLOAT> &pos, cons
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::drawText(const std::string& text, const ReyEngine::Pos<R_FLOAT>& pos, const ReyEngine::ReyEngineFont& font, const ReyEngine::ColorRGBA& color, R_FLOAT size, R_FLOAT spacing) const {
+   ReyEngine::drawText(text, pos, font, color, size, spacing);
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawTextCentered(const std::string &text, const Pos<R_FLOAT> &pos, const ReyEngine::ReyEngineFont& font) const{
    ReyEngine::drawTextCentered(text, pos, font);
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::drawTextCentered(const std::string &text, const ReyEngine::Pos<float> &pos, const ReyEngine::ReyEngineFont &font, const ReyEngine::ColorRGBA &color, float size, float spacing) const {
+   ReyEngine::drawTextCentered(text, pos, font, color, size, spacing);
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawRectangle(const ReyEngine::Rect<R_FLOAT> &rect, const ReyEngine::ColorRGBA &color) const {

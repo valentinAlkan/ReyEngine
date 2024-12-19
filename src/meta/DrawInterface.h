@@ -938,6 +938,7 @@ namespace ReyEngine {
 #define COLORS ReyEngine::Colors
    namespace Colors{
       static constexpr ColorRGBA gray = {130, 130, 130, 255};
+      static constexpr ColorRGBA disabledGray = {230, 230, 230, 255};
       static constexpr ColorRGBA lightGray = {200, 200, 200, 255};
       static constexpr ColorRGBA red = {230, 41, 55, 255};
       static constexpr ColorRGBA green = { 0, 228, 48, 255};
@@ -1015,7 +1016,9 @@ namespace ReyEngine {
    void maximizeWindow();
    void minimizeWindow();
    void drawText(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font);
+   void drawText(const std::string& text, const ReyEngine::Pos<R_FLOAT>& pos, const ReyEngine::ReyEngineFont& font, const ReyEngine::ColorRGBA& color, R_FLOAT size, R_FLOAT spacing);
    void drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font);
+   void drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font, const ReyEngine::ColorRGBA& color, R_FLOAT size, R_FLOAT spacing);
    void drawTextRelative(const std::string& text, const Pos<R_FLOAT>& relPos, const ReyEngineFont& font);
    void drawRectangle(const Rect<R_FLOAT>&, const ReyEngine::ColorRGBA& color);
    void drawRectangleRounded(const Rect<float>&, float roundness, int segments, const ReyEngine::ColorRGBA& color);

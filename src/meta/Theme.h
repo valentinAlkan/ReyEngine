@@ -48,6 +48,7 @@ namespace Style {
       , PROPERTY_DECLARE(colorPrimary, ReyEngine::Colors::none)
       , PROPERTY_DECLARE(colorSecondary, ReyEngine::Colors::none)
       , PROPERTY_DECLARE(colorTertiary, ReyEngine::Colors::none)
+      , PROPERTY_DECLARE(colorDisabled, ReyEngine::Colors::lightGray)
       {}
       const EnumPair<Fill, 3>& getDict() const override {return dict;}
       static constexpr EnumPair<Fill, 3> dict = {
@@ -59,10 +60,12 @@ namespace Style {
          registerProperty(colorPrimary);
          registerProperty(colorSecondary);
          registerProperty(colorTertiary);
+         registerProperty(colorDisabled);
       }
       ReyEngine::ColorProperty colorPrimary;
       ReyEngine::ColorProperty colorSecondary; //for gradient
       ReyEngine::ColorProperty colorTertiary; //for whatever
+      ReyEngine::ColorProperty colorDisabled; //for whatever
    };
    
    struct MarginsProperty : public Vec4Property<int>{
@@ -119,6 +122,9 @@ namespace Style {
          background.colorPrimary = ReyEngine::Colors::lightGray;
          background.colorSecondary = ReyEngine::Colors::black;
          background.colorTertiary = ReyEngine::Colors::white;
+         background.colorDisabled = ReyEngine::Colors::disabledGray;
+
+         foreground.colorDisabled = ReyEngine::Colors::white;
       }
       std::string toString() const override {return "not impelenmeted";}
       Empty fromString(const std::string& data) override { return value;}

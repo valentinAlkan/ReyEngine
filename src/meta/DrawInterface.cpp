@@ -42,8 +42,12 @@ Size<int> ReyEngine::getScreenSize() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::drawText(const std::string &text, const ReyEngine::Pos<R_FLOAT>& pos, const ReyEngineFont& font) {
-//   void DrawTextPro(Font font, const char *text, Vector2 position, Vector2 origin, float rotation, float fontSize, float spacing, Color tint);
-   DrawTextPro(font.font, text.c_str(), {(float)pos.x, (float)pos.y}, {0, 0}, 0, font.size, font.spacing, font.color);
+   drawText(text, pos, font, font.color, font.size, font.spacing);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawText(const std::string& text, const ReyEngine::Pos<R_FLOAT>& pos, const ReyEngine::ReyEngineFont& font, const ReyEngine::ColorRGBA& color, R_FLOAT size, R_FLOAT spacing) {
+   DrawTextPro(font.font, text.c_str(), {(float)pos.x, (float)pos.y}, {0, 0}, 0, size, spacing, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -118,11 +122,17 @@ void ReyEngine::drawTexture(const ReyTexture& texture, const Rect<R_FLOAT> &sour
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font){
+   drawTextCentered(text, pos, font, font.color, font.size, font.spacing);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawTextCentered(const std::string &text, const Pos<float> &pos, const ReyEngineFont &font, const ReyEngine::ColorRGBA &color, float size, float spacing) {
    auto textWidth = MeasureText(text.c_str(), font.size);
    float newX = (float)pos.x - (float)textWidth / 2;
    float newY = (float)pos.y - (float)font.size / 2;
-   drawText(text, Vec2<R_FLOAT>((int)newX, (int)newY), font);
+   drawText(text, Vec2<R_FLOAT>(newX, newY), font, color, size, spacing);
 }
+
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::drawTextRelative(const std::string& text, const Pos<R_FLOAT>& relPos, const ReyEngineFont& font){

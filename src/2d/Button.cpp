@@ -5,7 +5,7 @@ using namespace ReyEngine;
 /////////////////////////////////////////////////////////////////////////////////////////
 Handled BaseButton::_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
     if (_isEditorWidget) return false;
-//    if (!mouse->isInside) return false;
+    if (!enabled) return false;
     switch (event.eventId) {
         case InputEventMouseButton::getUniqueEventId(): {
             auto mbEvent = event.toEventType<InputEventMouseButton>();
@@ -49,10 +49,18 @@ void BaseButton::setDown(bool newDown){
 void PushButton::render() const {
     static constexpr int SEGMENTS = 10;
     static constexpr int THICKNESS = 1;
-    auto color = theme->background.colorPrimary.value;
-    if (isHovered()) color = theme->background.colorSecondary.value;
-    if (down) color = theme->background.colorTertiary.value;
-    drawRectangleRounded(getRect().toSizeRect(), theme->roundness.value, SEGMENTS, color);
+    ColorRGBA backgroundColor;
+    ColorRGBA textColor;
+    if (enabled) {
+       backgroundColor = theme->background.colorPrimary.value;
+       textColor = theme->font.value.color;
+       if (isHovered()) backgroundColor = theme->background.colorSecondary.value;
+       if (down) backgroundColor = theme->background.colorTertiary.value;
+    } else {
+       backgroundColor = theme->background.colorDisabled;
+       textColor = theme->foreground.colorDisabled;
+    }
+    drawRectangleRounded(getRect().toSizeRect(), theme->roundness.value, SEGMENTS, backgroundColor);
     drawRectangleRoundedLines(getRect().toSizeRect().embiggen(-THICKNESS), theme->roundness.value, SEGMENTS, THICKNESS, COLORS::black);
-    drawTextCentered(text.value, getRect().toSizeRect().center(), theme->font.value);
+    drawTextCentered(text.value, getRect().toSizeRect().center(), theme->font.value, textColor, theme->font.value.size, theme->font.value.spacing);
 }
