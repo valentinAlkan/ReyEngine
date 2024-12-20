@@ -219,7 +219,7 @@ namespace ReyEngine{
 
       //misc
       void setEnabled(bool newEnabled){ enabled.value = newEnabled;}
-      bool getEnabled(bool newEnabled){ return enabled.value;}
+      bool getEnabled(){ return enabled.value;}
    protected:
 
       void __on_rect_changed(const Rect<R_FLOAT>& oldRect); //internal. Trigger resize for anchored widgets.
