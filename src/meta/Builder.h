@@ -100,9 +100,11 @@ PARENT_CLASSNAME(NAME, TYPE_NAME)                  \
    static void _ensure_is_statically_buildable()          {                                        \
    static_assert( ReyEngine::has_required_builds<T, BUILD_ARGS_TO_TUPLE(__VA_ARGS__)>::value, \
   "Type must publicly implement all static build functions specified to the build system. \n" \
-  "If you are using the REYENGINE_OBJECT_BUILD_ONLY macro, then you can place REYENGINE_DEFAULT_BUILD macro somewhere in the public section of your class definition. \n"               \
+  "If you are using the REYENGINE_OBJECT_BUILD_ONLY macro, then you can place REYENGINE_DEFAULT_BUILD macro somewhere in the public section of your class definition. \n" \
   "You may also implement this functionality yourself if you desire more control over the build process. If you are seeing this error despite \n" \
-  "having declared build functions that accept all the necessary properties, ensure the functions are publicly accessible.");}   \
+  "having declared build functions that accept all the necessary properties, ensure the functions are publicly accessible. \n" \
+  "Also, please be aware that the custom build macro includes access specifiers, so it can change the visibility \n" \
+  "of functions below it. As such, always place an access specifier DIRECTLY AFTER the line containing the macro");}
 ///////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_DEFAULT_CTOR(CLASSNAME) \
 CLASSNAME(const std::string& name): CLASSNAME(name, _get_static_constexpr_typename()){}
@@ -125,6 +127,9 @@ public:                                                        \
    REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME)
 
 //to disallow building except via a factory function
+// - please note - this macro includes access specifiers, so it can change
+// the visibility of functions below it. As such, always place an access specifier DIRECTLY AFTER
+// the line containg the macro
 #define REYENGINE_OBJECT_CUSTOM_BUILD(CLASSNAME, PARENT_CLASSNAME, ...)  \
 private:                                                               \
    REYENGINE_ENSURE_IS_STATICALLY_BUILDABLE(CLASSNAME, __VA_ARGS__)    \
