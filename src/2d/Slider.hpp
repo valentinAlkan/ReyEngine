@@ -80,7 +80,6 @@ namespace ReyEngine{
 
          if (e.isEvent<InputEventMouseButton>()){
             auto &buttonEvent = e.toEventType<InputEventMouseButton>();
-            bool handled = false;
             if (isInside(localPos) && buttonEvent.isDown) {
                _cursor_down = true;
                _is_dragging = _grabber.isInside(localPos) && _cursor_down;

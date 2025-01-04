@@ -76,7 +76,7 @@ namespace ReyEngine{
       : BaseEvent(eventId, publisher)
       {}
       template <typename Other>
-      bool isEvent() const {
+      [[nodiscard]] bool isEvent() const {
          static_assert(std::is_base_of_v<T, Other>);
          return eventId == Other::getUniqueEventId();
       }
