@@ -469,6 +469,22 @@ namespace ReyEngine {
       constexpr inline Line<T> rightSide() const {return {topRight(), bottomRight()};}
       constexpr inline Line<T> top() const {return {topLeft(), topRight()};}
       constexpr inline Line<T> bottom() const {return {bottomLeft(), bottomRight()};}
+      // return a rectangle that would render the same but has positive width and height
+      constexpr inline void normalize() {
+         if (width < 0){
+            x += width;
+            width = -width;
+         }
+         if (height < 0){
+            y += height;
+            height = -height;
+         }
+      }
+      constexpr inline Rect normalized() const {
+         auto retval = Rect(*this);
+         retval.normalize();
+         return retval;
+      }
       constexpr inline bool collides(const Rect& other) const {
          return ((x < (other.x + other.width) && (x + width) > other.x) &&
              (y < (other.y + other.height) && (y + height) > other.y));
