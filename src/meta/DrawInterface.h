@@ -368,10 +368,11 @@ namespace ReyEngine {
           Pos projectedPoint = *this + Pos(scaledDirection.x, scaledDirection.y);
           return projectedPoint;
       }
-      constexpr double distanceTo(const Pos& other) const {
+      constexpr inline double distanceTo(const Pos& other) const {
          auto diff = *this - other;
          return std::sqrt(diff.x * diff.x + diff.y * diff.y);
       }
+      constexpr inline Line<T> to(const Pos& other) const {return Line<T>(*this, other);}
       inline std::string toString() const {return Vec2<T>::toString();}
    };
 
