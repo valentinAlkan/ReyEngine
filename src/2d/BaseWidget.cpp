@@ -323,6 +323,10 @@ void BaseWidget::drawText(const std::string& text, const ReyEngine::Pos<R_FLOAT>
    ReyEngine::drawText(text, pos, font, color, size, spacing);
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::drawTextCentered(const std::string &text, const Pos<R_FLOAT> &pos) const{
+   ReyEngine::drawTextCentered(text, pos, theme->font);
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawTextCentered(const std::string &text, const Pos<R_FLOAT> &pos, const ReyEngine::ReyEngineFont& font) const{
