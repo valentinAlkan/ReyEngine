@@ -9,6 +9,7 @@
 #include "FileSystem.h"
 #include "Component.h"
 #include <thread>
+#include <random>
 
 namespace ReyEngine{
    namespace Internal{
@@ -50,7 +51,13 @@ namespace ReyEngine{
       static std::unique_lock<std::mutex> getLock(); //use this to syncrhonize with the engine
       static constexpr Platform getPlatform(){return PLATFORM;}
       static UniqueValue generateUniqueValue(){return instance()._nextUniqueValue++;}
-      static double generateRandom(double low, double high);
+      template <typename T=double>
+      static T generateRandom(T low, T high){
+         std::random_device rd;
+         std::mt19937 gen(rd());
+         std::uniform_real_distribution<> dis(low, high);
+         return dis(gen);
+      };
       static long double secondsSinceInit();
    protected:
       Window& createWindow(Internal::WindowPrototype&, std::optional<std::shared_ptr<Canvas>>);
