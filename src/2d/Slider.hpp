@@ -12,6 +12,10 @@ namespace ReyEngine{
          double value;
          Perunum pct;
       };
+      class EventSliderClicked : public Event<EventSliderClicked> {
+      public:
+         EVENT_CTOR_SIMPLE(EventSliderClicked, Event<EventSliderClicked>){}
+      };
 
       enum class SliderType{VERTICAL, HORIZONTAL};
       struct SliderTypeProperty : public Property<SliderType>{
@@ -85,11 +89,16 @@ namespace ReyEngine{
                _is_dragging = _grabber.isInside(localPos) && _cursor_down;
                return true;
             }
-            if (_is_dragging && !buttonEvent.isDown) {
-               //only handle button up if we are dragging
-               _cursor_down = buttonEvent.isDown;
-               _is_dragging = false;
-               return true;
+            if (!buttonEvent.isDown) {
+               //uppies
+               if (_is_dragging) {
+                  _cursor_down = buttonEvent.isDown;
+                  _is_dragging = false;
+                  return true;
+               } else if (isInside(localPos)){
+                  //simple INSIDE click
+                  publish(EventSliderClicked(toEventPublisher()));
+               }
             }
          }
          return false;
