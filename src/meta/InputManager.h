@@ -52,6 +52,12 @@ namespace ReyEngine{
       INPUT_FILTER_PUBLISH_AND_PASS, //publishes subscribers input instead of handling it locally
       INPUT_FILTER_PASS_AND_PUBLISH, //publishes input subscribers instead of handling it locally
       INPUT_FILTER_PUBLISH_AND_STOP, //publishes input to subscribers instead of handling it locally
+      INPUT_FILTER_PASS_PUBLISH_PROCESS, //
+      INPUT_FILTER_PASS_PROCESS_PUBLISH, //
+      INPUT_FILTER_PROCESS_PUBLISH_PASS, //
+      INPUT_FILTER_PROCESS_PASS_PUBLISH, //
+      INPUT_FILTER_PUBLISH_PASS_PROCESS, //
+      INPUT_FILTER_PUBLISH_PROCESS_PASS, //
    };
 
    struct UnhandledMouseInput{

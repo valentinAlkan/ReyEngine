@@ -12,10 +12,6 @@ namespace ReyEngine{
          double value;
          Perunum pct;
       };
-      class EventSliderClicked : public Event<EventSliderClicked> {
-      public:
-         EVENT_CTOR_SIMPLE(EventSliderClicked, Event<EventSliderClicked>){}
-      };
 
       enum class SliderType{VERTICAL, HORIZONTAL};
       struct SliderTypeProperty : public Property<SliderType>{
@@ -84,21 +80,15 @@ namespace ReyEngine{
 
          if (e.isEvent<InputEventMouseButton>()){
             auto &buttonEvent = e.toEventType<InputEventMouseButton>();
-            if (isInside(localPos) && buttonEvent.isDown) {
+            if (isInside(localPos) && buttonEvent.isDown && _grabber.isInside(localPos)) {
                _cursor_down = true;
-               _is_dragging = _grabber.isInside(localPos) && _cursor_down;
+               _is_dragging = _cursor_down;
                return true;
             }
-            if (!buttonEvent.isDown) {
-               //uppies
-               if (_is_dragging) {
-                  _cursor_down = buttonEvent.isDown;
-                  _is_dragging = false;
-                  return true;
-               } else if (isInside(localPos)){
-                  //simple INSIDE click
-                  publish(EventSliderClicked(toEventPublisher()));
-               }
+            if (!buttonEvent.isDown && _is_dragging) {
+               _cursor_down = buttonEvent.isDown;
+               _is_dragging = false;
+               return true;
             }
          }
          return false;

@@ -121,11 +121,10 @@ Handled BaseWidget::_process_unhandled_input(const InputEvent& event, const std:
             switch (event.eventId) {
                case InputEventMouseMotion::getUniqueEventId():
                case InputEventMouseButton::getUniqueEventId():
-               case InputEventMouseWheel::getUniqueEventId(): {
+               case InputEventMouseWheel::getUniqueEventId():{
                   auto globalPos = event.toEventType<InputEventMouse>().globalPos;
                   _mouse = child->toMouseInput(globalPos);
-               }
-                  break;
+                  break;}
             }
          }
 
@@ -157,6 +156,12 @@ Handled BaseWidget::_process_unhandled_input(const InputEvent& event, const std:
            break;
    }
 
+   auto publishInputEvent = [&]() -> Handled {
+      WidgetUnhandledInputEvent unhandledInputEvent(toEventPublisher(), event, mouse);
+      publishMutable<WidgetUnhandledInputEvent>(unhandledInputEvent);
+      return unhandledInputEvent.handled;
+   };
+
    switch (_inputFilter){
       case InputFilter::INPUT_FILTER_PASS_AND_PROCESS:
          return passInput(event, mouse) || _unhandled_input(event, mouse);
@@ -167,19 +172,24 @@ Handled BaseWidget::_process_unhandled_input(const InputEvent& event, const std:
       case InputFilter::INPUT_FILTER_PROCESS_AND_STOP:
          return _unhandled_input(event, mouse);
       case InputFilter::INPUT_FILTER_IGNORE_AND_STOP:
-         return false;
-       case InputFilter::INPUT_FILTER_PUBLISH_AND_PASS:
-           publish(event);
-           return passInput(event, mouse);
-       case InputFilter::INPUT_FILTER_PASS_AND_PUBLISH:
-           if (passInput(event, mouse)) return true;
-           publish(event);
-           break;
-       case InputFilter::INPUT_FILTER_PUBLISH_AND_STOP:
-           publish(event);
-           return false;
-      default:
-         throw std::runtime_error("INVALID INPUT FILTER STATE!");
+         break;
+      case InputFilter::INPUT_FILTER_PUBLISH_AND_PASS:
+         if (publishInputEvent()) return true;
+         return passInput(event, mouse);
+      case InputFilter::INPUT_FILTER_PASS_AND_PUBLISH:
+         if (passInput(event, mouse)) return true;
+         if (publishInputEvent()) return true;
+         break;
+      case InputFilter::INPUT_FILTER_PUBLISH_AND_STOP:
+         if (publishInputEvent()) return true;
+         break;
+      case InputFilter::INPUT_FILTER_PASS_PUBLISH_PROCESS:
+         if (publishInputEvent()) return true;
+         if (_unhandled_input(event, mouse)) return true;
+      case InputFilter::INPUT_FILTER_PROCESS_PASS_PUBLISH:
+         if (_unhandled_input(event, mouse)) return true;
+         if (passInput(event, mouse)) return true;
+         if (publishInputEvent()) return true;
    }
    return false;
 }

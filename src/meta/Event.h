@@ -123,6 +123,10 @@ namespace ReyEngine{
 //           std::cout << "subscribing to event " << eventId << std::endl;
            _eventMap[eventId][subscriber].push_back(fx);
        }
+      template <typename T>
+      void publishMutable(T& event){
+         publish(static_cast<const T&>(event));
+      }
        template <typename T>
        void publish(const T& event){
            static_assert(std::is_base_of_v<BaseEvent, T>); //compile time check
@@ -172,6 +176,15 @@ namespace ReyEngine{
    /////////////////////////////////////////////////////////////////////////////////////////
    class EventSubscriber : public inheritable_enable_shared_from_this<EventSubscriber>{
    public:
+      template <typename T>
+      void subscribeMutable(std::shared_ptr<EventPublisher> publisher, std::function<void(T&)> typedEventHandler){
+         std::shared_ptr<EventSubscriber> me = shared_from_this();
+         auto adapter = [typedEventHandler](const BaseEvent& baseEvent) {
+            auto& s = const_cast<T&>(static_cast<const T&>(baseEvent));
+            typedEventHandler(s);
+         };
+         publisher->addSubscriber<T>(me, adapter);
+      }
       template <typename T>
       void subscribe(std::shared_ptr<EventPublisher> publisher, std::function<void(const T&)> typedEventHandler){
          static_assert(std::is_base_of_v<BaseEvent, T>);

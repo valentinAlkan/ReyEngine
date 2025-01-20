@@ -69,6 +69,18 @@ namespace ReyEngine{
          ReyEngine::Rect<R_FLOAT> rect;
       };
 
+      struct WidgetUnhandledInputEvent : public Event<WidgetUnhandledInputEvent> {
+         EVENT_CTOR_SIMPLE(WidgetUnhandledInputEvent, Event<WidgetUnhandledInputEvent>, const InputEvent& fwdEvent, const std::optional<UnhandledMouseInput>& fwdMouse)
+         , fwdEvent(fwdEvent)
+         , fwdMouse(fwdMouse)
+         {}
+         ReyEngine::Rect<R_FLOAT> rect;
+         const InputEvent& fwdEvent;
+         const std::optional<UnhandledMouseInput> fwdMouse;
+         bool handled = false;
+      };
+
+
       //Input masking controls whether input inside the rect is masked (ignored)
       enum InputMask {NONE, IGNORE_INSIDE, IGNORE_OUTSIDE};
       template <typename T>
