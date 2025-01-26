@@ -152,7 +152,7 @@ add_library(ReyEngine3D STATIC
     src/3d/BaseBody.cpp
     src/3d/Camera3D.cpp
     src/3d/Plane3D.cpp
-        src/3d/ModelBody.cpp
+    src/3d/ModelBody.cpp
 )
 
 add_library(Editor STATIC
