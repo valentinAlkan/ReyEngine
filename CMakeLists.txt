@@ -11,8 +11,7 @@ project(ReyEngine)
 # add lua
 add_subdirectory(src/thirdParty/lua)
 
-# enable -std=c++17
-set (CMAKE_CXX_STANDARD 17)
+set (CMAKE_CXX_STANDARD 20)
 
 # Add static linking flags for GCC and standard C++ libraries
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
@@ -98,6 +97,12 @@ set(CUSTOM_SOURCES
     test/RootWidget.hpp
 )
 
+add_library(ReyEngineUtil INTERFACE)
+
+target_include_directories(ReyEngineUtil INTERFACE
+    src/lib
+)
+
 add_library(ReyEngine2D STATIC
     src/meta/ArgParse.cpp
     src/meta/FileSystem.cpp
@@ -146,6 +151,17 @@ add_library(ReyEngine2D STATIC
     ${CUSTOM_SOURCES}
 )
 
+target_include_directories(ReyEngine2D PUBLIC
+    src
+    src/meta
+    src/2d
+    test
+    src/thirdParty/xml
+    src/thirdParty/uuid
+    src/pathfinding
+    src/physics
+)
+
 add_library(ReyEngine3D STATIC
     src/3d/DrawInterface3D.cpp
     src/3d/Viewport.cpp
@@ -164,24 +180,13 @@ add_library(Editor STATIC
     src/editor/InspectorWidgetFactory.cpp
 )
 
-target_include_directories(ReyEngine2D PUBLIC
-    src
-    src/meta
-    src/2d
-    test
-    src/thirdParty/xml
-    src/thirdParty/uuid
-    src/pathfinding
-    src/physics
-)
-
 # most stuff is linked against and included with ReyEngine2D already. Since ReyEngine3D is linked against ReyEngine2D,
 # there's no need to link against much new stuff (for now)
 target_include_directories( ReyEngine3D PUBLIC
     src/3d
 )
 
-target_link_libraries(ReyEngine2D raylib lua Threads::Threads Eigen3::Eigen yaml-cpp::yaml-cpp)
+target_link_libraries(ReyEngine2D raylib ReyEngineUtil lua Threads::Threads Eigen3::Eigen yaml-cpp::yaml-cpp)
 
 if (UNIX)
     target_link_libraries(ReyEngine2D stdc++fs)

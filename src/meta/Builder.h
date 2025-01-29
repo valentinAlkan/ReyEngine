@@ -73,7 +73,7 @@ std::string _get_static_constexpr_typename() override {return TYPE_NAME;}
 #define REYENGINE_CTOR_INIT_LIST(NAME, PARENT_CLASSNAME) \
 PARENT_CLASSNAME(NAME, TYPE_NAME)                  \
 , NamedInstance(NAME, TYPE_NAME)                     \
-, ReyEngine::Internal::Component(NAME, TYPE_NAME)                \
+, ReyEngine::Internal::Component(NAME, TYPE_NAME)     \
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_SERIALIZER(CLASSNAME, PARENT_CLASSNAME)
 /////////////////////////////////////////////////////////////////////////////////////////
