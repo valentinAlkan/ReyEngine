@@ -639,7 +639,7 @@ namespace ReyEngine {
          //divide by 0?
          auto subx = pos.x / size.x;
          auto suby = pos.y / size.y;
-         return {subx, suby};
+         return {(int)subx, (int)suby};
       }
 
       //get an actual subrect given a subrect size and an index
@@ -709,7 +709,7 @@ namespace ReyEngine {
       /// Return a point on the circle that corresponds to the given angular offset from right-handed horizontal
       /// \param r
       /// \return
-      inline Pos<R_FLOAT> getPoint(Radians r) const {return {center.x + radius * std::cos(r.get()), center.y + radius * std::sin(r.get())};}
+      inline Pos<R_FLOAT> getPoint(Radians r) const {return {(float)center.x + radius * std::cos(r.get()), (float)center.y + radius * std::sin(r.get())};}
       /// Return the angular offset from the right-handed horizontal that corresponds to the given point.
       ///
       /// \param pos: A point along a normal
