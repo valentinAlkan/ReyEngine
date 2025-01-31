@@ -5,9 +5,7 @@ using namespace std;
 using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::Camera2D::renderBegin(ReyEngine::Pos<R_FLOAT> &textureOffset) {
-   //zero out our position on the texture offset
-   textureOffset -= getPos();
+void ReyEngine::Camera2D::renderBegin() {
    //pop the active camera - that is to say, return to a 'no camera' scenario
    rlDrawRenderBatchActive();
    rlPushMatrix();
@@ -65,9 +63,7 @@ void ReyEngine::Camera2D ::renderChain(Pos<R_FLOAT>& parentOffset) {
 
    if (!_visible) return;
    Pos<R_FLOAT> localOffset;
-   renderBegin(localOffset);
-   auto prevOffset = _renderOffset;
-   _renderOffset += (localOffset + parentOffset);
+   renderBegin();
    //backrender
 
    auto rotation = Degrees(getRotation()).get();
@@ -77,7 +73,7 @@ void ReyEngine::Camera2D ::renderChain(Pos<R_FLOAT>& parentOffset) {
       frameStack.push_back(MatrixRotate({0,0,1}, rotation));
    }
    for (const auto &child: _backRenderList) {
-      child->renderChain(_renderOffset);
+      child->renderChain();
    }
 
    if (!frameStack.empty()) {
@@ -87,13 +83,12 @@ void ReyEngine::Camera2D ::renderChain(Pos<R_FLOAT>& parentOffset) {
 
    //front render
    for (const auto &child: _frontRenderList) {
-      child->renderChain(_renderOffset);
+      child->renderChain();
    }
    if (!frameStack.empty()) {
       frameStack.pop_back();
    }
 
-   _renderOffset = prevOffset; //reset to local offset when we are done
    renderEnd();
    renderEditorFeatures();
 }

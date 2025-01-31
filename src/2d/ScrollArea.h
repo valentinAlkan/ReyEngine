@@ -25,7 +25,7 @@ namespace ReyEngine {
         static constexpr std::string_view VSLIDER_NAME = "__vslider";
         static constexpr std::string_view HSLIDER_NAME = "__hslider";
 
-        void renderBegin(ReyEngine::Pos<R_FLOAT> &textureOffset) override;
+        void renderBegin() override;
         void render() const {}
         void renderEnd() override;
         void _process(float dt) override {}

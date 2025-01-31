@@ -31,7 +31,7 @@ namespace ReyEngine{
       void _on_rect_changed() override;
       Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
       void addChild(std::shared_ptr<BaseWidget> child) = delete;
-      void renderBegin(ReyEngine::Pos<R_FLOAT>& textureOffset) override;
+      void renderBegin() override;
       void renderEnd() override;
       void render() const override;
       void registerProperties() override;

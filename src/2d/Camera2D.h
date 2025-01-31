@@ -40,7 +40,7 @@ namespace ReyEngine {
          applyRect({{0, 0},screenSize});
       }
       void renderChain(Pos<R_FLOAT>& parentOffset);
-      void renderBegin(ReyEngine::Pos<R_FLOAT>& textureOffset) override;
+      void renderBegin() override;
       void renderEnd() override;
       void render() const override {};
       void _on_enter_tree() override{

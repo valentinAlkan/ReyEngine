@@ -266,7 +266,7 @@ int main(int argc, char** argv) {
 
                 //draw a rotating arrow
                 {
-                    auto rect = GRID.getSubRectAtCoords(Size(GRID_SIZE), Rect<int>::SubRectCoords({0, 1}));
+                    auto rect = GRID.getSubRectAtCoords(Size(GRID_SIZE), Rect<int>::SubRectCoords(Vec2(0, 1)));
                     Line<int> l = {rect.leftSide().midpoint(), rect.rightSide().midpoint()};
                     auto sec = (double) Application::secondsSinceInit();
                     ctl.drawArrow(l.rotate(l.midpoint(), Degrees(360) * sec % 360), 2.0, Colors::blue);
@@ -275,14 +275,14 @@ int main(int argc, char** argv) {
                 auto factor = abs(sin(Application::secondsSinceInit()));
                 //draw a rotating line
                 {
-                    auto rect = GRID.getSubRectAtCoords(Size(GRID_SIZE), Rect<int>::SubRectCoords({1, 1}));
+                    auto rect = GRID.getSubRectAtCoords(Size(GRID_SIZE), Rect<int>::SubRectCoords(Vec2(1, 1)));
                     Line<int> l = {rect.leftSide().midpoint(), rect.rightSide().midpoint()};
                     ctl.drawLine(l.rotate(l.midpoint(), Degrees(360 * factor)), 2.0, Colors::blue);
                 }
 
                 //draw a rotating point
                 {
-                    auto rect = GRID.getSubRectAtCoords(Size(GRID_SIZE), Rect<int>::SubRectCoords({0, 2}));
+                    auto rect = GRID.getSubRectAtCoords(Size(GRID_SIZE), Rect<int>::SubRectCoords(Vec2(0, 2)));
                     Line<int> l = {rect.center(), rect.leftSide().midpoint()};
                     l = l.rotate(rect.center(), Degrees(360 * factor));
                     auto c1 = Circle(l.b, 2.0);
@@ -602,12 +602,12 @@ int main(int argc, char** argv) {
 
             //connect to slider events
             auto hSlidercb = [&](const Slider::EventSliderValueChanged &event) {
-                control->setPos({(int) ((double) inputFilter->getWidth() * event.pct), control->getPos().y});
+                control->setPos({(int) ((double) inputFilter->getWidth() * event.pct.get()), control->getPos().y});
             };
             inputFilter->subscribe<Slider::EventSliderValueChanged>(hslider, hSlidercb);
 
             auto vSlidercb = [&](const Slider::EventSliderValueChanged &event) {
-                control->setPos({control->getPos().x, (int) ((double) inputFilter->getHeight() * event.pct)});
+                control->setPos({control->getPos().x, (int) ((double) inputFilter->getHeight() * event.pct.get())});
             };
             inputFilter->subscribe<Slider::EventSliderValueChanged>(vslider, vSlidercb);
 
@@ -657,7 +657,7 @@ int main(int argc, char** argv) {
             }
 
            //assert sizes
-           auto assertRect = [&](const std::shared_ptr<BaseWidget>& widget, const Rect<int>& assertRect){
+           auto assertRect = [&](const std::shared_ptr<BaseWidget>& widget, const Rect<float>& assertRect){
               auto widgetRect = widget->getRect();
               Logger::info() << "Widget " << widget->getName() << " has rect " << widgetRect;
               auto match = widgetRect == assertRect;
@@ -669,7 +669,7 @@ int main(int argc, char** argv) {
               return match;
            };
             for (int i=0;i<SUBCONS;i++){
-               passed &= assertRect(layout3->getChildren().at(i), {200 * i, 0, 200, 200});
+               passed &= assertRect(layout3->getChildren().at(i), {200 * (float)i, 0, 200, 200});
             }
 
            passed &= assertRect(mainVLayout, {0,0,800,600});
@@ -1662,11 +1662,11 @@ int main(int argc, char** argv) {
                       case InputInterface::MouseButton::LEFT:
                          switch (mode){
                             case Mode::SET_START:
-                               start = astar.at(cellCoords.get());
+                               start = astar.at(cellCoords);
                                checkPath();
                                return true;
                             case Mode::SET_GOAL:
-                               goal = astar.at(cellCoords.get());
+                               goal = astar.at(cellCoords);
                                checkPath();
                                return true;
                             case Mode::PICK_PATH:

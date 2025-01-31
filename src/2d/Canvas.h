@@ -31,7 +31,7 @@ namespace ReyEngine{
       : REYENGINE_CTOR_INIT_LIST(instanceName, BaseWidget)
       , _renderTarget(renderTarget)
       {}
-      void renderBegin(Pos<R_FLOAT>& textureOffset) override;
+      void renderBegin() override;
       void render() const override;
       void renderActiveCamera(Pos<R_FLOAT>& textureOffset);
       void renderEnd() override;

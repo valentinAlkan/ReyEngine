@@ -16,14 +16,14 @@ void ReyEngine::Canvas::_init() {
 //   _cameraStack.push(&_transform.value);
 }
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::Canvas::renderBegin(ReyEngine::Pos<R_FLOAT>& textureOffset) {
+void ReyEngine::Canvas::renderBegin() {
    //only clear owned render target.
    // otherwise we will assume that is being managed externally (by window, for instance)
    if (_renderTargetPtr) {
       Application::getWindow(0).pushRenderTarget(_renderTarget);
       _renderTarget.clear();
    }
-   textureOffset -= getPos();
+
    //apply the active camera transform
    auto camera = _activeCamera.lock();
    if (camera){
@@ -44,8 +44,7 @@ void ReyEngine::Canvas::renderEnd() {
    auto modal = getModal();
    if (modal){
        auto modalWidget = modal.value().lock();
-       Pos<R_FLOAT> toffset;
-       if (modalWidget->_visible) modalWidget->renderChain(toffset);
+       if (modalWidget->_visible) modalWidget->renderChain();
    }
    auto camera = _activeCamera.lock();
    if (camera){

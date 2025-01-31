@@ -340,10 +340,9 @@ void Window::exec(){
 
          //draw the canvas
          rlLoadIdentity();
-         ReyEngine::Pos<R_FLOAT> texOffset;
          Application::getWindow(0).pushRenderTarget(_renderTarget);
          _renderTarget.clear();
-         canvas->renderChain(texOffset);
+         canvas->renderChain();
          Application::getWindow(0).popRenderTarget(); //debug
 
          //do physics synchronously for now
@@ -356,7 +355,7 @@ void Window::exec(){
          //draw the drag and drop preview (if any)
          if (_isDragging && _dragNDrop && _dragNDrop.value()->preview) {
             _dragNDrop.value()->preview.value()->setPos(InputManager::getMousePos());
-            _dragNDrop.value()->preview.value()->renderChain(texOffset);
+            _dragNDrop.value()->preview.value()->renderChain();
          }
          //render the canvas to the window
          BeginDrawing();

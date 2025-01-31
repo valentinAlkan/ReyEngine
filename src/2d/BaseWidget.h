@@ -257,13 +257,13 @@ namespace ReyEngine{
       virtual void _process(float dt){};
 
       // Drawing functions
-      virtual void renderBegin(ReyEngine::Pos<R_FLOAT>& textureOffset){}
+      virtual void renderBegin(){}
       virtual void renderEnd(){}
 
       virtual void renderEditorFeatures();
-      virtual void renderChain(ReyEngine::Pos<R_FLOAT>& textureOffset);
-      ReyEngine::Vec2<float> getRenderOffset() const {return _renderOffset;}
-      void setRenderOffset(ReyEngine::Pos<R_FLOAT> offset){_renderOffset = offset;}
+      virtual void renderChain();
+//      ReyEngine::Vec2<float> getRenderOffset() const {return _renderOffset;}
+//      void setRenderOffset(ReyEngine::Pos<R_FLOAT> offset){_renderOffset = offset;}
       void registerProperties() override;
       SizeProperty<R_FLOAT> _size;
       Transform2DProperty _transform;
@@ -320,7 +320,7 @@ namespace ReyEngine{
       bool _visible = true; //whether to show the widget (and its children)
       bool _isModal = false;
       bool _scheduled_for_deletion = false; // true when the widget has been scheduled for deletion but is not yet deleted.
-      ReyEngine::Pos<R_FLOAT> _renderOffset; //used for different rendering modes. does not offset position.
+//      ReyEngine::Pos<R_FLOAT> _renderOffset; //used for different rendering modes. does not offset position.
       InputInterface::MouseCursor cursor = InputInterface::MouseCursor::DEFAULT;
 
       //input

@@ -4,7 +4,7 @@ using namespace std;
 using namespace ReyEngine;
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void Control::renderBegin(ReyEngine::Pos<R_FLOAT> &textureOffset) {
+void Control::renderBegin() {
    if (_doScissor){
       startScissor(scissorArea);
    }

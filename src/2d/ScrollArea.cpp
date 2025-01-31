@@ -17,8 +17,7 @@ void ScrollArea::hideHSlider(bool hidden) {
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ScrollArea::renderBegin(ReyEngine::Pos<R_FLOAT>& textureOffset){
-    textureOffset -= getScrollOffset();
+void ScrollArea::renderBegin(){
     startScissor(getRect().toSizeRect());
 }
 
@@ -79,13 +78,13 @@ void ScrollArea::_init(){
 
     auto setOffsetX = [this](const Slider::EventSliderValueChanged &event) {
         scrollOffsetX.setLerp(event.pct);
-        hslider->setRenderOffset(getScrollOffset());
-        vslider->setRenderOffset(getScrollOffset());
+//        hslider->setRenderOffset(getScrollOffset());
+//        vslider->setRenderOffset(getScrollOffset());
     };
     auto setOffsetY = [this](const Slider::EventSliderValueChanged &event) {
         scrollOffsetY.setLerp(event.pct);
-        hslider->setRenderOffset(getScrollOffset());
-        vslider->setRenderOffset(getScrollOffset());
+//        hslider->setRenderOffset(getScrollOffset());
+//        vslider->setRenderOffset(getScrollOffset());
     };
     subscribe<Slider::EventSliderValueChanged>(hslider, setOffsetX);
     subscribe<Slider::EventSliderValueChanged>(vslider, setOffsetY);

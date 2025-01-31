@@ -26,7 +26,7 @@ namespace ReyEngine{
    protected:
        bool _doScissor = false;
        void render() const override;
-       void renderBegin(ReyEngine::Pos<R_FLOAT>& textureOffset) override;
+       void renderBegin() override;
        void renderEnd() override;
        std::function<void(Control&)> mouseEnterCallback;
        std::function<void(Control&)> mouseExitCallback;

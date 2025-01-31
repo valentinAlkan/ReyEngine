@@ -36,7 +36,7 @@ void Panel::render() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Panel::renderBegin(ReyEngine::Pos<R_FLOAT> &textureOffset) {
+void Panel::renderBegin() {
    startScissor(_scissorArea);
 }
 
