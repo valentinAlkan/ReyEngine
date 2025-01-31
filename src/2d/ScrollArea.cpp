@@ -78,6 +78,7 @@ void ScrollArea::_init(){
 
     auto setOffsetX = [this](const Slider::EventSliderValueChanged &event) {
         scrollOffsetX.setLerp(event.pct);
+
 //        hslider->setRenderOffset(getScrollOffset());
 //        vslider->setRenderOffset(getScrollOffset());
     };

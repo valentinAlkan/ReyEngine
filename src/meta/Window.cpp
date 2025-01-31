@@ -359,8 +359,7 @@ void Window::exec(){
          }
          //render the canvas to the window
          BeginDrawing();
-         const auto &target = canvas->_renderTarget;
-         DrawTextureRec(target.getRenderTexture(), {0, 0, (float) target.getSize().x, -(float) target.getSize().y},{0, 0}, WHITE);
+         canvas->paint();
          EndDrawing();
       } // release scoped lock here
       _frameCounter++;

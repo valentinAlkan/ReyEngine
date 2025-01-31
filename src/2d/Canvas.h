@@ -33,6 +33,7 @@ namespace ReyEngine{
       {}
       void renderBegin() override;
       void render() const override;
+      virtual void paint();
       void renderActiveCamera(Pos<R_FLOAT>& textureOffset);
       void renderEnd() override;
       void _on_rect_changed() override;
