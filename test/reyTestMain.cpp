@@ -1501,7 +1501,6 @@ int main(int argc, char** argv) {
                auto localPos = thiz.getLocalMousePos();
                thiz.drawRectangle({0,0,5,5}, Colors::red);
                thiz.drawCircle({localPos, 5}, Colors::black);
-               Logger::info() << localPos << endl;
             };
             cursor->setRenderCallback(cursorRender);
 

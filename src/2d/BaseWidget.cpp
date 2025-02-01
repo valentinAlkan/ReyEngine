@@ -710,7 +710,7 @@ std::optional<std::shared_ptr<BaseWidget>> BaseWidget::askHover(const Pos<R_FLOA
     //ask this widget to accept the hover
 
     auto process = [&]() -> std::optional<std::shared_ptr<BaseWidget>> {
-        if (acceptsHover && isInside(globalToLocal(globalPos))){
+        if (acceptsHover && isInside(globalToLocal(globalPos) - getInputOffset())){
             return toBaseWidget();
         }
         return nullopt;
@@ -719,8 +719,12 @@ std::optional<std::shared_ptr<BaseWidget>> BaseWidget::askHover(const Pos<R_FLOA
     auto pass = [&]() -> std::optional<std::shared_ptr<BaseWidget>>{
             for (auto it = getChildren().rbegin(); it != getChildren().rend(); ++it) {
                 const auto &child = *it;
-                auto handled = child->askHover(globalPos);
-                if (handled) return handled;
+                auto globalPosCopy = globalPos;
+                if (hasInputOffset()){
+                   globalPosCopy -= getInputOffset();
+                }
+               auto handled = child->askHover(globalPosCopy);
+               if (handled) return handled;
             }
         return nullopt;
     };
