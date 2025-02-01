@@ -119,7 +119,7 @@ namespace ReyEngine::Internal{
             child->_parent = me;
             auto newIndex = getChildren().size(); //index of new child's location in ordered vector
             _childOrder.push_back(childTypePtr);
-            _childMap[childTypePtr->getName()] = std::pair<int, T*>(newIndex, me.get());
+            _childMap[childTypePtr->getName()] = {newIndex, child->toContainedTypePtr().get()};
             __on_child_added_immediate(childTypePtr);
             childTypePtr->TypeContainer<T>::__on_added_to_parent();
             if (isInTree()){
