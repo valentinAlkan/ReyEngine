@@ -1,12 +1,15 @@
 #pragma once
+#include "Logger.h"
 #include "Event.h"
 #include "DrawInterface.h"
 #include <algorithm>
-#include "Logger.h"
 
 namespace ReyEngine{
    struct InputEvent : public ReyEngine::Event<InputEvent> {
       EVENT_CTOR_SIMPLE_OVERRIDABLE(InputEvent, Event<InputEvent>){}
+      InputEvent(const InputEvent& other)
+      : ReyEngine::Event<InputEvent>(other)
+      {}
    };
 
    struct InputEventKey : public InputEvent {
@@ -22,6 +25,7 @@ namespace ReyEngine{
    };
 
 
+   // mouse types
    struct InputEventMouse : public InputEvent{
       EVENT_CTOR_SIMPLE_OVERRIDABLE(InputEventMouse, InputEvent){}
       ReyEngine::Pos<int> globalPos;
@@ -41,6 +45,67 @@ namespace ReyEngine{
    struct InputEventMouseMotion : public InputEventMouse{
       EVENT_CTOR_SIMPLE(InputEventMouseMotion, InputEventMouse){}
       ReyEngine::Vec2<double> mouseDelta;
+   };
+
+   //largest of the mouse input sizes
+   union InputEventMouseUnion {
+      InputEventMouse mouse;
+      InputEventMouseMotion motion;
+      InputEventMouseButton button;
+      InputEventMouseWheel wheel;
+      InputEventMouseUnion(const InputEventMouse& other){*this = other;}
+      InputEventMouseUnion(const InputEventMouseUnion& other){
+         switch (other.mouse.eventId){
+            case InputEventMouseMotion::getUniqueEventId():
+               new (&motion) InputEventMouseMotion(other.motion);
+               break;
+            case InputEventMouseButton::getUniqueEventId():
+               new (&button) InputEventMouseButton(other.button);
+               break;
+            case InputEventMouseWheel::getUniqueEventId():
+               new (&wheel) InputEventMouseWheel(other.wheel);
+               break;
+            default:
+               throw std::runtime_error("Invalid input event type");
+         }
+      }
+      InputEventMouseUnion& operator=(const InputEventMouse& other){
+         //placement new construction
+         new (&mouse) InputEventMouse(other);
+         //do copies specific for each type so that we don't have to implement constructors for every type
+         switch (other.eventId){
+            case InputEventMouseMotion::getUniqueEventId():{
+               auto& _other = other.toEventType<InputEventMouseMotion>();
+               motion.mouseDelta = _other.mouseDelta;
+               break;}
+            case InputEventMouseButton::getUniqueEventId():{
+               auto& _other = other.toEventType<InputEventMouseButton>();
+               button.button = _other.button;
+               button.isDown = _other.isDown;
+               break;}
+            case InputEventMouseWheel::getUniqueEventId():{
+               auto& _other = other.toEventType<InputEventMouseWheel>();
+               wheel.wheelMove = _other.wheelMove;
+               break;}
+            default:
+               throw std::runtime_error("Invalid input event type");
+         }
+         return *this;
+      }
+      ~InputEventMouseUnion(){
+         switch (mouse.eventId){
+            case InputEventMouseMotion::getUniqueEventId():
+               motion.~InputEventMouseMotion();
+               break;
+            case InputEventMouseButton::getUniqueEventId():
+               button.~InputEventMouseButton();
+               break;
+            case InputEventMouseWheel::getUniqueEventId():{
+               wheel.~InputEventMouseWheel();
+               break;
+            }
+         }
+      }
    };
 
    enum class InputFilter {

@@ -107,18 +107,18 @@ void BaseWidget::renderChain() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled BaseWidget::_process_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
-   auto passInput = [&](const InputEvent& _event, std::optional<UnhandledMouseInput> _mouse) {
+Handled BaseWidget::_process_unhandled_input(const InputEvent& rawEvent, const std::optional<UnhandledMouseInput>& rawMouse) {
+   auto passInput = [this](const InputEvent& _event, std::optional<UnhandledMouseInput> _mouse) {
       //iterate backwards since siblings that are towards the end of the orderered child vector are drawn ON TOP of ones prior to them
       for(auto it = getChildren().rbegin(); it != getChildren().rend(); ++it){
          auto& child = *it;
          if (_mouse) {
             //if this is mouse input, make sure it is inside the bounding rect
-            switch (event.eventId) {
+            switch (_event.eventId) {
                case InputEventMouseMotion::getUniqueEventId():
                case InputEventMouseButton::getUniqueEventId():
                case InputEventMouseWheel::getUniqueEventId():{
-                  auto globalPos = event.toEventType<InputEventMouse>().globalPos;
+                  auto globalPos = _event.toEventType<InputEventMouse>().globalPos;
                   _mouse = child->toMouseInput(globalPos);
                   break;}
             }
@@ -132,10 +132,23 @@ Handled BaseWidget::_process_unhandled_input(const InputEvent& event, const std:
    };
 
    if (!_visible) return false;
+   //offset the mouse input if necessary
+   auto mouse = rawMouse;
+   std::unique_ptr<InputEventMouseUnion> xformedEvent; //this pointer will own the transformed event memory, should it exist.
+   if (mouse && hasInputOffset()){
+      mouse->localPos += getInputOffset();
+      // manually allocate memory for the return value, then transfer it to a unique_ptr for
+      // proper lifetime management after transforming it. Avoids unnecessary allocations.
+      auto u = new InputEventMouseUnion(rawEvent.toEventType<InputEventMouse>());
+      u->mouse.globalPos = u->mouse.globalPos - getInputOffset();
+      xformedEvent.reset(u);
+   }
+   // if the transformed event exists, use it. Otherwise, use the raw event.
+   const auto& event = xformedEvent ? xformedEvent->mouse : rawEvent;
+
    if (_isEditorWidget){
       if (_process_unhandled_editor_input(event, mouse) > 0) return true;
    }
-
    //apply input masking
    switch(_inputMask.value){
        case NONE:
@@ -392,13 +405,15 @@ void BaseWidget::drawCircleSectorLines(const ReyEngine::CircleSector& sector, co
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawRenderTargetRect(const ReyEngine::RenderTarget& target, const ReyEngine::Rect<R_FLOAT>& src, const Pos<R_FLOAT>& dst) const {
-   DrawTextureRec(target.getRenderTexture(), {(float)src.x, (float)src.y, (float) src.width, -src.height}, {dst.x + dst.y}, Colors::none);
+void BaseWidget::drawRenderTargetRect(const ReyEngine::RenderTarget& target, const ReyEngine::Rect<R_FLOAT>& src, const Pos<R_FLOAT>& dst, const ColorRGBA& tint) const {
+   auto globalPos = getGlobalPos();
+   DrawTextureRec(target.getRenderTexture(), {(float)src.x, (float)src.y, (float) src.width, -src.height}, {globalPos.x + dst.x + globalPos.y + dst.y}, tint);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawRenderTarget(const ReyEngine::RenderTarget& target, const Pos<R_FLOAT>& dst) const {
-   DrawTextureRec(target.getRenderTexture(), {0,0, (float)target.getSize().x, -(float)target.getSize().y}, {dst.x, dst.y}, Colors::none);
+void BaseWidget::drawRenderTarget(const ReyEngine::RenderTarget& target, const Pos<R_FLOAT>& dst, const ColorRGBA& tint) const {
+   auto globalPos = getGlobalPos();
+   DrawTextureRec(target.getRenderTexture(), {0,0, (float)target.getSize().x, -(float)target.getSize().y}, {globalPos.x + dst.x, globalPos.y + dst.y}, tint);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////

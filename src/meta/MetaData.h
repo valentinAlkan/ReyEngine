@@ -9,13 +9,12 @@
 class MetaData {
 public:
    using MetaDataValue = std::variant<
-   std::string,
-   int,
-   float,
-   bool,
-   std::vector<int>,
-   std::vector<std::string>,
-   void*
+    std::string
+   , int
+   , float
+   , bool
+   , void*
+   , std::vector<char>
    >;
 
    explicit MetaData(MetaDataValue value) : value_(std::move(value)) {}
@@ -38,29 +37,51 @@ public:
       }
    }
 
-//   // Serialization support
-//   std::string serialize() const;
-//   static MetaData deserialize(const std::string& data);
-
 private:
    MetaDataValue value_;
 };
 
 // Base class for objects that can have properties
 class MetaDataOwner {
+private:
+   template<typename T, typename Variant>
+   struct is_not_in_variant;
+   template<typename T, typename... Types>
+   struct is_not_in_variant<T, std::variant<Types...>>
+   : std::bool_constant<!(std::is_same_v<T, Types> || ...)> {};
+   template<typename T, typename Variant>
+   static constexpr bool is_not_in_variant_v = is_not_in_variant<T, Variant>::value;
 public:
-   template<typename T>
-   void setMetadata(const std::string& name, T value) {
-      metadata[name] = std::make_unique<MetaData>(std::move(value));
+   //potential shallow copy, alignment issues, etc. with non-variant types
+   template <typename T>
+   void setMetadata(const std::string& name, const T& value) {
+      auto it = metadata.find(name);
+      if (it != metadata.end()){
+         //update existing value
+         auto data = it->second->get<std::vector<char>>().data();
+         memcpy(data, &value, sizeof(T));
+      } else {
+         std::vector<char> storage;
+         storage.resize(sizeof(T));
+         memcpy(storage.data(), &value, sizeof(T));
+         metadata.emplace_hint(it, name, std::make_unique<MetaData>(std::move(storage)));
+      }
    }
 
    template<typename T>
-   T& getMetadata(const std::string& name) {
+   T& getMetadata(const std::string& name) const {
       auto it = metadata.find(name);
       if (it == metadata.end()) {
          throw std::runtime_error("Property not found: " + name);
       }
-      return it->second->get<T>();
+      if constexpr (is_not_in_variant_v<T, MetaData::MetaDataValue>){
+         //some other type
+         return *(reinterpret_cast<T*>(it->second->get<std::vector<char>>().data()));
+      } else {
+         //normal metadata type
+         return it->second->get<T>();
+      }
+
    }
 
    bool hasMetadata(const std::string& name) const {

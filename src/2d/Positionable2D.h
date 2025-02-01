@@ -1,4 +1,5 @@
 #pragma once
+#include "InputManager.h"
 #include "DrawInterface.h"
 #include "Property.h"
 
@@ -24,6 +25,19 @@ namespace ReyEngine{
          }
          return sum;
       }
+      Pos<T> getGlobalInputPos() const {
+         //sum up all our ancestors' positions and add our own to it
+         auto sum = InputManager::getMousePos() - getInputOffset();
+         auto _parent = parent;
+         while (_parent){
+            sum -= _parent->getInputOffset();
+            _parent = _parent->parent;
+         }
+         return sum;
+      }
+      void setInputOffset(const ReyEngine::Pos<R_FLOAT>& newOffset){_inputOffset = newOffset; _hasInputOffset = (bool)_inputOffset;}
+      bool hasInputOffset(){return _hasInputOffset;}
+      [[nodiscard]] ReyEngine::Pos<R_FLOAT> getInputOffset() const {return _inputOffset;}
       ReyEngine::Rect<T> getGlobalRect() const {auto globalPos = getGlobalPos(); return {globalPos.x, globalPos.y, getSize().x, getSize().y};}
       ReyEngine::Rect<T> getRect() const {return {transform.position, size};}
       ReyEngine::Size<T> getSize() const {return size;}
@@ -66,6 +80,8 @@ namespace ReyEngine{
       }
       void setParent(Positionable2D* newParent){parent=newParent;}
    private:
+      ReyEngine::Pos<float> _inputOffset; //some positionables will need to transform the input, for example if they are drawn somewhere differently than where they actually are.
+      bool _hasInputOffset = false;
       Positionable2D* parent = nullptr; //potentially invalid if orphaned - non-owning
    };
 

@@ -73,7 +73,7 @@ Window::Window(const std::string &title, int width, int height, const std::vecto
 void Window::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
     //Create canvas if not provided
     if (!optRoot) {
-        optRoot = Canvas::build("root", _renderTarget);
+        optRoot = Canvas::build("root");
     }
     auto& root = optRoot.value();
     root->ReyEngine::Internal::TypeContainer<ReyEngine::BaseWidget>::setRoot(true);
@@ -98,17 +98,17 @@ void Window::exec(){
    };
    auto canvas = getCanvas();
    applyProcess(canvas);
-   ReyEngine::Size<int> size = getSize();
-   ReyEngine::Pos<int> position;
+   ReyEngine::Size<float> size = getSize();
+   ReyEngine::Pos<float> position;
+   canvas->setSize(size);
    SetTargetFPS(targetFPS);
-   _renderTarget.setSize(size);
    while (!WindowShouldClose()){
       {
 
          unique_lock<mutex> sl(Application::instance()._busy);
 
          //see if the window size has changed
-         auto newSize = getSize();
+         Size<float> newSize = getSize();
          if (newSize != size) {
             WindowResizeEvent event(toEventPublisher(), newSize);
             size = newSize;
@@ -117,12 +117,12 @@ void Window::exec(){
             if (canvas->getAnchoring() != BaseWidget::Anchor::NONE) {
                canvas->setSize(size);
             }
-            if (newSize != _renderTarget.getSize()){
-               _renderTarget.setSize(newSize);
+            if (newSize != canvas->getSize()){
+               canvas->setSize(newSize);
             }
          }
          //see if the window has moved
-         auto newPos = getPosition();
+         Pos<float> newPos = getPosition();
          if (newPos != position) {
             auto me = toEventPublisher();
             WindowMoveEvent event(toEventPublisher());
@@ -338,18 +338,19 @@ void Window::exec(){
          //process widget logic
          _processList.processAll(dt);
 
-         //draw the canvas
+         //draw the canvas to our render texture
          rlLoadIdentity();
-         Application::getWindow(0).pushRenderTarget(_renderTarget);
-         _renderTarget.clear();
+         auto& _renderTarget = canvas->getRenderTarget();
+//         Application::getWindow(0).pushRenderTarget(_renderTarget);
+//         _renderTarget.clear();
          canvas->renderChain();
-         Application::getWindow(0).popRenderTarget(); //debug
+//         Application::getWindow(0).popRenderTarget(); //debug
 
          //do physics synchronously for now
          rlLoadIdentity();
-         Application::getWindow(0).pushRenderTarget(_renderTarget); //debug
+//         Application::getWindow(0).pushRenderTarget(_renderTarget); //debug
          Physics::PhysicsSystem::process();
-         Application::getWindow(0).popRenderTarget(); //debug
+//         Application::getWindow(0).popRenderTarget(); //debug
 
 
          //draw the drag and drop preview (if any)
@@ -359,7 +360,7 @@ void Window::exec(){
          }
          //render the canvas to the window
          BeginDrawing();
-         canvas->paint();
+         DrawTextureRec(_renderTarget.getRenderTexture(), {0, 0, (float) _renderTarget.getSize().x, -(float) getSize().y}, {0, 0}, WHITE);
          EndDrawing();
       } // release scoped lock here
       _frameCounter++;

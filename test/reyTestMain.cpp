@@ -1494,18 +1494,22 @@ int main(int argc, char** argv) {
             auto subCanvas = Canvas::build("subCanvas");
             root->addChild(subCanvas);
             subCanvas->setRect({50, 50, 1000, 1000});
+            subCanvas->getTheme()->background.colorPrimary.value = Colors::blue;
 
             auto cursor = Control::build("Cursor");
             auto cursorRender = [](const Control &thiz) {
-                thiz.drawCircle({thiz.getLocalMousePos(), 5}, Colors::black);
+               auto localPos = thiz.getLocalMousePos();
+               thiz.drawRectangle({0,0,5,5}, Colors::red);
+               thiz.drawCircle({localPos, 5}, Colors::black);
+               Logger::info() << localPos << endl;
             };
             cursor->setRenderCallback(cursorRender);
 
-            auto inputCB = [](const Control &control, const InputEvent &event,
-                              const std::optional<UnhandledMouseInput> &mouse) -> Handled {
-                cout << control.getName() << "->" << InputManager::getMousePos() << " : " << mouse->localPos << endl;
+            auto inputCB = [](Control &control, const InputEvent &event, const std::optional<UnhandledMouseInput> &mouse) -> Handled {
+                cout << control.getName() << "-> (G)" << InputManager::getMousePos() << " : (L)" << mouse->localPos << endl;
                 return false;
             };
+            cursor->setUnhandledInputCallback(inputCB);
 
             for (int i = 0; i < 3; i++) {
                 auto control = Control::build("Control" + to_string(i));

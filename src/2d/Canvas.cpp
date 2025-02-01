@@ -12,17 +12,14 @@ void ReyEngine::Canvas::_init() {
       _renderTarget.setSize(Size<int>(getSize())); //todo: make protected
    }
 
-   // the canvas' own transform acts as the default camera
-//   _cameraStack.push(&_transform.value);
+   theme->background.colorPrimary.value = Colors::white;
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::Canvas::renderBegin() {
    //only clear owned render target.
    // otherwise we will assume that is being managed externally (by window, for instance)
-   if (_renderTargetPtr) {
-      Application::getWindow(0).pushRenderTarget(_renderTarget);
-      _renderTarget.clear();
-   }
+   Application::getWindow(0).pushRenderTarget(_renderTarget);
+   _renderTarget.clear();
 
    //apply the active camera transform
    auto camera = _activeCamera.lock();
@@ -31,16 +28,6 @@ void ReyEngine::Canvas::renderBegin() {
       // Apply 2d camera transformation to modelview
       rlMultMatrixf(MatrixToFloat(camera->getCameraMatrix2D()));
    }
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::Canvas::render() const{
-
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::Canvas::paint() {
-   DrawTextureRec(_renderTarget.getRenderTexture(), {0, 0, (float) _renderTarget.getSize().x, -(float) getSize().y}, {0, 0}, WHITE);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -55,39 +42,27 @@ void ReyEngine::Canvas::renderEnd() {
    if (camera){
       rlPopMatrix();
    }
-   if (_renderTargetPtr) {
-      Application::getWindow(0).popRenderTarget();
-   }
+   Application::getWindow(0).popRenderTarget();
+   //draw what has been painted to this texture
+   drawRenderTarget(_renderTarget, {0,0}, theme->background.colorPrimary.value);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Handled Canvas::__process_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
    //for mouse events, convert global coordinates to world space, then pass along the normal chain
-   std::optional<UnhandledMouseInput> worldSpaceMouse = mouse;
    if (mouse){
-      worldSpaceMouse.value().localPos = screenToWorld(mouse->localPos);
+      //the function we will use to transform input
+      auto xformFx = [this](const Pos<int>& p){ return screenToWorld(p);};
+      std::optional<UnhandledMouseInput> worldSpaceMouse = mouse;
+      worldSpaceMouse.value().localPos = xformFx(mouse->localPos);
       worldSpaceMouse->isInside = isInside(worldSpaceMouse.value().localPos);
-   }
+      auto& mouseEvent = event.toEventType<InputEventMouse>();
 
-   switch (event.eventId){
-      case InputEventMouseMotion::getUniqueEventId():
-      case InputEventMouseButton::getUniqueEventId():
-      case InputEventMouseWheel::getUniqueEventId():{
-         //have to make sure we store enough memory to copy correctly - we won't know the size in advance
-         union InputEventUnion {
-            InputEventMouseMotion motion;
-            InputEventMouseButton button;
-            InputEventMouseWheel wheel;
-         };
-         char raw[sizeof(InputEventUnion)];
-         //just go ahead and copy off the end, we don't really care what's there
-         memcpy(raw, &event, sizeof(InputEventUnion));
-         const auto& _event = event.toEventType<InputEventMouse>();
-         auto& _worldSpaceEvent = reinterpret_cast<InputEventMouse&>(raw);
-         _worldSpaceEvent.globalPos = screenToWorld(_event.globalPos);
-         return _process_unhandled_input(reinterpret_cast<InputEvent&>(raw), worldSpaceMouse);
-         }
+      InputEventMouseUnion _union(mouseEvent);
+      _union.mouse.globalPos = xformFx(_union.mouse.globalPos);
+      return _process_unhandled_input(_union.mouse, worldSpaceMouse);
    }
+   //non-mouse input
    return _process_unhandled_input(event, mouse);
 }
 
@@ -144,14 +119,8 @@ void Canvas::clearModal() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::_on_rect_changed() {
-   //only resize the render target if we are the owner
-   if (_renderTargetPtr) {
-      _renderTarget.setSize(getSize());
-   }
-//   _defaultCamera.setTarget(Vec2<float>(getSize().x/2, getSize().y/2));
-//   _defaultCamera.target = _defaultCamera.offset;
-//   auto gpos = getGlobalPos();
-//   _virtualInputOffset = Pos<R_FLOAT>(gpos.x, gpos.y);
+   _renderTarget.setSize(getSize());
+   setInputOffset(getPos());
 }
 
 

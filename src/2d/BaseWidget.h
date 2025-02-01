@@ -172,7 +172,7 @@ namespace ReyEngine{
       void setWidth(R_FLOAT width);
       void setHeight(R_FLOAT height);
 
-      ReyEngine::Pos<R_FLOAT> getLocalMousePos() const {return globalToLocal(InputManager::getMousePos());}
+      ReyEngine::Pos<R_FLOAT> getLocalMousePos() const {return getGlobalInputPos() - getGlobalPos();}
       ReyEngine::Pos<R_FLOAT> globalToLocal(const Pos<R_FLOAT>& global, const Pos<R_FLOAT>& localBase = {0,0}) const;
       ReyEngine::Pos<R_FLOAT> localToGlobal(const Pos<R_FLOAT>& local, const Pos<R_FLOAT>& globalBase = {0,0}) const;
       ReyEngine::Rect<R_FLOAT> globalToLocal(const Rect<R_FLOAT>& global) const;
@@ -224,8 +224,8 @@ namespace ReyEngine{
       void drawCircle(const ReyEngine::Circle&, const ReyEngine::ColorRGBA&) const;
       void drawCircleLines(const ReyEngine::Circle&, const ReyEngine::ColorRGBA&) const;
       void drawCircleSectorLines(const ReyEngine::CircleSector&, const ReyEngine::ColorRGBA&, int segments) const;
-      void drawRenderTarget(const ReyEngine::RenderTarget&, const ReyEngine::Pos<R_FLOAT>&) const;
-      void drawRenderTargetRect(const ReyEngine::RenderTarget&, const ReyEngine::Rect<R_FLOAT>&, const ReyEngine::Pos<R_FLOAT>&) const;
+      void drawRenderTarget(const ReyEngine::RenderTarget&, const ReyEngine::Pos<R_FLOAT>&, const ColorRGBA&) const;
+      void drawRenderTargetRect(const ReyEngine::RenderTarget&, const ReyEngine::Rect<R_FLOAT>&, const ReyEngine::Pos<R_FLOAT>&,  const ReyEngine::ColorRGBA&) const;
       void drawTextureRect(const ReyEngine::ReyTexture&, const ReyEngine::Rect<R_FLOAT>& src, const ReyEngine::Rect<R_FLOAT>& dst, float rotation, const ReyEngine::ColorRGBA& tint) const;
       void startScissor(const ReyEngine::Rect<R_FLOAT>&) const;
       void stopScissor() const;
@@ -270,9 +270,8 @@ namespace ReyEngine{
       InputMaskProperty<R_FLOAT> _inputMask; //Only input inside this rectangle will be handled;
       BoolProperty enabled;
 
-
-      //input
    public:
+      //input
       virtual Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&){return false;}
       virtual Handled _unhandled_masked_input(const InputEventMouse&, const std::optional<UnhandledMouseInput>&){return true;} //masked input is handled by default
       virtual std::optional<std::shared_ptr<BaseWidget>> askHover(const ReyEngine::Pos<R_FLOAT>& globalPos);

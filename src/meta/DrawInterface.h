@@ -1057,6 +1057,7 @@ namespace ReyEngine {
    class RenderTarget{
       public:
          explicit RenderTarget();
+         RenderTarget(const Size<int>& size);
          ~RenderTarget();
          void setSize(const Size<int>& newSize);
          inline Size<int> getSize() const {return _size;}

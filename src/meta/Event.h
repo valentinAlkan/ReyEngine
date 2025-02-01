@@ -62,8 +62,11 @@ namespace ReyEngine{
       : publisher(publisher)
       , eventId(eventId)
       {}
-      BaseEvent(const BaseEvent& other): BaseEvent(other.eventId, other.publisher)
-      {}
+      BaseEvent(const BaseEvent& other)
+      : BaseEvent(other.eventId, other.publisher)
+      {
+         subscriber = other.subscriber;
+      }
       const std::shared_ptr<EventPublisher>& publisher;
       const EventId eventId;
       std::shared_ptr<EventSubscriber> subscriber;
@@ -74,6 +77,9 @@ namespace ReyEngine{
    public:
       Event(EventId eventId, const std::shared_ptr<EventPublisher>& publisher)
       : BaseEvent(eventId, publisher)
+      {}
+      Event(const Event& other)
+      : BaseEvent(other)
       {}
       template <typename Other>
       [[nodiscard]] bool isEvent() const {
