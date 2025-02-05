@@ -7,7 +7,7 @@ using namespace std;
 using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::Canvas::_init() {
+void Canvas::_init() {
    if (!_renderTarget.ready()) {
       _renderTarget.setSize(Size<int>(getSize())); //todo: make protected
    }
@@ -15,7 +15,7 @@ void ReyEngine::Canvas::_init() {
    theme->background.colorPrimary.value = Colors::white;
 }
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::Canvas::renderBegin() {
+void Canvas::renderBegin() {
    //only clear owned render target.
    // otherwise we will assume that is being managed externally (by window, for instance)
    Application::getWindow(0).pushRenderTarget(_renderTarget);
@@ -31,7 +31,7 @@ void ReyEngine::Canvas::renderBegin() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::Canvas::renderEnd() {
+void Canvas::renderEnd() {
    //redraw the modal widget, if any
    auto modal = getModal();
    if (modal){
@@ -44,7 +44,7 @@ void ReyEngine::Canvas::renderEnd() {
    }
    Application::getWindow(0).popRenderTarget();
    //draw what has been painted to this texture
-   drawRenderTarget(_renderTarget, {0,0}, theme->background.colorPrimary.value);
+   drawRenderTarget(_renderTarget, renderSrc, renderDst, theme->background.colorPrimary.value);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -67,7 +67,7 @@ Handled Canvas::__process_unhandled_input(const InputEvent& event, const std::op
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled ReyEngine::Canvas::_unhandled_input(const InputEvent& inputEvent, const std::optional<UnhandledMouseInput>& mouseInput) {
+Handled Canvas::_unhandled_input(const InputEvent& inputEvent, const std::optional<UnhandledMouseInput>& mouseInput) {
    //offer up input to modal widget first
    if (_modal){
       auto widget = _modal.value().lock();

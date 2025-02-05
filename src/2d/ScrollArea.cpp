@@ -3,6 +3,8 @@
 using namespace std;
 using namespace ReyEngine;
 
+constexpr bool scrollAreaDebug = true;
+
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::hideVSlider(bool hidden) {
     _hideVSlider = hidden;
@@ -17,13 +19,26 @@ void ScrollArea::hideHSlider(bool hidden) {
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ScrollArea::renderBegin(){
-    startScissor(getRect().toSizeRect());
+void ScrollArea::renderBegin() {
+   //similar to a canvas
+   Application::getWindow(0).pushRenderTarget(_renderTarget);
+   _renderTarget.clear();
 }
-
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::renderEnd() {
-    stopScissor();
+   drawRectangleLines(_childBoundingBox.toRect(), 1, Colors::red);
+   Application::getWindow(0).popRenderTarget();
+   if constexpr (scrollAreaDebug){
+      //draw everything, and show a debug view of the sliding window
+      auto r = _renderTarget.getSize().toRect();
+      drawRenderTargetRect(_renderTarget, r, r, theme->background.colorPrimary.value);
+      drawRectangleLines(getChildBoundingBox(), 2.0, Colors::green);
+   } else {
+      drawRenderTargetRect(_renderTarget, _viewport, _window, theme->background.colorPrimary.value);
+   }
+   //redraw the sliders so that they're always on top of the children
+   hslider->renderChain();
+   vslider->renderChain();
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::_on_rect_changed(){
@@ -31,26 +46,35 @@ void ScrollArea::_on_rect_changed(){
     scrollOffsetX.setValue(0);
     scrollOffsetY.setValue(0);
     auto ourSize= getRect().size();
-    static constexpr int sliderSize = 20;
+    static constexpr float sliderSize = 20;
     //get the box that contains all our children, except for the sliders
-    _childBoundingBox = getScrollAreaChildBoundingBox();
+    _childBoundingBox = getScrollAreaChildBoundingBox().max(ourSize);
+    _renderTarget.setSize(_childBoundingBox);
     scrollOffsetX.setMax(_childBoundingBox.x - getWidth());
     scrollOffsetY.setMax(_childBoundingBox.y - getHeight());
-    auto vsliderNewRect = ReyEngine::Rect<int>((ourSize.x - sliderSize), 0, sliderSize, ourSize.y);
-    auto hsliderNewRect = ReyEngine::Rect<int>(0,(ourSize.y - sliderSize), (ourSize.x - sliderSize), sliderSize);
-    _viewport= getRect();
+    auto vsliderNewRect = ReyEngine::Rect<float>((ourSize.x - sliderSize), 0, sliderSize, ourSize.y) + getPos();
+    auto hsliderNewRect = ReyEngine::Rect<float>(0,(ourSize.y - sliderSize), (ourSize.x - sliderSize), sliderSize) + getPos();
     if (vslider) {
         vslider->setRect(vsliderNewRect);
         vslider->setVisible(!_hideVSlider && _childBoundingBox.y > getHeight());
-        _viewport.width -= vsliderNewRect.width;
+        _viewport.width = getWidth() - vsliderNewRect.width;
     }
     if (hslider) {
         //add in the width of the vslider if it is not visible
-        hslider->setRect(hsliderNewRect + (vslider->getVisible() ? Size<int>() : Size<int>{sliderSize, 0}));
+        hslider->setRect(hsliderNewRect + (vslider->getVisible() ? Size() : Size<float>(sliderSize, 0)));
         hslider->setVisible(!_hideHSlider && _childBoundingBox.x > getWidth());
-        _viewport.height -= hsliderNewRect.height;
+        _viewport.height = getHeight() - hsliderNewRect.height;
     }
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ScrollArea::_on_child_rect_changed(std::shared_ptr<BaseWidget>& child){
+   if (child != vslider && child != hslider) {
+      //recalculate
+      _on_rect_changed();
+   }
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::_on_child_added(std::shared_ptr<BaseWidget>& child){
@@ -60,32 +84,36 @@ void ScrollArea::_on_child_added(std::shared_ptr<BaseWidget>& child){
     auto cb = [&](const WidgetRectChangedEvent &e) { _on_rect_changed(); };
 
     if (child != vslider && child != hslider) {
-        subscribe<WidgetRectChangedEvent>(child, cb);
+       //recalculate
+       _on_rect_changed();
+       subscribe<WidgetRectChangedEvent>(child, cb);
     }
-    //recalculate
-    _on_rect_changed();
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ScrollArea::updateViewport(){
+   _viewport = {scrollOffsetX.getValue(), scrollOffsetY.getValue(), getWidth(), getHeight()};
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::_init(){
+    //cancel out input offset from base canvas
+    setInputOffset({0, 0});
     //create scrollbars
     vslider = Slider::build(std::string(VSLIDER_NAME), Slider::SliderType::VERTICAL);
     hslider = Slider::build(std::string(HSLIDER_NAME), Slider::SliderType::HORIZONTAL);
     vslider->setVisible(false);
     hslider->setVisible(false);
-    addChild(vslider);
-    addChild(hslider);
+
 
     auto setOffsetX = [this](const Slider::EventSliderValueChanged &event) {
         scrollOffsetX.setLerp(event.pct);
-
-//        hslider->setRenderOffset(getScrollOffset());
-//        vslider->setRenderOffset(getScrollOffset());
+        updateViewport();
     };
     auto setOffsetY = [this](const Slider::EventSliderValueChanged &event) {
         scrollOffsetY.setLerp(event.pct);
-//        hslider->setRenderOffset(getScrollOffset());
-//        vslider->setRenderOffset(getScrollOffset());
+       updateViewport();
     };
     subscribe<Slider::EventSliderValueChanged>(hslider, setOffsetX);
     subscribe<Slider::EventSliderValueChanged>(vslider, setOffsetY);
@@ -93,19 +121,19 @@ void ScrollArea::_init(){
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::Size<R_FLOAT> ScrollArea::getScrollAreaChildBoundingBox() {
-    ReyEngine::Size<int> childRect;
-    for (const auto &child: getChildren()) {
-        if (child->getName() == VSLIDER_NAME) {
-            if (vslider->getVisible()) childRect.x += vslider->getWidth();
-            continue;
-        } else if (child->getName() == HSLIDER_NAME) {
-            if (hslider->getVisible()) childRect.y += hslider->getHeight();
-            continue;
-        }
-        auto totalOffset = child->getRect().size() + ReyEngine::Size<R_FLOAT>(child->getPos());
-        childRect = childRect.max(totalOffset);
-    }
-    return childRect;
+   //just like normal child bounding box but ignores scroll bars
+   Size<R_FLOAT> childRect;
+   for (const auto &child: getChildren()) {
+      if (child->getName() == VSLIDER_NAME) {
+//         if (vslider->getVisible()) childRect.x += vslider->getWidth();
+         continue;
+      } else if (child->getName() == HSLIDER_NAME) {
+//         if (hslider->getVisible()) childRect.y += hslider->getHeight();
+         continue;
+      }
+      childRect = childRect.max(child->getRect().enclosing().size());
+   }
+   return childRect;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

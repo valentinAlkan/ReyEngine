@@ -474,7 +474,7 @@ int main(int argc, char** argv) {
             label2->setText("Hello from the bottom right!");
             scrollArea->addChild(label1);
             scrollArea->addChild(label2);
-            scrollArea->getTheme()->background.colorPrimary.set(COLORS::red);
+            scrollArea->getTheme()->background.colorPrimary.set(COLORS::lightGray);
 
             //callback to move other labels
             auto moveLabels = [&](const Slider::EventSliderValueChanged &event) {
@@ -488,11 +488,7 @@ int main(int argc, char** argv) {
             label2->subscribe<Slider::EventSliderValueChanged>(yslider, moveLabels);
 
             //draw a box around the scroll area
-            auto boxRect = scrollArea->getRect();
-            boxRect.x -= 1;
-            boxRect.y -= 1;
-            boxRect.width += 1;
-            boxRect.height += 1;
+            auto boxRect = scrollArea->getRect().embiggen(2);
             auto box = Control::build("OutlineControl");
             box->setRect(boxRect);
             box->getTheme().get()->background.set(Style::Fill::SOLID);
@@ -507,8 +503,8 @@ int main(int argc, char** argv) {
                 box->setRect(scrollArea->getRect());
             };
             labelLayout->subscribe<BaseWidget::WidgetRectChangedEvent>(scrollArea, displaySize);
-            scrollArea->setInEditor(true);
-            scrollArea->setEditorSelected(true);
+//            scrollArea->setInEditor(true);
+//            scrollArea->setEditorSelected(true);
         } else if (args.getArg("--childBoundingBoxTest")) {
             auto boxBounder = Control::build("BoxBounder");
             boxBounder->setRect({0, 0, 2000, 2000});

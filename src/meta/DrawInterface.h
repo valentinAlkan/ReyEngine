@@ -32,6 +32,7 @@ namespace ReyEngine {
 
    template <typename T> struct Size;
    template <typename T> struct Pos;
+   template <typename T> struct Rect;
    template <typename T>
    struct Vec {
       constexpr explicit Vec(size_t size): size(size){}
@@ -342,6 +343,7 @@ namespace ReyEngine {
       constexpr inline bool operator!=(const Pos& rhs){return this->x != rhs.x || this->y != rhs.y;}
       inline operator std::string() const {return Vec2<T>::toString();}
       constexpr inline void operator=(const Size<T>&) = delete;
+      Rect<T> toRect();
       constexpr inline Pos clamp(Pos clampA, Pos clampB) const { return Pos(Vec2<T>::clamp(clampA, clampB));}
 //      inline Pos& operator=(const Vec2<T>& other){Pos::x = other.x; Pos::y = other.y; return *this;}
 //      Rotate around a basis point
@@ -386,7 +388,7 @@ namespace ReyEngine {
       Pos<T> fromString(const std::string& str) override {return {};}
    };
 
-   template <typename T>
+   template <typename T=R_FLOAT>
    struct Size : public Vec2<T>{
       constexpr inline Size(): Vec2<T>(){}
       constexpr inline Size(const T& x, const T& y) : Vec2<T>(x, y){}
@@ -404,6 +406,7 @@ namespace ReyEngine {
       inline Size& operator-=(const Size& rhs){this->x -= rhs.x; this->y -= rhs.y; return *this;}
       inline Pos<T> center() const {return {this->x/2.0f,this->y/2.0f};}
       inline operator std::string() const {return Vec2<T>::toString();}
+      Rect<T> toRect();
    };
 
    template <typename T>
@@ -461,9 +464,10 @@ namespace ReyEngine {
       constexpr inline Rect chopRight(T amt) const {auto retval = *this; retval.width-=amt; return retval;} //remove the rightmost amt of the rectangle and return the remainder (cuts width)
       constexpr inline Rect chopLeft(T amt) const {auto retval = *this; retval.x+=amt; retval.width-=amt; return retval;} //remove the leftmost amt of the rectangle and return the remainder (moves x, cuts width)
       constexpr inline bool isInside(const Vec2<T>& point) const {return isInsideX(point) && isInsideY(point);}
+      constexpr inline bool isInside(const Rect& other) const {return other.x+other.width <= x+width && other.x >= x && other.y >= y && other.y+other.height <= y+height;}
       constexpr inline bool isInsideX(const Vec2<T>& point) const {return (point.x >= x && point.x <= x + width);}
       constexpr inline bool isInsideY(const Vec2<T>& point) const {return (point.y >= y && point.y <= y + height);}
-      constexpr inline bool isInside(const Rect& other) const {return other.x+other.width <= x+width && other.x >= x && other.y >= y && other.y+other.height <= y+height;}
+      constexpr inline Rect enclosing(const Pos<T>& origin={0,0}){return {origin, {pos() + size() - origin}};}
       constexpr inline Pos<T> topLeft() const {return {x, y};}
       constexpr inline Pos<T> topRight() const {return {x+width, y};}
       constexpr inline Pos<T> bottomRight() const {return {x+width, y+height};}

@@ -1,5 +1,5 @@
 #pragma once
-#include "Control.h"
+#include "Canvas.h"
 #include "Slider.hpp"
 
 namespace ReyEngine {
@@ -26,13 +26,14 @@ namespace ReyEngine {
         static constexpr std::string_view HSLIDER_NAME = "__hslider";
 
         void renderBegin() override;
-        void render() const {}
+        void render() const {};
         void renderEnd() override;
         void _process(float dt) override {}
 
         void registerProperties() override {}
 
         void _on_rect_changed() override;
+        void _on_child_rect_changed(std::shared_ptr<BaseWidget>&) override;
         void _on_child_added(std::shared_ptr<BaseWidget> &child) override;
         void _init() override;
         Handled _unhandled_input (const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
@@ -46,9 +47,13 @@ namespace ReyEngine {
         std::shared_ptr<Slider> vslider;
         std::shared_ptr<Slider> hslider;
         ReyEngine::Size<R_FLOAT> _childBoundingBox;
-        Rect<R_FLOAT> _viewport; //the area that isn't obscured by sliders
+        Rect<R_FLOAT> _viewport; //the 'sliding' rectangle that moves over the render target, changing what's in the view
+        Rect<R_FLOAT> _window; //the area where we draw what's in the viewport
         bool _hideVSlider = false;
         bool _hideHSlider = false;
+    private:
+        void updateViewport();
+        RenderTarget _renderTarget;
     };
 
 }

@@ -76,8 +76,8 @@ Rect<R_FLOAT> BaseWidget::localToGlobal(const Rect<R_FLOAT> &local) const {
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::Size<R_FLOAT> BaseWidget::getChildBoundingBox() const {
    Size<R_FLOAT> childRect;
-   for (const auto& childIter : getChildMap()){
-      auto totalOffset = childIter.second.second->getRect().size() + Size<R_FLOAT>(childIter.second.second->getPos().x, childIter.second.second->getPos().y);
+   for (const auto& child : getChildren()){
+      auto totalOffset = child->getRect().size() + Size<R_FLOAT>(child->getPos().x, child->getPos().y);
       childRect = childRect.max(totalOffset);
    }
    return childRect;
@@ -405,15 +405,15 @@ void BaseWidget::drawCircleSectorLines(const ReyEngine::CircleSector& sector, co
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawRenderTargetRect(const ReyEngine::RenderTarget& target, const ReyEngine::Rect<R_FLOAT>& src, const Pos<R_FLOAT>& dst, const ColorRGBA& tint) const {
+void BaseWidget::drawRenderTarget(const ReyEngine::RenderTarget& target, const Pos<R_FLOAT>& src, const Pos<R_FLOAT>& dst, const ColorRGBA& tint) const {
    auto globalPos = getGlobalPos();
-   DrawTextureRec(target.getRenderTexture(), {(float)src.x, (float)src.y, (float) src.width, -src.height}, {globalPos.x + dst.x + globalPos.y + dst.y}, tint);
+   DrawTextureRec(target.getRenderTexture(), {src.x, src.y, (float)target.getSize().x, -(float)target.getSize().y}, {globalPos.x + dst.x, globalPos.y + dst.y}, tint);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawRenderTarget(const ReyEngine::RenderTarget& target, const Pos<R_FLOAT>& dst, const ColorRGBA& tint) const {
+void BaseWidget::drawRenderTargetRect(const ReyEngine::RenderTarget& target, const Rect<R_FLOAT>& src, const Rect<R_FLOAT>& dst, const ColorRGBA& tint) const {
    auto globalPos = getGlobalPos();
-   DrawTextureRec(target.getRenderTexture(), {0,0, (float)target.getSize().x, -(float)target.getSize().y}, {globalPos.x + dst.x, globalPos.y + dst.y}, tint);
+   DrawTexturePro(target.getRenderTexture(), {src.x, src.y, (float)src.width, -(float)src.height}, {globalPos.x + dst.x, globalPos.y + dst.y, dst.width, dst.height}, {0,0}, 0, tint);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -477,6 +477,17 @@ std::optional<std::shared_ptr<BaseWidget>> BaseWidget::getWidgetAt(Pos<R_FLOAT> 
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setRect(const ReyEngine::Rect<R_FLOAT>& r){
+
+   auto applyRectProperties = [this](auto& newRect){
+      //enforce min/max sizes
+      newRect.setSize(newRect.size().max(minSize));
+      newRect.setSize(newRect.size().min(maxSize));
+      const auto& oldRect = getRect();
+      applyRect(newRect);
+      __on_rect_changed(oldRect);
+      _publishSize();
+   };
+
    ReyEngine::Rect<R_FLOAT> newRect(r);
    auto parent = getParent().lock();
    int parentHeight, parentWidth;
@@ -488,9 +499,7 @@ void BaseWidget::setRect(const ReyEngine::Rect<R_FLOAT>& r){
       auto windowSize = Application::instance().windowCount() ? Application::instance().getWindow(0).getSize() : Size<int>(0,0);
       newRect = {{0, 0}, windowSize};
    } else {
-      applyRect(r);
-      __on_rect_changed(r);
-      _publishSize();
+      applyRectProperties(newRect);
       return;
       //todo: this is weird, find a way to make this flow better
    }
@@ -552,13 +561,7 @@ void BaseWidget::setRect(const ReyEngine::Rect<R_FLOAT>& r){
       default:
          break;
    }
-   //enforce min/max sizes
-   newRect.setSize(newRect.size().max(minSize));
-   newRect.setSize(newRect.size().min(maxSize));
-   const auto& oldRect = getRect();
-   applyRect(newRect);
-   __on_rect_changed(oldRect);
-   _publishSize();
+   applyRectProperties(newRect);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -650,6 +653,12 @@ void BaseWidget::__on_rect_changed(const Rect<R_FLOAT>& oldRect){
             child->setRect(child->getRect());
          }
       }
+   }
+   //notify parents
+   auto parent = getParent().lock();
+   if (parent){
+      auto widget = toBaseWidget();
+      parent->_on_child_rect_changed(widget);
    }
    _on_rect_changed();
 }
