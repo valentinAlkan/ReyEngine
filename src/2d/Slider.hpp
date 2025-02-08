@@ -71,7 +71,6 @@ namespace ReyEngine{
                         newValue = _range.lerp(widthRange.pct(localPos.x));
                         sliderValue.set(_range.clamp(newValue));
                   }
-                  Logger::info() << sliderValue.value << std::endl;
                   _compute_appearance();
                   _publish_slider_val();
                }

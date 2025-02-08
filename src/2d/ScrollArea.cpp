@@ -40,7 +40,8 @@ void ScrollArea::renderEnd() {
    //done drawing children, we need to reload the old transform so we can draw the rendertarget where its supposed to be
    rlPopMatrix();
    Application::getWindow(0).popRenderTarget();
-//   if constexpr (false){
+   if constexpr (false){
+      //debug
       //draw everything, and show a debug view of the sliding window
       constexpr Pos<float> DEBUG_OFFSET = {600, 0};
       drawRenderTargetRect(_renderTarget, _renderBox, _renderBox + DEBUG_OFFSET, theme->background.colorPrimary.value);
@@ -50,8 +51,10 @@ void ScrollArea::renderEnd() {
       drawText("viewport", _viewport.pos() + getPos() + DEBUG_OFFSET);
       drawText("viewport = " + _viewport.toString(), getPos() + DEBUG_OFFSET - Pos<float>(0, 40));
       drawText("window = " + _window.toString(), getPos() + DEBUG_OFFSET - Pos<float>(0, 20));
-//      drawRenderTargetRect(_renderTarget, _viewport, {_window.x, _window.height, _window.width, _window.height}, theme->background.colorPrimary.value);
+   } else {
+      //normal
       drawRenderTargetRect(_renderTarget, _viewport, _window, theme->background.colorPrimary.value);
+   }
    //redraw the sliders so that they're always on top of the children
    hslider->renderChain();
    vslider->renderChain();
@@ -102,25 +105,22 @@ void ScrollArea::updateViewport(){
    _viewport = ourSize.toRect();
    auto vsliderNewRect = ReyEngine::Rect<float>((ourSize.x - sliderSize), 0, sliderSize, ourSize.y) + getPos();
    auto hsliderNewRect = ReyEngine::Rect<float>(0,(ourSize.y - sliderSize), (ourSize.x - sliderSize), sliderSize) + getPos();
+   bool xTooBig = _renderBox.width > ourSize.x;
+   auto yTooBig = _renderBox.height > ourSize.y;
 
+   //subtract the slider sizes before updating viewport since each dimension depends on the other
+   if (xTooBig) _viewport.height = getHeight() - sliderSize; //subtract slider
+   if (yTooBig) _viewport.width -= sliderSize; //subtract slider
+   _viewport.x = (_renderBox.width - _viewport.width) * Perunum(scrollOffsetX).get();
+   _viewport.y = (_renderBox.height - _viewport.height) * Perunum(scrollOffsetY).get();
    if (hslider) {
       hslider->setRect(hsliderNewRect);
-      bool xTooBig = _renderBox.width > ourSize.x;
       hslider->setVisible(!_hideHSlider && xTooBig);
-      if (xTooBig) {
-         _viewport.x = (_renderBox.width - _viewport.width) * Perunum(scrollOffsetX).get();
-         _viewport.height = getHeight() - sliderSize; //subtract slider
-      }
    }
 
    if (vslider) {
       vslider->setRect(vsliderNewRect + (vslider->getVisible() ? Size() : Size<float>(sliderSize, 0)));
-      auto yTooBig = _renderBox.height > ourSize.y;
       vslider->setVisible(!_hideVSlider && yTooBig);
-      if (yTooBig) {
-         _viewport.y = (_renderBox.height - _viewport.height) * Perunum(scrollOffsetY).get();
-         _viewport.width -= sliderSize; //subtract slider
-      }
    }
    _window.setSize(_viewport.size());
 
@@ -148,16 +148,6 @@ void ScrollArea::_init(){
     subscribe<Slider::EventSliderValueChanged>(hslider, setOffsetX);
     subscribe<Slider::EventSliderValueChanged>(vslider, setOffsetY);
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////
-//ReyEngine::Size<R_FLOAT> ScrollArea::getScrollAreaChildBoundingBox() {
-//   //just like normal child bounding box but ignores scroll bars
-//   Size<R_FLOAT> childRect;
-//   for (const auto &child: getChildren()) {
-//      childRect = childRect.max(child->getRect().enclosing().size());
-//   }
-//   return childRect;
-//}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Handled ScrollArea::_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
