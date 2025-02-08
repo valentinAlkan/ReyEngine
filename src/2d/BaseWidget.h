@@ -143,7 +143,7 @@ namespace ReyEngine{
       ~BaseWidget() override;
 
       //rect stuff
-      Size<R_FLOAT> getChildBoundingBox() const; //get the smallest rectangle that contains all children, starting from 0,0. Does not include grandchildren.
+      Rect<R_FLOAT> getChildBoundingBox() const; //get the smallest rectangle that contains all children, starting from 0,0. Does not include grandchildren.
       Size<R_FLOAT> getMinSize(){return minSize;}
       Size<R_FLOAT> getMaxSize(){return maxSize;}
       Size<R_FLOAT> getClampedSize();
@@ -224,7 +224,7 @@ namespace ReyEngine{
       void drawCircle(const Circle&, const ColorRGBA&) const;
       void drawCircleLines(const Circle&, const ColorRGBA&) const;
       void drawCircleSectorLines(const CircleSector&, const ColorRGBA&, int segments) const;
-      void drawRenderTarget(const RenderTarget&, const Pos<R_FLOAT>&, const Pos<R_FLOAT>&, const ColorRGBA&) const;
+      void drawRenderTarget(const RenderTarget&, const Pos<R_FLOAT>&, const ColorRGBA&) const;
       void drawRenderTargetRect(const RenderTarget&, const Rect<R_FLOAT>&, const Rect<R_FLOAT>&, const ColorRGBA&) const;
       void drawTextureRect(const ReyTexture&, const Rect<R_FLOAT>& src, const Rect<R_FLOAT>& dst, float rotation, const ColorRGBA& tint) const;
       void startScissor(const Rect<R_FLOAT>&) const;

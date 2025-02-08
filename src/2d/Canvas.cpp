@@ -44,7 +44,7 @@ void Canvas::renderEnd() {
    }
    Application::getWindow(0).popRenderTarget();
    //draw what has been painted to this texture
-   drawRenderTarget(_renderTarget, renderSrc, renderDst, theme->background.colorPrimary.value);
+   drawRenderTarget(_renderTarget, renderDst, theme->background.colorPrimary.value);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

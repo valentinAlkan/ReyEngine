@@ -89,6 +89,7 @@ int main(int argc, char** argv) {
         args.defineArg(RuntimeArg("--inputPositionTest", "InputPositionTest", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--inspector", "InspectorTest", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--spriteTest", "SpriteTest", 0, RuntimeArg::ArgType::FLAG));
+        args.defineArg(RuntimeArg("--textureRectTest", "TextureRectTest", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--buttonTest", "PushButton usage example", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--anchorTest", "Anchoring options test", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--marginsTest", "Layout margins test", 0, RuntimeArg::ArgType::FLAG));
@@ -466,45 +467,43 @@ int main(int argc, char** argv) {
             //add scroll area
             auto scrollArea = ScrollArea::build("ScrollArea");
             scrollArea->setRect(Rect<int>(50, 50, 500, 500));
-            auto label1 = Label::build("ScrollAreaLabel1");
-            auto label2 = Label::build("ScrollAreaLabel2");
-            label1->setRect({40, 40, 0, 0});
-            label2->setRect({300, 300, 0, 0});
-            label1->setText("Hello from somewhere nearish to the top left!");
-            label2->setText("Hello from the bottom right!");
+            auto gradient = Control::build("Control");
+            gradient->setRect(scrollArea->getRect().toSizeRect());
+            auto label1 = Label::build("L1");
+            auto label2 = Label::build("L2");
+            label1->setRect({20, 20, 0, 0});
+            label2->setRect({0, 0, 0, 0});
+            label1->setText("Hello from {20,20}!");
+            label2->setText("Hello!");
+            label1->getTheme()->outline.value = Style::Outline::LINE;
+            label2->getTheme()->outline.value = Style::Outline::LINE;
+            scrollArea->addChild(gradient);
             scrollArea->addChild(label1);
             scrollArea->addChild(label2);
-            scrollArea->getTheme()->background.colorPrimary.set(COLORS::lightGray);
+
+            auto gradientCallBack = [&](const Control& ctl) {
+               drawRectangleGradientV(ctl.getRect().toSizeRect(), Colors::red, Colors::blue);
+            };
+            gradient->setRenderCallback(gradientCallBack);
 
             //callback to move other labels
             auto moveLabels = [&](const Slider::EventSliderValueChanged &event) {
                 const Vec2<int> range(300, 1000);
                 auto newX = range.lerp(xslider->getSliderPct());
                 auto newY = range.lerp(yslider->getSliderPct());
-                label2->setPos({(int) newX, (int) newY});
+                label2->setPos({(int) newX + 100, (int) newY + 100});
+                gradient->setSize(label2->getPos() + label2->getSize());
             };
 
             label2->subscribe<Slider::EventSliderValueChanged>(xslider, moveLabels);
             label2->subscribe<Slider::EventSliderValueChanged>(yslider, moveLabels);
 
-            //draw a box around the scroll area
-            auto boxRect = scrollArea->getRect().embiggen(2);
-            auto box = Control::build("OutlineControl");
-            box->setRect(boxRect);
-            box->getTheme().get()->background.set(Style::Fill::SOLID);
-            box->getTheme().get()->background.colorPrimary.set({125, 125, 125, 127});
-            root->addChild(box);
-
             root->addChild(scrollArea);
-    //
             auto displaySize = [&](const BaseWidget::WidgetRectChangedEvent &) {
                 xlabel->setText(scrollArea->getWidth());
                 ylabel->setText(scrollArea->getHeight());
-                box->setRect(scrollArea->getRect());
             };
             labelLayout->subscribe<BaseWidget::WidgetRectChangedEvent>(scrollArea, displaySize);
-//            scrollArea->setInEditor(true);
-//            scrollArea->setEditorSelected(true);
         } else if (args.getArg("--childBoundingBoxTest")) {
             auto boxBounder = Control::build("BoxBounder");
             boxBounder->setRect({0, 0, 2000, 2000});
@@ -519,9 +518,9 @@ int main(int argc, char** argv) {
 
             //draw the child bounding box
             auto drawBoundingBox = [&](const Control &) {
-                auto size = boxBounder->getChildBoundingBox();
+                auto box = boxBounder->getChildBoundingBox();
                 auto mousePos = InputManager::getMousePos();
-                ReyEngine::drawRectangle({{0, 0}, size}, ReyEngine::Colors::yellow);
+                ReyEngine::drawRectangle(box, ReyEngine::Colors::yellow);
                 ReyEngine::drawRectangle(label1->getRect(), ReyEngine::Colors::green);
                 ReyEngine::drawRectangle(label2->getRect(), ReyEngine::Colors::green);
                 ReyEngine::drawLine({{0, 0}, mousePos}, 1, COLORS::red);
@@ -881,6 +880,47 @@ int main(int argc, char** argv) {
             animatedSprite->fitTexture();
             animatedSprite->scale(Vec2<float>(5, 5));
             root->addChild(animatedSprite);
+        } else if (args.getArg("--textureRectTest")) {
+           auto src = make_shared<Rect<float>>(0,0,500,500);
+           auto dst = make_shared<Rect<float>>(src->pos() + Pos<float>(src->width + 50, 0), src->size());
+           auto cursor = make_shared<Rect<float>>(0,0,50,50);
+           auto renderTarget = make_shared<RenderTarget>(src->size());
+           auto control = Control::build("control");
+           control->setRect(*src);
+           root->addChild(control);
+           auto drawCB = [src, dst, cursor, renderTarget](const Control& ctl){
+              Application::getWindow(0).pushRenderTarget(*renderTarget);
+              ctl.drawRectangleGradientV(ctl.getRect().toSizeRect(), Colors::red, Colors::blue);
+              ctl.drawText("Here is some text for you", {100,100});
+              Application::getWindow(0).popRenderTarget();
+              ctl.drawRenderTarget(*renderTarget, {0,0}, Colors::none);
+              //two different drawing methods
+              if constexpr (false) {
+                 Rect<float> _cursor({cursor->x, -cursor->y-cursor->height}, {cursor->width, -cursor->height});
+                 DrawTexturePro(renderTarget->getRenderTexture(), _cursor, *dst, {}, 0, RAYWHITE);
+                 ctl.drawText("_crsr   = " + Rect<int>(_cursor).toString(), src->bottomLeft() + Pos<float>(0,60));
+              } else {
+                 ctl.drawRenderTargetRect(*renderTarget, *cursor, *dst, Colors::none);
+              }
+              //draw dst rect outline
+              ctl.drawRectangleLines(*dst, 1.0, Colors::red);
+              //draw cursor rect
+              ctl.drawRectangleLines(*cursor, 1.0, Colors::yellow);
+              //draw target texture rect
+              //draw some info
+              ctl.drawText("SrcRect = " + Rect<int>(*src).toString(), src->bottomLeft() + Pos<float>(0,20));
+              ctl.drawText("CrsRect = " + Rect<int>(*cursor).toString(), src->bottomLeft() + Pos<float>(0,40));
+              ctl.drawText("DstRect = " + Rect<int>(*dst).toString(), dst->bottomLeft() + Pos<float>(0,20));
+           };
+
+           auto inputCB = [src, dst, cursor](Control& ctl, const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) -> Handled{
+              if (!mouse) return false;
+              *cursor = mouse->localPos.toCenterRect(cursor->size());
+              cursor->keepInside(*src);
+           };
+           control->setRenderCallback(drawCB);
+           control->setUnhandledInputCallback(inputCB);
+
         } else if (args.getArg("--tileMapTest")) {
             //load destination tilemap
             auto tileMap = TileMap::build("destMap");

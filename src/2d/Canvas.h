@@ -18,9 +18,7 @@ namespace ReyEngine{
       void setUnhandledInputCallback(std::function<Handled(Canvas&, const InputEvent&, const std::optional<UnhandledMouseInput>&)> fx){unhandledInputCallback = fx;}
       void setActiveCamera(std::shared_ptr<ReyEngine::Camera2D>&);
       RenderTarget& getRenderTarget(){return _renderTarget;}
-      inline Pos<R_FLOAT> getRenderSrc() const {return renderSrc;}
       inline Pos<R_FLOAT> getRenderDst() const {return renderDst;}
-      inline void setRenderSrc(const Pos<R_FLOAT>& src){renderSrc = src;}
       inline void setRenderDst(const Pos<R_FLOAT>& dst){renderDst = dst;}
    protected:
       void renderBegin() override;
@@ -37,7 +35,6 @@ namespace ReyEngine{
       RenderTarget _renderTarget;
       std::function<Handled(Canvas&, const InputEvent&, const std::optional<UnhandledMouseInput>&)> unhandledInputCallback;
    private:
-      Pos<R_FLOAT> renderSrc;
       Pos<R_FLOAT> renderDst;
       friend class Window;
    };

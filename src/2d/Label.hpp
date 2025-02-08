@@ -31,7 +31,7 @@ namespace ReyEngine{
          }
          switch(outline.value){
             case Style::Outline::LINE:
-               drawRectangleLines(getRect(), outline.thickness.value, outline.color.value);
+               drawRectangleLines(getRect().toSizeRect(), outline.thickness.value, outline.color.value);
                break;
    //         case Style::Outline::SHADOW:
    //            break;

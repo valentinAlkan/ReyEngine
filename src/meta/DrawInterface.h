@@ -343,8 +343,10 @@ namespace ReyEngine {
       constexpr inline bool operator!=(const Pos& rhs){return this->x != rhs.x || this->y != rhs.y;}
       inline operator std::string() const {return Vec2<T>::toString();}
       constexpr inline void operator=(const Size<T>&) = delete;
-      Rect<T> toRect();
-      constexpr inline Pos clamp(Pos clampA, Pos clampB) const { return Pos(Vec2<T>::clamp(clampA, clampB));}
+      [[nodiscard]] Rect<T> toRect() const;
+      [[nodiscard]] Rect<T> toRect(const Size<T>&) const;
+      [[nodiscard]] Rect<T> toCenterRect(const Size<T>&) const;
+      [[nodiscard]] constexpr inline Pos clamp(Pos clampA, Pos clampB) const { return Pos(Vec2<T>::clamp(clampA, clampB));}
 //      inline Pos& operator=(const Vec2<T>& other){Pos::x = other.x; Pos::y = other.y; return *this;}
 //      Rotate around a basis point
       constexpr inline Pos rotatePoint(const Pos<int>& basis, Radians r) const {
@@ -468,6 +470,13 @@ namespace ReyEngine {
       constexpr inline bool isInsideX(const Vec2<T>& point) const {return (point.x >= x && point.x <= x + width);}
       constexpr inline bool isInsideY(const Vec2<T>& point) const {return (point.y >= y && point.y <= y + height);}
       constexpr inline Rect enclosing(const Pos<T>& origin={0,0}){return {origin, {pos() + size() - origin}};}
+      // constrain this rectangle's position so that it is INSIDE the larger rectangle
+      constexpr inline void keepInside(const Rect& larger){
+         if (x+width > larger.x+larger.width) x = larger.x+larger.width - width;
+         if (x < larger.x) x += larger.x - x;
+         if (y+height > larger.y+larger.height) y = larger.y+larger.height - height;
+         if (y < larger.y) y += larger.y - y;
+      }
       constexpr inline Pos<T> topLeft() const {return {x, y};}
       constexpr inline Pos<T> topRight() const {return {x+width, y};}
       constexpr inline Pos<T> bottomRight() const {return {x+width, y+height};}

@@ -74,13 +74,13 @@ Rect<R_FLOAT> BaseWidget::localToGlobal(const Rect<R_FLOAT> &local) const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyEngine::Size<R_FLOAT> BaseWidget::getChildBoundingBox() const {
+ReyEngine::Rect<R_FLOAT> BaseWidget::getChildBoundingBox() const {
    Size<R_FLOAT> childRect;
    for (const auto& child : getChildren()){
       auto totalOffset = child->getRect().size() + Size<R_FLOAT>(child->getPos().x, child->getPos().y);
       childRect = childRect.max(totalOffset);
    }
-   return childRect;
+   return {{0, 0}, {childRect}};
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -405,22 +405,25 @@ void BaseWidget::drawCircleSectorLines(const ReyEngine::CircleSector& sector, co
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawRenderTarget(const ReyEngine::RenderTarget& target, const Pos<R_FLOAT>& src, const Pos<R_FLOAT>& dst, const ColorRGBA& tint) const {
+void BaseWidget::drawRenderTarget(const ReyEngine::RenderTarget& target, const Pos<R_FLOAT>& dst, const ColorRGBA& tint) const {
    auto globalPos = getGlobalPos();
-   DrawTextureRec(target.getRenderTexture(), {src.x, src.y, (float)target.getSize().x, -(float)target.getSize().y}, {globalPos.x + dst.x, globalPos.y + dst.y}, tint);
+   DrawTextureRec(target.getRenderTexture(), {0, 0, (float)target.getSize().x, -(float)target.getSize().y}, {globalPos.x + dst.x, globalPos.y + dst.y}, tint);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawRenderTargetRect(const ReyEngine::RenderTarget& target, const Rect<R_FLOAT>& src, const Rect<R_FLOAT>& dst, const ColorRGBA& tint) const {
    auto globalPos = getGlobalPos();
-   DrawTexturePro(target.getRenderTexture(), {src.x, src.y, (float)src.width, -(float)src.height}, {globalPos.x + dst.x, globalPos.y + dst.y, dst.width, dst.height}, {0,0}, 0, tint);
+   Rectangle _src = {src.x, -src.y-src.height, (float)src.width, -(float)src.height};
+   Rectangle _dst = {globalPos.x + dst.x, globalPos.y + dst.y, dst.width, dst.height};
+   DrawTexturePro(target.getRenderTexture(), _src, _dst, {}, 0, tint);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawTextureRect(const ReyEngine::ReyTexture& rtex, const ReyEngine::Rect<R_FLOAT> &src, const ReyEngine::Rect<R_FLOAT> &dst, float rotation, const ReyEngine::ColorRGBA &tint) const {
    auto gpos = getGlobalPos();
-   Rectangle _src  = {src.x, src.y, src.width, src.height};
-   Rectangle _dst = {static_cast<float>(dst.x + gpos.x), static_cast<float>(dst.y + gpos.y), dst.width, dst.height};
+   //this may be wrong, see drawRengerTargetRect, which is right
+   Rectangle _src  = {src.x, src.y, src.width, -src.height};
+   Rectangle _dst = {dst.x + gpos.x, dst.y + gpos.y, dst.width, dst.height};
    DrawTexturePro(rtex.getTexture(), _src, _dst, {0,0}, rotation, Colors::none);
 }
 
