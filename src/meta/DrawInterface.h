@@ -103,9 +103,9 @@ namespace ReyEngine {
 //      inline constexpr Vec2 midpoint() const {return {x/2, y / 2};} does this make sense?
       inline Vec2 min(const Vec2& other) const {Vec2 r; r.x = Math::min(Vec2::x, other.x); r.y = Math::min(Vec2::y, other.y); return r;}
       inline Vec2 max(const Vec2& other) const {Vec2 r; r.x = Math::max(Vec2::x, other.x); r.y = Math::max(Vec2::y, other.y); return r;}
-      inline Perunum pct(double input) const {return (input-x)/(y - x);} //given an input value, what percentage of the range is it from 0 to 1?
-      inline double lerp(Perunum lerpVal) const {return lerpVal.get() * (y - x) + x;} //given a value from 0 to 1, what is the value of the range that corresponds to it?
-      inline Vec2 lerp(Vec2 otherPoint, double xprm) const {return {xprm, y + (((xprm - x) * (otherPoint.y - y)) / (otherPoint.x - x))};}
+      inline Perunum pct(R_FLOAT input) const {return (input-x)/(y - x);} //given an input value, what percentage of the range is it from 0 to 1?
+      inline R_FLOAT lerp(Perunum lerpVal) const {return lerpVal.get() * (y - x) + x;} //given a value from 0 to 1, what is the value of the range that corresponds to it?
+      inline Vec2 lerp(Vec2 otherPoint, R_FLOAT xprm) const {return {xprm, y + (((xprm - x) * (otherPoint.y - y)) / (otherPoint.x - x))};}
       inline Vec2 extend(R_FLOAT distance) const {Vec2<T> normalized = normalize();return normalized * distance;}
       inline T clamp(T value) const {if (value < x) return x; if (value > y) return y; return value;}
       inline Vec2 clamp(Vec2 clampA, Vec2 clampB) const {
@@ -570,8 +570,8 @@ namespace ReyEngine {
                return secondaryRect;
          }
       }
-      [[nodiscard]] constexpr inline Vec2<T> center() const {return {x+width/2, y+height/2};}
-      constexpr inline void setCenter(const Vec2<T>& center) {x = center.x-width/2; y= center.y - height / 2;}
+      [[nodiscard]] constexpr inline Pos<T> center() const {return {x+width/2, y+height/2};}
+      constexpr inline void setCenter(const Pos<T>& center) {x = center.x-width/2; y= center.y - height / 2;}
       [[nodiscard]] inline std::string toString() const {
          return "{" + std::to_string(x) + ", " + std::to_string(y) + ", " +
          std::to_string(width) + ", " + std::to_string(height) + "}";

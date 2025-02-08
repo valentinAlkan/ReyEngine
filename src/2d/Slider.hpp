@@ -27,15 +27,15 @@ namespace ReyEngine{
          return me;
       }
 
-      ReyEngine::Vec2<double> getRange(){return _range;}
-      void setRange(ReyEngine::Vec2<double> newRange){
+      Vec2<double> getRange(){return _range;}
+      void setRange(Vec2<double> newRange){
          minSliderValue.set(newRange.x);
          maxSlidervalue.set(newRange.y);
          _range = {minSliderValue.value, maxSlidervalue.value};
       }
-      inline double getSliderValue(){return sliderValue.value;}
+      inline double getSliderValue() const {return sliderValue.value;}
       inline void setSliderValue(float value, bool publish=true){sliderValue.set(value);if (publish)_publish_slider_val();_compute_appearance();}
-      inline Perunum getSliderPct(){return _range.pct(sliderValue.value);}
+      inline Perunum getSliderPct() const {return _range.pct(sliderValue.value);}
       inline void setSliderPct(Perunum pct, bool publish=true){setSliderValue(_range.lerp(pct), publish);}
 
       Slider(const std::string &name, SliderType sliderDir)
@@ -58,7 +58,7 @@ namespace ReyEngine{
                //drag grabber
                if (_is_dragging) {
                   //set new slider value based on input
-                  double newValue = 0;
+                  double newValue;
                   switch (sliderType.value) {
                      case SliderType::VERTICAL: {
                         auto heightRange = ReyEngine::Vec2<double>(0, getRect().height);
@@ -67,10 +67,11 @@ namespace ReyEngine{
                      }
                         break;
                      case SliderType::HORIZONTAL:
-                        auto widthRange = ReyEngine::Vec2<double>(0, getRect().width);
+                        auto widthRange = Vec2<float>(0, getWidth());
                         newValue = _range.lerp(widthRange.pct(localPos.x));
                         sliderValue.set(_range.clamp(newValue));
                   }
+                  Logger::info() << sliderValue.value << std::endl;
                   _compute_appearance();
                   _publish_slider_val();
                }
@@ -95,9 +96,17 @@ namespace ReyEngine{
       }
       void render() const override {
          //draw slider
-         drawRectangle(getRect().toSizeRect(), _cursor_in_slider || _is_dragging? ReyEngine::Colors::green : ReyEngine::Colors::red);
+         drawRectangle(getRect().toSizeRect(), _cursor_in_slider || _is_dragging? Colors::green : Colors::red);
          //draw grabber
-         drawRectangle(_grabber, _cursor_down && _cursor_in_grabber || _is_dragging ? ReyEngine::Colors::yellow : ReyEngine::Colors::blue);
+         drawRectangle(_grabber, _cursor_down && _cursor_in_grabber || _is_dragging ? Colors::yellow : Colors::blue);
+         if constexpr (false) {
+            //debug
+            auto x = Vec2<float>(0, getWidth());
+            auto y = Vec2<float>(0, getHeight());
+            auto s = getSliderValue();
+            Circle c({x.lerp(Percent(s)), y.lerp(Percent(s))}, 2);
+            drawCircle(c, Colors::black);
+         }
       }
       void _on_rect_changed() override {
          _compute_appearance();
@@ -121,21 +130,21 @@ namespace ReyEngine{
             case SliderType::VERTICAL: {
                _grabber.width= getRect().width;
                _grabber.height= getRect().height / 10;
-               ReyEngine::Vec2<double> adjustedRange = {0, getHeight() - _grabber.height};
+               Vec2<double> adjustedRange = {0, getHeight() - _grabber.height};
                _grabber.y = adjustedRange.lerp(getSliderPct());
             }
             break;
             case SliderType::HORIZONTAL: {
                _grabber.width= getRect().width/10;
                _grabber.height= getRect().height;
-               ReyEngine::Vec2<double> adjustedRange = {0, getWidth() - _grabber.width};
+               Vec2<double> adjustedRange = {0, getWidth() - _grabber.width};
                _grabber.x = adjustedRange.lerp(getSliderPct());
             }
             break;
          }
       }
 
-      FloatProperty sliderValue; //0 to 1
+      FloatProperty sliderValue; //0 to 100
       FloatProperty minSliderValue;
       FloatProperty maxSlidervalue;
       SliderTypeProperty sliderType;
@@ -143,8 +152,9 @@ namespace ReyEngine{
       bool _cursor_in_grabber = false;
       bool _cursor_down = false;
       bool _is_dragging = false;
-      ReyEngine::Rect<double> _grabber = {0, 0, 0, 0};
-      ReyEngine::Vec2<double> _range = {0,0};
+      Rect<float> _grabber = {0, 0, 0, 0};
+      Vec2<float> _range = {0,0};
+      Pos<float> _valuePoint; //the actual point from where we measure edge-distance
       friend class ScrollArea;
    };
 }
