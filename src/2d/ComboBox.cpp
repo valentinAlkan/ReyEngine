@@ -86,7 +86,7 @@ Handled ComboBox::_unhandled_input(const InputEvent& event, const std::optional<
             auto mbEvent = event.toEventType<InputEventMouseButton>();
             if (mbEvent.isDown) return false;
             if (mouse.value().isInside){
-               //toggle menu visibility the menu
+               //toggle menu visibility
                _isOpen = !_isOpen;
                if (_isOpen){
                   //declare widget modal

@@ -60,6 +60,24 @@ Handled Canvas::__process_unhandled_input(const InputEvent& event, const std::op
 
       InputEventMouseUnion _union(mouseEvent);
       _union.mouse.globalPos = xformFx(_union.mouse.globalPos);
+
+      //offer up input to modal widget first
+      if (_modal){
+         auto widget = _modal.value().lock();
+         if (widget && widget->_visible){
+            auto modalMouseInput = mouse;
+            //translate to local for mouse input
+            if (modalMouseInput){
+               auto& mouseEvent = event.toEventType<InputEventMouse>();
+               modalMouseInput.value().localPos = Pos<int>(widget->globalToLocal(mouseEvent.globalPos));
+               modalMouseInput->isInside = widget->isInside(modalMouseInput->localPos);
+            }
+            //nobody else should get modal input
+            return widget->_process_unhandled_input(event, modalMouseInput);
+         }
+      }
+
+
       return _process_unhandled_input(_union.mouse, worldSpaceMouse);
    }
    //non-mouse input
@@ -74,23 +92,6 @@ Handled Canvas::__process_unhandled_input(const InputEvent& event, const std::op
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Handled Canvas::_unhandled_input(const InputEvent& inputEvent, const std::optional<UnhandledMouseInput>& mouseInput) {
-   //offer up input to modal widget first
-   if (_modal){
-      auto widget = _modal.value().lock();
-      if (widget && widget->_visible){
-         auto modalMouseInput = mouseInput;
-         //translate to local for mouse input
-         if (modalMouseInput){
-            auto& mouseEvent = inputEvent.toEventType<InputEventMouse>();
-            modalMouseInput.value().localPos = Pos<int>(widget->globalToLocal(mouseEvent.globalPos));
-            modalMouseInput->isInside = widget->isInside(modalMouseInput->localPos);
-         }
-         if (widget->_process_unhandled_input(inputEvent, modalMouseInput)){
-            return true;
-         }
-      }
-   }
-
    if (unhandledInputCallback) {
        if (unhandledInputCallback(*this, inputEvent, mouseInput)) return true;
    }
