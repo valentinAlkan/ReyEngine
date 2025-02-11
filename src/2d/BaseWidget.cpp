@@ -421,8 +421,7 @@ void BaseWidget::drawRenderTargetRect(const ReyEngine::RenderTarget& target, con
 ///////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawTextureRect(const ReyEngine::ReyTexture& rtex, const ReyEngine::Rect<R_FLOAT> &src, const ReyEngine::Rect<R_FLOAT> &dst, float rotation, const ReyEngine::ColorRGBA &tint) const {
    auto gpos = getGlobalPos();
-   //this may be wrong, see drawRengerTargetRect, which is right
-   Rectangle _src  = {src.x, src.y, src.width, -src.height};
+   Rectangle _src  = {src.x, src.y, src.width, src.height};
    Rectangle _dst = {dst.x + gpos.x, dst.y + gpos.y, dst.width, dst.height};
    DrawTexturePro(rtex.getTexture(), _src, _dst, {0,0}, rotation, Colors::none);
 }
