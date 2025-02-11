@@ -666,6 +666,20 @@ void BaseWidget::__on_rect_changed(const Rect<R_FLOAT>& oldRect){
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
+void BaseWidget::setFocus(bool isFocus) {
+   auto canvas = getCanvas();
+   if (!canvas){
+      std::runtime_error("Error: BaseWidget " + getName() + " does not belong to a canvas!");
+   }
+   if (isFocus) {
+      auto thiz = toBaseWidget();
+      canvas.value()->setFocus(thiz);
+   } else {
+      canvas.value()->clearFocus();
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::setModal(bool isModal) {
    auto canvas = getCanvas();
    if (!canvas){

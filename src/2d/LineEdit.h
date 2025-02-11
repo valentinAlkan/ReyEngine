@@ -26,8 +26,8 @@ namespace ReyEngine {
       void registerProperties() override;
       std::string getText(){return _text;}
    protected:
-      void _on_modality_gained();
-      void _on_modality_lost();
+      void _on_focus_gained() override;
+      void _on_focus_lost() override;
       void _on_rect_changed() override;
       Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
       virtual void _on_default_text_changed(const std::string &){};

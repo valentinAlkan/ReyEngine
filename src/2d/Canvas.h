@@ -10,6 +10,10 @@ namespace ReyEngine{
       void setModal(std::shared_ptr<BaseWidget>&);
       void clearModal();
       inline std::optional<std::weak_ptr<BaseWidget>> getModal() { if (_modal) { return _modal;} return std::nullopt;}
+      //focusness
+      void setFocus(std::shared_ptr<BaseWidget>&);
+      void clearFocus();
+      inline std::optional<std::weak_ptr<BaseWidget>> getFocus() { if (_focus) { return _focus;} return std::nullopt;}
       void _init() override;
       void pushScissor(const Rect<R_FLOAT>&);
       void popScissor();
@@ -28,7 +32,8 @@ namespace ReyEngine{
       void _on_rect_changed() override;
       Handled __process_unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) final;
       Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
-      std::optional<std::weak_ptr<BaseWidget>> _modal; //if a widget wishes to collect all input, it can be modal. Only one allowed at a time.
+      std::optional<std::weak_ptr<BaseWidget>> _focus; //if a widget wishes to collect all input, it can be focused. Only one allowed at a time.
+      std::optional<std::weak_ptr<BaseWidget>> _modal; //Focus AND redraw. Only one.
 
       std::stack<Rect<R_FLOAT>> _scissorStack;
       std::weak_ptr<ReyEngine::Camera2D> _activeCamera;

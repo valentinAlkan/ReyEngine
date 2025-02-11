@@ -90,7 +90,7 @@ Handled LineEdit::_unhandled_input(const InputEvent& event, const std::optional<
             const auto& mouseEvent = event.toEventType<InputEventMouseButton>();
             if (mouse->isInside) {
                if (!mouseEvent.isDown) {
-                  if (isModal()){
+                  if (isFocus()){
                      //has input - move caret
                      //see if we clicked off the end
                      if (mouse.value().localPos.x > measureText(_text.value, theme->font).x){
@@ -99,15 +99,15 @@ Handled LineEdit::_unhandled_input(const InputEvent& event, const std::optional<
                      }
                   } else {
                      //grab iput
-                     setModal(true);
+                     setFocus(true);
                      _caretPos = -1;
                      return true;
                   }
                }
             } else {
-               if (isModal()) {
+               if (isFocus()) {
                   //release input
-                  setModal(false);
+                  setFocus(false);
                }
             }
             break;
@@ -136,11 +136,11 @@ Handled LineEdit::_unhandled_input(const InputEvent& event, const std::optional<
    return false;
 }
 ///////////////////////////////////////////////////////////////////////////////////////
-void LineEdit::_on_modality_gained() {
+void LineEdit::_on_focus_gained() {
    _isEditing = true;
 }
 ///////////////////////////////////////////////////////////////////////////////////////
-void LineEdit::_on_modality_lost() {
+void LineEdit::_on_focus_lost() {
    _isEditing = false;
 }
 

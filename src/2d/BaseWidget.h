@@ -246,6 +246,8 @@ namespace ReyEngine{
       virtual void _on_mouse_exit(){};
       virtual void _on_modality_gained(){}
       virtual void _on_modality_lost(){}
+      virtual void _on_focus_gained(){}
+      virtual void _on_focus_lost(){}
       void _on_child_removed(ChildPtr& child) override {
          child->isInLayout = false;
       }
@@ -291,10 +293,14 @@ namespace ReyEngine{
       BoolProperty isBackRender;
 
    public:
-      //modality
+      //modality - modal widgets should be children of the root canvas, otherwise they will
       void setModal(bool isModal);
       bool isModal() const {return _isModal;};
       std::optional<std::shared_ptr<Canvas>> getCanvas(); //get the most closely-related parent canvas this widget belongs to
+
+      //focus - first crack at input
+      bool isFocus(){return _isFocus;}
+      void setFocus(bool isFocus);
 
       //editor stuff
       inline void setInEditor(bool state){_isEditorWidget = state;}
@@ -319,6 +325,7 @@ namespace ReyEngine{
       bool _hovered = false; //true when hovered, set by application
       bool _visible = true; //whether to show the widget (and its children)
       bool _isModal = false;
+      bool _isFocus = false;
       bool _scheduled_for_deletion = false; // true when the widget has been scheduled for deletion but is not yet deleted.
 //      Pos<R_FLOAT> _renderOffset; //used for different rendering modes. does not offset position.
       InputInterface::MouseCursor cursor = InputInterface::MouseCursor::DEFAULT;

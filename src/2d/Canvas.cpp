@@ -63,7 +63,13 @@ Handled Canvas::__process_unhandled_input(const InputEvent& event, const std::op
       return _process_unhandled_input(_union.mouse, worldSpaceMouse);
    }
    //non-mouse input
-   return _process_unhandled_input(event, mouse);
+
+   //offer to focused first
+   if (getFocus()){
+      auto focused = getFocus()->lock();
+      if (focused->_process_unhandled_input(event, {})) return true;
+   }
+   return _process_unhandled_input(event, {});
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -115,6 +121,32 @@ void Canvas::clearModal() {
       }
    }
    _modal.reset();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::setFocus(std::shared_ptr<BaseWidget>& newFocus){
+   if (_focus){
+      auto focus = _focus->lock();
+      if (focus){
+         focus->_isFocus = false;
+         focus->_on_focus_lost();
+      }
+   }
+   _focus = newFocus;
+   newFocus->_isFocus = true;
+   newFocus->_on_focus_gained();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::clearFocus() {
+   if (_focus){
+      auto focus = _focus->lock();
+      if (focus){
+         focus->_isFocus = false;
+         focus->_on_focus_lost();
+      }
+   }
+   _focus.reset();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
