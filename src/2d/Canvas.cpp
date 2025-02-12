@@ -77,7 +77,6 @@ Handled Canvas::__process_unhandled_input(const InputEvent& event, const std::op
          }
       }
 
-
       return _process_unhandled_input(_union.mouse, worldSpaceMouse);
    }
    //non-mouse input

@@ -1,7 +1,6 @@
 #include <algorithm>
 #include "BaseWidget.h"
 #include "Application.h"
-#include "EventManager.h"
 #include <iostream>
 #include <utility>
 #include "Canvas.h"

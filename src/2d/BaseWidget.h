@@ -4,7 +4,6 @@
 #include "Property.h"
 #include "TypeManager.h"
 #include "InputManager.h"
-#include "EventManager.h"
 #include "Theme.h"
 #include "Component.h"
 #include "FileSystem.h"

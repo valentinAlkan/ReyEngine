@@ -117,7 +117,6 @@ add_library(ReyEngine2D STATIC
     src/meta/Logger.cpp
     src/meta/XML.cpp
     src/meta/SystemTime.cpp
-    src/meta/Event.cpp
     src/meta/InputManager.cpp
     src/meta/Timer.hpp
     src/meta/Theme.cpp
@@ -232,3 +231,4 @@ install_file(./test/xmltest.xml ./test/xmltest.xml)
 install_file(./test/spritesheet.png ./test/spritesheet.png)
 install_file(./test/csvTest.csv ./test/csvTest.csv)
 install_file(./test/3d/suzanne.obj ./test/suzanne.obj)
+install_file(./test/10x10_checkered_board.png ./test/10x10_checkered_board.png)

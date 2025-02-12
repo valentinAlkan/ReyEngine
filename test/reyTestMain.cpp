@@ -90,6 +90,7 @@ int main(int argc, char** argv) {
         args.defineArg(RuntimeArg("--inspector", "InspectorTest", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--spriteTest", "SpriteTest", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--textureRectTest", "TextureRectTest", 0, RuntimeArg::ArgType::FLAG));
+        args.defineArg(RuntimeArg("--renderTargetTest", "RenderTargetTest", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--buttonTest", "PushButton usage example", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--anchorTest", "Anchoring options test", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--marginsTest", "Layout margins test", 0, RuntimeArg::ArgType::FLAG));
@@ -881,6 +882,16 @@ int main(int argc, char** argv) {
             animatedSprite->scale(Vec2<float>(5, 5));
             root->addChild(animatedSprite);
         } else if (args.getArg("--textureRectTest")) {
+           auto textureRectBack = TextureRect::build("1");
+           auto textureRect = TextureRect::build("2");
+           root->addChild(textureRectBack);
+           textureRectBack->setTexture("test/10x10_checkered_board.png");
+           textureRectBack->fitTexture();
+           root->addChild(textureRect);
+           textureRect->setTexture("test/spritesheet.png");
+           textureRect->fitTexture();
+           textureRect->setPos({25,25});
+        } else if (args.getArg("--renderTargetTest")) {
            auto src = make_shared<Rect<float>>(0,0,500,500);
            auto dst = make_shared<Rect<float>>(src->pos() + Pos<float>(src->width + 50, 0), src->size());
            auto cursor = make_shared<Rect<float>>(0,0,50,50);
@@ -958,7 +969,7 @@ int main(int argc, char** argv) {
 
             //source texture
             auto srcTexRect = TextureRect::build("sourceTexRect");
-            srcTexRect->setRect({tileMap->getPos().x + tileMap->getWidth() + 30, 5, 100, 100});
+            srcTexRect->setRect({20, 5, 100, 100});
             srcTexRect->setTexture(spriteSheet);
             srcTexRect->fitTexture();
             //input forwarderers
@@ -985,7 +996,7 @@ int main(int argc, char** argv) {
             TileMap::TileIndex selectedIndex = -1;
 
             //source texture input callback
-            auto cbSrcInput = [&](const Control &, const InputEvent &event,
+            auto cbSrcInput = [&](const Control& ctl, const InputEvent &event,
                                   const std::optional<UnhandledMouseInput> &mouse) -> bool {
                 if (mouse && mouse->isInside) {
                     auto subrect = srcTexRect->getRect().getSubRectAtPos({SRC_TILE_SIZE, SRC_TILE_SIZE}, mouse->localPos);

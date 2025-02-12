@@ -1,6 +1,6 @@
 #pragma once
-#include "Canvas.h"
 #include <map>
+#include "BaseWidget.h"
 
 namespace ReyEngine {
    class TileMap : public BaseWidget {
