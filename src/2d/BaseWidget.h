@@ -1,13 +1,11 @@
 #pragma once
-#include "raylib.h"
-#include "ReyEngine.h"
 #include "Property.h"
 #include "TypeManager.h"
 #include "InputManager.h"
 #include "Theme.h"
-#include "Component.h"
 #include "FileSystem.h"
 #include "CollisionShape.h"
+#include "Renderable2D.h"
 #include <iostream>
 #include <stack>
 #include <utility>
@@ -33,7 +31,7 @@ namespace ReyEngine{
    class BaseWidget
    : public virtual Internal::Component
    , public Internal::TypeContainer<BaseWidget>
-   , public Positionable2D<R_FLOAT>
+   , public Internal::Renderable2D
    {
       using ChildIndex = unsigned long;
       using WidgetPtr = std::shared_ptr<BaseWidget>;
@@ -147,8 +145,6 @@ namespace ReyEngine{
       Size<R_FLOAT> getMaxSize(){return maxSize;}
       Size<R_FLOAT> getClampedSize();
       Size<R_FLOAT> getClampedSize(Size<R_FLOAT>);
-      void setVisible(bool visible){_visible = visible;}
-      bool getVisible() const {return _visible;}
       //sizing
       void setAnchoring(Anchor newAnchor);
       Anchor getAnchoring(){return _anchor.value;}
@@ -267,8 +263,6 @@ namespace ReyEngine{
 //      Vec2<float> getRenderOffset() const {return _renderOffset;}
 //      void setRenderOffset(Pos<R_FLOAT> offset){_renderOffset = offset;}
       void registerProperties() override;
-      SizeProperty<R_FLOAT> _size;
-      Transform2DProperty _transform;
       InputMaskProperty<R_FLOAT> _inputMask; //Only input inside this rectangle will be handled;
       BoolProperty enabled;
 
@@ -322,7 +316,6 @@ namespace ReyEngine{
       std::optional<std::shared_ptr<Scene>> _scene;
       bool _request_delete = false; //true when we want to remove this object from the tree
       bool _hovered = false; //true when hovered, set by application
-      bool _visible = true; //whether to show the widget (and its children)
       bool _isModal = false;
       bool _isFocus = false;
       bool _scheduled_for_deletion = false; // true when the widget has been scheduled for deletion but is not yet deleted.
@@ -337,7 +330,6 @@ namespace ReyEngine{
       InputFilter _inputFilter = InputFilter::INPUT_FILTER_PASS_AND_PROCESS;
 
       //theme
-      std::shared_ptr<Style::Theme> theme;
       friend class Window;
       friend class Canvas;
       friend class Application;

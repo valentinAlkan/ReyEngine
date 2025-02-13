@@ -13,17 +13,14 @@ using namespace FileSystem;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 BaseWidget::BaseWidget(const std::string& name, std::string typeName)
-: Positionable2D<R_FLOAT>(_size.value, _transform.value)
-, NamedInstance(name, typeName)
+: NamedInstance(name, typeName)
+, Internal::Renderable2D(name, typeName)
 , Component(name, typeName)
 , Internal::TypeContainer<BaseWidget>(name, typeName)
 , PROPERTY_DECLARE(isBackRender, false)
-, PROPERTY_DECLARE(_size)
-, PROPERTY_DECLARE(_transform)
 , PROPERTY_DECLARE(_anchor, Anchor::NONE)
 , PROPERTY_DECLARE(_inputMask, InputMask::NONE)
 , PROPERTY_DECLARE(enabled, false)
-, theme(make_shared<Style::Theme>())
 {}
 
 BaseWidget::~BaseWidget() {
