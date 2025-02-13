@@ -24,23 +24,24 @@ void ScrollArea::renderBegin() {
 
    //undo our specific offsets, which are going to be re-applied by the base renderchain
    // this WILL affect any rendering we try to do in the local space
+   globalMatrix = rlGetMatrixTransform();
+   rlLoadIdentity();
    rlPushMatrix();
-   rlScalef(1 / transform.scale.x, 1 / transform.scale.y, 1);
-   rlRotatef(-transform.rotation * 180 / M_PI, 0, 0, 1);
-   rlTranslatef(-transform.position.x, -transform.position.y, 0);
+//   rlScalef(1 / transform.scale.x, 1 / transform.scale.y, 1);
+//   rlRotatef(-transform.rotation * 180 / M_PI, 0, 0, 1);
+//   rlTranslatef(-transform.position.x, -transform.position.y, 0);
    _renderTarget.clear();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ScrollArea::render() const {
- /* any drawing done here will be modified by the inverse of the translation matrix*/
-}
+void ScrollArea::render() const {}
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::renderEnd() {
    //done drawing children, we need to reload the old transform so we can draw the rendertarget where its supposed to be
    rlPopMatrix();
+   rlSetMatrixModelview(globalMatrix);
    Application::getWindow(0).popRenderTarget();
-   if constexpr (false){
+   if constexpr (true){
       //debug
       //draw everything, and show a debug view of the sliding window
       constexpr Pos<float> DEBUG_OFFSET = {600, 0};
@@ -51,9 +52,10 @@ void ScrollArea::renderEnd() {
       drawText("viewport", _viewport.pos() + getPos() + DEBUG_OFFSET);
       drawText("viewport = " + _viewport.toString(), getPos() + DEBUG_OFFSET - Pos<float>(0, 40));
       drawText("window = " + _window.toString(), getPos() + DEBUG_OFFSET - Pos<float>(0, 20));
-   } else {
-      //normal
-      drawRenderTargetRect(_renderTarget, _viewport, _window, theme->background.colorPrimary.value);
+   }
+
+   if (_viewport && _window && _renderTarget.getSize()) {
+      drawRenderTargetRect(_renderTarget, _viewport, _window, Colors::none);
    }
    //redraw the sliders so that they're always on top of the children
    hslider->renderChain();

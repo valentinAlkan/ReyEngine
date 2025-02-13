@@ -405,23 +405,20 @@ void BaseWidget::drawCircleSectorLines(const ReyEngine::CircleSector& sector, co
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawRenderTarget(const ReyEngine::RenderTarget& target, const Pos<R_FLOAT>& dst, const ColorRGBA& tint) const {
-   auto globalPos = getGlobalPos();
-   DrawTextureRec(target.getRenderTexture(), {0, 0, (float)target.getSize().x, -(float)target.getSize().y}, {globalPos.x + dst.x, globalPos.y + dst.y}, tint);
+   DrawTextureRec(target.getRenderTexture(), {0, 0, (float)target.getSize().x, -(float)target.getSize().y}, {dst.x, dst.y}, tint);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawRenderTargetRect(const ReyEngine::RenderTarget& target, const Rect<R_FLOAT>& src, const Rect<R_FLOAT>& dst, const ColorRGBA& tint) const {
-   auto globalPos = getGlobalPos();
    Rectangle _src = {src.x, -src.y-src.height, (float)src.width, -(float)src.height};
-   Rectangle _dst = {globalPos.x + dst.x, globalPos.y + dst.y, dst.width, dst.height};
+   Rectangle _dst = {dst.x, dst.y, dst.width, dst.height};
    DrawTexturePro(target.getRenderTexture(), _src, _dst, {}, 0, tint);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::drawTextureRect(const ReyEngine::ReyTexture& rtex, const ReyEngine::Rect<R_FLOAT> &src, const ReyEngine::Rect<R_FLOAT> &dst, float rotation, const ReyEngine::ColorRGBA &tint) const {
-   auto gpos = getGlobalPos();
    Rectangle _src  = {src.x, src.y, src.width, src.height};
-   Rectangle _dst = {dst.x + gpos.x, dst.y + gpos.y, dst.width, dst.height};
+   Rectangle _dst = {dst.x, dst.y, dst.width, dst.height};
    DrawTexturePro(rtex.getTexture(), _src, _dst, {0,0}, rotation, Colors::none);
 }
 

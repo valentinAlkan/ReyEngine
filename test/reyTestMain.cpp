@@ -71,9 +71,10 @@ int main(int argc, char** argv) {
         args.defineArg(RuntimeArg("--loadScene", "help", 1, RuntimeArg::ArgType::POSITIONAL));
         args.defineArg(RuntimeArg("--eventTest", "help", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--renderTest", "help", 0, RuntimeArg::ArgType::FLAG));
-        args.defineArg(RuntimeArg("--scrollAreaTest", "help", 0, RuntimeArg::ArgType::FLAG));
-        args.defineArg(RuntimeArg("--sliderTest", "help", 0, RuntimeArg::ArgType::FLAG));
-        args.defineArg(RuntimeArg("--labelTest", "help", 0, RuntimeArg::ArgType::FLAG));
+        args.defineArg(RuntimeArg("--scrollAreaTest", "scrollAreaTest", 0, RuntimeArg::ArgType::FLAG));
+        args.defineArg(RuntimeArg("--scrollAreaFillTest", "scrollAreaFillTest", 0, RuntimeArg::ArgType::FLAG));
+        args.defineArg(RuntimeArg("--sliderTest", "sliderTest", 0, RuntimeArg::ArgType::FLAG));
+        args.defineArg(RuntimeArg("--labelTest", "labelTest", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--saveLoadSceneTest", "Filename to save/load to", 1, RuntimeArg::ArgType::POSITIONAL));
         args.defineArg(RuntimeArg("--xmlTest", "XML test", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--csvTest", "CSV test", 0, RuntimeArg::ArgType::FLAG));
@@ -465,7 +466,6 @@ int main(int argc, char** argv) {
             xslider->addChild(xlabel);
             yslider->addChild(ylabel);
 
-            //add scroll area
             auto scrollArea = ScrollArea::build("ScrollArea");
             scrollArea->setRect(Rect<int>(50, 50, 500, 500));
             auto gradient = Control::build("Control");
@@ -505,6 +505,30 @@ int main(int argc, char** argv) {
                 ylabel->setText(scrollArea->getHeight());
             };
             labelLayout->subscribe<BaseWidget::WidgetRectChangedEvent>(scrollArea, displaySize);
+        } else if (args.getArg("--scrollAreaFillTest")) {
+           //test scroll areas inside layouts
+           auto vlayout = VLayout::build("vlayout");
+           vlayout->setRect({100,100,1000, 500});
+           root->addChild(vlayout);
+           {
+              auto texRect1 = TextureRect::build("TextureRect1");
+              texRect1->setTexture("test/spritesheet.png");
+              texRect1->fitTexture();
+
+              auto ctl = Control::build("ctl");
+              vlayout->addChild(ctl);
+
+              auto scrollArea = ScrollArea::build("ScrollArea");
+              scrollArea->setAnchoring(ReyEngine::BaseWidget::Anchor::FILL);
+              scrollArea->addChild(texRect1);
+              ctl->addChild(scrollArea);
+           }
+           {
+              auto texRect2 = TextureRect::build("TextureRect2");
+              texRect2->setTexture("test/characters.png");
+              texRect2->fitTexture();
+              vlayout->addChild(texRect2);
+           }
         } else if (args.getArg("--childBoundingBoxTest")) {
             auto boxBounder = Control::build("BoxBounder");
             boxBounder->setRect({0, 0, 2000, 2000});

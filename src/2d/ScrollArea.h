@@ -43,6 +43,7 @@ namespace ReyEngine {
         bool _hideVSlider = false;
         bool _hideHSlider = false;
     private:
+        Matrix globalMatrix;
         static constexpr float sliderSize = 20;
         void updateViewport();
         RenderTarget _renderTarget;

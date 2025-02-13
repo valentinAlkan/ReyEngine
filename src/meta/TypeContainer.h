@@ -93,6 +93,7 @@ namespace ReyEngine::Internal{
             return inheritable_enable_shared_from_this<TypeContainer<T>>::template downcasted_shared_from_this<T>();
         };
         void addChild(std::shared_ptr<TypeContainer<T>> child){
+            if (!child) throw std::runtime_error("addChild: child is null!");
             auto me = toContainedTypePtr();
             auto childTypePtr = child->toContainedTypePtr();
             if (child == me){

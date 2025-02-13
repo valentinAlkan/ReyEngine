@@ -57,6 +57,7 @@ int main(int argc, char** argv){
 
    Vector3 cubePosition = { 0.0f, 0.0f, 0.0f };
    RenderTexture2D canvasTarget = LoadRenderTexture(windowSize.x, windowSize.y);
+   RenderTexture2D scrollTarget = LoadRenderTexture(windowSize.x, windowSize.y);
 
    auto suzanne = LoadModel("test/suzanne.obj");
 
@@ -192,55 +193,134 @@ int main(int argc, char** argv){
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //      2d rotations
+//      BeginTextureMode(canvasTarget);              // Begin drawing to render texture
+//      {
+//         ClearBackground(WHITE);
+//         DrawText("This is the Camera UI", 0, windowSize.y - 20, 20, BLACK);
+//
+//         {
+//            BeginMode2D(foregroundCamera);
+//            rlPushMatrix();
+//               rlTranslatef(100,100,0);
+//               rlRotatef(20, 0.0f, 0.0f, 1.0f);        // Rotate around Z axis
+//               auto frame1 = rlGetMatrixTransform();
+//               cout << printMat(frame1) << endl;
+//               DrawText("RotatedOnce!", 0, 0, 20, BLACK);
+//               auto origin = getPointInFrame({0,0,0}, frame1);
+//               DrawLine(origin.x, origin.y, 50,0, Colors::red);
+//
+//                  rlTranslatef(100,100,0);
+//                  rlRotatef(20, 0.0f, 0.0f, 1.0f);
+//                  auto frame2 = rlGetMatrixTransform();
+//                  cout << printMat(frame2) << endl;
+//                  DrawText("RotatedTwice!", 0, 0, 20, BLACK);
+//                  origin = Vector3Transform(getPointInFrame({0,0,0}, frame2), frame1);
+//                  DrawLine(origin.x, origin.y, 50,0, Colors::red);
+//
+//                     rlTranslatef(100,100,0);
+//                     rlRotatef(20, 0.0f, 0.0f, 1.0f);
+//                     auto frame3 = rlGetMatrixTransform();
+//                     cout << printMat(frame3) << endl;
+//                     DrawText("RotatedNotOnceNotTwiceButThrice!", 0, 0, 20, BLACK);
+//                     origin = (Vector3Transform(getPointInFrame({0,0,0}, frame3), frame2));
+//                     DrawLine(origin.x, origin.y, 50,0, Colors::red);
+//
+//
+//            rlPopMatrix();
+//            EndMode2D();
+//         }
+//         EndTextureMode();
+//      }
+//      //window
+//      BeginDrawing();
+//      ClearBackground(WHITE);
+//      //DRaw the texture
+//      rlPushMatrix();
+//      rlScalef(2,2,0);
+//      DrawTextureRec(canvasTarget.texture, {0, 0, (float)windowSize.x, -(float)windowSize.y}, {0, 0}, WHITE);
+//      rlPopMatrix();
+//      EndDrawing();
+//
+//   }
+
+      //scroll area
+//      std::stack<Matrix> myStack;
+//      BeginTextureMode(canvasTarget);              // Begin drawing to render texture
+//      {
+//         ClearBackground(WHITE);
+//         DrawText("This is the Camera UI", 0, windowSize.y - 20, 20, BLACK);
+//
+//         {
+////            BeginMode2D(foregroundCamera);
+//            rlPushMatrix();
+//               rlTranslatef(100,100,0);
+//               rlRotatef(20, 0.0f, 0.0f, 1.0f);        // Rotate around Z axis
+//               auto frame1 = rlGetMatrixTransform();
+//               cout << "frame 1 = " << printMat(frame1) << endl;
+//               DrawText("RotatedOnce!", 0, 0, 20, BLACK);
+//               auto origin = getPointInFrame({0,0,0}, frame1);
+//               DrawLine(origin.x, origin.y, 50,0, Colors::red);
+//
+//                  rlPushMatrix();
+//                  rlTranslatef(100,100,0);
+//                  rlRotatef(20, 0.0f, 0.0f, 1.0f);
+//                  auto frame2 = rlGetMatrixTransform();
+//                  cout << printMat(frame2) << endl;
+//                  DrawText("RotatedTwice!", 0, 0, 20, BLACK);
+//                  origin = Vector3Transform(getPointInFrame({0,0,0}, frame2), frame1);
+//                  DrawLine(origin.x, origin.y, 50,0, Colors::red);
+//
+//                  auto mat = rlGetMatrixTransform();
+//                  cout << "Global transform = " << printMat(mat) << endl;
+//                  EndTextureMode();
+//                     BeginTextureMode(scrollTarget);
+//                     rlPushMatrix();
+//                        DrawRectangleGradientEx({0,0,(float)scrollTarget.texture.width, (float)scrollTarget.texture.height}, BLUE, RED, GREEN, PURPLE);
+//                     rlPopMatrix();
+//                     EndTextureMode();
+//                  BeginTextureMode(canvasTarget);
+//                  rlPushMatrix();
+//                     rlMultMatrixf(&mat.m0);
+//                     cout << "Restored matrix = " << printMat(rlGetMatrixTransform()) << endl;
+//                     DrawTextureRec(scrollTarget.texture, {0, 0, (float)scrollTarget.texture.width, -(float)scrollTarget.texture.height}, {0, 0}, LIGHTGRAY);
+//                     DrawText("I am a scroll area!", 0, 0, 20, BLACK);
+//                  rlPopMatrix();
+//
+//            rlPopMatrix();
+//            rlPopMatrix();
+////            EndMode2D();
+//         }
+//      }
+//      EndTextureMode();
+//      //window
+//      BeginDrawing();
+//      DrawTextureRec(canvasTarget.texture, {0, 0, (float)windowSize.x, -(float)windowSize.y}, {0, 0}, WHITE);
+//      EndDrawing();
+//
+//   }
+
       BeginTextureMode(canvasTarget);              // Begin drawing to render texture
       {
          ClearBackground(WHITE);
-         DrawText("This is the Camera UI", 0, windowSize.y - 20, 20, BLACK);
+         DrawText("hello", 0, windowSize.y - 20, 20, BLACK);
 
          {
-            BeginMode2D(foregroundCamera);
-            rlPushMatrix();
-               rlTranslatef(100,100,0);
-               rlRotatef(20, 0.0f, 0.0f, 1.0f);        // Rotate around Z axis
-               auto frame1 = rlGetMatrixTransform();
-               cout << printMat(frame1) << endl;
-               DrawText("RotatedOnce!", 0, 0, 20, BLACK);
-               auto origin = getPointInFrame({0,0,0}, frame1);
-               DrawLine(origin.x, origin.y, 50,0, Colors::red);
-
-                  rlTranslatef(100,100,0);
-                  rlRotatef(20, 0.0f, 0.0f, 1.0f);
-                  auto frame2 = rlGetMatrixTransform();
-                  cout << printMat(frame2) << endl;
-                  DrawText("RotatedTwice!", 0, 0, 20, BLACK);
-                  origin = Vector3Transform(getPointInFrame({0,0,0}, frame2), frame1);
-                  DrawLine(origin.x, origin.y, 50,0, Colors::red);
-
-                     rlTranslatef(100,100,0);
-                     rlRotatef(20, 0.0f, 0.0f, 1.0f);
-                     auto frame3 = rlGetMatrixTransform();
-                     cout << printMat(frame3) << endl;
-                     DrawText("RotatedNotOnceNotTwiceButThrice!", 0, 0, 20, BLACK);
-                     origin = (Vector3Transform(getPointInFrame({0,0,0}, frame3), frame2));
-                     DrawLine(origin.x, origin.y, 50,0, Colors::red);
-
-
-            rlPopMatrix();
-            EndMode2D();
+            EndTextureMode();
+            BeginTextureMode(scrollTarget);
+               ClearBackground(RED);
+               DrawText("ScrollArea", 20, 20, 20, BLACK);
+               DrawRectangleGradientEx({0,0,1000, 1000}, BLUE, RED, GREEN, PURPLE);
+            EndTextureMode();
+            BeginTextureMode(canvasTarget);
+            DrawTextureRec(scrollTarget.texture, {0, 0, (float)scrollTarget.texture.width, -(float)scrollTarget.texture.height}, {0, 0}, WHITE);
          }
-         EndTextureMode();
       }
+      EndTextureMode();
       //window
       BeginDrawing();
-      ClearBackground(WHITE);
-      //DRaw the texture
-      rlPushMatrix();
-      rlScalef(2,2,0);
       DrawTextureRec(canvasTarget.texture, {0, 0, (float)windowSize.x, -(float)windowSize.y}, {0, 0}, WHITE);
-      rlPopMatrix();
       EndDrawing();
 
    }
-
    return 0;
 }
