@@ -81,25 +81,25 @@ ReyEngine::Rect<R_FLOAT> BaseWidget::getChildBoundingBox() const {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::renderChain() {
-   if (!_visible) return;
-   renderBegin();
-
-   rlPushMatrix();
-   rlTranslatef(transform.position.x, transform.position.y, 0);
-   rlRotatef(transform.rotation * 180/M_PI, 0,0,1);
-   rlScalef(transform.scale.x, transform.scale.y, 1);
-   for (const auto &child: _backRenderList) {
-      child->renderChain();
-   }
-   render();
-
-   //front render
-   for (const auto &child: _frontRenderList) {
-      child->renderChain();
-   }
-   rlPopMatrix();
-   renderEnd();
-   renderEditorFeatures();
+//   if (!_visible) return;
+//   renderBegin();
+//
+//   rlPushMatrix();
+//   rlTranslatef(transform.position.x, transform.position.y, 0);
+//   rlRotatef(transform.rotation * 180/M_PI, 0,0,1);
+//   rlScalef(transform.scale.x, transform.scale.y, 1);
+//   for (const auto &child: _backRenderList) {
+//      child->renderChain();
+//   }
+//   render();
+//
+//   //front render
+//   for (const auto &child: _frontRenderList) {
+//      child->renderChain();
+//   }
+//   rlPopMatrix();
+//   renderEnd();
+//   renderEditorFeatures();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
