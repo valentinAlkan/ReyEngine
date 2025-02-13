@@ -1,7 +1,7 @@
 #pragma once
 #include <queue>
 #include <set>
-#include "DrawInterface.h"
+#include "ReyEngine.h"
 #include "MathUtils.h"
 
 //class to preform an AStar algorithm

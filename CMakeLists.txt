@@ -104,10 +104,11 @@ target_include_directories(ReyEngineUtil INTERFACE
 )
 
 add_library(ReyEngine2D STATIC
+    src/meta/ReyEngine.cpp
+    src/meta/RenderManager.cpp
     src/meta/ArgParse.cpp
     src/meta/FileSystem.cpp
     src/meta/StringTools.cpp
-    src/meta/DrawInterface.cpp
     src/meta/Application.cpp
     src/meta/Thread.cpp
     src/meta/TypeManager.cpp

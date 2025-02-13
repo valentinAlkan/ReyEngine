@@ -1,7 +1,7 @@
 #pragma once
 #include "Logger.h"
 #include "Event.h"
-#include "DrawInterface.h"
+#include "ReyEngine.h"
 #include <algorithm>
 
 namespace ReyEngine{

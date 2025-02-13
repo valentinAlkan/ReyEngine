@@ -4,7 +4,7 @@
 #include <queue>
 #include "Window.h"
 #include "Logger.h"
-#include "DrawInterface.h"
+#include "ReyEngine.h"
 #include "Platform.h"
 #include "FileSystem.h"
 #include "Component.h"

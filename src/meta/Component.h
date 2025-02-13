@@ -1,6 +1,6 @@
 #pragma once
 #include "Property.h"
-#include "DrawInterface.h"
+#include "ReyEngine.h"
 #include "TypeManager.h"
 #include "TypeContainer.h"
 #include "Event.h"

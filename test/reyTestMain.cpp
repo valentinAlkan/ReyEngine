@@ -1,5 +1,5 @@
 #include "reyTestMain.h"
-#include "DrawInterface.h"
+#include "ReyEngine.h"
 #include <cassert>
 #include "ScrollArea.h"
 #include "Application.h"

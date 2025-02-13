@@ -57,7 +57,7 @@ int main(int argc, char** argv){
 
    Vector3 cubePosition = { 0.0f, 0.0f, 0.0f };
    RenderTexture2D canvasTarget = LoadRenderTexture(windowSize.x, windowSize.y);
-   RenderTexture2D scrollTarget = LoadRenderTexture(windowSize.x, windowSize.y);
+   RenderTexture2D scrollTarget = LoadRenderTexture(300, 300);
 
    auto suzanne = LoadModel("test/suzanne.obj");
 
@@ -298,22 +298,34 @@ int main(int argc, char** argv){
 //      EndDrawing();
 //
 //   }
+      static float tick = 0;
+      tick++;
+      BeginTextureMode(scrollTarget);
+      ClearBackground(WHITE);
+      rlPushMatrix();
+         rlTranslatef(100,100,0);
+         DrawText("ScrollArea", 0, 0, 20, BLACK);
+         auto deg = 360 * cos(tick)/1;
+         rlRotatef(deg, 0,0,1);
+         cout << deg << endl;
+         DrawRectangleGradientEx({0,0,30, 30}, BLUE, RED, GREEN, PURPLE);
+      rlPopMatrix();
+      EndTextureMode();
 
       BeginTextureMode(canvasTarget);              // Begin drawing to render texture
       {
          ClearBackground(WHITE);
          DrawText("hello", 0, windowSize.y - 20, 20, BLACK);
+         rlPushMatrix();
+            rlTranslatef(100,100,0);
+            rlRotatef(45, 0,0,1);
+            DrawText("rotated", 0, 0, 20, BLACK);
 
-         {
-            EndTextureMode();
-            BeginTextureMode(scrollTarget);
-               ClearBackground(RED);
-               DrawText("ScrollArea", 20, 20, 20, BLACK);
-               DrawRectangleGradientEx({0,0,1000, 1000}, BLUE, RED, GREEN, PURPLE);
-            EndTextureMode();
-            BeginTextureMode(canvasTarget);
-            DrawTextureRec(scrollTarget.texture, {0, 0, (float)scrollTarget.texture.width, -(float)scrollTarget.texture.height}, {0, 0}, WHITE);
-         }
+            rlPushMatrix();
+               DrawTextureRec(scrollTarget.texture, {0, 0, (float)scrollTarget.texture.width, -(float)scrollTarget.texture.height}, {0, 0}, WHITE);
+            rlPopMatrix();
+
+         rlPopMatrix();
       }
       EndTextureMode();
       //window
