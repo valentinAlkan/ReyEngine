@@ -5,7 +5,7 @@ using namespace std;
 using namespace ReyEngine;
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void LineEdit::render() const {
+void LineEdit::render2D() const {
    drawRectangle(getRect().toSizeRect(), theme->background.colorTertiary);
 
    auto& font = theme->font;
@@ -21,9 +21,9 @@ void LineEdit::render() const {
       auto ourWidth = getWidth();
       auto textStart = textWidth > ourWidth ? ourWidth - textWidth : 2;
 
-      startScissor(_scissorArea);
+//      startScissor(_scissorArea);
       drawText(text, {textStart, textPosV}, font);
-      stopScissor();
+//      stopScissor();
    };
 
    //draw default text

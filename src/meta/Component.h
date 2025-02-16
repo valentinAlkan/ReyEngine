@@ -19,7 +19,6 @@ namespace ReyEngine{
       {
       public:
          using RID = uint64_t;
-         REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(TypeContainer)
          Component(const std::string& name, const std::string& typeName);
          inline RID getRid() const {return _resourceId;}
 

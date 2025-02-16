@@ -65,7 +65,7 @@ void Tree::determineVisible() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Tree::render() const{
+void Tree::render2D() const{
    drawRectangle(getRect().toSizeRect(), theme->background.colorPrimary.value);
    // draw the items
    auto font = theme->font.value;
@@ -105,7 +105,7 @@ Handled Tree::_unhandled_input(const InputEvent& event, const std::optional<Unha
        case InputEventMouseMotion::getUniqueEventId():
        case InputEventMouseButton::getUniqueEventId():
           auto mouseEvent = event.toEventType<InputEventMouse>();
-          auto localPos = globalToLocal(mouseEvent.globalPos);
+          auto localPos = canvasToLocal(mouseEvent.canvasPos);
           if (!getRect().toSizeRect().isInside(localPos)){
              return false;
           }

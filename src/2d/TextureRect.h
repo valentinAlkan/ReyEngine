@@ -13,7 +13,7 @@ namespace ReyEngine {
       void fitTexture();
    protected:
       void registerProperties() override{};
-      void render() const override;
+      void render2D() const override;
       void _init() override;
       std::shared_ptr<ReyEngine::ReyTexture> _texture;
       StringProperty _texturePath;

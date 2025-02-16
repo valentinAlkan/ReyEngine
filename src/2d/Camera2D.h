@@ -42,7 +42,7 @@ namespace ReyEngine {
       void renderChain(Pos<R_FLOAT>& parentOffset);
       void renderBegin() override;
       void renderEnd() override;
-      void render() const override {};
+      void render2D() const override {};
       void _on_enter_tree() override{
          //look at center of screen
          auto canvasOpt = getCanvas();

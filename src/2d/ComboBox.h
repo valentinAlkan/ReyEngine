@@ -70,7 +70,7 @@ namespace ReyEngine {
       std::string text() const;
       ComboBoxDataField& getCurrentField();
       ComboBoxDataField& getField(int index);
-      void render() const override;
+      void render2D() const override;
       void registerProperties() override{registerProperty(fields);};
 
    protected:

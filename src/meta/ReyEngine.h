@@ -30,6 +30,35 @@ namespace ReyEngine {
         template <typename T> T max(T a, T b){return a >= b ? a : b;}
     }
 
+   // Canvas Coordinates - relative to current canvas
+   template <typename T>
+   struct WindowSpace{
+   public:
+      WindowSpace() = default;
+      WindowSpace(const T& other): underlying(other){}
+      WindowSpace& operator=(const T& other){ underlying = other;}
+      T& get(){return underlying;}
+      const T& get() const {return underlying;}
+      friend std::ostream& operator<<(std::ostream& os, const WindowSpace<T>& other) {os << other.get(); return os;}
+
+   private:
+      T underlying;
+   };
+
+    // Canvas Coordinates - relative to current canvas
+   template <typename T>
+   struct CanvasSpace{
+   public:
+       CanvasSpace() = default;
+       CanvasSpace(const T& other): underlying(other){}
+       CanvasSpace& operator=(const T& other){ underlying = other;}
+       T& get(){return underlying;}
+       const T& get() const {return underlying;}
+       friend std::ostream& operator<<(std::ostream& os, const CanvasSpace<T>& other) {os << other.get(); return os;}
+   private:
+      T underlying;
+   };
+
    template <typename T> struct Size;
    template <typename T> struct Pos;
    template <typename T> struct Rect;
@@ -1274,7 +1303,7 @@ namespace InputInterface{
    inline bool isMouseButtonDown(MouseButton btn){return IsMouseButtonDown(static_cast<int>(btn));}
    inline bool isMouseButtonUp(MouseButton btn){return IsMouseButtonUp(static_cast<int>(btn));}
    inline bool isMouseButtonReleased(MouseButton btn){return IsMouseButtonReleased(static_cast<int>(btn));}
-   inline ReyEngine::Vec2<R_FLOAT> getMousePos(){return GetMousePosition();}
+   inline ReyEngine::WindowSpace<ReyEngine::Pos<R_FLOAT>> getMousePos(){ ReyEngine::WindowSpace<ReyEngine::Pos<float>> ws(GetMousePosition()); return ws;}
    inline ReyEngine::Vec2<R_FLOAT> getMouseDelta(){return GetMouseDelta();}
    inline ReyEngine::Vec2<R_FLOAT> getMouseWheel(){return GetMouseWheelMoveV();}
 

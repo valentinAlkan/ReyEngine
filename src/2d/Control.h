@@ -25,9 +25,9 @@ namespace ReyEngine{
        void clearScissorArea();
    protected:
        bool _doScissor = false;
-       void render() const override;
-       void renderBegin() override;
-       void renderEnd() override;
+       void render2D() const override;
+       void render2DBegin() override;
+       void render2DEnd() override;
        std::function<void(Control&)> mouseEnterCallback;
        std::function<void(Control&)> mouseExitCallback;
        std::function<void(const Control&)> renderCallback;

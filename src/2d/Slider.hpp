@@ -52,7 +52,7 @@ namespace ReyEngine{
    protected:
       Handled _unhandled_input(const InputEvent& e, const std::optional<UnhandledMouseInput>& mouse) override {
          auto& mouseEvent = (InputEventMouseMotion&)(e);
-         auto localPos = globalToLocal(mouseEvent.globalPos);
+         auto localPos = canvasToLocal(mouseEvent.canvasPos);
          if (mouseEvent.isEvent<InputEventMouseMotion>()){
             if (_is_dragging) {
                //drag grabber
@@ -93,7 +93,7 @@ namespace ReyEngine{
          }
          return false;
       }
-      void render() const override {
+      void render2D() const override {
          //draw slider
          drawRectangle(getRect().toSizeRect(), _cursor_in_slider || _is_dragging? Colors::green : Colors::red);
          //draw grabber

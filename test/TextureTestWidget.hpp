@@ -6,7 +6,7 @@ class TextureTestWidget : public ReyEngine::BaseWidget{
 public:
    REYENGINE_DEFAULT_BUILD(TextureTestWidget)
    void renderBegin() override {}
-   void render() const override {}
+   void render2D() const override {}
 //   void renderEnd() override{}
    void _process(float dt) override {}
    void registerProperties() override{

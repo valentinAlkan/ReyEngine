@@ -400,12 +400,12 @@ int main(int argc, char** argv) {
 
             auto renderSubControl = [subcontrol](const Control &) {
                 auto rect = subcontrol->getGlobalRect();
-                ReyEngine::drawRectangle(rect, COLORS::blue);
+                ReyEngine::drawRectangle(rect.get(), COLORS::blue);
             };
 
             auto process = [&](const Control &, float dt) {
-                subcontrol->setRect({{control->globalToLocal(InputManager::getMousePos())},
-                                     {50, 50}});
+               NOT_IMPLEMENTED;
+//                subcontrol->setRect({{control->canvasToLocal(InputManager::getMousePos().get())},{50, 50}});
             };
 
             control->addChild(subcontrol);
@@ -543,20 +543,22 @@ int main(int argc, char** argv) {
 
             //draw the child bounding box
             auto drawBoundingBox = [&](const Control &) {
-                auto box = boxBounder->getChildBoundingBox();
-                auto mousePos = InputManager::getMousePos();
-                ReyEngine::drawRectangle(box, ReyEngine::Colors::yellow);
-                ReyEngine::drawRectangle(label1->getRect(), ReyEngine::Colors::green);
-                ReyEngine::drawRectangle(label2->getRect(), ReyEngine::Colors::green);
-                ReyEngine::drawLine({{0, 0}, mousePos}, 1, COLORS::red);
+               NOT_IMPLEMENTED;
+//                auto box = boxBounder->getChildBoundingBox();
+//                auto mousePos = InputManager::getMousePos();
+//                ReyEngine::drawRectangle(box, ReyEngine::Colors::yellow);
+//                ReyEngine::drawRectangle(label1->getRect(), ReyEngine::Colors::green);
+//                ReyEngine::drawRectangle(label2->getRect(), ReyEngine::Colors::green);
+//                ReyEngine::drawLine({{0, 0}, mousePos}, 1, COLORS::red);
             };
             boxBounder->setRenderCallback(drawBoundingBox);
 
             auto process = [&](const Control &, float dt) {
-                auto globalPos = InputManager::getMousePos();
+               NOT_IMPLEMENTED;
+//                auto globalPos = InputManager::getMousePos();
                 // reposition label
-                auto newPos = label1->getParent().lock()->globalToLocal(globalPos);
-                label1->setRect({newPos, label1->getSize()});
+//                auto newPos = label1->getParent().lock()->canvasToLocal(globalPos);
+//                label1->setRect({newPos, label1->getSize()});
             };
             boxBounder->setProcessCallback(process);
 
@@ -924,16 +926,17 @@ int main(int argc, char** argv) {
            control->setRect(*src);
            root->addChild(control);
            auto drawCB = [src, dst, cursor, renderTarget](const Control& ctl){
+              auto& f = ctl.getTheme()->font;
               Application::getWindow(0).pushRenderTarget(*renderTarget);
               ctl.drawRectangleGradientV(ctl.getRect().toSizeRect(), Colors::red, Colors::blue);
-              ctl.drawText("Here is some text for you", {100,100});
+              ctl.drawText("Here is some text for you", {100,100}, f);
               Application::getWindow(0).popRenderTarget();
               ctl.drawRenderTarget(*renderTarget, {0,0}, Colors::none);
               //two different drawing methods
               if constexpr (false) {
                  Rect<float> _cursor({cursor->x, -cursor->y-cursor->height}, {cursor->width, -cursor->height});
                  DrawTexturePro(renderTarget->getRenderTexture(), _cursor, *dst, {}, 0, RAYWHITE);
-                 ctl.drawText("_crsr   = " + Rect<int>(_cursor).toString(), src->bottomLeft() + Pos<float>(0,60));
+                 ctl.drawText("_crsr   = " + Rect<int>(_cursor).toString(), src->bottomLeft() + Pos<float>(0,60), f);
               } else {
                  ctl.drawRenderTargetRect(*renderTarget, *cursor, *dst, Colors::none);
               }
@@ -943,9 +946,9 @@ int main(int argc, char** argv) {
               ctl.drawRectangleLines(*cursor, 1.0, Colors::yellow);
               //draw target texture rect
               //draw some info
-              ctl.drawText("SrcRect = " + Rect<int>(*src).toString(), src->bottomLeft() + Pos<float>(0,20));
-              ctl.drawText("CrsRect = " + Rect<int>(*cursor).toString(), src->bottomLeft() + Pos<float>(0,40));
-              ctl.drawText("DstRect = " + Rect<int>(*dst).toString(), dst->bottomLeft() + Pos<float>(0,20));
+              ctl.drawText("SrcRect = " + Rect<int>(*src).toString(), src->bottomLeft() + Pos<float>(0,20), f);
+              ctl.drawText("CrsRect = " + Rect<int>(*cursor).toString(), src->bottomLeft() + Pos<float>(0,40), f);
+              ctl.drawText("DstRect = " + Rect<int>(*dst).toString(), dst->bottomLeft() + Pos<float>(0,20), f);
            };
 
            auto inputCB = [src, dst, cursor](Control& ctl, const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) -> Handled{
@@ -1050,10 +1053,10 @@ int main(int argc, char** argv) {
             //make a simple control that can draw stuff on our texture rect
             auto renderCB = [&](const Control &) {
                 if (hoverRect) {
-                    ReyEngine::drawRectangleLines(hoverRect + srcTexRect->getGlobalRect().pos(), 2.0, Colors::yellow);
+                    ReyEngine::drawRectangleLines(hoverRect + srcTexRect->getGlobalRect().get().pos(), 2.0, Colors::yellow);
                 }
                 if (selectRect) {
-                    ReyEngine::drawRectangleLines(selectRect + srcTexRect->getGlobalRect().pos(), 2.0, Colors::red);
+                    ReyEngine::drawRectangleLines(selectRect + srcTexRect->getGlobalRect().get().pos(), 2.0, Colors::red);
                 }
             };
             srcInputFwd->setRenderCallback(renderCB);
@@ -1271,7 +1274,7 @@ int main(int argc, char** argv) {
                     auto label = Label::build("Label");
                     auto onEnter = [label, control](const Control &) {
                         label->setVisible(true);
-                        label->setText(control->localToGlobal(label->getPos()));
+                        label->setText(control->localToCanvas(label->getPos()).get());
                     };
                     auto onExit = [label, control](const Control &) {
                         label->setVisible(false);
@@ -1320,7 +1323,7 @@ int main(int argc, char** argv) {
                 auto control = Control::build("Control" + to_string(i));
                 auto color = Colors::randColor();
                 auto renderCB = [control, color](const Control &) {
-                    ReyEngine::drawRectangle(control->getGlobalRect(), color);
+                    ReyEngine::drawRectangle(control->getGlobalRect().get(), color);
                 };
                 control->setRenderCallback(renderCB);
                 tabContainer->addChild(control);
@@ -1442,12 +1445,14 @@ int main(int argc, char** argv) {
                                const std::optional<UnhandledMouseInput> mouse) -> bool {
                 switch (event.eventId) {
                     case InputEventMouseButton::getUniqueEventId(): {
-                        auto &mbEvent = event.toEventType<InputEventMouseButton>();
-                        down = mbEvent.isDown && rect.isInside(mbEvent.globalPos);
+                       NOT_IMPLEMENTED;
+//                        auto &mbEvent = event.toEventType<InputEventMouseButton>();
+//                        down = mbEvent.isDown && rect.isInside(mbEvent.globalPos);
                         return true;
                     }
                     case InputEventMouseMotion::getUniqueEventId():
-                        mousePos = InputManager::getMousePos();
+                       NOT_IMPLEMENTED;
+//                        mousePos = InputManager::getMousePos();
                         if (down) {
                             rect.setPos(mousePos - offset);
                         } else {
@@ -1576,6 +1581,7 @@ int main(int argc, char** argv) {
             cursor->setRenderCallback(cursorRender);
 
             auto inputCB = [](Control &control, const InputEvent &event, const std::optional<UnhandledMouseInput> &mouse) -> Handled {
+                NOT_IMPLEMENTED;
                 cout << control.getName() << "-> (G)" << InputManager::getMousePos() << " : (L)" << mouse->localPos << endl;
                 return false;
             };
@@ -1760,6 +1766,7 @@ int main(int argc, char** argv) {
        }
 
         else if (args.getArg("--astarTestAuto")) {
+           NOT_IMPLEMENTED;
            //test a star stuff without any graphics
            static constexpr int CELL_SIZE = 8;
            //create graph
@@ -1998,17 +2005,18 @@ int main(int argc, char** argv) {
                 if (rotation) {
                     camera->setRotation(camera->getRotation() + rotation);
                 }
-                auto bgPos = camera->nearToFar(InputManager::getMousePos());
-                cameraUILabel->setText("Label: " + string(cameraUILabel->getPos())
-                                       + "\nCamera Pos = " + string(camera->getPos())
-                                       + "\nCamera Target = " + string(camera->getTarget())
-                                       + "\nCamera Offset = " + string(camera->getOffset())
-                                       + "\nWindow Mouse Pos = " + InputManager::getMousePos().toString()
-                                       + "\nBckgnd Mouse Pos = " + bgPos.toString()
-                );
-                backgroundLabel->setText("BG pos = " + backgroundLabel->getPos().toString()
-                                        + "\nLocal Mouse Pos = " + inputEventMousePosLocal.toString()
-                );
+                NOT_IMPLEMENTED;
+//                auto bgPos = camera->nearToFar(InputManager::getMousePos());
+//                cameraUILabel->setText("Label: " + string(cameraUILabel->getPos())
+//                                       + "\nCamera Pos = " + string(camera->getPos())
+//                                       + "\nCamera Target = " + string(camera->getTarget())
+//                                       + "\nCamera Offset = " + string(camera->getOffset())
+//                                       + "\nWindow Mouse Pos = " + InputManager::getMousePos().toString()
+//                                       + "\nBckgnd Mouse Pos = " + bgPos.toString()
+//                );
+//                backgroundLabel->setText("BG pos = " + backgroundLabel->getPos().toString()
+//                                        + "\nLocal Mouse Pos = " + inputEventMousePosLocal.toString()
+//                );
 
             };
             background->setUnhandledInputCallback(cbBGUnhandledInput);
@@ -2161,8 +2169,9 @@ int main(int argc, char** argv) {
                   }
                }
                //move ctl 4
-               ctl4->setRect({InputManager::getMousePos(), {20,20}});
-               ctl5->setRotation(ctl5->getRotation()+0.01);
+              NOT_IMPLEMENTED;
+//               ctl4->setRect({InputManager::getMousePos(), {20,20}});
+//               ctl5->setRotation(ctl5->getRotation()+0.01);
            };
 
            auto ctlRender = [&](const Control& ctl){
@@ -2203,13 +2212,15 @@ int main(int argc, char** argv) {
             if (!mouse) return false;
             switch (event.eventId){
                case InputEventMouseMotion::getUniqueEventId():{
-                  const auto& mmEvent = event.toEventType<InputEventMouseMotion>();
-                  auto localPos = ctl.globalToLocal(mmEvent.globalPos, ctl.getSize()/2);
-                  facingdir = UnitVector2(localPos);
-                  cout << localPos << endl;
-                  cout << facingdir << endl;
+                  NOT_IMPLEMENTED;
+//                  const auto& mmEvent = event.toEventType<InputEventMouseMotion>();
+//                  auto localPos = ctl.canvasToLocal(mmEvent.globalPos, ctl.getSize() / 2);
+//                  facingdir = UnitVector2(localPos);
+//                  cout << localPos << endl;
+//                  cout << facingdir << endl;
                   break;}
             }
+            return false;
          };
          ctl->setRenderCallback(renderCB);
          ctl->setProcessCallback(procCB);

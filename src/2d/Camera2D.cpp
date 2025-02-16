@@ -20,37 +20,38 @@ void ReyEngine::Camera2D::renderEnd() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 std::optional<std::shared_ptr<BaseWidget>> ReyEngine::Camera2D::askHover(const ReyEngine::Pos<float> &globalPos) {
-   return BaseWidget::askHover(InputManager::getMousePos() + getGlobalPos());
+//   return BaseWidget::askHover(InputManager::getMousePos() + getGlobalPos().get());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Handled ReyEngine::Camera2D::__process_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse){
-   //for mouse events, convert global coordinates to world space, then pass along the normal chain
-   std::optional<UnhandledMouseInput> screenSpaceMouse = mouse;
-   if (mouse){
-      screenSpaceMouse.value().localPos = InputManager::getMousePos();
-      screenSpaceMouse->isInside = isInside(screenSpaceMouse.value().localPos);
-   }
-
-   switch (event.eventId){
-      case InputEventMouseMotion::getUniqueEventId():
-      case InputEventMouseButton::getUniqueEventId():
-      case InputEventMouseWheel::getUniqueEventId():{
-         //have to make sure we store enough memory to copy correctly - we won't know the size in advance
-         union InputEventUnion {
-            InputEventMouseMotion motion;
-            InputEventMouseButton button;
-            InputEventMouseWheel wheel;
-         };
-         char raw[sizeof(InputEventUnion)];
-         //just go ahead and copy off the end, we don't really care what's there
-         memcpy(raw, &event, sizeof(InputEventUnion));
-         auto& _screenSpaceEvent = reinterpret_cast<InputEventMouse&>(raw);
-         _screenSpaceEvent.globalPos = InputManager::getMousePos() + getGlobalPos();
-         return _process_unhandled_input(reinterpret_cast<InputEvent&>(raw), screenSpaceMouse);
-      }
-   }
-   return _process_unhandled_input(event, mouse);
+   NOT_IMPLEMENTED;
+//   //for mouse events, convert global coordinates to world space, then pass along the normal chain
+//   std::optional<UnhandledMouseInput> screenSpaceMouse = mouse;
+//   if (mouse){
+//      screenSpaceMouse.value().localPos = InputManager::getMousePos();
+//      screenSpaceMouse->isInside = isInside(screenSpaceMouse.value().localPos);
+//   }
+//
+//   switch (event.eventId){
+//      case InputEventMouseMotion::getUniqueEventId():
+//      case InputEventMouseButton::getUniqueEventId():
+//      case InputEventMouseWheel::getUniqueEventId():{
+//         //have to make sure we store enough memory to copy correctly - we won't know the size in advance
+//         union InputEventUnion {
+//            InputEventMouseMotion motion;
+//            InputEventMouseButton button;
+//            InputEventMouseWheel wheel;
+//         };
+//         char raw[sizeof(InputEventUnion)];
+//         //just go ahead and copy off the end, we don't really care what's there
+//         memcpy(raw, &event, sizeof(InputEventUnion));
+//         auto& _screenSpaceEvent = reinterpret_cast<InputEventMouse&>(raw);
+//         _screenSpaceEvent.canvasPos = InputManager::getMousePos() + getGlobalPos().get();
+//         return _process_unhandled_input(reinterpret_cast<InputEvent&>(raw), screenSpaceMouse);
+//      }
+//   }
+//   return _process_unhandled_input(event, mouse);
 }
 
 
@@ -79,7 +80,7 @@ void ReyEngine::Camera2D ::renderChain(Pos<R_FLOAT>& parentOffset) {
    if (!frameStack.empty()) {
       drawLine({{-transform.position.x, -transform.position.y}, {0, 0}}, 2.0, Colors::red);
    }
-   render();
+   render2D();
 
    //front render
    for (const auto &child: _frontRenderList) {

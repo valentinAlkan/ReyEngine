@@ -4,7 +4,7 @@
 using namespace std;
 using namespace ReyEngine;
 /////////////////////////////////////////////////////////////////////////////////////////
-void ComboBox::render() const {
+void ComboBox::render2D() const {
    //draw the background
    drawRectangle(getRect().toSizeRect(), theme->background.colorPrimary);
 

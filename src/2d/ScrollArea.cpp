@@ -16,7 +16,7 @@ void ScrollArea::hideHSlider(bool hidden) {
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ScrollArea::renderBegin() {
+void ScrollArea::render2DBegin() {
    //draw background
    drawRectangle(getRect(), theme->background.colorPrimary);
    //similar to a canvas
@@ -34,9 +34,9 @@ void ScrollArea::renderBegin() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ScrollArea::render() const {}
+void ScrollArea::render2D() const {}
 /////////////////////////////////////////////////////////////////////////////////////////
-void ScrollArea::renderEnd() {
+void ScrollArea::render2DEnd() {
    //done drawing children, we need to reload the old transform so we can draw the rendertarget where its supposed to be
    rlPopMatrix();
    rlSetMatrixModelview(globalMatrix);
@@ -49,9 +49,9 @@ void ScrollArea::renderEnd() {
       drawRectangleLines(_renderBox + getPos() + DEBUG_OFFSET, 2.0, Colors::green);
       drawRectangleLines(_viewport + getPos() + DEBUG_OFFSET, 1.0, Colors::blue);
       drawRectangleLines(_window + getPos() + DEBUG_OFFSET, 1.0, Colors::yellow);
-      drawText("viewport", _viewport.pos() + getPos() + DEBUG_OFFSET);
-      drawText("viewport = " + _viewport.toString(), getPos() + DEBUG_OFFSET - Pos<float>(0, 40));
-      drawText("window = " + _window.toString(), getPos() + DEBUG_OFFSET - Pos<float>(0, 20));
+      drawText("viewport", _viewport.pos() + getPos() + DEBUG_OFFSET, getTheme()->font);
+      drawText("viewport = " + _viewport.toString(), getPos() + DEBUG_OFFSET - Pos<float>(0, 40), getTheme()->font);
+      drawText("window = " + _window.toString(), getPos() + DEBUG_OFFSET - Pos<float>(0, 20), getTheme()->font);
    }
 
    if (_viewport && _window && _renderTarget.getSize()) {
@@ -155,12 +155,12 @@ void ScrollArea::_init(){
 Handled ScrollArea::_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
     //we want to give priority to sliders, then pass input to everyone else
     if (mouse) {
-        auto globalPos = localToGlobal(mouse->localPos);
-        if (vslider && vslider->_process_unhandled_input(event, vslider->toMouseInput(globalPos))) return true;
-        if (hslider && hslider->_process_unhandled_input(event, hslider->toMouseInput(globalPos))) return true;
+        auto globalPos = localToCanvas(mouse->localPos);
+        if (vslider && vslider->_process_unhandled_input(event, vslider->toMouseInput(globalPos.get()))) return true;
+        if (hslider && hslider->_process_unhandled_input(event, hslider->toMouseInput(globalPos.get()))) return true;
         for (auto &child: getChildren()) {
             if (child != vslider && child != hslider) {
-                if (child->_process_unhandled_input(event, child->toMouseInput(globalPos))) return true;
+                if (child->_process_unhandled_input(event, child->toMouseInput(globalPos.get()))) return true;
             }
         }
     }

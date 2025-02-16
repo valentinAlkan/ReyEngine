@@ -121,7 +121,7 @@ namespace ReyEngine {
       void setTileSize(const Size<int>&);
       Size<int> getTileSize() const {return {_gridWidth, _gridHeight};}
    protected:
-      void render() const override;
+      void render2D() const override;
       virtual Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
       void registerProperties() override;
    protected:

@@ -8,6 +8,7 @@ namespace ReyEngine{
       class CollisionRect;
    }
 
+   class Canvas;
    template <typename T>
    class Positionable2D {
    public:
@@ -17,28 +18,56 @@ namespace ReyEngine{
       {}
       Pos<T> getPos() const {return transform.position;}
       Pos<T> getCenter() const {return transform.position + size / 2;}
-      Pos<T> getGlobalPos() const {
+      CanvasSpace<Pos<T>> getGlobalPos() const {
          //sum up all our ancestors' positions and add our own to it
          auto sum = getPos();
-         if (parent){ //todo: Race conditions?
-            sum += parent->getGlobalPos();
+         if (parent && parent != (Positionable2D<T>*)parentCanvas){ //todo: Race conditions?
+            sum += parent->getGlobalPos().get();
          }
-         return sum;
+         return {sum};
       }
-      Pos<T> getGlobalInputPos() const {
+      [[nodiscard]] CanvasSpace<Pos<int>> getCanvasInputPos() const {
          //sum up all our ancestors' positions and add our own to it
-         auto sum = InputManager::getMousePos() - getInputOffset();
+         auto sum = InputManager::getMousePos().get() - getInputOffset();
          auto _parent = parent;
          while (_parent){
+            if (_parent == (Positionable2D<T>*)parentCanvas) break;
             sum -= _parent->getInputOffset();
             _parent = _parent->parent;
          }
-         return sum;
+         return {sum};
+      }
+      Pos<T> canvasToLocal(const CanvasSpace<Pos <T>>& canvas) const {
+         auto globalPos = getGlobalPos().get();
+         auto retval = canvas.get() - globalPos;
+      }
+      Rect<T> canvasToLocal(const CanvasSpace<Rect<T>>& canvas) const{
+         auto globalPos = getGlobalPos();
+         auto retval = canvas - globalPos;
+         return retval;
+      }
+      CanvasSpace<Pos<T>> localToCanvas(const Pos<T>& local) const {
+         return local + getGlobalPos().get();
+      }
+      CanvasSpace<Rect<T>> localToCanvas(const Rect<T>& local) const{
+         return local + getGlobalPos().get();
+      }
+      Positionable2D* getAt(const Pos<float>& localPos) const {
+         NOT_IMPLEMENTED;
+         return nullptr;
+      }
+      void setGlobalPos(const Vec2<R_FLOAT>& newPos){
+         auto newLocalPos = canvasToLocal(newPos);
+         setPos(newLocalPos);
       }
       void setInputOffset(const ReyEngine::Pos<R_FLOAT>& newOffset){_inputOffset = newOffset; _hasInputOffset = (bool)_inputOffset;}
       bool hasInputOffset(){return _hasInputOffset;}
       [[nodiscard]] ReyEngine::Pos<R_FLOAT> getInputOffset() const {return _inputOffset;}
-      ReyEngine::Rect<T> getGlobalRect() const {auto globalPos = getGlobalPos(); return {globalPos.x, globalPos.y, getSize().x, getSize().y};}
+      CanvasSpace<ReyEngine::Rect<T>> getGlobalRect() const {
+         auto globalPos = getGlobalPos().get();
+         CanvasSpace<ReyEngine::Rect<T>> retval(ReyEngine::Rect<T>(globalPos.x, globalPos.y, getSize().x, getSize().y));
+         return retval;
+      }
       ReyEngine::Rect<T> getRect() const {return {transform.position, size};}
       ReyEngine::Size<T> getSize() const {return size;}
       Transform2D& getTransform(){return transform;}
@@ -51,10 +80,10 @@ namespace ReyEngine{
          f = MatrixMultiply(f, MatrixTranslate(transform.position.x, transform.position.y, 0));
          return f;
       }
-      Matrix getGlobalTransformationMatrix() const {
+      CanvasSpace<Matrix> getGlobalTransformationMatrix() const {
          auto f = getTransformationMatrix();
          if (parent){
-            f = MatrixMultiply(f, parent->getGlobalTransformationMatrix());
+            f = MatrixMultiply(f, parent->getGlobalTransformationMatrix().get());
          }
          return f;
       }
@@ -83,6 +112,7 @@ namespace ReyEngine{
       ReyEngine::Pos<float> _inputOffset; //some positionables will need to transform the input, for example if they are drawn somewhere differently than where they actually are.
       bool _hasInputOffset = false;
       Positionable2D* parent = nullptr; //potentially invalid if orphaned - non-owning
+      Canvas* parentCanvas = nullptr; //the canvas that owns this widget
    };
 
 

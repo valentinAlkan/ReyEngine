@@ -52,7 +52,7 @@ namespace ReyEngine{
       bool isEditor(){return _isEditor;}
       bool setProcess(bool, std::shared_ptr<BaseWidget>); //returns whether operation was successful. Returns false if widget already being processed or is not found.
 //      void setCanvas(std::shared_ptr<Canvas>&);
-      static Pos<int> getMousePos(); //returns global mouse position
+      static WindowSpace<Pos<float>> getMousePos(); //returns global mouse position
       static Vec2<double> getMousePct(); //returns global mouse position as a percentage of the window size from 0 to 1
       std::shared_ptr<Canvas> getCanvas();
       Size<int> getSize(){return getWindowSize();}

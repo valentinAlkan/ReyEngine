@@ -34,7 +34,7 @@ namespace ReyEngine{
       }
    public:
       REYENGINE_DEFAULT_BUILD(TabContainer)
-      void render() const override;
+      void render2D() const override;
       void registerProperties() override{};
       void _on_child_added(std::shared_ptr<BaseWidget>&) override;
       std::shared_ptr<TabTheme>& getTabTheme(){return tabTheme;}

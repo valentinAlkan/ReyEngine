@@ -157,7 +157,7 @@ namespace ReyEngine{
 
       void determineOrdering();
       void determineVisible();
-      void render() const override;
+      void render2D() const override;
       Handled _unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
       void _on_mouse_enter() override {};
       void _on_mouse_exit() override { _hoveredMeta.reset();/*_hoveredRowNum = -1;*/}

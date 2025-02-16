@@ -19,7 +19,7 @@ namespace ReyEngine{
    public:
       REYENGINE_DEFAULT_BUILD(Sprite)
       Sprite& operator=(const Sprite& other);
-      void render() const override;
+      void render2D() const override;
       void registerProperties() override;
       void _init() override;
       bool setTexture(FileSystem::File&); //no temporaries
@@ -48,7 +48,7 @@ namespace ReyEngine{
          REYENGINE_OBJECT_BUILD_ONLY(AnimatedSprite, BaseWidget){}
       public:
          REYENGINE_DEFAULT_BUILD(AnimatedSprite);
-         void render() const override;
+         void render2D() const override;
          void registerProperties() override;
          void _init() override;
 

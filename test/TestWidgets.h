@@ -22,7 +22,7 @@ namespace ReyEngine{
       REYENGINE_DEFAULT_BUILD(PosTestWidget)
       REYENGINE_OBJECT_BUILD_ONLY(PosTestWidget, BaseWidget), someString("someString"){}
    protected:
-      void render() const override;
+      void render2D() const override;
       void _process(float dt) override;
       void registerProperties() override;
       TestProperty someString;

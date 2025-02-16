@@ -5,10 +5,10 @@
 #include <algorithm>
 
 namespace ReyEngine{
-   struct InputEvent : public ReyEngine::Event<InputEvent> {
+   struct InputEvent : public Event<InputEvent> {
       EVENT_CTOR_SIMPLE_OVERRIDABLE(InputEvent, Event<InputEvent>){}
       InputEvent(const InputEvent& other)
-      : ReyEngine::Event<InputEvent>(other)
+      : Event<InputEvent>(other)
       {}
    };
 
@@ -28,7 +28,7 @@ namespace ReyEngine{
    // mouse types
    struct InputEventMouse : public InputEvent{
       EVENT_CTOR_SIMPLE_OVERRIDABLE(InputEventMouse, InputEvent){}
-      ReyEngine::Pos<int> globalPos;
+      CanvasSpace<Pos<float>> canvasPos;
    };
 
    struct InputEventMouseButton : public InputEventMouse{
@@ -39,12 +39,12 @@ namespace ReyEngine{
 
    struct InputEventMouseWheel : public InputEventMouse{
       EVENT_CTOR_SIMPLE(InputEventMouseWheel, InputEventMouse){}
-      ReyEngine::Vec2<double> wheelMove;
+      Vec2<float> wheelMove;
    };
 
    struct InputEventMouseMotion : public InputEventMouse{
       EVENT_CTOR_SIMPLE(InputEventMouseMotion, InputEventMouse){}
-      ReyEngine::Vec2<double> mouseDelta;
+      Vec2<float> mouseDelta;
    };
 
    //largest of the mouse input sizes
@@ -127,7 +127,7 @@ namespace ReyEngine{
 
    struct UnhandledMouseInput{
       bool isInside = false;
-      ReyEngine::Pos<int> localPos;
+      Pos<float> localPos;
    };
 
    class InputManager
@@ -148,8 +148,8 @@ namespace ReyEngine{
       static inline void setExitKey(InputInterface::KeyCode key){return InputInterface::setExitKey(key);}
       static inline bool isShiftKeyDown(){return InputInterface::isKeyDown(InputInterface::KeyCode::KEY_LEFT_SHIFT) || InputInterface::isKeyDown(InputInterface::KeyCode::KEY_RIGHT_SHIFT);}
       static inline InputInterface::KeyCode getLastKeyPressed(){return instance()._lastKey;}
-      static inline ReyEngine::Pos<int> getMousePos(){return InputInterface::getMousePos();}
-      static inline ReyEngine::Vec2<int> getMouseDelta(){return InputInterface::getMouseDelta();}
+      static inline WindowSpace<Pos<float>> getMousePos(){return InputInterface::getMousePos();}
+      static inline Vec2<float> getMouseDelta(){return InputInterface::getMouseDelta();}
    protected:
       static inline bool isKeyPressed(InputInterface::KeyCode key){return InputInterface::isKeyPressed(key);}
       static inline bool isKeyReleased(InputInterface::KeyCode key){return InputInterface::isKeyReleased(key);}

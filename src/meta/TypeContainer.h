@@ -7,6 +7,7 @@
 #include <mutex>
 #include "Logger.h"
 #include "Event.h"
+#include "ReyEngine.h"
 
 #define FIXME(identifier) throw std::runtime_error("FIXME: " #identifier)
 namespace ReyEngine::Internal{
@@ -16,7 +17,7 @@ namespace ReyEngine::Internal{
     , public EventSubscriber
     {
     public:
-        NamedInstance(  const std::string& instanceName, const std::string& typeName)
+        NamedInstance(const std::string& instanceName, const std::string& typeName)
         : _name(instanceName)
         , _type(typeName)
         {}

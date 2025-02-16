@@ -5,7 +5,7 @@ using namespace std;
 using namespace ReyEngine;
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void TextureRect::render() const {
+void TextureRect::render2D() const {
    if (_texture) {
       drawTextureRect(*_texture, {{0,0}, _texture->size}, getRect().toSizeRect(), 0.0, Colors::none);
    }

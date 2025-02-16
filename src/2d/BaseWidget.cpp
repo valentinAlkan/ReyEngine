@@ -14,8 +14,8 @@ using namespace FileSystem;
 /////////////////////////////////////////////////////////////////////////////////////////
 BaseWidget::BaseWidget(const std::string& name, std::string typeName)
 : NamedInstance(name, typeName)
+, Internal::Component(name, typeName)
 , Internal::Renderable2D(name, typeName)
-, Component(name, typeName)
 , Internal::TypeContainer<BaseWidget>(name, typeName)
 , PROPERTY_DECLARE(isBackRender, false)
 , PROPERTY_DECLARE(_anchor, Anchor::NONE)
@@ -25,12 +25,6 @@ BaseWidget::BaseWidget(const std::string& name, std::string typeName)
 
 BaseWidget::~BaseWidget() {
    Logger::debug() << "Deleting widget " << getScenePath() << std::endl;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::setGlobalPos(const Vec2<R_FLOAT>& newPos) {
-   auto newLocalPos = globalToLocal(newPos);
-   setPos(newLocalPos);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -46,30 +40,6 @@ ReyEngine::Size<R_FLOAT> BaseWidget::getClampedSize(){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Pos<R_FLOAT> BaseWidget::globalToLocal(const Pos<R_FLOAT>& global, const Pos<R_FLOAT>& localBase) const {
-   auto globalPos = getGlobalPos() + localBase;
-   auto retval = global - globalPos;
-   return retval;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-Pos<R_FLOAT> BaseWidget::localToGlobal(const Pos<R_FLOAT>& local, const Pos<R_FLOAT>& globalBase) const {
-   return local + getGlobalPos() + globalBase;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-Rect<R_FLOAT> BaseWidget::globalToLocal(const Rect<R_FLOAT> &global) const {
-   auto globalPos = getGlobalPos();
-   auto retval = global - globalPos;
-   return retval;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-Rect<R_FLOAT> BaseWidget::localToGlobal(const Rect<R_FLOAT> &local) const {
-   return local + getGlobalPos();
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::Rect<R_FLOAT> BaseWidget::getChildBoundingBox() const {
    Size<R_FLOAT> childRect;
    for (const auto& child : getChildren()){
@@ -81,6 +51,7 @@ ReyEngine::Rect<R_FLOAT> BaseWidget::getChildBoundingBox() const {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void BaseWidget::renderChain() {
+   NOT_IMPLEMENTED;
 //   if (!_visible) return;
 //   renderBegin();
 //
@@ -104,98 +75,99 @@ void BaseWidget::renderChain() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Handled BaseWidget::_process_unhandled_input(const InputEvent& rawEvent, const std::optional<UnhandledMouseInput>& rawMouse) {
-   auto passInput = [this](const InputEvent& _event, std::optional<UnhandledMouseInput> _mouse) {
-      //iterate backwards since siblings that are towards the end of the orderered child vector are drawn ON TOP of ones prior to them
-      for(auto it = getChildren().rbegin(); it != getChildren().rend(); ++it){
-         auto& child = *it;
-         if (_mouse) {
-            //if this is mouse input, make sure it is inside the bounding rect
-            switch (_event.eventId) {
-               case InputEventMouseMotion::getUniqueEventId():
-               case InputEventMouseButton::getUniqueEventId():
-               case InputEventMouseWheel::getUniqueEventId():{
-                  auto globalPos = _event.toEventType<InputEventMouse>().globalPos;
-                  _mouse = child->toMouseInput(globalPos);
-                  break;}
-            }
-         }
-
-         if (child->__process_unhandled_input(_event, _mouse)) {
-            return true;
-         }
-      }
-      return false;
-   };
-
-   if (!_visible) return false;
-   //offset the mouse input if necessary
-   auto mouse = rawMouse;
-   std::unique_ptr<InputEventMouseUnion> xformedEvent; //this pointer will own the transformed event memory, should it exist.
-   if (mouse && hasInputOffset()){
-      mouse->localPos += getInputOffset();
-      // manually allocate memory for the return value, then transfer it to a unique_ptr for
-      // proper lifetime management after transforming it. Avoids unnecessary allocations.
-      auto u = new InputEventMouseUnion(rawEvent.toEventType<InputEventMouse>());
-      u->mouse.globalPos = u->mouse.globalPos - getInputOffset();
-      xformedEvent.reset(u);
-   }
-   // if the transformed event exists, use it. Otherwise, use the raw event.
-   const auto& event = xformedEvent ? xformedEvent->mouse : rawEvent;
-
-   if (_isEditorWidget){
-      if (_process_unhandled_editor_input(event, mouse) > 0) return true;
-   }
-   //apply input masking
-   switch(_inputMask.value){
-       case NONE:
-           break;
-       case IGNORE_INSIDE:
-           if (mouse && _inputMask.mask.isInside(mouse->localPos)){
-               if (_unhandled_masked_input(event.toEventType<InputEventMouse>(), mouse)) return true;
-           }
-           break;
-       case IGNORE_OUTSIDE:
-           if (mouse && !_inputMask.mask.isInside(mouse->localPos)) {
-               if (_unhandled_masked_input(event.toEventType<InputEventMouse>(), mouse)) return true;
-           }
-           break;
-   }
-
-   auto publishInputEvent = [&]() -> Handled {
-      WidgetUnhandledInputEvent unhandledInputEvent(toEventPublisher(), event, mouse);
-      publishMutable<WidgetUnhandledInputEvent>(unhandledInputEvent);
-      return unhandledInputEvent.handled;
-   };
-
-   switch (_inputFilter){
-      case InputFilter::INPUT_FILTER_PASS_AND_PROCESS:
-         return passInput(event, mouse) || _unhandled_input(event, mouse);
-      case InputFilter::INPUT_FILTER_PROCESS_AND_PASS:
-         return _unhandled_input(event, mouse) || passInput(event, mouse);
-      case InputFilter::INPUT_FILTER_IGNORE_AND_PASS:
-         return passInput(event, mouse);
-      case InputFilter::INPUT_FILTER_PROCESS_AND_STOP:
-         return _unhandled_input(event, mouse);
-      case InputFilter::INPUT_FILTER_IGNORE_AND_STOP:
-         break;
-      case InputFilter::INPUT_FILTER_PUBLISH_AND_PASS:
-         if (publishInputEvent()) return true;
-         return passInput(event, mouse);
-      case InputFilter::INPUT_FILTER_PASS_AND_PUBLISH:
-         if (passInput(event, mouse)) return true;
-         if (publishInputEvent()) return true;
-         break;
-      case InputFilter::INPUT_FILTER_PUBLISH_AND_STOP:
-         if (publishInputEvent()) return true;
-         break;
-      case InputFilter::INPUT_FILTER_PASS_PUBLISH_PROCESS:
-         if (publishInputEvent()) return true;
-         if (_unhandled_input(event, mouse)) return true;
-      case InputFilter::INPUT_FILTER_PROCESS_PASS_PUBLISH:
-         if (_unhandled_input(event, mouse)) return true;
-         if (passInput(event, mouse)) return true;
-         if (publishInputEvent()) return true;
-   }
+   NOT_IMPLEMENTED;
+//   auto passInput = [this](const InputEvent& _event, std::optional<UnhandledMouseInput> _mouse) {
+//      //iterate backwards since siblings that are towards the end of the orderered child vector are drawn ON TOP of ones prior to them
+//      for(auto it = getChildren().rbegin(); it != getChildren().rend(); ++it){
+//         auto& child = *it;
+//         if (_mouse) {
+//            //if this is mouse input, make sure it is inside the bounding rect
+//            switch (_event.eventId) {
+//               case InputEventMouseMotion::getUniqueEventId():
+//               case InputEventMouseButton::getUniqueEventId():
+//               case InputEventMouseWheel::getUniqueEventId():{
+//                  auto globalPos = _event.toEventType<InputEventMouse>().canvasPos;
+//                  _mouse = child->toMouseInput(globalPos);
+//                  break;}
+//            }
+//         }
+//
+//         if (child->__process_unhandled_input(_event, _mouse)) {
+//            return true;
+//         }
+//      }
+//      return false;
+//   };
+//
+//   if (!_visible) return false;
+//   //offset the mouse input if necessary
+//   auto mouse = rawMouse;
+//   std::unique_ptr<InputEventMouseUnion> xformedEvent; //this pointer will own the transformed event memory, should it exist.
+//   if (mouse && hasInputOffset()){
+//      mouse->localPos += getInputOffset();
+//      // manually allocate memory for the return value, then transfer it to a unique_ptr for
+//      // proper lifetime management after transforming it. Avoids unnecessary allocations.
+//      auto u = new InputEventMouseUnion(rawEvent.toEventType<InputEventMouse>());
+//      u->mouse.canvasPos = u->mouse.canvasPos - getInputOffset();
+//      xformedEvent.reset(u);
+//   }
+//   // if the transformed event exists, use it. Otherwise, use the raw event.
+//   const auto& event = xformedEvent ? xformedEvent->mouse : rawEvent;
+//
+//   if (_isEditorWidget){
+//      if (_process_unhandled_editor_input(event, mouse) > 0) return true;
+//   }
+//   //apply input masking
+//   switch(_inputMask.value){
+//       case NONE:
+//           break;
+//       case IGNORE_INSIDE:
+//           if (mouse && _inputMask.mask.isInside(mouse->localPos)){
+//               if (_unhandled_masked_input(event.toEventType<InputEventMouse>(), mouse)) return true;
+//           }
+//           break;
+//       case IGNORE_OUTSIDE:
+//           if (mouse && !_inputMask.mask.isInside(mouse->localPos)) {
+//               if (_unhandled_masked_input(event.toEventType<InputEventMouse>(), mouse)) return true;
+//           }
+//           break;
+//   }
+//
+//   auto publishInputEvent = [&]() -> Handled {
+//      WidgetUnhandledInputEvent unhandledInputEvent(toEventPublisher(), event, mouse);
+//      publishMutable<WidgetUnhandledInputEvent>(unhandledInputEvent);
+//      return unhandledInputEvent.handled;
+//   };
+//
+//   switch (_inputFilter){
+//      case InputFilter::INPUT_FILTER_PASS_AND_PROCESS:
+//         return passInput(event, mouse) || _unhandled_input(event, mouse);
+//      case InputFilter::INPUT_FILTER_PROCESS_AND_PASS:
+//         return _unhandled_input(event, mouse) || passInput(event, mouse);
+//      case InputFilter::INPUT_FILTER_IGNORE_AND_PASS:
+//         return passInput(event, mouse);
+//      case InputFilter::INPUT_FILTER_PROCESS_AND_STOP:
+//         return _unhandled_input(event, mouse);
+//      case InputFilter::INPUT_FILTER_IGNORE_AND_STOP:
+//         break;
+//      case InputFilter::INPUT_FILTER_PUBLISH_AND_PASS:
+//         if (publishInputEvent()) return true;
+//         return passInput(event, mouse);
+//      case InputFilter::INPUT_FILTER_PASS_AND_PUBLISH:
+//         if (passInput(event, mouse)) return true;
+//         if (publishInputEvent()) return true;
+//         break;
+//      case InputFilter::INPUT_FILTER_PUBLISH_AND_STOP:
+//         if (publishInputEvent()) return true;
+//         break;
+//      case InputFilter::INPUT_FILTER_PASS_PUBLISH_PROCESS:
+//         if (publishInputEvent()) return true;
+//         if (_unhandled_input(event, mouse)) return true;
+//      case InputFilter::INPUT_FILTER_PROCESS_PASS_PUBLISH:
+//         if (_unhandled_input(event, mouse)) return true;
+//         if (passInput(event, mouse)) return true;
+//         if (publishInputEvent()) return true;
+//   }
    return false;
 }
 
@@ -206,7 +178,7 @@ Handled BaseWidget::_process_unhandled_editor_input(const InputEvent& event, con
       case InputEventMouseButton::getUniqueEventId():
       case InputEventMouseMotion::getUniqueEventId():
          auto mouseEvent = event.toEventType<InputEventMouseButton>();
-         auto localPos = globalToLocal(mouseEvent.globalPos);
+         auto localPos = canvasToLocal(mouseEvent.canvasPos);
          switch (event.eventId){
             case InputEventMouseButton::getUniqueEventId(): {
                auto mouseButton = event.toEventType<InputEventMouseButton>();
@@ -273,9 +245,9 @@ Handled BaseWidget::_process_unhandled_editor_input(const InputEvent& event, con
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-UnhandledMouseInput BaseWidget::toMouseInput(const Pos<R_FLOAT> &global) const {
+UnhandledMouseInput BaseWidget::toMouseInput(const CanvasSpace<Pos<float>>& canvas) const {
     UnhandledMouseInput childmouse;
-    childmouse.localPos = globalToLocal(global);
+    childmouse.localPos = canvasToLocal(canvas);
     childmouse.isInside = isInside(childmouse.localPos);
     return childmouse;
 }
@@ -310,113 +282,6 @@ void BaseWidget::setBackRender(bool _isBackrender) {
    }
    //nothing to do
    isBackRender = _isBackrender;
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawLine(const ReyEngine::Line<R_FLOAT>& line, float lineThick, const ReyEngine::ColorRGBA& color) const {
-   ReyEngine::drawLine(line, lineThick, color);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawArrow(const Line<R_FLOAT>& line, float lineThick, const ReyEngine::ColorRGBA& color, float headSize) const {
-    ReyEngine::drawArrow(line, lineThick, color, headSize);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawText(const std::string &text, const Pos<R_FLOAT> &pos) const{
-   ReyEngine::drawText(text, pos, getTheme()->font);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawText(const std::string &text, const Pos<R_FLOAT> &pos, const ReyEngine::ReyEngineFont& font) const{
-   ReyEngine::drawText(text, pos, font);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawText(const std::string& text, const ReyEngine::Pos<R_FLOAT>& pos, const ReyEngine::ReyEngineFont& font, const ReyEngine::ColorRGBA& color, R_FLOAT size, R_FLOAT spacing) const {
-   ReyEngine::drawText(text, pos, font, color, size, spacing);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawTextCentered(const std::string &text, const Pos<R_FLOAT> &pos) const{
-   ReyEngine::drawTextCentered(text, pos, theme->font);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawTextCentered(const std::string &text, const Pos<R_FLOAT> &pos, const ReyEngine::ReyEngineFont& font) const{
-   ReyEngine::drawTextCentered(text, pos, font);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawTextCentered(const std::string &text, const ReyEngine::Pos<float> &pos, const ReyEngine::ReyEngineFont &font, const ReyEngine::ColorRGBA &color, float size, float spacing) const {
-   ReyEngine::drawTextCentered(text, pos, font, color, size, spacing);
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawRectangle(const ReyEngine::Rect<R_FLOAT> &rect, const ReyEngine::ColorRGBA &color) const {
-   ReyEngine::drawRectangle(rect, color);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawRectangleLines(const ReyEngine::Rect<R_FLOAT> &rect, float lineThick, const ReyEngine::ColorRGBA &color) const {
-   ReyEngine::drawRectangleLines(rect, lineThick, color);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawRectangleRounded(const ReyEngine::Rect<R_FLOAT> &rect, float roundness, int segments, const ReyEngine::ColorRGBA &color) const {
-   //use the size of the param rect but use the position of our rect + the param rect
-//   Rect<R_FLOAT> newRect(rect + Pos<R_FLOAT>(getGlobalPos()) + Pos<R_FLOAT>(_renderOffset));
-   ReyEngine::drawRectangleRounded(rect, roundness, segments, color);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawRectangleRoundedLines(const ReyEngine::Rect<R_FLOAT> &rect, float roundness, int segments, float lineThick, const ReyEngine::ColorRGBA &color) const {
-   //use the size of the param rect but use the position of our rect + the param rect
-//   Rect<float> newRect(rect + Pos<R_FLOAT>(getGlobalPos()) + Pos<R_FLOAT>(_renderOffset));
-   ReyEngine::drawRectangleRoundedLines(rect, roundness, segments, lineThick, color);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawRectangleGradientV(const ReyEngine::Rect<R_FLOAT> &rect, const ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA &color2) const {
-   //use the size of the param rect but use the position of our rect + the param rect
-//   Rect<float> newRect(rect + getGlobalPos() + _renderOffset);
-   ReyEngine::drawRectangleGradientV(rect, color1, color2);
-}
-
-///////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawCircle(const ReyEngine::Circle& circle, const ReyEngine::ColorRGBA& color) const {
-   ReyEngine::drawCircle(circle, color);
-}
-
-///////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawCircleLines(const ReyEngine::Circle& circle, const ReyEngine::ColorRGBA& color) const {
-   ReyEngine::drawCircleLines(circle, color);
-}
-
-///////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawCircleSectorLines(const ReyEngine::CircleSector& sector, const ReyEngine::ColorRGBA& color, int segments) const {
-   ReyEngine::drawCircleSectorLines(sector, color, segments);
-}
-
-///////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawRenderTarget(const ReyEngine::RenderTarget& target, const Pos<R_FLOAT>& dst, const ColorRGBA& tint) const {
-   DrawTextureRec(target.getRenderTexture(), {0, 0, (float)target.getSize().x, -(float)target.getSize().y}, {dst.x, dst.y}, tint);
-}
-
-///////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawRenderTargetRect(const ReyEngine::RenderTarget& target, const Rect<R_FLOAT>& src, const Rect<R_FLOAT>& dst, const ColorRGBA& tint) const {
-   Rectangle _src = {src.x, -src.y-src.height, (float)src.width, -(float)src.height};
-   Rectangle _dst = {dst.x, dst.y, dst.width, dst.height};
-   DrawTexturePro(target.getRenderTexture(), _src, _dst, {}, 0, tint);
-}
-
-///////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::drawTextureRect(const ReyEngine::ReyTexture& rtex, const ReyEngine::Rect<R_FLOAT> &src, const ReyEngine::Rect<R_FLOAT> &dst, float rotation, const ReyEngine::ColorRGBA &tint) const {
-   Rectangle _src  = {src.x, src.y, src.width, src.height};
-   Rectangle _dst = {dst.x, dst.y, dst.width, dst.height};
-   DrawTexturePro(rtex.getTexture(), _src, _dst, {0,0}, rotation, Colors::none);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -458,9 +323,9 @@ std::optional<std::shared_ptr<BaseWidget>> BaseWidget::getWidgetAt(Pos<R_FLOAT> 
    //query the widget and figure out which of its children is the topmost widget at the position
    std::shared_ptr<BaseWidget> widgetAt;
    std::function<std::shared_ptr<BaseWidget>(std::shared_ptr<BaseWidget>)> findWidget = [&](std::shared_ptr<BaseWidget> currentWidget){
-      if (currentWidget->getGlobalRect().isInside(pos)) widgetAt = currentWidget;
+      if (currentWidget->getGlobalRect().get().isInside(pos)) widgetAt = currentWidget;
       for (auto& child : currentWidget->getChildren()) {
-         if (child->getGlobalRect().isInside(pos)) widgetAt = child;
+         if (child->getGlobalRect().get().isInside(pos)) widgetAt = child;
          findWidget(child);
       }
       return std::shared_ptr<BaseWidget>();
@@ -688,39 +553,18 @@ void BaseWidget::setModal(bool isModal) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 std::optional<std::shared_ptr<ReyEngine::Canvas>> BaseWidget::getCanvas() {
-   auto weakPrt = getParent();
-   while (!weakPrt.expired()) {
-      auto parent = weakPrt.lock();
-      if (!parent) {
-         return nullopt;
-      }
-      if (parent->_get_static_constexpr_typename() == ReyEngine::Canvas::TYPE_NAME) {
-         return parent->toType<ReyEngine::Canvas>();
-      }
-      weakPrt = parent->getParent();
-   }
+//   auto weakPrt = getParent();
+//   while (!weakPrt.expired()) {
+//      auto parent = weakPrt.lock();
+//      if (!parent) {
+//         return nullopt;
+//      }
+//      if (parent->_get_static_constexpr_typename() == ReyEngine::Canvas::TYPE_NAME) {
+//         return parent->toType<ReyEngine::Canvas>();
+//      }
+//      weakPrt = parent->getParent();
+//   }
    return nullopt;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::startScissor(const ReyEngine::Rect<R_FLOAT>& area) const {
-   auto& thiz = const_cast<BaseWidget&>(*this);
-   auto canvasOpt = thiz.getCanvas();
-   if (canvasOpt){
-      auto scissorRect = area;
-      scissorRect.setPos(localToGlobal(area.pos()));
-      canvasOpt.value()->pushScissor(scissorRect);
-   }
-
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::stopScissor() const {
-   auto& thiz = const_cast<BaseWidget&>(*this);
-   auto canvasOpt = thiz.getCanvas();
-   if (canvasOpt){
-      canvasOpt.value()->popScissor();
-   }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -728,7 +572,7 @@ std::optional<std::shared_ptr<BaseWidget>> BaseWidget::askHover(const Pos<R_FLOA
     //ask this widget to accept the hover
 
     auto process = [&]() -> std::optional<std::shared_ptr<BaseWidget>> {
-        if (acceptsHover && isInside(globalToLocal(globalPos) - getInputOffset())){
+        if (acceptsHover && isInside(canvasToLocal(globalPos) - getInputOffset())){
             return toBaseWidget();
         }
         return nullopt;

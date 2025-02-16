@@ -18,9 +18,9 @@ namespace ReyEngine {
         static constexpr std::string_view VSLIDER_NAME = "__vslider";
         static constexpr std::string_view HSLIDER_NAME = "__hslider";
 
-        void renderBegin() override;
-        void render() const;
-        void renderEnd() override;
+        void render2DBegin() override;
+        void render2D() const;
+        void render2DEnd() override;
         void _process(float dt) override {}
 
         void registerProperties() override {}

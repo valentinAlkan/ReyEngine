@@ -13,7 +13,7 @@ Sprite &Sprite::operator=(const Sprite &other) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Sprite::render() const {
+void Sprite::render2D() const {
    if (texture) {
       drawTexture(*texture, region, getRect().toSizeRect(), 0.0, Colors::none);
    }

@@ -50,7 +50,7 @@ namespace ReyEngine{
       void registerProperties() override {
          registerProperty(text);
       };
-      void render() const override;
+      void render2D() const override;
       StringProperty text;
    public:
       static std::shared_ptr<PushButton> build(const std::string& name){return PushButton::build(name, name);}

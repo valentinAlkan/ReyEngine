@@ -48,7 +48,7 @@ namespace ReyEngine{
       void renderEnd() override;
       virtual void arrangeChildren();
       ColorRGBA _debugColor = ColorRGBA::random(255);
-      void render() const override {drawRectangle(getRect().toSizeRect(), _debugColor);}
+      void render2D() const override {drawRectangle(getRect().toSizeRect(), _debugColor);}
       const LayoutDir dir;
 
    };

@@ -6,6 +6,7 @@
 #include "FileSystem.h"
 #include "CollisionShape.h"
 #include "Renderable2D.h"
+#include "InputHandler.h"
 #include <iostream>
 #include <stack>
 #include <utility>
@@ -20,8 +21,6 @@
 
 #define DEBUG_FILL 1
 
-using Handled = bool;
-
 namespace ReyEngine{
    class Window;
    class Scene;
@@ -29,9 +28,10 @@ namespace ReyEngine{
    class Canvas;
    class Camera2D;
    class BaseWidget
-   : public virtual Internal::Component
+   : public Internal::Renderable2D
+   , public virtual Internal::Component
    , public Internal::TypeContainer<BaseWidget>
-   , public Internal::Renderable2D
+   , public Internal::InputHandler
    {
       using ChildIndex = unsigned long;
       using WidgetPtr = std::shared_ptr<BaseWidget>;
@@ -167,13 +167,8 @@ namespace ReyEngine{
       void setWidth(R_FLOAT width);
       void setHeight(R_FLOAT height);
 
-      Pos<R_FLOAT> getLocalMousePos() const {return getGlobalInputPos() - getGlobalPos();}
-      Pos<R_FLOAT> globalToLocal(const Pos<R_FLOAT>& global, const Pos<R_FLOAT>& localBase = {0,0}) const;
-      Pos<R_FLOAT> localToGlobal(const Pos<R_FLOAT>& local, const Pos<R_FLOAT>& globalBase = {0,0}) const;
-      Rect<R_FLOAT> globalToLocal(const Rect<R_FLOAT>& global) const;
-      Rect<R_FLOAT> localToGlobal(const Rect<R_FLOAT>& local) const;
-      void setGlobalPos(const Vec2<R_FLOAT>&);
-      bool isInside(const Vec2<R_FLOAT>& point) const {return getRect().toSizeRect().isInside(point);}
+      Pos<R_FLOAT> getLocalMousePos() const {return getCanvasInputPos().get() - getGlobalPos().get();}
+      bool isInside(const Pos<R_FLOAT>& point) const {return getRect().toSizeRect().isInside(point);}
       bool setName(const std::string& name, bool append_index=false);
       bool setIndex(unsigned int newIndex);
       std::string getTypeName() const {return _typeName;}
@@ -193,37 +188,12 @@ namespace ReyEngine{
       void setAcceptsHover(bool accepts){acceptsHover = accepts;} //only way to get mouse_enter and mouse_exit
       bool getAcceptsHover() const {return acceptsHover;}
       void setProcess(bool process);
-
-      virtual void render() const = 0; //draw the widget
       void setBackRender(bool);
 
       template <typename T> bool is_base_of(){return std::is_base_of_v<BaseWidget, T>;}
       inline std::shared_ptr<Style::Theme>& getTheme(){return theme;}
       inline const std::shared_ptr<Style::Theme>& getTheme() const {return theme;}
       inline void setTheme(std::shared_ptr<Style::Theme>& newTheme){theme = newTheme;}
-
-      //drawing functions
-      void drawLine(const Line<R_FLOAT>&, float lineThick, const ColorRGBA&) const;
-      void drawArrow(const Line<R_FLOAT>&, float lineThick, const ColorRGBA&, float headSize=20) const;
-      void drawText(const std::string& text, const Pos<R_FLOAT>& pos) const;
-      void drawText(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font) const;
-      void drawText(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font, const ColorRGBA& color, R_FLOAT size, R_FLOAT spacing) const;
-      void drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos) const;
-      void drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font) const;
-      void drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font, const ColorRGBA& color, R_FLOAT size, R_FLOAT spacing) const;
-      void drawRectangle(const Rect<R_FLOAT>& rect, const ColorRGBA& color) const;
-      void drawRectangleLines(const Rect<R_FLOAT>& rect, float lineThick, const ColorRGBA& color) const;
-      void drawRectangleRounded(const Rect<R_FLOAT>& rect,  float roundness, int segments, const ColorRGBA& color) const;
-      void drawRectangleRoundedLines(const Rect<R_FLOAT>& rect, float roundness, int segments, float lineThick, const ColorRGBA& color) const;
-      void drawRectangleGradientV(const Rect<R_FLOAT>& rect, const ColorRGBA& color1, const ColorRGBA& color2) const;
-      void drawCircle(const Circle&, const ColorRGBA&) const;
-      void drawCircleLines(const Circle&, const ColorRGBA&) const;
-      void drawCircleSectorLines(const CircleSector&, const ColorRGBA&, int segments) const;
-      void drawRenderTarget(const RenderTarget&, const Pos<R_FLOAT>&, const ColorRGBA&) const;
-      void drawRenderTargetRect(const RenderTarget&, const Rect<R_FLOAT>&, const Rect<R_FLOAT>&, const ColorRGBA&) const;
-      void drawTextureRect(const ReyTexture&, const Rect<R_FLOAT>& src, const Rect<R_FLOAT>& dst, float rotation, const ColorRGBA& tint) const;
-      void startScissor(const Rect<R_FLOAT>&) const;
-      void stopScissor() const;
 
       //misc
       void setEnabled(bool newEnabled){ enabled.value = newEnabled;}
@@ -235,14 +205,7 @@ namespace ReyEngine{
       void __on_exit_tree() override {}
       void __on_enter_tree() override;
       void __on_added_to_parent() override;
-      virtual void _on_rect_changed(){} //called when the rect is manipulated
-      virtual void _on_child_rect_changed(std::shared_ptr<BaseWidget>&){} //called when an immediate child's rect is manipulated (not descendent)
-      virtual void _on_mouse_enter(){};
-      virtual void _on_mouse_exit(){};
-      virtual void _on_modality_gained(){}
-      virtual void _on_modality_lost(){}
-      virtual void _on_focus_gained(){}
-      virtual void _on_focus_lost(){}
+
       void _on_child_removed(ChildPtr& child) override {
          child->isInLayout = false;
       }
@@ -326,7 +289,7 @@ namespace ReyEngine{
       Handled _process_unhandled_input(const InputEvent&, const std::optional<UnhandledMouseInput>&); //pass input to children if they want it and then process it for ourselves if necessary
       virtual Handled __process_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse){ return _process_unhandled_input(event, mouse);}
       Handled _process_unhandled_editor_input(const InputEvent&, const std::optional<UnhandledMouseInput>&); //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)
-      UnhandledMouseInput toMouseInput(const Pos<R_FLOAT>& global) const;
+      UnhandledMouseInput toMouseInput(const CanvasSpace<Pos<R_FLOAT>>& canvas) const;
       InputFilter _inputFilter = InputFilter::INPUT_FILTER_PASS_AND_PROCESS;
 
       //theme

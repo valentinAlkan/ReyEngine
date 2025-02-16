@@ -15,7 +15,7 @@ void Canvas::_init() {
    theme->background.colorPrimary.value = Colors::white;
 }
 /////////////////////////////////////////////////////////////////////////////////////////
-void Canvas::renderBegin() {
+void Canvas::render2DBegin() {
    //only clear owned render target.
    // otherwise we will assume that is being managed externally (by window, for instance)
    Application::getWindow(0).pushRenderTarget(_renderTarget);
@@ -31,7 +31,7 @@ void Canvas::renderBegin() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Canvas::renderEnd() {
+void Canvas::render2DEnd() {
    //redraw the modal widget, if any
    auto modal = getModal();
    if (modal){
@@ -49,44 +49,44 @@ void Canvas::renderEnd() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Handled Canvas::__process_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
-   //for mouse events, convert global coordinates to world space, then pass along the normal chain
-   if (mouse){
-      //the function we will use to transform input
-      auto xformFx = [this](const Pos<int>& p){ return screenToWorld(p);};
-      std::optional<UnhandledMouseInput> worldSpaceMouse = mouse;
-      worldSpaceMouse.value().localPos = xformFx(mouse->localPos);
-      worldSpaceMouse->isInside = isInside(worldSpaceMouse.value().localPos);
-      auto& mouseEvent = event.toEventType<InputEventMouse>();
-
-      InputEventMouseUnion _union(mouseEvent);
-      _union.mouse.globalPos = xformFx(_union.mouse.globalPos);
-
-      //offer up input to modal widget first
-      if (_modal){
-         auto widget = _modal.value().lock();
-         if (widget && widget->_visible){
-            auto modalMouseInput = mouse;
-            //translate to local for mouse input
-            if (modalMouseInput){
-               auto& mouseEvent = event.toEventType<InputEventMouse>();
-               modalMouseInput.value().localPos = Pos<int>(widget->globalToLocal(mouseEvent.globalPos));
-               modalMouseInput->isInside = widget->isInside(modalMouseInput->localPos);
-            }
-            //nobody else should get modal input
-            return widget->_process_unhandled_input(event, modalMouseInput);
-         }
-      }
-
-      return _process_unhandled_input(_union.mouse, worldSpaceMouse);
-   }
-   //non-mouse input
-
-   //offer to focused first
-   if (getFocus()){
-      auto focused = getFocus()->lock();
-      if (focused->_process_unhandled_input(event, {})) return true;
-   }
-   return _process_unhandled_input(event, {});
+   //for mouse events, convert window coordinates to canvas space, then pass along the normal chain
+//   if (mouse){
+//      //the function we will use to transform input
+//      auto xformFx = [this](const CanvasSpace<Pos<float>>& p){return screenToWorld(p);};
+//      std::optional<UnhandledMouseInput> worldSpaceMouse = mouse;
+//      worldSpaceMouse.value().localPos = xformFx(mouse->localPos); //is global/canvas space
+//      worldSpaceMouse->isInside = isInside(worldSpaceMouse.value().localPos);
+//      auto& mouseEvent = event.toEventType<InputEventMouse>();
+//
+//      InputEventMouseUnion _union(mouseEvent);
+//      _union.mouse.globalPos = xformFx(_union.mouse.globalPos);
+//
+//      //offer up input to modal widget first
+//      if (_modal){
+//         auto widget = _modal.value().lock();
+//         if (widget && widget->_visible){
+//            auto modalMouseInput = mouse;
+//            //translate to local for mouse input
+//            if (modalMouseInput){
+//               auto& mouseEvent = event.toEventType<InputEventMouse>();
+//               modalMouseInput.value().localPos = widget->canvasToLocal(mouseEvent.globalPos);
+//               modalMouseInput->isInside = widget->isInside(modalMouseInput->localPos);
+//            }
+//            //nobody else should get modal input
+//            return widget->_process_unhandled_input(event, modalMouseInput);
+//         }
+//      }
+//
+//      return _process_unhandled_input(_union.mouse, worldSpaceMouse);
+//   }
+//   //non-mouse input
+//
+//   //offer to focused first
+//   if (getFocus()){
+//      auto focused = getFocus()->lock();
+//      if (focused->_process_unhandled_input(event, {})) return true;
+//   }
+//   return _process_unhandled_input(event, {});
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -157,12 +157,11 @@ void Canvas::_on_rect_changed() {
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Canvas::pushScissor(const ReyEngine::Rect<R_FLOAT>& newArea) {
-   bool hastop = !_scissorStack.empty();
-   if (hastop) {
-      _scissorStack.push(_scissorStack.top().getOverlap(newArea));
+void Canvas::pushScissor(const CanvasSpace<ReyEngine::Rect<R_FLOAT>>& newArea) {
+   if (!_scissorStack.empty()){
+      _scissorStack.push(_scissorStack.top().getOverlap(newArea.get()));
    } else {
-      _scissorStack.push(newArea);
+      _scissorStack.push(newArea.get());
    }
    auto& area = _scissorStack.top();
    BeginScissorMode(area.x, area.y, area.width, area.height);
@@ -185,14 +184,14 @@ void Canvas::setActiveCamera(std::shared_ptr<ReyEngine::Camera2D>& camera) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-Pos<R_FLOAT> Canvas::screenToWorld(const Pos<R_FLOAT>& pos) const {
+Pos<R_FLOAT> Canvas::screenToWorld(const CanvasSpace<Pos<float>>& pos) const {
    auto camera = _activeCamera.lock();
-   if (!camera) return pos;
-   return camera->screenToWorld(pos);
+   if (!camera) return pos.get();
+   return camera->screenToWorld(pos.get());
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-Pos<R_FLOAT> Canvas::worldToScreen(const Pos<R_FLOAT>& pos) const {
+CanvasSpace<Pos<R_FLOAT>> Canvas::worldToScreen(const Pos<R_FLOAT>& pos) const {
    auto camera = _activeCamera.lock();
    if (!camera) return pos;
    return camera->worldToscreen(pos);

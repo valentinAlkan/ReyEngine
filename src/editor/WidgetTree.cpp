@@ -31,7 +31,7 @@ void WidgetTree::_init(){
 
 /////////////////////////////////////////////////////////////////////////////////////////
 std::optional<std::shared_ptr<Draggable>> WidgetTree::_on_drag_start(ReyEngine::Pos<R_FLOAT> globalPos){
-   auto metaAt = getMetaAt(globalToLocal(globalPos));
+   auto metaAt = getMetaAt(canvasToLocal(globalPos));
    if (metaAt) {
       auto typeName = metaAt.value()->item->getText();
       auto typeMeta = Internal::TypeManager::getType(typeName);

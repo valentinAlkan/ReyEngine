@@ -22,7 +22,7 @@ namespace ReyEngine {
       inline void clear(){ setText("");}
       void setText(const std::string&, bool noPublish=false);
       void setDefaultText(const std::string&, bool noPublish=false);
-      void render() const override;
+      void render2D() const override;
       void registerProperties() override;
       std::string getText(){return _text;}
    protected:

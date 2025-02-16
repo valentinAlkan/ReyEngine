@@ -6,7 +6,7 @@ using namespace ReyEngine;
 using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Panel::render() const {
+void Panel::render2D() const {
    auto color = theme->background.colorPrimary;
    //draw the menu bar top half that peeks out
    auto menuBarHeight = menuBar->getHeight();
@@ -36,13 +36,13 @@ void Panel::render() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Panel::renderBegin() {
-   startScissor(_scissorArea);
+void Panel::render2DBegin() {
+//   startScissor(_scissorArea);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Panel::renderEnd() {
-   stopScissor();
+void Panel::render2DEnd() {
+//   stopScissor();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -207,7 +207,7 @@ Handled Panel::_unhandled_input(const InputEvent& event, const std::optional<Unh
          auto &mbEvent = event.toEventType<InputEventMouseButton>();
          if (mbEvent.button != InputInterface::MouseButton::LEFT) break;
          if (mbEvent.isDown && !mouse->isInside) break; //ingore downs that occur outside the rect
-         dragStart = InputManager::getMousePos();
+         dragStart = mouse.value().localPos;
          resizeStartRect= getRect();
          offset = (Pos<R_FLOAT>)mousePos - getPos(); //record position
 
@@ -232,7 +232,7 @@ Handled Panel::_unhandled_input(const InputEvent& event, const std::optional<Unh
       case InputEventMouseMotion::getUniqueEventId():
          //no dragging or resizing if we're maximized
          if (_isMaximized) break;
-         mousePos = InputManager::getMousePos();
+         mousePos = mouse->localPos;
          auto delta = mousePos - dragStart;
          //stretching overrides dragging
          auto stretchN = [&](Rect<int> newRect){newRect.y+=delta.y; newRect.height -= delta.y; return newRect;};

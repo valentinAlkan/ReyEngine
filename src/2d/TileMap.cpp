@@ -5,7 +5,7 @@
 using namespace ReyEngine;
 using namespace std;
 /////////////////////////////////////////////////////////////////////////////////////////
-void TileMap::render() const {
+void TileMap::render2D() const {
    //draw all tiles in the layer
    for (auto& layer : _layers){
       for (auto& [x, yMap] : layer.second.tiles){

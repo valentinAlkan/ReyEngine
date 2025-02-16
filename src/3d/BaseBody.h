@@ -78,6 +78,7 @@ namespace ReyEngine {
    //Combines the functionality above
 class BaseBody : public Internal::Renderable3D {
 public:
+   using Internal::TypeContainer<Internal::Renderable3D>::ChildPtr;
    friend class ReyEngine::Internal::Component;
    static constexpr char TYPE_NAME[] = "BaseBody";
    std::string _get_static_constexpr_typename() override {return TYPE_NAME;}

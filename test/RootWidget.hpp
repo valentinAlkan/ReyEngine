@@ -8,7 +8,7 @@ namespace ReyEngine{
       REYENGINE_DEFAULT_BUILD(RootWidget)
 //      static std::shared_ptr<RootWidget> build(const std::string& name){return std::shared_ptr<RootWidget>(new RootWidget(name));}
    //   void renderBegin() override {}
-      void render() const override {
+      void render2D() const override {
          drawRectangle(getRect(), theme->background.colorPrimary.value);
       }
    //   void renderEnd() override{}

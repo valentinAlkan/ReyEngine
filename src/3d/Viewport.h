@@ -35,7 +35,7 @@ namespace ReyEngine {
    protected:
       void addChild();
       void renderChain() override;
-      void render() const override;
+      void render2D() const override;
       void renderer3DBegin() override;
       void renderer3DEnd() override;
       void _on_rect_changed() override;

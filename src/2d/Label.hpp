@@ -18,7 +18,7 @@ namespace ReyEngine{
       }
    public:
       REYENGINE_DEFAULT_BUILD(Label)
-      void render() const override{
+      void render2D() const override{
          //todo: scissor text
          auto& outline = theme->outline;
          auto& background = theme->background;

@@ -4,7 +4,7 @@ using namespace std;
 using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void TabContainer::render() const {
+void TabContainer::render2D() const {
 //   auto& roundness = tabTheme->roundness;
 //   auto& roundnessSegments = tabTheme->roundnessSegments;
    auto& backgroundPrimary = tabTheme->background.colorPrimary;
@@ -81,7 +81,7 @@ Handled TabContainer::_unhandled_input(const InputEvent &event, const std::optio
          case InputEventMouseButton::getUniqueEventId(): {
             auto mouseEvent = event.toEventType<InputEventMouseButton>();
             if (mouseEvent.isDown) return false; //only want uppies
-            auto localPos = globalToLocal(mouseEvent.globalPos);
+            auto localPos = canvasToLocal(mouseEvent.canvasPos);
             for (int i = 0; i < _tabRects.size(); i++) {
                auto &tabRect = _tabRects[i];
                if (tabRect.isInside(localPos)) {

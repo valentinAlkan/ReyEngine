@@ -152,7 +152,7 @@ void Window::exec(){
                     _inputQueueMouse.pop();
                 }
                UnhandledMouseInput mouse;
-               mouse.localPos = (Pos<int>)canvas->globalToLocal((*event).toEventType<InputEventMouse>().globalPos);
+               mouse.localPos = (Pos<float>) canvas->canvasToLocal((*event).toEventType<InputEventMouse>().canvasPos);
                mouse.isInside = canvas->isInside(mouse.localPos);
                processUnhandledInput(*event, mouse);
             }
@@ -229,25 +229,25 @@ void Window::exec(){
             if (btnUp != InputInterface::MouseButton::NONE) {
                if (btnUp == InputInterface::MouseButton::LEFT) {
                   //check for drag n drop
-                  if (_dragNDrop.has_value() && _isDragging) {
-                     //we have a widget being dragged, lets try to drop it
-                     bool handled = false;
-                     auto widgetAt = canvas->getWidgetAt(pos);
-                     if (widgetAt) {
-                        handled = widgetAt.value()->_on_drag_drop(_dragNDrop.value());
-                     }
-                     _dragNDrop.reset();
-                     _isDragging = false;
-                     if (handled) continue; //otherwise continue on to publishing an event
-                  }
+//                  if (_dragNDrop.has_value() && _isDragging) {
+//                     //we have a widget being dragged, lets try to drop it
+//                     bool handled = false;
+//                     auto widgetAt = canvas->getWidgetAt(pos);
+//                     if (widgetAt) {
+//                        handled = widgetAt.value()->_on_drag_drop(_dragNDrop.value());
+//                     }
+//                     _dragNDrop.reset();
+//                     _isDragging = false;
+//                     if (handled) continue; //otherwise continue on to publishing an event
+//                  }
                }
 
                InputEventMouseButton event(toEventPublisher());
                event.button = btnUp;
                event.isDown = false;
-               event.globalPos = pos;
+               event.canvasPos = pos.get();
                UnhandledMouseInput mouse;
-               mouse.localPos = (Pos<int>)canvas->globalToLocal(pos);
+               mouse.localPos = canvas->screenToWorld(event.canvasPos);
                mouse.isInside = canvas->isInside(mouse.localPos);
                processUnhandledInput(event, mouse);
             }
@@ -259,25 +259,25 @@ void Window::exec(){
             if (btnDown != InputInterface::MouseButton::NONE) {
                auto pos = InputManager::getMousePos();
                //check for dragndrops
-               if (btnDown == InputInterface::MouseButton::LEFT) {
-                  auto widgetAt = canvas->getWidgetAt(pos);
-                  if (widgetAt) {
-                     auto willDrag = widgetAt.value()->_on_drag_start(pos);
-                     if (willDrag) {
-                        _dragNDrop = willDrag.value();
-                        _dragNDrop.value()->startPos = pos;
-                     } else {
-                        _dragNDrop = nullopt;
-                     }
-                     _isDragging = false;
-                  }
-               }
+//               if (btnDown == InputInterface::MouseButton::LEFT) {
+//                  auto widgetAt = canvas->getWidgetAt(pos);
+//                  if (widgetAt) {
+//                     auto willDrag = widgetAt.value()->_on_drag_start(pos);
+//                     if (willDrag) {
+//                        _dragNDrop = willDrag.value();
+//                        _dragNDrop.value()->startPos = pos;
+//                     } else {
+//                        _dragNDrop = nullopt;
+//                     }
+//                     _isDragging = false;
+//                  }
+//               }
                InputEventMouseButton event(toEventPublisher());
                event.button = btnDown;
                event.isDown = true;
-               event.globalPos = pos;
+               event.canvasPos = pos.get();
                UnhandledMouseInput mouse;
-               mouse.localPos = (Pos<int>)canvas->globalToLocal(pos);
+               mouse.localPos = canvas->canvasToLocal(event.canvasPos);
                mouse.isInside = canvas->isInside(mouse.localPos);
                processUnhandledInput(event, mouse);
             } else {
@@ -290,10 +290,10 @@ void Window::exec(){
             if (wheel) {
                InputEventMouseWheel event(toEventPublisher());
                auto pos = InputManager::getMousePos();
-               event.globalPos = pos;
+               event.canvasPos = pos.get();
                event.wheelMove = wheel;
                UnhandledMouseInput mouse;
-               mouse.localPos = (Pos<int>)canvas->globalToLocal(event.globalPos);
+               mouse.localPos = canvas->canvasToLocal(event.canvasPos);
                mouse.isInside = canvas->isInside(mouse.localPos);
                processUnhandledInput(event, mouse);
             }
@@ -305,30 +305,30 @@ void Window::exec(){
          if (mouseDelta) {
             InputEventMouseMotion event(toEventPublisher());
             event.mouseDelta = mouseDelta;
-            event.globalPos = InputManager::getMousePos();
+            event.canvasPos = InputManager::getMousePos().get();
 
             //don't do hovering or mouse input if we're dragging and dropping
-            static constexpr unsigned int DRAG_THRESHOLD = 20;
-            if (_dragNDrop) {
+//            static constexpr unsigned int DRAG_THRESHOLD = 20;
+//            if (_dragNDrop) {
                //only drag if we've moved the mouse above a certain threshold
-               auto dragDelta = _dragNDrop.value()->startPos - getMousePos();
-               if (abs(dragDelta.x) > DRAG_THRESHOLD || abs(dragDelta.y) > DRAG_THRESHOLD) {
-                  _isDragging = true;
-               }
-            } else {
+//               auto dragDelta = _dragNDrop.value()->startPos - getMousePos();
+//               if (abs(dragDelta.x) > DRAG_THRESHOLD || abs(dragDelta.y) > DRAG_THRESHOLD) {
+//                  _isDragging = true;
+//               }
+//            } else {
                //find out which widget will accept the mouse motion as focus
-               auto hovered = canvas->askHover(canvas->screenToWorld(event.globalPos));
-               if (hovered) {
-                  setHover(hovered.value());
-               } else {
-                  clearHover();
-               }
+//               auto hovered = canvas->askHover(canvas->screenToWorld(event.canvasPos));
+//               if (hovered) {
+//                  setHover(hovered.value());
+//               } else {
+//                  clearHover();
+//               }
 //            if (_isEditor) continue;
                UnhandledMouseInput mouse;
-               mouse.localPos = (Pos<int>)canvas->globalToLocal(event.globalPos);
+               mouse.localPos = canvas->canvasToLocal(event.canvasPos);
                mouse.isInside = canvas->isInside(mouse.localPos);
                processUnhandledInput(event, mouse);
-            }
+//            }
          }
 
          //process timers and call their callbacks
@@ -354,10 +354,10 @@ void Window::exec(){
 
 
          //draw the drag and drop preview (if any)
-         if (_isDragging && _dragNDrop && _dragNDrop.value()->preview) {
-            _dragNDrop.value()->preview.value()->setPos(InputManager::getMousePos());
-            _dragNDrop.value()->preview.value()->renderChain();
-         }
+//         if (_isDragging && _dragNDrop && _dragNDrop.value()->preview) {
+//            _dragNDrop.value()->preview.value()->setPos(InputManager::getMousePos().get());
+//            _dragNDrop.value()->preview.value()->renderChain();
+//         }
          //render the canvas to the window
          BeginDrawing();
          DrawTextureRec(_renderTarget.getRenderTexture(), {0, 0, (float) _renderTarget.getSize().x, -(float) getSize().y}, {0, 0}, WHITE);
@@ -415,13 +415,13 @@ void Window::ProcessList::processAll(double dt) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-Pos<int> Window::getMousePos(){
+WindowSpace<Pos<float>> Window::getMousePos(){
    return InputManager::getMousePos();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 Vec2<double> Window::getMousePct() {
-   auto pos = getMousePos();
+   auto pos = getMousePos().get();
    auto screenSize = ReyEngine::getScreenSize();
    auto xRange = Vec2<int>(0,(int)screenSize.x);
    auto yRange = Vec2<int>(0,(int)screenSize.y);

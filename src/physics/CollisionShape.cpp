@@ -77,8 +77,8 @@ struct Collision::CollisionChecker<CollisionRect, CollisionRect> {
       auto rectB = b.positionable.getRect().toSizeRect();
 
       // Get transformed corners as Vec2 instead of Pos
-      auto cornersA = rectA.transform(xformA);
-      auto cornersB = rectB.transform(xformB);
+      auto cornersA = rectA.transform(xformA.get());
+      auto cornersB = rectB.transform(xformB.get());
 
 
       // Debug visualization of corners
