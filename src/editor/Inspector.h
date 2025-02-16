@@ -7,7 +7,7 @@ namespace ReyEngine{
    class Inspector : public ReyEngine::ScrollArea {
    public:
       REYENGINE_DEFAULT_BUILD(Inspector)
-      REYENGINE_OBJECT_BUILD_ONLY(Inspector, ScrollArea){}
+      REYENGINE_OBJECT_BUILD_ONLY(Inspector, ScrollArea, BaseWidget){}
    public:
       void inspect(std::shared_ptr<BaseWidget>); //load an object into the inspector
    protected:

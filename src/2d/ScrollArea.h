@@ -4,7 +4,7 @@
 
 namespace ReyEngine {
     class ScrollArea : public BaseWidget {
-    REYENGINE_OBJECT_BUILD_ONLY(ScrollArea, BaseWidget) {
+    REYENGINE_OBJECT_BUILD_ONLY(ScrollArea, BaseWidget, BaseWidget) {
         _inputFilter = InputFilter::INPUT_FILTER_PROCESS_AND_STOP; //catch all input so we can prioritize sliders
     }
 

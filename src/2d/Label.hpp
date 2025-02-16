@@ -6,7 +6,7 @@
 
 namespace ReyEngine{
    class Label : public BaseWidget {
-      REYENGINE_OBJECT_BUILD_ONLY(Label, BaseWidget)
+      REYENGINE_OBJECT_BUILD_ONLY(Label, BaseWidget, BaseWidget)
       , PROPERTY_DECLARE(text, getName())
       {
          auto expandOpt = needsExpand();

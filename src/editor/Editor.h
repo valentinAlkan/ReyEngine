@@ -6,7 +6,7 @@
 
 namespace ReyEngine {
    class Editor : public VLayout {
-      REYENGINE_OBJECT_BUILD_ONLY(Editor, VLayout) {}
+      REYENGINE_OBJECT_BUILD_ONLY(Editor, VLayout, BaseWidget) {}
 
    public:
       REYENGINE_DEFAULT_BUILD(Editor);

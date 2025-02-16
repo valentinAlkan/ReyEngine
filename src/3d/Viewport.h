@@ -9,16 +9,13 @@ namespace ReyEngine {
    : public virtual BaseWidget
    , public virtual Internal::Renderer3D
    {
-      REYENGINE_OBJECT_BUILD_ONLY(Viewport, BaseWidget)
+      REYENGINE_OBJECT_BUILD_ONLY(Viewport, BaseWidget, BaseWidget)
       , Internal::Renderer3D(name, typeName)
       , _activeCamera(_defaultCamera)
       , _showGrid("showGrid", true)
       {}
    public:
-      static std::shared_ptr<Viewport> build(const std::string& name){
-         auto me = std::shared_ptr<Viewport>(new Viewport(name));
-         return me;
-      }
+      REYENGINE_DEFAULT_BUILD(Viewport)
       void _init() override;
       void setUnhandledInputCallback(std::function<Handled(Viewport&, const InputEvent&, const std::optional<UnhandledMouseInput>&)> fx);
       void setActiveCamera(CameraTransform3D&);

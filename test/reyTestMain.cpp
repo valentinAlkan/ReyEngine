@@ -70,7 +70,6 @@ int main(int argc, char** argv) {
         ArgParse args;
         args.defineArg(RuntimeArg("--loadScene", "help", 1, RuntimeArg::ArgType::POSITIONAL));
         args.defineArg(RuntimeArg("--eventTest", "help", 0, RuntimeArg::ArgType::FLAG));
-        args.defineArg(RuntimeArg("--renderTest", "help", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--scrollAreaTest", "scrollAreaTest", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--scrollAreaFillTest", "scrollAreaFillTest", 0, RuntimeArg::ArgType::FLAG));
         args.defineArg(RuntimeArg("--sliderTest", "sliderTest", 0, RuntimeArg::ArgType::FLAG));
@@ -412,12 +411,6 @@ int main(int argc, char** argv) {
             subcontrol->setRenderCallback(renderSubControl);
             subcontrol->setProcessCallback(process);
             root->addChild(control);
-        } else if (args.getArg("--renderTest")) {
-            root->addChild(RootWidget::build("Root"));
-            root->setRect({0, 0, 0, 0});
-            auto textureTest = TextureTestWidget::build("TexTest");
-            textureTest->setRect({0, 0, 100, 100});
-            root->addChild(textureTest);
         } else if (args.getArg("--labelTest")) {
             root->addChild(RootWidget::build("Root"));
             auto testLabel = Label::build("Label");

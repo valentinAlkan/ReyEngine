@@ -6,7 +6,7 @@ namespace ReyEngine{
    class Control : public BaseWidget {
 
    public:
-      REYENGINE_OBJECT_BUILD_ONLY(Control, BaseWidget){}
+      REYENGINE_OBJECT_BUILD_ONLY(Control, BaseWidget, BaseWidget){}
    public:
        REYENGINE_DEFAULT_BUILD(Control);
        void _process(float dt) override;

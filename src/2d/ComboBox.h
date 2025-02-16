@@ -28,7 +28,7 @@ namespace ReyEngine {
 
 
    class ComboBox : public BaseWidget {
-   REYENGINE_OBJECT_BUILD_ONLY(ComboBox, BaseWidget)
+   REYENGINE_OBJECT_BUILD_ONLY(ComboBox, BaseWidget, BaseWidget)
    , PROPERTY_DECLARE(toolTip)
    , PROPERTY_DECLARE(fields)
    , PROPERTY_DECLARE(currentIndex, 0)

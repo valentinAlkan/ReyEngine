@@ -3,7 +3,7 @@
 
 namespace ReyEngine{
    class Canvas : public BaseWidget {
-      REYENGINE_OBJECT_BUILD_ONLY(Canvas, BaseWidget){}
+      REYENGINE_OBJECT_BUILD_ONLY(Canvas, BaseWidget, BaseWidget){}
    public:
       REYENGINE_DEFAULT_BUILD(Canvas);
 

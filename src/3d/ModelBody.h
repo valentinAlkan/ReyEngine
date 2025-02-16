@@ -14,7 +14,7 @@ namespace ReyEngine {
 
 
    class ModelBody : public BaseBody {
-      REYENGINE_OBJECT_BUILD_ONLY(ModelBody, BaseBody){
+      REYENGINE_OBJECT_BUILD_ONLY(ModelBody, BaseBody, BaseBody){
           //Load a default model which does nothing
       }
    public:

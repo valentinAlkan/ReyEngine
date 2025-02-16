@@ -93,6 +93,11 @@ namespace ReyEngine::Internal{
         ChildPtr toContainedTypePtr(){
             return inheritable_enable_shared_from_this<TypeContainer<T>>::template downcasted_shared_from_this<T>();
         };
+//        template <typename T>
+//       std::shared_ptr<T> toType(){
+//          static_assert(std::is_base_of_v<BaseWidget, T>);
+//          return std::static_pointer_cast<T>(toContainedTypePtr());
+//       }
         void addChild(std::shared_ptr<TypeContainer<T>> child){
             if (!child) throw std::runtime_error("addChild: child is null!");
             auto me = toContainedTypePtr();
@@ -401,6 +406,11 @@ namespace ReyEngine::Internal{
        std::recursive_mutex _childLock;
        ChildMap _childMap;
        ChildOrder _childOrder;
+
+    };
+
+
+    class TypeTree{
 
     };
 }

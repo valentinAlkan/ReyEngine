@@ -19,7 +19,7 @@ namespace ReyEngine{
          bool mouseCapture;
       };
    protected:
-      REYENGINE_VIRTUAL_OBJECT(BaseButton, BaseWidget)
+      REYENGINE_VIRTUAL_OBJECT(BaseButton, BaseWidget, BaseWidget)
       , PROPERTY_DECLARE(down)
       {
          acceptsHover = true;
@@ -40,7 +40,7 @@ namespace ReyEngine{
    REYENGINE_OBJECT_CUSTOM_BUILD(PushButton, BaseButton, std::tuple<const std::string&>, std::tuple<const std::string&, const std::string&>)
       //must implement all necessary constructors yourself
       PushButton(const std::string& name)
-      : REYENGINE_CTOR_INIT_LIST(name, BaseButton)
+      : REYENGINE_CTOR_INIT_LIST(name, BaseButton, BaseWidget)
       , PROPERTY_DECLARE(text)
       {
          theme->background.colorPrimary.set(COLORS::gray);

@@ -6,7 +6,8 @@
 namespace ReyEngine {
    //Each canvas can have excatly 1 active camera at a time!!!!
    class Camera3D : public BaseBody {
-      REYENGINE_OBJECT_BUILD_ONLY(Camera3D, BaseBody), PROPERTY_DECLARE(active, true){}
+      REYENGINE_OBJECT_BUILD_ONLY(Camera3D, BaseBody, BaseBody)
+      , PROPERTY_DECLARE(active, true){}
    public:
       REYENGINE_DEFAULT_BUILD(Camera3D)
       using BaseBody::getChildren;

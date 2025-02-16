@@ -30,7 +30,7 @@ namespace ReyEngine{
    class BaseWidget
    : public Internal::Renderable2D
    , public virtual Internal::Component
-   , public Internal::TypeContainer<BaseWidget>
+   , public virtual Internal::TypeContainer<BaseWidget>
    , public Internal::InputHandler
    {
       using ChildIndex = unsigned long;
@@ -52,8 +52,8 @@ namespace ReyEngine{
       using Internal::TypeContainer<BaseWidget>::findDescendents;
       using Internal::TypeContainer<BaseWidget>::removeChild;
       using Internal::TypeContainer<BaseWidget>::removeAllChildren;
-      using Internal::TypeContainer<BaseWidget>::toContainedType;
-      using Internal::TypeContainer<BaseWidget>::toContainedTypePtr;
+//      using Internal::TypeContainer<BaseWidget>::toContainedType;
+//      using Internal::TypeContainer<BaseWidget>::toContainedTypePtr;
       using Internal::TypeContainer<BaseWidget>::ChildPtr;
       using Internal::TypeContainer<BaseWidget>::isRoot;
       using Internal::TypeContainer<BaseWidget>::setRoot;
@@ -178,11 +178,6 @@ namespace ReyEngine{
       void setInputFilter(InputFilter newFilter){ _inputFilter = newFilter;}
       InputFilter getInputFilter(){return _inputFilter;}
 
-      template <typename T>
-      std::shared_ptr<T> toType(){
-         static_assert(std::is_base_of_v<BaseWidget, T>);
-         return std::static_pointer_cast<T>(toContainedTypePtr());
-      }
       WidgetPtr toBaseWidget(){return toType<BaseWidget>();}
 
       void setAcceptsHover(bool accepts){acceptsHover = accepts;} //only way to get mouse_enter and mouse_exit

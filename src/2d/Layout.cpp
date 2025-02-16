@@ -70,6 +70,7 @@ Layout::Layout(const std::string &name, const std::string &typeName, LayoutDir l
 : BaseWidget(name, typeName)
 , NamedInstance(name, typeName)
 , Component(name, typeName)
+, Internal::TypeContainer<BaseWidget>(name, typeName)
 , layoutRatios("layoutRatios")
 , alignment("alignment", Alignment::EVEN)
 , dir(layoutDir)

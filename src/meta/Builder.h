@@ -70,18 +70,28 @@ namespace ReyEngine {
 static constexpr char TYPE_NAME[] = #TYPENAME;               \
 std::string _get_static_constexpr_typename() override {return TYPE_NAME;}
 /////////////////////////////////////////////////////////////////////////////////////////
-#define REYENGINE_CTOR_INIT_LIST(NAME, PARENT_CLASSNAME) \
-PARENT_CLASSNAME(NAME, TYPE_NAME)                  \
-, NamedInstance(NAME, TYPE_NAME)                     \
-, ReyEngine::Internal::Component(NAME, TYPE_NAME)     \
+#define __REYENGINE_CTOR_INIT_LIST_EXPANSION(NAME, TYPECONTAINER_T) \
+, NamedInstance(#NAME, TYPE_NAME)                     \
+, ReyEngine::Internal::Component(#NAME, TYPE_NAME)        \
+, TypeContainer<TYPECONTAINER_T>(#NAME, TYPE_NAME)
+#define REYENGINE_CTOR_INIT_LIST(NAME, PARENT_CLASSNAME, TYPECONTAINER_T) \
+PARENT_CLASSNAME(#NAME, TYPE_NAME)          \
+__REYENGINE_CTOR_INIT_LIST_EXPANSION(NAME, TYPECONTAINER_T)
+#define REYENGINE_CTOR_INIT_LIST_ARGS(NAME, PARENT_CLASSNAME, TYPECONTAINER_T, ...) \
+PARENT_CLASSNAME(#NAME, TYPE_NAME, __VA_ARGS__)          \
+__REYENGINE_CTOR_INIT_LIST_EXPANSION(NAME, TYPECONTAINER_T)
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_SERIALIZER(CLASSNAME, PARENT_CLASSNAME)
 /////////////////////////////////////////////////////////////////////////////////////////
-#define REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME) \
-   CLASSNAME(const std::string& name, const std::string& typeName): PARENT_CLASSNAME(name, typeName), NamedInstance(name, typeName), Component(name, typeName)
+#define REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME, TYPECONTAINER_T) \
+   CLASSNAME(const std::string& name, const std::string& typeName) \
+   : REYENGINE_CTOR_INIT_LIST(CLASSNAME, PARENT_CLASSNAME, TYPECONTAINER_T)
+#define REYENGINE_PROTECTED_CTOR_ARGS(CLASSNAME, PARENT_CLASSNAME, TYPECONTAINER_T, ...) \
+   CLASSNAME(const std::string& name, const std::string& typeName) \
+   : REYENGINE_CTOR_INIT_LIST_ARGS(CLASSNAME, PARENT_CLASSNAME, TYPECONTAINER_T, __VA_ARGS__)
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_DEFAULT_BUILD(T) \
-   static std::shared_ptr<T> build(const std::string& instanceName){ return T::_reyengine_make_shared(instanceName); }
+static std::shared_ptr<T> build(const std::string& instanceName){ return T::_reyengine_make_shared(instanceName, TYPE_NAME); }
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_PRIVATE_MAKE_SHARED(T) \
    template<typename... Args> \
@@ -105,9 +115,6 @@ PARENT_CLASSNAME(NAME, TYPE_NAME)                  \
   "having declared build functions that accept all the necessary properties, ensure the functions are publicly accessible. \n" \
   "Also, please be aware that the custom build macro includes access specifiers, so it can change the visibility \n" \
   "of functions below it. As such, always place an access specifier DIRECTLY AFTER the line containing the macro");}
-///////////////////////////////////////////////////////////////////////////////////////////
-#define REYENGINE_DEFAULT_CTOR(CLASSNAME) \
-CLASSNAME(const std::string& name): CLASSNAME(name, _get_static_constexpr_typename()){}
 /////////////////////////////////////////////////////////////////////////////////////////
 #define REYENGINE_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME) \
 protected:                                                \
@@ -117,14 +124,13 @@ protected:                                                \
    }
 
 //to instantiate a virtual object with no deserializer
-#define REYENGINE_VIRTUAL_OBJECT(CLASSNAME, PARENT_CLASSNAME)  \
+#define REYENGINE_VIRTUAL_OBJECT(CLASSNAME, PARENT_CLASSNAME, TYPECONTAINER_T)  \
 public:                                                        \
    REYENGINE_DECLARE_COMPONENT_FRIEND                             \
    REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(CLASSNAME)  \
    protected:                                                     \
-   REYENGINE_DEFAULT_CTOR(CLASSNAME)                       \
    REYENGINE_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME)  \
-   REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME)
+   REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME, TYPECONTAINER_T)
 
 //to disallow building except via a factory function
 // - please note - this macro includes access specifiers, so it can change
@@ -138,9 +144,10 @@ public:                                                           \
    REYENGINE_DECLARE_COMPONENT_FRIEND                             \
    REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(CLASSNAME)         \
 protected:                                                     \
-   REYENGINE_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME)                \
-
-#define REYENGINE_OBJECT_BUILD_ONLY(CLASSNAME, PARENT_CLASSNAME) \
+   REYENGINE_REGISTER_PARENT_PROPERTIES(PARENT_CLASSNAME)
+#define REYENGINE_OBJECT_BUILD_ONLY(CLASSNAME, PARENT_CLASSNAME, TYPECONTAINER_T) \
    REYENGINE_OBJECT_CUSTOM_BUILD(CLASSNAME, PARENT_CLASSNAME, std::tuple<const std::string&>) \
-   REYENGINE_DEFAULT_CTOR(CLASSNAME)                       \
-   REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME)
+   REYENGINE_PROTECTED_CTOR(CLASSNAME, PARENT_CLASSNAME, TYPECONTAINER_T)
+#define REYENGINE_OBJECT_BUILD_ONLY_ARGS(CLASSNAME, PARENT_CLASSNAME, TYPECONTAINER_T, ...) \
+   REYENGINE_OBJECT_CUSTOM_BUILD(CLASSNAME, PARENT_CLASSNAME, std::tuple<const std::string&>) \
+   REYENGINE_PROTECTED_CTOR_ARGS(CLASSNAME, PARENT_CLASSNAME, TYPECONTAINER_T, __VA_ARGS__)

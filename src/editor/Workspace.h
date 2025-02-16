@@ -37,7 +37,7 @@ namespace ReyEngine{
 
 
    class Workspace : public Panel {
-      REYENGINE_OBJECT_BUILD_ONLY(Workspace, Panel){}
+      REYENGINE_OBJECT_BUILD_ONLY(Workspace, Panel, BaseWidget){}
    public:
       REYENGINE_DEFAULT_BUILD(Workspace)
       struct EventWidgetAdded : public Event<EventWidgetAdded> {

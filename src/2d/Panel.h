@@ -15,7 +15,7 @@ namespace ReyEngine{
       static constexpr char BTN_MIN_NAME[] = "__btn_min";
       static constexpr char BTN_MAX_NAME[] = "__btn_max";
       static constexpr char TITLE_LABEL_NAME[] = "__titleLabel";
-      REYENGINE_OBJECT_BUILD_ONLY(Panel, BaseWidget)
+      REYENGINE_OBJECT_BUILD_ONLY(Panel, BaseWidget, BaseWidget)
       , PROPERTY_DECLARE(panelTitle)
       , PROPERTY_DECLARE(showHeader, true)
       , PROPERTY_DECLARE(_isResizable, true)

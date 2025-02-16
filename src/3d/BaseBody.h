@@ -76,7 +76,10 @@ namespace ReyEngine {
 
 
    //Combines the functionality above
-class BaseBody : public Internal::Renderable3D {
+class BaseBody
+      : public Internal::Renderable3D
+      , public virtual Internal::TypeContainer<BaseBody>
+{
 public:
    using Internal::TypeContainer<Internal::Renderable3D>::ChildPtr;
    friend class ReyEngine::Internal::Component;
@@ -95,6 +98,7 @@ protected:
    : Internal::Renderable3D(name, typeName)
    , NamedInstance(name, typeName)
    , Component(name, typeName)
+   , Internal::TypeContainer<BaseBody>(name, typeName)
    {}
    protected:
       void _on_application_ready() override{}

@@ -39,9 +39,7 @@ namespace ReyEngine{
       inline void setSliderPct(Perunum pct, bool publish=true){setSliderValue(_range.lerp(pct), publish);}
 
       Slider(const std::string &name, SliderType sliderDir)
-      : BaseWidget(name, _get_static_constexpr_typename())
-      , NamedInstance(name, _get_static_constexpr_typename())
-      , Component(name, _get_static_constexpr_typename())
+      : REYENGINE_CTOR_INIT_LIST(Slider, BaseWidget, BaseWidget)
       , sliderValue("sliderValue", 0.0)
       , minSliderValue("minSliderValue", 0.0)
       , maxSlidervalue("maxSliderValue", 100.0)

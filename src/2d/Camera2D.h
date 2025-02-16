@@ -28,7 +28,7 @@ namespace ReyEngine {
       Matrix getCameraMatrix2D() const { return GetCameraMatrix2D(_cameraTransform); }
    protected:
       Camera2D(const std::string& instanceName, const Size<int>& screenSize)
-      : REYENGINE_CTOR_INIT_LIST(instanceName, BaseWidget)
+      : REYENGINE_CTOR_INIT_LIST(instanceName, BaseWidget, BaseWidget)
 //      , PROPERTY_DECLARE(_cameraTransform)
       , active(PROP_ACTIVE_NAME, true)
       {

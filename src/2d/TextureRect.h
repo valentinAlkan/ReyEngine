@@ -3,7 +3,7 @@
 
 namespace ReyEngine {
    class TextureRect : public BaseWidget {
-   REYENGINE_OBJECT_BUILD_ONLY(TextureRect, BaseWidget)
+   REYENGINE_OBJECT_BUILD_ONLY(TextureRect, BaseWidget, BaseWidget)
    , PROPERTY_DECLARE(_texturePath)
    {}
    public:

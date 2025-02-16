@@ -20,7 +20,7 @@ namespace ReyEngine{
    class PosTestWidget : public BaseWidget {
    public:
       REYENGINE_DEFAULT_BUILD(PosTestWidget)
-      REYENGINE_OBJECT_BUILD_ONLY(PosTestWidget, BaseWidget), someString("someString"){}
+      REYENGINE_OBJECT_BUILD_ONLY(PosTestWidget, BaseWidget, BaseWidget), someString("someString"){}
    protected:
       void render2D() const override;
       void _process(float dt) override;

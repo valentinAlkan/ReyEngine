@@ -22,11 +22,7 @@ namespace ReyEngine{
    };
 
    class TabContainer : public Layout {
-      REYENGINE_SERIALIZER(TabContainer, Layout)
-      REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(TabContainer)
-      TabContainer(const std::string& instanceName): Layout(instanceName, TYPE_NAME, LayoutDir::OTHER)
-      , NamedInstance(instanceName, TYPE_NAME)
-      , Component(instanceName, TYPE_NAME)
+      REYENGINE_OBJECT_BUILD_ONLY_ARGS(TabContainer, Layout, BaseWidget, LayoutDir::OTHER)
       , PROPERTY_DECLARE(currentTab, 0){
          //replace generic style with tab style
          theme = std::make_shared<TabTheme>();
@@ -45,7 +41,6 @@ namespace ReyEngine{
       void arrangeChildren() override;
       IntProperty currentTab;
    private:
-      REYENGINE_PRIVATE_MAKE_SHARED(TabContainer)
       std::shared_ptr<TabTheme> tabTheme;
       ReyEngine::Rect<int> _childBoundingRect;
       std::vector<ReyEngine::Rect<int>> _tabRects;

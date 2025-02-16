@@ -7,7 +7,7 @@
 namespace ReyEngine{
    class Sprite : public BaseWidget {
    public:
-   REYENGINE_OBJECT_BUILD_ONLY(Sprite, BaseWidget)
+   REYENGINE_OBJECT_BUILD_ONLY(Sprite, BaseWidget, BaseWidget)
    , PROPERTY_DECLARE(region)
    {}
    static std::shared_ptr<Sprite> build(const std::string& name, const FileSystem::File& texPath, const Rect<double>& region){
@@ -45,7 +45,7 @@ namespace ReyEngine{
 
    class AnimatedSprite : public BaseWidget {
       public:
-         REYENGINE_OBJECT_BUILD_ONLY(AnimatedSprite, BaseWidget){}
+         REYENGINE_OBJECT_BUILD_ONLY(AnimatedSprite, BaseWidget, BaseWidget){}
       public:
          REYENGINE_DEFAULT_BUILD(AnimatedSprite);
          void render2D() const override;

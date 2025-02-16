@@ -2,7 +2,7 @@
 //#include "Application.h"
 
 class TextureTestWidget : public ReyEngine::BaseWidget{
-   REYENGINE_OBJECT_BUILD_ONLY(TextureTestWidget, BaseWidget){}
+   REYENGINE_OBJECT_BUILD_ONLY(TextureTestWidget, BaseWidget, BaseWidget){}
 public:
    REYENGINE_DEFAULT_BUILD(TextureTestWidget)
    void render2DBegin() override {}

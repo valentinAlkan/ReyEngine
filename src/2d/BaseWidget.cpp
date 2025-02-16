@@ -623,7 +623,7 @@ void BaseWidget::__on_child_removed(Internal::TypeContainer<BaseWidget>::ChildPt
          _backRenderList.erase(backRenderFound);
       }
    }
-   child->toContainedType().Positionable2D<R_FLOAT>::setParent(nullptr);
+   child->Positionable2D<R_FLOAT>::setParent(nullptr);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -644,12 +644,12 @@ template <>
 void ReyEngine::Internal::TypeContainer<BaseWidget>::__on_child_added_immediate(std::shared_ptr<BaseWidget>& child){
    if(_get_static_constexpr_typename() != Window::TYPE_NAME){
       //window will be typecontainer root, so we don't want to make it the parent since its not truly a positionable
-      auto mypositionable = static_cast<Positionable2D<R_FLOAT>*>(&toContainedType());
-      child->toContainedType().Positionable2D<R_FLOAT>::setParent(mypositionable);
+      auto mypositionable = toContainedTypePtr()->toType<Positionable2D<float>>();
+      child->Positionable2D<R_FLOAT>::setParent(mypositionable.get());
    }
    child->__init();
    if (_get_static_constexpr_typename() != Window::TYPE_NAME) {
-      toContainedType().__on_child_added_immediate_basewidget(child);
+      toContainedTypePtr()->__on_child_added_immediate_basewidget(child);
    }
    _on_child_added(child);
 }

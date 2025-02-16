@@ -65,7 +65,39 @@ namespace ReyEngine{
    };
 
    class Tree : public VLayout {
-      REYENGINE_OBJECT_BUILD_ONLY(Tree, VLayout){
+   private:
+      static void _ensure_is_statically_buildable() {
+         static_assert(ReyEngine::has_required_builds<Tree, std::tuple<std::tuple<const std::string&>>>::value,
+                       "Type must publicly implement all static build functions specified to the build system. \n" "If you are using the REYENGINE_OBJECT_BUILD_ONLY macro, then you can place REYENGINE_DEFAULT_BUILD macro somewhere in the public section of your class definition. \n" "You may also implement this functionality yourself if you desire more control over the build process. If you are seeing this error despite \n" "having declared build functions that accept all the necessary properties, ensure the functions are publicly accessible. \n" "Also, please be aware that the custom build macro includes access specifiers, so it can change the visibility \n" "of functions below it. As such, always place an access specifier DIRECTLY AFTER the line containing the macro");
+      }
+      template<typename...Args>
+      static std::shared_ptr<Tree> _reyengine_make_shared(Args&& ...args) noexcept {
+         auto mem = ReyEngine::Internal::AllocationTools::malloc(sizeof(Tree));
+         auto obj = new(mem)Tree(std::forward<Args>(args)...);
+         std::shared_ptr<Tree> ptr(obj, [](Tree *ptr) {
+            ptr->~Tree();
+            ReyEngine::Internal::AllocationTools::free(ptr, sizeof(Tree));
+         });
+         return ptr;
+      }
+   public:
+      friend class ReyEngine::Internal::Component;
+      static constexpr char TYPE_NAME[] = "Tree";
+      std::string _get_static_constexpr_typename()
+      override{
+         return
+               TYPE_NAME;
+      }protected:protected:
+      void _register_parent_properties()
+      override{
+         VLayout::_register_parent_properties();
+         VLayout::registerProperties();
+      }
+      Tree(const std::string& name) : Tree(name, _get_static_constexpr_typename()) {}
+      Tree(const std::string& name, const std::string& typeName) : VLayout("Tree", TYPE_NAME),
+                                                                   NamedInstance("Tree", TYPE_NAME),
+                                                                   ReyEngine::Internal::Component("Tree", TYPE_NAME),
+                                                                   TypeContainer<BaseWidget>("Tree", TYPE_NAME){
          acceptsHover=true;
       }
    public:

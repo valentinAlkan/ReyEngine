@@ -55,59 +55,22 @@ namespace ReyEngine{
 
    /////////////////////////////////////////////////////////////////////////////////////////
    class VLayout : public Layout {
+      REYENGINE_OBJECT_BUILD_ONLY_ARGS(VLayout, Layout, BaseWidget, Layout::LayoutDir::VERTICAL){}
    public:
-      REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(VLayout);
-      REYENGINE_SERIALIZER(VLayout, Layout)
-      REYENGINE_DEFAULT_BUILD(VLayout);
-   protected:
-      VLayout(const std::string& instanceName)
-      : Layout(instanceName, _get_static_constexpr_typename(), LayoutDir::VERTICAL)
-      , NamedInstance(instanceName, _get_static_constexpr_typename())
-      , Component(instanceName, _get_static_constexpr_typename()){}
-      VLayout(const std::string& name, const std::string& typeName): Layout(name, typeName, LayoutDir::VERTICAL)
-      , NamedInstance(name, _get_static_constexpr_typename()), Internal::Component(name, _get_static_constexpr_typename()){}
-   private:
-      REYENGINE_PRIVATE_MAKE_SHARED(VLayout)
+      REYENGINE_DEFAULT_BUILD(VLayout)
    };
 
    /////////////////////////////////////////////////////////////////////////////////////////
    class HLayout : public Layout {
+      REYENGINE_OBJECT_BUILD_ONLY_ARGS(HLayout, Layout, BaseWidget, Layout::LayoutDir::HORIZONTAL){}
    public:
-      REYENGINE_DEFAULT_BUILD(HLayout);
-      REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(HLayout);
-      REYENGINE_SERIALIZER(HLayout, Layout)
-   protected:
-      HLayout(const std::string& instanceName)
-      : Layout(instanceName, _get_static_constexpr_typename(), Layout::LayoutDir::HORIZONTAL)
-      , NamedInstance(instanceName, _get_static_constexpr_typename())
-      , Component(instanceName, _get_static_constexpr_typename())
-      {}
-      HLayout(const std::string& instanceName, const std::string& typeName): Layout(instanceName, typeName, LayoutDir::HORIZONTAL)
-      , NamedInstance(instanceName, typeName)
-      , Component(instanceName, _get_static_constexpr_typename())
-      {}
-   private:
-      REYENGINE_PRIVATE_MAKE_SHARED(HLayout)
+      REYENGINE_DEFAULT_BUILD(HLayout)
    };
 
    /////////////////////////////////////////////////////////////////////////////////////////
    class GridLayout : public Layout {
+      REYENGINE_OBJECT_BUILD_ONLY_ARGS(GridLayout, Layout, BaseWidget, Layout::LayoutDir::GRID){}
    public:
-       REYENGINE_DEFAULT_BUILD(GridLayout);
-       REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(GridLayout);
-       REYENGINE_SERIALIZER(GridLayout, Layout)
-   protected:
-       GridLayout(const std::string& instanceName)
-       : Layout(instanceName, _get_static_constexpr_typename(), Layout::LayoutDir::HORIZONTAL)
-       , NamedInstance(instanceName, _get_static_constexpr_typename())
-       , Component(instanceName, _get_static_constexpr_typename())
-       {}
-       GridLayout(const std::string& instanceName, const std::string& typeName)
-       : Layout(instanceName, typeName, LayoutDir::GRID)
-       , NamedInstance(instanceName, typeName)
-       , Component(instanceName, _get_static_constexpr_typename())
-       {}
-   private:
-      REYENGINE_PRIVATE_MAKE_SHARED(GridLayout)
+      REYENGINE_DEFAULT_BUILD(GridLayout)
    };
 }
