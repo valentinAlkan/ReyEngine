@@ -216,15 +216,6 @@ namespace ReyEngine{
 
       //override and setProcess(true) to allow processing
       virtual void _process(float dt){};
-
-      // Drawing functions
-      virtual void renderBegin(){}
-      virtual void renderEnd(){}
-
-      virtual void renderEditorFeatures();
-      virtual void renderChain();
-//      Vec2<float> getRenderOffset() const {return _renderOffset;}
-//      void setRenderOffset(Pos<R_FLOAT> offset){_renderOffset = offset;}
       void registerProperties() override;
       InputMaskProperty<R_FLOAT> _inputMask; //Only input inside this rectangle will be handled;
       BoolProperty enabled;

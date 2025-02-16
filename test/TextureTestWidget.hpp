@@ -5,7 +5,7 @@ class TextureTestWidget : public ReyEngine::BaseWidget{
    REYENGINE_OBJECT_BUILD_ONLY(TextureTestWidget, BaseWidget){}
 public:
    REYENGINE_DEFAULT_BUILD(TextureTestWidget)
-   void renderBegin() override {}
+   void render2DBegin() override {}
    void render2D() const override {}
 //   void renderEnd() override{}
    void _process(float dt) override {}

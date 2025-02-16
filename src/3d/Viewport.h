@@ -34,7 +34,7 @@ namespace ReyEngine {
           return testRayAll(_activeCamera.get().getRay(pos));}
    protected:
       void addChild();
-      void renderChain() override;
+      void render2DChain() override;
       void render2D() const override;
       void renderer3DBegin() override;
       void renderer3DEnd() override;

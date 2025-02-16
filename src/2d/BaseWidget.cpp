@@ -50,30 +50,6 @@ ReyEngine::Rect<R_FLOAT> BaseWidget::getChildBoundingBox() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::renderChain() {
-   NOT_IMPLEMENTED;
-//   if (!_visible) return;
-//   renderBegin();
-//
-//   rlPushMatrix();
-//   rlTranslatef(transform.position.x, transform.position.y, 0);
-//   rlRotatef(transform.rotation * 180/M_PI, 0,0,1);
-//   rlScalef(transform.scale.x, transform.scale.y, 1);
-//   for (const auto &child: _backRenderList) {
-//      child->renderChain();
-//   }
-//   render();
-//
-//   //front render
-//   for (const auto &child: _frontRenderList) {
-//      child->renderChain();
-//   }
-//   rlPopMatrix();
-//   renderEnd();
-//   renderEditorFeatures();
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
 Handled BaseWidget::_process_unhandled_input(const InputEvent& rawEvent, const std::optional<UnhandledMouseInput>& rawMouse) {
    NOT_IMPLEMENTED;
 //   auto passInput = [this](const InputEvent& _event, std::optional<UnhandledMouseInput> _mouse) {
@@ -290,17 +266,17 @@ void BaseWidget::registerProperties() {
    registerProperty(_anchor);
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
-void BaseWidget::renderEditorFeatures(){
-   if (_editor_selected){
-      //render the grab handles
-      static constexpr ReyEngine::ColorRGBA GRAB_HANDLE_COLOR = COLORS::blue;
-      drawRectangleRounded(_getGrabHandle(0), 1.0, 5, GRAB_HANDLE_COLOR);
-      drawRectangleRounded(_getGrabHandle(1), 1.0, 5, GRAB_HANDLE_COLOR);
-      drawRectangleRounded(_getGrabHandle(2), 1.0, 5, GRAB_HANDLE_COLOR);
-      drawRectangleRounded(_getGrabHandle(3), 1.0, 5, GRAB_HANDLE_COLOR);
-   }
-}
+///////////////////////////////////////////////////////////////////////////////////////////
+//void BaseWidget::render2DEditorFeatures() {
+//   if (_editor_selected){
+//      //render the grab handles
+//      static constexpr ReyEngine::ColorRGBA GRAB_HANDLE_COLOR = COLORS::blue;
+//      drawRectangleRounded(_getGrabHandle(0), 1.0, 5, GRAB_HANDLE_COLOR);
+//      drawRectangleRounded(_getGrabHandle(1), 1.0, 5, GRAB_HANDLE_COLOR);
+//      drawRectangleRounded(_getGrabHandle(2), 1.0, 5, GRAB_HANDLE_COLOR);
+//      drawRectangleRounded(_getGrabHandle(3), 1.0, 5, GRAB_HANDLE_COLOR);
+//   }
+//}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::Rect<R_FLOAT> BaseWidget::_getGrabHandle(int index) {

@@ -5,14 +5,14 @@ using namespace std;
 using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::Camera2D::renderBegin() {
+void ReyEngine::Camera2D::render2DBegin() {
    //pop the active camera - that is to say, return to a 'no camera' scenario
    rlDrawRenderBatchActive();
    rlPushMatrix();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::Camera2D::renderEnd() {
+void ReyEngine::Camera2D::render2DEnd() {
    //return to transformation mode;
    rlDrawRenderBatchActive();
    rlPopMatrix();
@@ -56,7 +56,7 @@ Handled ReyEngine::Camera2D::__process_unhandled_input(const InputEvent& event, 
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::Camera2D ::renderChain(Pos<R_FLOAT>& parentOffset) {
+void ReyEngine::Camera2D ::render2DChain(Pos<R_FLOAT>& parentOffset) {
    static std::vector<Matrix> frameStack;
    auto getPointInFrame = [](Vector3 point, const Matrix& frameMatrix) {
       return Vector3Transform(point, MatrixInvert(frameMatrix));
@@ -64,7 +64,7 @@ void ReyEngine::Camera2D ::renderChain(Pos<R_FLOAT>& parentOffset) {
 
    if (!_visible) return;
    Pos<R_FLOAT> localOffset;
-   renderBegin();
+   render2DBegin();
    //backrender
 
    auto rotation = Degrees(getRotation()).get();
@@ -74,7 +74,7 @@ void ReyEngine::Camera2D ::renderChain(Pos<R_FLOAT>& parentOffset) {
       frameStack.push_back(MatrixRotate({0,0,1}, rotation));
    }
    for (const auto &child: _backRenderList) {
-      child->renderChain();
+      child->render2DChain();
    }
 
    if (!frameStack.empty()) {
@@ -84,12 +84,12 @@ void ReyEngine::Camera2D ::renderChain(Pos<R_FLOAT>& parentOffset) {
 
    //front render
    for (const auto &child: _frontRenderList) {
-      child->renderChain();
+      child->render2DChain();
    }
    if (!frameStack.empty()) {
       frameStack.pop_back();
    }
 
-   renderEnd();
-   renderEditorFeatures();
+   render2DEnd();
+   render2DEditorFeatures();
 }

@@ -343,7 +343,7 @@ void Window::exec(){
          auto& _renderTarget = canvas->getRenderTarget();
 //         Application::getWindow(0).pushRenderTarget(_renderTarget);
 //         _renderTarget.clear();
-         canvas->renderChain();
+         canvas->render2DChain();
 //         Application::getWindow(0).popRenderTarget(); //debug
 
          //do physics synchronously for now
@@ -356,7 +356,7 @@ void Window::exec(){
          //draw the drag and drop preview (if any)
 //         if (_isDragging && _dragNDrop && _dragNDrop.value()->preview) {
 //            _dragNDrop.value()->preview.value()->setPos(InputManager::getMousePos().get());
-//            _dragNDrop.value()->preview.value()->renderChain();
+//            _dragNDrop.value()->preview.value()->render2DChain();
 //         }
          //render the canvas to the window
          BeginDrawing();

@@ -105,7 +105,7 @@ void Layout::_on_child_removed(std::shared_ptr<BaseWidget>& child){
    }
 }
 
-void Layout::renderEnd() {
+void Layout::render2DEnd() {
    //debug
 //   drawRectangleLines({0, 0, getWidth(), getHeight()}, 1.0, COLORS::black);
 }

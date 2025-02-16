@@ -36,7 +36,7 @@ void Canvas::render2DEnd() {
    auto modal = getModal();
    if (modal){
        auto modalWidget = modal.value().lock();
-       if (modalWidget->_visible) modalWidget->renderChain();
+       if (modalWidget->_visible) modalWidget->render2DChain();
    }
    auto camera = _activeCamera.lock();
    if (camera){

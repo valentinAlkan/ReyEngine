@@ -39,9 +39,9 @@ namespace ReyEngine {
          _cameraTransform.rotation = 0;
          applyRect({{0, 0},screenSize});
       }
-      void renderChain(Pos<R_FLOAT>& parentOffset);
-      void renderBegin() override;
-      void renderEnd() override;
+      void render2DChain(Pos<R_FLOAT>& parentOffset);
+      void render2DBegin() override;
+      void render2DEnd() override;
       void render2D() const override {};
       void _on_enter_tree() override{
          //look at center of screen

@@ -22,7 +22,7 @@ void ScrollArea::render2DBegin() {
    //similar to a canvas
    Application::getWindow(0).pushRenderTarget(_renderTarget);
 
-   //undo our specific offsets, which are going to be re-applied by the base renderchain
+   //undo our specific offsets, which are going to be re-applied by the base render2DChain
    // this WILL affect any rendering we try to do in the local space
    globalMatrix = rlGetMatrixTransform();
    rlLoadIdentity();
@@ -58,8 +58,8 @@ void ScrollArea::render2DEnd() {
       drawRenderTargetRect(_renderTarget, _viewport, _window, Colors::none);
    }
    //redraw the sliders so that they're always on top of the children
-   hslider->renderChain();
-   vslider->renderChain();
+   hslider->render2DChain();
+   vslider->render2DChain();
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::_on_rect_changed(){

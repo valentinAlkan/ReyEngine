@@ -6,20 +6,20 @@
 //   bool selected = false;
 //public:
 //   /////////////////////////////////////////////////////////////////////////////////////////
-//   void renderChain(ReyEngine::Pos<double>& parentOffset) {
+//   void render2DChain(ReyEngine::Pos<double>& parentOffset) {
 //      stastic_assert(std::is_base_of_v<T, BaseWidget>());
 //      auto& bw = static_cast<BaseWidget&>(*this);
 //      if (!bw._visible) return;
 //      ReyEngine::Pos<double> localOffset;
-//      bw.renderBegin(localOffset);
+//      bw.render2DBegin(localOffset);
 //      bw._renderOffset += (localOffset + parentOffset);
 //      bw.render();
 //      //renderChildren
 //      for (const auto& [name, childIter] : bw._children){
-//         childIter.second->renderChain(bw._renderOffset);
+//         childIter.second->render2DChain(bw._renderOffset);
 //      }
 //      bw._renderOffset -= (localOffset + parentOffset); //subtract local offset when we are done
-//      bw.renderEnd();
+//      bw.render2DEnd();
 //      bw.renderEditorFeatures();
 //   }
 //   static std::shared_ptr<WorkspaceWidget<BaseWidget>> _deserialize(const std::string& instanceName, PropertyPrototypeMap& properties) {

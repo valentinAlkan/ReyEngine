@@ -45,7 +45,7 @@ namespace ReyEngine{
       void _on_child_added(std::shared_ptr<BaseWidget>& child) override;
       void _on_child_removed(std::shared_ptr<BaseWidget>& child) override;
       void _on_rect_changed() override {arrangeChildren();}
-      void renderEnd() override;
+      void render2DEnd() override;
       virtual void arrangeChildren();
       ColorRGBA _debugColor = ColorRGBA::random(255);
       void render2D() const override {drawRectangle(getRect().toSizeRect(), _debugColor);}

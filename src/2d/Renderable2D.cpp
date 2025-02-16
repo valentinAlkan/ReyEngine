@@ -13,7 +13,7 @@ void Renderer2D::renderer2DChain() {
    renderer2DBegin();
    //front render - default for now
    for (const auto& child : getChildren()){
-      child->renderable2DChain();
+      child->render2DChain();
    }
    renderer2DEnd();
    renderer2DEditorFeatures();
@@ -23,7 +23,7 @@ void Renderer2D::renderer2DChain() {
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
-void Internal::Renderable2D::renderable2DChain(){
+void Internal::Renderable2D::render2DChain(){
    if (!_visible) return;
    render2DBegin();
 
@@ -36,11 +36,11 @@ void Internal::Renderable2D::renderable2DChain(){
 
    //front render
    for (const auto &child: getChildren()) {
-      child->renderable2DChain();
+      child->render2DChain();
    }
    rlPopMatrix();
    render2DEnd();
-   renderable2DEditorFeatures();
+   render2DEditorFeatures();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

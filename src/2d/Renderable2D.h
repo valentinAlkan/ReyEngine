@@ -70,8 +70,8 @@ namespace ReyEngine::Internal {
       virtual void render2DBegin(){};
       virtual void render2D() const = 0;
       virtual void render2DEnd(){};
-      virtual void renderable2DChain();
-      virtual void renderable2DEditorFeatures(){}
+      virtual void render2DChain();
+      virtual void render2DEditorFeatures(){}
 
       virtual void _on_rect_changed(){} //called when the rect is manipulated
       virtual void _on_child_rect_changed(std::shared_ptr<BaseWidget>&){} //called when an immediate child's rect is manipulated (not descendent)
