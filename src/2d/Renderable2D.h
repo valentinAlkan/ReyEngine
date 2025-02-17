@@ -11,13 +11,11 @@ namespace ReyEngine{
 namespace ReyEngine::Internal {
    //Something which renders 2D objects but is not a 3D body in itself
    class Renderable2D;
-   class Renderer2D : public TypeContainer<Renderable2D>{
+   class Renderer2D : public Component {
    public:
-      using TypeContainer<Renderable2D>::getChildren;
-//      std::optional<std::shared_ptr<Canvas>> getViewport();
    protected:
       Renderer2D(const std::string& name, const std::string& typeName, Canvas* canvas = nullptr)
-      : TypeContainer<Renderable2D>(name, typeName)
+      : Component(name, typeName)
       , NamedInstance(name, typeName)
       , canvas(canvas)
       {}
@@ -32,7 +30,6 @@ namespace ReyEngine::Internal {
    // Something which has volume is able to be rendered in 3D along with its children.
    class Renderable2D : public Renderer2D, public Positionable2D<R_FLOAT>{
    public:
-      using TypeContainer<Renderable2D>::getChildren;
       void setVisible(bool visible){_visible = visible;}
       bool getVisible() const {return _visible;}
 

@@ -35,7 +35,7 @@ void Internal::Renderable2D::render2DChain(){
    render2D();
 
    //front render
-   for (const auto &child: getChildren()) {
+   for (const auto &child: _childOrder) {
       child->render2DChain();
    }
    rlPopMatrix();

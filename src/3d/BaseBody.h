@@ -98,7 +98,6 @@ protected:
    : Internal::Renderable3D(name, typeName)
    , NamedInstance(name, typeName)
    , Component(name, typeName)
-   , Internal::TypeContainer<BaseBody>(name, typeName)
    {}
    protected:
       void _on_application_ready() override{}

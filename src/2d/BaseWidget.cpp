@@ -16,7 +16,6 @@ BaseWidget::BaseWidget(const std::string& name, std::string typeName)
 : NamedInstance(name, typeName)
 , Internal::Component(name, typeName)
 , Internal::Renderable2D(name, typeName)
-, Internal::TypeContainer<BaseWidget>(name, typeName)
 , PROPERTY_DECLARE(isBackRender, false)
 , PROPERTY_DECLARE(_anchor, Anchor::NONE)
 , PROPERTY_DECLARE(_inputMask, InputMask::NONE)
@@ -42,7 +41,7 @@ ReyEngine::Size<R_FLOAT> BaseWidget::getClampedSize(){
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::Rect<R_FLOAT> BaseWidget::getChildBoundingBox() const {
    Size<R_FLOAT> childRect;
-   for (const auto& child : getChildren()){
+   for (const auto& child : ReyEngine::Internal::TypeContainer<ReyEngine::Internal::Component>::_childOrder){
       auto totalOffset = child->getRect().size() + Size<R_FLOAT>(child->getPos().x, child->getPos().y);
       childRect = childRect.max(totalOffset);
    }

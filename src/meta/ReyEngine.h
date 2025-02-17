@@ -30,6 +30,19 @@ namespace ReyEngine {
         template <typename T> T max(T a, T b){return a >= b ? a : b;}
     }
 
+   class FNVHash {
+      static constexpr std::size_t FNV_PRIME = 0x100000001b3;
+      static constexpr std::size_t FNV_OFFSET = 0xcbf29ce484222325;
+   public:
+      static constexpr std::size_t hash(std::string_view str) {std::size_t hash = FNV_OFFSET; for (char c: str) {hash ^= static_cast<std::size_t>(c); hash *= FNV_PRIME;} return hash;}
+   };
+
+   class DJB2Hash {
+   public:
+      static constexpr std::size_t hash(std::string_view str) {std::size_t hash = 5381;for (char c: str) {hash = ((hash << 5) + hash) + static_cast<std::size_t>(c);}return hash;}
+   };
+
+
    // Canvas Coordinates - relative to current canvas
    template <typename T>
    struct WindowSpace{

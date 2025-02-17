@@ -383,6 +383,8 @@ namespace ReyEngine::Internal{
             }
         } //called right after a type leaves the tree
        bool _isRoot = false;
+       ChildMap _childMap;
+       ChildOrder _childOrder;
     private:
        /// Called by parent when added to tree
        void doEnterTree(TypeContainer<T>& parent){
@@ -404,9 +406,6 @@ namespace ReyEngine::Internal{
        std::string _scenePath;
        std::weak_ptr<T> _parent;
        std::recursive_mutex _childLock;
-       ChildMap _childMap;
-       ChildOrder _childOrder;
-
     };
 
 

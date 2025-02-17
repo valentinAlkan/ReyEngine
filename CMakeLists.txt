@@ -109,6 +109,7 @@ add_library(ReyEngine2D STATIC
     src/meta/FileSystem.cpp
     src/meta/StringTools.cpp
     src/meta/Application.cpp
+    src/meta/AbstractTree.cpp
     src/meta/Thread.cpp
     src/meta/TypeManager.cpp
     src/meta/Window.cpp
@@ -205,9 +206,15 @@ target_link_libraries(Editor PUBLIC ReyEngine2D ReyEngine3D)
 add_executable( ReyEngineTest test/reyTestMain.cpp)
 target_link_libraries(ReyEngineTest Editor)
 
+# Test Project
+add_executable( AbstractTreeTest test/treeTest.cpp)
+target_include_directories(AbstractTreeTest PUBLIC src/lib src/meta)
+target_link_libraries(AbstractTreeTest raylib)
+
 # Project for testing the build system
 add_executable( ReyEngineBuildTest test/buildTest.cpp)
 target_link_libraries(ReyEngineBuildTest ReyEngine2D)
+
 ##########################################
 # for testing basic raylib stuff
 add_executable( raylibTest

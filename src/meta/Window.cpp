@@ -62,7 +62,7 @@ void WindowPrototype::use() {
 /////////////////////////////////////////////////////////////////////////////////////////
 Window::Window(const std::string &title, int width, int height, const std::vector<Flags> &flags, int targetFPS)
 : NamedInstance("Window", "Window")
-, Internal::TypeContainer<BaseWidget>("Window", "Window")
+, Internal::TypeContainer<Component>("Window", "Window")
 , targetFPS(targetFPS)
 , startingWidth(width)
 , startingHeight(height)

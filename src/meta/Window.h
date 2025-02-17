@@ -28,7 +28,7 @@ namespace ReyEngine{
 
    class Canvas;
    class Window
-   : public Internal::TypeContainer<BaseWidget> {
+   : public Internal::Component {
    public:
       struct WindowResizeEvent : public Event<WindowResizeEvent> {
          EVENT_CTOR_SIMPLE(WindowResizeEvent, Event<WindowResizeEvent>, Pos<int> newSize), size(newSize){
