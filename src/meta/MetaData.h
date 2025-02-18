@@ -13,7 +13,7 @@ public:
    void setMetadata(const std::string& name, const T& value) {
       auto& storage = metadata.try_emplace(name).first->second;
       storage.resize(sizeof(T));
-      auto& _reinterp = reinterpret_cast<T&>(*storage.data());
+      auto& _reinterp = reinterpret_cast<T&>(*storage._data());
       _reinterp = value;
    }
 
@@ -23,12 +23,12 @@ public:
       if (it == metadata.end()) {
          throw std::runtime_error("Property not found: " + name);
       }
-      return *reinterpret_cast<T*>(it->second.data());
+      return *reinterpret_cast<T*>(it->second._data());
    }
 
    inline std::optional<char*> hasMetadata (const std::string& name) {
       auto it = metadata.find(name);
-      if (it != metadata.end()) return it->second.data();
+      if (it != metadata.end()) return it->second._data();
    }
 
    template<typename T>

@@ -109,7 +109,7 @@ add_library(ReyEngine2D STATIC
     src/meta/FileSystem.cpp
     src/meta/StringTools.cpp
     src/meta/Application.cpp
-    src/meta/AbstractTree.cpp
+        src/meta/TypeTree.cpp
     src/meta/Thread.cpp
     src/meta/TypeManager.cpp
     src/meta/Window.cpp

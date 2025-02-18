@@ -6,47 +6,60 @@ namespace ReyEngine::Internal::Tree{
    template<typename T> class RefCounted;
    template<typename T> class WeakRef;
 
-   // Control block that will be shared between RefCounted and WeakRef
-   template<typename T>
    class ControlBlock {
    public:
-      explicit ControlBlock(T* ptr) noexcept
-      : ptr_(ptr)
-      , strongCount_(1)
-      , weakCount_(0) {
-         talk();
-      }
-      void talk(){std::cout << "Ref count is now " << strongCount_ << std::endl;}
-      void addStrongRef() noexcept {
-         auto current = strongCount_.load(std::memory_order_relaxed);
-         while (current != 0 && !strongCount_.compare_exchange_weak(current, current + 1, std::memory_order_relaxed, std::memory_order_relaxed)) {/* Retry on failure*/}
+      virtual ~ControlBlock() = default;
+      virtual void addStrongRef() noexcept = 0;
+      virtual void releaseStrongRef() noexcept = 0;
+      virtual void addWeakRef() noexcept = 0;
+      virtual void releaseWeakRef() noexcept = 0;
+      virtual bool tryAddStrongRef() noexcept = 0;
+      virtual long useCount() const noexcept = 0;
+      virtual void* get_ptr() const = 0;
+   };
+
+   template<typename T>
+   class TypedControlBlock : public ControlBlock {
+   public:
+      void talk(){std::cout << "SCount =  " << strongCount_ << ", WCount = " << weakCount_ << std::endl;}
+      explicit TypedControlBlock(T* ptr) noexcept
+      : ptr_(ptr), strongCount_(1), weakCount_(0) {
          talk();
       }
 
-      void releaseStrongRef() noexcept {
+      void addStrongRef() noexcept override {
+         auto current = strongCount_.load(std::memory_order_relaxed);
+         while (current != 0 && !strongCount_.compare_exchange_weak(current, current + 1, std::memory_order_relaxed, std::memory_order_relaxed)) {/* Retry */}
+         talk();
+      }
+
+      void releaseStrongRef() noexcept override {
          if (strongCount_.fetch_sub(1, std::memory_order_acq_rel) == 1) {
             delete ptr_;
             ptr_ = nullptr;
             if (weakCount_.load(std::memory_order_relaxed) == 0) {
+               std::cout << "Strongref releasing contorl block!" << std::endl;
                delete this;
+            } else {
+               talk();
             }
          }
-         talk();
       }
 
-      void addWeakRef() noexcept {
+      void addWeakRef() noexcept override {
          weakCount_.fetch_add(1, std::memory_order_relaxed);
       }
 
-      void releaseWeakRef() noexcept {
+      void releaseWeakRef() noexcept override {
          if (weakCount_.fetch_sub(1, std::memory_order_acq_rel) == 1) {
             if (strongCount_.load(std::memory_order_relaxed) == 0) {
+               std::cout << "Weakref releasing contorl block!" << std::endl;
                delete this;
             }
          }
       }
 
-      bool tryAddStrongRef() noexcept {
+      bool tryAddStrongRef() noexcept override {
          auto current = strongCount_.load(std::memory_order_relaxed);
          while (current != 0) {
             if (strongCount_.compare_exchange_weak(current, current + 1, std::memory_order_relaxed, std::memory_order_relaxed)) {
@@ -54,14 +67,15 @@ namespace ReyEngine::Internal::Tree{
                return true;
             }
          }
+         talk();
          return false;
       }
 
-      T* get() const noexcept { return ptr_; }
-
-      long useCount() const noexcept {
+      long useCount() const noexcept override {
          return strongCount_.load(std::memory_order_relaxed);
       }
+
+      void* get_ptr() const override { return ptr_; }
 
    private:
       T* ptr_;
@@ -74,30 +88,31 @@ namespace ReyEngine::Internal::Tree{
    class RefCounted {
    public:
       explicit RefCounted(T* ptr = nullptr) noexcept
-      : control_(ptr ? new ControlBlock<T>(ptr) : nullptr) {}
+      : control_(ptr ? new TypedControlBlock<T>(ptr) : nullptr) {}
 
       // Constructor from existing control block (used by WeakRef::lock())
-      explicit RefCounted(ControlBlock<T>* control) noexcept
+      explicit RefCounted(ControlBlock* control) noexcept
       : control_(control) {}
 
-      RefCounted(RefCounted&& other) noexcept
+      // Add converting constructor for inheritance
+      template<typename U>
+      RefCounted(RefCounted<U>&& other) noexcept
       : control_(other.control_) {
          other.control_ = nullptr;
       }
 
-      RefCounted& operator=(RefCounted&& other) noexcept {
-         if (this != &other) {
-            if (control_) {
-               control_->releaseStrongRef();
-            }
-            control_ = other.control_;
-            other.control_ = nullptr;
-         }
-         return *this;
+      // makes no sense in a shared ownership model. Just copy and drop.
+      RefCounted& operator=(RefCounted&& other) = delete;
+      RefCounted(RefCounted&& other) = delete;
+
+      RefCounted(const RefCounted& other) : control_(other.control_) {
+         if (control_) control_->addStrongRef();
       }
 
-      RefCounted(const RefCounted&) = delete;
-      RefCounted& operator=(const RefCounted&) = delete;
+      RefCounted& operator=(const RefCounted& other){
+         if (control_) control_->addStrongRef();
+         control_ = other.control_;
+      }
 
       ~RefCounted() {
          if (control_) {
@@ -117,17 +132,19 @@ namespace ReyEngine::Internal::Tree{
          }
       }
 
-      T* get() const noexcept {return control_ ? control_->get() : nullptr;}
+      T* get() const noexcept {return control_ ? static_cast<T*>(control_->get_ptr()) : nullptr;}
       T* operator->() const noexcept { return get(); }
       T& operator*() const noexcept { return *get(); }
       [[nodiscard]] size_t use_count() const noexcept {return control_ ? control_->useCount() : 0;}
-      explicit operator bool() const noexcept {return control_ && control_->get();}
+      explicit operator bool() const noexcept {return control_ && control_;}
 
       WeakRef<T> getWeakRef() noexcept;
 
    private:
-      ControlBlock<T>* control_;
+      ControlBlock* control_;
       friend class WeakRef<T>;
+      template<typename U>
+      friend class RefCounted;
    };
 
    // WeakRef implementation
@@ -136,7 +153,7 @@ namespace ReyEngine::Internal::Tree{
    public:
       WeakRef() noexcept : control_(nullptr) {}
 
-      explicit WeakRef(ControlBlock<T>* control) noexcept : control_(control) {
+      explicit WeakRef(ControlBlock* control) noexcept : control_(control) {
          if (control_) {
             control_->addWeakRef();
          }
@@ -203,7 +220,7 @@ namespace ReyEngine::Internal::Tree{
       }
 
    private:
-      ControlBlock<T>* control_;
+      ControlBlock* control_;
       friend class RefCounted<T>;
    };
 
