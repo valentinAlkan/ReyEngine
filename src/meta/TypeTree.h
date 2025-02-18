@@ -49,23 +49,29 @@ namespace ReyEngine::Internal::Tree {
    // Convert type-erased data to a format that can be stored in the tree
    class TypeNode {
    public:
-//      TypeNode(const TypeNode&) = delete;
-      explicit TypeNode(RefCounted<TypeBase>&& data, const std::string& instanceName, const std::string& typeName)
+      TypeNode(TypeNode&& other)
+      : instanceInfo(other.instanceInfo)
+      , _data(std::move(other._data))
+      {}
+      explicit TypeNode(TypeBase* data, const std::string& instanceName, const std::string& typeName)
       : instanceInfo(instanceName, typeName)
-      , _data(data) {}
+      , _data(std::unique_ptr<TypeBase>(data)) {}
       virtual ~TypeNode(){
          std::cout << "Goodbye from typeNode " << instanceInfo.instanceName << " of type " << instanceInfo.instanceName << std::endl;
       }
       [[nodiscard]] TypeBase* getData() const { return _data.get(); }
 
       // Add child with a name for lookup
-      inline void addChild(TypeNode& child) {addChild(child);}
+      inline void addChild(TypeNode&& child) {
+         auto rc = make_ref_counted<TypeNode>(std::move(child));
+         addChild(rc);
+      }
       inline void addChild(RefCounted<TypeNode>& child) {
          const auto& name = child->instanceInfo.instanceName;
          size_t nameHash = std::hash<std::string>{}(name);
 
-         // Store owned reference in map
-         auto [it, inserted] = _childMap.emplace(nameHash, std::move(child));
+         // create ref count and store it in the map
+         auto [it, inserted] = _childMap.emplace(nameHash, child);
          if (!inserted) {
             // Handle duplicate name case if needed
             throw DuplicateNameError("Node " + name);
@@ -98,19 +104,21 @@ namespace ReyEngine::Internal::Tree {
       const NamedInstance2 instanceInfo;
    private:
       TypeNode* _parent = nullptr;
-      RefCounted<TypeBase> _data;
+      std::unique_ptr<TypeBase> _data;
       std::map<size_t, RefCounted<TypeNode>> _childMap;       // map of types
       std::vector<RefCounted<TypeNode>*> _childOrder;         // Points to map entries
    };
 
 
-   template<typename T>
-   static TypeNode make_node(const std::string& instanceName, const std::string& typeName, T&& t) {
-      return TypeNode(make_ref_counted<TypeWrapper<T>>(std::forward(t)), instanceName, typeName);
-   }
    template<typename T, typename First, typename Second, typename... Args>
    static TypeNode make_node(First&& instanceName, Second&& typeName, Args&&... args) {
-      auto refCount = make_ref_counted<TypeWrapper<T>>(T(std::forward<Args>(args)...));
-      return TypeNode(std::move(refCount), instanceName, typeName);
+      auto* wrap = new TypeWrapper<T>(T(std::forward<Args>(args)...));
+      return TypeNode(wrap, instanceName, typeName);
+   }
+
+   template<typename T, typename First, typename Second, typename... Args>
+   static RefCounted<TypeNode> make_node_refcounted(First&& instanceName, Second&& typeName, Args&&... args) {
+      auto* wrap = new TypeWrapper<T>(T(std::forward<Args>(args)...));
+      return make_ref_counted<TypeNode>(wrap, instanceName, typeName);
    }
 }
