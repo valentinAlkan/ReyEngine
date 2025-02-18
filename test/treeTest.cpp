@@ -39,9 +39,9 @@ int main(){
       auto canvas = make_ref_counted<TypeWrapper<Canvas>>(Canvas("blah blah blah"));
       auto component = make_ref_counted<TypeWrapper<Component>>(Component("fuck dude what the h"));
       {
-         TypeNode root(std::move(canvas), CANVAS_NAME, "Canvas");
+         auto root = make_node<Canvas>(CANVAS_NAME, "CanvasType", "hey fuck you guy");
          if (auto _canvas = root.as<Canvas>()){
-            cout << _canvas.value()->someData << endl;
+            cout << root.instanceInfo.instanceName << ":" << _canvas.value()->someData << endl;
          }
          auto nakednode = new TypeNode(std::move(component), COMPONENT_NAME, "Component");
          auto node = RefCounted<TypeNode>(nakednode);

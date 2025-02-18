@@ -16,8 +16,8 @@ namespace ReyEngine::Internal::Tree {
       : instanceName(instancename)
       , typeName(typeName)
       {}
-      const std::string& instanceName;
-      const std::string& typeName;
+      const std::string instanceName;
+      const std::string typeName;
    };
 
    // virtual base for type-erasure
@@ -59,7 +59,7 @@ namespace ReyEngine::Internal::Tree {
       [[nodiscard]] TypeBase* getData() const { return _data.get(); }
 
       // Add child with a name for lookup
-      inline void addChild(RefCounted<TypeNode>&& child) {addChild(child);}
+      inline void addChild(TypeNode& child) {addChild(child);}
       inline void addChild(RefCounted<TypeNode>& child) {
          const auto& name = child->instanceInfo.instanceName;
          size_t nameHash = std::hash<std::string>{}(name);
@@ -84,8 +84,8 @@ namespace ReyEngine::Internal::Tree {
          return std::nullopt;
       }
 
-      inline RefCounted<TypeNode>* getChildByIndex(size_t index) {
-         return index < _childOrder.size() ? _childOrder[index] : nullptr;
+      RefCounted<TypeNode>& getChildByIndex(size_t index) {
+         return *_childOrder.at(index);
       }
       template<typename T>
       std::optional<T*> as() {
@@ -94,56 +94,23 @@ namespace ReyEngine::Internal::Tree {
          }
          return {};
       }
-
-      template<typename T, typename... Args>
-      static RefCounted<TypeNode> make_node(Args&&... args) {
-         return make_ref_counted<TypeWrapper<T>>(T(std::forward<Args>(args)...));
-      }
-
       struct DuplicateNameError : public std::runtime_error {explicit DuplicateNameError(const std::string& message) : std::runtime_error(message) {}};
+      const NamedInstance2 instanceInfo;
    private:
       TypeNode* _parent = nullptr;
       RefCounted<TypeBase> _data;
       std::map<size_t, RefCounted<TypeNode>> _childMap;       // map of types
       std::vector<RefCounted<TypeNode>*> _childOrder;         // Points to map entries
-      const NamedInstance2 instanceInfo;
    };
 
-   // Type-safe handle class using RefCounted
-//   class TypeHandle {
-//   public:
-//      explicit TypeHandle(RefCounted<TypeNode>* ref = nullptr) : ref_(ref) {
-//         if (ref_) ref_->addRef();
-//      }
-//
-//      TypeHandle(const TypeHandle& other) : ref_(other.ref_) {
-//         if (ref_) ref_->addRef();
-//      }
-//
-//      TypeHandle(TypeHandle&& other) noexcept : ref_(other.ref_) {
-//         other.ref_ = nullptr;
-//      }
-//
-//      ~TypeHandle() {
-//         if (ref_) ref_->release();
-//      }
-//
-//      TypeHandle& operator=(const TypeHandle& other) {
-//         if (this != &other) {
-//            if (ref_) ref_->release();
-//            ref_ = other.ref_;
-//            if (ref_) ref_->addRef();
-//         }
-//         return *this;
-//      }
-//
-//      template<typename T>
-//      T* as() {
-//         return ref_ ? ref_->get()->as<T>() : nullptr;
-//      }
-//
-//   private:
-//      RefCounted<TypeNode>* ref_;
-//   };
 
+   template<typename T>
+   static TypeNode make_node(const std::string& instanceName, const std::string& typeName, T&& t) {
+      return TypeNode(make_ref_counted<TypeWrapper<T>>(std::forward(t)), instanceName, typeName);
+   }
+   template<typename T, typename First, typename Second, typename... Args>
+   static TypeNode make_node(First&& instanceName, Second&& typeName, Args&&... args) {
+      auto refCount = make_ref_counted<TypeWrapper<T>>(T(std::forward<Args>(args)...));
+      return TypeNode(std::move(refCount), instanceName, typeName);
+   }
 }
