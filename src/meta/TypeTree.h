@@ -33,19 +33,14 @@ namespace ReyEngine::Internal::Tree {
    class TypeBase {
    public:
       virtual ~TypeBase() = default;
-      virtual std::type_index getTypeIndex() const = 0;
-      TypeNode& getNode(){return *_node;};
-      const TypeNode& getNode() const {return *_node;}
-   protected:
-      TypeNode* _node = nullptr;
-      friend class TypeNode;
+      [[nodiscard]] virtual std::type_index getTypeIndex() const = 0;
    };
 
    //Wrappable types interface
    template<typename T>
    concept TypeWrappable = requires(T t, TypeNode* node) {
-      {t._on_added_to_tree(node)};
-      {t._on_child_added_to_tree(node)};
+      {t.__on_added_to_tree(node)};
+      {t.__on_child_added_to_tree(node)};
       { T::TYPE_NAME } -> std::convertible_to<const char*>;
       requires std::is_array_v<decltype(T::TYPE_NAME)> && std::is_same_v<std::remove_extent_t<decltype(T::TYPE_NAME)>, const char>;
    };
@@ -66,32 +61,31 @@ namespace ReyEngine::Internal::Tree {
 
       T& getValue() { return _value; }
       const T& getValue() const { return _value; }
-   protected:
-
    private:
       T _value;
    };
 
-   // Define a concept
-//   class TypeNode;
-//   template<typename T>
-//   concept NodeType = std::is_base_of_v<T, TypeNode>;
+   template<typename Derived, typename Base>
+   concept OverridesTreeCallbacks = std::derived_from<Derived, Base> &&
+   requires(Derived d, Base b, TypeNode* n) {
+      { d._on_added_to_tree(n) } -> std::same_as<void>;
+      { b._on_added_to_tree(n) } -> std::same_as<void>;
+      requires &Derived::_on_added_to_tree != &Base::_on_added_to_tree;
+   };
 
    // Convert type-erased data to a format that can be stored in the tree
    class TypeNode {
    public:
       explicit TypeNode(TypeBase* data, const std::string& instanceName, const std::string& typeName)
       : instanceInfo(instanceName, typeName)
-      , _data(data) {
-         _data->_node = this;
-      }
+      , _data(data) {}
       virtual ~TypeNode(){
          std::cout << "Deleting type node " << instanceInfo.instanceName << " of type " << instanceInfo.instanceName << std::endl;
       }
       [[nodiscard]] TypeBase* getData() const { return _data.get(); }
 
       // Add child with a name for lookup
-      template <TypeWrappable ChildType, TypeWrappable ThisType>
+      template <TypeWrappable ChildType, TypeWrappable ParentType>
       void addChild(std::unique_ptr<TypeNode>&& child) {
          const auto& name = child->instanceInfo.instanceName;
          HashId nameHash = std::hash<std::string>{}(name);
@@ -109,8 +103,19 @@ namespace ReyEngine::Internal::Tree {
          // Set parent
          childPtr->_parent = this;
          //callbacks
-         is<ThisType>().value()->_on_added_to_tree(this);
-         childPtr->is<ChildType>().value()->_on_child_added_to_tree(childPtr);
+         if constexpr (!std::is_same_v<ChildType, void> || !std::is_same_v<ParentType, void>) {
+            if (auto value = childPtr->is<ChildType>()) {
+               value.value()->ChildType::__on_added_to_tree(this);
+            } else {
+               throw BadTypeError("Node " + name + ": AddChild() - wrong type for this");
+            }
+            if (auto value = is<ParentType>()) {
+               value.value()->ParentType::__on_child_added_to_tree(childPtr);
+            } else {
+               throw BadTypeError("Node " + name + ": AddChild() - wrong type for child");
+            }
+
+         }
 
       }
 
@@ -139,6 +144,7 @@ namespace ReyEngine::Internal::Tree {
       }
 
       struct DuplicateNameError : public std::runtime_error {explicit DuplicateNameError(const std::string& message) : std::runtime_error(message) {}};
+      struct BadTypeError : public std::runtime_error {explicit BadTypeError(const std::string& message) : std::runtime_error(message) {}};
       const NamedInstance2 instanceInfo;
    private:
       TypeNode* _parent = nullptr;
@@ -150,10 +156,6 @@ namespace ReyEngine::Internal::Tree {
    template<typename T, typename InstanceName, typename... Args>
    requires std::constructible_from<T, Args...>
    static std::unique_ptr<TypeNode> make_node(InstanceName&& instanceName, Args&&... args) {
-      TypeWrapper<T>* wrap;
-      {
-         wrap = new TypeWrapper<T>(std::forward<Args>(args)...);
-      }
-      return std::unique_ptr<TypeNode>(new TypeNode(wrap, instanceName, T::TYPE_NAME));
+      return std::unique_ptr<TypeNode>(new TypeNode(new TypeWrapper<T>(std::forward<Args>(args)...), instanceName, T::TYPE_NAME));
    }
 }

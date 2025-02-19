@@ -1,88 +1,25 @@
-#include "TypeTree.h"
+#include "treeTest.h"
 
 using namespace std;
 using namespace ReyEngine;
 using namespace Internal;
 using namespace Tree;
 
-#define TYPENAME(CLASSNAME) \
-static constexpr char TYPE_NAME[] = #CLASSNAME; \
 
-#define REYENGINE_OBJECT(CLASSNAME, PARENT_NAME) \
-TYPENAME(CLASSNAME) \
-virtual std::string getTypeName(){return TYPE_NAME;}
-//void __on_added_to_tree(){__on_added_to_tree();}
-
-//satisfies typewrappable
-struct EngineObject {
-   TYPENAME(EngineObject)
-   void _on_added_to_tree(TypeNode* node){};
-   void _on_child_added_to_tree(TypeNode* node){};
-};
-
-struct Renderable2D : public EngineObject {
-   REYENGINE_OBJECT(Renderable2D, EngineObject)
-   Renderable2D(const std::string& blah): someData(blah){}
-   Renderable2D(int a){}
-   ~Renderable2D() { cout << "Peace!!" << endl; }
-   void _on_added_to_tree(TypeNode*){
-      cout << "Fuck I'm a canvas and i got added to a tree" << endl;
-   };
-   std::string someData;
-};
-
-
-struct Canvas : public EngineObject {
-   REYENGINE_OBJECT(Canvas, EngineObject)
-   Canvas(): componentData("Default args"){}
-   ~Canvas() { cout << "So long suckers!" << endl; }
-   Canvas(const std::string& blah): componentData(blah){}
-   void _on_added_to_tree(TypeNode*){
-      cout << "Fuck I'm a Canvas and i got added to a tree" << endl;
-   };
-   std::string componentData;
-};
-
-
-struct Component : public EngineObject {
-   REYENGINE_OBJECT(Component, EngineObject)
-   Component(): componentData("Default args"){}
-   ~Component() { cout << "So long suckers!" << endl; }
-   Component(const std::string& blah): componentData(blah){}
-   void _on_added_to_tree(TypeNode* node){
-      cout << "Fuck I'm a component and i got added to a tree" << endl;
-   };
-   std::string componentData;
-};
-
+void Renderer2D::_on_child_added_to_tree(TypeNode *child) {
+   if (child->as<Drawable2D>()) {
+      std::cout << "Child " << child->instanceInfo.instanceName << " is a renderable" << std::endl;
+   }
+}
 
 int main(){
-   // Example usage:
-//   {
-//      WeakRef<int> weak;
-//      {
-//         auto ref = make_ref_counted<int>(42);
-//         weak = ref.getWeakRef();
-//         if (auto handle = weak.lock()) {
-//            // Use the handle
-//            *handle = 43;
-//            assert(handle);
-//         }
-//
-//         assert(!weak.expired());
-//      }
-//      assert(weak.expired());
-//   }
-
-
-
    //abstract tree
    {
       static constexpr char CANVAS_NAME[] = "canvas";
       static constexpr char COMPONENT_NAME[] = "component";
       {
          auto root = make_node<Canvas>(CANVAS_NAME, "asdf");
-         if (auto renderable = root->as<Renderable2D>()){
+         if (auto renderable = root->as<Drawable2D>()){
             cout << root->instanceInfo.instanceName << ":" << renderable.value()->someData << endl;
          }
          if (auto engineobj = root->as<EngineObject>()){
@@ -90,25 +27,19 @@ int main(){
          } else {
             cout << root->instanceInfo.instanceName << " is not " << EngineObject::TYPE_NAME << endl;
          }
-         root->addChild<Component, Canvas>(make_node<Component>("component_instance"));
-         if (auto found = root->getChild("component")){
+         root->addChild<Sprite, Canvas>(make_node<Sprite>("sprite_instance"));
+         if (auto found = root->getChild("sprite")){
             if (found){
                auto _component = (*found.value()).as<Canvas>();
                if (_component){
-                  std::cout << _component.value()->componentData << endl;
+                  std::cout << _component.value()->someOtherData << endl;
                }
             }
          }
-//         auto child = make_node<Buttz>("buttz", "Buttz", 1,2,"yo");
-//         root.addChild(child);
+//         auto unlreated = make_node<CompletelyUnrelatedType>("unrelatedType");
+//         root->addChild<CompletelyUnrelatedType, Canvas>(std::move(unlreated));
       }
    }
-//   TypeNode root2(make_unique<Canvas>());
-//   root.addChild(root2)
-
-
-
-
 
    return 0;
 }
