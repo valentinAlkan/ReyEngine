@@ -35,10 +35,10 @@ struct Renderer2D : public EngineObject {
    REYENGINE_OBJECT(Renderer2D, EngineObject)
    Renderer2D(){}
    virtual ~Renderer2D() { std::cout << "Goodbye from " << TYPE_NAME << "!!" << std::endl; }
-   void _on_added_to_tree(TypeNode*){
+   void _on_added_to_tree(TypeNode*) override{
       std::cout << TYPE_NAME << " added to tree" << std::endl;
    };
-   void _on_child_added_to_tree(TypeNode* child);
+   void _on_child_added_to_tree(TypeNode* child) override;
 };
 
 

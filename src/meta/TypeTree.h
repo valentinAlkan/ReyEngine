@@ -30,7 +30,9 @@ namespace ReyEngine::Internal::Tree {
    class TypeNode;
    struct TreeCallable {
       static constexpr char TYPE_NAME[] = "TreeCallable";
-      virtual void _on_added_to_tree(TypeNode *n) {};
+      virtual void _on_added_to_tree(TypeNode *n) {
+         std::cout << "yo!" << std::endl;
+      };
       virtual void _on_child_added_to_tree(TypeNode *n) {};
    };
 
@@ -45,8 +47,7 @@ namespace ReyEngine::Internal::Tree {
 
    //Wrappable types interface
    template<typename T>
-   concept TypeWrappable = requires(T t, TypeNode* node) {
-      { std::derived_from<T, TreeCallable> };
+   concept TypeWrappable = std::derived_from<T, TreeCallable> && requires(T t) {
       { T::TYPE_NAME } -> std::convertible_to<const char*>;
       requires std::is_array_v<decltype(T::TYPE_NAME)> && std::is_same_v<std::remove_extent_t<decltype(T::TYPE_NAME)>, const char>;
    };
@@ -125,6 +126,13 @@ namespace ReyEngine::Internal::Tree {
       std::optional<T*> as() {
          if (auto wrapper = dynamic_cast<TypeWrapper<T>*>(_data.get())) {
             return &wrapper->getValue();
+         }
+         // Get the actual type stored in the wrapper and try to cast that
+         if (_data) {
+            auto* wrapper = static_cast<TypeWrapper<TreeCallable>*>(_data.get());
+            if (auto* value = dynamic_cast<T*>(&wrapper->getValue())) {
+               return value;
+            }
          }
          return std::nullopt;
       }
