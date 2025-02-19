@@ -27,9 +27,16 @@ namespace ReyEngine::Internal::Tree {
       std::string scenePath;
    };
 
+   class TypeNode;
+   struct TreeCallable {
+      static constexpr char TYPE_NAME[] = "TreeCallable";
+      virtual void _on_added_to_tree(TypeNode *n) {};
+      virtual void _on_child_added_to_tree(TypeNode *n) {};
+   };
+
+
    // Base class for all types that can be stored in the tree
    // virtual base for type-erasure
-   class TypeNode;
    class TypeBase {
    public:
       virtual ~TypeBase() = default;
@@ -39,8 +46,7 @@ namespace ReyEngine::Internal::Tree {
    //Wrappable types interface
    template<typename T>
    concept TypeWrappable = requires(T t, TypeNode* node) {
-      {t.__on_added_to_tree(node)};
-      {t.__on_child_added_to_tree(node)};
+      { std::derived_from<T, TreeCallable> };
       { T::TYPE_NAME } -> std::convertible_to<const char*>;
       requires std::is_array_v<decltype(T::TYPE_NAME)> && std::is_same_v<std::remove_extent_t<decltype(T::TYPE_NAME)>, const char>;
    };
@@ -65,14 +71,6 @@ namespace ReyEngine::Internal::Tree {
       T _value;
    };
 
-   template<typename Derived, typename Base>
-   concept OverridesTreeCallbacks = std::derived_from<Derived, Base> &&
-   requires(Derived d, Base b, TypeNode* n) {
-      { d._on_added_to_tree(n) } -> std::same_as<void>;
-      { b._on_added_to_tree(n) } -> std::same_as<void>;
-      requires &Derived::_on_added_to_tree != &Base::_on_added_to_tree;
-   };
-
    // Convert type-erased data to a format that can be stored in the tree
    class TypeNode {
    public:
@@ -85,7 +83,6 @@ namespace ReyEngine::Internal::Tree {
       [[nodiscard]] TypeBase* getData() const { return _data.get(); }
 
       // Add child with a name for lookup
-      template <TypeWrappable ChildType, TypeWrappable ParentType>
       void addChild(std::unique_ptr<TypeNode>&& child) {
          const auto& name = child->instanceInfo.instanceName;
          HashId nameHash = std::hash<std::string>{}(name);
@@ -103,19 +100,8 @@ namespace ReyEngine::Internal::Tree {
          // Set parent
          childPtr->_parent = this;
          //callbacks
-         if constexpr (!std::is_same_v<ChildType, void> || !std::is_same_v<ParentType, void>) {
-            if (auto value = childPtr->is<ChildType>()) {
-               value.value()->ChildType::__on_added_to_tree(this);
-            } else {
-               throw BadTypeError("Node " + name + ": AddChild() - wrong type for this");
-            }
-            if (auto value = is<ParentType>()) {
-               value.value()->ParentType::__on_child_added_to_tree(childPtr);
-            } else {
-               throw BadTypeError("Node " + name + ": AddChild() - wrong type for child");
-            }
-
-         }
+         childPtr->as<TreeCallable>().value()->_on_added_to_tree(this);
+         as<TreeCallable>().value()->_on_child_added_to_tree(childPtr);
 
       }
 

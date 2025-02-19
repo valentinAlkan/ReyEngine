@@ -27,7 +27,7 @@ int main(){
          } else {
             cout << root->instanceInfo.instanceName << " is not " << EngineObject::TYPE_NAME << endl;
          }
-         root->addChild<Sprite, Canvas>(make_node<Sprite>("sprite_instance"));
+         root->addChild(make_node<Sprite>("sprite_instance"));
          if (auto found = root->getChild("sprite")){
             if (found){
                auto _component = (*found.value()).as<Canvas>();
