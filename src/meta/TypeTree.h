@@ -30,15 +30,20 @@ namespace ReyEngine::Internal::Tree {
    class TypeNode;
    struct TreeCallable {
       static constexpr char TYPE_NAME[] = "TreeCallable";
-      virtual void _on_added_to_tree(TypeNode *n) {
-         std::cout << "yo!" << std::endl;
-      };
+      virtual void _on_added_to_tree(TypeNode *n) {};
       virtual void _on_child_added_to_tree(TypeNode *n) {};
+      TypeNode* getNode(){return _node;}
+      [[nodiscard]] const TypeNode* getNode() const {return _node;}
+   protected:
+      TypeNode* _node;
+   private:
+      std::vector<std::function<void()>> _on_enter_tree;
+      std::vector<std::function<void()>> _on_child_enter_tree;
+      friend class TypeNode;
    };
 
 
-   // Base class for all types that can be stored in the tree
-   // virtual base for type-erasure
+   // Type-erased base class for TypeWrapper
    class TypeBase {
    public:
       virtual ~TypeBase() = default;
@@ -47,13 +52,13 @@ namespace ReyEngine::Internal::Tree {
 
    //Wrappable types interface
    template<typename T>
-   concept TypeWrappable = std::derived_from<T, TreeCallable> && requires(T t) {
+   concept NamedType = std::derived_from<T, TreeCallable> && requires(T t) {
       { T::TYPE_NAME } -> std::convertible_to<const char*>;
       requires std::is_array_v<decltype(T::TYPE_NAME)> && std::is_same_v<std::remove_extent_t<decltype(T::TYPE_NAME)>, const char>;
    };
 
-   // Type erase wrapper
-   template<TypeWrappable T>
+   // Type erase wrapper. T must inherit from TreeCallable
+   template<NamedType T>
    class TypeWrapper : public TypeBase {
    public:
       template <typename... Args>
@@ -77,7 +82,10 @@ namespace ReyEngine::Internal::Tree {
    public:
       explicit TypeNode(TypeBase* data, const std::string& instanceName, const std::string& typeName)
       : instanceInfo(instanceName, typeName)
-      , _data(data) {}
+      , _data(data)
+      {
+         as<TreeCallable>().value()->_node = this;
+      }
       virtual ~TypeNode(){
          std::cout << "Deleting type node " << instanceInfo.instanceName << " of type " << instanceInfo.instanceName << std::endl;
       }

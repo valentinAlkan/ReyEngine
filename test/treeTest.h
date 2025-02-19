@@ -10,35 +10,20 @@ static constexpr char TYPE_NAME[] = #CLASSNAME; \
 #define REYENGINE_OBJECT(CLASSNAME, PARENT_CLASSNAME) \
 TYPENAME(CLASSNAME) \
 virtual std::string getTypeName(){return TYPE_NAME;}  \
-//virtual void __on_added_to_tree(TypeNode* node) {      \
-//   PARENT_CLASSNAME::__on_added_to_tree(node);   \
-//   CLASSNAME::_on_added_to_tree(node);           \
-//}                                                     \
-//virtual void __on_child_added_to_tree(TypeNode* node) {\
-//   PARENT_CLASSNAME::__on_child_added_to_tree(node);   \
-//   CLASSNAME::_on_child_added_to_tree(node);           \
-//}
 
 //satisfies typewrappable
 struct EngineObject : public TreeCallable
 {
    TYPENAME(EngineObject)
-//   void __on_added_to_tree(TypeNode* node){_on_added_to_tree(node);}
-//   void __on_child_added_to_tree(TypeNode* node){ _on_child_added_to_tree(node);}
-//   void _on_added_to_tree(TypeNode*){
-//      std::cout << TYPE_NAME << " added to tree" << std::endl;
-//   };
-//   void _on_child_added_to_tree(TypeNode*){};
 };
 
+struct Drawable2D;
 struct Renderer2D : public EngineObject {
    REYENGINE_OBJECT(Renderer2D, EngineObject)
    Renderer2D(){}
    virtual ~Renderer2D() { std::cout << "Goodbye from " << TYPE_NAME << "!!" << std::endl; }
-   void _on_added_to_tree(TypeNode*) override{
-      std::cout << TYPE_NAME << " added to tree" << std::endl;
-   };
    void _on_child_added_to_tree(TypeNode* child) override;
+   std::vector<Drawable2D*> drawables;
 };
 
 
@@ -51,7 +36,6 @@ struct Canvas : public Renderer2D {
 
 struct Drawable2D : public Renderer2D {
    REYENGINE_OBJECT(Drawable2D, Renderer2D)
-   Drawable2D(){}
    ~Drawable2D() { std::cout << "Goodbye from " << TYPE_NAME << "!!" << std::endl; }
    std::string someData;
 };
@@ -67,8 +51,14 @@ struct Component : public EngineObject {
 
 struct Sprite : public Drawable2D {
    REYENGINE_OBJECT(Sprite, Drawable2D)
-   Sprite(): Drawable2D(){}
+   Sprite(const std::string& texPath): texPath(texPath){}
    ~Sprite() { std::cout << "Goodbye from " << TYPE_NAME << "!!" << std::endl; }
+   std::string texPath;
+};
+
+struct AnimatedSprite : public Sprite {
+   REYENGINE_OBJECT(AnimatedSprite, Sprite)
+   ~AnimatedSprite() { std::cout << "Goodbye from " << TYPE_NAME << "!!" << std::endl; }
 };
 
 struct CompletelyUnrelatedType {

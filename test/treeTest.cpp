@@ -7,16 +7,21 @@ using namespace Tree;
 
 
 void Renderer2D::_on_child_added_to_tree(TypeNode *child) {
-   if (child->as<Drawable2D>()) {
+   if (auto drawable = child->as<Drawable2D>()) {
       std::cout << "Child " << child->instanceInfo.instanceName << " is a renderable" << std::endl;
+      drawables.push_back(drawable.value());
+      for (const auto& drawable : drawables){
+//         cout << drawable.getNode()
+      }
    }
+
 }
 
 int main(){
    //abstract tree
    {
       static constexpr char CANVAS_NAME[] = "canvas";
-      static constexpr char COMPONENT_NAME[] = "component";
+      static constexpr char SPRITE_NAME[] = "SPRITE";
       {
          auto root = make_node<Canvas>(CANVAS_NAME, "asdf");
          if (auto renderable = root->as<Drawable2D>()){
@@ -27,12 +32,11 @@ int main(){
          } else {
             cout << root->instanceInfo.instanceName << " is not " << EngineObject::TYPE_NAME << endl;
          }
-         root->addChild(make_node<Sprite>("sprite_instance"));
-         if (auto found = root->getChild("sprite")){
+         root->addChild(make_node<Sprite>(SPRITE_NAME, "texture_path"));
+         if (auto found = root->getChild(SPRITE_NAME)){
             if (found){
-               auto _component = (*found.value()).as<Canvas>();
-               if (_component){
-                  std::cout << _component.value()->someOtherData << endl;
+               if (auto sprite = (*found.value()).as<Sprite>()){
+                  std::cout << "Found " << SPRITE_NAME << " : " << sprite.value()->texPath << endl;
                }
             }
          }
