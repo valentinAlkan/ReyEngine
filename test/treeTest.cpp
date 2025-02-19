@@ -22,12 +22,13 @@ int main(){
       }
       assert(weak.expired());
    }
-   struct Canvas  {
+   struct Canvas {
       Canvas(const std::string& blah): someData(blah){}
+      void _on_added_to_tree();
       std::string someData;
    };
 
-   struct Component  {
+   struct Component {
       Component(const std::string& blah): componentData(blah){}
       std::string componentData;
    };
@@ -40,6 +41,7 @@ int main(){
       {}
       int a;
       int b;
+      void _on_added_to_tree();
    };
 
    //abstract tree
@@ -51,17 +53,17 @@ int main(){
          if (auto _canvas = root.as<Canvas>()){
             cout << root.instanceInfo.instanceName << ":" << _canvas.value()->someData << endl;
          }
-         root.addChild(make_node<Component>(COMPONENT_NAME, "ComponentType", "fuck dude what the h"));
+//         root.addChild(make_node<Component>(COMPONENT_NAME, "ComponentType", "fuck dude what the h"));
          if (auto found = root.getChild("component")){
             if (found){
-               auto _component = (*found.value()).as<Component>();
-               if (_component){
-                  std::cout << _component.value()->componentData << endl;
-               }
+//               auto _component = (*found.value()).as<Component>();
+//               if (_component){
+//                  std::cout << _component.value()->componentData << endl;
+//               }
             }
          }
-         auto child = make_node_refcounted<Buttz>("buttz", "Buttz", 1,2,"yo");
-         root.addChild(child);
+         auto child = make_node<Buttz>("buttz", "Buttz", 1,2,"yo");
+//         root.addChild(child);
       }
    }
 //   TypeNode root2(make_unique<Canvas>());

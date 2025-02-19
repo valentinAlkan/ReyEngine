@@ -5,7 +5,7 @@
 namespace ReyEngine::Internal::Tree{
    template<typename T> class RefCounted;
    template<typename T> class WeakRef;
-
+   using RefCountSizeType = uint32_t;
    class ControlBlock {
    public:
       virtual ~ControlBlock() = default;
@@ -14,7 +14,7 @@ namespace ReyEngine::Internal::Tree{
       virtual void addWeakRef() noexcept = 0;
       virtual void releaseWeakRef() noexcept = 0;
       virtual bool tryAddStrongRef() noexcept = 0;
-      virtual long useCount() const noexcept = 0;
+      virtual RefCountSizeType useCount() const noexcept = 0;
       virtual void* get_ptr() const = 0;
    };
 
@@ -71,7 +71,7 @@ namespace ReyEngine::Internal::Tree{
          return false;
       }
 
-      long useCount() const noexcept override {
+      RefCountSizeType useCount() const noexcept override {
          return strongCount_.load(std::memory_order_relaxed);
       }
 
@@ -79,8 +79,8 @@ namespace ReyEngine::Internal::Tree{
 
    private:
       T* ptr_;
-      std::atomic<size_t> strongCount_;
-      std::atomic<size_t> weakCount_;
+      std::atomic<RefCountSizeType> strongCount_;
+      std::atomic<RefCountSizeType> weakCount_;
    };
 
 // Updated RefCounted to use ControlBlock
@@ -135,8 +135,8 @@ namespace ReyEngine::Internal::Tree{
       T* get() const noexcept {return control_ ? static_cast<T*>(control_->get_ptr()) : nullptr;}
       T* operator->() const noexcept { return get(); }
       T& operator*() const noexcept { return *get(); }
-      [[nodiscard]] size_t use_count() const noexcept {return control_ ? control_->useCount() : 0;}
-      explicit operator bool() const noexcept {return control_ && control_;}
+      [[nodiscard]] RefCountSizeType use_count() const noexcept {return control_ ? control_->useCount() : 0;}
+      explicit operator bool() const noexcept {return control_;}
 
       WeakRef<T> getWeakRef() noexcept;
 

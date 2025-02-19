@@ -7,9 +7,12 @@
 #include <string>
 #include <typeinfo>
 #include <typeindex>
+#include <set>
+#include "MapValueRefView.h"
 
 namespace ReyEngine::Internal::Tree {
-   // Base class for all types that can be stored in the tree
+   using TypeHash = size_t;
+
    class NamedInstance2{
    public:
       NamedInstance2(const std::string& instancename, const std::string& typeName)
@@ -20,6 +23,7 @@ namespace ReyEngine::Internal::Tree {
       const std::string typeName;
    };
 
+   // Base class for all types that can be stored in the tree
    // virtual base for type-erasure
    class TypeBase {
    public:
@@ -27,8 +31,13 @@ namespace ReyEngine::Internal::Tree {
       virtual std::type_index getTypeIndex() const = 0;
    };
 
-   // Type erase wrapper
    template<typename T>
+   concept TypeWrappable = requires(T t) {
+      {t._on_added_to_tree()};
+   };
+
+   // Type erase wrapper
+   template<TypeWrappable T>
    class TypeWrapper : public TypeBase {
    public:
       explicit TypeWrapper(T value)
@@ -39,8 +48,13 @@ namespace ReyEngine::Internal::Tree {
          return std::type_index(typeid(T));
       }
 
+      void _on_added_to_tree() {
+         value_._on_added_to_tree();
+      };
+
       T& getValue() { return value_; }
       const T& getValue() const { return value_; }
+
 
    private:
       T value_;
@@ -49,31 +63,23 @@ namespace ReyEngine::Internal::Tree {
    // Convert type-erased data to a format that can be stored in the tree
    class TypeNode {
    public:
-      TypeNode(TypeNode&& other)
-      : instanceInfo(other.instanceInfo)
-      , _data(std::move(other._data))
-      {}
       explicit TypeNode(TypeBase* data, const std::string& instanceName, const std::string& typeName)
       : instanceInfo(instanceName, typeName)
-      , _data(std::unique_ptr<TypeBase>(data)) {}
+      , _data(RefCounted<TypeBase>(data)) {}
       virtual ~TypeNode(){
          std::cout << "Goodbye from typeNode " << instanceInfo.instanceName << " of type " << instanceInfo.instanceName << std::endl;
       }
       [[nodiscard]] TypeBase* getData() const { return _data.get(); }
 
       // Add child with a name for lookup
-      inline void addChild(TypeNode&& child) {
-         auto rc = make_ref_counted<TypeNode>(std::move(child));
-         addChild(rc);
-      }
-      inline void addChild(RefCounted<TypeNode>& child) {
+      inline void addChild(std::unique_ptr<TypeNode>& child) {
          const auto& name = child->instanceInfo.instanceName;
-         size_t nameHash = std::hash<std::string>{}(name);
+         TypeHash nameHash = std::hash<std::string>{}(name);
 
          // create ref count and store it in the map
-         auto [it, inserted] = _childMap.emplace(nameHash, child);
+         auto[it, inserted] = _childMap.emplace(nameHash, std::move(child));
          if (!inserted) {
-            // Handle duplicate name case if needed
+             // Handle duplicate name case if needed
             throw DuplicateNameError("Node " + name);
          }
 
@@ -82,16 +88,19 @@ namespace ReyEngine::Internal::Tree {
 
          // Set parent
          it->second->_parent = this;
+
+//         //callbacks
+//         child->
       }
 
-      inline std::optional<RefCounted<TypeNode>> getChild(const std::string& name) {
+      inline std::optional<TypeNode> getChild(const std::string& name) {
          auto it = _childMap.find(std::hash<std::string>{}(name));
-         if (it != _childMap.end()) return {it->second};
+//         if (it != _childMap.end()) return {it->second};
          return std::nullopt;
       }
 
-      RefCounted<TypeNode>& getChildByIndex(size_t index) {
-         return *_childOrder.at(index);
+      TypeNode& getChildByIndex(size_t index) {
+         return **_childOrder.at(index);
       }
       template<typename T>
       std::optional<T*> as() {
@@ -100,13 +109,17 @@ namespace ReyEngine::Internal::Tree {
          }
          return {};
       }
+
+      //Tree-oriented functions
+      virtual void _on_added_to_tree(){};
+
       struct DuplicateNameError : public std::runtime_error {explicit DuplicateNameError(const std::string& message) : std::runtime_error(message) {}};
       const NamedInstance2 instanceInfo;
    private:
       TypeNode* _parent = nullptr;
-      std::unique_ptr<TypeBase> _data;
-      std::map<size_t, RefCounted<TypeNode>> _childMap;       // map of types
-      std::vector<RefCounted<TypeNode>*> _childOrder;         // Points to map entries
+      RefCounted<TypeBase> _data;
+      std::map<TypeHash, std::unique_ptr<TypeNode>> _childMap;       // map of types
+      std::vector<std::unique_ptr<TypeNode>*> _childOrder;         // Points to map entries
    };
 
 
@@ -116,9 +129,9 @@ namespace ReyEngine::Internal::Tree {
       return TypeNode(wrap, instanceName, typeName);
    }
 
-   template<typename T, typename First, typename Second, typename... Args>
-   static RefCounted<TypeNode> make_node_refcounted(First&& instanceName, Second&& typeName, Args&&... args) {
-      auto* wrap = new TypeWrapper<T>(T(std::forward<Args>(args)...));
-      return make_ref_counted<TypeNode>(wrap, instanceName, typeName);
-   }
+//   template<typename T, typename First, typename Second, typename... Args>
+//   static TypeNode make_node(First&& instanceName, Second&& typeName, Args&&... args) {
+//      auto* wrap = new TypeWrapper<T>(T(std::forward<Args>(args)...));
+//      return TypeNode>(wrap, instanceName, typeName);
+//   }
 }
