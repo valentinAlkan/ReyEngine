@@ -16,11 +16,8 @@ virtual std::string getTypeName(){return TYPE_NAME;}
 //satisfies typewrappable
 struct EngineObject {
    TYPENAME(EngineObject)
-   void _on_added_to_tree(){};
-public:
-   TypeNode* getNode(){return node;}
-private:
-   TypeNode* node;
+   void _on_added_to_tree(TypeNode* node){};
+   void _on_child_added_to_tree(TypeNode* node){};
 };
 
 struct Renderable2D : public EngineObject {
@@ -28,7 +25,7 @@ struct Renderable2D : public EngineObject {
    Renderable2D(const std::string& blah): someData(blah){}
    Renderable2D(int a){}
    ~Renderable2D() { cout << "Peace!!" << endl; }
-   void _on_added_to_tree(){
+   void _on_added_to_tree(TypeNode*){
       cout << "Fuck I'm a canvas and i got added to a tree" << endl;
    };
    std::string someData;
@@ -40,22 +37,24 @@ struct Canvas : public EngineObject {
    Canvas(): componentData("Default args"){}
    ~Canvas() { cout << "So long suckers!" << endl; }
    Canvas(const std::string& blah): componentData(blah){}
-   void _on_added_to_tree(){
+   void _on_added_to_tree(TypeNode*){
+      cout << "Fuck I'm a Canvas and i got added to a tree" << endl;
+   };
+   std::string componentData;
+};
+
+
+struct Component : public EngineObject {
+   REYENGINE_OBJECT(Component, EngineObject)
+   Component(): componentData("Default args"){}
+   ~Component() { cout << "So long suckers!" << endl; }
+   Component(const std::string& blah): componentData(blah){}
+   void _on_added_to_tree(TypeNode* node){
       cout << "Fuck I'm a component and i got added to a tree" << endl;
    };
    std::string componentData;
 };
 
-struct Buttz : public Canvas{
-   Buttz(int a, int b, const std::string& someBullshit)
-   : Canvas(someBullshit)
-   , a(a)
-   , b(b)
-   {}
-   int a;
-   int b;
-//   void _on_added_to_tree(){};
-};
 
 int main(){
    // Example usage:
@@ -91,7 +90,7 @@ int main(){
          } else {
             cout << root->instanceInfo.instanceName << " is not " << EngineObject::TYPE_NAME << endl;
          }
-         root->addChild<Canvas>(make_node<Canvas>("component_instance"));
+         root->addChild<Component, Canvas>(make_node<Component>("component_instance"));
          if (auto found = root->getChild("component")){
             if (found){
                auto _component = (*found.value()).as<Canvas>();

@@ -29,19 +29,24 @@ namespace ReyEngine::Internal::Tree {
 
    // Base class for all types that can be stored in the tree
    // virtual base for type-erasure
+   class TypeNode;
    class TypeBase {
    public:
       virtual ~TypeBase() = default;
       virtual std::type_index getTypeIndex() const = 0;
+      TypeNode& getNode(){return *_node;};
+      const TypeNode& getNode() const {return *_node;}
+   protected:
+      TypeNode* _node = nullptr;
+      friend class TypeNode;
    };
 
    //Wrappable types interface
-   class TypeNode;
    template<typename T>
-   concept TypeWrappable = requires(T t) {
-      {t._on_added_to_tree()};
+   concept TypeWrappable = requires(T t, TypeNode* node) {
+      {t._on_added_to_tree(node)};
+      {t._on_child_added_to_tree(node)};
       { T::TYPE_NAME } -> std::convertible_to<const char*>;
-      { t.getNode() } -> std::same_as<TypeNode*>;
       requires std::is_array_v<decltype(T::TYPE_NAME)> && std::is_same_v<std::remove_extent_t<decltype(T::TYPE_NAME)>, const char>;
    };
 
@@ -59,30 +64,34 @@ namespace ReyEngine::Internal::Tree {
          return std::type_index(typeid(T));
       }
 
-      void _on_added_to_tree() {
-         _value._on_added_to_tree();
-      };
-
       T& getValue() { return _value; }
       const T& getValue() const { return _value; }
+   protected:
 
    private:
       T _value;
    };
+
+   // Define a concept
+//   class TypeNode;
+//   template<typename T>
+//   concept NodeType = std::is_base_of_v<T, TypeNode>;
 
    // Convert type-erased data to a format that can be stored in the tree
    class TypeNode {
    public:
       explicit TypeNode(TypeBase* data, const std::string& instanceName, const std::string& typeName)
       : instanceInfo(instanceName, typeName)
-      , _data(std::shared_ptr<TypeBase>(data)) {}
+      , _data(data) {
+         _data->_node = this;
+      }
       virtual ~TypeNode(){
          std::cout << "Deleting type node " << instanceInfo.instanceName << " of type " << instanceInfo.instanceName << std::endl;
       }
       [[nodiscard]] TypeBase* getData() const { return _data.get(); }
 
       // Add child with a name for lookup
-      template <TypeWrappable T>
+      template <TypeWrappable ChildType, TypeWrappable ThisType>
       void addChild(std::unique_ptr<TypeNode>&& child) {
          const auto& name = child->instanceInfo.instanceName;
          HashId nameHash = std::hash<std::string>{}(name);
@@ -99,14 +108,9 @@ namespace ReyEngine::Internal::Tree {
 
          // Set parent
          childPtr->_parent = this;
-
          //callbacks
-         auto typeWrapper = static_cast<TypeWrapper<T>*>(childPtr->_data.get());
-         _on_added_to_tree(this);
-         if (_parent){
-            _parent->_on_child_added_to_tree(this);
-         }
-         typeWrapper->_on_added_to_tree();
+         is<ThisType>().value()->_on_added_to_tree(this);
+         childPtr->is<ChildType>().value()->_on_child_added_to_tree(childPtr);
 
       }
 
@@ -133,10 +137,6 @@ namespace ReyEngine::Internal::Tree {
          }
          return std::nullopt;
       }
-
-      //Tree-oriented functions
-      virtual void _on_added_to_tree(TypeNode* node){};
-      virtual void _on_child_added_to_tree(TypeNode* node){};
 
       struct DuplicateNameError : public std::runtime_error {explicit DuplicateNameError(const std::string& message) : std::runtime_error(message) {}};
       const NamedInstance2 instanceInfo;
