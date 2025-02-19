@@ -31,17 +31,22 @@ namespace ReyEngine::Internal::Tree {
       virtual std::type_index getTypeIndex() const = 0;
    };
 
+   //Wrappable types interface
    template<typename T>
    concept TypeWrappable = requires(T t) {
       {t._on_added_to_tree()};
+      { T::TYPE_NAME } -> std::convertible_to<const char*>;
+      requires std::is_array_v<decltype(T::TYPE_NAME)> && std::is_same_v<std::remove_extent_t<decltype(T::TYPE_NAME)>, const char>;
    };
 
    // Type erase wrapper
    template<TypeWrappable T>
    class TypeWrapper : public TypeBase {
    public:
-      explicit TypeWrapper(T value)
-      : value_(std::move(value))
+      template <typename... Args>
+      explicit TypeWrapper(Args&&... args)
+      requires std::constructible_from<T, Args...>
+      : value_(std::forward<Args>(args)...)
       {}
 
       [[nodiscard]] std::type_index getTypeIndex() const override {
@@ -72,7 +77,7 @@ namespace ReyEngine::Internal::Tree {
       [[nodiscard]] TypeBase* getData() const { return _data.get(); }
 
       // Add child with a name for lookup
-      inline void addChild(std::unique_ptr<TypeNode>& child) {
+      inline void addChild(std::unique_ptr<TypeNode>&& child) {
          const auto& name = child->instanceInfo.instanceName;
          TypeHash nameHash = std::hash<std::string>{}(name);
 
@@ -93,9 +98,9 @@ namespace ReyEngine::Internal::Tree {
 //         child->
       }
 
-      inline std::optional<TypeNode> getChild(const std::string& name) {
+      inline std::optional<TypeNode*> getChild(const std::string& name) {
          auto it = _childMap.find(std::hash<std::string>{}(name));
-//         if (it != _childMap.end()) return {it->second};
+         if (it != _childMap.end()) return {it->second.get()};
          return std::nullopt;
       }
 
@@ -103,11 +108,15 @@ namespace ReyEngine::Internal::Tree {
          return **_childOrder.at(index);
       }
       template<typename T>
-      std::optional<T*> as() {
+      std::optional<T*> is() {
          if (_data->getTypeIndex() == std::type_index(typeid(T))) {
             return &static_cast<TypeWrapper<T>*>(_data.get())->getValue();
          }
          return {};
+      }
+      template<typename T>
+      std::optional<T*> as() {
+         return &dynamic_cast<TypeWrapper<T>*>(_data.get())->getValue();
       }
 
       //Tree-oriented functions
@@ -122,16 +131,10 @@ namespace ReyEngine::Internal::Tree {
       std::vector<std::unique_ptr<TypeNode>*> _childOrder;         // Points to map entries
    };
 
-
-   template<typename T, typename First, typename Second, typename... Args>
-   static TypeNode make_node(First&& instanceName, Second&& typeName, Args&&... args) {
+   template<typename T, typename InstanceName, typename... Args>
+   requires std::constructible_from<T, Args...>
+   static std::unique_ptr<TypeNode> make_node(InstanceName&& instanceName, Args&&... args) {
       auto* wrap = new TypeWrapper<T>(T(std::forward<Args>(args)...));
-      return TypeNode(wrap, instanceName, typeName);
+      return std::unique_ptr<TypeNode>(new TypeNode(wrap, instanceName, T::TYPE_NAME));
    }
-
-//   template<typename T, typename First, typename Second, typename... Args>
-//   static TypeNode make_node(First&& instanceName, Second&& typeName, Args&&... args) {
-//      auto* wrap = new TypeWrapper<T>(T(std::forward<Args>(args)...));
-//      return TypeNode>(wrap, instanceName, typeName);
-//   }
 }

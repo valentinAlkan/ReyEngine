@@ -5,6 +5,40 @@ using namespace ReyEngine;
 using namespace Internal;
 using namespace Tree;
 
+#define TYPENAME(CLASSNAME) static constexpr char TYPE_NAME[] = #CLASSNAME;
+
+struct BaseCanvas {
+   TYPENAME(BaseCanvas)
+   void _on_added_to_tree();
+};
+
+struct Canvas : public BaseCanvas {
+   Canvas(const std::string& blah): someData(blah){}
+   Canvas(int a){}
+   static constexpr char TYPE_NAME[] = "Canvas";
+   std::string someData;
+};
+
+
+struct Component {
+   Component(): componentData("Default args"){}
+   Component(const std::string& blah): componentData(blah){}
+   TYPENAME(Component);
+   void _on_added_to_tree();
+   std::string componentData;
+};
+
+struct Buttz : public Component{
+   Buttz(int a, int b, const std::string& someBullshit)
+   : Component(someBullshit)
+   , a(a)
+   , b(b)
+   {}
+   int a;
+   int b;
+   void _on_added_to_tree();
+};
+
 int main(){
    // Example usage:
    {
@@ -22,39 +56,28 @@ int main(){
       }
       assert(weak.expired());
    }
-   struct Canvas {
-      Canvas(const std::string& blah): someData(blah){}
-      void _on_added_to_tree();
-      std::string someData;
-   };
 
-   struct Component {
-      Component(const std::string& blah): componentData(blah){}
-      std::string componentData;
-   };
 
-   struct Buttz : public Component{
-      Buttz(int a, int b, const std::string& someBullshit)
-      : Component(someBullshit)
-      , a(a)
-      , b(b)
-      {}
-      int a;
-      int b;
-      void _on_added_to_tree();
-   };
 
    //abstract tree
    {
       static constexpr char CANVAS_NAME[] = "canvas";
       static constexpr char COMPONENT_NAME[] = "component";
       {
-         auto root = make_node<Canvas>(CANVAS_NAME, "CanvasType", "hey fuck you guy");
-         if (auto _canvas = root.as<Canvas>()){
-            cout << root.instanceInfo.instanceName << ":" << _canvas.value()->someData << endl;
+
+         auto wrapped = TypeWrapper<Canvas>("some text");
+
+         auto root = make_node<Canvas>(CANVAS_NAME, "asdf");
+         if (auto _canvas = root->is<Canvas>()){
+            cout << root->instanceInfo.instanceName << ":" << _canvas.value()->someData << endl;
          }
-//         root.addChild(make_node<Component>(COMPONENT_NAME, "ComponentType", "fuck dude what the h"));
-         if (auto found = root.getChild("component")){
+         if (auto _baseCanvas = root->as<BaseCanvas>()){
+            cout << root->instanceInfo.instanceName << " inherits from " << _baseCanvas.value()->TYPE_NAME << endl;
+         } else {
+            cout << root->instanceInfo.instanceName << " is not " << BaseCanvas::TYPE_NAME << endl;
+         }
+         root->addChild(make_node<Component>("component_instance"));
+         if (auto found = root->getChild("component")){
             if (found){
 //               auto _component = (*found.value()).as<Component>();
 //               if (_component){
@@ -62,7 +85,7 @@ int main(){
 //               }
             }
          }
-         auto child = make_node<Buttz>("buttz", "Buttz", 1,2,"yo");
+//         auto child = make_node<Buttz>("buttz", "Buttz", 1,2,"yo");
 //         root.addChild(child);
       }
    }
