@@ -9,6 +9,7 @@
 #include <typeindex>
 #include <set>
 #include "MapValueRefView.h"
+#include "Logger.h"
 
 namespace ReyEngine::Internal::Tree {
    using HashId = size_t;
@@ -17,10 +18,10 @@ namespace ReyEngine::Internal::Tree {
    class NamedInstance2{
    public:
       NamedInstance2(const std::string& instancename, const std::string& typeName)
-      : instanceName(instancename)
+      : name(instancename)
       , typeName(typeName)
       {}
-      const std::string instanceName;
+      const std::string name;
       const std::string typeName;
       std::string getScenePath(){return scenePath;}
    private:
@@ -28,17 +29,21 @@ namespace ReyEngine::Internal::Tree {
    };
 
    class TypeNode;
-   struct TreeCallable {
+   struct TreeStorable {
       static constexpr char TYPE_NAME[] = "TreeCallable";
-      virtual void _on_added_to_tree(TypeNode *n) {};
-      virtual void _on_child_added_to_tree(TypeNode *n) {};
+      virtual void __init(){}; //added to tree for first time
+      virtual void __on_added_to_tree(){}; //every time when added to tree
+      virtual void __on_child_added_to_tree(TypeNode *n) {}; // direct children only
+      virtual void __on_descendant_added_to_tree(TypeNode *n) {};
+      virtual void __on_child_removed_from_tree(TypeNode*){}; // direct children only
+      virtual void __on_descendant_removed_from_tree(TypeNode*){};
+      virtual void __on_orphaned(TypeNode*){}; //when the node has been orphaned (ancestor removed from tree)
       TypeNode* getNode(){return _node;}
       [[nodiscard]] const TypeNode* getNode() const {return _node;}
    protected:
-      TypeNode* _node;
+      TypeNode* _node = nullptr;
+      bool _has_inited = false;
    private:
-      std::vector<std::function<void()>> _on_enter_tree;
-      std::vector<std::function<void()>> _on_child_enter_tree;
       friend class TypeNode;
    };
 
@@ -52,7 +57,7 @@ namespace ReyEngine::Internal::Tree {
 
    //Wrappable types interface
    template<typename T>
-   concept NamedType = std::derived_from<T, TreeCallable> && requires(T t) {
+   concept NamedType = std::derived_from<T, TreeStorable> && requires(T t) {
       { T::TYPE_NAME } -> std::convertible_to<const char*>;
       requires std::is_array_v<decltype(T::TYPE_NAME)> && std::is_same_v<std::remove_extent_t<decltype(T::TYPE_NAME)>, const char>;
    };
@@ -84,34 +89,39 @@ namespace ReyEngine::Internal::Tree {
       : instanceInfo(instanceName, typeName)
       , _data(data)
       {
-         as<TreeCallable>().value()->_node = this;
+         //link the type with the node
+         as<TreeStorable>().value()->_node = this;
       }
       virtual ~TypeNode(){
-         std::cout << "Deleting type node " << instanceInfo.instanceName << " of type " << instanceInfo.instanceName << std::endl;
+         std::cout << "Deleting type node " << instanceInfo.name << " of type " << instanceInfo.name << std::endl;
       }
       [[nodiscard]] TypeBase* getData() const { return _data.get(); }
 
       // Add child with a name for lookup
       void addChild(std::unique_ptr<TypeNode>&& child) {
-         const auto& name = child->instanceInfo.instanceName;
+         const auto& name = child->instanceInfo.name;
          HashId nameHash = std::hash<std::string>{}(name);
 
          auto[it, success] = _childMap.emplace(nameHash, std::move(child));
          if (!success) {
              // Handle duplicate name case if needed
-            throw DuplicateNameError("Node " + name);
+            Logger::error() << "Child " << name << " already exists for parent " << instanceInfo.name;
          }
-         auto childPtr = it->second.get();
-
+         auto childptr = it->second.get();
+         auto addedStorable = childptr->as<TreeStorable>().value();
          // update child order vector
-         _childOrder.push_back(childPtr);
+         _childOrder.push_back(childptr);
 
          // Set parent
-         childPtr->_parent = this;
-         //callbacks
-         childPtr->as<TreeCallable>().value()->_on_added_to_tree(this);
-         as<TreeCallable>().value()->_on_child_added_to_tree(childPtr);
-
+         childptr->_parent = this;
+         //////callbacks
+         //init, if needed
+         if (!addedStorable->_has_inited) addedStorable->__init();
+         addedStorable->__on_added_to_tree();
+         as<TreeStorable>().value()->__on_child_added_to_tree(childptr);
+         while (_parent){
+            _parent->as<TreeStorable>().value()->__on_descendant_added_to_tree(childptr);
+         }
       }
 
       inline std::optional<TypeNode*> getChild(const std::string& name) {
@@ -137,7 +147,7 @@ namespace ReyEngine::Internal::Tree {
          }
          // Get the actual type stored in the wrapper and try to cast that
          if (_data) {
-            auto* wrapper = static_cast<TypeWrapper<TreeCallable>*>(_data.get());
+            auto* wrapper = static_cast<TypeWrapper<TreeStorable>*>(_data.get());
             if (auto* value = dynamic_cast<T*>(&wrapper->getValue())) {
                return value;
             }
@@ -145,8 +155,8 @@ namespace ReyEngine::Internal::Tree {
          return std::nullopt;
       }
 
-      struct DuplicateNameError : public std::runtime_error {explicit DuplicateNameError(const std::string& message) : std::runtime_error(message) {}};
-      struct BadTypeError : public std::runtime_error {explicit BadTypeError(const std::string& message) : std::runtime_error(message) {}};
+//      struct DuplicateNameError : public std::runtime_error {explicit DuplicateNameError(const std::string& message) : std::runtime_error(message) {}};
+//      struct BadTypeError : public std::runtime_error {explicit BadTypeError(const std::string& message) : std::runtime_error(message) {}};
       const NamedInstance2 instanceInfo;
    private:
       TypeNode* _parent = nullptr;

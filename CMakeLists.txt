@@ -109,7 +109,7 @@ add_library(ReyEngine2D STATIC
     src/meta/FileSystem.cpp
     src/meta/StringTools.cpp
     src/meta/Application.cpp
-        src/meta/TypeTree.cpp
+    src/meta/TypeTree.cpp
     src/meta/Thread.cpp
     src/meta/TypeManager.cpp
     src/meta/Window.cpp
@@ -207,9 +207,20 @@ add_executable( ReyEngineTest test/reyTestMain.cpp)
 target_link_libraries(ReyEngineTest Editor)
 
 # Test Project
-add_executable( AbstractTreeTest test/treeTest.cpp)
+add_executable( AbstractTreeTest test/treeTest.cpp src/meta/Logger.cpp)
 target_include_directories(AbstractTreeTest PUBLIC src/lib src/meta)
 target_link_libraries(AbstractTreeTest raylib)
+
+# Test Project
+add_executable( NewEngine
+        src/newEngine/main.cpp
+        src/newEngine/Window2.cpp
+        src/meta/Logger.cpp
+        src/meta/ReyEngine.cpp
+        )
+target_include_directories(NewEngine PUBLIC src/newEngine src/lib src/meta)
+target_link_libraries(NewEngine raylib)
+
 
 # Project for testing the build system
 add_executable( ReyEngineBuildTest test/buildTest.cpp)
