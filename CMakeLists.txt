@@ -216,7 +216,6 @@ add_executable( NewEngine
         src/newEngine/main.cpp
         src/newEngine/Window2.cpp
         src/meta/Logger.cpp
-        src/meta/ReyEngine.cpp
         )
 target_include_directories(NewEngine PUBLIC src/newEngine src/lib src/meta)
 target_link_libraries(NewEngine raylib)

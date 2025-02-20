@@ -15,19 +15,6 @@ namespace ReyEngine::Internal::Tree {
    using HashId = size_t;
    using NameHash = HashId;
 
-   class NamedInstance2{
-   public:
-      NamedInstance2(const std::string& instancename, const std::string& typeName)
-      : name(instancename)
-      , typeName(typeName)
-      {}
-      const std::string name;
-      const std::string typeName;
-      std::string getScenePath(){return scenePath;}
-   private:
-      std::string scenePath;
-   };
-
    class TypeNode;
    struct TreeStorable {
       static constexpr char TYPE_NAME[] = "TreeCallable";
@@ -86,26 +73,27 @@ namespace ReyEngine::Internal::Tree {
    class TypeNode {
    public:
       explicit TypeNode(TypeBase* data, const std::string& instanceName, const std::string& typeName)
-      : instanceInfo(instanceName, typeName)
-      , _data(data)
+      : _data(data)
+      , name(instanceName)
+      , typeName(typeName)
       {
          //link the type with the node
          as<TreeStorable>().value()->_node = this;
       }
       virtual ~TypeNode(){
-         std::cout << "Deleting type node " << instanceInfo.name << " of type " << instanceInfo.name << std::endl;
+         std::cout << "Deleting type node " << name << " of type " << name << std::endl;
       }
       [[nodiscard]] TypeBase* getData() const { return _data.get(); }
 
       // Add child with a name for lookup
       void addChild(std::unique_ptr<TypeNode>&& child) {
-         const auto& name = child->instanceInfo.name;
+         const auto& name = child->name;
          HashId nameHash = std::hash<std::string>{}(name);
 
          auto[it, success] = _childMap.emplace(nameHash, std::move(child));
          if (!success) {
              // Handle duplicate name case if needed
-            Logger::error() << "Child " << name << " already exists for parent " << instanceInfo.name;
+            Logger::error() << "Child " << name << " already exists for parent " << name;
          }
          auto childptr = it->second.get();
          auto addedStorable = childptr->as<TreeStorable>().value();
@@ -157,8 +145,10 @@ namespace ReyEngine::Internal::Tree {
 
 //      struct DuplicateNameError : public std::runtime_error {explicit DuplicateNameError(const std::string& message) : std::runtime_error(message) {}};
 //      struct BadTypeError : public std::runtime_error {explicit BadTypeError(const std::string& message) : std::runtime_error(message) {}};
-      const NamedInstance2 instanceInfo;
+      const std::string name;
+      const std::string typeName;
    private:
+      std::string scenePath;
       TypeNode* _parent = nullptr;
       std::shared_ptr<TypeBase> _data;
       std::map<NameHash, std::unique_ptr<TypeNode>> _childMap; //parents own children
