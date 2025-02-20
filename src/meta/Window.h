@@ -42,7 +42,6 @@ namespace ReyEngine{
          }
          Pos<int> position;
       };
-      enum Flags{RESIZE, IS_EDITOR};
       virtual void exec();
       ~Window() override;
 
@@ -87,7 +86,7 @@ namespace ReyEngine{
       inline void keyInput(InputInterface::KeyCode){};
       int getFPS() const {return GetFPS();}
    protected:
-      Window(const std::string& title, int width, int height, const std::vector<Flags>& flags, int targetFPS);
+      Window(const std::string& title, int width, int height, const std::vector<WindowFlags>& flags, int targetFPS);
       void initialize(std::optional<std::shared_ptr<Canvas>> root);
       static constexpr size_t INPUT_COUNT_LIMIT = 256;
    private:
@@ -135,11 +134,11 @@ namespace ReyEngine{
             Window& createWindow();
             Window& createWindow(std::shared_ptr<Canvas>& root);
         protected:
-            WindowPrototype(const std::string &title, int width, int height, const std::vector<Window::Flags> &flags, int targetFPS);
+            WindowPrototype(const std::string &title, int width, int height, const std::vector<WindowFlags> &flags, int targetFPS);
             const std::string title;
             const int width;
             const int height;
-            const std::vector<Window::Flags> &flags;
+            const std::vector<WindowFlags> &flags;
             const int targetFPS;
             bool isEditor(){return _isEditor;}
         private:

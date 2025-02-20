@@ -23,6 +23,11 @@ int main(){
       static constexpr char CANVAS_NAME[] = "canvas";
       static constexpr char SPRITE_NAME[] = "SPRITE";
       {
+         // make_node combines Creating a type AND wrapping it in a node, in the same call.
+         // But this is really two operations -
+         // auto canvas = Canvas("asdf");
+         // auto root = TypeWrapper<Canvas>(canvas, CANVAS_NAME);
+         // which is to say, the first step is to create the type, and then we wrap the type in a TypeNode
          auto root = make_node<Canvas>(CANVAS_NAME, "asdf");
          if (auto renderable = root->as<Drawable2D>()){
             cout << root->name << ":" << renderable.value()->someData << endl;

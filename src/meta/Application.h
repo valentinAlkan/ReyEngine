@@ -45,8 +45,8 @@ namespace ReyEngine{
       static void exitError(std::string msg, ExitReason rsn){Logger::error() << msg << std::endl; ::exit((int)rsn);}
       static void exit(ExitReason rsn){::exit((int)rsn);}
 
-      static void registerForApplicationReady(std::shared_ptr<Internal::Component>&); //somethings require initwindow to have been called - so we can let the application know we want to be called when application is ready.
-      static void registerForApplicationReady(std::function<void()>); //somethings require initwindow to have been called - so we can let the application know we want to be called when application is ready.
+//      static void registerForApplicationReady(std::shared_ptr<Internal::Component>&); //somethings require initwindow to have been called - so we can let the application know we want to be called when application is ready.
+//      static void registerForApplicationReady(std::function<void()>); //somethings require initwindow to have been called - so we can let the application know we want to be called when application is ready.
       static bool isReady(){return instance()._is_ready;}
       static std::unique_lock<std::mutex> getLock(); //use this to syncrhonize with the engine
       static constexpr Platform getPlatform(){return PLATFORM;}
@@ -80,8 +80,8 @@ namespace ReyEngine{
       std::vector<std::shared_ptr<Window>> _windows;
       uint64_t newRid;
       std::mutex _busy; //the main mutex that determines if the engine is busy or not
-      std::unordered_set<std::shared_ptr<Internal::Component>> _applicationReadyList; //list of widgets that want to be notified when the application is fully initialized
-      std::vector<std::function<void()>> _initListArbCallback; //list of arbitrary callbacks that serve the same purpose as the above
+      std::vector<std::function<void()>> _applicationReadyList; //list of widgets that want to be notified when the application is fully initialized
+//      std::vector<std::function<void()>> _initListArbCallback; //list of arbitrary callbacks that serve the same purpose as the above
 
       //init list
       using InitPair = std::pair<std::shared_ptr<Internal::Component>, std::shared_ptr<Internal::Component>>;

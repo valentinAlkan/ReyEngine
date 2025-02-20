@@ -1,43 +1,39 @@
-#include "Application.h"
-#include "Component.h"
-#include <utility>
-#include "Canvas.h"
-#include "Platform.h"
+#include "Application2.h"
+#include "Window2.h"
 
 using namespace std;
 using namespace ReyEngine;
 using namespace Internal;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Application::Application()
+Application2::Application2()
 {
    _startTime = chrono::steady_clock::now();
-   TypeManager::instance()._registerTypes();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Internal::WindowPrototype Application::createWindowPrototype(const std::string &title, int width, int height, const std::vector<ReyEngine::Window::Flags> &flags, int targetFPS) {
-   Application::instance(); //initalize application at least once
-    return WindowPrototype(title, width, height, flags, targetFPS);
+std::unique_ptr<Internal::WindowPrototype2> Application2::createWindowPrototype(const std::string &title, int width, int height, const std::vector<ReyEngine::WindowFlags> &flags, int targetFPS) {
+   Application2::instance(); //initalize application at least once
+   return std::unique_ptr<WindowPrototype2>(new WindowPrototype2(title, width, height, flags, targetFPS));
 }
 /////////////////////////////////////////////////////////////////////////////////////////
-Window& Application::createWindow(Internal::WindowPrototype& prototype, std::optional<std::shared_ptr<Canvas>> root){
-   _windows.emplace_back(new Window(prototype.title, prototype.width, prototype.height, prototype.flags, prototype.targetFPS));
+Window2& Application2::createWindow(Internal::WindowPrototype2& prototype, std::optional<std::shared_ptr<Canvas>> root){
+   _windows.emplace_back(new Window2(prototype.title, prototype.width, prototype.height, prototype.flags, prototype.targetFPS));
    auto& window = *_windows.back();
    window.initialize(root);
-   window.getCanvas()->setRect({}); //will auto fill
+//   window.getCanvas()->setRect({}); //will auto fill
    return window;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-//void Application::registerForApplicationReady(std::function<void()> fx) {
+//void Application2::registerForApplication2Ready(std::function<void()> fx) {
 //   if (!isReady()) {
 //      instance()._applicationReadyList.push_back(fx);
 //   }
 //}
 
 /////////////////////////////////////////////////////////////////////////////////////////
-//void Application::registerForApplicationReady(std::function<void()> cb) {
+//void Application2::registerForApplication2Ready(std::function<void()> cb) {
 //   if (!isReady()) {
 //      instance()._initListArbCallback.push_back(cb);
 //   } else {
@@ -46,7 +42,7 @@ Window& Application::createWindow(Internal::WindowPrototype& prototype, std::opt
 //}
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-//void Application::ready() {
+//void Application2::ready() {
 //   for (auto& component : instance()._applicationReadyList){
 //      component->_on_application_ready();
 //   }
@@ -59,12 +55,12 @@ Window& Application::createWindow(Internal::WindowPrototype& prototype, std::opt
 //}
 
 ////////////////////////////////////////////////////////////////////////////////////////
-std::unique_lock<std::mutex> Application::getLock() {
+std::unique_lock<std::mutex> Application2::getLock() {
    std::unique_lock<std::mutex> l(instance()._busy);
    return std::move(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
-long double Application::secondsSinceInit() {
-    return std::chrono::duration<long double>(std::chrono::steady_clock::now() - instance()._startTime).count();
+long double Application2::secondsSinceInit() {
+   return std::chrono::duration<long double>(std::chrono::steady_clock::now() - instance()._startTime).count();
 }

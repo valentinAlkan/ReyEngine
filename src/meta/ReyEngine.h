@@ -20,6 +20,7 @@
 #define NOT_IMPLEMENTED throw std::runtime_error("Not implemented!")
 
 namespace ReyEngine {
+   enum WindowFlags{RESIZE, IS_EDITOR};
    static constexpr long long MaxInt = INT_MAX;
    static constexpr long long MinInt = INT_MIN;
    static constexpr R_FLOAT MaxFloat = FLT_MAX;

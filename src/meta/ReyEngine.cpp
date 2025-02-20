@@ -1,5 +1,4 @@
 #include "ReyEngine.h"
-#include "Application.h"
 #include "rlgl.h"
 #include <cstring>
 
@@ -17,17 +16,14 @@ ReyTexture::ReyTexture(const FileSystem::File& file)
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyTexture::loadTexture(const FileSystem::File &file) {
-   auto doReady = [&]() {
-      auto path = file.abs();
-      if (!file.exists()){
-         Logger::warn() << "LoadTexture failure: Texture file " << file.abs() << " does not exist!" << endl;
-      }
-      _tex = LoadTexture(path.c_str());
-      _texLoaded = true;
-      size = {_tex.width, _tex.height};
-   };
-   Application::registerForApplicationReady(doReady);
-
+   auto path = file.abs();
+   if (!file.exists()){
+      Logger::warn() << "LoadTexture failure: Texture file " << file.abs() << " does not exist!" << endl;
+   }
+   _tex = LoadTexture(path.c_str());
+   _texLoaded = true;
+   size = {_tex.width, _tex.height};
+//   Application::registerForApplicationReady(doReady);
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 template<> Rect<float> Size<float>::toRect(){return {0,0,x,y};}
