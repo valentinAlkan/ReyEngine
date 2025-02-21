@@ -93,12 +93,12 @@ void Window2::exec(){
 //      }
 //      if (widget->_isProcessed.value) widget->setProcess(true);
 //   };
-//   auto canvas = getCanvas();
+   auto canvas = getCanvas();
 //   applyProcess(canvas);
-//   ReyEngine::Size<float> size = getSize();
-//   ReyEngine::Pos<float> position;
+   ReyEngine::Size<float> size = getSize();
+   ReyEngine::Pos<float> position;
 //   canvas->setSize(size);
-//   SetTargetFPS(targetFPS);
+   SetTargetFPS(targetFPS);
 //   while (!WindowShouldClose()){
 //      {
 //
@@ -501,7 +501,7 @@ Window2::~Window2(){
 //   }
 //}
 //
-/////////////////////////////////////////////////////////////////////////////////////////////
-//std::shared_ptr<Canvas> Window2::getCanvas() {
-//   return getChildren().at(0)->toType<Canvas>();
-//}
+///////////////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<Canvas> Window2::getCanvas() {
+   return _root;
+}

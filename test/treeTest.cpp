@@ -32,10 +32,10 @@ int main(){
          if (auto renderable = root->as<Drawable2D>()){
             cout << root->name << ":" << renderable.value()->someData << endl;
          }
-         if (auto engineobj = root->as<EngineObject>()){
+         if (auto engineobj = root->as<ReyObject>()){
             cout << root->name << " inherits from " << engineobj.value()->TYPE_NAME << endl;
          } else {
-            cout << root->name << " is not " << EngineObject::TYPE_NAME << endl;
+            cout << root->name << " is not " << ReyObject::TYPE_NAME << endl;
             assert(false);
          }
          root->addChild(make_node<Sprite>(SPRITE_NAME, "texture_path"));

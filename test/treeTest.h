@@ -12,7 +12,7 @@ TYPENAME(CLASSNAME) \
 virtual std::string getTypeName(){return TYPE_NAME;}  \
 
 //satisfies typewrappable
-struct EngineObject : public TreeStorable
+struct ReyObject : public TreeStorable
 {
    TYPENAME(EngineObject)
    //reserved for internal functionality.
@@ -38,7 +38,7 @@ struct EngineObject : public TreeStorable
 };
 
 struct Drawable2D;
-struct Renderer2D : public EngineObject {
+struct Renderer2D : public ReyObject {
    REYENGINE_OBJECT(Renderer2D, EngineObject)
    Renderer2D(){}
    virtual ~Renderer2D() { std::cout << "Goodbye from " << TYPE_NAME << "!!" << std::endl; }
@@ -61,7 +61,7 @@ struct Drawable2D : public Renderer2D {
 };
 
 
-struct Component : public EngineObject {
+struct Component : public ReyObject {
    REYENGINE_OBJECT(Component, EngineObject)
    Component(): componentData("Default args"){}
    ~Component() { std::cout << "Goodbye from " << TYPE_NAME << "!!" << std::endl; }

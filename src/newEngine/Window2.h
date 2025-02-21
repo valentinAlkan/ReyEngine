@@ -70,7 +70,7 @@ namespace ReyEngine{
 //      std::weak_ptr<BaseWidget> _hovered; //the currently hovered widget
       bool _isEditor = false; //enables other features
 //      std::optional<std::shared_ptr<Draggable>> _dragNDrop; //the widget currently being drag n dropped
-      bool _isDragging = false; //true when we start a dragndrop
+//      bool _isDragging = false; //true when we start a dragndrop
       uint64_t _frameCounter=0;
       int targetFPS;
       std::chrono::milliseconds _keyDownRepeatDelay = std::chrono::milliseconds(500); //how long a key must be held down before it counts as a repeat
@@ -80,7 +80,8 @@ namespace ReyEngine{
 //      std::stack<RenderTarget*> renderStack;
 //      std::queue<std::unique_ptr<InputEvent>> _inputQueueMouse; //a place to hold programatically generated input
 //      std::queue<std::unique_ptr<InputEvent>> _inputQueueKey; //a place to hold programatically generated input
-      std::mutex _inputMtx;
+//      std::mutex _inputMtx;
+      std::shared_ptr<Canvas> _root;
       /////////////////////
       /////////////////////
       class ProcessList {
