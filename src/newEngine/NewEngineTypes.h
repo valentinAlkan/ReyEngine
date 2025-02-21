@@ -8,7 +8,7 @@ using Handled = bool;
 #define TYPENAME(CLASSNAME) \
 static constexpr char TYPE_NAME[] = #CLASSNAME; \
 
-#define REYENGINE_OBJECT(CLASSNAME, PARENT_CLASSNAME) \
+#define REYENGINE_OBJECT(CLASSNAME) \
 TYPENAME(CLASSNAME) \
 virtual std::string getTypeName(){return TYPE_NAME;}  \
 
@@ -53,7 +53,7 @@ struct Transformable : virtual ReyObject {
 };
 
 struct Drawable2D : ReyObject {
-   REYENGINE_OBJECT(Drawable2D, Renderer2D)
+   REYENGINE_OBJECT(Drawable2D)
    ~Drawable2D() { std::cout << "Goodbye from " << TYPE_NAME << "!!" << std::endl; }
    std::string someData;
    Transform xform{};
@@ -61,7 +61,7 @@ struct Drawable2D : ReyObject {
 };
 
 struct Canvas : public ReyObject {
-   REYENGINE_OBJECT(Canvas, Renderer2D)
+   REYENGINE_OBJECT(Canvas)
    Canvas(const std::string& blah){}
    ~Canvas() { std::cout << "Goodbye from " << TYPE_NAME << "!!" << std::endl; }
    void _on_descendant_added_to_tree(TypeNode* child) override;
@@ -75,14 +75,14 @@ struct Widget : public Drawable2D, public InputHandler {
 };
 
 struct Sprite : public Widget {
-   REYENGINE_OBJECT(Sprite, Drawable2D)
+   REYENGINE_OBJECT(Sprite)
    Sprite(const std::string& texPath): texPath(texPath){}
    ~Sprite() { std::cout << "Goodbye from " << TYPE_NAME << "!!" << std::endl; }
    std::string texPath;
 };
 
 struct AnimatedSprite : public Sprite {
-   REYENGINE_OBJECT(AnimatedSprite, Sprite)
+   REYENGINE_OBJECT(AnimatedSprite)
    ~AnimatedSprite() { std::cout << "Goodbye from " << TYPE_NAME << "!!" << std::endl; }
 };
 

@@ -128,6 +128,10 @@ namespace ReyEngine::Internal::Tree {
          return childptr;
       }
 
+      std::unique_ptr<TypeNode> removeChild (std::string& name){
+
+      };
+
       inline std::optional<TypeNode*> getChild(const std::string& name) {
          auto it = _childMap.find(std::hash<std::string>{}(name));
          if (it != _childMap.end()) return {it->second.get()};
