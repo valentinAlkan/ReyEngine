@@ -39,11 +39,12 @@ void Canvas::cacheDrawables() {
    };
 
    auto parent = _node->getParent();
+   auto root = _node->getRoot();
 
    getDrawables(_node);
    std::reverse(drawOrder.begin(), drawOrder.end());
    for (const auto& [Matrix, drawable] : drawOrder){
-      cout << drawable->getNode()->name<< ",";
+      cout << drawable->getNode()->getScenePath() << ",";
    }
    cout << endl;
 }

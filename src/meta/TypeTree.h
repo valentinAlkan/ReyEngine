@@ -84,6 +84,7 @@ namespace ReyEngine::Internal::Tree {
       {
          //link the type with the node
          as<TreeStorable>().value()->_node = this;
+         _scenePath = "\\" + name;
       }
       virtual ~TypeNode(){
          std::cout << "Deleting type node " << name << " of type " << name << std::endl;
@@ -91,6 +92,7 @@ namespace ReyEngine::Internal::Tree {
       [[nodiscard]] TypeBase* getData() const { return _data.get(); }
       inline TypeNode* getParent(){return _parent;}
       inline TypeNode* getRoot(){return _root;}
+      inline std::string getScenePath(){return _scenePath;}
       // Add child with a name for lookup
       TypeNode* addChild(std::unique_ptr<TypeNode>&& child) {
          const auto& name = child->name;
@@ -110,7 +112,8 @@ namespace ReyEngine::Internal::Tree {
          childptr->_parent = this;
 
          //set the root
-         _root = _parent ? _parent->_root : this;
+         childptr->_root = _root;
+         childptr->_scenePath = _scenePath + "\\" + name;
 
          //////callbacks
          //init, if needed
@@ -179,9 +182,9 @@ namespace ReyEngine::Internal::Tree {
       const std::string name;
       const std::string typeName;
    private:
-      std::string scenePath;
+      std::string _scenePath;
       TypeNode* _parent = nullptr;
-      TypeNode* _root = nullptr;
+      TypeNode* _root = this;
       std::shared_ptr<TypeBase> _data;
       std::map<NameHash, std::unique_ptr<TypeNode>> _childMap; //parents own children
       std::vector<TypeNode*> _childOrder;         // Points to map entries
