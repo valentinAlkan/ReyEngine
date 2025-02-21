@@ -4,14 +4,15 @@
 #include <unordered_set>
 
 namespace ReyEngine{
-   class Window2 {
+   class Window2 : public EventPublisher {
    public:
-//      struct WindowResizeEvent : public Event<WindowResizeEvent> {
-//         EVENT_CTOR_SIMPLE(WindowResizeEvent, Event<WindowResizeEvent>, Pos<int> newSize), size(newSize){
-//               //         std::cout << "Window resize is event id " << getUniqueEventId() << std::endl;
-//         }
-//         Size<int> size;
-//      };
+      struct WindowResizeEvent : public Event<WindowResizeEvent> {
+         WindowResizeEvent(EventPublisher* publisher, Pos<int> newSize)
+         : Event<WindowResizeEvent>(publisher)
+         , size(newSize)
+         {}
+         Size<int> size;
+      };
 //      struct WindowMoveEvent : public Event<WindowMoveEvent> {
 //         EVENT_CTOR_SIMPLE(WindowMoveEvent, Event<WindowMoveEvent>){
 //            //         std::cout << "Window move is event id " << getUniqueEventId() << std::endl;

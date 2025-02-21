@@ -215,6 +215,7 @@ target_link_libraries(AbstractTreeTest raylib)
 add_executable( NewEngine
         src/newEngine/main.cpp
         src/newEngine/Window2.cpp
+        src/newEngine/Event2.cpp
         src/meta/Logger.cpp
         src/meta/ReyEngine.cpp
         src/meta/FileSystem.cpp

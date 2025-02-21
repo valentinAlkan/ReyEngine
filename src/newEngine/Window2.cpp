@@ -84,6 +84,7 @@ void Window2::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Window2::exec(){
+   InputInterface::setExitKey(InputInterface::KeyCode::KEY_ESCAPE);
    //set widgets as processed
    //NOTE: This must be done here, because widgets can be created and loaded before a window exists
    // Since the window controls the process list, it might not exist yet.
@@ -95,22 +96,51 @@ void Window2::exec(){
 //   };
    auto canvas = getCanvas();
 //   applyProcess(canvas);
-   ReyEngine::Size<float> size = getSize();
-   ReyEngine::Pos<float> position;
+   Size<float> size = getSize();
+   Pos<float> position;
 //   canvas->setSize(size);
    SetTargetFPS(targetFPS);
 //   while (!WindowShouldClose()){
+      BeginDrawing();
+      EndDrawing();
 //      {
+      {
+         EventPublisher p;
+         {
+            auto cb = [](const Event<float> f) {
+               cout << "yop" << endl;
+            };
+            EventSubscriber s;
+            s.subscribe<Event<float>>(&p, cb);
+         }
+      }
+
+   {
+      EventSubscriber s;
+      {
+         auto cb = [](const Event<float> f) {
+            cout << "yop" << endl;
+         };
+         EventPublisher p;
+         s.subscribe<Event<float>>(&p, cb);
+      }
+   }
 //
 //         unique_lock<mutex> sl(Application::instance()._busy);
 //
-//         //see if the window size has changed
+         //see if the window size has changed
 //         Size<float> newSize = getSize();
 //         if (newSize != size) {
-//            WindowResizeEvent event(toEventPublisher(), newSize);
+            auto windowcb = [](const Window2::WindowResizeEvent& event){
+               std::cout << "got eem" << event.size << endl;
+            };
+            EventSubscriber subscriber;
+            subscriber.subscribe<Window2::WindowResizeEvent>(this, windowcb);
+            WindowResizeEvent event(this, getSize());
 //            size = newSize;
-//            publish(event);
-//            //see if our root needs to resize
+            publish(event);
+
+            //see if our root needs to resize
 //            if (canvas->getAnchoring() != BaseWidget::Anchor::NONE) {
 //               canvas->setSize(size);
 //            }

@@ -54,21 +54,26 @@ void Canvas::cacheDrawables() {
 int main(){
    //create window
    //createWindowPrototype(const std::string &title, int width, int height, const std::vector<ReyEngine::WindowFlags> &flags, int targetFPS) {
-   auto& window = Application2::createWindowPrototype("window", 1920, 1080, {WindowFlags::RESIZE}, 60)->createWindow();
-
-   //abstract tree
    {
-      static constexpr char CANVAS_NAME[] = "canvas";
-      static constexpr char SPRITE_NAME[] = "SPRITE";
-      {
-         auto root = make_node<Canvas>(CANVAS_NAME, "asdf");
-         auto sprite = root->addChild(make_node<Sprite>(SPRITE_NAME, "texture_path"));
-         auto sprite2 = sprite->addChild(make_node<Sprite>(string(SPRITE_NAME) + "_2", "texture_path"));
-         auto sprite3 = sprite->addChild(make_node<Sprite>(string(SPRITE_NAME) + "_3", "texture_path"));
-         auto sprite33 = sprite3->addChild(make_node<Sprite>(string(SPRITE_NAME) + "_33", "texture_path"));
-         auto sprite4 = sprite->addChild(make_node<Sprite>(string(SPRITE_NAME) + "_4", "texture_path"));
-      }
-   }
+      auto& window = Application2::createWindowPrototype("window", 1920, 1080, {WindowFlags::RESIZE}, 60)->createWindow();
 
+      //abstract tree
+      {
+         static constexpr char CANVAS_NAME[] = "canvas";
+         static constexpr char SPRITE_NAME[] = "SPRITE";
+         {
+            auto root = make_node<Canvas>(CANVAS_NAME, "asdf");
+            auto sprite = root->addChild(make_node<Sprite>(SPRITE_NAME, "texture_path"));
+            auto sprite2 = sprite->addChild(make_node<Sprite>(string(SPRITE_NAME) + "_2", "texture_path"));
+            auto sprite3 = sprite->addChild(make_node<Sprite>(string(SPRITE_NAME) + "_3", "texture_path"));
+            auto sprite33 = sprite3->addChild(make_node<Sprite>(string(SPRITE_NAME) + "_33", "texture_path"));
+            auto sprite4 = sprite->addChild(make_node<Sprite>(string(SPRITE_NAME) + "_4", "texture_path"));
+         }
+      }
+
+
+      window.exec();
+   }
    return 0;
+
 }
