@@ -1,6 +1,7 @@
 #pragma once
 #include "NewEngineTypes.h"
 #include "Application2.h"
+#include "InputHandler2.h"
 #include <unordered_set>
 
 namespace ReyEngine{
@@ -79,8 +80,8 @@ namespace ReyEngine{
       const int startingWidth;
       const int startingHeight;
 //      std::stack<RenderTarget*> renderStack;
-//      std::queue<std::unique_ptr<InputEvent>> _inputQueueMouse; //a place to hold programatically generated input
-//      std::queue<std::unique_ptr<InputEvent>> _inputQueueKey; //a place to hold programatically generated input
+      std::queue<std::unique_ptr<InputEvent>> _inputQueueMouse; //a place to hold programatically generated input
+      std::queue<std::unique_ptr<InputEvent>> _inputQueueKey; //a place to hold programatically generated input
 //      std::mutex _inputMtx;
       std::shared_ptr<Canvas> _root;
       /////////////////////

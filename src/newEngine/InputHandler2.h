@@ -1,5 +1,5 @@
 #pragma once
-#include "InputManager.h"
+#include "InputManager2.h"
 #include "Event2.h"
 
 namespace ReyEngine{

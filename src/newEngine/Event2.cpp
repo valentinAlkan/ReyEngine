@@ -3,7 +3,7 @@
 using namespace ReyEngine;
 
 EventPublisher::~EventPublisher() {
-   //notify all customers that their magazine subscriptions are cancelled
+   //notify all customers that their subscriptions are cancelled
    //NO REFUNDS
    for (auto it=_eventMap.begin(); it!=_eventMap.end();/**/){
       auto& callbackmap = it->second;
