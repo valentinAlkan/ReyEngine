@@ -1,6 +1,6 @@
 #pragma once
 #include "InputManager.h"
-#include "Event2.h"
+#include "Event.h"
 
 namespace ReyEngine{
    using Handled = bool;

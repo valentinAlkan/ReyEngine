@@ -211,19 +211,19 @@ namespace ReyEngine {
             return {0, _y > 0 ? 1 : -1};
          }
       }
-      Vec2<int> ortho8() const {
+      [[nodiscard]] Vec2<int> ortho8() const {
          constexpr float DIAGONAL_THRESHOLD = 0.9239f; //22.5 degrees
          float absX = std::abs(_x);
          float absY = std::abs(_y);
          if (absX / absY > DIAGONAL_THRESHOLD && absY / absX > DIAGONAL_THRESHOLD) {
-            //diagnoals
-            return Vec2<int>(_x > 0 ? 1 : -1,_y > 0 ? 1 : -1);
+            //diagonals
+            return {_x > 0 ? 1 : -1,_y > 0 ? 1 : -1};
          }
          //fallback to cardinal directions
          return ortho4();
       }
-      void rotate(const Radians& r){
-         toVec2().rotate(r);
+      auto rotate(const Radians& r) const {
+         return toVec2().rotate(r);
       }
       CircleSector toCircleSector(Degrees totalAngle, double radius, const Pos<R_FLOAT>& pos) const;
       friend std::ostream& operator<<(std::ostream& os, const UnitVector2& v) {os << v.toVec2().toString(); return os;}
@@ -235,29 +235,24 @@ namespace ReyEngine {
    template <typename T>
    struct Vec3 : protected Vec<T> {
       using Vec<T>::toString;
-      inline Vec3(): Vec<T>(3), x(0), y(0), z(0){}
-      inline operator Vector3() const {return {(float)x,(float)y,(float)z};}
-      inline Vec3(const T& _x, const T& y, const T& _z) : Vec<T>(3), x(_x), y(y),z(_z) {}
-      inline explicit Vec3(const Vector3& v)     : Vec<T>(3), x((T)v.x), y((T)v.y), z((T)v.z){}
-      inline Vec3(const Vec3& v): Vec<T>(3), x((T)v.x), y((T)v.y), z((T)v.z){}
-      inline double length(){return std::sqrt(x * x + y * y + z * z);}
-      inline Vec3 normalize(){
-          auto len = length();
-          if (len != 0){return {x/len, y/len, z/len};}
-          return {};
-      }
-      inline Vec3& operator=(const Vec3& rhs){x = rhs.x; y=rhs.y; z=rhs.z; return *this;}
-      inline Vec3& operator-(){x = -x; y =-y; z = -z; return *this;}
-      inline Vec3 operator-(const Vec3& rhs) const {Vec3 retval; retval.x=x-rhs.x; retval.y=y-rhs.y; retval.z=z-rhs.z; return retval;}
-      inline Vec3 operator+(const Vec3& rhs) const {Vec3 retval; retval.x=x+rhs.x; retval.y=y+rhs.y; retval.z=z+rhs.z; return retval;}
-      inline Vec3& operator-=(const Vec3& rhs){x-=rhs.x; y-=rhs.y; z-=rhs.z; return *this;}
-      inline Vec3& operator+=(const Vec3& rhs){x+=rhs.x; y+=rhs.y; z+=rhs.z; return *this;}
+      constexpr inline Vec3(): Vec<T>(3), x(0), y(0), z(0){}
+      constexpr inline operator Vector3() const {return {(float)x,(float)y,(float)z};}
+      constexpr inline Vec3(const T& _x, const T& y, const T& _z) : Vec<T>(3), x(_x), y(y),z(_z) {}
+      constexpr inline explicit Vec3(const Vector3& v)     : Vec<T>(3), x((T)v.x), y((T)v.y), z((T)v.z){}
+      constexpr inline Vec3(const Vec3& v): Vec<T>(3), x((T)v.x), y((T)v.y), z((T)v.z){}
+      constexpr inline Vec3& operator=(const Vec3& rhs){x = rhs.x; y=rhs.y; z=rhs.z; return *this;}
+      constexpr inline Vec3& operator-(){x = -x; y =-y; z = -z; return *this;}
+      constexpr inline Vec3 operator-(const Vec3& rhs) const {Vec3 retval; retval.x=x-rhs.x; retval.y=y-rhs.y; retval.z=z-rhs.z; return retval;}
+      constexpr inline Vec3 operator+(const Vec3& rhs) const {Vec3 retval; retval.x=x+rhs.x; retval.y=y+rhs.y; retval.z=z+rhs.z; return retval;}
+      constexpr inline Vec3& operator-=(const Vec3& rhs){x-=rhs.x; y-=rhs.y; z-=rhs.z; return *this;}
+      constexpr inline Vec3& operator+=(const Vec3& rhs){x+=rhs.x; y+=rhs.y; z+=rhs.z; return *this;}
       inline static std::vector<T> fromString(const std::string& s){return Vec<T>::fromString(3, s);};
       [[nodiscard]] inline std::vector<T> getElements() const override {return {x,y,z};}
-      inline std::optional<T> normalize() const {
-         const auto& len = magnitude();
+      inline std::optional<Vec3<T>> normalize() const {return normalize(*this);}
+      inline constexpr static Vec3<T> normalize(const Vec3& other) {
+         auto len = other.magnitude();
          if (len == T(0)) return {};
-         return {x / len, y / len, z / len};
+         return Vec3(other.x / len, other.y / len, other.z / len);
       }
       inline T magnitude() const {return std::sqrt(x * x + y * y + z * z);}
       inline T dot(const Vec3& rhs) const {return x * rhs.x + y * rhs.y + z * rhs.z;}
@@ -295,6 +290,86 @@ namespace ReyEngine {
         T y;
         T z;
     };
+
+
+   struct UnitVector3 {
+      constexpr UnitVector3()=default;
+      constexpr UnitVector3(const Vec3<R_FLOAT>& v): UnitVector3(v.x, v.y, v.z){}
+      constexpr UnitVector3(R_FLOAT x, R_FLOAT y, R_FLOAT z){
+         auto normalized = Vec3<R_FLOAT>::normalize({x, y, z});
+         _x = normalized.x;
+         _y = normalized.y;
+         _z = normalized.z;
+      }
+      constexpr Vec3<R_FLOAT> operator*(R_FLOAT distance) const {return {_x*distance, _y*distance, _z*distance};}
+      constexpr UnitVector3& operator=(const Vec3<R_FLOAT>& v){*this = UnitVector3(v); return *this;}
+      constexpr operator Vec3<R_FLOAT>() const {return {_x, _y, _z};}
+      constexpr Vec3<R_FLOAT> toVec3() const {return (Vec3<R_FLOAT>)(*this);}
+      bool valid() const {return FloatEquals(toVec3().magnitude(), 1.0);}
+      constexpr R_FLOAT x() const {return _x;}
+      constexpr R_FLOAT y() const {return _y;}
+      constexpr R_FLOAT z() const {return _z;}
+
+      // Project to primary axes (similar to ortho4 in 2D)
+      Vec3<int> ortho6() const {
+         float absX = std::abs(_x);
+         float absY = std::abs(_y);
+         float absZ = std::abs(_z);
+
+         if (absX >= absY && absX >= absZ) {
+            return {_x > 0 ? 1 : -1, 0, 0};
+         } else if (absY >= absX && absY >= absZ) {
+            return {0, _y > 0 ? 1 : -1, 0};
+         } else {
+            return {0, 0, _z > 0 ? 1 : -1};
+         }
+      }
+
+      // Project to primary axes or diagonals (similar to ortho8 in 2D, but in 3D it's ortho26)
+      // This is a simplified version that only handles primary axes and main diagonals (8 directions)
+      Vec3<int> ortho26() const {
+         constexpr float DIAGONAL_THRESHOLD = 0.7071f; // 45 degrees
+         float absX = std::abs(_x);
+         float absY = std::abs(_y);
+         float absZ = std::abs(_z);
+
+         bool strongX = absX > DIAGONAL_THRESHOLD;
+         bool strongY = absY > DIAGONAL_THRESHOLD;
+         bool strongZ = absZ > DIAGONAL_THRESHOLD;
+
+         return {
+               strongX ? (_x > 0 ? 1 : -1) : 0,
+               strongY ? (_y > 0 ? 1 : -1) : 0,
+               strongZ ? (_z > 0 ? 1 : -1) : 0
+         };
+      }
+
+      // Rotate around an arbitrary axis
+      // This is a placeholder - implementation would depend on your rotation system
+      void rotate(const Vec3<R_FLOAT>& axis, const Radians& angle) {
+         // Would need a proper 3D rotation implementation
+         // This depends on how your Vec3 implements rotation
+      }
+
+      // Cross product with another unit vector (returns a unit vector)
+      UnitVector3 cross(const UnitVector3& other) const {
+         auto result = toVec3().cross(other.toVec3());
+         return UnitVector3(result);
+      }
+
+      // Dot product with another unit vector
+      R_FLOAT dot(const UnitVector3& other) const {
+         return _x * other._x + _y * other._y + _z * other._z;
+      }
+      friend std::ostream& operator<<(std::ostream& os, const UnitVector3& v) {
+         os << v.toVec3().toString();
+         return os;
+      }
+   private:
+      R_FLOAT _x=0;
+      R_FLOAT _y=0;
+      R_FLOAT _z=0;
+   };
 
    template <typename T>
    struct Range : private Vec3<T> {
@@ -891,87 +966,188 @@ namespace ReyEngine {
    };
 
    //should maybe use eigen transforms. one day.
-   struct Transform2D {
-      //todo: This should be a matrix, and functions should decompose it
-      Pos<R_FLOAT> position;
-      R_FLOAT rotation; // In radians
-      Vec2<R_FLOAT> scale = {1.0f, 1.0f};
+//should maybe use eigen transforms. one day.
+   template <uint8_t D>
+   requires (D==2 || D==3)
+   struct Transform {
+      Matrix matrix;
+      [[nodiscard]] Matrix getMatrix() const {return matrix;};
 
-      // Get final position of a point after transform
-      Vec2<float> transform(const Vec2<float>& point) const {
-         float cos_a = std::cos(rotation);
-         float sin_a = std::sin(rotation);
-         return Vec2<float>{
-               point.x * cos_a - point.y * sin_a + position.x,
-               point.x * sin_a + point.y * cos_a + position.y
+      // Base implementation
+      [[nodiscard]] Matrix inverse() const {return MatrixInvert(matrix);}
+   };
+
+// Specialization for 2D transforms
+   struct Transform2D : public Transform<2> {
+      Matrix matrix;
+      // Enhanced 2D transform function with more arguments
+      [[nodiscard]] Vec2<float> transform(const Vec2<float>& point,
+                                          bool applyScale = true,
+                                          bool applyRotation = true,
+                                          bool applyTranslation = true) const {
+         // Create a copy of the matrix to selectively apply transformations
+         Matrix workingMatrix = matrix;
+
+         if (!applyScale) {
+            // Remove scaling from the working matrix
+            Vec2<float> scale = extractScale();
+            if (scale.x != 0 && scale.y != 0) {
+               workingMatrix = MatrixMultiply(MatrixScale(1.0f/scale.x, 1.0f/scale.y, 1.0f), workingMatrix);
+            }
+         }
+
+         if (!applyRotation) {
+            // Remove rotation from the working matrix
+            float rotation = extractRotation();
+            workingMatrix = MatrixMultiply(MatrixRotate({0, 0, 1}, -rotation), workingMatrix);
+         }
+
+         if (!applyTranslation) {
+            // Remove translation from the working matrix
+            Vec2<float> translation = extractTranslation();
+            workingMatrix = MatrixMultiply(MatrixTranslate(-translation.x, -translation.y, 0), workingMatrix);
+         }
+
+         // Use the modified matrix to transform the point
+         Vector3 vec3Point = {point.x, point.y, 0.0f};
+         Vector3 transformed = Vector3Transform(vec3Point, workingMatrix);
+         return Vec2<float>{transformed.x, transformed.y};
+      }
+
+      // Additional utility functions for 2D
+      [[nodiscard]] Vec2<float> extractTranslation() const {
+         return Vec2<float>{matrix.m12, matrix.m13};
+      }
+
+      [[nodiscard]] float extractRotation() const {
+         // Extract rotation angle from the matrix
+         return atan2f(matrix.m1, matrix.m0);
+      }
+
+      [[nodiscard]] Vec2<float> extractScale() const {
+         // Extract scale from the matrix
+         float scaleX = Vector2Length({matrix.m0, matrix.m4});
+         float scaleY = Vector2Length({matrix.m1, matrix.m5});
+         return Vec2<float>{scaleX, scaleY};
+      }
+
+      [[nodiscard]] Matrix inverse() const {return MatrixInvert(matrix);}
+
+      // Enhanced 2D rotate with optional center point
+      void rotate(const Radians& r, const Vec2<float>& centerPoint = {0.0f, 0.0f}) {
+         if (centerPoint.x == 0.0f && centerPoint.y == 0.0f) {
+            // Simple rotation around origin
+            matrix = MatrixMultiply(MatrixRotate({0, 0, 1}, (float)r.get()), matrix);
+         } else {
+            // Rotation around a specific point:
+            // 1. Translate center to origin
+            translate(-centerPoint);
+            // 2. Rotate
+            matrix = MatrixMultiply(MatrixRotate({0, 0, 1}, (float)r.get()), matrix);
+            // 3. Translate back
+            translate(centerPoint);
+         }
+      }
+
+      // Enhanced 2D translate with optional scale factor
+      void translate(const Vec2<float>& vec, float scaleFactor = 1.0f) {
+         matrix = MatrixMultiply(MatrixTranslate(vec.x * scaleFactor, vec.y * scaleFactor, 0), matrix);
+      }
+
+      // Enhanced 2D scale with optional center point
+      void scale(const Vec2<float>& scale, const Vec2<float>& centerPoint = {0.0f, 0.0f}) {
+         if (centerPoint.x == 0.0f && centerPoint.y == 0.0f) {
+            // Simple scaling around origin
+            matrix = MatrixMultiply(MatrixScale(scale.x, scale.y, 1), matrix);
+         } else {
+            // Scaling around a specific point:
+            // 1. Translate center to origin
+            translate(-centerPoint);
+            // 2. Scale
+            matrix = MatrixMultiply(MatrixScale(scale.x, scale.y, 1), matrix);
+            // 3. Translate back
+            translate(centerPoint);
+         }
+      }
+
+      // New function: shear transformation
+      void shear(float shearX, float shearY) {
+         Matrix shearMatrix = {
+               1.0f, shearY, 0.0f, 0.0f,
+               shearX, 1.0f, 0.0f, 0.0f,
+               0.0f, 0.0f, 1.0f, 0.0f,
+               0.0f, 0.0f, 0.0f, 1.0f
          };
+         matrix = MatrixMultiply(shearMatrix, matrix);
       }
 
-      // Compose two transforms, returning the equivalent single transform
-//      Transform2D operator*(const Transform2D& rhs) const {
-//         // First rotate rhs translation by our rotation
-//         float cos_a = std::cos(rotation);
-//         float sin_a = std::sin(rotation);
-//         Vec2<float> rotated_translation{
-//               rhs.translation.x * cos_a - rhs.translation.y * sin_a,
-//               rhs.translation.x * sin_a + rhs.translation.y * cos_a
-//         };
-//
-//         return Transform2D{
-//               rotation + rhs.rotation,
-//               translation + rotated_translation
-//         };
-//      }
-//      Transform2D& operator*=(const Transform2D& rhs) {*this = *this * rhs; return *this;}
-//      Transform2D& operator=(const Transform2D& rhs) {
-//         if (this != &rhs) {
-//            rotation = rhs.rotation;
-//            translation = rhs.translation;
-//         }
-//         return *this;
-//      }
-//      Transform2D inverse() const {
-//         // For rotation, we negate the angle
-//         float inv_rotation = -rotation;
-//
-//         // For translation, we need to rotate it by -angle and negate it
-//         float cos_a = std::cos(inv_rotation);
-//         float sin_a = std::sin(inv_rotation);
-//         Vec2<float> inv_translation{
-//               -(translation.x * cos_a - translation.y * sin_a),
-//               -(translation.x * sin_a + translation.y * cos_a)
-//         };
-//
-//         return Transform2D{inv_rotation, inv_translation, {0}};
-//      }
-
-      Matrix getMatrix() const {
-         auto m = MatrixTranslate(position.x, position.y, 0);
-         m = MatrixMultiply(m, MatrixRotate({0, 0, 1}, rotation));
-         m = MatrixMultiply(m, MatrixScale(scale.x, scale.y, 1));
-         return m;
-      };
-
-      //applies the transform to a point
-      Pos<R_FLOAT> transformPoint(const Pos<R_FLOAT>& point) const {
-         auto res = Vector3Transform({point.x, point.y, 0}, getMatrix());
-         return {res.x, res.y};
+      // New function: reflect across a line defined by a point and angle
+      void reflect(const Vec2<float>& point, const Radians& angle) {
+         // 1. Translate to origin
+         translate(-point);
+         // 2. Rotate to align with axis
+         Radians negAngle = Radians(-(float)angle.get());
+         rotate(negAngle);
+         // 3. Reflect across x-axis (flip y)
+         matrix = MatrixMultiply(MatrixScale(1.0f, -1.0f, 1.0f), matrix);
+         // 4. Rotate back
+         rotate(angle);
+         // 5. Translate back
+         translate(point);
       }
-      //de-applies the transform to a point
-      Pos<R_FLOAT> invertPoint(const Pos<R_FLOAT>& point) const {
-         auto res = Vector3Transform({point.x, point.y, 0}, MatrixInvert(getMatrix()));
-         return {res.x, res.y};
+
+      // New function: compose with another transform with blending factor
+      void compose(const Transform<2>& other, float blendFactor = 1.0f) {
+         if (blendFactor == 1.0f) {
+            matrix = MatrixMultiply(other.matrix, matrix);
+         } else {
+            // Linear interpolation between matrices
+            // Note: This is a simplistic approach; for proper matrix interpolation,
+            // you'd typically decompose, interpolate components, and recompose
+            Matrix blendedMatrix = matrix;
+            for (int i = 0; i < 16; i++) {
+               float* m1 = &matrix.m0 + i;
+               const float* m2 = &other.matrix.m0 + i;
+               float* result = &blendedMatrix.m0 + i;
+               *result = *m1 + blendFactor * (*m2 - *m1);
+            }
+            matrix = blendedMatrix;
+         }
       }
    };
 
-   struct Transform2DProperty : public Property<Transform2D>{
-      using Property<Transform2D>::operator=;
-      Transform2DProperty(const std::string& instanceName,  Transform2D&& defaultvalue={})
-      : Property<Transform2D>(instanceName, PropertyTypes::Color, std::move(defaultvalue))
-      {}
-      std::string toString() const override {return "{}";}
-      Transform2D fromString(const std::string& str) override {return Transform2D();}
-   }; 
+   // Specialization for 3D transforms
+   struct Transform3D : public Transform<3> {
+      Matrix matrix;
+      [[nodiscard]] Matrix getMatrix() const {return matrix;};
+
+      [[nodiscard]] Vector3 transform(const Vector3& point) const {
+         return Vector3Transform(point, matrix);
+      }
+
+      [[nodiscard]] Matrix inverse() const {return MatrixInvert(matrix);}
+
+      void rotate(const Vector3& axis, float angle) {
+         matrix = MatrixMultiply(MatrixRotate(axis, angle), matrix);
+      }
+
+      void translate(const Vector3& vec) {
+         matrix = MatrixMultiply(MatrixTranslate(vec.x, vec.y, vec.z), matrix);
+      }
+
+      void scale(const Vector3& scale) {
+         matrix = MatrixMultiply(MatrixScale(scale.x, scale.y, scale.z), matrix);
+      }
+   };
+
+//   struct Transform2DProperty : public Property<Transform2D>{
+//      using Property<Transform2D>::operator=;
+//      Transform2DProperty(const std::string& instanceName,  Transform2D&& defaultvalue={})
+//      : Property<Transform2D>(instanceName, PropertyTypes::Color, std::move(defaultvalue))
+//      {}
+//      std::string toString() const override {return "{}";}
+//      Transform2D fromString(const std::string& str) override {return Transform2D();}
+//   };
 
    struct ColorRGBA {
       ColorRGBA(): r(0), g(0), b(0), a(255){}

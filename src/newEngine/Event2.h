@@ -78,6 +78,11 @@ namespace ReyEngine{
       : publisher(publisher)
       , eventId(eventId)
       {}
+      template <typename T>
+      T& toEventType() {
+         static_assert(std::is_base_of_v<BaseEvent, T>);
+         return static_cast<T&>(*this);
+      }
       const EventPublisher* publisher;
       const EventId eventId;
    };
@@ -113,11 +118,12 @@ namespace ReyEngine{
    using EventCallbackMap = std::map<EventSubscriber*,std::vector<EventHandler>>;
    struct EventPublisher {
       virtual ~EventPublisher();
-      std::map<std::type_index, EventCallbackMap> _eventMap;
+      std::map<EventId, EventCallbackMap> _eventMap;
    protected:
       template <typename T>
+      requires (std::is_base_of_v<T, BaseEvent>)
       void addSubscriber(EventSubscriber* subscriber, std::function<void(const BaseEvent&)> fx) {
-         auto eventId = std::type_index(typeid(T));
+         auto eventId = T::eventId;
          auto _ev = _eventMap.find(eventId);
          if (_ev == _eventMap.end()){
             //registered publisher doesn't have any events to publish
@@ -129,7 +135,7 @@ namespace ReyEngine{
          auto found = subscribers.find(subscriber);
          if (found == subscribers.end()){
             //create new set
-            auto eventdescr = _eventMap[eventId][subscriber];
+            _eventMap[eventId][subscriber];
          }
    //           std::cout << "subscribing to event " << eventId << std::endl;
          _eventMap[eventId][subscriber].push_back(fx);
@@ -162,9 +168,6 @@ namespace ReyEngine{
       template <typename T>
       void publish(const T& event){
          static_assert(std::is_base_of_v<BaseEvent, T>); //compile time check
-   //      auto publisher = downcasted_shared_from_this<EventPublisher>();
-   //           std::cout << "Publishing event " << T::getUniqueEventId() << std::endl;
-         //publish by virtual eventId so we can publish from the base class
          auto _ev = _eventMap.find(event.eventId);
          if (_ev == _eventMap.end()){
             //publisher doesn't have any events to publish

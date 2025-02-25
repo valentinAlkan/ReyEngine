@@ -49,8 +49,12 @@ namespace ReyEngine::Internal::Tree {
       requires std::is_array_v<decltype(T::TYPE_NAME)> && std::is_same_v<std::remove_extent_t<decltype(T::TYPE_NAME)>, const char>;
    };
 
+   //Type tagging interface - nodes can inherit from typetags to extend their functionality
+   // this is useful to avoid the diamond problem. TypeTags CANNOT inherit from TreeStorable,
+   // so one single object type can serve as the base for being stored in the tree,
+   // with all additional functionality resulting from typetags.
+   // Node data can be cast to base storables OR applicable typetags
    struct TypeTag{};
-   //Type tagging interface
    template<typename T>
    concept TypeTagged = std::is_base_of_v<TypeTag, T> && !std::is_base_of_v<TreeStorable, T>;
 

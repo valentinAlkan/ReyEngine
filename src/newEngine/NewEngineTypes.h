@@ -42,55 +42,26 @@ namespace ReyEngine{
    };
 
    struct Canvas;
-   struct InputHandler : TypeTag {
-      virtual Handled __process_unhandled_input() = 0;
-      virtual Handled _unhandled_input(){return false;}
-   };
+   namespace Internal{
+      struct Transformable2D : virtual ReyObject {
+         Transform2D transform2D;
+      };
 
-   struct Transformable : virtual ReyObject {
+      struct Drawable2D : ReyObject, Transformable2D {
+         REYENGINE_OBJECT(Drawable2D)
+         ~Drawable2D() { std::cout << "Goodbye from " << TYPE_NAME << "!!" << std::endl; }
+         Canvas* canvas = nullptr;
+         virtual void render() = 0;
+      };
 
-   };
-
-   struct Drawable2D : ReyObject {
-      REYENGINE_OBJECT(Drawable2D)
-      ~Drawable2D() { std::cout << "Goodbye from " << TYPE_NAME << "!!" << std::endl; }
-      std::string someData;
-      Transform xform{};
-      Canvas* canvas = nullptr;
-   };
-
-   struct Canvas : public ReyObject {
-      REYENGINE_OBJECT(Canvas)
-      Canvas(const std::string& blah){}
-      ~Canvas() { std::cout << "Goodbye from " << TYPE_NAME << "!!" << std::endl; }
-      void _on_descendant_added_to_tree(TypeNode* child) override;
-      ///walk the tree and pin any drawables to us
-      void cacheDrawables();
-      std::vector<std::pair<Matrix, Drawable2D*>> drawOrder;
-   };
-
-   struct Widget
-         : public Drawable2D
-         , public InputHandler
-         , public EventPublisher
-         {
-      Handled __process_unhandled_input(){std::cout << "Processed input!" << std::endl;};
-   };
-
-   struct Sprite : public Widget {
-      REYENGINE_OBJECT(Sprite)
-      Sprite(const std::string& texPath): texPath(texPath){}
-      ~Sprite() { std::cout << "Goodbye from " << TYPE_NAME << "!!" << std::endl; }
-      std::string texPath;
-   };
-
-   struct AnimatedSprite : public Sprite {
-      REYENGINE_OBJECT(AnimatedSprite)
-      ~AnimatedSprite() { std::cout << "Goodbye from " << TYPE_NAME << "!!" << std::endl; }
-   };
-
-   struct CompletelyUnrelatedType {
-      TYPENAME(CompletelyUnrelatedType)
-      ~CompletelyUnrelatedType() { std::cout << "Goodbye from " << TYPE_NAME << "!!" << std::endl; }
-   };
+      struct Canvas : public Drawable2D {
+         REYENGINE_OBJECT(Canvas)
+         Canvas(const std::string& blah){}
+         ~Canvas() { std::cout << "Goodbye from " << TYPE_NAME << "!!" << std::endl; }
+         void _on_descendant_added_to_tree(TypeNode* child) override;
+         ///walk the tree and pin any drawables to us
+         void cacheDrawables();
+         std::vector<std::pair<Matrix, Drawable2D*>> drawOrder;
+      };
+   }
 }

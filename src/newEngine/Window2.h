@@ -7,12 +7,11 @@
 namespace ReyEngine{
    class Window2 : public EventPublisher {
    public:
-      struct WindowResizeEvent : public Event<WindowResizeEvent> {
-         WindowResizeEvent(EventPublisher* publisher, Pos<int> newSize)
-         : Event<WindowResizeEvent>(publisher)
-         , size(newSize)
-         {}
-         Size<int> size;
+
+      EVENT_ARGS(WindowResizeEvent, 6565546465, ReyEngine::Size<float> newSize)
+      , size(newSize)
+      {}
+         Size<float> size;
       };
 //      struct WindowMoveEvent : public Event<WindowMoveEvent> {
 //         EVENT_CTOR_SIMPLE(WindowMoveEvent, Event<WindowMoveEvent>){
@@ -80,8 +79,8 @@ namespace ReyEngine{
       const int startingWidth;
       const int startingHeight;
 //      std::stack<RenderTarget*> renderStack;
-      std::queue<std::unique_ptr<InputEvent>> _inputQueueMouse; //a place to hold programatically generated input
-      std::queue<std::unique_ptr<InputEvent>> _inputQueueKey; //a place to hold programatically generated input
+      std::queue<std::unique_ptr<BaseEvent>> _inputQueueMouse; //a place to hold programatically generated input
+      std::queue<std::unique_ptr<BaseEvent>> _inputQueueKey; //a place to hold programatically generated input
 //      std::mutex _inputMtx;
       std::shared_ptr<Canvas> _root;
       /////////////////////
