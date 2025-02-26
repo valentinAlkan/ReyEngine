@@ -3,7 +3,7 @@
 
 namespace ReyEngine{
    using Handled = bool;
-
+   class Window2;
    namespace Internal {
 
       class InputHandler : public TypeTag {

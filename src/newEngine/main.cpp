@@ -72,7 +72,7 @@ int main(){
 //      }
 //
 //
-//      window.exec();
+      window.exec();
    }
    return 0;
 

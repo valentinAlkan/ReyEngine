@@ -9,22 +9,19 @@ namespace ReyEngine{
    class Window2 : public EventPublisher {
    public:
 
-      EVENT_ARGS(WindowResizeEvent, 6565546465, ReyEngine::Size<float> newSize)
+      EVENT_ARGS(WindowResizeEvent, 6565546465, Size<float> newSize)
       , size(newSize)
       {}
          Size<float> size;
       };
-//      struct WindowMoveEvent : public Event<WindowMoveEvent> {
-//         EVENT_CTOR_SIMPLE(WindowMoveEvent, Event<WindowMoveEvent>){
-//            //         std::cout << "Window move is event id " << getUniqueEventId() << std::endl;
-//         }
-//         Pos<int> position;
-//      };
+      EVENT_ARGS(WindowMoveEvent, 321657798551, Pos<float> newPos)
+      , position(newPos)
+      {}
+         Pos<int> position;
+      };
       virtual void exec();
       ~Window2();
 
-//      REYENGINE_DECLARE_STATIC_CONSTEXPR_TYPENAME(Window)
-//      template <typename T> void addChild(std::shared_ptr<TypeContainer<T>> child) = delete;
 //      bool isProcessed(const std::shared_ptr<BaseWidget>&) const;
       bool isEditor(){return _isEditor;}
 //      bool setProcess(bool, std::shared_ptr<BaseWidget>); //returns whether operation was successful. Returns false if widget already being processed or is not found.
@@ -38,7 +35,7 @@ namespace ReyEngine{
       void setPosition(Pos<int> newPos){setWindowPosition(newPos);}
       void maximize(){maximizeWindow();}
       void minimize(){minimizeWindow();}
-      inline uint64_t getFrameCounter(){return _frameCounter;}
+      inline uint64_t getFrameCounter() const {return _frameCounter;}
 //      std::optional<std::shared_ptr<Draggable>>getDragNDrop(){if (_dragNDrop) return _dragNDrop; return std::nullopt;}
       //hover
 //      void clearHover();
@@ -68,7 +65,7 @@ namespace ReyEngine{
       void initialize(std::optional<std::shared_ptr<Canvas>> root);
       static constexpr size_t INPUT_COUNT_LIMIT = 256;
    private:
-//      void processUnhandledInput(InputEvent&, std::optional<UnhandledMouseInput>);
+      void processUnhandledInput(const InputEvent&);
 //      std::weak_ptr<BaseWidget> _hovered; //the currently hovered widget
       bool _isEditor = false; //enables other features
 //      std::optional<std::shared_ptr<Draggable>> _dragNDrop; //the widget currently being drag n dropped
@@ -80,8 +77,8 @@ namespace ReyEngine{
       const int startingWidth;
       const int startingHeight;
 //      std::stack<RenderTarget*> renderStack;
-      std::queue<std::unique_ptr<BaseEvent>> _inputQueueMouse; //a place to hold programatically generated input
-      std::queue<std::unique_ptr<BaseEvent>> _inputQueueKey; //a place to hold programatically generated input
+      std::queue<std::unique_ptr<InputEvent>> _inputQueueMouse; //a place to hold programatically generated input
+      std::queue<std::unique_ptr<InputEvent>> _inputQueueKey; //a place to hold programatically generated input
 //      std::mutex _inputMtx;
       std::shared_ptr<Canvas> _root;
       /////////////////////

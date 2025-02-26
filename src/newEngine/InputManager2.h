@@ -4,13 +4,16 @@
 #include "ReyEngine.h"
 #include <algorithm>
 
+#define CONSTEXPR_EVENTID(EVENT_ID) static constexpr EventId ID = EVENT_ID;
 #define EVENT(EVENT_NAME, UNIQUE_EVENT_ID) \
    struct EVENT_NAME : public Event<EVENT_NAME, UNIQUE_EVENT_ID> { \
+      CONSTEXPR_EVENTID(UNIQUE_EVENT_ID)                   \
       explicit EVENT_NAME(const EventPublisher* publisher) : Event<EVENT_NAME, UNIQUE_EVENT_ID>(publisher)
 
 
 #define EVENT_ARGS(EVENT_NAME, UNIQUE_EVENT_ID, ...) \
    struct EVENT_NAME : public Event<EVENT_NAME, UNIQUE_EVENT_ID> { \
+      CONSTEXPR_EVENTID(UNIQUE_EVENT_ID)             \
       explicit EVENT_NAME(const EventPublisher* publisher, __VA_ARGS__) : Event<EVENT_NAME, UNIQUE_EVENT_ID>(publisher)
 
 namespace ReyEngine{
@@ -34,7 +37,6 @@ namespace ReyEngine{
       {}
       CanvasSpace<Pos<float>> canvasPos;
       Pos<float> localPos; //gets transformed
-      Transform2D t;
    };
 
    EVENT_ARGS(InputEventMouseButton, 85436723527, const Pos<float>& pos, InputInterface::MouseButton button, bool isDown)
@@ -71,6 +73,18 @@ namespace ReyEngine{
 
    //largest of the mouse input sizes
    union InputEvent {
+   private:
+      void initCommon(bool _isMouse, EventId _eventId) {
+         isMouse = _isMouse;
+         eventId = _eventId;
+      }
+   public:
+      InputEvent(const InputEventKey& eventKey): key(eventKey) {initCommon(false, InputEventKey::ID);}
+      InputEvent(const InputEventChar& eventChar): chr(eventChar) {initCommon(false, InputEventChar::ID);}
+      InputEvent(const InputEventMouseMotion& eventMotion): motion(eventMotion) {initCommon(true, InputEventMouseMotion::ID);}
+      InputEvent(const InputEventMouseButton& eventButton): button(eventButton) {initCommon(true, InputEventMouseButton::ID);}
+      InputEvent(const InputEventMouseWheel& eventWheel): wheel(eventWheel) {initCommon(true, InputEventMouseWheel::ID);}
+      InputEvent(const InputEventController& controller): controller(controller) {initCommon(false, InputEventController::ID);}
       InputEventKey key;
       InputEventChar chr;
       InputEventMouse mouse;
@@ -78,8 +92,8 @@ namespace ReyEngine{
       InputEventMouseButton button;
       InputEventMouseWheel wheel;
       InputEventController controller;
-      bool isMouse = false;
-      bool eventId;
+      bool isMouse;
+      EventId eventId;
    };
 
    enum class InputFilter {
