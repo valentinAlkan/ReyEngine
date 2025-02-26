@@ -8,13 +8,14 @@
 #include "ReyEngine.h"
 #include "Platform.h"
 #include "FileSystem.h"
-#include "NewEngineTypes.h"
+#include "ReyObject.h"
 
 namespace ReyEngine{
    namespace Internal{
       class WindowPrototype2;
    }
    class Window2;
+   class Canvas;
    class Application2
    {
    public:

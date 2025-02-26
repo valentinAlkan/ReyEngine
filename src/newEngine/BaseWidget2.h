@@ -3,7 +3,7 @@
 //#include "Theme.h"
 //#include "FileSystem.h"
 //#include "CollisionShape.h"
-#include "NewEngineTypes.h"
+#include "ReyObject.h"
 #include "InputHandler2.h"
 #include <iostream>
 #include <stack>

@@ -1,10 +1,11 @@
 #pragma once
-#include "NewEngineTypes.h"
+#include "ReyObject.h"
 #include "Application2.h"
 #include "InputHandler2.h"
 #include <unordered_set>
 
 namespace ReyEngine{
+   class Canvas;
    class Window2 : public EventPublisher {
    public:
 

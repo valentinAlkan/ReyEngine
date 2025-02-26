@@ -2,7 +2,7 @@
 #include <iostream>
 #include "Application2.h"
 //#include "Scene.h"
-//#include "Canvas.h"
+#include "Canvas2.h"
 //#include "SystemTime.h"
 //#include "TypeContainer.h"
 //#include "Physics.h"
