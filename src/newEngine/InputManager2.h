@@ -24,10 +24,8 @@ namespace ReyEngine{
    };
 
    EVENT(InputEventChar, 234623462346)
-      , eventKey(publisher)
       {}
       char ch = 0;
-      InputEventKey eventKey;
    };
 
 
@@ -71,27 +69,83 @@ namespace ReyEngine{
       /*nothing to see here*/
    };
 
+   namespace Internal{
+      struct InputUnion {
+         InputEventKey* key;
+         InputEventChar* chr;
+         InputEventMouse* mouse;
+         InputEventMouseMotion* motion;
+         InputEventMouseButton* button;
+         InputEventMouseWheel* wheel;
+         InputEventController* controller;
+      };
+   }
+
    //largest of the mouse input sizes
-   union InputEvent {
+   struct InputEvent {
    private:
       void initCommon(bool _isMouse, EventId _eventId) {
          isMouse = _isMouse;
          eventId = _eventId;
       }
+      template <typename T>
+      void assign(T* ptr, const T& event) {
+         ptr = &const_cast<T&>(event);
+         eventId = T::ID;
+         switch (T::ID) {
+            case InputEventMouse::ID:
+            case InputEventMouseMotion::ID:
+            case InputEventMouseButton::ID:
+            case InputEventMouseWheel::ID:
+               isMouse = true;
+               break;
+            default:
+               isMouse = false;
+               break;
+         }
+      }
+      Internal::InputUnion _union = {};
    public:
-      InputEvent(const InputEventKey& eventKey): key(eventKey) {initCommon(false, InputEventKey::ID);}
-      InputEvent(const InputEventChar& eventChar): chr(eventChar) {initCommon(false, InputEventChar::ID);}
-      InputEvent(const InputEventMouseMotion& eventMotion): motion(eventMotion) {initCommon(true, InputEventMouseMotion::ID);}
-      InputEvent(const InputEventMouseButton& eventButton): button(eventButton) {initCommon(true, InputEventMouseButton::ID);}
-      InputEvent(const InputEventMouseWheel& eventWheel): wheel(eventWheel) {initCommon(true, InputEventMouseWheel::ID);}
-      InputEvent(const InputEventController& controller): controller(controller) {initCommon(false, InputEventController::ID);}
-      InputEventKey key;
-      InputEventChar chr;
-      InputEventMouse mouse;
-      InputEventMouseMotion motion;
-      InputEventMouseButton button;
-      InputEventMouseWheel wheel;
-      InputEventController controller;
+      InputEvent(const InputEventKey& event){assign<std::remove_cvref_t<decltype(event)>>(_union.key, event);}
+      InputEvent(const InputEventChar& event){assign<std::remove_cvref_t<decltype(event)>>(_union.chr, event);}
+      InputEvent(const InputEventMouseMotion& event){assign<std::remove_cvref_t<decltype(event)>>(_union.motion, event);}
+      InputEvent(const InputEventMouseButton& event){assign<std::remove_cvref_t<decltype(event)>>(_union.button, event);}
+      InputEvent(const InputEventMouseWheel& event){assign<std::remove_cvref_t<decltype(event)>>(_union.wheel, event);}
+      InputEvent(const InputEventController& event){assign<std::remove_cvref_t<decltype(event)>>(_union.controller, event);}
+      template <typename T>
+      requires std::is_base_of_v<T, BaseEvent>
+      constexpr const T& toEvent() {
+         switch (T::ID) {
+            case InputEventMouse::ID:{
+               auto member = _union.mouse;
+               static_assert(std::is_same_v<decltype(member), T*>);
+               return static_cast<const T&>(member);}
+            case InputEventMouseMotion::ID:{
+               auto member = _union.motion;
+               static_assert(std::is_same_v<decltype(member), T*>);
+               return static_cast<const T&>(member);}
+            case InputEventMouseButton::ID:{
+               auto member = _union.button;
+               static_assert(std::is_same_v<decltype(member), T*>);
+               return static_cast<const T&>(member);}
+            case InputEventMouseWheel::ID:{
+               auto member = _union.wheel;
+               static_assert(std::is_same_v<decltype(member), T*>);
+               return static_cast<const T&>(member);}
+            case InputEventKey::ID:{
+               auto member = _union.key;
+               static_assert(std::is_same_v<decltype(member), T*>);
+               return static_cast<const T&>(member);}
+            case InputEventChar::ID:{
+               auto member = _union.chr;
+               static_assert(std::is_same_v<decltype(member), T*>);
+               return static_cast<const T&>(member);}
+            case InputEventController::ID:{
+               auto member = _union.controller;
+               static_assert(std::is_same_v<decltype(member), T*>);
+               return static_cast<const T&>(member);}
+         }
+      }
       bool isMouse;
       EventId eventId;
    };
@@ -111,11 +165,6 @@ namespace ReyEngine{
       INPUT_FILTER_PROCESS_PASS_PUBLISH, //
       INPUT_FILTER_PUBLISH_PASS_PROCESS, //
       INPUT_FILTER_PUBLISH_PROCESS_PASS, //
-   };
-
-   struct UnhandledMouseInput{
-      bool isInside = false;
-      Pos<float> localPos;
    };
 
    class InputManager2

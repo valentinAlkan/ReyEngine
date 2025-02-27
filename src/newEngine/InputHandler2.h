@@ -18,7 +18,7 @@ namespace ReyEngine{
          //input
          virtual Handled _process_unhandled_input(const InputEvent&) = 0; //pass input to children if they want it and then process it for ourselves if necessary
          virtual Handled __process_unhandled_input(const InputEvent& event){ return _process_unhandled_input(event);}
-         virtual Handled _process_unhandled_editor_input(const InputEvent&){}; //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)
+         virtual Handled _process_unhandled_editor_input(const InputEvent&){return false;} //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)
          InputFilter _inputFilter = InputFilter::INPUT_FILTER_PASS_AND_PROCESS;
       };
    }

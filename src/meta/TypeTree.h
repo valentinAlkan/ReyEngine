@@ -40,13 +40,15 @@ namespace ReyEngine::Internal::Tree {
    public:
       virtual ~TypeBase() = default;
       [[nodiscard]] virtual std::type_index getTypeIndex() const = 0;
+      [[nodiscard]] virtual std::string getTypeName() const = 0;
    };
 
    //Wrappable types interface
    template<typename T>
-   concept NamedType = std::is_base_of_v<TreeStorable, T> && requires(T t) {
+   concept NamedType = std::is_base_of_v<TreeStorable, T> && requires {
       { T::TYPE_NAME } -> std::convertible_to<const char*>;
-      requires std::is_array_v<decltype(T::TYPE_NAME)> && std::is_same_v<std::remove_extent_t<decltype(T::TYPE_NAME)>, const char>;
+      requires std::is_array_v<decltype(T::TYPE_NAME)> &&
+               std::is_same_v<std::remove_extent_t<decltype(T::TYPE_NAME)>, const char>;
    };
 
    //Type tagging interface - nodes can inherit from typetags to extend their functionality
@@ -56,15 +58,15 @@ namespace ReyEngine::Internal::Tree {
    // Node data can be cast to base storables OR applicable typetags
    struct TypeTag{};
    template<typename T>
-   concept TypeTagged = std::is_base_of_v<TypeTag, T> && !std::is_base_of_v<TreeStorable, T>;
+   concept TypeTagged = std::is_base_of_v<TypeTag, T> && !std::is_base_of_v<T, TreeStorable>;
 
    // Type erase wrapper. T must inherit from TreeCallable
    template<NamedType T>
    class TypeWrapper : public TypeBase {
    public:
+      TypeWrapper(T* ptr): _value(ptr){}
       template <typename... Args>
       explicit TypeWrapper(Args&&... args)
-      requires std::constructible_from<T, Args...>
       : _value(std::forward<Args>(args)...)
       {}
 
@@ -72,10 +74,14 @@ namespace ReyEngine::Internal::Tree {
          return std::type_index(typeid(T));
       }
 
-      T& getValue() { return _value; }
-      const T& getValue() const { return _value; }
+      [[nodiscard]] std::string getTypeName() const override {
+         return T::TYPE_NAME;
+      }
+
+      T& getValue() { return *_value; }
+      [[nodiscard]] const T& getValue() const { return *_value; }
    private:
-      T _value;
+      std::unique_ptr<T> _value;
    };
 
    // Convert type-erased data to a format that can be stored in the tree
@@ -133,7 +139,7 @@ namespace ReyEngine::Internal::Tree {
       }
 
       std::unique_ptr<TypeNode> removeChild (std::string& name){
-
+         throw std::runtime_error("not implemented");
       };
 
       inline std::optional<TypeNode*> getChild(const std::string& name) {
@@ -145,6 +151,20 @@ namespace ReyEngine::Internal::Tree {
       TypeNode& getChildByIndex(size_t index) {
          return *_childOrder.at(index);
       }
+
+      template<typename T>
+      std::shared_ptr<T> ref() {
+         if (_data->getTypeIndex() == std::type_index(typeid(T))) {
+            // First, cast to TypeWrapper<T>
+            auto wrapper = std::dynamic_pointer_cast<TypeWrapper<T>>(_data);
+            if (wrapper) {
+               // Then return a shared_ptr to the contained value
+               return std::shared_ptr<T>(&wrapper->getValue(), [wrapper](T*){});
+            }
+         }
+         return nullptr;
+      }
+
       template<typename T>
       std::optional<T*> is() {
          if (_data->getTypeIndex() == std::type_index(typeid(T))) {
@@ -168,11 +188,11 @@ namespace ReyEngine::Internal::Tree {
       }
 
       template<NamedType T>
-      [[nodiscard]] std::optional<const T*> as() const{
+      [[nodiscard]] std::optional<const T*> tag() const{
          return (const_cast<TypeNode*>(this))->as<T>();
       }
 
-      template<TypeTagged T> std::optional<T*> as() {
+      template<TypeTagged T> std::optional<T*> tag() {
          if (_data) {
             if (auto storable = as<TreeStorable>()){
                if (auto v = dynamic_cast<T*>(storable.value())) return v;
@@ -198,9 +218,11 @@ namespace ReyEngine::Internal::Tree {
       std::vector<TypeNode*> _childOrder;         // Points to map entries
    };
 
+// Primary template for when arguments are provided
    template<typename T, typename InstanceName, typename... Args>
-   requires std::constructible_from<T, Args...>
    static std::unique_ptr<TypeNode> make_node(InstanceName&& instanceName, Args&&... args) {
-      return std::unique_ptr<TypeNode>(new TypeNode(new TypeWrapper<T>(std::forward<Args>(args)...), instanceName, T::TYPE_NAME));
+      auto ptr = new T(std::forward<Args>(args)...);
+      auto wrapper = new TypeWrapper<T>(ptr);
+      return std::unique_ptr<TypeNode>(new TypeNode(std::move(wrapper), instanceName, T::TYPE_NAME));
    }
 }

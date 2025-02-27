@@ -13,13 +13,14 @@ namespace ReyEngine{
 
    #define REYENGINE_OBJECT(CLASSNAME) \
    TYPENAME(CLASSNAME) \
-   virtual std::string getTypeName(){return TYPE_NAME;}  \
+   std::string getTypeName() override {return TYPE_NAME;}  \
 
    //satisfies typewrappable
    namespace Internal{
       struct ReyObject : public TreeStorable
       {
          TYPENAME(ReyObject)
+         virtual std::string getTypeName() {return TYPE_NAME;}
          //reserved for internal functionality.
          //   GOOD FREND FOR IESVS SAKE FORBEARE
          //   TO DIGG THE DVST ENCLOASED HEARE

@@ -45,7 +45,7 @@ template<> Rect<int> Pos<int>::toCenterRect(const Size<int>& s) const {return {*
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 Pos<R_FLOAT> ReyEngine::getScreenCenter() {
-   return {(GetScreenWidth())/2, (GetScreenHeight())/2};
+   return {(float)(GetScreenWidth())/2, (float)(GetScreenHeight())/2};
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -150,10 +150,10 @@ void ReyEngine::drawTextCentered(const std::string &text, const Pos<float> &pos,
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::drawTextRelative(const std::string& text, const Pos<R_FLOAT>& relPos, const ReyEngineFont& font){
    //draw text relative as a percentage of the screen
-   Vector2 screenSize = {(float)GetScreenWidth(), (float)GetScreenHeight()};
-   auto newX = screenSize.x * relPos.x / 100.0;
-   auto newY = screenSize.y * relPos.y / 100.0;
-   drawText(text, {(int)newX, (int)newY}, font);
+   Vec2<R_FLOAT> screenSize = {(float)GetScreenWidth(), (float)GetScreenHeight()};
+   auto newX = (float)(screenSize.x * relPos.x / 100.0);
+   auto newY = (float)(screenSize.y * relPos.y / 100.0);
+   drawText(text, {newX, newY}, font);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

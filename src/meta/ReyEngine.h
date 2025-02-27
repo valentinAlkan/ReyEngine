@@ -840,12 +840,12 @@ namespace ReyEngine {
       /// Return a point on the circle that corresponds to the given angular offset from right-handed horizontal
       /// \param r
       /// \return
-      inline Pos<R_FLOAT> getPoint(Radians r) const {return {(float)center.x + radius * std::cos(r.get()), (float)center.y + radius * std::sin(r.get())};}
+      [[nodiscard]] inline Pos<R_FLOAT> getPoint(Radians r) const {return {center.x + radius * (float)std::cos(r.get()), center.y + radius * (float)std::sin(r.get())};}
       /// Return the angular offset from the right-handed horizontal that corresponds to the given point.
       ///
       /// \param pos: A point along a normal
       /// \return
-      inline Radians getRadians(const Pos<R_FLOAT>& pos) const {
+      [[nodiscard]] inline Radians getRadians(const Pos<R_FLOAT>& pos) const {
          double dx = pos.x - center.x;
          double dy = pos.y - center.y;
          double angle = std::atan2(dy, dx);
@@ -857,12 +857,12 @@ namespace ReyEngine {
       }
       /// Returns the point that intersects with the circle and lies along the normal formed by the point and the circle.
       /// \return
-      inline Pos<R_FLOAT> getTangentPoint(const Pos<R_FLOAT>& pos) const {return getPoint(getRadians(pos));}
+      [[nodiscard]] inline Pos<R_FLOAT> getTangentPoint(const Pos<R_FLOAT>& pos) const {return getPoint(getRadians(pos));}
       /// Returns a line that is tangent to the circle at the given normal point.
       /// \param pos: a point lying on a line that is normal to the circle.
       /// \param length: the length of the tangent
       /// \return: a tangent line that intersects the given normal
-      inline Line<R_FLOAT> getTangentLine(const Pos<R_FLOAT>& pos, double length) const {
+      [[nodiscard]] inline Line<R_FLOAT> getTangentLine(const Pos<R_FLOAT>& pos, double length) const {
          auto point = getTangentPoint(pos);
          // Calculate the vector from center to tangent point
          double dx = point.x - center.x;
@@ -970,6 +970,7 @@ namespace ReyEngine {
    template <uint8_t D>
    requires (D==2 || D==3)
    struct Transform {
+      Transform(){matrix = MatrixIdentity();}
       Matrix matrix;
       [[nodiscard]] Matrix getMatrix() const {return matrix;};
 
@@ -979,7 +980,6 @@ namespace ReyEngine {
 
 // Specialization for 2D transforms
    struct Transform2D : public Transform<2> {
-      Matrix matrix;
       // Enhanced 2D transform function with more arguments
       [[nodiscard]] Vec2<float> transform(const Vec2<float>& point,
                                           bool applyScale = true,

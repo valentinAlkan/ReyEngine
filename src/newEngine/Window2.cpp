@@ -65,6 +65,7 @@ Window2::Window2(const std::string &title, int width, int height, const std::vec
 , startingWidth(width)
 , startingHeight(height)
 {
+
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -77,6 +78,7 @@ void Window2::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
 //   root->ReyEngine::Internal::TypeContainer<ReyEngine::BaseWidget>::setRoot(true);
 //   root->setAnchoring(BaseWidget::Anchor::FILL); //canvas is filled by default
 //   //make sure we init the root
+   _root = Tree::make_node<Canvas>("root");
 //   root->_init();
 //   root->_has_inited = true;
 //   root->setRect(Rect<int>(0, 0, startingWidth, startingHeight)); //initialize to be the same size as the window
@@ -95,7 +97,7 @@ void Window2::exec(){
 //      }
 //      if (widget->_isProcessed.value) widget->setProcess(true);
 //   };
-   auto canvas = getCanvas();
+   auto canvas = _root->ref<Canvas>();
 //   applyProcess(canvas);
    Size<float> size = getSize();
    Pos<float> position;
@@ -227,6 +229,8 @@ void Window2::exec(){
 
                InputEventMouseButton event(this, pos.get(), btnUp, false);
                canvas->__process_unhandled_input(event);
+            } else {
+               break;
             }
          }
 
@@ -263,70 +267,66 @@ void Window2::exec(){
                canvas->__process_unhandled_input(event);
             }
          }
-//
-//
+
+
 //         //check the mouse delta compared to last frame
-//         auto mouseDelta = InputManager2::getMouseDelta();
-//         if (mouseDelta) {
-//            InputEventMouseMotion event(toEventPublisher());
-//            event.mouseDelta = mouseDelta;
-//            event.canvasPos = InputManager2::getMousePos().get();
-//
-//            //don't do hovering or mouse input if we're dragging and dropping
-////            static constexpr unsigned int DRAG_THRESHOLD = 20;
-////            if (_dragNDrop) {
-//            //only drag if we've moved the mouse above a certain threshold
-////               auto dragDelta = _dragNDrop.value()->startPos - getMousePos();
-////               if (abs(dragDelta.x) > DRAG_THRESHOLD || abs(dragDelta.y) > DRAG_THRESHOLD) {
-////                  _isDragging = true;
-////               }
-////            } else {
-//            //find out which widget will accept the mouse motion as focus
-////               auto hovered = canvas->askHover(canvas->screenToWorld(event.canvasPos));
-////               if (hovered) {
-////                  setHover(hovered.value());
-////               } else {
-////                  clearHover();
-////               }
-////            if (_isEditor) continue;
-//            UnhandledMouseInput mouse;
-//            mouse.localPos = canvas->canvasToLocal(event.canvasPos);
-//            mouse.isInside = canvas->isInside(mouse.localPos);
-//            processUnhandledInput(event, mouse);
-////            }
-//         }
-//
-//         //process timers and call their callbacks
+         auto mouseDelta = InputManager2::getMouseDelta();
+         if (mouseDelta) {
+            InputEventMouseMotion event(this, InputManager2::getMousePos().get(), mouseDelta);
+            event.mouseDelta = mouseDelta;
+
+            //don't do hovering or mouse input if we're dragging and dropping
+//            static constexpr unsigned int DRAG_THRESHOLD = 20;
+//            if (_dragNDrop) {
+            //only drag if we've moved the mouse above a certain threshold
+//               auto dragDelta = _dragNDrop.value()->startPos - getMousePos();
+//               if (abs(dragDelta.x) > DRAG_THRESHOLD || abs(dragDelta.y) > DRAG_THRESHOLD) {
+//                  _isDragging = true;
+//               }
+//            } else {
+            //find out which widget will accept the mouse motion as focus
+//               auto hovered = canvas->askHover(canvas->screenToWorld(event.canvasPos));
+//               if (hovered) {
+//                  setHover(hovered.value());
+//               } else {
+//                  clearHover();
+//               }
+//            if (_isEditor) continue;
+            canvas->__process_unhandled_input(event);
+//            }
+         }
+
+         //process timers and call their callbacks
 //         SystemTime::processTimers();
-//
-//         float dt = getFrameDelta();
-//         //process widget logic
+
+         float dt = getFrameDelta();
+         //process widget logic
 //         _processList.processAll(dt);
-//
-//         //draw the canvas to our render texture
-//         rlLoadIdentity();
-//         auto& _renderTarget = canvas->getRenderTarget();
-////         Application::getWindow(0).pushRenderTarget(_renderTarget);
-////         _renderTarget.clear();
-//         canvas->render2DChain();
-////         Application::getWindow(0).popRenderTarget(); //debug
-//
-//         //do physics synchronously for now
-//         rlLoadIdentity();
-////         Application::getWindow(0).pushRenderTarget(_renderTarget); //debug
+
+         //draw the canvas to our render texture
+         rlLoadIdentity();
+         auto& _renderTarget = canvas->getRenderTarget();
+//         Application::getWindow(0).pushRenderTarget(_renderTarget);
+//         _renderTarget.clear();
+         canvas->renderProcess();
+//         Application::getWindow(0).popRenderTarget(); //debug
+
+         //do physics synchronously for now
+         rlLoadIdentity();
+//         Application::getWindow(0).pushRenderTarget(_renderTarget); //debug
 //         Physics::PhysicsSystem::process();
-////         Application::getWindow(0).popRenderTarget(); //debug
-//
+//         Application::getWindow(0).popRenderTarget(); //debug
+
 //
 //         //draw the drag and drop preview (if any)
 ////         if (_isDragging && _dragNDrop && _dragNDrop.value()->preview) {
 ////            _dragNDrop.value()->preview.value()->setPos(InputManager2::getMousePos().get());
 ////            _dragNDrop.value()->preview.value()->render2DChain();
 ////         }
-//         //render the canvas to the window
-//         BeginDrawing();
-//         DrawTextureRec(_renderTarget.getRenderTexture(), {0, 0, (float) _renderTarget.getSize().x, -(float) getSize().y}, {0, 0}, WHITE);
-//         EndDrawing();
+         //render the canvas to the window
+         BeginDrawing();
+         DrawTextureRec(_renderTarget.getRenderTexture(), {0, 0, (float) _renderTarget.getSize().x, -(float) getSize().y}, {0, 0}, WHITE);
+         EndDrawing();
 //      } // release scoped lock here
 //      _frameCounter++;
    }
@@ -465,5 +465,5 @@ Window2::~Window2(){
 //
 ///////////////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<Canvas> Window2::getCanvas() {
-   return _root;
+   return _root->ref<Canvas>();
 }

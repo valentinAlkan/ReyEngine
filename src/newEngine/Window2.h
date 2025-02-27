@@ -65,7 +65,6 @@ namespace ReyEngine{
       void initialize(std::optional<std::shared_ptr<Canvas>> root);
       static constexpr size_t INPUT_COUNT_LIMIT = 256;
    private:
-      void processUnhandledInput(const InputEvent&);
 //      std::weak_ptr<BaseWidget> _hovered; //the currently hovered widget
       bool _isEditor = false; //enables other features
 //      std::optional<std::shared_ptr<Draggable>> _dragNDrop; //the widget currently being drag n dropped
@@ -80,7 +79,7 @@ namespace ReyEngine{
       std::queue<std::unique_ptr<InputEvent>> _inputQueueMouse; //a place to hold programatically generated input
       std::queue<std::unique_ptr<InputEvent>> _inputQueueKey; //a place to hold programatically generated input
 //      std::mutex _inputMtx;
-      std::shared_ptr<Canvas> _root;
+      std::unique_ptr<TypeNode> _root;
       /////////////////////
       /////////////////////
       class ProcessList {

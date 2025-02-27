@@ -214,6 +214,9 @@ target_link_libraries(AbstractTreeTest raylib)
 # Test Project
 add_executable( NewEngine
         src/newEngine/main.cpp
+        src/newEngine/Canvas2.cpp
+        src/newEngine/Widget2.cpp
+        src/newEngine/Drawable2D.cpp
         src/newEngine/Window2.cpp
         src/newEngine/Event2.cpp
         src/newEngine/InputManager2.cpp
@@ -222,6 +225,7 @@ add_executable( NewEngine
         src/meta/ReyEngine.cpp
         src/meta/FileSystem.cpp
         src/newEngine/Application2.cpp
+#        src/meta/SystemTime.cpp
         )
 target_include_directories(NewEngine PUBLIC src/newEngine src/lib src/meta)
 target_link_libraries(NewEngine raylib)

@@ -28,7 +28,7 @@ namespace ReyEngine{
       static std::chrono::time_point<std::chrono::system_clock> nowSystem();
       static std::string nowSystemString();
       static uint64_t getCurrentFrameCount();
-      static std::shared_ptr<Timer> newTimer(std::chrono::milliseconds timeout);
+//      static std::shared_ptr<Timer> newTimer(std::chrono::milliseconds timeout);
    protected:
       static void processTimers();
    //   static void updateTimer(std::shared_ptr<Timer>);
