@@ -216,6 +216,7 @@ add_executable( NewEngine
         src/newEngine/main.cpp
         src/newEngine/Window2.cpp
         src/newEngine/Event2.cpp
+        src/newEngine/InputManager2.cpp
 #        src/newEngine/BaseWidget2.cpp
         src/meta/Logger.cpp
         src/meta/ReyEngine.cpp

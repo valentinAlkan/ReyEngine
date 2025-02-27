@@ -2,6 +2,7 @@
 #include <iostream>
 #include "Application2.h"
 //#include "Scene.h"
+#include "InputManager2.h"
 #include "Canvas2.h"
 //#include "SystemTime.h"
 //#include "TypeContainer.h"
@@ -131,19 +132,19 @@ void Window2::exec(){
          while(!_inputQueueKey.empty()){
             auto event = std::move(_inputQueueKey.front());
             _inputQueueKey.pop();
-            processUnhandledInput(*event);
+            canvas->__process_unhandled_input(*event);
          }
 
          while(!_inputQueueMouse.empty()){
             auto event = std::move(_inputQueueMouse.front());
             _inputQueueMouse.pop();
-            processUnhandledInput(*event);
+            canvas->__process_unhandled_input(*event);
          }
 
          // collect char input (up to limit)
          // only downs for chars - no ups. Use keys for uppies.
          for (size_t i = 0; i < Window2::INPUT_COUNT_LIMIT; i++) {
-            auto charDown = InputManager::instance().getCharPressed();
+            auto charDown = InputManager2::instance().getCharPressed();
             if (charDown) {
                InputEventChar event(this);
                event.ch = charDown;
@@ -156,7 +157,7 @@ void Window2::exec(){
          //collect key input (up to limit)
          //do ups first so we don't process up and down on same frame
          for (size_t i = 0; i < Window2::INPUT_COUNT_LIMIT; i++) {
-            auto keyUp = InputManager::instance().getKeyReleased();
+            auto keyUp = InputManager2::instance().getKeyReleased();
             if ((int) keyUp) {
                InputEventKey event(this);
                event.key = keyUp;
@@ -171,8 +172,8 @@ void Window2::exec(){
          //REPEATS
          auto now = chrono::steady_clock::now();
          static chrono::time_point<chrono::steady_clock> keyDownTimestamp = now;
-         auto lastKey = InputManager::getLastKeyPressed();
-         if (InputManager::isKeyDown(lastKey)) {
+         auto lastKey = InputManager2::getLastKeyPressed();
+         if (InputManager2::isKeyDown(lastKey)) {
             static chrono::time_point<chrono::steady_clock> keyRepeatTimestamp = now;
             if (now - keyDownTimestamp > _keyDownRepeatDelay) {
                //start sending repeats
@@ -182,7 +183,7 @@ void Window2::exec(){
                   event.key = lastKey;
                   event.isDown = true;
                   event.isRepeat = true;
-                  processUnhandledInput(event);
+                  canvas->__process_unhandled_input(event);
                }
             }
          }
@@ -190,14 +191,14 @@ void Window2::exec(){
 
          //DOWNS
          for (size_t i = 0; i < Window2::INPUT_COUNT_LIMIT; i++) {
-            auto keyDown = InputManager::instance().getKeyPressed();
+            auto keyDown = InputManager2::instance().getKeyPressed();
             if ((int) keyDown) {
                keyDownTimestamp = chrono::steady_clock::now();
                InputEventKey event(this);
                event.key = keyDown;
                event.isDown = true;
                event.isRepeat = false;
-               processUnhandledInput(event);
+               canvas->__process_unhandled_input(event);
             } else {
                break;
             }
@@ -206,8 +207,8 @@ void Window2::exec(){
          //now do mouse input
          //UPS
          for (size_t i = 0; i < Window2::INPUT_COUNT_LIMIT; i++) {
-            auto btnUp = InputManager::instance().getMouseButtonReleased();
-            auto pos = InputManager::getMousePos();
+            auto btnUp = InputManager2::instance().getMouseButtonReleased();
+            auto pos = InputManager2::getMousePos();
             if (btnUp != InputInterface::MouseButton::NONE) {
                if (btnUp == InputInterface::MouseButton::LEFT) {
                   //check for drag n drop
@@ -225,15 +226,15 @@ void Window2::exec(){
                }
 
                InputEventMouseButton event(this, pos.get(), btnUp, false);
-               processUnhandledInput(event);
+               canvas->__process_unhandled_input(event);
             }
          }
 
          //DOWNS
          for (size_t i = 0; i < Window2::INPUT_COUNT_LIMIT; i++) {
-            auto btnDown = InputManager::instance().getMouseButtonPressed();
+            auto btnDown = InputManager2::instance().getMouseButtonPressed();
             if (btnDown != InputInterface::MouseButton::NONE) {
-               auto pos = InputManager::getMousePos();
+               auto pos = InputManager2::getMousePos();
                //check for dragndrops
 //               if (btnDown == InputInterface::MouseButton::LEFT) {
 //                  auto widgetAt = canvas->getWidgetAt(pos);
@@ -249,33 +250,27 @@ void Window2::exec(){
 //                  }
 //               }
                InputEventMouseButton event(this, pos.get(), btnDown, true);
-               processUnhandledInput(event);
+               canvas->__process_unhandled_input(event);
             } else {
                break;
             }
          }
-//
-//         {
-//            auto wheel = InputManager::getMouseWheel();
-//            if (wheel) {
-//               InputEventMouseWheel event(toEventPublisher());
-//               auto pos = InputManager::getMousePos();
-//               event.canvasPos = pos.get();
-//               event.wheelMove = wheel;
-//               UnhandledMouseInput mouse;
-//               mouse.localPos = canvas->canvasToLocal(event.canvasPos);
-//               mouse.isInside = canvas->isInside(mouse.localPos);
-//               processUnhandledInput(event, mouse);
-//            }
-//         }
+
+         {
+            auto wheel = InputManager2::getMouseWheel();
+            if (wheel) {
+               InputEventMouseWheel event(this, InputManager2::getMousePos().get(), wheel);
+               canvas->__process_unhandled_input(event);
+            }
+         }
 //
 //
 //         //check the mouse delta compared to last frame
-//         auto mouseDelta = InputManager::getMouseDelta();
+//         auto mouseDelta = InputManager2::getMouseDelta();
 //         if (mouseDelta) {
 //            InputEventMouseMotion event(toEventPublisher());
 //            event.mouseDelta = mouseDelta;
-//            event.canvasPos = InputManager::getMousePos().get();
+//            event.canvasPos = InputManager2::getMousePos().get();
 //
 //            //don't do hovering or mouse input if we're dragging and dropping
 ////            static constexpr unsigned int DRAG_THRESHOLD = 20;
@@ -325,7 +320,7 @@ void Window2::exec(){
 //
 //         //draw the drag and drop preview (if any)
 ////         if (_isDragging && _dragNDrop && _dragNDrop.value()->preview) {
-////            _dragNDrop.value()->preview.value()->setPos(InputManager::getMousePos().get());
+////            _dragNDrop.value()->preview.value()->setPos(InputManager2::getMousePos().get());
 ////            _dragNDrop.value()->preview.value()->render2DChain();
 ////         }
 //         //render the canvas to the window
@@ -386,7 +381,7 @@ Window2::~Window2(){
 //
 /////////////////////////////////////////////////////////////////////////////////////////////
 //WindowSpace<Pos<float>> Window2::getMousePos(){
-//   return InputManager::getMousePos();
+//   return InputManager2::getMousePos();
 //}
 //
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -448,12 +443,6 @@ Window2::~Window2(){
 //std::optional<std::weak_ptr<BaseWidget>> Window2::getHovered() {
 //   if (_hovered.expired()) return nullopt;
 //   return _hovered;
-//}
-//
-///////////////////////////////////////////////////////////////////////////////////////////
-//void Window2::processUnhandledInput(InputEvent& inputEvent, std::optional<UnhandledMouseInput> mouseInput){
-//   //first offer up input to modal widget (if any)
-//   getCanvas()->__process_unhandled_input(inputEvent, mouseInput);
 //}
 //
 ///////////////////////////////////////////////////////////////////////////////////////////

@@ -1,6 +1,6 @@
 #pragma once
 #include "Logger.h"
-#include "Event.h"
+#include "Event2.h"
 #include "ReyEngine.h"
 #include <algorithm>
 
@@ -118,15 +118,15 @@ namespace ReyEngine{
       Pos<float> localPos;
    };
 
-   class InputManager
+   class InputManager2
    {
    public:
-      static InputManager& instance(){static InputManager instance; return instance;}
+      static InputManager2& instance(){static InputManager2 instance; return instance;}
    private:
-      InputManager(){}
+      InputManager2(){}
    public:
-      InputManager(InputManager const&) = delete;
-      void operator=(InputManager const&) = delete;
+      InputManager2(InputManager2 const&) = delete;
+      void operator=(InputManager2 const&) = delete;
       static inline bool isMouseButtonDown(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonDown(mouseButton);}
       static inline bool isMouseButtonUp(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonUp(mouseButton);}
       static inline bool isMouseButtonPressed(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonPressed(mouseButton);}
