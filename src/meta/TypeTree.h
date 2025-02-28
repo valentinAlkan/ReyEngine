@@ -113,6 +113,10 @@ namespace ReyEngine::Internal::Tree {
       inline std::string getScenePath(){return _scenePath;}
       // Add child with a name for lookup
       TypeNode* addChild(std::unique_ptr<TypeNode>&& child) {
+         if (child.get() == this){
+            Logger::error() << "Child " << name << " cannot be added to itself " << name;
+            return nullptr; //child still valid at this point
+         }
          const auto& name = child->name;
          HashId nameHash = std::hash<std::string>{}(name);
          auto[it, success] = _childMap.emplace(nameHash, std::move(child));

@@ -10,6 +10,6 @@ namespace ReyEngine {
    public:
       REYENGINE_OBJECT(Canvas)
    protected:
-      Handled _process_unhandled_input(const InputEvent& event) override {return false;}
+      Handled _unhandled_input(const InputEvent& event) override {return false;}
    };
 }
