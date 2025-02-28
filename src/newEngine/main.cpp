@@ -26,9 +26,15 @@ int main(){
       auto& window = Application2::createWindowPrototype("window", 1920, 1080, {WindowFlags::RESIZE}, 60)->createWindow();
       auto root = window.getCanvas();
 
+      TypeNode* label0;
       {
-         auto [widget, node] = make_node<Label2>("Label0", "Here is some text");
-         root->getNode()->addChild(std::move(node));
+         auto [widget, _] = make_node<Label2>("Label0", "Here is some text");
+         label0 = root->getNode()->addChild(std::move(_));
+         widget->setPosition({50,50});
+      }
+      {
+         auto [widget, _] = make_node<Label2>("Label1", "Here is some more text");
+         label0->addChild(std::move(_));
          widget->setPosition({50,50});
       }
       window.exec();

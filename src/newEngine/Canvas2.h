@@ -12,7 +12,7 @@ namespace ReyEngine {
       void _on_descendant_added_to_tree(TypeNode* child) override;
 
       ///walk the tree and pin any drawables to us
-      void cacheDrawables();
+      void cacheDrawables(size_t count);
       void renderProcess();
       void render2D() const override;
       void render2DBegin() override;
@@ -20,8 +20,19 @@ namespace ReyEngine {
       CanvasSpace<Pos<float>> getMousePos();
       void updateGlobalTransforms();
    protected:
+      //naive implementation for now. I assume there's a smarter way to do this
+      // than backtracking all the way up a drawable's heirarchy and pushing the transformation matrices
+      struct DrawOrderData {
+         DrawOrderData(Drawable2D* drawable, DrawOrderData* parent)
+         : drawable(drawable)
+         , parent(parent)
+         {}
+         Drawable2D* drawable;
+         DrawOrderData* parent;
+      };
+
       RenderTarget& getRenderTarget(){return renderTarget;}
-      std::vector<std::pair<Matrix, Drawable2D*>> drawOrder;
+      std::vector<DrawOrderData> drawOrder;
    private:
       RenderTarget renderTarget;
 

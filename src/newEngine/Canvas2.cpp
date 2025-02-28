@@ -1,4 +1,5 @@
 #include "Canvas2.h"
+#include <stack>
 #include "rlgl.h"
 
 using namespace std;
@@ -13,16 +14,18 @@ void Canvas::render2DBegin() {
 void Canvas::_on_descendant_added_to_tree(TypeNode *n) {
    if (auto drawable = n->as<Drawable2D>()) {
       std::cout << "Descendant " << n->name << " is drawable" << std::endl;
-      cacheDrawables();
+      cacheDrawables(drawOrder.size()+1);
    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Canvas::cacheDrawables() {
+void Canvas::cacheDrawables(size_t count) {
    //walk the tree and cache all our drawables in the correct rendering order
    drawOrder.clear();
+   drawOrder.reserve(count); //keep the vector from reallocating
    std::string indent = "";
    cout << _node->name << endl;
+   DrawOrderData* parent = nullptr;
    std::function<std::vector<TypeNode*>(TypeNode*, Matrix&)> getDrawables = [&](TypeNode* node, Matrix& globalTransform){
       Matrix _globalTransform;
       indent += "   ";
@@ -38,23 +41,21 @@ void Canvas::cacheDrawables() {
             auto& drawable = isDrawable.value();
             Matrix childGlobalMatrix = MatrixMultiply(_globalTransform, drawable->transform2D.matrix);
             drawable->getGlobalTransform().matrix = childGlobalMatrix;
-            drawOrder.emplace_back(drawable->getTransform().matrix, drawable);
+            drawOrder.emplace_back(drawable, parent);
          }
          getDrawables(child, _globalTransform);
+         parent = &drawOrder.back();
       }
       indent.resize(indent.length() - 3);
       return node->getChildren();
    };
 
-   auto parent = _node->getParent();
-   auto root = _node->getRoot();
-
    Matrix globalTransform = MatrixIdentity();
    getDrawables(_node, globalTransform);
    std::reverse(drawOrder.begin(), drawOrder.end());
    cout << "New Draw order is: " << endl;
-   for (auto& [Matrix, drawable] : drawOrder){
-      cout << drawable->getNode()->getScenePath() << ",";
+   for (auto& data : drawOrder){
+      cout << data.drawable->getNode()->getScenePath() << ",";
    }
    cout << endl;
 }
@@ -77,11 +78,20 @@ void Canvas::renderProcess() {
    render2D();
 
    //front render
-   for (const auto& pair: drawOrder) {
-      auto& drawable = pair.second;
+   //first we have to iterate backwards over the list and apply all the transformation matrices
+   for (size_t i=0; i<drawOrder.size(); i++) {
+      auto& data = drawOrder[i];
+      auto& drawable = data.drawable;
       if (!drawable->_visible) continue;
-      rlPushMatrix();
-      rlMultMatrixf((const float*)&pair.first);
+      //push parents to make global transform. naive for now.
+      std::function<void(DrawOrderData&)> multParent = [&](DrawOrderData& data){
+         if (data.parent) {
+            multParent(*data.parent);
+         }
+         rlPushMatrix();
+         rlMultMatrixf(MatrixToFloat(data.drawable->getTransform().matrix));
+      };
+      multParent(data);
       drawable->render2DBegin();
       drawable->render2D();
       drawable->render2DEnd();
