@@ -8,10 +8,13 @@ using namespace ReyEngine::Internal::Tree;
 
 
 
-struct Sprite : public Widget2 {
-  void render2D() const override {
-     drawText("here is some text", Pos<float>(0,0), getDefaultFont());
+struct Label2 : public Widget2 {
+  Label2(const std::string& text): text(text){}
+   void render2D() const override {
+     drawText(text, {0,0}, getDefaultFont());
+     drawText(Pos<int>(getPosition()), {0,20}, getDefaultFont());
   }
+  std::string text;
 };
 
 
@@ -24,8 +27,9 @@ int main(){
       auto root = window.getCanvas();
 
       {
-         auto widget = make_node<Sprite>("sprite");
-         root->getNode()->addChild(std::move(widget));
+         auto [widget, node] = make_node<Label2>("Label0", "Here is some text");
+         root->getNode()->addChild(std::move(node));
+         widget->setPosition({50,50});
       }
       window.exec();
    }

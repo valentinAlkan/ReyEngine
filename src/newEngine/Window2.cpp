@@ -78,7 +78,7 @@ void Window2::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
 //   root->ReyEngine::Internal::TypeContainer<ReyEngine::BaseWidget>::setRoot(true);
 //   root->setAnchoring(BaseWidget::Anchor::FILL); //canvas is filled by default
 //   //make sure we init the root
-   _root = Tree::make_node<Canvas>("root");
+   _root = Tree::make_node<Canvas>("root").second;
 //   root->_init();
 //   root->_has_inited = true;
 //   root->setRect(Rect<int>(0, 0, startingWidth, startingHeight)); //initialize to be the same size as the window
@@ -327,8 +327,8 @@ void Window2::exec(){
          BeginDrawing();
          DrawTextureRec(_renderTarget.getRenderTexture(), {0, 0, (float) _renderTarget.getSize().x, -(float) getSize().y}, {0, 0}, WHITE);
          EndDrawing();
+         _frameCounter++;
 //      } // release scoped lock here
-//      _frameCounter++;
    }
 //   _processList.clear();
 }

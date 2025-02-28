@@ -14,6 +14,9 @@
 namespace ReyEngine::Internal::Tree {
    using HashId = size_t;
    using NameHash = HashId;
+   class TypeNode;
+   template <typename T>
+   using MakeNodeReturnType = std::pair<std::shared_ptr<T>, std::unique_ptr<TypeNode>>;
 
    class TypeNode;
    struct TreeStorable {
@@ -82,13 +85,17 @@ namespace ReyEngine::Internal::Tree {
       [[nodiscard]] const T& getValue() const { return *_value; }
    private:
       std::unique_ptr<T> _value;
+
+      // Declare make_node as a friend
+      template<typename U, typename InstanceName, typename... Args>
+      friend MakeNodeReturnType<T> make_node(InstanceName&&, Args&&...);
    };
 
    // Convert type-erased data to a format that can be stored in the tree
    class TypeNode {
-   public:
-      explicit TypeNode(TypeBase* data, const std::string& instanceName, const std::string& typeName)
-      : _data(data)
+   protected:
+      explicit TypeNode(std::unique_ptr<TypeBase> data, const std::string& instanceName, const std::string& typeName)
+      : _data(std::move(data))
       , name(instanceName)
       , typeName(typeName)
       {
@@ -96,6 +103,7 @@ namespace ReyEngine::Internal::Tree {
          as<TreeStorable>().value()->_node = this;
          _scenePath = "\\" + name;
       }
+   public:
       virtual ~TypeNode(){
          std::cout << "Deleting type node " << name << " of type " << name << std::endl;
       }
@@ -200,7 +208,7 @@ namespace ReyEngine::Internal::Tree {
          }
          return {};
       }
-      template<TypeTagged T> [[nodiscard]] std::optional<const T*> as() const {return const_cast<TypeNode*>(this)->as<T>();}
+      template<TypeTagged T> [[nodiscard]] std::optional<const T*> tag() const {return const_cast<TypeNode*>(this)->as<T>();}
 
       [[nodiscard]] const std::vector<TypeNode*>& getChildren() const {return _childOrder;}
       std::vector<TypeNode*>& getChildren() {return _childOrder;}
@@ -216,13 +224,19 @@ namespace ReyEngine::Internal::Tree {
       std::shared_ptr<TypeBase> _data;
       std::map<NameHash, std::unique_ptr<TypeNode>> _childMap; //parents own children
       std::vector<TypeNode*> _childOrder;         // Points to map entries
+
+
+      // Make make_node a friend so it can access the protected constructor
+      template<typename T, typename InstanceName, typename... Args>
+      friend MakeNodeReturnType<T> make_node(InstanceName&&, Args&&...);
    };
 
 // Primary template for when arguments are provided
    template<typename T, typename InstanceName, typename... Args>
-   static std::unique_ptr<TypeNode> make_node(InstanceName&& instanceName, Args&&... args) {
+   MakeNodeReturnType<T> make_node(InstanceName&& instanceName, Args&&... args) {
       auto ptr = new T(std::forward<Args>(args)...);
-      auto wrapper = new TypeWrapper<T>(ptr);
-      return std::unique_ptr<TypeNode>(new TypeNode(std::move(wrapper), instanceName, T::TYPE_NAME));
+      auto wrapper = std::make_unique<TypeWrapper<T>>(ptr);
+      auto node = std::unique_ptr<TypeNode>(new TypeNode(std::move(wrapper), instanceName, T::TYPE_NAME));
+      return {node->ref<T>(), std::move(node)};
    }
 }

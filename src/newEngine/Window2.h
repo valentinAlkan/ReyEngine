@@ -5,6 +5,7 @@
 #include <unordered_set>
 
 namespace ReyEngine{
+   using FrameCount = uint64_t;
    class Canvas;
    class Window2 : public EventPublisher {
    public:
@@ -37,27 +38,6 @@ namespace ReyEngine{
       void minimize(){minimizeWindow();}
       inline uint64_t getFrameCounter() const {return _frameCounter;}
 //      std::optional<std::shared_ptr<Draggable>>getDragNDrop(){if (_dragNDrop) return _dragNDrop; return std::nullopt;}
-      //hover
-//      void clearHover();
-//      void setHover(std::shared_ptr<BaseWidget>&);
-
-      void pushRenderTarget(RenderTarget&);
-      void popRenderTarget();
-//      std::optional<std::weak_ptr<BaseWidget>> getHovered();
-      /// Generates an inputEvent with the window as the publisher
-      /// \tparam T
-      /// \return
-//      template <typename T>
-//      std::unique_ptr<T> generateInputEvent(){
-//         static_assert(std::is_base_of_v<InputEvent, T>);
-//         return std::make_unique<T>(toEventPublisher());
-//      }
-//      template <typename T>
-//      void mouseInput(std::unique_ptr<T>& event){
-//         static_assert(std::is_base_of_v<InputEvent, T>);
-//         std::unique_lock<std::mutex> sl(_inputMtx);
-//         _inputQueueMouse.push(std::move(event));
-//      }
       inline void keyInput(InputInterface::KeyCode){};
       int getFPS() const {return GetFPS();}
    protected:

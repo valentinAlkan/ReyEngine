@@ -217,6 +217,7 @@ add_executable( NewEngine
         src/newEngine/Canvas2.cpp
         src/newEngine/Widget2.cpp
         src/newEngine/Drawable2D.cpp
+        src/newEngine/Positionable2D2.cpp
         src/newEngine/Window2.cpp
         src/newEngine/Event2.cpp
         src/newEngine/InputManager2.cpp

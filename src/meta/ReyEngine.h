@@ -972,7 +972,6 @@ namespace ReyEngine {
    struct Transform {
       Transform(){matrix = MatrixIdentity();}
       Matrix matrix;
-      [[nodiscard]] Matrix getMatrix() const {return matrix;};
 
       // Base implementation
       [[nodiscard]] Matrix inverse() const {return MatrixInvert(matrix);}
