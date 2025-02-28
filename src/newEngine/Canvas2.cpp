@@ -25,7 +25,6 @@ void Canvas::cacheDrawables(size_t count) {
    drawOrder.reserve(count); //keep the vector from reallocating
    std::string indent = "";
    cout << _node->name << endl;
-   DrawOrderData* parent = nullptr;
    std::function<std::vector<TypeNode*>(TypeNode*, Matrix&)> getDrawables = [&](TypeNode* node, Matrix& globalTransform){
       Matrix _globalTransform;
       indent += "   ";
@@ -41,10 +40,10 @@ void Canvas::cacheDrawables(size_t count) {
             auto& drawable = isDrawable.value();
             Matrix childGlobalMatrix = MatrixMultiply(_globalTransform, drawable->transform2D.matrix);
             drawable->getGlobalTransform().matrix = childGlobalMatrix;
-            drawOrder.emplace_back(drawable, parent);
+            drawOrder.emplace_back(drawable);
+            drawOrder.back().childCount = child->getChildren().size();
          }
          getDrawables(child, _globalTransform);
-         parent = &drawOrder.back();
       }
       indent.resize(indent.length() - 3);
       return node->getChildren();
@@ -52,7 +51,6 @@ void Canvas::cacheDrawables(size_t count) {
 
    Matrix globalTransform = MatrixIdentity();
    getDrawables(_node, globalTransform);
-   std::reverse(drawOrder.begin(), drawOrder.end());
    cout << "New Draw order is: " << endl;
    for (auto& data : drawOrder){
       cout << data.drawable->getNode()->getScenePath() << ",";
@@ -78,24 +76,26 @@ void Canvas::renderProcess() {
    render2D();
 
    //front render
-   //first we have to iterate backwards over the list and apply all the transformation matrices
-   for (size_t i=0; i<drawOrder.size(); i++) {
-      auto& data = drawOrder[i];
+   //iterate backwards since we are looking at pointers to vector entries that would be invalidated if reversed
+   std::stack<size_t> pushStack;
+   for (auto& data : drawOrder) {
       auto& drawable = data.drawable;
+      pushStack.push(data.childCount);
+      cout << "Drawing drawable " << drawable->getNode()->name << endl;
+      cout << "    (child count = " << data.childCount << ")" << endl;
+      cout << "    (pushStack = " << pushStack.top() << ")" << endl;
       if (!drawable->_visible) continue;
-      //push parents to make global transform. naive for now.
-      std::function<void(DrawOrderData&)> multParent = [&](DrawOrderData& data){
-         if (data.parent) {
-            multParent(*data.parent);
-         }
-         rlPushMatrix();
-         rlMultMatrixf(MatrixToFloat(data.drawable->getTransform().matrix));
-      };
-      multParent(data);
+      rlPushMatrix();
+      rlMultMatrixf(MatrixToFloat(data.drawable->getTransform().matrix));
       drawable->render2DBegin();
       drawable->render2D();
       drawable->render2DEnd();
-      rlPopMatrix();
+      while (!pushStack.empty() && pushStack.top() == 0) {
+         rlPopMatrix();
+         pushStack.pop();
+         if (pushStack.empty()) break;
+         pushStack.top() -= 1;
+      }
    }
    rlPopMatrix();
    render2DEnd();

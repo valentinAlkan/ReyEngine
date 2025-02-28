@@ -27,14 +27,27 @@ int main(){
       auto root = window.getCanvas();
 
       TypeNode* label0;
+      TypeNode* label1;
+      TypeNode* label2;
+      TypeNode* label10;
       {
-         auto [widget, _] = make_node<Label2>("Label0", "Here is some text");
+         auto [widget, _] = make_node<Label2>("Label0", "Parent");
          label0 = root->getNode()->addChild(std::move(_));
          widget->setPosition({50,50});
       }
       {
-         auto [widget, _] = make_node<Label2>("Label1", "Here is some more text");
-         label0->addChild(std::move(_));
+         auto [widget, _] = make_node<Label2>("Label1", "Child");
+         label1 = label0->addChild(std::move(_));
+         widget->setPosition({50,50});
+      }
+      {
+         auto [widget, _] = make_node<Label2>("Label2", "Child");
+         label2 = label1->addChild(std::move(_));
+         widget->setPosition({50,50});
+      }
+      {
+         auto [widget, _] = make_node<Label2>("Label10", "Child");
+         label10 = label1->addChild(std::move(_));
          widget->setPosition({50,50});
       }
       window.exec();

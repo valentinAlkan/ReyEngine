@@ -23,12 +23,11 @@ namespace ReyEngine {
       //naive implementation for now. I assume there's a smarter way to do this
       // than backtracking all the way up a drawable's heirarchy and pushing the transformation matrices
       struct DrawOrderData {
-         DrawOrderData(Drawable2D* drawable, DrawOrderData* parent)
+         DrawOrderData(Drawable2D* drawable)
          : drawable(drawable)
-         , parent(parent)
          {}
          Drawable2D* drawable;
-         DrawOrderData* parent;
+         size_t childCount;
       };
 
       RenderTarget& getRenderTarget(){return renderTarget;}
