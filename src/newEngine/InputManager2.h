@@ -30,36 +30,49 @@ namespace ReyEngine{
 
 
    // mouse types
-   EVENT_ARGS(InputEventMouse, 2346275324, const Pos<float>& pos)
-      , canvasPos(pos)
+   struct MouseEvent {
+      explicit MouseEvent(const CanvasSpace<Pos<float>>& canvasPos)
+      : canvasPos(canvasPos)
       {}
+      [[nodiscard]] CanvasSpace<Pos<float>> getCanvasPos() const {return canvasPos;}
+      [[nodiscard]] Pos<float> getLocalPos() const {return localPos;}
+   protected:
+      void transformLocalPos(const Matrix& m) {
+         localPos = canvasPos.get().transform(MatrixInvert(m));
+      }
+   public:
+      //friend access
+      struct Transformer {
+         static void transform(MouseEvent& data, const Matrix& m){data.transformLocalPos(m);}
+      };
+   private:
       CanvasSpace<Pos<float>> canvasPos;
-      Pos<float> localPos; //gets transformed
+      Pos<float> localPos;
    };
 
    EVENT_ARGS(InputEventMouseButton, 85436723527, const Pos<float>& pos, InputInterface::MouseButton button, bool isDown)
-      , mouse(publisher, pos)
+      , mouse(pos)
       , button(button)
       , isDown(isDown)
       {}
-      InputEventMouse mouse;
+      MouseEvent mouse;
       InputInterface::MouseButton button;
       bool isDown;
    };
 
-   EVENT_ARGS(InputEventMouseWheel, 386425732537, const Pos<int>& pos, const Vec2<float>& wheelMove)
+   EVENT_ARGS(InputEventMouseWheel, 386425732537, const Pos<float>& pos, const Vec2<float>& wheelMove)
       , wheelMove(wheelMove)
-      , mouse(publisher, pos)
+      , mouse(pos)
       {}
-      InputEventMouse mouse;
+      MouseEvent mouse;
       Vec2<float> wheelMove;
    };
 
-   EVENT_ARGS(InputEventMouseMotion, 384765275842754, const Pos<int>& pos, const Vec2<float>& mouseDelta)
-      , mouse(publisher, pos)
+   EVENT_ARGS(InputEventMouseMotion, 384765275842754, const Pos<float>& pos, const Vec2<float>& mouseDelta)
+      , mouse(pos)
       , mouseDelta(mouseDelta)
       {}
-      InputEventMouse mouse;
+      MouseEvent mouse;
       Vec2<float> mouseDelta;
    };
 
@@ -73,7 +86,6 @@ namespace ReyEngine{
       struct InputUnion {
          InputEventKey* key;
          InputEventChar* chr;
-         InputEventMouse* mouse;
          InputEventMouseMotion* motion;
          InputEventMouseButton* button;
          InputEventMouseWheel* wheel;
@@ -84,24 +96,31 @@ namespace ReyEngine{
    //largest of the mouse input sizes
    struct InputEvent {
    private:
-      void initCommon(bool _isMouse, EventId _eventId) {
-         isMouse = _isMouse;
-         eventId = _eventId;
-      }
+//      struct MouseEvent {
+//         MouseEvent(MouseEventData& mouseEventData): event(mouseEventData){}
+//         [[nodiscard]] Pos<float> localPos() const {return event.getLocalPos();};
+//         [[nodiscard]] CanvasSpace<Pos<float>> getCanvasPos() const {return event.getCanvasPos();}
+//      protected:
+//         void transformLocal(const Matrix& globalTransformMatrix) {
+//            MouseEventData::Transformer::transform(event, globalTransformMatrix);
+//         }
+//      private:
+//         MouseEventData& event;
+//         friend class Canvas;
+//      };
+
       template <typename T>
-      void assign(T* ptr, const T& event) {
-         ptr = &const_cast<T&>(event);
+      void assign(T*& unionMember, const T& event) {
+         unionMember = &const_cast<T&>(event);
          eventId = T::ID;
-         switch (T::ID) {
-            case InputEventMouse::ID:
-            case InputEventMouseMotion::ID:
-            case InputEventMouseButton::ID:
-            case InputEventMouseWheel::ID:
-               isMouse = true;
-               break;
-            default:
-               isMouse = false;
-               break;
+         if constexpr (T::ID == InputEventMouseMotion::ID){
+            _mouseData = &_union.motion->mouse;
+         }
+         if constexpr (T::ID == InputEventMouseButton::ID){
+            _mouseData = &_union.button->mouse;
+         }
+         if constexpr (T::ID == InputEventMouseWheel::ID){
+            _mouseData = &_union.wheel->mouse;
          }
       }
       Internal::InputUnion _union = {};
@@ -116,10 +135,6 @@ namespace ReyEngine{
       requires std::is_base_of_v<T, BaseEvent>
       constexpr const T& toEvent() {
          switch (T::ID) {
-            case InputEventMouse::ID:{
-               auto member = _union.mouse;
-               static_assert(std::is_same_v<decltype(member), T*>);
-               return static_cast<const T&>(member);}
             case InputEventMouseMotion::ID:{
                auto member = _union.motion;
                static_assert(std::is_same_v<decltype(member), T*>);
@@ -146,8 +161,11 @@ namespace ReyEngine{
                return static_cast<const T&>(member);}
          }
       }
-      bool isMouse;
+      //if this is a mouse event, return the mousedata, otherwise return an optional nullptr
+      [[nodiscard]] std::optional<MouseEvent*> isMouse() const {return _mouseData ? _mouseData: nullptr;}
       EventId eventId;
+   private:
+      MouseEvent* _mouseData = nullptr;
    };
 
    enum class InputFilter {

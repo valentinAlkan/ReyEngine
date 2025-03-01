@@ -18,6 +18,7 @@ namespace ReyEngine {
       void render2DBegin() override;
       void render2DEnd() override;
       void tryRender(TypeNode* node);
+      Handled tryHandle(InputEvent& event, TypeNode* node);
       CanvasSpace<Pos<float>> getMousePos();
       void updateGlobalTransforms();
    protected:

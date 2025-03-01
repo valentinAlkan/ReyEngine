@@ -175,10 +175,11 @@ namespace ReyEngine {
       inline static std::vector<T> fromString(const std::string& s){return Vec<T>::fromString(2, s);};
       friend std::ostream& operator<<(std::ostream& os, Vec2<T> v) {os << v.toString(); return os;}
       friend Vector2& operator+=(Vector2& in, Vec2<T> add) {in.x += add.x; in.y += add.y; return in;}
+      static inline Vec2 transform(const Vec2& v, const Matrix& m) {
+         auto retval = Vector3Transform({v.x, v.y, 0}, m);
+         return Vec2(retval.x, retval.y);
+      }
       inline Vec2 transform(const Matrix& m) const {
-//         auto wx = m.m0 * x - m.m1 * y;  // Negating m.m1
-//         auto wy = -m.m4 * x + m.m5 * y; // Negating m.m4
-//         return {wx, wy};
          auto retval = Vector3Transform({x, y, 0}, m);
          return Vec2(retval.x, retval.y);
       }
@@ -459,6 +460,7 @@ namespace ReyEngine {
       constexpr inline Pos& operator+=(const Pos& rhs){this->x += rhs.x; this->y += rhs.y; return *this;}
       constexpr inline Pos& operator-=(const Pos& rhs){this->x -= rhs.x; this->y -= rhs.y; return *this;}
       constexpr inline bool operator!=(const Pos& rhs){return this->x != rhs.x || this->y != rhs.y;}
+      constexpr inline Pos transform(const Matrix& m){return Vec2<T>::transform(*this, m);}
       inline operator std::string() const {return Vec2<T>::toString();}
       constexpr inline void operator=(const Size<T>&) = delete;
       [[nodiscard]] Rect<T> toRect() const;

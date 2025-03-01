@@ -96,6 +96,24 @@ void Canvas::tryRender(TypeNode *node) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+Handled Canvas::tryHandle(InputEvent& event, TypeNode* node) {
+   //try to transform the local mouse position, if applicable
+   if (auto mouseData = event.isMouse()) {
+      if (auto isPositionable = node->tag<Positionable2D2>()) {
+         auto& positionable = isPositionable.value();
+         MouseEvent::Transformer::transform(*mouseData.value(), positionable->getLocalTransform().matrix);
+      }
+   }
+   for (auto& child: node->getChildren()) {
+      if (auto isHandler = child->tag<InputHandler>()) {
+         if (tryHandle(event, child)) return true;
+         isHandler.value()->__process_unhandled_input(event);
+      }
+      tryHandle(event, child);
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::renderProcess() {
    ClearBackground(Colors::none);
    if (!_visible) return;
@@ -125,5 +143,5 @@ CanvasSpace<Pos<float>> Canvas::getMousePos() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Handled Canvas::__process_unhandled_input(const InputEvent& event) {
-
+   tryHandle(const_cast<InputEvent&>(event), _node);
 }
