@@ -11,24 +11,27 @@ struct Label2 : public Widget2 {
   : text(text)
   , color(Colors::randColor())
   {
-     setSize({100,100});
+     setSize({200,200});
   }
    void render2D() const override {
-      drawRectangle(getRect().toSizeRect(), color);
+      drawRectangle(getRect().toSizeRect(), isInside ? color : Colors::lightGray);
       drawText(text, {0,0}, getDefaultFont());
-      drawText(Pos<int>(getPosition()), {0,20}, getDefaultFont());
-      drawText(localMousePos, {0,40}, getDefaultFont());
+      drawText("P = " + Pos<int>(getPosition()).toString(), {0,20}, getDefaultFont());
+      drawText("S = " + Size<int>(getSize()).toString(), {0,40}, getDefaultFont());
+      drawText(localMousePos, {0,60}, getDefaultFont());
    }
 protected:
    Handled _unhandled_input(const InputEvent& event) override {
      if (auto isMouse = event.isMouse()){
         cout << _node->name << " got unhandled input @ localpos " << isMouse.value()->getLocalPos() << endl;
         localMousePos = isMouse.value()->getLocalPos();
+        isInside = event.isMouse().value()->isInside();
      }
 
      return false;
   }
   Pos<int> localMousePos;
+  bool isInside = false;
   std::string text;
   ColorRGBA color;
 };
@@ -46,12 +49,12 @@ int main(){
       {
          auto [widget2, _] = make_node<Label2>("Parent", "Parent");
          labels.push_back(root->getNode()->addChild(std::move(_)));
-         widget2->setPosition({50, 50});
+         widget2->setPosition({0, 00});
       }
       {
          auto [widget3, _] = make_node<Label2>("Child", "child");
          labels.push_back(labels.at(0)->addChild(std::move(_)));
-         widget3->setPosition({50, 50});
+         widget3->setPosition({150, 150});
       }
 
       window.exec();

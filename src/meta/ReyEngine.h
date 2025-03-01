@@ -527,6 +527,7 @@ namespace ReyEngine {
       inline Size& operator+=(const Size& rhs){this->x += rhs.x; this->y += rhs.y; return *this;}
       inline Size& operator-=(const Size& rhs){this->x -= rhs.x; this->y -= rhs.y; return *this;}
       inline Pos<T> center() const {return {this->x/2.0f,this->y/2.0f};}
+      inline Rect<T> toRect() const {return {{0,0}, {*this}};}
       inline operator std::string() const {return Vec2<T>::toString();}
       Rect<T> toRect();
    };
@@ -973,6 +974,7 @@ namespace ReyEngine {
    requires (D==2 || D==3)
    struct Transform {
       Transform(){matrix = MatrixIdentity();}
+      Transform(const Matrix& m){matrix = m;}
       Matrix matrix;
 
       // Base implementation
@@ -981,6 +983,8 @@ namespace ReyEngine {
 
 // Specialization for 2D transforms
    struct Transform2D : public Transform<2> {
+      Transform2D(): Transform<2>(){}
+      Transform2D(const Matrix& m): Transform<2>(m){}
       // Enhanced 2D transform function with more arguments
       [[nodiscard]] Vec2<float> transform(const Vec2<float>& point,
                                           bool applyScale = true,
@@ -1032,7 +1036,7 @@ namespace ReyEngine {
          return Vec2<float>{scaleX, scaleY};
       }
 
-      [[nodiscard]] Matrix inverse() const {return MatrixInvert(matrix);}
+      [[nodiscard]] Transform2D inverse() const {return MatrixInvert(matrix);}
 
       // Enhanced 2D rotate with optional center point
       void rotate(const Radians& r, const Vec2<float>& centerPoint = {0.0f, 0.0f}) {

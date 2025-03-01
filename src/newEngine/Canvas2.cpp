@@ -1,9 +1,11 @@
 #include "Canvas2.h"
 #include <stack>
 #include "rlgl.h"
+#include "MiscTools.h"
 
 using namespace std;
 using namespace ReyEngine;
+using namespace Tools;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::render2DBegin() {
@@ -97,20 +99,42 @@ void Canvas::tryRender(TypeNode *node) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Handled Canvas::tryHandle(InputEvent& event, TypeNode* node) {
-   //try to transform the local mouse position, if applicable
+   cout << "\"" << node->name << "\"" << " processing input event at parent's pos " << event.isMouse().value()->getLocalPos() << endl;
+   //----------------------------------------------------------------------------------------------------
+   //lazy transform and auto-cleanup of mouse transformations. When this falls out of scope, it will
+   // revert the local position back to it's parent. But only if it was transformed in the first place.
+   // pretty sneaky!
+   std::unique_ptr<MouseEvent::ScopeTransformer> mouseTransformer;
+   //----------------------------------------------------------------------------------------------------
+
+   //first transform the mouse coordinates so that they're relative to the current node
    if (auto mouseData = event.isMouse()) {
       if (auto isPositionable = node->tag<Positionable2D2>()) {
          auto& positionable = isPositionable.value();
-         MouseEvent::Transformer::transform(*mouseData.value(), positionable->getLocalTransform().matrix);
+         mouseTransformer = make_unique<MouseEvent::ScopeTransformer>(*mouseData.value(), positionable->getLocalTransform(), positionable->getSize());
+//         cout << "\"" << node->name << "\"" << " transforming to local pos " << mouseTransformer->getLocalPos() << endl;
       }
    }
+
+   // offer the input to children first
    for (auto& child: node->getChildren()) {
       if (auto isHandler = child->tag<InputHandler>()) {
-         if (tryHandle(event, child)) return true;
-         isHandler.value()->__process_unhandled_input(event);
+         auto handled = tryHandle(event, child);
+         if (handled) return true;
       }
-      tryHandle(event, child);
    }
+   //if no children want this event, we try to process it ourselves
+   // need to take care that we don't enter a recursive loop when the canvas that originated the event
+   // tries to handle it
+   if (auto isHandler = node->tag<InputHandler>()){
+      if (auto thisCanvas = node->as<Canvas>()) {
+         if (thisCanvas == this) {
+            return _unhandled_input(event);
+         }
+      }
+      return isHandler.value()->__process_unhandled_input(event);
+   }
+   return false;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

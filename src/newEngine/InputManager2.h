@@ -32,22 +32,43 @@ namespace ReyEngine{
    // mouse types
    struct MouseEvent {
       explicit MouseEvent(const CanvasSpace<Pos<float>>& canvasPos)
-      : canvasPos(canvasPos)
+      : _canvasPos(canvasPos)
+      , _localPos(canvasPos.get())
       {}
-      [[nodiscard]] CanvasSpace<Pos<float>> getCanvasPos() const {return canvasPos;}
-      [[nodiscard]] Pos<float> getLocalPos() const {return localPos;}
+      [[nodiscard]] CanvasSpace<Pos<float>> getCanvasPos() const {return _canvasPos;}
+      [[nodiscard]] Pos<float> getLocalPos() const {return _localPos;}
+      [[nodiscard]] bool isInside() const {return _isInside;}
    protected:
-      void transformLocalPos(const Matrix& m) {
-         localPos = canvasPos.get().transform(MatrixInvert(m));
+      void transformLocalPos(const Transform2D& xform) {
+         //account for other transformations?
+         _localPos = Pos<float>(xform.inverse().transform(_localPos));
       }
    public:
       //friend access
-      struct Transformer {
-         static void transform(MouseEvent& data, const Matrix& m){data.transformLocalPos(m);}
+      struct ScopeTransformer {
+         ScopeTransformer(MouseEvent& mouseEvent, const Transform2D& xform, const Size<float>& localSize)
+         : xform(xform)
+         , mouseEvent(mouseEvent)
+         , localSize(localSize)
+         {
+            mouseEvent.transformLocalPos(xform);
+            mouseEvent._isInside = localSize.toRect().isInside(getLocalPos());
+         }
+         ~ScopeTransformer(){
+            mouseEvent.transformLocalPos(xform.inverse());
+            mouseEvent._isInside = localSize.toRect().isInside(getLocalPos());
+         }
+         [[nodiscard]] Pos<float> getLocalPos() const {return mouseEvent._localPos;}
+         [[nodiscard]] CanvasSpace<Pos<float>> getCanvasPos() const {return mouseEvent._canvasPos;}
+      private:
+         MouseEvent& mouseEvent;
+         const Transform2D& xform;
+         const Size<float>& localSize;
       };
    private:
-      CanvasSpace<Pos<float>> canvasPos;
-      Pos<float> localPos;
+      CanvasSpace<Pos<float>> _canvasPos;
+      Pos<float> _localPos;
+      bool _isInside;
    };
 
    EVENT_ARGS(InputEventMouseButton, 85436723527, const Pos<float>& pos, InputInterface::MouseButton button, bool isDown)
@@ -96,19 +117,6 @@ namespace ReyEngine{
    //largest of the mouse input sizes
    struct InputEvent {
    private:
-//      struct MouseEvent {
-//         MouseEvent(MouseEventData& mouseEventData): event(mouseEventData){}
-//         [[nodiscard]] Pos<float> localPos() const {return event.getLocalPos();};
-//         [[nodiscard]] CanvasSpace<Pos<float>> getCanvasPos() const {return event.getCanvasPos();}
-//      protected:
-//         void transformLocal(const Matrix& globalTransformMatrix) {
-//            MouseEventData::Transformer::transform(event, globalTransformMatrix);
-//         }
-//      private:
-//         MouseEventData& event;
-//         friend class Canvas;
-//      };
-
       template <typename T>
       void assign(T*& unionMember, const T& event) {
          unionMember = &const_cast<T&>(event);
