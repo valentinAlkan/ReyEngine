@@ -101,7 +101,7 @@ void Canvas::tryRender(TypeNode *node) {
 Handled Canvas::tryHandle(InputEvent& event, TypeNode* node) {
 //   cout << "\"" << node->name << "\"" << " processing input event at parent's pos " << event.isMouse().value()->getLocalPos() << endl;
    //----------------------------------------------------------------------------------------------------
-   //lazy transform and auto-cleanup of mouse transformations. When this falls out of scope, it will
+   //lazy initialization and auto-cleanup of mouse transformations. When this falls out of scope, it will
    // revert the local position back to it's parent. But only if it was transformed in the first place.
    // pretty sneaky!
    std::unique_ptr<MouseEvent::ScopeTransformer> mouseTransformer;
@@ -139,8 +139,9 @@ Handled Canvas::tryHandle(InputEvent& event, TypeNode* node) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::renderProcess() {
-   ClearBackground(Colors::none);
    if (!_visible) return;
+   ClearBackground(Colors::none);
+   rlPushMatrix();
    render2DBegin();
 
    //front render
