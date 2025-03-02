@@ -1,13 +1,13 @@
 #pragma once
 #include "ReyObject.h"
-#include "Application2.h"
+#include "Application.h"
 #include "InputHandler2.h"
 #include <unordered_set>
 
 namespace ReyEngine{
    using FrameCount = uint64_t;
    class Canvas;
-   class Window2 : public EventPublisher {
+   class Window : public EventPublisher {
    public:
 
       EVENT_ARGS(WindowResizeEvent, 6565546465, Size<float> newSize)
@@ -21,7 +21,7 @@ namespace ReyEngine{
          Pos<int> position;
       };
       virtual void exec();
-      ~Window2();
+      ~Window();
 
 //      bool isProcessed(const std::shared_ptr<BaseWidget>&) const;
       bool isEditor(){return _isEditor;}
@@ -41,7 +41,7 @@ namespace ReyEngine{
       inline void keyInput(InputInterface::KeyCode){};
       int getFPS() const {return GetFPS();}
    protected:
-      Window2(const std::string& title, int width, int height, const std::vector<WindowFlags>& flags, int targetFPS);
+      Window(const std::string& title, int width, int height, const std::vector<WindowFlags>& flags, int targetFPS);
       void initialize(std::optional<std::shared_ptr<Canvas>> root);
       static constexpr size_t INPUT_COUNT_LIMIT = 256;
    private:
@@ -79,7 +79,7 @@ namespace ReyEngine{
       } _processList;
       /////////////////////
       /////////////////////
-      friend class Application2;
+      friend class Application;
    };
 
 
@@ -87,7 +87,7 @@ namespace ReyEngine{
    namespace Internal {
       class WindowPrototype2 {
       public:
-         Window2& createWindow();
+         Window& createWindow();
 //         Window2& createWindow(std::shared_ptr<Canvas>& root);
       protected:
          WindowPrototype2(const std::string &title, int width, int height, const std::vector<WindowFlags>& flags, int targetFPS);
@@ -101,7 +101,7 @@ namespace ReyEngine{
          void use();
          bool _usedUp = false; //can only generate one window per prototype
          bool _isEditor = false;
-         friend class ReyEngine::Application2;
+         friend class ReyEngine::Application;
       };
    }
 }

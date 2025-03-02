@@ -109,7 +109,7 @@ Handled Canvas::tryHandle(InputEvent& event, TypeNode* node) {
 
    //first transform the mouse coordinates so that they're relative to the current node
    if (auto mouseData = event.isMouse()) {
-      if (auto isPositionable = node->tag<Positionable2D2>()) {
+      if (auto isPositionable = node->tag<Positionable2D>()) {
          auto& positionable = isPositionable.value();
          mouseTransformer = make_unique<MouseEvent::ScopeTransformer>(*mouseData.value(), positionable->getLocalTransform(), positionable->getSize());
 //         cout << "\"" << node->name << "\"" << " transforming to local pos " << mouseTransformer->getLocalPos() << endl;

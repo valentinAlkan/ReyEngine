@@ -1,6 +1,6 @@
 #include "Window2.h"
 #include <iostream>
-#include "Application2.h"
+#include "Application.h"
 //#include "Scene.h"
 #include "InputManager2.h"
 #include "Canvas2.h"
@@ -37,9 +37,9 @@ WindowPrototype2::WindowPrototype2(const std::string &title, int width, int heig
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Window2& WindowPrototype2::createWindow() {
+Window& WindowPrototype2::createWindow() {
    use();
-   return Application2::instance().createWindow(*this, nullopt);
+   return Application::instance().createWindow(*this, nullopt);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -60,7 +60,7 @@ void WindowPrototype2::use() {
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
-Window2::Window2(const std::string &title, int width, int height, const std::vector<WindowFlags> &flags, int targetFPS)
+Window::Window(const std::string &title, int width, int height, const std::vector<WindowFlags> &flags, int targetFPS)
 : targetFPS(targetFPS)
 , startingWidth(width)
 , startingHeight(height)
@@ -69,7 +69,7 @@ Window2::Window2(const std::string &title, int width, int height, const std::vec
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Window2::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
+void Window::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
    //Create canvas if not provided
 //   if (!optRoot) {
 //      optRoot = Canvas::build("root");
@@ -86,7 +86,7 @@ void Window2::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Window2::exec(){
+void Window::exec(){
    InputInterface::setExitKey(InputInterface::KeyCode::KEY_ESCAPE);
    //set widgets as processed
    //NOTE: This must be done here, because widgets can be created and loaded before a window exists
@@ -145,7 +145,7 @@ void Window2::exec(){
 
          // collect char input (up to limit)
          // only downs for chars - no ups. Use keys for uppies.
-         for (size_t i = 0; i < Window2::INPUT_COUNT_LIMIT; i++) {
+         for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
             auto charDown = InputManager2::instance().getCharPressed();
             if (charDown) {
                InputEventChar event(this);
@@ -158,7 +158,7 @@ void Window2::exec(){
 
          //collect key input (up to limit)
          //do ups first so we don't process up and down on same frame
-         for (size_t i = 0; i < Window2::INPUT_COUNT_LIMIT; i++) {
+         for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
             auto keyUp = InputManager2::instance().getKeyReleased();
             if ((int) keyUp) {
                InputEventKey event(this);
@@ -192,7 +192,7 @@ void Window2::exec(){
 
 
          //DOWNS
-         for (size_t i = 0; i < Window2::INPUT_COUNT_LIMIT; i++) {
+         for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
             auto keyDown = InputManager2::instance().getKeyPressed();
             if ((int) keyDown) {
                keyDownTimestamp = chrono::steady_clock::now();
@@ -208,7 +208,7 @@ void Window2::exec(){
 
          //now do mouse input
          //UPS
-         for (size_t i = 0; i < Window2::INPUT_COUNT_LIMIT; i++) {
+         for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
             auto btnUp = InputManager2::instance().getMouseButtonReleased();
             auto pos = InputManager2::getMousePos();
             if (btnUp != InputInterface::MouseButton::NONE) {
@@ -235,7 +235,7 @@ void Window2::exec(){
          }
 
          //DOWNS
-         for (size_t i = 0; i < Window2::INPUT_COUNT_LIMIT; i++) {
+         for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
             auto btnDown = InputManager2::instance().getMouseButtonPressed();
             if (btnDown != InputInterface::MouseButton::NONE) {
                auto pos = InputManager2::getMousePos();
@@ -334,7 +334,7 @@ void Window2::exec(){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Window2::~Window2(){
+Window::~Window(){
    Logger::debug() << "Deleting Window" << endl;
 }
 
@@ -464,6 +464,6 @@ Window2::~Window2(){
 //}
 //
 ///////////////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<Canvas> Window2::getCanvas() {
+std::shared_ptr<Canvas> Window::getCanvas() {
    return _root->ref<Canvas>();
 }

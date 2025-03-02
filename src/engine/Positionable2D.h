@@ -2,7 +2,7 @@
 #include "ReyObject.h"
 
 namespace ReyEngine::Internal {
-   class Positionable2D2 : public TypeTag {
+   class Positionable2D : public TypeTag {
    public:
       [[nodiscard]] inline Rect<R_FLOAT> getRect() const {return {transform2D.extractTranslation(), size};}
       [[nodiscard]] inline Size<R_FLOAT> getSize() const {return size;}

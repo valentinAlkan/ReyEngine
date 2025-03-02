@@ -43,6 +43,6 @@ namespace ReyEngine {
    private:
       RenderTarget renderTarget;
 
-      friend class Window2;
+      friend class Window;
    };
 }

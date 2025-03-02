@@ -241,6 +241,6 @@ namespace ReyEngine{
          auto it = std::find(queue.begin(), queue.end(), button);
          return it != queue.end();
       }
-      friend class Window2;
+      friend class Window;
    };
 }

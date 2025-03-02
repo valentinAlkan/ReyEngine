@@ -3,7 +3,7 @@
 
 namespace ReyEngine{
    using Handled = bool;
-   class Window2;
+   class Window;
    class Canvas;
    namespace Internal {
 

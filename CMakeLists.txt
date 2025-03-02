@@ -155,12 +155,12 @@ target_include_directories(ReyEngineUtil INTERFACE
 add_library(ReyEngine2D STATIC
         src/engine/Canvas2.cpp
         src/engine/Widget2.cpp
-        src/engine/Positionable2D2.cpp
+        src/engine/Positionable2D.cpp
         src/engine/Drawable2D.cpp
         src/engine/Window2.cpp
         src/engine/Event2.cpp
         src/engine/InputManager2.cpp
-        src/engine/Application2.cpp
+        src/engine/Application.cpp
         src/engine/ReyEngine.cpp
         src/meta/Logger.cpp
         src/meta/FileSystem.cpp

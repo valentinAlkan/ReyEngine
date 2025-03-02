@@ -59,11 +59,11 @@ protected:
 int main(){
    //create window
    {
-      auto& window = Application2::createWindowPrototype("window", 1920, 1080, {WindowFlags::RESIZE}, 60)->createWindow();
+      auto& window = Application::createWindowPrototype("window", 1920, 1080, {WindowFlags::RESIZE}, 60)->createWindow();
       auto root = window.getCanvas();
 
       auto makeName = []() -> std::string{
-         return "Label" + to_string(Application2::generateRandom(0,200000));
+         return "Label" + to_string(Application::generateRandom(0, 200000));
       };
       std::vector<TypeNode*> labels;
       {

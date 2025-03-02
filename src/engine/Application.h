@@ -14,20 +14,20 @@ namespace ReyEngine{
    namespace Internal{
       class WindowPrototype2;
    }
-   class Window2;
+   class Window;
    class Canvas;
-   class Application2
+   class Application
    {
    public:
       enum class Platform{WINDOWS, LINUX};
-      static Application2& instance(){
-         static Application2 instance;
+      static Application& instance(){
+         static Application instance;
          return instance;
       }
    private:
-      Application2();
+      Application();
    public:
-      ~Application2(){
+      ~Application(){
          Logger::debug() << "Deleting Application2" << std::endl;
       }
       enum class ExitReason{
@@ -36,11 +36,11 @@ namespace ReyEngine{
          INVALID_SCENE_FILE_FORMAT,
       };
       using UniqueValue = uint64_t;
-      Application2(Application2 const&)    = delete;
-      void operator=(Application2 const&) = delete;
+      Application(Application const&)    = delete;
+      void operator=(Application const&) = delete;
 
       static std::unique_ptr<Internal::WindowPrototype2> createWindowPrototype(const std::string& title, int width, int height, const std::vector<ReyEngine::WindowFlags>& flags, int targetFPS=60);
-      static Window2& getWindow(int windowIndex){return *(instance()._windows.at(windowIndex));}
+      static Window& getWindow(int windowIndex){return *(instance()._windows.at(windowIndex));}
       static size_t windowCount(){return instance()._windows.size();}
 
       static void exitError(std::string msg, ExitReason rsn){Logger::error() << msg << std::endl; ::exit((int)rsn);}
@@ -61,7 +61,7 @@ namespace ReyEngine{
       };
       static long double secondsSinceInit();
    protected:
-      Window2& createWindow(Internal::WindowPrototype2&, std::optional<std::shared_ptr<Canvas>>);
+      Window& createWindow(Internal::WindowPrototype2&, std::optional<std::shared_ptr<Canvas>>);
       static uint64_t getNewRid(){return ++instance().newRid;}
       static void ready();
       std::chrono::time_point<std::chrono::steady_clock> _startTime;
@@ -76,7 +76,7 @@ namespace ReyEngine{
       bool _is_ready = false;
 
       //for now, only one.
-      std::vector<Window2*> _windows;
+      std::vector<Window*> _windows;
       uint64_t newRid;
       std::mutex _busy; //the main mutex that determines if the engine is busy or not
 //      std::vector<std::function<void()>> _Application2ReadyList; //list of widgets that want to be notified when the Application2 is fully initialized
