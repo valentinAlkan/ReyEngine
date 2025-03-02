@@ -1,7 +1,7 @@
 #pragma once
 #include "ReyObject.h"
 #include "Application.h"
-#include "InputHandler2.h"
+#include "InputHandler.h"
 #include <unordered_set>
 
 namespace ReyEngine{

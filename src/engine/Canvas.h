@@ -1,9 +1,9 @@
 #pragma once
-#include "Widget2.h"
+#include "Widget.h"
 
 namespace ReyEngine {
    class Canvas
-      : public Widget2
+      : public Widget
       {
    public:
       REYENGINE_OBJECT(Canvas)

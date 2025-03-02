@@ -1,12 +1,12 @@
-#include "Window2.h"
-#include "Widget2.h"
-#include "Canvas2.h"
+#include "Window.h"
+#include "Widget.h"
+#include "Canvas.h"
 
 using namespace std;
 using namespace ReyEngine;
 using namespace ReyEngine::Internal::Tree;
 
-struct Label2 : public Widget2 {
+struct Label2 : public Widget {
   Label2(const std::string& text)
   : text(text)
   , color(Colors::randColor())

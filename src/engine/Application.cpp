@@ -1,5 +1,5 @@
 #include "Application.h"
-#include "Window2.h"
+#include "Window.h"
 
 using namespace std;
 using namespace ReyEngine;

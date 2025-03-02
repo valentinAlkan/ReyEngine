@@ -1,9 +1,9 @@
 #pragma once
 #include "Drawable2D.h"
-#include "InputHandler2.h"
+#include "InputHandler.h"
 
 namespace ReyEngine {
-   class Widget2
+   class Widget
    : public Internal::Drawable2D
    , public Internal::InputHandler
    {

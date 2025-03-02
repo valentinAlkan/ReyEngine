@@ -1,5 +1,5 @@
 #pragma once
-#include "InputManager2.h"
+#include "InputManager.h"
 
 namespace ReyEngine{
    using Handled = bool;

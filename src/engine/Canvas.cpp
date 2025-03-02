@@ -1,4 +1,4 @@
-#include "Canvas2.h"
+#include "Canvas.h"
 #include <stack>
 #include "rlgl.h"
 #include "MiscTools.h"
@@ -163,7 +163,7 @@ void Canvas::render2DEnd() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 CanvasSpace<Pos<float>> Canvas::getMousePos() {
-   return InputManager2::getMousePos().get();
+   return InputManager::getMousePos().get();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

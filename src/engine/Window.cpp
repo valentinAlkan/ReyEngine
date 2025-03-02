@@ -1,9 +1,9 @@
-#include "Window2.h"
+#include "Window.h"
 #include <iostream>
 #include "Application.h"
 //#include "Scene.h"
-#include "InputManager2.h"
-#include "Canvas2.h"
+#include "InputManager.h"
+#include "Canvas.h"
 //#include "SystemTime.h"
 //#include "TypeContainer.h"
 //#include "Physics.h"
@@ -146,7 +146,7 @@ void Window::exec(){
          // collect char input (up to limit)
          // only downs for chars - no ups. Use keys for uppies.
          for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
-            auto charDown = InputManager2::instance().getCharPressed();
+            auto charDown = InputManager::instance().getCharPressed();
             if (charDown) {
                InputEventChar event(this);
                event.ch = charDown;
@@ -159,7 +159,7 @@ void Window::exec(){
          //collect key input (up to limit)
          //do ups first so we don't process up and down on same frame
          for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
-            auto keyUp = InputManager2::instance().getKeyReleased();
+            auto keyUp = InputManager::instance().getKeyReleased();
             if ((int) keyUp) {
                InputEventKey event(this);
                event.key = keyUp;
@@ -174,8 +174,8 @@ void Window::exec(){
          //REPEATS
          auto now = chrono::steady_clock::now();
          static chrono::time_point<chrono::steady_clock> keyDownTimestamp = now;
-         auto lastKey = InputManager2::getLastKeyPressed();
-         if (InputManager2::isKeyDown(lastKey)) {
+         auto lastKey = InputManager::getLastKeyPressed();
+         if (InputManager::isKeyDown(lastKey)) {
             static chrono::time_point<chrono::steady_clock> keyRepeatTimestamp = now;
             if (now - keyDownTimestamp > _keyDownRepeatDelay) {
                //start sending repeats
@@ -193,7 +193,7 @@ void Window::exec(){
 
          //DOWNS
          for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
-            auto keyDown = InputManager2::instance().getKeyPressed();
+            auto keyDown = InputManager::instance().getKeyPressed();
             if ((int) keyDown) {
                keyDownTimestamp = chrono::steady_clock::now();
                InputEventKey event(this);
@@ -209,8 +209,8 @@ void Window::exec(){
          //now do mouse input
          //UPS
          for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
-            auto btnUp = InputManager2::instance().getMouseButtonReleased();
-            auto pos = InputManager2::getMousePos();
+            auto btnUp = InputManager::instance().getMouseButtonReleased();
+            auto pos = InputManager::getMousePos();
             if (btnUp != InputInterface::MouseButton::NONE) {
                if (btnUp == InputInterface::MouseButton::LEFT) {
                   //check for drag n drop
@@ -236,9 +236,9 @@ void Window::exec(){
 
          //DOWNS
          for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
-            auto btnDown = InputManager2::instance().getMouseButtonPressed();
+            auto btnDown = InputManager::instance().getMouseButtonPressed();
             if (btnDown != InputInterface::MouseButton::NONE) {
-               auto pos = InputManager2::getMousePos();
+               auto pos = InputManager::getMousePos();
                //check for dragndrops
 //               if (btnDown == InputInterface::MouseButton::LEFT) {
 //                  auto widgetAt = canvas->getWidgetAt(pos);
@@ -261,18 +261,18 @@ void Window::exec(){
          }
 
          {
-            auto wheel = InputManager2::getMouseWheel();
+            auto wheel = InputManager::getMouseWheel();
             if (wheel) {
-               InputEventMouseWheel event(this, InputManager2::getMousePos().get(), wheel);
+               InputEventMouseWheel event(this, InputManager::getMousePos().get(), wheel);
                canvas->__process_unhandled_input(event);
             }
          }
 
 
 //         //check the mouse delta compared to last frame
-         auto mouseDelta = InputManager2::getMouseDelta();
+         auto mouseDelta = InputManager::getMouseDelta();
          if (mouseDelta) {
-            InputEventMouseMotion event(this, InputManager2::getMousePos().get(), mouseDelta);
+            InputEventMouseMotion event(this, InputManager::getMousePos().get(), mouseDelta);
             event.mouseDelta = mouseDelta;
 
             //don't do hovering or mouse input if we're dragging and dropping

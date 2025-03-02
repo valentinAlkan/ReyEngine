@@ -1,10 +1,10 @@
-#include "InputManager2.h"
+#include "InputManager.h"
 
 using namespace ReyEngine;
 using namespace InputInterface;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-KeyCode InputManager2::getKeyPressed() {
+KeyCode InputManager::getKeyPressed() {
    auto key = InputInterface::getKeyPressed();
    if ((int)key){
       keyQueue.push_back(key);
@@ -14,7 +14,7 @@ KeyCode InputManager2::getKeyPressed() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-KeyCode InputManager2::getKeyReleased() {
+KeyCode InputManager::getKeyReleased() {
    for (auto it=keyQueue.begin(); it!=keyQueue.end(); it++){
       KeyCode key = *it;
       if (InputInterface::isKeyUp(key)){
@@ -31,12 +31,12 @@ KeyCode InputManager2::getKeyReleased() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-char InputManager2::getCharPressed() {
+char InputManager::getCharPressed() {
    return InputInterface::getCharPressed();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-InputInterface::MouseButton InputManager2::getMouseButtonPressed() {
+InputInterface::MouseButton InputManager::getMouseButtonPressed() {
    for (auto btn : MouseButtons) {
       if (InputInterface::isMouseButtonDown(btn) && !isInQueue(mouseButtonQueue, btn)) {
          mouseButtonQueue.push_back(btn);
@@ -47,7 +47,7 @@ InputInterface::MouseButton InputManager2::getMouseButtonPressed() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-InputInterface::MouseButton InputManager2::getMouseButtonReleased() {
+InputInterface::MouseButton InputManager::getMouseButtonReleased() {
 
    for (auto it=mouseButtonQueue.begin(); it!=mouseButtonQueue.end(); it++){
       InputInterface::MouseButton btn = *it;
