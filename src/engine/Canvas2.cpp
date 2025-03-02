@@ -167,5 +167,5 @@ CanvasSpace<Pos<float>> Canvas::getMousePos() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Handled Canvas::__process_unhandled_input(const InputEvent& event) {
-   tryHandle(const_cast<InputEvent&>(event), _node);
+   return tryHandle(const_cast<InputEvent&>(event), _node);
 }

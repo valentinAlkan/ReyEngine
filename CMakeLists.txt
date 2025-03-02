@@ -9,7 +9,7 @@ project(ReyEngine)
 #set(THREADS_PREFER_PTHREAD_FLAG ON)
 
 # add lua
-add_subdirectory(src/thirdParty/lua)
+#add_subdirectory(src/thirdParty/lua)
 
 set (CMAKE_CXX_STANDARD 20)
 
@@ -153,23 +153,22 @@ target_include_directories(ReyEngineUtil INTERFACE
 #)
 
 add_library(ReyEngine2D STATIC
-        src/2d/Canvas2.cpp
-        src/2d/Widget2.cpp
-        src/2d/Drawable2D.cpp
-        src/2d/Positionable2D2.cpp
-        src/meta/Window2.cpp
-        src/meta/Event2.cpp
-        src/meta/InputManager2.cpp
-        #        src/newEngine/BaseWidget2.cpp
+        src/engine/Canvas2.cpp
+        src/engine/Widget2.cpp
+        src/engine/Positionable2D2.cpp
+        src/engine/Drawable2D.cpp
+        src/engine/Window2.cpp
+        src/engine/Event2.cpp
+        src/engine/InputManager2.cpp
+        src/engine/Application2.cpp
+        src/engine/ReyEngine.cpp
         src/meta/Logger.cpp
-        src/meta/ReyEngine.cpp
         src/meta/FileSystem.cpp
-        src/meta/Application2.cpp
-        #        src/meta/SystemTime.cpp
 )
 
 target_include_directories(ReyEngine2D PUBLIC
     src
+    src/engine
     src/meta
     src/2d
     test
