@@ -45,29 +45,29 @@ if (NOT raylib_FOUND) # If there's none, fetch and build raylib
 endif()
 
 #set up eigen
-message(CHECK_START "Fetching Eigen3")
-list(APPEND CMAKE_MESSAGE_INDENT "  ")
+#message(CHECK_START "Fetching Eigen3")
+#list(APPEND CMAKE_MESSAGE_INDENT "  ")
+#
+#include(FetchContent)
+#FetchContent_Declare(
+#        Eigen
+#        GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
+#        GIT_TAG master
+#        GIT_SHALLOW TRUE
+#        GIT_PROGRESS TRUE)
+## note: To disable eigen tests,
+## you should put this code in a add_subdirectory to avoid to change
+## BUILD_TESTING for your own project too since variables are directory
+## scoped
 
-include(FetchContent)
-FetchContent_Declare(
-        Eigen
-        GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
-        GIT_TAG master
-        GIT_SHALLOW TRUE
-        GIT_PROGRESS TRUE)
-# note: To disable eigen tests,
-# you should put this code in a add_subdirectory to avoid to change
-# BUILD_TESTING for your own project too since variables are directory
-# scoped
-
-set(BUILD_TESTING OFF)
-set(EIGEN_BUILD_TESTING OFF)
-set(EIGEN_MPL2_ONLY ON)
-set(EIGEN_BUILD_PKGCONFIG OFF)
-set(EIGEN_BUILD_DOC OFF)
-FetchContent_MakeAvailable(Eigen)
-message(CHECK_START "Fetching Eigen3")
-list(APPEND CMAKE_MESSAGE_INDENT "  ")
+#set(BUILD_TESTING OFF)
+#set(EIGEN_BUILD_TESTING OFF)
+#set(EIGEN_MPL2_ONLY ON)
+#set(EIGEN_BUILD_PKGCONFIG OFF)
+#set(EIGEN_BUILD_DOC OFF)
+#FetchContent_MakeAvailable(Eigen)
+#message(CHECK_START "Fetching Eigen3")
+#list(APPEND CMAKE_MESSAGE_INDENT "  ")
 
 #find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 
@@ -103,53 +103,69 @@ target_include_directories(ReyEngineUtil INTERFACE
     src/lib
 )
 
+#add_library(ReyEngine2D STATIC
+#    src/meta/ReyEngine.cpp
+#    src/meta/ArgParse.cpp
+#    src/meta/FileSystem.cpp
+#    src/meta/StringTools.cpp
+#    src/meta/Application.cpp
+#    src/meta/TypeTree.cpp
+#    src/meta/Thread.cpp
+#    src/meta/TypeManager.cpp
+#    src/meta/Window.cpp
+#    src/meta/Scene.cpp
+#    src/meta/Property.cpp
+#    src/meta/Logger.cpp
+#    src/meta/XML.cpp
+#    src/meta/SystemTime.cpp
+#    src/meta/InputManager.cpp
+#    src/meta/Timer.hpp
+#    src/meta/Theme.cpp
+#    src/meta/Font.hpp
+#    src/meta/Component.cpp
+#    src/meta/Config.cpp
+#    src/meta/CSVParser.cpp
+#    src/meta/Platform.cpp
+#    src/2d/Renderable2D.cpp
+#    src/2d/BaseWidget.cpp
+#    src/2d/ComboBox.cpp
+#    src/2d/Control.cpp
+#    src/2d/Canvas.cpp
+#    src/2d/Panel.cpp
+#    src/2d/TabContainer.cpp
+#    src/2d/Slider.hpp
+#    src/2d/Button.cpp
+#    src/2d/Label.hpp
+#    src/2d/Sprite.cpp
+#    src/2d/Layout.cpp
+#    src/2d/ScrollArea.cpp
+#    src/2d/Tree.cpp
+#    src/2d/TileMap.cpp
+#    src/2d/LineEdit.cpp
+#    src/2d/TextureRect.cpp
+#    src/2d/CustomTypes.cpp
+#    src/2d/Camera2D.cpp
+#    src/2d/Positionable2D.cpp
+#    src/pathfinding/AStar.cpp
+#    src/physics/CollisionShape.cpp
+#    src/physics/Physics.cpp
+#    ${CUSTOM_SOURCES}
+#)
+
 add_library(ReyEngine2D STATIC
-    src/meta/ReyEngine.cpp
-    src/meta/ArgParse.cpp
-    src/meta/FileSystem.cpp
-    src/meta/StringTools.cpp
-    src/meta/Application.cpp
-    src/meta/TypeTree.cpp
-    src/meta/Thread.cpp
-    src/meta/TypeManager.cpp
-    src/meta/Window.cpp
-    src/meta/Scene.cpp
-    src/meta/Property.cpp
-    src/meta/Logger.cpp
-    src/meta/XML.cpp
-    src/meta/SystemTime.cpp
-    src/meta/InputManager.cpp
-    src/meta/Timer.hpp
-    src/meta/Theme.cpp
-    src/meta/Font.hpp
-    src/meta/Component.cpp
-    src/meta/Config.cpp
-    src/meta/CSVParser.cpp
-    src/meta/Platform.cpp
-    src/2d/Renderable2D.cpp
-    src/2d/BaseWidget.cpp
-    src/2d/ComboBox.cpp
-    src/2d/Control.cpp
-    src/2d/Canvas.cpp
-    src/2d/Panel.cpp
-    src/2d/TabContainer.cpp
-    src/2d/Slider.hpp
-    src/2d/Button.cpp
-    src/2d/Label.hpp
-    src/2d/Sprite.cpp
-    src/2d/Layout.cpp
-    src/2d/ScrollArea.cpp
-    src/2d/Tree.cpp
-    src/2d/TileMap.cpp
-    src/2d/LineEdit.cpp
-    src/2d/TextureRect.cpp
-    src/2d/CustomTypes.cpp
-    src/2d/Camera2D.cpp
-    src/2d/Positionable2D.cpp
-    src/pathfinding/AStar.cpp
-    src/physics/CollisionShape.cpp
-    src/physics/Physics.cpp
-    ${CUSTOM_SOURCES}
+        src/2d/Canvas2.cpp
+        src/2d/Widget2.cpp
+        src/2d/Drawable2D.cpp
+        src/2d/Positionable2D2.cpp
+        src/meta/Window2.cpp
+        src/meta/Event2.cpp
+        src/meta/InputManager2.cpp
+        #        src/newEngine/BaseWidget2.cpp
+        src/meta/Logger.cpp
+        src/meta/ReyEngine.cpp
+        src/meta/FileSystem.cpp
+        src/meta/Application2.cpp
+        #        src/meta/SystemTime.cpp
 )
 
 target_include_directories(ReyEngine2D PUBLIC
@@ -163,44 +179,45 @@ target_include_directories(ReyEngine2D PUBLIC
     src/physics
 )
 
-add_library(ReyEngine3D STATIC
-    src/3d/DrawInterface3D.cpp
-    src/3d/Viewport.cpp
-    src/3d/BaseBody.cpp
-    src/3d/Camera3D.cpp
-    src/3d/Plane3D.cpp
-    src/3d/ModelBody.cpp
-)
+#add_library(ReyEngine3D STATIC
+#    src/3d/DrawInterface3D.cpp
+#    src/3d/Viewport.cpp
+#    src/3d/BaseBody.cpp
+#    src/3d/Camera3D.cpp
+#    src/3d/Plane3D.cpp
+#    src/3d/ModelBody.cpp
+#)
 
-add_library(Editor STATIC
-    src/editor/Editor.cpp
-    src/editor/WidgetTree.cpp
-    src/editor/SceneTree.cpp
-    src/editor/Workspace.cpp
-    src/editor/Inspector.cpp
-    src/editor/InspectorWidgetFactory.cpp
-)
+#add_library(Editor STATIC
+#    src/editor/Editor.cpp
+#    src/editor/WidgetTree.cpp
+#    src/editor/SceneTree.cpp
+#    src/editor/Workspace.cpp
+#    src/editor/Inspector.cpp
+#    src/editor/InspectorWidgetFactory.cpp
+#)
 
 # most stuff is linked against and included with ReyEngine2D already. Since ReyEngine3D is linked against ReyEngine2D,
 # there's no need to link against much new stuff (for now)
-target_include_directories( ReyEngine3D PUBLIC
-    src/3d
-)
+#target_include_directories( ReyEngine3D PUBLIC
+#    src/3d
+#)
 
-target_link_libraries(ReyEngine2D raylib ReyEngineUtil lua Threads::Threads Eigen3::Eigen yaml-cpp::yaml-cpp)
+#target_link_libraries(ReyEngine2D raylib ReyEngineUtil lua Threads::Threads Eigen3::Eigen yaml-cpp::yaml-cpp)
+target_link_libraries(ReyEngine2D raylib ReyEngineUtil lua Threads::Threads yaml-cpp::yaml-cpp)
 
 if (UNIX)
     target_link_libraries(ReyEngine2D stdc++fs)
 endif (UNIX)
 
-target_link_libraries(ReyEngine3D ReyEngine2D)
+#target_link_libraries(ReyEngine3D ReyEngine2D)
 
 
-target_include_directories(Editor PUBLIC
-    src/editor
-)
+#target_include_directories(Editor PUBLIC
+#    src/editor
+#)
 
-target_link_libraries(Editor PUBLIC ReyEngine2D ReyEngine3D)
+#target_link_libraries(Editor PUBLIC ReyEngine2D ReyEngine3D)
 
 # Test Project
 add_executable( ReyEngineTest test/reyTestMain.cpp)
@@ -213,23 +230,9 @@ target_link_libraries(AbstractTreeTest raylib)
 
 # Test Project
 add_executable( NewEngine
-        src/newEngine/main.cpp
-        src/newEngine/Canvas2.cpp
-        src/newEngine/Widget2.cpp
-        src/newEngine/Drawable2D.cpp
-        src/newEngine/Positionable2D2.cpp
-        src/newEngine/Window2.cpp
-        src/newEngine/Event2.cpp
-        src/newEngine/InputManager2.cpp
-#        src/newEngine/BaseWidget2.cpp
-        src/meta/Logger.cpp
-        src/meta/ReyEngine.cpp
-        src/meta/FileSystem.cpp
-        src/newEngine/Application2.cpp
-#        src/meta/SystemTime.cpp
-        )
-target_include_directories(NewEngine PUBLIC src/newEngine src/lib src/meta)
-target_link_libraries(NewEngine raylib)
+    src/newEngine/main.cpp
+)
+target_link_libraries(NewEngine ReyEngine2D)
 
 
 # Project for testing the build system
