@@ -9,7 +9,6 @@
 #include "StringTools.h"
 #include "Logger.h"
 #include "FileSystem.h"
-#include "Property.h"
 #include "StrongUnits.h"
 #ifdef linux
 #include <limits.h>
@@ -500,15 +499,15 @@ namespace ReyEngine {
       inline std::string toString() const {return Vec2<T>::toString();}
    };
 
-   template <typename T>
-   struct PosProperty : public Property<Pos<T>>{
-      using Property<Pos<T>>::operator=;
-      PosProperty(const std::string& instanceName,  Pos<T>&& defaultvalue={})
-      : Property<Pos<T>>(instanceName, PropertyTypes::Pos, std::move(defaultvalue))
-      {}
-      std::string toString() const override {return "";}
-      Pos<T> fromString(const std::string& str) override {return {};}
-   };
+//   template <typename T>
+//   struct PosProperty : public Property<Pos<T>>{
+//      using Property<Pos<T>>::operator=;
+//      PosProperty(const std::string& instanceName,  Pos<T>&& defaultvalue={})
+//      : Property<Pos<T>>(instanceName, PropertyTypes::Pos, std::move(defaultvalue))
+//      {}
+//      std::string toString() const override {return "";}
+//      Pos<T> fromString(const std::string& str) override {return {};}
+//   };
 
    template <typename T=R_FLOAT>
    struct Size : public Vec2<T>{
@@ -532,15 +531,15 @@ namespace ReyEngine {
       Rect<T> toRect();
    };
 
-   template <typename T>
-   struct SizeProperty : public Property<Size<T>>{
-      using Property<Size<T>>::operator=;
-      SizeProperty(const std::string& instanceName,  Size<T>&& defaultvalue={})
-      : Property<Size<T>>(instanceName, PropertyTypes::Size, std::move(defaultvalue))
-      {}
-      std::string toString() const override {return "";}
-      Size<T> fromString(const std::string& str) override {return {};}
-   };
+//   template <typename T>
+//   struct SizeProperty : public Property<Size<T>>{
+//      using Property<Size<T>>::operator=;
+//      SizeProperty(const std::string& instanceName,  Size<T>&& defaultvalue={})
+//      : Property<Size<T>>(instanceName, PropertyTypes::Size, std::move(defaultvalue))
+//      {}
+//      std::string toString() const override {return "";}
+//      Size<T> fromString(const std::string& str) override {return {};}
+//   };
 
    struct Circle;
    template <typename T>
@@ -904,21 +903,21 @@ namespace ReyEngine {
       R_FLOAT radius;
    };
 
-   struct CircleProperty : public Property<Circle>{
-      using Property<ReyEngine::Circle>::operator=;
-      CircleProperty(const std::string& instanceName,  ReyEngine::Circle&& defaultvalue=Circle({},0))
-      : Property<ReyEngine::Circle>(instanceName, PropertyTypes::Color, std::move(defaultvalue))
-      {}
-      std::string toString() const override {
-         auto fvec = value.center.getElements();
-         fvec.push_back(value.radius);
-         return string_tools::listJoin(fvec);
-      }
-      ReyEngine::Circle fromString(const std::string& str) override {
-         auto split = string_tools::fromList(str);
-         return {Pos<R_FLOAT>(STOF(split.at(0)), STOF(split.at(1))), STOF(split.at(2))};
-      }
-   };
+//   struct CircleProperty : public Property<Circle>{
+//      using Property<ReyEngine::Circle>::operator=;
+//      CircleProperty(const std::string& instanceName,  ReyEngine::Circle&& defaultvalue=Circle({},0))
+//      : Property<ReyEngine::Circle>(instanceName, PropertyTypes::Color, std::move(defaultvalue))
+//      {}
+//      std::string toString() const override {
+//         auto fvec = value.center.getElements();
+//         fvec.push_back(value.radius);
+//         return string_tools::listJoin(fvec);
+//      }
+//      ReyEngine::Circle fromString(const std::string& str) override {
+//         auto split = string_tools::fromList(str);
+//         return {Pos<R_FLOAT>(STOF(split.at(0)), STOF(split.at(1))), STOF(split.at(2))};
+//      }
+//   };
 
    struct CircleSector : public Circle {
       static constexpr double FIRST_QUADRANT_ANGLE = 0;
@@ -1184,17 +1183,17 @@ namespace ReyEngine {
       unsigned char a;
    };
 
-   struct ColorProperty : public Property<ReyEngine::ColorRGBA>{
-      using Property<ReyEngine::ColorRGBA>::operator=;
-      ColorProperty(const std::string& instanceName,  ReyEngine::ColorRGBA defaultvalue)//pass color by copy
-      : Property<ReyEngine::ColorRGBA>(instanceName, PropertyTypes::Color, std::move(defaultvalue))
-      {}
-      std::string toString() const override {return "{" + std::to_string(value.r) + ", " + std::to_string(value.g) + ", " + std::to_string(value.b) + ", "  + std::to_string(value.a) + "}";}
-      ReyEngine::ColorRGBA fromString(const std::string& str) override {
-         auto split = string_tools::fromList(str);
-         return {std::stoi(split[0]), std::stoi(split[1]), std::stoi(split[2]), std::stoi(split[3])};
-      }
-   };
+//   struct ColorProperty : public Property<ReyEngine::ColorRGBA>{
+//      using Property<ReyEngine::ColorRGBA>::operator=;
+//      ColorProperty(const std::string& instanceName,  ReyEngine::ColorRGBA defaultvalue)//pass color by copy
+//      : Property<ReyEngine::ColorRGBA>(instanceName, PropertyTypes::Color, std::move(defaultvalue))
+//      {}
+//      std::string toString() const override {return "{" + std::to_string(value.r) + ", " + std::to_string(value.g) + ", " + std::to_string(value.b) + ", "  + std::to_string(value.a) + "}";}
+//      ReyEngine::ColorRGBA fromString(const std::string& str) override {
+//         auto split = string_tools::fromList(str);
+//         return {std::stoi(split[0]), std::stoi(split[1]), std::stoi(split[2]), std::stoi(split[3])};
+//      }
+//   };
 
 
 #define COLORS ReyEngine::Colors
