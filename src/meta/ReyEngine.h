@@ -1059,6 +1059,12 @@ namespace ReyEngine {
          matrix = MatrixMultiply(MatrixTranslate(vec.x * scaleFactor, vec.y * scaleFactor, 0), matrix);
       }
 
+      // Enhanced 2D translate with optional scale factor
+      void setPosition(const Vec2<float>& vec) {
+         matrix.m12 = vec.x;
+         matrix.m13 = vec.y;
+      }
+
       // Enhanced 2D scale with optional center point
       void scale(const Vec2<float>& scale, const Vec2<float>& centerPoint = {0.0f, 0.0f}) {
          if (centerPoint.x == 0.0f && centerPoint.y == 0.0f) {

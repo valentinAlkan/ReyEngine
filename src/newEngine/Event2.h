@@ -78,10 +78,19 @@ namespace ReyEngine{
       : publisher(publisher)
       , eventId(eventId)
       {}
+      virtual ~BaseEvent(){};
       template <typename T>
       T& toEventType() {
          static_assert(std::is_base_of_v<BaseEvent, T>);
          return static_cast<T&>(*this);
+      }
+      template <typename T>
+      std::optional<const T*> isEvent() const {
+         static_assert(std::is_base_of_v<BaseEvent, T>);
+         if (eventId == T::ID){
+            return dynamic_cast<const T*>(this);
+         }
+         return {};
       }
       const EventPublisher* publisher;
       const EventId eventId;

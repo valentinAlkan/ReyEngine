@@ -99,7 +99,7 @@ void Canvas::tryRender(TypeNode *node) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Handled Canvas::tryHandle(InputEvent& event, TypeNode* node) {
-   cout << "\"" << node->name << "\"" << " processing input event at parent's pos " << event.isMouse().value()->getLocalPos() << endl;
+//   cout << "\"" << node->name << "\"" << " processing input event at parent's pos " << event.isMouse().value()->getLocalPos() << endl;
    //----------------------------------------------------------------------------------------------------
    //lazy transform and auto-cleanup of mouse transformations. When this falls out of scope, it will
    // revert the local position back to it's parent. But only if it was transformed in the first place.
@@ -162,7 +162,7 @@ void Canvas::render2DEnd() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 CanvasSpace<Pos<float>> Canvas::getMousePos() {
-
+   return InputManager2::getMousePos().get();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

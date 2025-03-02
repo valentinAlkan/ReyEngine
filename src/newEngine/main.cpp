@@ -23,9 +23,28 @@ struct Label2 : public Widget2 {
 protected:
    Handled _unhandled_input(const InputEvent& event) override {
      if (auto isMouse = event.isMouse()){
-        cout << _node->name << " got unhandled input @ localpos " << isMouse.value()->getLocalPos() << endl;
         localMousePos = isMouse.value()->getLocalPos();
-        isInside = event.isMouse().value()->isInside();
+        isInside = isMouse.value()->isInside();
+        switch (event.eventId) {
+           case InputEventMouseButton::ID:{
+              auto& mbEvent = event.toEvent<InputEventMouseButton>();
+              if (isInside && mbEvent.isDown) {
+                 isDown = true;
+                 return true;
+              }
+              if (isDown && !mbEvent.isDown){
+                 isDown = false;
+                 return true;
+              }
+              break;}
+           case InputEventMouseMotion::ID:{
+              auto& mmEvent = event.toEvent<InputEventMouseMotion>();
+              if (isDown){
+                 setPosition(getPosition() + mmEvent.mouseDelta);
+                 cout << "setting new position " << getPosition() << endl;
+              }
+              break;}
+        }
      }
 
      return false;
@@ -34,6 +53,7 @@ protected:
   bool isInside = false;
   std::string text;
   ColorRGBA color;
+  bool isDown = false;
 };
 
 int main(){
