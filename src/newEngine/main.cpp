@@ -21,6 +21,9 @@ struct Label2 : public Widget {
       drawText(localMousePos, {0,60}, getDefaultFont());
    }
 protected:
+   void _on_rect_changed() override {
+     cout << "new position = " << getPosition() << endl;
+  }
    Handled _unhandled_input(const InputEvent& event) override {
      if (auto isMouse = event.isMouse()){
         localMousePos = isMouse.value()->getLocalPos();
@@ -41,7 +44,6 @@ protected:
               auto& mmEvent = event.toEvent<InputEventMouseMotion>();
               if (isDown){
                  setPosition(getPosition() + mmEvent.mouseDelta);
-                 cout << "setting new position " << getPosition() << endl;
               }
               break;}
         }

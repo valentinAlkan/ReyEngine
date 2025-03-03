@@ -164,6 +164,8 @@ add_library(ReyEngine2D STATIC
         src/engine/ReyEngine.cpp
         src/meta/Logger.cpp
         src/meta/FileSystem.cpp
+
+        src/2d/Control.cpp
 )
 
 target_include_directories(ReyEngine2D PUBLIC

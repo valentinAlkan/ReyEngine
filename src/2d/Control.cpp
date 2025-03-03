@@ -15,23 +15,24 @@ void Control::render2D() const {
    if (renderCallback) {
       renderCallback(*this);
    } else {
-      switch(theme->background.value){
-         case Style::Fill::SOLID:
-            drawRectangle(getRect().toSizeRect(), theme->background.colorPrimary.value);
-            break;
-         case Style::Fill::GRADIENT:
-            drawRectangleGradientV(getRect().toSizeRect(), theme->background.colorPrimary.value, theme->background.colorSecondary.value);
-            break;
-         default:
-            break;
-      }
-      switch(theme->outline.value){
-         case Style::Outline::LINE:
-            drawRectangleLines(getRect().toSizeRect(), theme->outline.thickness, theme->outline.color);
-            break;
-         default:
-            break;
-      }
+      drawRectangle(Internal::Drawable2D::getRect().toSizeRect(), Colors::red);
+//      switch(theme->background.value){
+//         case Style::Fill::SOLID:
+//            drawRectangle(getRect().toSizeRect(), theme->background.colorPrimary.value);
+//            break;
+//         case Style::Fill::GRADIENT:
+//            drawRectangleGradientV(getRect().toSizeRect(), theme->background.colorPrimary.value, theme->background.colorSecondary.value);
+//            break;
+//         default:
+//            break;
+//      }
+//      switch(theme->outline.value){
+//         case Style::Outline::LINE:
+//            drawRectangleLines(getRect().toSizeRect(), theme->outline.thickness, theme->outline.color);
+//            break;
+//         default:
+//            break;
+//      }
    }
 }
 
@@ -47,8 +48,8 @@ void Control::_process(float dt) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled Control::_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
-   if (unhandledInputCallback) return unhandledInputCallback(*this, event, mouse);
+Handled Control::_unhandled_input(const InputEvent& event) {
+   if (unhandledInputCallback) return unhandledInputCallback(*this, event);
    return false;
 }
 
