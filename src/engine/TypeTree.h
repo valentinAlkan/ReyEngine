@@ -16,7 +16,7 @@ namespace ReyEngine::Internal::Tree {
    using NameHash = HashId;
    class TypeNode;
    template <typename T>
-   using MakeNodeReturnType = std::pair<std::shared_ptr<T>, std::unique_ptr<TypeNode>>;
+   using MakeNodeReturnType = std::pair<RefCounted<T>, std::unique_ptr<TypeNode>>;
 
    class TypeNode;
    struct TreeStorable {
@@ -110,6 +110,7 @@ namespace ReyEngine::Internal::Tree {
       [[nodiscard]] TypeBase* getData() const { return _data.get(); }
       inline TypeNode* getParent(){return _parent;}
       inline TypeNode* getRoot(){return _root;}
+      inline std::string getName(){return name;}
       inline std::string getScenePath(){return _scenePath;}
       // Add child with a name for lookup
       TypeNode* addChild(std::unique_ptr<TypeNode>&& child) {
@@ -165,13 +166,13 @@ namespace ReyEngine::Internal::Tree {
       }
 
       template<typename T>
-      std::shared_ptr<T> ref() {
+      RefCounted<T> ref() {
          if (_data->getTypeIndex() == std::type_index(typeid(T))) {
             // First, cast to TypeWrapper<T>
             auto wrapper = std::dynamic_pointer_cast<TypeWrapper<T>>(_data);
             if (wrapper) {
                // Then return a shared_ptr to the contained value
-               return std::shared_ptr<T>(&wrapper->getValue(), [wrapper](T*){});
+               return RefCounted<T>(&wrapper->getValue(), [wrapper](T*){});
             }
          }
          return nullptr;
@@ -225,7 +226,7 @@ namespace ReyEngine::Internal::Tree {
       std::string _scenePath;
       TypeNode* _parent = nullptr;
       TypeNode* _root = this;
-      std::shared_ptr<TypeBase> _data;
+      RefCounted<TypeBase> _data;
       std::map<NameHash, std::unique_ptr<TypeNode>> _childMap; //parents own children
       std::vector<TypeNode*> _childOrder;         // Points to map entries
 
@@ -235,10 +236,18 @@ namespace ReyEngine::Internal::Tree {
       friend MakeNodeReturnType<T> make_node(InstanceName&&, Args&&...);
    };
 
-// Primary template for when arguments are provided
+   // Primary template for when arguments are provided
    template<typename T, typename InstanceName, typename... Args>
    MakeNodeReturnType<T> make_node(InstanceName&& instanceName, Args&&... args) {
       auto ptr = new T(std::forward<Args>(args)...);
+      auto wrapper = std::make_unique<TypeWrapper<T>>(ptr);
+      auto node = std::unique_ptr<TypeNode>(new TypeNode(std::move(wrapper), instanceName, T::TYPE_NAME));
+      return {node->ref<T>(), std::move(node)};
+   }
+
+   //secondary template with move semantics
+   template<typename T, typename InstanceName, typename... Args>
+   MakeNodeReturnType<T> make_node(InstanceName&& instanceName, std::unique_ptr<T>&& ptr) {
       auto wrapper = std::make_unique<TypeWrapper<T>>(ptr);
       auto node = std::unique_ptr<TypeNode>(new TypeNode(std::move(wrapper), instanceName, T::TYPE_NAME));
       return {node->ref<T>(), std::move(node)};

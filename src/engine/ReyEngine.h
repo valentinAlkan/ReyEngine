@@ -10,6 +10,7 @@
 #include "Logger.h"
 #include "FileSystem.h"
 #include "StrongUnits.h"
+#include "RefCounted.h"
 #ifdef linux
 #include <limits.h>
 #endif
@@ -17,6 +18,9 @@
 #define R_FLOAT float //float or double?
 #define STOF std::stof
 #define NOT_IMPLEMENTED throw std::runtime_error("Not implemented!")
+
+template <typename T>
+using RefCounted = ReyEngine::Internal::Tree::RefCounted<T>;
 
 namespace ReyEngine {
    enum WindowFlags{RESIZE, IS_EDITOR};

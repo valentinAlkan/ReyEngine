@@ -5,10 +5,9 @@
 #include <sstream>
 
 namespace ReyEngine{
-   class Label : public BaseWidget {
-      REYENGINE_OBJECT_BUILD_ONLY(Label, BaseWidget, BaseWidget)
-      , PROPERTY_DECLARE(text, getName())
-      {
+   class Label : public Widget {
+   public:
+      Label(const std::string& text){
          auto expandOpt = needsExpand();
          if (expandOpt){
             applyRect({getPos(), expandOpt.value()});
@@ -16,8 +15,6 @@ namespace ReyEngine{
          }
          theme->background = Style::Fill::NONE;
       }
-   public:
-      REYENGINE_DEFAULT_BUILD(Label)
       void render2D() const override{
          //todo: scissor text
          auto& outline = theme->outline;
@@ -92,6 +89,6 @@ namespace ReyEngine{
          return std::nullopt;
       };
       inline ReyEngine::Size<double> measureText() const {return theme->font.value.measure(text.value);}
-      StringProperty text;
+      std::string text;
    };
 }

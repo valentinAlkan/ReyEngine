@@ -12,12 +12,12 @@ Application::Application()
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::unique_ptr<Internal::WindowPrototype2> Application::createWindowPrototype(const std::string &title, int width, int height, const std::vector<ReyEngine::WindowFlags> &flags, int targetFPS) {
+std::unique_ptr<Internal::WindowPrototype> Application::createWindowPrototype(const std::string &title, int width, int height, const std::vector<ReyEngine::WindowFlags> &flags, int targetFPS) {
    Application::instance(); //initalize application at least once
-   return std::unique_ptr<WindowPrototype2>(new WindowPrototype2(title, width, height, flags, targetFPS));
+   return std::unique_ptr<WindowPrototype>(new WindowPrototype(title, width, height, flags, targetFPS));
 }
 /////////////////////////////////////////////////////////////////////////////////////////
-Window& Application::createWindow(Internal::WindowPrototype2& prototype, std::optional<std::shared_ptr<Canvas>> root){
+Window& Application::createWindow(Internal::WindowPrototype& prototype, std::optional<std::shared_ptr<Canvas>> root){
    _windows.emplace_back(new Window(prototype.title, prototype.width, prototype.height, prototype.flags, prototype.targetFPS));
    auto& window = *_windows.back();
    window.initialize(root);

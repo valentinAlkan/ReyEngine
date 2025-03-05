@@ -2,9 +2,7 @@
 #include "Widget.h"
 
 namespace ReyEngine {
-   class Canvas
-      : public Widget
-      {
+   class Canvas: public Widget {
    public:
       REYENGINE_OBJECT(Canvas)
       Canvas(){}

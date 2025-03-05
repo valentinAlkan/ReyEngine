@@ -26,13 +26,24 @@ namespace ReyEngine::Internal {
          size = newSize;
          _on_rect_changed();
       }
+      inline void setRect(const Rect<R_FLOAT>& newRect){
+         size = newRect.size();
+         transform2D.setPosition(newRect.pos());
+         _on_rect_changed();
+      }
       inline Transform2D& getLocalTransform(){return transform2D;}
-      inline Transform2D& getGlobalTransform(){return globalTransform;}
+//      inline Transform2D& getGlobalTransform(){return globalTransform;}
+      inline Size<float> getMinSize(){return minSize;}
+      inline Size<float> getMaxSize(){return maxSize;}
+      inline void setMinSize(const Size<float>& newMin){minSize = newMin;}
+      inline void setMaxSize(const Size<float>& newMax){maxSize = newMax;}
    protected:
       virtual void _on_rect_changed(){};
 
       Transform2D  globalTransform;
       Transform2D transform2D;
       Size<float> size;
+      Size<float> minSize;
+      Size<float> maxSize;
    };
 }

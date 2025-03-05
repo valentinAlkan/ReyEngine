@@ -85,12 +85,12 @@ namespace ReyEngine{
 
    //just initializes important stuff that must be initialized, so that we can create a root to pass to window if we want.
    namespace Internal {
-      class WindowPrototype2 {
+      class WindowPrototype {
       public:
          Window& createWindow();
 //         Window2& createWindow(std::shared_ptr<Canvas>& root);
       protected:
-         WindowPrototype2(const std::string &title, int width, int height, const std::vector<WindowFlags>& flags, int targetFPS);
+         WindowPrototype(const std::string &title, int width, int height, const std::vector<WindowFlags>& flags, int targetFPS);
          const std::string title;
          const int width;
          const int height;

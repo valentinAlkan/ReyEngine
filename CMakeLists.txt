@@ -156,7 +156,6 @@ add_library(ReyEngine2D STATIC
         src/engine/Canvas.cpp
         src/engine/Widget.cpp
         src/engine/Positionable2D.cpp
-        src/engine/Drawable2D.cpp
         src/engine/Window.cpp
         src/engine/Event.cpp
         src/engine/InputManager.cpp
@@ -166,6 +165,7 @@ add_library(ReyEngine2D STATIC
         src/meta/FileSystem.cpp
 
         src/2d/Control.cpp
+        src/2d/Layout.cpp
 )
 
 target_include_directories(ReyEngine2D PUBLIC

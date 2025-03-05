@@ -8,11 +8,11 @@
 #include "ReyEngine.h"
 #include "Platform.h"
 #include "FileSystem.h"
-#include "ReyObject.h"
+#include "UniqueValue.h"
 
 namespace ReyEngine{
    namespace Internal{
-      class WindowPrototype2;
+      class WindowPrototype;
    }
    class Window;
    class Canvas;
@@ -35,11 +35,10 @@ namespace ReyEngine{
          INVALID_ARGS = 1,
          INVALID_SCENE_FILE_FORMAT,
       };
-      using UniqueValue = uint64_t;
       Application(Application const&)    = delete;
       void operator=(Application const&) = delete;
 
-      static std::unique_ptr<Internal::WindowPrototype2> createWindowPrototype(const std::string& title, int width, int height, const std::vector<ReyEngine::WindowFlags>& flags, int targetFPS=60);
+      static std::unique_ptr<Internal::WindowPrototype> createWindowPrototype(const std::string& title, int width, int height, const std::vector<ReyEngine::WindowFlags>& flags, int targetFPS=60);
       static Window& getWindow(int windowIndex){return *(instance()._windows.at(windowIndex));}
       static size_t windowCount(){return instance()._windows.size();}
 
@@ -51,7 +50,7 @@ namespace ReyEngine{
       static bool isReady(){return instance()._is_ready;}
       static std::unique_lock<std::mutex> getLock(); //use this to syncrhonize with the engine
       static constexpr Platform getPlatform(){return PLATFORM;}
-      static UniqueValue generateUniqueValue(){return instance()._nextUniqueValue++;}
+      static UniqueValue generateUniqueValue(){return instance().uniqueGenerator.makeNew();}
       template <typename T=double>
       static T generateRandom(T low, T high){
          std::random_device rd;
@@ -61,13 +60,13 @@ namespace ReyEngine{
       };
       static long double secondsSinceInit();
    protected:
-      Window& createWindow(Internal::WindowPrototype2&, std::optional<std::shared_ptr<Canvas>>);
+      Window& createWindow(Internal::WindowPrototype&, std::optional<std::shared_ptr<Canvas>>);
       static uint64_t getNewRid(){return ++instance().newRid;}
       static void ready();
       std::chrono::time_point<std::chrono::steady_clock> _startTime;
 
    private:
-      UniqueValue _nextUniqueValue = 0;
+      Internal::UniqueGenerator uniqueGenerator;
 #ifdef REYENGINE_PLATFORM_WINDOWS
       static constexpr Platform PLATFORM = Platform::WINDOWS;
 #elif defined(REYENGINE_PLATFORM_LINUX)
@@ -86,7 +85,7 @@ namespace ReyEngine{
 //      using InitPair = std::pair<std>, std::shared_ptr<Internal::Component>>;
 //      std::queue<InitPair> _initQueue;
 //      friend class Internal::Component;
-      friend class Internal::WindowPrototype2;
+      friend class Internal::WindowPrototype;
       friend class Window;
    };
 }

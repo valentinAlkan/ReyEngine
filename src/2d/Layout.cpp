@@ -3,33 +3,36 @@
 
 using namespace std;
 using namespace ReyEngine;
+using namespace Internal;
+using namespace Tree;
 
 static constexpr bool VERBOSE = false;
 /// A struct that helps us layout widgets. Applies changes on dtor.
 struct Layout::LayoutHelper {
-   LayoutHelper(LayoutDir layoutDir, int index, std::shared_ptr<BaseWidget>& child)
+   LayoutHelper(LayoutDir layoutDir, int index, Widget& parent, Widget& child)
    : childIndex(index)
    , layoutDir(layoutDir)
    , child(child)
+   , parent(parent)
    {}
    ~LayoutHelper(){
       //apply the rect
-      if constexpr (VERBOSE) Logger::debug() << "Parent " << child->getParent().lock()->getName() << " applying rectangle " << pendingRect << " to child " << child->getName() << endl;
+      if constexpr (VERBOSE) Logger::debug() << "Parent " << parent.getNode()->getName() << " applying rectangle " << pendingRect << " to child " << child.getNode()->getName() << endl;
 
       //apply margins - this should always be the very last thing we do
-      auto theme = child->getParent().lock()->getTheme();
-      pendingRect.x += theme->layoutMargins.left();
-      pendingRect.y += theme->layoutMargins.top();
-      pendingRect.width -= (theme->layoutMargins.right() + theme->layoutMargins.left());
-      pendingRect.height -= (theme->layoutMargins.bottom() + theme->layoutMargins.top());
-      child->setRect(pendingRect);
+      auto& theme = parent.getTheme();
+      pendingRect.x += theme.layoutMargins.left();
+      pendingRect.y += theme.layoutMargins.top();
+      pendingRect.width -= (theme.layoutMargins.right() + theme.layoutMargins.left());
+      pendingRect.height -= (theme.layoutMargins.bottom() + theme.layoutMargins.top());
+      child.setRect(pendingRect);
    }
    /// Accounts for min/max
    std::optional<R_FLOAT> setPendingRect(const Rect<int>& newRect){
-      Tools::AnonymousDtor dtor([&](){if constexpr (VERBOSE) Logger::debug() << "Child " << child->getName() << " will be allowed " << pendingRect.size() << " space" << endl;});
+      Tools::AnonymousDtor dtor([&](){if constexpr (VERBOSE) Logger::debug() << "Child " << child.getNode().getName() << " will be allowed " << pendingRect.size() << " space" << endl;});
       pendingRect = newRect;
-      auto maxSize = layoutDir == LayoutDir::HORIZONTAL ? child->getMaxSize().x : child->getMaxSize().y;
-      auto minSize = layoutDir == LayoutDir::HORIZONTAL ? child->getMinSize().x : child->getMinSize().y;
+      auto maxSize = layoutDir == LayoutDir::HORIZONTAL ? child.getMaxSize().x : child.getMaxSize().y;
+      auto minSize = layoutDir == LayoutDir::HORIZONTAL ? child.getMinSize().x : child.getMinSize().y;
       auto& releventDimension = layoutDir == LayoutDir::HORIZONTAL ? pendingRect.width : pendingRect.height;
 
       bool isConstrainedMax = releventDimension > maxSize;
@@ -60,18 +63,15 @@ struct Layout::LayoutHelper {
    bool operator==(const LayoutHelper& rhs) const {return child == rhs.child;}
    const int childIndex;
    const LayoutDir layoutDir;
-   std::shared_ptr<BaseWidget>& child;
+   Widget& child;
+   Widget& parent;
 private:
    Rect<R_FLOAT> pendingRect;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Layout::Layout(const std::string &name, const std::string &typeName, LayoutDir layoutDir)
-: BaseWidget(name, typeName)
-, NamedInstance(name, typeName)
-, Component(name, typeName)
-, Internal::TypeContainer<BaseWidget>(name, typeName)
-, layoutRatios("layoutRatios")
+Layout::Layout(LayoutDir layoutDir)
+: layoutRatios("layoutRatios")
 , alignment("alignment", Alignment::EVEN)
 , dir(layoutDir)
 {

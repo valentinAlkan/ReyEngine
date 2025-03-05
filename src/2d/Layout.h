@@ -3,47 +3,46 @@
 #include "MathUtils.h"
 
 namespace ReyEngine{
-   class Layout : public BaseWidget {
+   class Layout : public Widget {
    public:
       /////////////////////////////////////////////////////////////////////////////////////////
       enum class LayoutDir{HORIZONTAL, VERTICAL, GRID, OTHER};
       /////////////////////////////////////////////////////////////////////////////////////////
-      struct LayoutProperty : public EnumProperty<LayoutDir, 3>{
-         LayoutProperty(const std::string& instanceName,  LayoutDir defaultvalue)
-         : EnumProperty<LayoutDir, 3>(instanceName, std::move(defaultvalue)){}
-         const EnumPair<LayoutDir, 3>& getDict() const override {return dict;}
-         static constexpr EnumPair<LayoutDir, 3> dict = {
-            ENUM_PAIR_DECLARE(LayoutDir, VERTICAL),
-            ENUM_PAIR_DECLARE(LayoutDir, HORIZONTAL),
-            ENUM_PAIR_DECLARE(LayoutDir, GRID),
-         };
-         void registerProperties() override {}
-      };
+//      struct LayoutProperty : public EnumProperty<LayoutDir, 3>{
+//         LayoutProperty(const std::string& instanceName,  LayoutDir defaultvalue)
+//         : EnumProperty<LayoutDir, 3>(instanceName, std::move(defaultvalue)){}
+//         const EnumPair<LayoutDir, 3>& getDict() const override {return dict;}
+//         static constexpr EnumPair<LayoutDir, 3> dict = {
+//            ENUM_PAIR_DECLARE(LayoutDir, VERTICAL),
+//            ENUM_PAIR_DECLARE(LayoutDir, HORIZONTAL),
+//            ENUM_PAIR_DECLARE(LayoutDir, GRID),
+//         };
+//         void registerProperties() override {}
+//      };
 
       enum class Alignment{EVEN, FRONT, BACK};
       /////////////////////////////////////////////////////////////////////////////////////////
-      struct AlignmentProperty : public EnumProperty<Alignment, 3>{
-         AlignmentProperty(const std::string& instanceName,  Alignment defaultvalue)
-         : EnumProperty<Alignment, 3>(instanceName, std::move(defaultvalue)){}
-         const EnumPair<Alignment, 3>& getDict() const override {return dict;}
-         static constexpr EnumPair<Alignment, 3> dict = {
-            ENUM_PAIR_DECLARE(Alignment, EVEN),
-            ENUM_PAIR_DECLARE(Alignment, FRONT),
-            ENUM_PAIR_DECLARE(Alignment, BACK),
-         };
-         void registerProperties() override {}
-      };
+//      struct AlignmentProperty : public EnumProperty<Alignment, 3>{
+//         AlignmentProperty(const std::string& instanceName,  Alignment defaultvalue)
+//         : EnumProperty<Alignment, 3>(instanceName, std::move(defaultvalue)){}
+//         const EnumPair<Alignment, 3>& getDict() const override {return dict;}
+//         static constexpr EnumPair<Alignment, 3> dict = {
+//            ENUM_PAIR_DECLARE(Alignment, EVEN),
+//            ENUM_PAIR_DECLARE(Alignment, FRONT),
+//            ENUM_PAIR_DECLARE(Alignment, BACK),
+//         };
+//         void registerProperties() override {}
+//      };
 
       ReyEngine::Size<int> calculateIdealBoundingBox();
-      FloatListProperty layoutRatios;
-      AlignmentProperty alignment;
+      std::vector<float> layoutRatios;
+      Alignment alignment;
       /////////////////////////////////////////////////////////////////////////////////////////
    protected:
       struct LayoutHelper;
       Layout(const std::string &name, const std::string &typeName, LayoutDir layoutDir);
-      void _register_parent_properties() override;
-      void _on_child_added(std::shared_ptr<BaseWidget>& child) override;
-      void _on_child_removed(std::shared_ptr<BaseWidget>& child) override;
+      void _on_child_added_to_tree(TypeNode*) override;
+      void _on_child_removed_from_tree(TypeNode*) override;
       void _on_rect_changed() override {arrangeChildren();}
       void render2DEnd() override;
       virtual void arrangeChildren();

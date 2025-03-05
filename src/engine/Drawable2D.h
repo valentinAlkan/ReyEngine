@@ -13,7 +13,6 @@ namespace ReyEngine {
          ~Drawable2D() { std::cout << "Goodbye from " << TYPE_NAME << "!!" << std::endl; }
          [[nodiscard]] ReyEngine::Rect<float> getRect() const {return {getPosition(), getSize()};}
          [[nodiscard]] ReyEngine::Size<float> getSize() const {return size;}
-         void _on_child_added_to_tree(TypeNode*) override;
          Transform2D& getTransform(){return transform2D;}
       protected:
          void render2DChain();

@@ -1,3 +1,4 @@
+#pragma once
 #include <atomic>
 #include <type_traits>
 #include <utility>
@@ -93,6 +94,10 @@ namespace ReyEngine::Internal::Tree{
       // Constructor from existing control block (used by WeakRef::lock())
       explicit RefCounted(ControlBlock* control) noexcept
       : control_(control) {}
+
+      // Constructor to convert from unique ptr
+      explicit RefCounted(std::unique_ptr<T>&& data) noexcept
+      : RefCounted(data.get()){}
 
       // Add converting constructor for inheritance
       template<typename U>

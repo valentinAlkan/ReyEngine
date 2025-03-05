@@ -2,6 +2,7 @@
 #include "TypeTree.h"
 #include "Event.h"
 #include <memory>
+#include "Application.h"
 
 namespace ReyEngine{
    using TypeNode = Internal::Tree::TypeNode;
@@ -19,6 +20,9 @@ namespace ReyEngine{
    namespace Internal{
       struct ReyObject : public TreeStorable
       {
+         ReyObject(){
+            uniqueValue = Application::generateUniqueValue();
+         }
          TYPENAME(ReyObject)
          virtual std::string getTypeName() {return TYPE_NAME;}
          //reserved for internal functionality.
@@ -41,6 +45,10 @@ namespace ReyEngine{
          virtual void _on_descendant_added_to_tree(TypeNode *n) {};
          virtual void _on_child_removed_from_tree(TypeNode*){};
          virtual void _on_descendant_removed_from_tree(TypeNode*){};
+         inline bool operator==(const ReyObject& rhs){return uniqueValue == rhs.uniqueValue;}
+         inline bool operator!=(const ReyObject& rhs){return uniqueValue == rhs.uniqueValue;}
+      private:
+         UniqueValue uniqueValue;
       };
    }
 }

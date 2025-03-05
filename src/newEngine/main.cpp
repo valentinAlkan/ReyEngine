@@ -1,13 +1,15 @@
 #include "Window.h"
 #include "Widget.h"
 #include "Canvas.h"
+//#include "Label.hpp"
+#include "Layout.h"
 
 using namespace std;
 using namespace ReyEngine;
 using namespace ReyEngine::Internal::Tree;
 
-struct Label2 : public Widget {
-  Label2(const std::string& text)
+struct TestWidget : public Widget {
+  TestWidget(const std::string& text)
   : text(text)
   , color(Colors::randColor())
   {
@@ -69,14 +71,20 @@ int main(){
       };
       std::vector<TypeNode*> labels;
       {
-         auto [widget2, _] = make_node<Label2>("Parent", "Parent");
+         auto [widget2, _] = make_node<TestWidget>("Parent", "Parent");
          labels.push_back(root->getNode()->addChild(std::move(_)));
          widget2->setPosition({0, 00});
       }
       {
-         auto [widget3, _] = make_node<Label2>("Child", "child");
+         auto [widget3, _] = make_node<TestWidget>("Child", "child");
          labels.push_back(labels.at(0)->addChild(std::move(_)));
          widget3->setPosition({150, 150});
+      }
+
+      {
+         auto [label, _] = make_node<Label>("Label", "Hey baby");
+         labels.push_back(labels.at(0)->addChild(std::move(_)));
+         label->setPosition({100, 500});
       }
 
       window.exec();
