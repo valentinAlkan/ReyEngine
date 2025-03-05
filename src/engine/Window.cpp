@@ -464,6 +464,6 @@ Window::~Window(){
 //}
 //
 ///////////////////////////////////////////////////////////////////////////////////////////
-RefCounted<Canvas> Window::getCanvas() {
+std::shared_ptr<Canvas> Window::getCanvas() {
    return _root->ref<Canvas>();
 }

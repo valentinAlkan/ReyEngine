@@ -39,7 +39,19 @@ namespace ReyEngine::Internal {
       inline void setMaxSize(const Size<float>& newMax){maxSize = newMax;}
       inline R_FLOAT getWidth(){return size.x;}
       inline R_FLOAT getHeight(){return size.y;}
+      inline Size<R_FLOAT> clampedSize(const Size<R_FLOAT>& rhs) {
+         auto newX = ReyEngine::Vec2<R_FLOAT>(minSize.x, maxSize.x).clamp(size.x);
+         auto newY = ReyEngine::Vec2<R_FLOAT>(minSize.y, maxSize.y).clamp(size.y);
+         return {newX, newY};
+      }
    protected:
+      /// Bypasses normal mechanisms and just directly sets a rect without calling callbacks
+      void applySize(const Size<R_FLOAT>& newSize){size = newSize;}
+      void applyRect(const Rect<R_FLOAT>& rect){
+         transform2D.setPosition(rect.pos());
+         size = rect.size();
+      }
+
       virtual void _on_rect_changed(){};
 
       Transform2D  globalTransform;

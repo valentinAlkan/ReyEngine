@@ -2,7 +2,7 @@
 #include <utility>
 #include "Control.h"
 #include "Layout.h"
-#include "Label.hpp"
+#include "Label.h"
 
 // A simple visual panel that just gives us something to look at. No other functionality.
 namespace ReyEngine{

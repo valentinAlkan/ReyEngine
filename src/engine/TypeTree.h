@@ -16,7 +16,7 @@ namespace ReyEngine::Internal::Tree {
    using NameHash = HashId;
    class TypeNode;
    template <typename T>
-   using MakeNodeReturnType = std::pair<RefCounted<T>, std::unique_ptr<TypeNode>>;
+   using MakeNodeReturnType = std::pair<std::shared_ptr<T>, std::unique_ptr<TypeNode>>;
 
    class TypeNode;
    struct TreeStorable {
@@ -66,12 +66,13 @@ namespace ReyEngine::Internal::Tree {
    // Type erase wrapper. T must inherit from TreeCallable
    template<NamedType T>
    class TypeWrapper : public TypeBase {
-   public:
+   protected:
       TypeWrapper(T* ptr): _value(ptr){}
       template <typename... Args>
       explicit TypeWrapper(Args&&... args)
       : _value(std::forward<Args>(args)...)
       {}
+   public:
 
       [[nodiscard]] std::type_index getTypeIndex() const override {
          return std::type_index(typeid(T));
@@ -88,7 +89,7 @@ namespace ReyEngine::Internal::Tree {
 
       // Declare make_node as a friend
       template<typename U, typename InstanceName, typename... Args>
-      friend MakeNodeReturnType<T> make_node(InstanceName&&, Args&&...);
+      friend MakeNodeReturnType<U> make_node(InstanceName&&, Args&&...);
    };
 
    // Convert type-erased data to a format that can be stored in the tree
@@ -118,7 +119,7 @@ namespace ReyEngine::Internal::Tree {
             Logger::error() << "Child " << name << " cannot be added to itself " << name;
             return nullptr; //child still valid at this point
          }
-         const auto& name = child->name;
+         const auto name = child->name;
          HashId nameHash = std::hash<std::string>{}(name);
          auto[it, success] = _childMap.emplace(nameHash, std::move(child));
          if (!success) {
@@ -166,13 +167,13 @@ namespace ReyEngine::Internal::Tree {
       }
 
       template<typename T>
-      RefCounted<T> ref() {
+      std::shared_ptr<T> ref() {
          if (_data->getTypeIndex() == std::type_index(typeid(T))) {
             // First, cast to TypeWrapper<T>
-            auto wrapper = dynamic_cast<TypeWrapper<T>>(_data.get());
+            auto wrapper = std::dynamic_pointer_cast<TypeWrapper<T>>(_data);
             if (wrapper) {
-               // if this succeeds, we are are as we say we are
-               return _data;
+               // Then return a shared_ptr to the contained value
+               return std::shared_ptr<T>(&wrapper->getValue(), [wrapper](T*){});
             }
          }
          return nullptr;
@@ -226,7 +227,7 @@ namespace ReyEngine::Internal::Tree {
       std::string _scenePath;
       TypeNode* _parent = nullptr;
       TypeNode* _root = this;
-      RefCounted<TypeBase> _data;
+      std::shared_ptr<TypeBase> _data;
       std::map<NameHash, std::unique_ptr<TypeNode>> _childMap; //parents own children
       std::vector<TypeNode*> _childOrder;         // Points to map entries
 
@@ -240,7 +241,7 @@ namespace ReyEngine::Internal::Tree {
    template<typename T, typename InstanceName, typename... Args>
    MakeNodeReturnType<T> make_node(InstanceName&& instanceName, Args&&... args) {
       auto ptr = new T(std::forward<Args>(args)...);
-      auto wrapper = std::make_unique<TypeWrapper<T>>(ptr);
+      auto wrapper = std::unique_ptr<TypeWrapper<T>>(new TypeWrapper<T>(ptr));
       auto node = std::unique_ptr<TypeNode>(new TypeNode(std::move(wrapper), instanceName, T::TYPE_NAME));
       return {node->ref<T>(), std::move(node)};
    }

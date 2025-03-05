@@ -3,7 +3,7 @@
 #include "CustomTypes.h"
 #include "BaseWidget.h"
 #include "Button.h"
-#include "Label.hpp"
+#include "Label.h"
 #include "ScrollArea.h"
 #include "Slider.hpp"
 

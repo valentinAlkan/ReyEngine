@@ -40,7 +40,6 @@ namespace ReyEngine::Internal::Tree{
             ptr_ = nullptr;
             if (weakCount_.load(std::memory_order_relaxed) == 0) {
                std::cout << "Strongref releasing contorl block!" << std::endl;
-               delete this;
             } else {
                talk();
             }
@@ -88,27 +87,49 @@ namespace ReyEngine::Internal::Tree{
    template<typename T>
    class RefCounted {
    public:
+      RefCounted(std::nullptr_t) noexcept : control_(nullptr) {}
       explicit RefCounted(T* ptr = nullptr) noexcept
       : control_(ptr ? new TypedControlBlock<T>(ptr) : nullptr) {}
 
       // Constructor from existing control block (used by WeakRef::lock())
       explicit RefCounted(ControlBlock* control) noexcept
-      : control_(control) {}
+      : control_(control) {
+
+      }
+
+      //other-type-aware
+      template<typename U>
+      RefCounted(ControlBlock* control) noexcept
+      : control_(control) {
+         if (control_) control_->addStrongRef();
+      }
 
       // Constructor to convert from unique ptr
       explicit RefCounted(std::unique_ptr<T>&& data) noexcept
-      : RefCounted(data.get()){}
+      : RefCounted(data.release()){}
 
       // Add converting constructor for inheritance
       template<typename U>
       RefCounted(RefCounted<U>&& other) noexcept
-      : control_(other.control_) {
+      : control_(other.control_)
+      {
          other.control_ = nullptr;
+      }
+
+      template<typename U>
+      RefCounted(const RefCounted<U>& other) noexcept
+      : control_(other.control_)
+      {
+         if (control_) control_->addStrongRef();
       }
 
       // makes no sense in a shared ownership model. Just copy and drop.
       RefCounted& operator=(RefCounted&& other) = delete;
-      RefCounted(RefCounted&& other) = delete;
+      RefCounted(RefCounted&& other)
+      : control_(other.control_)
+      {
+         other.release();
+      }
 
       RefCounted(const RefCounted& other) : control_(other.control_) {
          if (control_) control_->addStrongRef();
@@ -142,6 +163,7 @@ namespace ReyEngine::Internal::Tree{
       T& operator*() const noexcept { return *get(); }
       [[nodiscard]] RefCountSizeType use_count() const noexcept {return control_ ? control_->useCount() : 0;}
       explicit operator bool() const noexcept {return control_;}
+      ControlBlock* get_ctrl_block(){return control_;} //dangerous, make sure you know what you're doing
 
       WeakRef<T> getWeakRef() noexcept;
 

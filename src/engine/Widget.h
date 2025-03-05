@@ -11,7 +11,8 @@ namespace ReyEngine {
    , public Internal::Processable
    {
    public:
-      REYENGINE_OBJECT(Canvas)
+      Widget(): theme(new Theme){}
+      REYENGINE_OBJECT(Widget)
       Theme& getTheme(){return *theme;}
    protected:
       Handled _unhandled_input(const InputEvent& event) override {return false;}
@@ -20,6 +21,7 @@ namespace ReyEngine {
       bool acceptsHover = false;
 
       bool isLayout = false;
+      bool isInLayout = false;
       RefCounted<Theme> theme;
    };
 }

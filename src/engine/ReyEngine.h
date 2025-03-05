@@ -141,7 +141,8 @@ namespace ReyEngine {
       inline bool operator!=(const Vec2& rhs) const {return x!=rhs.x || y!=rhs.y;}
       inline Vec2 operator-() const {return {-x, -y};}
       inline void operator=(Size<T>&) = delete;
-      inline void operator=(Pos<T>&) = delete;
+
+      virtual inline void operator=(Pos<T>&) = delete;
       inline explicit operator Vector2() const {return {(float)x,(float)y};}
       inline constexpr T magnitude() const {return std::sqrt(x * x + y * y);}
       static inline constexpr T magnitude(T x, T y) {return std::sqrt(x * x + y * y);}
@@ -517,7 +518,7 @@ namespace ReyEngine {
    struct Size : public Vec2<T>{
       constexpr inline Size(): Vec2<T>(){}
       constexpr inline Size(const T& x, const T& y) : Vec2<T>(x, y){}
-      explicit inline Size(const T edge): Size(edge, edge){}
+      explicit inline Size(const T& edge): Size(edge, edge){}
       constexpr inline Size(const Vector2& v)     : Vec2<T>(v.x,v.y){}
       template <typename R>
       constexpr inline Size(const Vec2<R>& v)   : Vec2<T>(v.x,v.y){}
@@ -529,9 +530,9 @@ namespace ReyEngine {
       inline Size operator-(const Size& rhs) const {auto val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
       inline Size& operator+=(const Size& rhs){this->x += rhs.x; this->y += rhs.y; return *this;}
       inline Size& operator-=(const Size& rhs){this->x -= rhs.x; this->y -= rhs.y; return *this;}
-      inline Pos<T> center() const {return {this->x/2.0f,this->y/2.0f};}
-      inline Rect<T> toRect() const {return {{0,0}, {*this}};}
-      inline operator std::string() const {return Vec2<T>::toString();}
+      [[nodiscard]] inline Pos<T> center() const {return {this->x/2.0f,this->y/2.0f};}
+      [[nodiscard]] inline Rect<T> toRect() const {return {{0,0}, {*this}};}
+      inline explicit operator std::string() const {return Vec2<T>::toString();}
       Rect<T> toRect();
    };
 

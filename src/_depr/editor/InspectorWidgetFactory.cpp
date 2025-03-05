@@ -1,6 +1,6 @@
 #include "InspectorWidgetFactory.h"
 #include "Layout.h"
-#include "Label.hpp"
+#include "Label.h"
 using namespace std;
 using namespace ReyEngine;
 

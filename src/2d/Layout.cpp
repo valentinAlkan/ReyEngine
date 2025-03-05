@@ -201,14 +201,14 @@ void Layout::arrangeChildren() {
                for (auto& _layout: childLayoutsAvailable){
                   auto& layout = _layout;
                   startOver = false;
-                  int allocatedSpace;
+                  float allocatedSpace;
                   {
                      double denominator = 0;
                      double numerator = layoutRatios.at(layout->childIndex);
                      for (int i=0; i<childLayoutsAvailable.size(); i++) {
                         denominator += layoutRatios.at(childLayoutsAvailable.at(i)->childIndex);
                      }
-                     allocatedSpace = (int) (totalSizeToAllocate * numerator / denominator);
+                     allocatedSpace = totalSizeToAllocate * numerator / denominator;
                      if constexpr (VERBOSE) Logger::debug() << "Child " << layout->child.getName() << " with scale of " << numerator << "/" << denominator << " can potentially be allocated " << allocatedSpace << " pixels" << endl;
                   }
                   std::optional<int> isConstrained;

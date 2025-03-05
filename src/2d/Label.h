@@ -3,6 +3,7 @@
 #include "StringTools.h"
 #include <iomanip>
 #include <sstream>
+#include "Theme.h"
 
 namespace ReyEngine{
    class Label : public Widget {
@@ -10,46 +11,44 @@ namespace ReyEngine{
       Label(const std::string& text){
          auto expandOpt = needsExpand();
          if (expandOpt){
-            applyRect({getPos(), expandOpt.value()});
+            applyRect({getPosition(), expandOpt.value()});
             minSize = expandOpt.value();
          }
-         theme->background = Style::Fill::NONE;
+         theme->background.fill = Style::Fill::NONE;
       }
       void render2D() const override{
          //todo: scissor text
-         auto& outline = theme->outline;
+         auto& outline = theme->background.outline;
          auto& background = theme->background;
 //         auto& foreground = theme->foreground;
-         switch (background.value){
+         switch (background.fill){
             case Style::Fill::SOLID:
-               drawRectangle(getRect().toSizeRect(), background.colorPrimary.value);
+               drawRectangle(getRect().toSizeRect(), background.colorPrimary);
             default:
                break;
          }
-         switch(outline.value){
+         switch(outline){
             case Style::Outline::LINE:
-               drawRectangleLines(getRect().toSizeRect(), outline.thickness.value, outline.color.value);
+               drawRectangleLines(getRect().toSizeRect(), theme->outline.linethick, theme->outline.colorPrimary);
                break;
    //         case Style::Outline::SHADOW:
    //            break;
             default:
                break;
          }
-          drawText(text.value, {0, 0}, theme->font.value);
+          drawText(text, {0, 0}, theme->font);
       };
-      void registerProperties() override{
-         registerProperty(text);
-      };
-      void clear(){text.value.clear();}
+
+      void clear(){text.clear();}
       void setText(const std::string& newText){
-         text.set(newText);
+         text = newText;
          auto expandOpt = needsExpand();
          if (expandOpt) {
             setMinSize(expandOpt.value());
          }
       }
       void appendText(const std::string& newText){
-         text.value += newText;
+         text += newText;
          if (!isInLayout) {
             auto expandOpt = needsExpand();
             if (expandOpt) {
@@ -68,12 +67,12 @@ namespace ReyEngine{
       void setText(int newText){
          setText(std::to_string(newText));
       }
-      std::string getText(){return text.value;}
+      std::string getText(){return text;}
 
    protected:
       inline ReyEngine::Rect<double> calculateBoundingRect(){
          auto textSize = measureText();
-         auto newSize = getClampedSize(textSize);
+         auto newSize = clampedSize(textSize);
          if (newSize.x > getSize().x || newSize.y > getSize().y){
             return {{0, 0}, newSize};
          }
@@ -88,7 +87,7 @@ namespace ReyEngine{
          }
          return std::nullopt;
       };
-      inline ReyEngine::Size<double> measureText() const {return theme->font.value.measure(text.value);}
+      inline ReyEngine::Size<double> measureText() const {return theme->font.measure(text);}
       std::string text;
    };
 }

@@ -1,7 +1,7 @@
 #include "Window.h"
 #include "Widget.h"
 #include "Canvas.h"
-//#include "Label.hpp"
+#include "Label.h"
 #include "Layout.h"
 
 using namespace std;
@@ -69,6 +69,11 @@ int main(){
       auto makeName = []() -> std::string{
          return "Label" + to_string(Application::generateRandom(0, 200000));
       };
+
+      {
+         auto letItDie = make_node<Canvas>("turds");
+      }
+
       std::vector<TypeNode*> labels;
       {
          auto [widget2, _] = make_node<TestWidget>("Parent", "Parent");

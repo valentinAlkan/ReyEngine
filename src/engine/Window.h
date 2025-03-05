@@ -29,7 +29,7 @@ namespace ReyEngine{
 //      void setCanvas(std::shared_ptr<Canvas>&);
       static WindowSpace<Pos<float>> getMousePos(); //returns global mouse position
       static Vec2<double> getMousePct(); //returns global mouse position as a percentage of the window size from 0 to 1
-      RefCounted<Canvas> getCanvas();
+      std::shared_ptr<Canvas> getCanvas();
       Size<int> getSize(){return getWindowSize();}
       void setSize(Size<int> newSize);
       Pos<int> getPosition(){return getWindowPosition();}
