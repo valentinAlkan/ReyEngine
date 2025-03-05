@@ -18,6 +18,8 @@ namespace ReyEngine {
       void _process(float dt) override {};
 
       bool acceptsHover = false;
+
+      bool isLayout = false;
       RefCounted<Theme> theme;
    };
 }

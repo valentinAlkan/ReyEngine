@@ -14,8 +14,7 @@ namespace ReyEngine{
 
    #define REYENGINE_OBJECT(CLASSNAME) \
    TYPENAME(CLASSNAME) \
-   std::string getTypeName() override {return TYPE_NAME;}  \
-
+   std::string getTypeName() override {return TYPE_NAME;}
    //satisfies typewrappable
    namespace Internal{
       struct ReyObject : public TreeStorable
@@ -25,6 +24,9 @@ namespace ReyEngine{
          }
          TYPENAME(ReyObject)
          virtual std::string getTypeName() {return TYPE_NAME;}
+         std::string getName(){return _node->name;}
+         std::vector<TypeNode*> getChildren(){return _node->getChildren();}
+         std::optional<TypeNode*> getChild(const std::string& name){return _node->getChild(name);}
          //reserved for internal functionality.
          //   GOOD FREND FOR IESVS SAKE FORBEARE
          //   TO DIGG THE DVST ENCLOASED HEARE
@@ -45,8 +47,7 @@ namespace ReyEngine{
          virtual void _on_descendant_added_to_tree(TypeNode *n) {};
          virtual void _on_child_removed_from_tree(TypeNode*){};
          virtual void _on_descendant_removed_from_tree(TypeNode*){};
-         inline bool operator==(const ReyObject& rhs){return uniqueValue == rhs.uniqueValue;}
-         inline bool operator!=(const ReyObject& rhs){return uniqueValue == rhs.uniqueValue;}
+         virtual inline bool operator==(const ReyObject& rhs){return uniqueValue == rhs.uniqueValue;}
       private:
          UniqueValue uniqueValue;
       };

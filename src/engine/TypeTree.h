@@ -169,10 +169,10 @@ namespace ReyEngine::Internal::Tree {
       RefCounted<T> ref() {
          if (_data->getTypeIndex() == std::type_index(typeid(T))) {
             // First, cast to TypeWrapper<T>
-            auto wrapper = std::dynamic_pointer_cast<TypeWrapper<T>>(_data);
+            auto wrapper = dynamic_cast<TypeWrapper<T>>(_data.get());
             if (wrapper) {
-               // Then return a shared_ptr to the contained value
-               return RefCounted<T>(&wrapper->getValue(), [wrapper](T*){});
+               // if this succeeds, we are are as we say we are
+               return _data;
             }
          }
          return nullptr;

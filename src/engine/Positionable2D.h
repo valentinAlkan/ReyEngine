@@ -33,10 +33,12 @@ namespace ReyEngine::Internal {
       }
       inline Transform2D& getLocalTransform(){return transform2D;}
 //      inline Transform2D& getGlobalTransform(){return globalTransform;}
-      inline Size<float> getMinSize(){return minSize;}
-      inline Size<float> getMaxSize(){return maxSize;}
+      inline Size<R_FLOAT> getMinSize(){return minSize;}
+      inline Size<R_FLOAT> getMaxSize(){return maxSize;}
       inline void setMinSize(const Size<float>& newMin){minSize = newMin;}
       inline void setMaxSize(const Size<float>& newMax){maxSize = newMax;}
+      inline R_FLOAT getWidth(){return size.x;}
+      inline R_FLOAT getHeight(){return size.y;}
    protected:
       virtual void _on_rect_changed(){};
 

@@ -5,6 +5,7 @@
 namespace ReyEngine{
    class Layout : public Widget {
    public:
+      REYENGINE_OBJECT(Layout)
       /////////////////////////////////////////////////////////////////////////////////////////
       enum class LayoutDir{HORIZONTAL, VERTICAL, GRID, OTHER};
       /////////////////////////////////////////////////////////////////////////////////////////
@@ -40,7 +41,7 @@ namespace ReyEngine{
       /////////////////////////////////////////////////////////////////////////////////////////
    protected:
       struct LayoutHelper;
-      Layout(const std::string &name, const std::string &typeName, LayoutDir layoutDir);
+      Layout(LayoutDir layoutDir);
       void _on_child_added_to_tree(TypeNode*) override;
       void _on_child_removed_from_tree(TypeNode*) override;
       void _on_rect_changed() override {arrangeChildren();}
@@ -54,22 +55,19 @@ namespace ReyEngine{
 
    /////////////////////////////////////////////////////////////////////////////////////////
    class VLayout : public Layout {
-      REYENGINE_OBJECT_BUILD_ONLY_ARGS(VLayout, Layout, BaseWidget, Layout::LayoutDir::VERTICAL){}
    public:
-      REYENGINE_DEFAULT_BUILD(VLayout)
+      REYENGINE_OBJECT(VLayout)
    };
 
    /////////////////////////////////////////////////////////////////////////////////////////
    class HLayout : public Layout {
-      REYENGINE_OBJECT_BUILD_ONLY_ARGS(HLayout, Layout, BaseWidget, Layout::LayoutDir::HORIZONTAL){}
    public:
-      REYENGINE_DEFAULT_BUILD(HLayout)
+      REYENGINE_OBJECT(VLayout)
    };
 
    /////////////////////////////////////////////////////////////////////////////////////////
    class GridLayout : public Layout {
-      REYENGINE_OBJECT_BUILD_ONLY_ARGS(GridLayout, Layout, BaseWidget, Layout::LayoutDir::GRID){}
    public:
-      REYENGINE_DEFAULT_BUILD(GridLayout)
+      REYENGINE_OBJECT(VLayout)
    };
 }

@@ -9,11 +9,11 @@ using namespace Tree;
 static constexpr bool VERBOSE = false;
 /// A struct that helps us layout widgets. Applies changes on dtor.
 struct Layout::LayoutHelper {
-   LayoutHelper(LayoutDir layoutDir, int index, Widget& parent, Widget& child)
+   LayoutHelper(LayoutDir layoutDir, int index, Widget* parent, Widget* child)
    : childIndex(index)
    , layoutDir(layoutDir)
-   , child(child)
-   , parent(parent)
+   , child(*child)
+   , parent(*parent)
    {}
    ~LayoutHelper(){
       //apply the rect
@@ -28,8 +28,8 @@ struct Layout::LayoutHelper {
       child.setRect(pendingRect);
    }
    /// Accounts for min/max
-   std::optional<R_FLOAT> setPendingRect(const Rect<int>& newRect){
-      Tools::AnonymousDtor dtor([&](){if constexpr (VERBOSE) Logger::debug() << "Child " << child.getNode().getName() << " will be allowed " << pendingRect.size() << " space" << endl;});
+   std::optional<R_FLOAT> setPendingRect(const Rect<R_FLOAT>& newRect){
+      Tools::AnonymousDtor dtor([&](){if constexpr (VERBOSE) Logger::debug() << "Child " << child.getNode()->getName() << " will be allowed " << pendingRect.size() << " space" << endl;});
       pendingRect = newRect;
       auto maxSize = layoutDir == LayoutDir::HORIZONTAL ? child.getMaxSize().x : child.getMaxSize().y;
       auto minSize = layoutDir == LayoutDir::HORIZONTAL ? child.getMinSize().x : child.getMinSize().y;
@@ -71,24 +71,17 @@ private:
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Layout::Layout(LayoutDir layoutDir)
-: layoutRatios("layoutRatios")
-, alignment("alignment", Alignment::EVEN)
+: alignment(Alignment::EVEN)
 , dir(layoutDir)
 {
    isLayout = true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Layout::_register_parent_properties() {
-   BaseWidget::_register_parent_properties();
-   BaseWidget::registerProperties();
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void Layout::_on_child_added(std::shared_ptr<BaseWidget> &child) {
+void Layout::_on_child_added_to_tree(TypeNode* child) {
    if constexpr (VERBOSE) Logger::debug() << child->getName() << " added to layout " << getName() << std::endl;
    if (layoutRatios.size() < getChildren().size()){
-      layoutRatios.append(1.0);
+      layoutRatios.push_back(1.0);
    }
    arrangeChildren();
 }
@@ -100,7 +93,7 @@ void Layout::_on_child_added(std::shared_ptr<BaseWidget> &child) {
 //}
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Layout::_on_child_removed(std::shared_ptr<BaseWidget>& child){
+void Layout::_on_child_removed_from_tree(TypeNode* child) {
    if (layoutRatios.size() > getChildren().size()){
       layoutRatios.pop_back();
    }
@@ -121,26 +114,35 @@ void Layout::arrangeChildren() {
       //determine box size
       Size<int> boundingBox;
       for (const auto& child : getChildren()){
-         boundingBox = boundingBox.max(child->getMaxSize());
+         auto isWidget = child->as<Widget>();
+         if (!isWidget) continue;
+         auto widget = isWidget.value();
+         boundingBox = boundingBox.max(widget->getMaxSize());
       }
       if (!boundingBox.x || !boundingBox.y) return; //invalid rect
       //create subrects to lay out the children
-      if (getWidth() && getHeight()) {
+      if (getWidth()!=0 && getHeight()!=0) {
          for (int i = 0; i < getChildren().size(); i++) {
-            auto &child = getChildren().at(i);
+            auto child = getChildren().at(i);
+            auto isWidget = child->as<Widget>();
+            if (!isWidget) continue;
+            auto widget = isWidget.value();
             auto subrect= getRect().toSizeRect().getSubRect(boundingBox, i);
-            child->setRect(subrect);
+            widget->setRect(subrect);
          }
       }
    } else {
       const auto expandingDimension = dir == LayoutDir::HORIZONTAL ? getWidth() : getHeight();
       // For front and back alignment, set all widgets to their minimum/maximum size, then allocate the leftover space to nothing.
-      switch (alignment.value){
+      switch (alignment){
          case Alignment::FRONT:{
             R_FLOAT pos = 0;
             for (int i=0; i<getChildren().size(); i++){
                //just make the thing as small as possible - setpendingrect will spit back its minimum size
-               LayoutHelper helper(dir, i, getChildren()[i]);
+               auto child = getChildren().at(i);
+               auto isWidget = child->as<Widget>();
+               if (!isWidget) continue;
+               LayoutHelper helper(dir, i, this, isWidget.value());
                helper.setReleventPosition(pos);
                auto pendingRect = dir == LayoutDir::HORIZONTAL ? Rect<R_FLOAT>(pos,0,0,getHeight()) : Rect<R_FLOAT>(0,pos,getWidth(),0);
                auto minSizeOpt = helper.setPendingRect(pendingRect);
@@ -154,7 +156,10 @@ void Layout::arrangeChildren() {
             R_FLOAT pos = dir == LayoutDir::HORIZONTAL ? getWidth() : getHeight();
             for (int i=0; i<getChildren().size(); i++){
                //just make the thing as small as possible - setpendingrect will spit back its minimum size
-               LayoutHelper helper(dir, i, getChildren()[i]);
+               auto child = getChildren().at(i);
+               auto isWidget = child->as<Widget>();
+               if (!isWidget) continue;
+               LayoutHelper helper(dir, i, this, isWidget.value());
                auto pendingRect = dir == LayoutDir::HORIZONTAL ? Rect<R_FLOAT>(0,0,0,getHeight()) : Rect<R_FLOAT>(0,0,getWidth(),0);
                auto minSizeOpt = helper.setPendingRect(pendingRect);
                //will either be constrained, or be 0, so we don't need to check other conditions
@@ -171,13 +176,17 @@ void Layout::arrangeChildren() {
 
             //determine which children we are giving space to. Children which are maxed out will not be considered
             // in this calculation. Start with a vector of all children, and remove them as we need to.
+            // use unique ptrs in case things get reallocated
             std::vector<std::unique_ptr<LayoutHelper>> childLayoutsAll;
-            std::vector<std::reference_wrapper<LayoutHelper>> childLayoutsAvailable;
+            std::vector<LayoutHelper*> childLayoutsAvailable;
             for (int i=0; i<getChildren().size(); i++){
-               childLayoutsAll.emplace_back(make_unique<LayoutHelper>(dir, i, getChildren().at(i)));
-               childLayoutsAvailable.emplace_back(*childLayoutsAll.back());
+               auto child = getChildren().at(i);
+               auto isWidget = child->as<Widget>();
+               if (!isWidget) continue;
+               childLayoutsAll.emplace_back(make_unique<LayoutHelper>(dir, i, this, isWidget.value()));
+               childLayoutsAvailable.push_back(childLayoutsAll.back().get());
             }
-            auto removeLayoutFromConsideration = [&](LayoutHelper& layout){
+            auto removeLayoutFromConsideration = [&](LayoutHelper* layout){
                for (auto it = childLayoutsAvailable.begin(); it != childLayoutsAvailable.end(); it++){
                   if (layout == *it){
                      childLayoutsAvailable.erase(it);
@@ -190,23 +199,23 @@ void Layout::arrangeChildren() {
             if constexpr (VERBOSE) Logger::debug() << "Parent " << getName() << " allocating " << getSize() << " pixels to children!" << endl;
             do {
                for (auto& _layout: childLayoutsAvailable){
-                  auto& layout = _layout.get();
+                  auto& layout = _layout;
                   startOver = false;
                   int allocatedSpace;
                   {
                      double denominator = 0;
-                     double numerator = layoutRatios.value.at(layout.childIndex);
+                     double numerator = layoutRatios.at(layout->childIndex);
                      for (int i=0; i<childLayoutsAvailable.size(); i++) {
-                        denominator += layoutRatios.value.at(childLayoutsAvailable.at(i).get().childIndex);
+                        denominator += layoutRatios.at(childLayoutsAvailable.at(i)->childIndex);
                      }
                      allocatedSpace = (int) (totalSizeToAllocate * numerator / denominator);
-                     if constexpr (VERBOSE) Logger::debug() << "Child " << layout.child->getName() << " with scale of " << numerator << "/" << denominator << " can potentially be allocated " << allocatedSpace << " pixels" << endl;
+                     if constexpr (VERBOSE) Logger::debug() << "Child " << layout->child.getName() << " with scale of " << numerator << "/" << denominator << " can potentially be allocated " << allocatedSpace << " pixels" << endl;
                   }
                   std::optional<int> isConstrained;
                   if (dir == LayoutDir::HORIZONTAL) {
-                     isConstrained = layout.setPendingRect({{0, 0},{allocatedSpace, getHeight()}});
+                     isConstrained = layout->setPendingRect({{0, 0},{allocatedSpace, getHeight()}});
                   } else {
-                     isConstrained = layout.setPendingRect({{0, 0}, {getWidth(), allocatedSpace}});
+                     isConstrained = layout->setPendingRect({{0, 0}, {getWidth(), allocatedSpace}});
                   }
                   if (isConstrained) {
                      removeLayoutFromConsideration(layout);
@@ -252,13 +261,19 @@ ReyEngine::Size<int> Layout::calculateIdealBoundingBox() {
    } else {
       if (dir == LayoutDir::VERTICAL){
          for (auto& child : getChildren()){
-            auto childMinSize = child->getMinSize().max({0, 0});
+            auto isWidget = child->as<Widget>();
+            if (!isWidget) continue;
+
+            auto childMinSize = isWidget.value()->getMinSize().max({0, 0});
             idealBoundingBox.x = Math::max(idealBoundingBox.x, childMinSize.x);
             idealBoundingBox.y += childMinSize.y;
          }
       } else {
          for (auto& child : getChildren()){
-            auto childMinSize = child->getMinSize().min({0,0});
+            auto isWidget = child->as<Widget>();
+            if (!isWidget) continue;
+
+            auto childMinSize = isWidget.value()->getMinSize().min({0,0});
             idealBoundingBox.x += childMinSize.x;
             idealBoundingBox.y = Math::max(idealBoundingBox.y, childMinSize.y);
          }

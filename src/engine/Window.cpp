@@ -15,7 +15,7 @@ using namespace Internal;
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
-WindowPrototype2::WindowPrototype2(const std::string &title, int width, int height, const std::vector<WindowFlags> &flags, int targetFPS)
+WindowPrototype::WindowPrototype(const std::string &title, int width, int height, const std::vector<WindowFlags> &flags, int targetFPS)
 : title(title)
 , width(width)
 , height(height)
@@ -37,7 +37,7 @@ WindowPrototype2::WindowPrototype2(const std::string &title, int width, int heig
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Window& WindowPrototype2::createWindow() {
+Window& WindowPrototype::createWindow() {
    use();
    return Application::instance().createWindow(*this, nullopt);
 }
@@ -49,7 +49,7 @@ Window& WindowPrototype2::createWindow() {
 //}
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void WindowPrototype2::use() {
+void WindowPrototype::use() {
    if (_usedUp) {
       throw std::runtime_error(
             "WindowPrototype2 for window " + title + " {" + std::to_string(width) + ":" + std::to_string(height) + " already used!");
@@ -464,6 +464,6 @@ Window::~Window(){
 //}
 //
 ///////////////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<Canvas> Window::getCanvas() {
+RefCounted<Canvas> Window::getCanvas() {
    return _root->ref<Canvas>();
 }
