@@ -89,18 +89,13 @@ int main(){
       {
          auto [layout, node] = make_node<Layout>("Layout", Layout::LayoutDir::VERTICAL);
          root->getNode()->addChild(std::move(node));
-         layout->setSize(root->getSize());
          layout->setAnchoring(Anchor::FILL);
 
-         auto [layoutl, nodel] = make_node<Layout>("Layout", Layout::LayoutDir::HORIZONTAL);
-         root->getNode()->addChild(std::move(nodel));
-         layout->setSize(root->getSize());
-         layout->setAnchoring(Anchor::FILL);
+         auto [layoutl, nodel] = make_node<Layout>("Layoutl", Layout::LayoutDir::HORIZONTAL);
+         layout->getNode()->addChild(std::move(nodel));
 
-         auto [layoutr, noder] = make_node<Layout>("Layout", Layout::LayoutDir::HORIZONTAL);
-         root->getNode()->addChild(std::move(noder));
-         layout->setSize(root->getSize());
-         layout->setAnchoring(Anchor::FILL);
+         auto [layoutr, noder] = make_node<Layout>("Layoutr", Layout::LayoutDir::HORIZONTAL);
+         layout->getNode()->addChild(std::move(noder));
 
          // add some children to the layout
          auto [widget1, n1] = make_node<TestWidget>("Child1", "firstchild");
