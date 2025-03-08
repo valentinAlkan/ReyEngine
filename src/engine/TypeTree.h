@@ -107,7 +107,7 @@ namespace ReyEngine::Internal::Tree {
    public:
       virtual ~TypeNode(){
          if (_data) {
-            std::cout << "Deleting node " << name << " of type " << _data->getTypeName() << std::endl;
+            Logger::info() << "Deleting node " << name << " of type " << _data->getTypeName() << std::endl;
          }
       }
       [[nodiscard]] TypeBase* getData() const { return _data.get(); }
@@ -117,16 +117,24 @@ namespace ReyEngine::Internal::Tree {
       inline std::string getScenePath(){return _scenePath;}
       // Add child with a name for lookup
       TypeNode* addChild(std::unique_ptr<TypeNode>&& child) {
+         if (this == nullptr){
+            Logger::error() << "Null parent!";
+            return nullptr;
+         }
+         if (!child){
+            Logger::error() << "Null child cannot be added to " << name;
+            return nullptr;
+         }
          if (child.get() == this){
             Logger::error() << "Child " << name << " cannot be added to itself " << name;
             return nullptr; //child still valid at this point
          }
          const auto name = child->name;
          HashId nameHash = std::hash<std::string>{}(name);
-         auto[it, success] = _childMap.emplace(nameHash, std::move(child));
+         auto[it, success] = _childMap.try_emplace(nameHash, std::move(child));
          if (!success) {
              // Handle duplicate name case if needed
-            Logger::error() << "Child " << name << " already exists for parent " << name;
+            Logger::error() << "Child " << name << " already exists for parent " << name << std::endl;
             return nullptr; //child still valid at this point
          }
          auto childptr = it->second.get();

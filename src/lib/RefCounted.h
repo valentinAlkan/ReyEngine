@@ -36,8 +36,7 @@ namespace ReyEngine::Internal::Tree{
 
       void releaseStrongRef() noexcept override {
          if (strongCount_.fetch_sub(1, std::memory_order_acq_rel) == 1) {
-            delete ptr_;
-            ptr_ = nullptr;
+            ptr_.release();
             if (weakCount_.load(std::memory_order_relaxed) == 0) {
                std::cout << "Strongref releasing contorl block!" << std::endl;
             } else {
@@ -71,14 +70,14 @@ namespace ReyEngine::Internal::Tree{
          return false;
       }
 
-      RefCountSizeType useCount() const noexcept override {
+      [[nodiscard]] RefCountSizeType useCount() const noexcept override {
          return strongCount_.load(std::memory_order_relaxed);
       }
 
-      void* get_ptr() const override { return ptr_; }
+      [[nodiscard]] void* get_ptr() const override { return (void*)ptr_.get(); }
 
    private:
-      T* ptr_;
+      std::unique_ptr<T> ptr_;
       std::atomic<RefCountSizeType> strongCount_;
       std::atomic<RefCountSizeType> weakCount_;
    };

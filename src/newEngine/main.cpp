@@ -92,11 +92,29 @@ int main(){
          layout->setSize(root->getSize());
          layout->setAnchoring(Anchor::FILL);
 
+         auto [layoutl, nodel] = make_node<Layout>("Layout", Layout::LayoutDir::HORIZONTAL);
+         root->getNode()->addChild(std::move(nodel));
+         layout->setSize(root->getSize());
+         layout->setAnchoring(Anchor::FILL);
+
+         auto [layoutr, noder] = make_node<Layout>("Layout", Layout::LayoutDir::HORIZONTAL);
+         root->getNode()->addChild(std::move(noder));
+         layout->setSize(root->getSize());
+         layout->setAnchoring(Anchor::FILL);
+
          // add some children to the layout
          auto [widget1, n1] = make_node<TestWidget>("Child1", "firstchild");
          auto [widget2, n2] = make_node<TestWidget>("Child2", "secondchild");
-         layout->getNode()->addChild(std::move(n1));
-         layout->getNode()->addChild(std::move(n2));
+         auto [widget3, n3] = make_node<TestWidget>("Child3", "thirdchild");
+         auto [widget4, n4] = make_node<TestWidget>("Child4", "fourtchild");
+         auto [widget5, n5] = make_node<TestWidget>("Child5", "fifthchild");
+         auto [widget6, n6] = make_node<TestWidget>("Child6", "sixthchild");
+         layoutl->getNode()->addChild(std::move(n1));
+         layoutl->getNode()->addChild(std::move(n2));
+         layoutl->getNode()->addChild(std::move(n3));
+         layoutr->getNode()->addChild(std::move(n4));
+         layoutr->getNode()->addChild(std::move(n5));
+         layoutr->getNode()->addChild(std::move(n6));
       }
 
       window.exec();
