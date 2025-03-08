@@ -179,7 +179,7 @@ namespace ReyEngine{
          }
       }
       //if this is a mouse event, return the mousedata, otherwise return an optional nullptr
-      [[nodiscard]] std::optional<MouseEvent*> isMouse() const {return _mouseData ? _mouseData: nullptr;}
+      [[nodiscard]] std::optional<MouseEvent*> isMouse() const {return _mouseData ? _mouseData : std::optional<MouseEvent*>();}
       EventId eventId;
    private:
       MouseEvent* _mouseData = nullptr;

@@ -106,7 +106,9 @@ namespace ReyEngine::Internal::Tree {
       }
    public:
       virtual ~TypeNode(){
-         std::cout << "Deleting type node " << name << " of type " << name << std::endl;
+         if (_data) {
+            std::cout << "Deleting node " << name << " of type " << _data->getTypeName() << std::endl;
+         }
       }
       [[nodiscard]] TypeBase* getData() const { return _data.get(); }
       inline TypeNode* getParent(){return _parent;}
@@ -188,15 +190,14 @@ namespace ReyEngine::Internal::Tree {
       }
       template<NamedType T>
       std::optional<T*> as() {
+         if (!_data) return {};
          if (auto wrapper = dynamic_cast<TypeWrapper<T>*>(_data.get())) {
             return &wrapper->getValue();
          }
          // T must store a named type
-         if (_data) {
-            auto* wrapper = static_cast<TypeWrapper<TreeStorable>*>(_data.get());
-            if (auto* value = dynamic_cast<T*>(&wrapper->getValue())) {
-               return value;
-            }
+         auto* wrapper = static_cast<TypeWrapper<TreeStorable>*>(_data.get());
+         if (auto* value = dynamic_cast<T*>(&wrapper->getValue())) {
+            return value;
          }
          return std::nullopt;
       }

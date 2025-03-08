@@ -35,39 +35,22 @@ namespace ReyEngine{
 //         void registerProperties() override {}
 //      };
 
+      Layout(Layout::LayoutDir layoutDir);
       ReyEngine::Size<int> calculateIdealBoundingBox();
       std::vector<float> layoutRatios;
       Alignment alignment;
       /////////////////////////////////////////////////////////////////////////////////////////
    protected:
       struct LayoutHelper;
-      Layout(LayoutDir layoutDir);
       void _on_child_added_to_tree(TypeNode*) override;
       void _on_child_removed_from_tree(TypeNode*) override;
       void _on_rect_changed() override {arrangeChildren();}
+      void _on_child_rect_changed() override {arrangeChildren();}
       void render2DEnd() override;
       virtual void arrangeChildren();
       ColorRGBA _debugColor = ColorRGBA::random(255);
       void render2D() const override {drawRectangle(getRect().toSizeRect(), _debugColor);}
       const LayoutDir dir;
 
-   };
-
-   /////////////////////////////////////////////////////////////////////////////////////////
-   class VLayout : public Layout {
-   public:
-      REYENGINE_OBJECT(VLayout)
-   };
-
-   /////////////////////////////////////////////////////////////////////////////////////////
-   class HLayout : public Layout {
-   public:
-      REYENGINE_OBJECT(VLayout)
-   };
-
-   /////////////////////////////////////////////////////////////////////////////////////////
-   class GridLayout : public Layout {
-   public:
-      REYENGINE_OBJECT(VLayout)
    };
 }

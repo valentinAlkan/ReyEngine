@@ -6,7 +6,7 @@ using namespace ReyEngine;
 using namespace Internal;
 using namespace Tree;
 
-static constexpr bool VERBOSE = false;
+static constexpr bool VERBOSE = true;
 /// A struct that helps us layout widgets. Applies changes on dtor.
 struct Layout::LayoutHelper {
    LayoutHelper(LayoutDir layoutDir, int index, Widget* parent, Widget* child)
@@ -25,11 +25,11 @@ struct Layout::LayoutHelper {
       pendingRect.y += theme.layoutMargins.top();
       pendingRect.width -= (theme.layoutMargins.right() + theme.layoutMargins.left());
       pendingRect.height -= (theme.layoutMargins.bottom() + theme.layoutMargins.top());
-      child.setRect(pendingRect);
+      child.applyRect(pendingRect);
    }
    /// Accounts for min/max
    std::optional<R_FLOAT> setPendingRect(const Rect<R_FLOAT>& newRect){
-      Tools::AnonymousDtor dtor([&](){if constexpr (VERBOSE) Logger::debug() << "Child " << child.getNode()->getName() << " will be allowed " << pendingRect.size() << " space" << endl;});
+      Tools::scope_exit exit([&](){if constexpr (VERBOSE) Logger::debug() << "Child " << child.getNode()->getName() << " will be allowed " << pendingRect.size() << " space" << endl;});
       pendingRect = newRect;
       auto maxSize = layoutDir == LayoutDir::HORIZONTAL ? child.getMaxSize().x : child.getMaxSize().y;
       auto minSize = layoutDir == LayoutDir::HORIZONTAL ? child.getMinSize().x : child.getMinSize().y;
@@ -79,11 +79,14 @@ Layout::Layout(LayoutDir layoutDir)
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Layout::_on_child_added_to_tree(TypeNode* child) {
-   if constexpr (VERBOSE) Logger::debug() << child->getName() << " added to layout " << getName() << std::endl;
-   if (layoutRatios.size() < getChildren().size()){
-      layoutRatios.push_back(1.0);
+   if (auto isWidget = child->as<Widget>()) {
+      if constexpr (VERBOSE) Logger::debug() << child->getName() << " added to layout " << getName() << std::endl;
+      if (layoutRatios.size() < getChildren().size()) {
+         layoutRatios.push_back(1.0);
+      }
+      isWidget.value()->isLocked = true;
+      arrangeChildren();
    }
-   arrangeChildren();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

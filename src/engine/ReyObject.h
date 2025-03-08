@@ -24,9 +24,9 @@ namespace ReyEngine{
          }
          TYPENAME(ReyObject)
          virtual std::string getTypeName() {return TYPE_NAME;}
-         std::string getName(){return _node->name;}
-         std::vector<TypeNode*> getChildren(){return _node->getChildren();}
-         std::optional<TypeNode*> getChild(const std::string& name){return _node->getChild(name);}
+         std::string getName(){return _node ? _node->name : "";}
+         std::vector<TypeNode*> getChildren(){return _node ? _node->getChildren() : std::vector<TypeNode*>();}
+         std::optional<TypeNode*> getChild(const std::string& name){return _node ? _node->getChild(name) : std::nullopt;}
          //reserved for internal functionality.
          //   GOOD FREND FOR IESVS SAKE FORBEARE
          //   TO DIGG THE DVST ENCLOASED HEARE

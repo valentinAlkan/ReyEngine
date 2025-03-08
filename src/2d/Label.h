@@ -8,7 +8,10 @@
 namespace ReyEngine{
    class Label : public Widget {
    public:
-      Label(const std::string& text){
+      REYENGINE_OBJECT(Label)
+      Label(const std::string& text)
+      : text(text)
+      {
          auto expandOpt = needsExpand();
          if (expandOpt){
             applyRect({getPosition(), expandOpt.value()});
@@ -49,7 +52,7 @@ namespace ReyEngine{
       }
       void appendText(const std::string& newText){
          text += newText;
-         if (!isInLayout) {
+         if (!isLocked) {
             auto expandOpt = needsExpand();
             if (expandOpt) {
                 setMinSize(expandOpt.value());

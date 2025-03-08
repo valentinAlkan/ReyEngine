@@ -9,7 +9,6 @@ namespace ReyEngine {
          , public Positionable2D {
       public:
          REYENGINE_OBJECT(Drawable2D)
-         Drawable2D(): Positionable2D(){}
          ~Drawable2D() { std::cout << "Goodbye from " << TYPE_NAME << "!!" << std::endl; }
          [[nodiscard]] ReyEngine::Rect<float> getRect() const {return {getPosition(), getSize()};}
          [[nodiscard]] ReyEngine::Size<float> getSize() const {return size;}

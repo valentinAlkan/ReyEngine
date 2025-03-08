@@ -78,7 +78,9 @@ void Window::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
 //   root->ReyEngine::Internal::TypeContainer<ReyEngine::BaseWidget>::setRoot(true);
 //   root->setAnchoring(BaseWidget::Anchor::FILL); //canvas is filled by default
 //   //make sure we init the root
-   _root = Tree::make_node<Canvas>("root").second;
+   auto [canvas, node] = Tree::make_node<Canvas>("root");
+   _root = std::move(node);
+   canvas->setSize(getSize());
 //   root->_init();
 //   root->_has_inited = true;
 //   root->setRect(Rect<int>(0, 0, startingWidth, startingHeight)); //initialize to be the same size as the window
@@ -114,11 +116,8 @@ void Window::exec(){
             WindowResizeEvent event(this, getSize());
             size = newSize;
             publish(event);
-            // see if our root needs to resize
+            //root canvas always same size as window
             canvas->setSize(size);
-            if (newSize != canvas->getSize()){
-               canvas->setSize(newSize);
-            }
          }
 
          // see if the window has moved

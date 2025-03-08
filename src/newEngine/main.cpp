@@ -9,6 +9,7 @@ using namespace ReyEngine;
 using namespace ReyEngine::Internal::Tree;
 
 struct TestWidget : public Widget {
+  REYENGINE_OBJECT(TestWidget)
   TestWidget(const std::string& text)
   : text(text)
   , color(Colors::randColor())
@@ -66,19 +67,11 @@ int main(){
       auto& window = Application::createWindowPrototype("window", 1920, 1080, {WindowFlags::RESIZE}, 60)->createWindow();
       auto root = window.getCanvas();
 
-      auto makeName = []() -> std::string{
-         return "Label" + to_string(Application::generateRandom(0, 200000));
-      };
-
-      {
-         auto letItDie = make_node<Canvas>("turds");
-      }
-
       std::vector<TypeNode*> labels;
       {
          auto [widget2, _] = make_node<TestWidget>("Parent", "Parent");
          labels.push_back(root->getNode()->addChild(std::move(_)));
-         widget2->setPosition({0, 00});
+         widget2->setPosition({0, 0});
       }
       {
          auto [widget3, _] = make_node<TestWidget>("Child", "child");
@@ -90,6 +83,20 @@ int main(){
          auto [label, _] = make_node<Label>("Label", "Hey baby");
          labels.push_back(labels.at(0)->addChild(std::move(_)));
          label->setPosition({100, 500});
+      }
+
+      //create a layout
+      {
+         auto [layout, node] = make_node<Layout>("Layout", Layout::LayoutDir::VERTICAL);
+         root->getNode()->addChild(std::move(node));
+         layout->setSize(root->getSize());
+         layout->setAnchoring(Anchor::FILL);
+
+         // add some children to the layout
+         auto [widget1, n1] = make_node<TestWidget>("Child1", "firstchild");
+         auto [widget2, n2] = make_node<TestWidget>("Child2", "secondchild");
+         layout->getNode()->addChild(std::move(n1));
+         layout->getNode()->addChild(std::move(n2));
       }
 
       window.exec();
