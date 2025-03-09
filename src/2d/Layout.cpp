@@ -110,8 +110,12 @@ void Layout::render2DEnd() {
 
 //sets rect and makes child widget resize calls are preserved
 /////////////////////////////////////////////////////////////////////////////////////////
-void Layout::layoutApplyRect(Widget* widget, const Rect<float>& r){
+void Layout::layoutApplyRect(Widget* widget, Rect<float>& r){
    auto oldRect = widget->getRect();
+   auto minSize = widget->getMinSize();
+   auto maxSize = widget->getMaxSize();
+   r.clampWidth({minSize.x, maxSize.x});
+   r.clampHeight({minSize.y, maxSize.y});
    widget->applyRect(r);
    widget->__on_rect_changed(oldRect, true);
 }

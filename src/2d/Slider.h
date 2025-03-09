@@ -26,6 +26,15 @@ namespace ReyEngine{
       Slider(SliderType sliderDir)
       : sliderType(sliderDir)
       {
+         constexpr float MAX_SIZE = 50;
+         switch (sliderDir){
+            case SliderType::HORIZONTAL:
+               maxSize = {std::numeric_limits<decltype(size.x)>::max(), MAX_SIZE};
+               break;
+            case SliderType::VERTICAL:
+               maxSize = {MAX_SIZE, std::numeric_limits<decltype(size.x)>::max()};
+               break;
+         }
          _range = {minSliderValue, maxSlidervalue};
       }
    protected:
@@ -35,22 +44,19 @@ namespace ReyEngine{
          auto localPos = mouseEvent.value()->getLocalPos();
          if (e.isEvent<InputEventMouseMotion>()){
             if (_is_dragging) {
-               //drag grabber
-               if (_is_dragging) {
-                  //set new slider value based on input
-                  double newValue;
-                  switch (sliderType) {
-                     case SliderType::VERTICAL: {
-                        auto heightRange = ReyEngine::Vec2<double>(0, getRect().height);
-                        newValue = _range.lerp(heightRange.pct(localPos.y));
-                        sliderValue = _range.clamp(newValue);
-                     }
-                        break;
-                     case SliderType::HORIZONTAL:
-                        auto widthRange = Vec2<float>(0, getWidth());
-                        newValue = _range.lerp(widthRange.pct(localPos.x));
-                        sliderValue = _range.clamp(newValue);
+               //set new slider value based on input
+               double newValue;
+               switch (sliderType) {
+                  case SliderType::VERTICAL: {
+                     auto heightRange = ReyEngine::Vec2<double>(0, getRect().height);
+                     newValue = _range.lerp(heightRange.pct(localPos.y));
+                     sliderValue = _range.clamp(newValue);
                   }
+                     break;
+                  case SliderType::HORIZONTAL:
+                     auto widthRange = Vec2<float>(0, getWidth());
+                     newValue = _range.lerp(widthRange.pct(localPos.x));
+                     sliderValue = _range.clamp(newValue);
                   _compute_appearance();
                   _publish_slider_val();
                }
@@ -118,9 +124,9 @@ namespace ReyEngine{
          }
       }
 
-      float sliderValue; //0 to 100
-      float minSliderValue;
-      float maxSlidervalue;
+      float sliderValue = 0; //0 to 100
+      float minSliderValue = 0;
+      float maxSlidervalue = 100;
       SliderType sliderType;
       bool _cursor_in_slider = false;
       bool _cursor_in_grabber = false;

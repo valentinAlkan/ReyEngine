@@ -41,7 +41,7 @@ namespace ReyEngine{
       Alignment alignment;
       /////////////////////////////////////////////////////////////////////////////////////////
    protected:
-      void layoutApplyRect(Widget* widget, const Rect<float>& r);
+      void layoutApplyRect(Widget* widget, Rect<float>& r);
       struct LayoutHelper;
       void _on_child_added_to_tree(TypeNode*) override;
       void _on_child_removed_from_tree(TypeNode*) override;

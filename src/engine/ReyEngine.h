@@ -594,7 +594,9 @@ namespace ReyEngine {
       constexpr inline bool isInside(const Rect& other) const {return other.x+other.width <= x+width && other.x >= x && other.y >= y && other.y+other.height <= y+height;}
       constexpr inline bool isInsideX(const Vec2<T>& point) const {return (point.x >= x && point.x <= x + width);}
       constexpr inline bool isInsideY(const Vec2<T>& point) const {return (point.y >= y && point.y <= y + height);}
-      constexpr inline Rect enclosing(const Pos<T>& origin={0,0}){return {origin, {pos() + size() - origin}};}
+      constexpr inline Rect enclosing(const Pos<T>& origin={0,0}) const {return {origin, {pos() + size() - origin}};} //returns a rectangle, starting at origin, that exactly encloses the point
+      constexpr inline void clampWidth(const Vec2<T>& widthRange){if (width < widthRange.x) width = widthRange.x; if (width > widthRange.y) width = widthRange.y;}
+      constexpr inline void clampHeight(const Vec2<T>& heightRange){if (height < heightRange.x) height = heightRange.x; if (height > heightRange.y) height = heightRange.y;}
       // constrain this rectangle's position so that it is INSIDE the larger rectangle
       constexpr inline void keepInside(const Rect& larger){
          if (x+width > larger.x+larger.width) x = larger.x+larger.width - width;

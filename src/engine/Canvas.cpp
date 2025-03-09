@@ -128,7 +128,7 @@ Handled Canvas::tryHandle(InputEvent& event, TypeNode* node) {
    for (auto& child: node->getChildren()) {
       if (auto isHandler = child->tag<Widget>()) {
          auto handled = tryHandle(event, child);
-         if (handled) return true;
+         if (handled) { return true; }
       }
    }
    //if no children want this event, we try to process it ourselves

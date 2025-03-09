@@ -120,23 +120,23 @@ int main(){
             buttonHolder = layoutr->addChild(std::move(n6));
          }
          //add a slider
-//         {
-//            auto [slider1, n1] = make_node<Slider>("slider1", Slider::SliderType::HORIZONTAL);
-//            sliderHolder->addChild(std::move(n1));
-//         }
-//
-//
-//         //add some buttons
-//         {
-//            auto [button1, n1] = make_node<PushButton>("button1");
-//            auto [button2, n2] = make_node<PushButton>("button2");
-//            auto [button3, n3] = make_node<PushButton>("button3");
-//            auto [button4, n4] = make_node<PushButton>("button4");
-//            buttonHolder->addChild(std::move(n1));
-//            buttonHolder->addChild(std::move(n2));
-//            buttonHolder->addChild(std::move(n3));
-//            buttonHolder->addChild(std::move(n4));
-//         }
+         {
+            auto [slider1, n1] = make_node<Slider>("slider1", Slider::SliderType::HORIZONTAL);
+            sliderHolder->addChild(std::move(n1));
+         }
+
+
+         //add some buttons
+         {
+            auto [button1, n1] = make_node<PushButton>("button1");
+            auto [button2, n2] = make_node<PushButton>("button2");
+            auto [button3, n3] = make_node<PushButton>("button3");
+            auto [button4, n4] = make_node<PushButton>("button4");
+            buttonHolder->addChild(std::move(n1));
+            buttonHolder->addChild(std::move(n2));
+            buttonHolder->addChild(std::move(n3));
+            buttonHolder->addChild(std::move(n4));
+         }
       }
 
       window.exec();
