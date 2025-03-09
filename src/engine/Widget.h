@@ -43,14 +43,17 @@ namespace ReyEngine {
 
       RefCounted<Theme> theme;
 
-      void __on_rect_changed(const Rect<R_FLOAT>& oldRect) override {
-         calculateAnchoring(getRect());
+      void __on_rect_changed(const Rect<R_FLOAT>& oldRect, bool byLayout = false) override {
+         if (!byLayout) {
+            //layout will have already resized children
+            calculateAnchoring(getRect());
+         }
          _on_rect_changed();
          auto event = ResizeEvent(this, oldRect);
          publish(event);
 
-         //try to inform children of resize in case they're anchored
-         for (auto& child : getChildren()) {
+         //try to inform children of resize in case they're anchored or need to do other logic
+         for (auto& child: getChildren()) {
             if (auto isWidget = child->as<Widget>()) {
                auto& childWidget = isWidget.value();
                isWidget.value()->setRect(childWidget->getRect());
@@ -59,6 +62,7 @@ namespace ReyEngine {
 
          //might not be in tree yet.
          if (!getNode()) return;
+         if (byLayout) return; //layouts don't inform their parents when the child rect is changed
          if (auto parent = getNode()->getParent()) {
             if (parent) {
                if (auto parentIsWidget = parent->as<Widget>()) {

@@ -46,13 +46,13 @@ namespace ReyEngine::Internal {
       }
       inline Transform2D& getLocalTransform(){return transform2D;}
 //      inline Transform2D& getGlobalTransform(){return globalTransform;}
-      inline Size<R_FLOAT> getMinSize(){return minSize;}
-      inline Size<R_FLOAT> getMaxSize(){return maxSize;}
+      inline Size<R_FLOAT> getMinSize() const {return minSize;}
+      inline Size<R_FLOAT> getMaxSize() const {return maxSize;}
       inline void setMinSize(const Size<float>& newMin){minSize = newMin;}
       inline void setMaxSize(const Size<float>& newMax){maxSize = newMax;}
-      inline R_FLOAT getWidth(){return size.x;}
-      inline R_FLOAT getHeight(){return size.y;}
-      inline Size<R_FLOAT> clampedSize(const Size<R_FLOAT>& rhs) {
+      inline R_FLOAT getWidth() const {return size.x;}
+      inline R_FLOAT getHeight() const {return size.y;}
+      inline Size<R_FLOAT> clampedSize(const Size<R_FLOAT>& rhs) const {
          auto newX = ReyEngine::Vec2<R_FLOAT>(minSize.x, maxSize.x).clamp(size.x);
          auto newY = ReyEngine::Vec2<R_FLOAT>(minSize.y, maxSize.y).clamp(size.y);
          return {newX, newY};
@@ -66,7 +66,7 @@ namespace ReyEngine::Internal {
          size = rect.size();
       }
 
-      virtual void __on_rect_changed(const Rect<R_FLOAT>& oldRect){}; //internal. Trigger resize for anchored widgets.
+      virtual void __on_rect_changed(const Rect<R_FLOAT>& oldRect, bool byLayout=false){}; //internal. Trigger resize for anchored widgets.
 
       Transform2D  globalTransform;
       Transform2D transform2D;

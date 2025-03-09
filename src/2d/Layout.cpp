@@ -9,30 +9,30 @@ using namespace Tree;
 static constexpr bool VERBOSE = true;
 /// A struct that helps us layout widgets. Applies changes on dtor.
 struct Layout::LayoutHelper {
-   LayoutHelper(LayoutDir layoutDir, int index, Widget* parent, Widget* child)
+   LayoutHelper(LayoutDir layoutDir, int index, Layout* parent, Widget* child)
    : childIndex(index)
    , layoutDir(layoutDir)
-   , child(*child)
-   , parent(*parent)
+   , child(child)
+   , parent(parent)
    {}
    ~LayoutHelper(){
       //apply the rect
-      if constexpr (VERBOSE) Logger::debug() << "Parent " << parent.getNode()->getName() << " applying rectangle " << pendingRect << " to child " << child.getNode()->getName() << endl;
+      if constexpr (VERBOSE) Logger::debug() << "Parent " << parent->getNode()->getName() << " applying rectangle " << pendingRect << " to child " << child->getNode()->getName() << endl;
 
       //apply margins - this should always be the very last thing we do
-      auto& theme = parent.getTheme();
+      auto& theme = parent->getTheme();
       pendingRect.x += theme.layoutMargins.left();
       pendingRect.y += theme.layoutMargins.top();
       pendingRect.width -= (theme.layoutMargins.right() + theme.layoutMargins.left());
       pendingRect.height -= (theme.layoutMargins.bottom() + theme.layoutMargins.top());
-      child.applyRect(pendingRect);
+      parent->layoutApplyRect(child, pendingRect);
    }
    /// Accounts for min/max
    std::optional<R_FLOAT> setPendingRect(const Rect<R_FLOAT>& newRect){
-      Tools::scope_exit exit([&](){if constexpr (VERBOSE) Logger::debug() << "Child " << child.getNode()->getName() << " will be allowed " << pendingRect.size() << " space" << endl;});
+      Tools::scope_exit exit([&](){if constexpr (VERBOSE) Logger::debug() << "Child " << child->getNode()->getName() << " will be allowed " << pendingRect.size() << " space" << endl;});
       pendingRect = newRect;
-      auto maxSize = layoutDir == LayoutDir::HORIZONTAL ? child.getMaxSize().x : child.getMaxSize().y;
-      auto minSize = layoutDir == LayoutDir::HORIZONTAL ? child.getMinSize().x : child.getMinSize().y;
+      auto maxSize = layoutDir == LayoutDir::HORIZONTAL ? child->getMaxSize().x : child->getMaxSize().y;
+      auto minSize = layoutDir == LayoutDir::HORIZONTAL ? child->getMinSize().x : child->getMinSize().y;
       auto& releventDimension = layoutDir == LayoutDir::HORIZONTAL ? pendingRect.width : pendingRect.height;
 
       bool isConstrainedMax = releventDimension > maxSize;
@@ -63,8 +63,8 @@ struct Layout::LayoutHelper {
    bool operator==(const LayoutHelper& rhs) const {return child == rhs.child;}
    const int childIndex;
    const LayoutDir layoutDir;
-   Widget& child;
-   Widget& parent;
+   Widget* child;
+   Layout* parent;
 private:
    Rect<R_FLOAT> pendingRect;
 };
@@ -102,9 +102,18 @@ void Layout::_on_child_removed_from_tree(TypeNode* child) {
    }
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
 void Layout::render2DEnd() {
    //debug
 //   drawRectangleLines({0, 0, getWidth(), getHeight()}, 1.0, COLORS::black);
+}
+
+//sets rect and makes child widget resize calls are preserved
+/////////////////////////////////////////////////////////////////////////////////////////
+void Layout::layoutApplyRect(Widget* widget, const Rect<float>& r){
+   auto oldRect = widget->getRect();
+   widget->applyRect(r);
+   widget->__on_rect_changed(oldRect, true);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -131,7 +140,7 @@ void Layout::arrangeChildren() {
             if (!isWidget) continue;
             auto widget = isWidget.value();
             auto subrect= getRect().toSizeRect().getSubRect(boundingBox, i);
-            widget->setRect(subrect);
+            layoutApplyRect(widget, subrect);
          }
       }
    } else {
@@ -212,7 +221,7 @@ void Layout::arrangeChildren() {
                         denominator += layoutRatios.at(childLayoutsAvailable.at(i)->childIndex);
                      }
                      allocatedSpace = totalSizeToAllocate * numerator / denominator;
-                     if constexpr (VERBOSE) Logger::debug() << "Child " << layout->child.getName() << " with scale of " << numerator << "/" << denominator << " can potentially be allocated " << allocatedSpace << " pixels" << endl;
+                     if constexpr (VERBOSE) Logger::debug() << "Child " << layout->child->getName() << " with scale of " << numerator << "/" << denominator << " can potentially be allocated " << allocatedSpace << " pixels" << endl;
                   }
                   std::optional<int> isConstrained;
                   if (dir == LayoutDir::HORIZONTAL) {

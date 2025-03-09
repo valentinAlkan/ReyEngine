@@ -5,7 +5,7 @@
 #include "Button.h"
 #include "Label.h"
 #include "ScrollArea.h"
-#include "Slider.hpp"
+#include "Slider.h"
 
 using namespace std;
 using namespace ReyEngine;

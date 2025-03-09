@@ -1,6 +1,6 @@
 #pragma once
 #include "Canvas.h"
-#include "Slider.hpp"
+#include "Slider.h"
 
 namespace ReyEngine {
     class ScrollArea : public BaseWidget {
