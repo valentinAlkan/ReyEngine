@@ -121,6 +121,7 @@ namespace ReyEngine{
    private:
       template <typename T>
       void assign(T*& unionMember, T& event) {
+         //assign the even to the correct union member
          unionMember = &const_cast<T&>(event);
          eventId = T::ID;
          if constexpr (T::ID == InputEventMouseMotion::ID){

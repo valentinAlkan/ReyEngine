@@ -26,7 +26,12 @@ void Canvas::_on_descendant_added_to_tree(TypeNode *n) {
       indent.resize(indent.length() - sizeof(INDENT)/sizeof(char));
    };
    catTree(_node);
-//   cacheTree(drawOrder.size() + 1, inputOrder.size() + 1);
+   //assign the object to its owning canvas (if not done so already)
+   if (auto isDrawable = n->as<Drawable2D>()){
+      if (!isDrawable.value()->canvas) {
+         isDrawable.value()->canvas = this;
+      }
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -76,9 +81,9 @@ void Canvas::cacheTree(size_t drawOrderSize, size_t inputOrderSize) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::updateGlobalTransforms() {
-   for (auto& drawable : drawOrder){
-//      drawable.second
-   }
+//   for (auto& drawable : drawOrder){
+////      drawable.second
+//   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -108,7 +113,8 @@ Handled Canvas::tryHandle(InputEvent& event, TypeNode* node) {
    //----------------------------------------------------------------------------------------------------
 
    //first transform the mouse coordinates so that they're relative to the current node
-   if (auto mouseData = event.isMouse()) {
+   auto mouseData = event.isMouse();
+   if (mouseData) {
       if (auto isPositionable = node->tag<Positionable2D>()) {
          auto& positionable = isPositionable.value();
          mouseTransformer = make_unique<MouseEvent::ScopeTransformer>(*mouseData.value(), positionable->getLocalTransform(), positionable->getSize());
@@ -117,8 +123,10 @@ Handled Canvas::tryHandle(InputEvent& event, TypeNode* node) {
    }
 
    // offer the input to children first
+   // Note: this always travels the entire tree, before any processing is done
+   // so we can use it to keep track of which widget is currently at the mouse cursor
    for (auto& child: node->getChildren()) {
-      if (auto isHandler = child->tag<InputHandler>()) {
+      if (auto isHandler = child->tag<Widget>()) {
          auto handled = tryHandle(event, child);
          if (handled) return true;
       }
@@ -126,15 +134,41 @@ Handled Canvas::tryHandle(InputEvent& event, TypeNode* node) {
    //if no children want this event, we try to process it ourselves
    // need to take care that we don't enter a recursive loop when the canvas that originated the event
    // tries to handle it
-   if (auto isHandler = node->tag<InputHandler>()){
+   if (auto iswidget = node->as<Widget>()){
       if (auto thisCanvas = node->as<Canvas>()) {
          if (thisCanvas == this) {
             return _unhandled_input(event);
          }
       }
-      return isHandler.value()->__process_unhandled_input(event);
+      return iswidget.value()->__process_unhandled_input(event);
    }
    return false;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Widget* Canvas::tryHover(InputEventMouseMotion& motion, TypeNode* node) const {
+   //see tryHandle for explanation
+   std::unique_ptr<MouseEvent::ScopeTransformer> mouseTransformer;
+
+   if (auto isPositionable = node->tag<Positionable2D>()) {
+      auto& positionable = isPositionable.value();
+      mouseTransformer = make_unique<MouseEvent::ScopeTransformer>(motion.mouse, positionable->getLocalTransform(), positionable->getSize());
+   }
+
+   for (auto& child: node->getChildren()) {
+      if (auto isWidget = child->tag<Widget>()) {
+         auto handled = tryHover(motion, child);
+         if (handled) return handled;
+      }
+   }
+   if (auto isWidget = node->as<Widget>()){
+      auto widget = isWidget.value();
+      if (widget->acceptsHover && motion.mouse.isInside()){
+         cout << "The currently hovered widget is " << widget->_node->name << endl;
+         return widget;
+      }
+   }
+   return nullptr;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -164,6 +198,18 @@ void Canvas::render2DEnd() {
 /////////////////////////////////////////////////////////////////////////////////////////
 CanvasSpace<Pos<float>> Canvas::getMousePos() {
    return InputManager::getMousePos().get();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::__process_hover(const InputEventMouseMotion& event){
+   Widget* oldHovered = hovered;
+   hovered = tryHover(const_cast<InputEventMouseMotion&>(event), _node);
+   if (oldHovered && hovered != oldHovered){
+      oldHovered->_on_mouse_exit();
+   }
+   if (hovered && hovered != oldHovered){
+      hovered->_on_mouse_enter();
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -110,6 +110,8 @@ namespace ReyEngine{
          static_assert(std::is_base_of_v<T, Other>);
          return static_cast<Other&>(*this);
       }
+      //simpler than a case statement if you only care about one type
+      bool isEvent(){return eventId == T::ID;}
    };
 
    struct EventCallback {

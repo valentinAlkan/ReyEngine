@@ -44,7 +44,7 @@ namespace ReyEngine {
          ColorRGBA colorDisabled; //for whatever
          Fill fill = Fill::NONE;
          Outline outline = Outline::NONE;
-         float roundness = 0;
+         float roundness = 0.2;
          float linethick = 1;
       };
 

@@ -291,6 +291,7 @@ void Window::exec(){
 //                  clearHover();
 //               }
 //            if (_isEditor) continue;
+            canvas->__process_hover(event);
             canvas->__process_unhandled_input(event);
 //            }
          }

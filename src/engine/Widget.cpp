@@ -1,6 +1,7 @@
 #include "Widget.h"
 #include "Layout.h"
 #include "MiscTools.h"
+#include "Canvas.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -100,4 +101,12 @@ void Widget::setAnchoring(Anchor newAnchor) {
    if (auto hasParent = _node->getParent()->as<Widget>()) {
       setRect(getRect());
    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+bool Widget::isHovered() const {
+   if (auto hasCanvas = getCanvas()){
+      return hasCanvas.value()->hovered == this;
+   }
+   return false;
 }

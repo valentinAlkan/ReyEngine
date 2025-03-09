@@ -166,6 +166,7 @@ add_library(ReyEngine2D STATIC
 
         src/2d/Control.cpp
         src/2d/Layout.cpp
+        src/2d/Button.cpp
 )
 
 target_include_directories(ReyEngine2D PUBLIC

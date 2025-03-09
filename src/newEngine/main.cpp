@@ -3,6 +3,7 @@
 #include "Canvas.h"
 #include "Label.h"
 #include "Layout.h"
+#include "Button.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -87,29 +88,46 @@ int main(){
 
       //create a layout
       {
-         auto [layout, node] = make_node<Layout>("Layout", Layout::LayoutDir::VERTICAL);
-         root->getNode()->addChild(std::move(node));
-         layout->setAnchoring(Anchor::FILL);
+         TypeNode* layoutl;
+         TypeNode* layoutr;
+         {
+            auto [layout, node] = make_node<Layout>("Layout", Layout::LayoutDir::VERTICAL);
+            root->getNode()->addChild(std::move(node));
+            layout->setAnchoring(Anchor::FILL);
 
-         auto [layoutl, nodel] = make_node<Layout>("Layoutl", Layout::LayoutDir::HORIZONTAL);
-         layout->getNode()->addChild(std::move(nodel));
+            auto [_layoutl, nodel] = make_node<Layout>("Layoutl", Layout::LayoutDir::HORIZONTAL);
+            layoutl = layout->getNode()->addChild(std::move(nodel));
 
-         auto [layoutr, noder] = make_node<Layout>("Layoutr", Layout::LayoutDir::HORIZONTAL);
-         layout->getNode()->addChild(std::move(noder));
-
+            auto [_layoutr, noder] = make_node<Layout>("Layoutr", Layout::LayoutDir::HORIZONTAL);
+            layoutr = layout->getNode()->addChild(std::move(noder));
+         }
+         TypeNode* buttonHolder;
          // add some children to the layout
-         auto [widget1, n1] = make_node<TestWidget>("Child1", "firstchild");
-         auto [widget2, n2] = make_node<TestWidget>("Child2", "secondchild");
-         auto [widget3, n3] = make_node<TestWidget>("Child3", "thirdchild");
-         auto [widget4, n4] = make_node<TestWidget>("Child4", "fourtchild");
-         auto [widget5, n5] = make_node<TestWidget>("Child5", "fifthchild");
-         auto [widget6, n6] = make_node<TestWidget>("Child6", "sixthchild");
-         layoutl->getNode()->addChild(std::move(n1));
-         layoutl->getNode()->addChild(std::move(n2));
-         layoutl->getNode()->addChild(std::move(n3));
-         layoutr->getNode()->addChild(std::move(n4));
-         layoutr->getNode()->addChild(std::move(n5));
-         layoutr->getNode()->addChild(std::move(n6));
+         {
+            auto [widget1, n1] = make_node<TestWidget>("Child1", "firstchild");
+            auto [widget2, n2] = make_node<TestWidget>("Child2", "secondchild");
+            auto [widget3, n3] = make_node<TestWidget>("Child3", "thirdchild");
+            auto [widget4, n4] = make_node<TestWidget>("Child4", "fourtchild");
+            auto [widget5, n5] = make_node<TestWidget>("Child5", "fifthchild");
+            auto [widget6, n6] = make_node<Layout>("ButtonLayout", Layout::LayoutDir::VERTICAL);
+            layoutl->addChild(std::move(n1));
+            layoutl->addChild(std::move(n2));
+            layoutl->addChild(std::move(n3));
+            layoutr->addChild(std::move(n4));
+            layoutr->addChild(std::move(n5));
+            buttonHolder = layoutr->addChild(std::move(n6));
+         }
+         //add some buttons
+         {
+            auto [button1, n1] = make_node<PushButton>("button1");
+            auto [button2, n2] = make_node<PushButton>("button2");
+            auto [button3, n3] = make_node<PushButton>("button3");
+            auto [button4, n4] = make_node<PushButton>("button4");
+            buttonHolder->addChild(std::move(n1));
+            buttonHolder->addChild(std::move(n2));
+            buttonHolder->addChild(std::move(n3));
+            buttonHolder->addChild(std::move(n4));
+         }
       }
 
       window.exec();

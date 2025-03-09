@@ -93,6 +93,7 @@ namespace ReyEngine::Internal::Tree {
    };
 
    // Convert type-erased data to a format that can be stored in the tree
+   struct ProtectedFunctionAccessor;
    class TypeNode {
    protected:
       explicit TypeNode(std::unique_ptr<TypeBase> data, const std::string& instanceName, const std::string& typeName)
@@ -228,10 +229,16 @@ namespace ReyEngine::Internal::Tree {
       [[nodiscard]] const std::vector<TypeNode*>& getChildren() const {return _childOrder;}
       std::vector<TypeNode*>& getChildren() {return _childOrder;}
 
-//      struct DuplicateNameError : public std::runtime_error {explicit DuplicateNameError(const std::string& message) : std::runtime_error(message) {}};
-//      struct BadTypeError : public std::runtime_error {explicit BadTypeError(const std::string& message) : std::runtime_error(message) {}};
       const std::string name;
       const std::string typeName;
+   protected:
+
+      //direct, unsafe type conversion
+      template<typename T>
+      T* dangerousIs() {
+         return &static_cast<TypeWrapper<T>*>(_data.get())->getValue();
+      }
+
    private:
       std::string _scenePath;
       TypeNode* _parent = nullptr;
@@ -244,6 +251,18 @@ namespace ReyEngine::Internal::Tree {
       // Make make_node a friend so it can access the protected constructor
       template<typename T, typename InstanceName, typename... Args>
       friend MakeNodeReturnType<T> make_node(InstanceName&&, Args&&...);
+
+      friend struct ReyEngine::Internal::Tree::ProtectedFunctionAccessor;
+   };
+
+   //use this if you're damn sure you know what you're doing
+   struct ProtectedFunctionAccessor{
+      ProtectedFunctionAccessor(TypeNode* node)
+      : protectee(node)
+      {}
+      template <typename T>T* dangerousIs(){return protectee->dangerousIs<T>();}
+      TypeNode* protectee;
+      friend class TypeNode;
    };
 
    // Primary template for when arguments are provided

@@ -17,9 +17,11 @@ namespace ReyEngine {
       void render2DEnd() override;
       void tryRender(TypeNode* node);
       Handled tryHandle(InputEvent& event, TypeNode* node);
+      Widget* tryHover(InputEventMouseMotion& event, TypeNode* node) const;
       CanvasSpace<Pos<float>> getMousePos();
       void updateGlobalTransforms();
    protected:
+      Widget* hovered = nullptr;
       //naive implementation for now. I assume there's a smarter way to do this
       // than backtracking all the way up a drawable's heirarchy and pushing the transformation matrices
       template <typename T>
@@ -33,14 +35,14 @@ namespace ReyEngine {
          size_t index;
          size_t parentIndex;
       };
-
       RenderTarget& getRenderTarget(){return renderTarget;}
-      std::vector<OrderableData<Drawable2D>> drawOrder;
-      std::vector<OrderableData<InputHandler>> inputOrder;
+//      std::vector<OrderableData<Drawable2D>> drawOrder;
+//      std::vector<OrderableData<Widget>> inputOrder;
       Handled __process_unhandled_input(const InputEvent& event) override;
+      void __process_hover(const InputEventMouseMotion& event);
    private:
       RenderTarget renderTarget;
-
+      friend class Widget;
       friend class Window;
    };
 }

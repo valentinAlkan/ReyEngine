@@ -8,7 +8,6 @@ namespace ReyEngine {
    enum class Anchor{NONE, LEFT, RIGHT, TOP, BOTTOM, FILL, TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, CENTER};
    class Widget
    : public Internal::Drawable2D
-   , public Internal::InputHandler
    , public Internal::Processable
    , public EventPublisher
    , public EventSubscriber
@@ -23,14 +22,25 @@ namespace ReyEngine {
       REYENGINE_OBJECT(Widget)
       Theme& getTheme(){return *theme;}
       void setAnchoring(Anchor newAnchor);
-      Anchor getAnchoring(){return _anchor;}
+      Anchor getAnchoring() const {return _anchor;}
+      bool isHovered() const;
    protected:
-      Handled _unhandled_input(const InputEvent& event) override {return false;}
+      //input
+      virtual Handled _unhandled_input(const InputEvent&){return false;} //pass input to children if they want it and then process it for ourselves if necessary
+      virtual Handled __process_unhandled_input(const InputEvent& event){ return _unhandled_input(event);}
+      virtual Handled _process_unhandled_editor_input(const InputEvent&){return false;} //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)
+      InputFilter _inputFilter = InputFilter::INPUT_FILTER_PASS_AND_PROCESS;
+      virtual void _on_mouse_enter(){};
+      virtual void _on_mouse_exit(){};
+      virtual void _on_modality_gained(){}
+      virtual void _on_modality_lost(){}
+      virtual void _on_focus_gained(){}
+      virtual void _on_focus_lost(){}
       void _process(float dt) override {};
-
       bool acceptsHover = false;
-
       bool isLayout = false;
+      bool enabled = true; //changes visuals and (typically) ingores input
+
       RefCounted<Theme> theme;
 
       void __on_rect_changed(const Rect<R_FLOAT>& oldRect) override {
@@ -62,5 +72,6 @@ namespace ReyEngine {
       virtual void _on_rect_changed(){};
       Anchor _anchor = Anchor::NONE;
       friend class Layout;
+      friend class Canvas;
    };
 }
