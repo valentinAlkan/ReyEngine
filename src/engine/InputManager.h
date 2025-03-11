@@ -4,7 +4,8 @@
 #include "ReyEngine.h"
 #include <algorithm>
 
-#define CONSTEXPR_EVENTID(EVENT_ID) static constexpr EventId ID = EVENT_ID;
+#define CONSTEXPR_EVENTID(EVENT_ID) static constexpr EventId ID = EVENT_ID; \
+                                    static constexpr EventId getUniqueEventId(){return ID;} //temporary <- eases porting
 #define EVENT(EVENT_NAME, UNIQUE_EVENT_ID) \
    struct EVENT_NAME : public Event<EVENT_NAME, UNIQUE_EVENT_ID> { \
       CONSTEXPR_EVENTID(UNIQUE_EVENT_ID)                   \

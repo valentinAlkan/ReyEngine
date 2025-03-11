@@ -981,6 +981,7 @@ namespace ReyEngine {
    struct Transform {
       Transform(){matrix = MatrixIdentity();}
       Transform(const Matrix& m){matrix = m;}
+      Transform& operator*=(const Transform& rhs){matrix = MatrixMultiply(matrix, rhs.matrix);return *this;}
       Matrix matrix;
 
       // Base implementation

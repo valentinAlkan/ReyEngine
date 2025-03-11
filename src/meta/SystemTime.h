@@ -26,6 +26,9 @@ namespace ReyEngine{
       static std::chrono::time_point<std::chrono::steady_clock> nowSteady();
    //   static std::string nowSteadyString();
       static std::chrono::time_point<std::chrono::system_clock> nowSystem();
+      static bool hasTimePassedSteady(const std::chrono::time_point<std::chrono::steady_clock>& point, const std::chrono::microseconds& us){
+         return (nowSteady() - point > us);
+      }
       static std::string nowSystemString();
       static uint64_t getCurrentFrameCount();
 //      static std::shared_ptr<Timer> newTimer(std::chrono::milliseconds timeout);
@@ -82,10 +85,10 @@ namespace ReyEngine{
            _timestamp = now;
         }
 
-        us getTargetPeriod() const { return _targetPeriod; }
-        double getTargetHz() const { return _targetHz; }
-        us getActualPeriod() const { return _actualPeriod; }
-        double getActualHz() const { return _actualHz; }
+        [[nodiscard]] us getTargetPeriod() const { return _targetPeriod; }
+        [[nodiscard]] double getTargetHz() const { return _targetHz; }
+        [[nodiscard]] us getActualPeriod() const { return _actualPeriod; }
+        [[nodiscard]] double getActualHz() const { return _actualHz; }
 
      private:
         const double _targetHz;

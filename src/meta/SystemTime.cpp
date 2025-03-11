@@ -1,7 +1,7 @@
 #include "SystemTime.h"
 #include <sstream>
 #include <iomanip>
-#include "Timer.hpp"
+//#include "Timer.hpp"
 
 using namespace std;
 using namespace chrono;
@@ -47,23 +47,23 @@ std::string SystemTime::serializeTimePoint(const std::chrono::system_clock::time
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<Timer> SystemTime::newTimer(std::chrono::milliseconds timeout) {
-   auto newTimer = std::shared_ptr<Timer>(new Timer(timeout));
-   instance()._timers.push_back(newTimer);
-   return newTimer;
-}
+//std::shared_ptr<Timer> SystemTime::newTimer(std::chrono::milliseconds timeout) {
+//   auto newTimer = std::shared_ptr<Timer>(new Timer(timeout));
+//   instance()._timers.push_back(newTimer);
+//   return newTimer;
+//}
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void SystemTime::processTimers() {
-   auto& timers = instance()._timers;
-   for (auto it = timers.begin(); it!=timers.end();/**/){
-      auto ptr = *it;
-      if (ptr.expired()){
-         //delete expired pointers
-         it = timers.erase(it);
-      } else {
-         ptr.lock()->process(nowSteady());
-         it++;
-      }
-   }
-}
+//void SystemTime::processTimers() {
+//   auto& timers = instance()._timers;
+//   for (auto it = timers.begin(); it!=timers.end();/**/){
+//      auto ptr = *it;
+//      if (ptr.expired()){
+//         //delete expired pointers
+//         it = timers.erase(it);
+//      } else {
+//         ptr.lock()->process(nowSteady());
+//         it++;
+//      }
+//   }
+//}

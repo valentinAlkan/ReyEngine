@@ -81,6 +81,7 @@ void Window::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
    auto [canvas, node] = Tree::make_node<Canvas>("root");
    _root = std::move(node);
    canvas->setSize(getSize());
+   canvas->window = this;
 //   root->_init();
 //   root->_has_inited = true;
 //   root->setRect(Rect<int>(0, 0, startingWidth, startingHeight)); //initialize to be the same size as the window

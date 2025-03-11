@@ -3,6 +3,7 @@
 #include "InputHandler.h"
 #include "Processable.h"
 #include "Theme.h"
+#include "WeakUnits.h"
 
 namespace ReyEngine {
    enum class Anchor{NONE, LEFT, RIGHT, TOP, BOTTOM, FILL, TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, CENTER};
@@ -22,8 +23,14 @@ namespace ReyEngine {
       REYENGINE_OBJECT(Widget)
       Theme& getTheme(){return *theme;}
       void setAnchoring(Anchor newAnchor);
-      Anchor getAnchoring() const {return _anchor;}
-      bool isHovered() const;
+      [[nodiscard]] Anchor getAnchoring() const {return _anchor;}
+      [[nodiscard]] FrameCount getFrameCount() const;
+      [[nodiscard]] bool isHovered() const;
+      [[nodiscard]] bool isFocused() const;
+      [[nodiscard]] bool isModal() const;
+      void setHovered(bool);
+      void setFocused(bool);
+      void setModal(bool);
    protected:
       //input
       virtual Handled _unhandled_input(const InputEvent&){return false;} //pass input to children if they want it and then process it for ourselves if necessary

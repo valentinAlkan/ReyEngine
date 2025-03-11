@@ -1,5 +1,5 @@
 #include "LineEdit.h"
-#include "Application.h"
+#include "SystemTime.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -9,10 +9,10 @@ void LineEdit::render2D() const {
    drawRectangle(getRect().toSizeRect(), theme->background.colorTertiary);
 
    auto& font = theme->font;
-   auto textheight = font.value.size;
+   auto textheight = font.size;
    //available vertical height
-   auto availableHeight= getRect().height;
-   auto textPosV = (int)((availableHeight - textheight) / 2);
+   float availableHeight= getRect().height;
+   float textPosV = ((availableHeight - textheight) / 2);
 
    static constexpr int textStartHPos = 1;
    auto renderText = [&](const std::string& text){
@@ -27,10 +27,10 @@ void LineEdit::render2D() const {
    };
 
    //draw default text
-   if (_text.value.empty() && !_defaultText.value.empty()) {
+   if (_text.empty() && !_defaultText.empty()) {
       if (_highlight_start || _highlight_end) {
          auto highlightRect= getRect() - Size<R_FLOAT>(2, 2) + Pos<R_FLOAT>(1, 1);
-         drawRectangle(highlightRect, theme->highlight);
+         drawRectangle(highlightRect, theme->highlight.colorPrimary);
       }
       renderText(_defaultText);
    } else {
@@ -39,19 +39,19 @@ void LineEdit::render2D() const {
 
    //draw caret
    if (_isEditing) {
-      auto frameCounter = getFrameCounter();
+      auto frameCounter = getFrameCount();
       auto caretHigh = frameCounter % 60 > 30;
       if (caretHigh) {
          //measure the position of the text for where it should start
-         int caretHPos;
+         float caretHPos;
          if (_caretPos == -1){
             //set caret to end
-            caretHPos = measureText(_text.value, theme->font).x;
+            caretHPos = measureText(_text, theme->font).x;
             if (caretHPos > getWidth()){
                caretHPos = getWidth() - 2;
             }
          }
-         drawLine({{caretHPos, 2}, {caretHPos, getHeight() - 2}}, 2, theme->font.value.color);
+         drawLine({{caretHPos, 2}, {caretHPos, getHeight() - 2}}, 2, theme->font.color);
       }
    }
 //   if (_isModal && getFrameCounter() % 60 == 0){
@@ -60,17 +60,11 @@ void LineEdit::render2D() const {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void LineEdit::registerProperties() {
-   registerProperty(_defaultText);
-   registerProperty(_text);
-}
-
-///////////////////////////////////////////////////////////////////////////////////////
 void LineEdit::setDefaultText(const std::string& _newDefaultText, bool noPublish) {
    _defaultText = _newDefaultText;
    _on_default_text_changed(_defaultText);
    if (!noPublish) {
-      EventLineEditDefaultTextChanged event(toEventPublisher(), _defaultText);
+      EventLineEditDefaultTextChanged event(this, _defaultText);
       publish(event);
    }
 }
@@ -83,31 +77,32 @@ void LineEdit::setText(const std::string& _newText, bool noPublish) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-Handled LineEdit::_unhandled_input(const InputEvent& event, const std::optional<UnhandledMouseInput>& mouse) {
-   if (mouse){
+Handled LineEdit::_unhandled_input(const InputEvent& event) {
+   if (auto isMouse = event.isMouse()){
+      auto& mouse = isMouse.value();
       switch (event.eventId) {
-         case InputEventMouseButton::getUniqueEventId():
-            const auto& mouseEvent = event.toEventType<InputEventMouseButton>();
-            if (mouse->isInside) {
+         case InputEventMouseButton::ID:
+            const auto& mouseEvent = event.toEvent<InputEventMouseButton>();
+            if (mouse->isInside()) {
                if (!mouseEvent.isDown) {
-                  if (isFocus()){
+                  if (isFocused()){
                      //has input - move caret
                      //see if we clicked off the end
-                     if (mouse.value().localPos.x > measureText(_text.value, theme->font).x){
+                     if (mouse->getLocalPos().x > measureText(_text, theme->font).x){
                         //clicked off end - set caret position to the end
                         _caretPos = -1;
                      }
                   } else {
                      //grab iput
-                     setFocus(true);
+                     setFocused(true);
                      _caretPos = -1;
                      return true;
                   }
                }
             } else {
-               if (isFocus()) {
+               if (isFocused()) {
                   //release input
-                  setFocus(false);
+                  setFocused(false);
                }
             }
             break;
@@ -116,16 +111,16 @@ Handled LineEdit::_unhandled_input(const InputEvent& event, const std::optional<
    if (_isEditing){
       switch (event.eventId) {
          case InputEventChar::getUniqueEventId(): {
-            const auto& charEvent = event.toEventType<InputEventChar>();
-            _text.value += charEvent.ch;
+            const auto& charEvent = event.toEvent<InputEventChar>();
+            _text += charEvent.ch;
             publishText();
             return true;
          }
          case InputEventKey::getUniqueEventId(): {
-            const auto& keyEvent = event.toEventType<InputEventKey>();
+            const auto& keyEvent = event.toEvent<InputEventKey>();
             if (keyEvent.isDown && keyEvent.key == InputInterface::KeyCode::KEY_BACKSPACE) {
-               if (!_text.value.empty()) {
-                  _text.value.pop_back();
+               if (!_text.empty()) {
+                  _text.pop_back();
                   publishText();
                }
                return true;
@@ -146,7 +141,7 @@ void LineEdit::_on_focus_lost() {
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void LineEdit::publishText() {
-   EventLineEditTextChanged event(toEventPublisher(), _text.value);
+   EventLineEditTextChanged event(this, _text);
    publish(event);
 }
 

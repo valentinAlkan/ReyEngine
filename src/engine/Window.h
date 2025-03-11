@@ -3,9 +3,9 @@
 #include "Application.h"
 #include "InputHandler.h"
 #include <unordered_set>
+#include "WeakUnits.h"
 
 namespace ReyEngine{
-   using FrameCount = uint64_t;
    class Canvas;
    class Window : public EventPublisher {
    public:
@@ -36,7 +36,7 @@ namespace ReyEngine{
       void setPosition(Pos<int> newPos){setWindowPosition(newPos);}
       void maximize(){maximizeWindow();}
       void minimize(){minimizeWindow();}
-      inline uint64_t getFrameCounter() const {return _frameCounter;}
+      inline FrameCount getFrameCount() const {return _frameCounter;}
 //      std::optional<std::shared_ptr<Draggable>>getDragNDrop(){if (_dragNDrop) return _dragNDrop; return std::nullopt;}
       inline void keyInput(InputInterface::KeyCode){};
       int getFPS() const {return GetFPS();}

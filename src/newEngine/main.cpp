@@ -5,6 +5,7 @@
 #include "Layout.h"
 #include "Button.h"
 #include "Slider.h"
+#include "LineEdit.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -110,7 +111,7 @@ int main(){
             auto [widget2, n2] = make_node<TestWidget>("Child2", "secondchild");
             auto [widget3, n3] = make_node<TestWidget>("Child3", "thirdchild");
             auto [widget4, n4] = make_node<TestWidget>("Child4", "fourtchild");
-            auto [widget5, n5] = make_node<Layout>("SliderLayout", Layout::LayoutDir::HORIZONTAL);
+            auto [widget5, n5] = make_node<Layout>("SliderLayout", Layout::LayoutDir::VERTICAL);
             auto [widget6, n6] = make_node<Layout>("ButtonLayout", Layout::LayoutDir::VERTICAL);
             layoutl->addChild(std::move(n1));
             layoutl->addChild(std::move(n2));
@@ -119,10 +120,13 @@ int main(){
             sliderHolder = layoutr->addChild(std::move(n5));
             buttonHolder = layoutr->addChild(std::move(n6));
          }
-         //add a slider
+         //add some other widgets
          {
             auto [slider1, n1] = make_node<Slider>("slider1", Slider::SliderType::HORIZONTAL);
             sliderHolder->addChild(std::move(n1));
+            auto [lineedit1, n2] = make_node<LineEdit>("LineEdit");
+            sliderHolder->addChild(std::move(n2));
+
          }
 
 

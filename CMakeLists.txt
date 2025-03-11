@@ -163,10 +163,12 @@ add_library(ReyEngine2D STATIC
         src/engine/ReyEngine.cpp
         src/meta/Logger.cpp
         src/meta/FileSystem.cpp
+        src/meta/SystemTime.cpp
 
         src/2d/Control.cpp
         src/2d/Layout.cpp
         src/2d/Button.cpp
+        src/2d/LineEdit.cpp
 )
 
 target_include_directories(ReyEngine2D PUBLIC

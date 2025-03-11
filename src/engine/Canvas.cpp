@@ -31,6 +31,8 @@ void Canvas::_on_descendant_added_to_tree(TypeNode *n) {
       if (!isDrawable.value()->canvas) {
          isDrawable.value()->canvas = this;
       }
+      //assign the object to its owning window
+      isDrawable.value()->window = window;
    }
 }
 
@@ -202,14 +204,7 @@ CanvasSpace<Pos<float>> Canvas::getMousePos() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::__process_hover(const InputEventMouseMotion& event){
-   Widget* oldHovered = hovered;
-   hovered = tryHover(const_cast<InputEventMouseMotion&>(event), _node);
-   if (oldHovered && hovered != oldHovered){
-      oldHovered->_on_mouse_exit();
-   }
-   if (hovered && hovered != oldHovered){
-      hovered->_on_mouse_enter();
-   }
+   setHover(tryHover(const_cast<InputEventMouseMotion&>(event), _node));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

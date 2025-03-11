@@ -45,7 +45,14 @@ namespace ReyEngine::Internal {
          __on_rect_changed(r);
       }
       inline Transform2D& getLocalTransform(){return transform2D;}
-//      inline Transform2D& getGlobalTransform(){return globalTransform;}
+      inline Transform2D getGlobalTransform(){
+         auto retval = getLocalTransform();
+         auto parent = selfNode->tag<Positionable2D>();
+         while (parent){
+            retval *= parent.value()->transform2D;
+         }
+         return retval;
+      }
       inline Size<R_FLOAT> getMinSize() const {return minSize;}
       inline Size<R_FLOAT> getMaxSize() const {return maxSize;}
       inline void setMinSize(const Size<float>& newMin){minSize = newMin;}
@@ -68,11 +75,14 @@ namespace ReyEngine::Internal {
 
       virtual void __on_rect_changed(const Rect<R_FLOAT>& oldRect, bool byLayout=false){}; //internal. Trigger resize for anchored widgets.
 
-      Transform2D  globalTransform;
+//      Transform2D  globalTransform;
       Transform2D transform2D;
       Size<float> size;
       Size<float> minSize;
       Size<float> maxSize;
       bool isLocked = false;
+      //when this is true, do not propogate global transform requests any further up the chain.
+      // For the most part, this should only be true for canvases.
+      bool isGlobalTransformBoundary = false;
    };
 }

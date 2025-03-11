@@ -2,6 +2,7 @@
 #include "Layout.h"
 #include "MiscTools.h"
 #include "Canvas.h"
+#include "Window.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -104,9 +105,61 @@ void Widget::setAnchoring(Anchor newAnchor) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
+FrameCount Widget::getFrameCount() const {
+   if (auto hasWindow = getWindow()){
+      return hasWindow.value()->getFrameCount();
+   }
+   return 0;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
 bool Widget::isHovered() const {
    if (auto hasCanvas = getCanvas()){
-      return hasCanvas.value()->hovered == this;
+      return hasCanvas.value()->getStatus<WidgetStatus::Hover>() == this;
    }
    return false;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+bool Widget::isFocused() const {
+   if (auto hasCanvas = getCanvas()){
+      return hasCanvas.value()->getStatus<WidgetStatus::Focus>() == this;
+   }
+   return false;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
+bool Widget::isModal() const {
+   if (auto hasCanvas = getCanvas()){
+      return hasCanvas.value()->getStatus<WidgetStatus::Modal>() == this;
+   }
+   return false;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void Widget::setHovered(bool newValue) {
+   if (auto hasCanvas = getCanvas()){
+      hasCanvas.value()->setStatus<WidgetStatus::Hover>(newValue ? this : nullptr);
+   } else {
+      Logger::error() << "Unable to set status on widget that is not associated with any Canvas" << endl;
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void Widget::setFocused(bool newValue) {
+   if (auto hasCanvas = getCanvas()){
+      hasCanvas.value()->setStatus<WidgetStatus::Focus>(newValue ? this : nullptr);
+   } else {
+      Logger::error() << "Unable to set status on widget that is not associated with any Canvas" << endl;
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void Widget::setModal(bool newValue) {
+   if (auto hasCanvas = getCanvas()){
+      hasCanvas.value()->setStatus<WidgetStatus::Modal>(newValue ? this : nullptr);
+   } else {
+      Logger::error() << "Unable to set status on widget that is not associated with any Canvas" << endl;
+   }
 }

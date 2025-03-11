@@ -59,7 +59,14 @@ namespace ReyEngine::Internal::Tree {
    // so one single object type can serve as the base for being stored in the tree,
    // with all additional functionality resulting from typetags.
    // Node data can be cast to base storables OR applicable typetags
-   struct TypeTag{};
+   struct TypeTag{
+   protected:
+      TypeNode* selfNode;
+      template<typename T, typename InstanceName, typename... Args>
+      friend MakeNodeReturnType<T> make_node(InstanceName&&, Args&&...);
+      template<typename U, typename InstanceName, typename... Args>
+      friend MakeNodeReturnType<U> make_node(InstanceName&&, Args&&...);
+   };
    template<typename T>
    concept TypeTagged = std::is_base_of_v<TypeTag, T> && !std::is_base_of_v<T, TreeStorable>;
 
@@ -123,11 +130,11 @@ namespace ReyEngine::Internal::Tree {
             return nullptr;
          }
          if (!child){
-            Logger::error() << "Null child cannot be added to " << name;
+            Logger::error() << "Null child cannot be added to " << name << std::endl;
             return nullptr;
          }
          if (child.get() == this){
-            Logger::error() << "Child " << name << " cannot be added to itself " << name;
+            Logger::error() << "Child " << name << " cannot be added to itself " << name << std::endl;
             return nullptr; //child still valid at this point
          }
          const auto name = child->name;
@@ -271,6 +278,10 @@ namespace ReyEngine::Internal::Tree {
       auto ptr = new T(std::forward<Args>(args)...);
       auto wrapper = std::unique_ptr<TypeWrapper<T>>(new TypeWrapper<T>(ptr));
       auto node = std::unique_ptr<TypeNode>(new TypeNode(std::move(wrapper), instanceName, T::TYPE_NAME));
+      //assign typetag self if applicable
+      if (auto isTagged = node->tag<TypeTag>()){
+         isTagged.value()->selfNode = node.get();
+      }
       return {node->ref<T>(), std::move(node)};
    }
 
@@ -279,6 +290,10 @@ namespace ReyEngine::Internal::Tree {
    MakeNodeReturnType<T> make_node(InstanceName&& instanceName, std::unique_ptr<T>&& ptr) {
       auto wrapper = std::make_unique<TypeWrapper<T>>(ptr);
       auto node = std::unique_ptr<TypeNode>(new TypeNode(std::move(wrapper), instanceName, T::TYPE_NAME));
+      //assign typetag self if applicable
+      if (auto isTagged = node->tag<TypeTag>()){
+         isTagged.value()->selfNode = node.get();
+      }
       return {node->ref<T>(), std::move(node)};
    }
 }
