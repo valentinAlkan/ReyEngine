@@ -26,7 +26,31 @@ namespace ReyEngine{
          virtual std::string getTypeName() {return TYPE_NAME;}
          std::string getName(){return _node ? _node->name : "";}
          std::vector<TypeNode*> getChildren(){return _node ? _node->getChildren() : std::vector<TypeNode*>();}
+         const std::vector<TypeNode*> getChildren() const {return const_cast<ReyObject*>(this)->getChildren();}
          std::optional<TypeNode*> getChild(const std::string& name){return _node ? _node->getChild(name) : std::nullopt;}
+
+         template <typename T>
+         std::vector<T*> getChildrenAs(){
+            std::vector<T*> retval;
+            for (auto child : getChildren()){
+               if (auto isT = child->as<T>()){
+                  retval.push_back(isT.value());
+               }
+            }
+            return retval;
+         }
+
+         template <typename T>
+         std::vector<const T*> getChildrenAs() const {
+            std::vector<T*> retval;
+            for (auto child : getChildren()){
+               if (auto isT = child->as<T>()){
+                  retval.push_back(child);
+               }
+            }
+            return retval;
+         }
+
          //reserved for internal functionality.
          //   GOOD FREND FOR IESVS SAKE FORBEARE
          //   TO DIGG THE DVST ENCLOASED HEARE

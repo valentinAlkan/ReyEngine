@@ -6,6 +6,7 @@
 #include "Button.h"
 #include "Slider.h"
 #include "LineEdit.h"
+#include "TabContainer.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -105,18 +106,19 @@ int main(){
          }
          TypeNode* sliderHolder;
          TypeNode* buttonHolder;
+         TypeNode* tabHolder;
          // add some children to the layout
          {
             auto [widget1, n1] = make_node<TestWidget>("Child1", "firstchild");
             auto [widget2, n2] = make_node<TestWidget>("Child2", "secondchild");
             auto [widget3, n3] = make_node<TestWidget>("Child3", "thirdchild");
-            auto [widget4, n4] = make_node<TestWidget>("Child4", "fourtchild");
+            auto [widget4, n4] = make_node<Layout>("TabLayout", Layout::LayoutDir::VERTICAL);
             auto [widget5, n5] = make_node<Layout>("SliderLayout", Layout::LayoutDir::VERTICAL);
             auto [widget6, n6] = make_node<Layout>("ButtonLayout", Layout::LayoutDir::VERTICAL);
             layoutl->addChild(std::move(n1));
             layoutl->addChild(std::move(n2));
             layoutl->addChild(std::move(n3));
-            layoutr->addChild(std::move(n4));
+            tabHolder = layoutr->addChild(std::move(n4));
             sliderHolder = layoutr->addChild(std::move(n5));
             buttonHolder = layoutr->addChild(std::move(n6));
          }
@@ -126,7 +128,6 @@ int main(){
             sliderHolder->addChild(std::move(n1));
             auto [lineedit1, n2] = make_node<LineEdit>("LineEdit");
             sliderHolder->addChild(std::move(n2));
-
          }
 
 
@@ -141,6 +142,29 @@ int main(){
             buttonHolder->addChild(std::move(n3));
             buttonHolder->addChild(std::move(n4));
          }
+
+         //make a tab widget
+         {
+            TypeNode* tabContainer;
+            {
+               auto [container, n] = make_node<TabContainer>("tabContainer");
+               tabContainer = tabHolder->addChild(std::move(n));
+            }
+
+            //make takes
+            {
+               //add some stuff ot differentiate the pages
+               auto [label1, n1] = make_node<Label>("Label1", "Page1");
+               auto [label2, n2] = make_node<Label>("Label2", "Page2");
+               auto [label3, n3] = make_node<Label>("Label3", "Page3");
+               auto [label4, n4] = make_node<Label>("Label4", "Page4");
+               tabContainer->addChild(std::move(n1));
+               tabContainer->addChild(std::move(n2));
+               tabContainer->addChild(std::move(n3));
+               tabContainer->addChild(std::move(n4));
+            }
+         }
+
       }
 
       window.exec();

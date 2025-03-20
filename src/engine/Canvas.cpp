@@ -93,6 +93,7 @@ void Canvas::tryRender(TypeNode *node) {
    for (auto& child: node->getChildren()) {
       if (auto isDrawable = child->as<Drawable2D>()) {
          auto& drawable = isDrawable.value();
+         if (!drawable->_visible) continue;
          rlPushMatrix();
          rlMultMatrixf(MatrixToFloat(drawable->getTransform().matrix));
          drawable->render2DBegin();
