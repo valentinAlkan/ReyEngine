@@ -43,8 +43,8 @@ namespace ReyEngine {
       void render2DBegin() override;
       void render2DEnd() override;
       void tryRender(TypeNode *thisNode, std::optional<Internal::Drawable2D*> selfDrawable, bool drawModal);
-      Handled tryHandle(InputEvent& event, TypeNode* node);
-      Widget* tryHover(InputEventMouseMotion& event, TypeNode* node) const;
+      Handled tryHandle(InputEvent& event, TypeNode* node, const Transform2D& inputTransform);
+      Widget* tryHover(InputEventMouseMotion& event, TypeNode* node, const Transform2D& inputTransform) const;
       CanvasSpace<Pos<float>> getMousePos();
       void updateGlobalTransforms();
    protected:

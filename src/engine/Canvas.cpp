@@ -94,22 +94,10 @@ void Canvas::tryRender(TypeNode *thisNode, optional<Drawable2D*> isSelfDrawable,
    if (isSelfDrawable && !isSelfDrawable.value()->_visible) return;
 
    //if we are drawable, push our matrix
-   struct PusherMan {
-      PusherMan(optional<Drawable2D*>& isSelfDrawable)
-      : isSelfDrawable(isSelfDrawable)
-      {
-         if (isSelfDrawable) {
-            rlPushMatrix();
-            rlMultMatrixf(MatrixToFloat(isSelfDrawable.value()->getTransform().matrix));
-         }
-      }
-      ////////////////////////////////////////////////
-      ~PusherMan(){
-         if (isSelfDrawable) rlPopMatrix();
-      }
-   private:
-      optional<Drawable2D*>& isSelfDrawable;
-   } pusherMan(isSelfDrawable);
+   if (isSelfDrawable) {
+      rlPushMatrix();
+      rlMultMatrixf(MatrixToFloat(isSelfDrawable.value()->getTransform().matrix));
+   }
 
    //draws actual drawables itself
    if (isSelfDrawable){
@@ -134,10 +122,12 @@ void Canvas::tryRender(TypeNode *thisNode, optional<Drawable2D*> isSelfDrawable,
          }
       }
    }
+
+   if (isSelfDrawable) rlPopMatrix();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled Canvas::tryHandle(InputEvent& event, TypeNode* node) {
+Handled Canvas::tryHandle(InputEvent& event, TypeNode* node, const Transform2D& inputTransform) {
 //   cout << "\"" << node->name << "\"" << " processing input event at parent's pos " << event.isMouse().value()->getLocalPos() << endl;
    //----------------------------------------------------------------------------------------------------
    //lazy initialization and auto-cleanup of mouse transformations. When this falls out of scope, it will
@@ -149,19 +139,18 @@ Handled Canvas::tryHandle(InputEvent& event, TypeNode* node) {
    //first transform the mouse coordinates so that they're relative to the current node
    auto mouseData = event.isMouse();
    if (mouseData) {
-      Logger::debug() << "Canvas Mouse pos = " << mouseData.value()->getCanvasPos() << endl;
       if (auto isPositionable = node->tag<Positionable2D>()) {
          auto& positionable = isPositionable.value();
-         mouseTransformer = make_unique<MouseEvent::ScopeTransformer>(*mouseData.value(), positionable->getLocalTransform(), positionable->getSize());
+         mouseTransformer = make_unique<MouseEvent::ScopeTransformer>(*mouseData.value(), inputTransform, positionable->getSize());
 //         cout << "\"" << node->name << "\"" << " transforming to local pos " << mouseTransformer->getLocalPos() << endl;
       }
    }
 
-   // offer the input to children first
+   // then offer to children
    // Note: this return cascades when the first widget accepts the event.
    for (auto& child: node->getChildren()) {
       if (auto isHandler = child->tag<Widget>()) {
-         auto handled = tryHandle(event, child);
+         auto handled = tryHandle(event, child, isHandler.value()->getTransform());
          if (handled) { return true; }
       }
    }
@@ -180,18 +169,18 @@ Handled Canvas::tryHandle(InputEvent& event, TypeNode* node) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Widget* Canvas::tryHover(InputEventMouseMotion& motion, TypeNode* node) const {
+Widget* Canvas::tryHover(InputEventMouseMotion& motion, TypeNode* node, const Transform2D& inputTransform) const {
    //see tryHandle for explanation
    unique_ptr<MouseEvent::ScopeTransformer> mouseTransformer;
 
    if (auto isPositionable = node->tag<Positionable2D>()) {
       auto& positionable = isPositionable.value();
-      mouseTransformer = make_unique<MouseEvent::ScopeTransformer>(motion.mouse, positionable->getLocalTransform(), positionable->getSize());
+      mouseTransformer = make_unique<MouseEvent::ScopeTransformer>(motion.mouse, inputTransform, positionable->getSize());
    }
 
    for (auto& child: node->getChildren()) {
       if (auto isWidget = child->tag<Widget>()) {
-         auto handled = tryHover(motion, child);
+         auto handled = tryHover(motion, child, isWidget.value()->getLocalTransform());
          if (handled) return handled;
       }
    }
@@ -248,10 +237,22 @@ CanvasSpace<Pos<float>> Canvas::getMousePos() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::__process_hover(const InputEventMouseMotion& event){
-   setHover(tryHover(const_cast<InputEventMouseMotion&>(event), _node));
+   //modal widgets eat input
+   auto& event_non_const = const_cast<InputEventMouseMotion&>(event);
+   if (auto modal = getModal()){
+      setHover(tryHover(event_non_const, modal->_node, modalXform));
+   } else {
+      setHover(tryHover(const_cast<InputEventMouseMotion&>(event), _node, getLocalTransform()));
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Handled Canvas::__process_unhandled_input(const InputEvent& event) {
-   return tryHandle(const_cast<InputEvent&>(event), _node);
+   //modal widgets eat input
+   auto& event_non_const = const_cast<InputEvent&>(event);
+   if (auto modal = getModal()){
+      return tryHandle(event_non_const, modal->_node, modalXform);
+   }
+
+   return tryHandle(event_non_const, _node, getLocalTransform());
 }
