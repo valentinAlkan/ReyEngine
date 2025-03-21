@@ -115,7 +115,7 @@ namespace ReyEngine::Internal::Tree {
    public:
       virtual ~TypeNode(){
          if (_data) {
-            Logger::info() << "Deleting node " << name << " of type " << _data->getTypeName() << std::endl;
+            Logger::debug() << "Deleting node " << name << " of type " << _data->getTypeName() << std::endl;
          }
       }
       [[nodiscard]] TypeBase* getData() const { return _data.get(); }

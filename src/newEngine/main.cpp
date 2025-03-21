@@ -7,6 +7,7 @@
 #include "Slider.h"
 #include "LineEdit.h"
 #include "TabContainer.h"
+#include "ComboBox.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -104,7 +105,7 @@ int main(){
             auto [_layoutr, noder] = make_node<Layout>("Layoutr", Layout::LayoutDir::HORIZONTAL);
             layoutr = layout->getNode()->addChild(std::move(noder));
          }
-         TypeNode* sliderHolder;
+         TypeNode* widgetsHolder;
          TypeNode* buttonHolder;
          TypeNode* tabHolder;
          // add some children to the layout
@@ -113,21 +114,24 @@ int main(){
             auto [widget2, n2] = make_node<TestWidget>("Child2", "secondchild");
             auto [widget3, n3] = make_node<TestWidget>("Child3", "thirdchild");
             auto [widget4, n4] = make_node<Layout>("TabLayout", Layout::LayoutDir::VERTICAL);
-            auto [widget5, n5] = make_node<Layout>("SliderLayout", Layout::LayoutDir::VERTICAL);
+            auto [widget5, n5] = make_node<Layout>("WidgetsLayout", Layout::LayoutDir::VERTICAL);
             auto [widget6, n6] = make_node<Layout>("ButtonLayout", Layout::LayoutDir::VERTICAL);
             layoutl->addChild(std::move(n1));
             layoutl->addChild(std::move(n2));
             layoutl->addChild(std::move(n3));
             tabHolder = layoutr->addChild(std::move(n4));
-            sliderHolder = layoutr->addChild(std::move(n5));
+            widgetsHolder = layoutr->addChild(std::move(n5));
             buttonHolder = layoutr->addChild(std::move(n6));
          }
          //add some other widgets
          {
             auto [slider1, n1] = make_node<Slider>("slider1", Slider::SliderType::HORIZONTAL);
-            sliderHolder->addChild(std::move(n1));
-            auto [lineedit1, n2] = make_node<LineEdit>("LineEdit");
-            sliderHolder->addChild(std::move(n2));
+            widgetsHolder->addChild(std::move(n1));
+            auto [lineedit1, n2] = make_node<LineEdit>("LineEdit", "Try clicking on this line edit");
+            widgetsHolder->addChild(std::move(n2));
+            auto [combobox1, n3] = make_node<ComboBox>("ComboBox");
+            combobox1->addItems({"this", "are", "some", "items"});
+            widgetsHolder->addChild(std::move(n3));
          }
 
 

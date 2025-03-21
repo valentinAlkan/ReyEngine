@@ -42,7 +42,6 @@ void TabContainer::_on_child_added_to_tree(TypeNode* node) {
    auto& child = isWidget.value();
    if (currentTab){
       child->setVisible(false);
-      cout << "Hiding child " << child->getName() << endl;
    } else {
       setCurrentTab(child);
    }
@@ -62,7 +61,6 @@ void TabContainer::setCurrentTab(Widget* w) {
    auto children = getChildrenAs<Widget>();
    for (auto child : children){
       child->setVisible(child == currentTab.value());
-      Logger::debug() << child->getName() << " set visible == " << child->getVisible() << endl;
    }
 }
 

@@ -6,7 +6,7 @@
 using namespace std;
 using namespace ReyEngine;
 using namespace Tools;
-
+using namespace Internal;
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::render2DBegin() {
 
@@ -15,7 +15,7 @@ void Canvas::render2DBegin() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::_on_descendant_added_to_tree(TypeNode *n) {
    static constexpr char INDENT = '-';
-   std::string indent = "";
+   string indent = "";
    cout << "------------------------" << endl;
    function<void(TypeNode*)> catTree = [&](TypeNode* n){
       cout << indent << n->name << "" << endl;
@@ -45,9 +45,9 @@ void Canvas::cacheTree(size_t drawOrderSize, size_t inputOrderSize) {
 //   inputOrder.reserve(inputOrderSize); //keep the vector from reallocating
 //
 //   cout << _node->name << endl;
-//   size_t doParent = std::numeric_limits<size_t>::max();
-//   size_t ihParent = std::numeric_limits<size_t>::max();
-//   std::function<std::vector<TypeNode*>(TypeNode*)> searchTree = [&](TypeNode* node){
+//   size_t doParent = numeric_limits<size_t>::max();
+//   size_t ihParent = numeric_limits<size_t>::max();
+//   function<vector<TypeNode*>(TypeNode*)> searchTree = [&](TypeNode* node){
 //
 //      //update global transform to account for this nodes transform, if applicable
 //      for (auto& child : node->getChildren()){
@@ -89,20 +89,51 @@ void Canvas::updateGlobalTransforms() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Canvas::tryRender(TypeNode *node) {
-   for (auto& child: node->getChildren()) {
-      if (auto isDrawable = child->as<Drawable2D>()) {
-         auto& drawable = isDrawable.value();
-         if (!drawable->_visible) continue;
-         rlPushMatrix();
-         rlMultMatrixf(MatrixToFloat(drawable->getTransform().matrix));
+void Canvas::tryRender(TypeNode *thisNode, optional<Drawable2D*> isSelfDrawable, bool drawModal) {
+   //ignore invisible
+   if (isSelfDrawable && !isSelfDrawable.value()->_visible) return;
+
+   //if we are drawable, push our matrix
+   struct PusherMan {
+      PusherMan(optional<Drawable2D*>& isSelfDrawable)
+      : isSelfDrawable(isSelfDrawable)
+      {
+         if (isSelfDrawable) {
+            rlPushMatrix();
+            rlMultMatrixf(MatrixToFloat(isSelfDrawable.value()->getTransform().matrix));
+         }
+      }
+      ////////////////////////////////////////////////
+      ~PusherMan(){
+         if (isSelfDrawable) rlPopMatrix();
+      }
+   private:
+      optional<Drawable2D*>& isSelfDrawable;
+   } pusherMan(isSelfDrawable);
+
+   //draws actual drawables itself
+   if (isSelfDrawable){
+      auto& drawable = isSelfDrawable.value();
+      if (!drawable->_modal || drawModal) {
          drawable->render2DBegin();
          drawable->render2D();
          drawable->render2DEnd();
-         tryRender(child);
       }
    }
-   rlPopMatrix();
+
+   //dispatch to children
+   for (auto& child: thisNode->getChildren()) {
+      if (auto childDrawable = child->as<Drawable2D>()){
+         auto& drawable = childDrawable.value();
+         if (drawable->_modal) {
+            //save off global transformation matrix so we can redraw this widget
+            // later in its proper position
+            modalXform = drawable->getGlobalTransform();
+         } else {
+            tryRender(child, childDrawable, false);
+         }
+      }
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -112,12 +143,13 @@ Handled Canvas::tryHandle(InputEvent& event, TypeNode* node) {
    //lazy initialization and auto-cleanup of mouse transformations. When this falls out of scope, it will
    // revert the local position back to it's parent. But only if it was transformed in the first place.
    // pretty sneaky!
-   std::unique_ptr<MouseEvent::ScopeTransformer> mouseTransformer;
+   unique_ptr<MouseEvent::ScopeTransformer> mouseTransformer;
    //----------------------------------------------------------------------------------------------------
 
    //first transform the mouse coordinates so that they're relative to the current node
    auto mouseData = event.isMouse();
    if (mouseData) {
+      Logger::debug() << "Canvas Mouse pos = " << mouseData.value()->getCanvasPos() << endl;
       if (auto isPositionable = node->tag<Positionable2D>()) {
          auto& positionable = isPositionable.value();
          mouseTransformer = make_unique<MouseEvent::ScopeTransformer>(*mouseData.value(), positionable->getLocalTransform(), positionable->getSize());
@@ -126,8 +158,7 @@ Handled Canvas::tryHandle(InputEvent& event, TypeNode* node) {
    }
 
    // offer the input to children first
-   // Note: this always travels the entire tree, before any processing is done
-   // so we can use it to keep track of which widget is currently at the mouse cursor
+   // Note: this return cascades when the first widget accepts the event.
    for (auto& child: node->getChildren()) {
       if (auto isHandler = child->tag<Widget>()) {
          auto handled = tryHandle(event, child);
@@ -151,7 +182,7 @@ Handled Canvas::tryHandle(InputEvent& event, TypeNode* node) {
 /////////////////////////////////////////////////////////////////////////////////////////
 Widget* Canvas::tryHover(InputEventMouseMotion& motion, TypeNode* node) const {
    //see tryHandle for explanation
-   std::unique_ptr<MouseEvent::ScopeTransformer> mouseTransformer;
+   unique_ptr<MouseEvent::ScopeTransformer> mouseTransformer;
 
    if (auto isPositionable = node->tag<Positionable2D>()) {
       auto& positionable = isPositionable.value();
@@ -167,7 +198,7 @@ Widget* Canvas::tryHover(InputEventMouseMotion& motion, TypeNode* node) const {
    if (auto isWidget = node->as<Widget>()){
       auto widget = isWidget.value();
       if (widget->acceptsHover && motion.mouse.isInside()){
-         cout << "The currently hovered widget is " << widget->_node->name << endl;
+         Logger::debug() << "The currently hovered widget is " << widget->_node->name << endl;
          return widget;
       }
    }
@@ -178,13 +209,25 @@ Widget* Canvas::tryHover(InputEventMouseMotion& motion, TypeNode* node) const {
 void Canvas::renderProcess() {
    if (!_visible) return;
    ClearBackground(Colors::none);
-   rlPushMatrix();
-   render2DBegin();
 
-   //front render
-   tryRender(_node);
+   //front render - first pass, don't draw modal
+   tryRender(_node, static_cast<Drawable2D*>(this), false);
 
-   rlPopMatrix();
+   //the modal widget's xform includes canvas xform, so we want to pop that off as if
+   // we are rendering globally
+   if (auto modal = getModal()){
+      auto modalDrawable = modal->_node->as<Drawable2D>();
+      rlPushMatrix();
+      rlMultMatrixf(MatrixToFloat(modalXform.matrix));
+
+      //invert (subtract off) the modal widget's own position since it's already encoded in modalXform.
+      rlMultMatrixf(MatrixToFloat(modalDrawable.value()->getTransform().inverse().matrix));
+
+//      Logger::debug() << "Drawing " << modal->_node->getName() << " at " << modalXform.extractTranslation() + _node->as<Drawable2D>().value()->getPosition() << endl;
+      tryRender(modal->_node, modalDrawable, true);
+      rlPopMatrix();
+   }
+
    render2DEnd();
 }
 

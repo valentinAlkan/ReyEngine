@@ -23,6 +23,7 @@ namespace ReyEngine {
          virtual void render2DBegin(){}
          virtual void render2DEnd(){}
          bool _visible = true;
+         bool _modal = false;
          Window* window = nullptr;
       private:
          Canvas* canvas = nullptr;

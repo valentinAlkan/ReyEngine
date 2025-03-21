@@ -47,9 +47,12 @@ namespace ReyEngine::Internal {
       inline Transform2D& getLocalTransform(){return transform2D;}
       inline Transform2D getGlobalTransform(){
          auto retval = getLocalTransform();
-         auto parent = selfNode->tag<Positionable2D>();
+         auto parent = selfNode->getParent();
          while (parent){
-            retval *= parent.value()->transform2D;
+            if (auto isPositionable = parent->tag<Positionable2D>()){
+               retval *= isPositionable.value()->transform2D;
+            }
+            parent = parent->getParent();
          }
          return retval;
       }

@@ -42,7 +42,7 @@ namespace ReyEngine {
       void render2D() const override;
       void render2DBegin() override;
       void render2DEnd() override;
-      void tryRender(TypeNode* node);
+      void tryRender(TypeNode *thisNode, std::optional<Internal::Drawable2D*> selfDrawable, bool drawModal);
       Handled tryHandle(InputEvent& event, TypeNode* node);
       Widget* tryHover(InputEventMouseMotion& event, TypeNode* node) const;
       CanvasSpace<Pos<float>> getMousePos();
@@ -68,7 +68,7 @@ namespace ReyEngine {
       template <WidgetStatus::StatusType Status>
       void setStatus(Widget* newWidget){
          constexpr std::size_t statusIndex = WidgetStatus::tuple_type_index_v<Status, WidgetStatus::StatusTypes>;
-         //gauranteed safe by static checks so we can live dangerously
+         //gauranteed safe against overflow by static index check so we can live dangerously by slicing arrays
          auto oldWidget = statusWidgetStorage[statusIndex];
          statusWidgetStorage[statusIndex] = newWidget;
          bool statusChange = newWidget != oldWidget;
@@ -89,10 +89,15 @@ namespace ReyEngine {
             }
          }
          if constexpr (std::is_same_v<Status, WidgetStatus::Modal>){
+            //only drawables can be modal so we can set some extra statuses to help us out
+            auto oldDrawable = static_cast<Internal::Drawable2D*>(oldWidget);
+            auto newDrawable = static_cast<Internal::Drawable2D*>(newWidget);
             if (oldWidget && statusChange){
+               oldDrawable->_modal = false;
                oldWidget->_on_modality_lost();
             }
             if (newWidget && statusChange){
+               newDrawable->_modal = true;
                newWidget->_on_modality_gained();
             }
          }
@@ -107,7 +112,7 @@ namespace ReyEngine {
       [[nodiscard]] const Widget* getStatus() const {return const_cast<Canvas*>(this)->getStatus<Status>();}
       std::array<Widget*, std::tuple_size_v<WidgetStatus::StatusTypes>> statusWidgetStorage = {0};
       RenderTarget renderTarget;
-
+      Transform2D modalXform;
    public:
       void setHover(Widget* w){setStatus<WidgetStatus::Hover>(w);}
       void setFocus(Widget* w){setStatus<WidgetStatus::Focus>(w);}
