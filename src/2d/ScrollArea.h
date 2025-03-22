@@ -3,13 +3,11 @@
 #include "Slider.h"
 
 namespace ReyEngine {
-    class ScrollArea : public BaseWidget {
-    REYENGINE_OBJECT_BUILD_ONLY(ScrollArea, BaseWidget, BaseWidget) {
-        _inputFilter = InputFilter::INPUT_FILTER_PROCESS_AND_STOP; //catch all input so we can prioritize sliders
-    }
-
+    class ScrollArea : public Widget {
     public:
-        REYENGINE_DEFAULT_BUILD(ScrollArea)
+        ScrollArea(){
+           _inputFilter = InputFilter::INPUT_FILTER_PROCESS_AND_STOP;
+        }
         void hideVSlider(bool hidden);
         void hideHSlider(bool hidden);
         Rect<R_FLOAT> getViewPort(){return _viewport;}
@@ -23,19 +21,17 @@ namespace ReyEngine {
         void render2DEnd() override;
         void _process(float dt) override {}
 
-        void registerProperties() override {}
-
         void _on_rect_changed() override;
-        void _on_child_rect_changed(std::shared_ptr<BaseWidget>&) override;
-        void _on_child_added(std::shared_ptr<BaseWidget> &child) override;
+        void _on_child_rect_changed(Widget*) override;
+        void _on_child_added_to_tree(TypeNode* child) override;
         void _init() override;
-        Handled _unhandled_input (const InputEvent&, const std::optional<UnhandledMouseInput>&) override;
-        std::optional<std::shared_ptr<BaseWidget>> askHover(const ReyEngine::Pos<R_FLOAT>& globalPos) override;
+        Handled _unhandled_input (const InputEvent&) override;
+//        std::optional<Widget*> askHover(const Pos<R_FLOAT>& globalPos) override;
 
         Percent scrollOffsetX;
         Percent scrollOffsetY;
-        std::shared_ptr<Slider> vslider;
-        std::shared_ptr<Slider> hslider;
+        Widget* vslider;
+        Widget* hslider;
         Rect<R_FLOAT> _renderBox; //contains all children, is at least as big as scrollArea. RenderTarget takes its size
         //viewport and window should always be the same size, but have different positions
         Rect<R_FLOAT> _viewport; //the 'sliding' rectangle that moves over the render target, changing what's in the view
@@ -43,6 +39,7 @@ namespace ReyEngine {
         bool _hideVSlider = false;
         bool _hideHSlider = false;
     private:
+        RenderTarget renderTarget;
         Matrix globalMatrix;
         static constexpr float sliderSize = 20;
         void updateViewport();

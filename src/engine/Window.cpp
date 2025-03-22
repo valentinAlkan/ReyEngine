@@ -305,15 +305,14 @@ void Window::exec(){
 //         _processList.processAll(dt);
 
          //draw the canvas to our render texture
-         rlLoadIdentity();
-         auto& _renderTarget = canvas->getRenderTarget();
 //         Application::getWindow(0).pushRenderTarget(_renderTarget);
 //         _renderTarget.clear();
+//         rlLoadIdentity();
          canvas->renderProcess();
 //         Application::getWindow(0).popRenderTarget(); //debug
 
          //do physics synchronously for now
-         rlLoadIdentity();
+//         rlLoadIdentity();
 //         Application::getWindow(0).pushRenderTarget(_renderTarget); //debug
 //         Physics::PhysicsSystem::process();
 //         Application::getWindow(0).popRenderTarget(); //debug
@@ -325,8 +324,10 @@ void Window::exec(){
 ////            _dragNDrop.value()->preview.value()->render2DChain();
 ////         }
          //render the canvas to the window
+
          BeginDrawing();
-         DrawTextureRec(_renderTarget.getRenderTexture(), {0, 0, (float) _renderTarget.getSize().x, -(float) getSize().y}, {0, 0}, WHITE);
+         auto _renderTarget = canvas->getRenderTarget();
+         DrawTextureRec(_renderTarget->getRenderTexture(), {0, 0, (float) _renderTarget->getSize().x, -(float) getSize().y}, {0, 0}, WHITE);
          EndDrawing();
          _frameCounter++;
 //      } // release scoped lock here

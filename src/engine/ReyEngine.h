@@ -982,6 +982,7 @@ namespace ReyEngine {
       Transform(){matrix = MatrixIdentity();}
       Transform(const Matrix& m){matrix = m;}
       Transform& operator*=(const Transform& rhs){matrix = MatrixMultiply(matrix, rhs.matrix);return *this;}
+      Transform& operator=(const Matrix& m){matrix = m;}
       Matrix matrix;
 
       // Base implementation

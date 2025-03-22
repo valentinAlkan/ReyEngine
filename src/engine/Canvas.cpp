@@ -9,8 +9,25 @@ using namespace Tools;
 using namespace Internal;
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::render2DBegin() {
-
+   //save the global matrix transform off
+//   globalXform = getGlobalTransform();
+   rlPushMatrix();
+   rlLoadIdentity();
+   getRenderTarget()->beginRenderMode();
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::render2DEnd() {
+//   rlMultMatrixf(MatrixToFloat(globalXform.matrix));
+   rlPopMatrix();
+   getRenderTarget()->endRenderMode();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::render2D() const {
+   Logger::debug() << "Rendering canvas " << getName() << endl;
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::_on_descendant_added_to_tree(TypeNode *n) {
@@ -95,17 +112,24 @@ void Canvas::tryRender(TypeNode *thisNode, optional<Drawable2D*> isSelfDrawable,
 
    //if we are drawable, push our matrix
    if (isSelfDrawable) {
-      rlPushMatrix();
-      rlMultMatrixf(MatrixToFloat(isSelfDrawable.value()->getTransform().matrix));
+      transformStack.pushTransform(&isSelfDrawable.value()->getTransform());
    }
 
-   //draws actual drawables itself
+   //draws actual drawable itself
    if (isSelfDrawable){
       auto& drawable = isSelfDrawable.value();
-      if (!drawable->_modal || drawModal) {
+      if (drawable->_isCanvas){
+         //this is the root canvas or a subcanvas
          drawable->render2DBegin();
          drawable->render2D();
          drawable->render2DEnd();
+      } else {
+         //normal render
+         if (!drawable->_modal || drawModal) {
+            drawable->render2DBegin();
+            drawable->render2D();
+            drawable->render2DEnd();
+         }
       }
    }
 
@@ -116,6 +140,7 @@ void Canvas::tryRender(TypeNode *thisNode, optional<Drawable2D*> isSelfDrawable,
          if (drawable->_modal) {
             //save off global transformation matrix so we can redraw this widget
             // later in its proper position
+            // Note: This encodes the drawables local transform, which needs to be subtracted off later.
             modalXform = drawable->getGlobalTransform();
          } else {
             tryRender(child, childDrawable, false);
@@ -123,7 +148,7 @@ void Canvas::tryRender(TypeNode *thisNode, optional<Drawable2D*> isSelfDrawable,
       }
    }
 
-   if (isSelfDrawable) rlPopMatrix();
+   if (isSelfDrawable) transformStack.popTransform();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -206,28 +231,18 @@ void Canvas::renderProcess() {
    // we are rendering globally
    if (auto modal = getModal()){
       auto modalDrawable = modal->_node->as<Drawable2D>();
-      rlPushMatrix();
-      rlMultMatrixf(MatrixToFloat(modalXform.matrix));
+      transformStack.pushTransform(&modalXform);
 
       //invert (subtract off) the modal widget's own position since it's already encoded in modalXform.
-      rlMultMatrixf(MatrixToFloat(modalDrawable.value()->getTransform().inverse().matrix));
+      auto inverseXform = modalDrawable.value()->getTransform().inverse();
+      transformStack.pushTransform(&inverseXform);
 
 //      Logger::debug() << "Drawing " << modal->_node->getName() << " at " << modalXform.extractTranslation() + _node->as<Drawable2D>().value()->getPosition() << endl;
       tryRender(modal->_node, modalDrawable, true);
-      rlPopMatrix();
+      transformStack.popTransform();
    }
 
    render2DEnd();
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void Canvas::render2D() const {
-
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void Canvas::render2DEnd() {
-
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -255,4 +270,21 @@ Handled Canvas::__process_unhandled_input(const InputEvent& event) {
    }
 
    return tryHandle(event_non_const, _node, getLocalTransform());
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::TransformStack::pushTransform(Transform2D* transform2D) {
+   rlPushMatrix();
+   rlMultMatrixf(MatrixToFloat(transform2D->matrix));
+   globalTransformStack.push(transform2D);
+   globalTransform = rlGetMatrixTransform();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::TransformStack::popTransform() {
+   globalTransformStack.pop();
+   rlPopMatrix();
+   globalTransform = rlGetMatrixTransform();
 }

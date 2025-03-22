@@ -108,17 +108,18 @@ int main(){
          TypeNode* widgetsHolder;
          TypeNode* buttonHolder;
          TypeNode* tabHolder;
+         TypeNode* subCanvasHolder;
          // add some children to the layout
          {
             auto [widget1, n1] = make_node<TestWidget>("Child1", "firstchild");
             auto [widget2, n2] = make_node<TestWidget>("Child2", "secondchild");
-            auto [widget3, n3] = make_node<TestWidget>("Child3", "thirdchild");
+            auto [widget3, n3] = make_node<TestWidget>("SubCanvasHolder", "SubCanvasHolder");
             auto [widget4, n4] = make_node<Layout>("TabLayout", Layout::LayoutDir::VERTICAL);
             auto [widget5, n5] = make_node<Layout>("WidgetsLayout", Layout::LayoutDir::VERTICAL);
             auto [widget6, n6] = make_node<Layout>("ButtonLayout", Layout::LayoutDir::VERTICAL);
             layoutl->addChild(std::move(n1));
             layoutl->addChild(std::move(n2));
-            layoutl->addChild(std::move(n3));
+            subCanvasHolder = layoutl->addChild(std::move(n3));
             tabHolder = layoutr->addChild(std::move(n4));
             widgetsHolder = layoutr->addChild(std::move(n5));
             buttonHolder = layoutr->addChild(std::move(n6));
@@ -167,6 +168,13 @@ int main(){
                tabContainer->addChild(std::move(n3));
                tabContainer->addChild(std::move(n4));
             }
+         }
+
+         // add a subcanvas
+         {
+            auto [subcanvas, n1] = make_node<Canvas>("SubCanvas");
+            subCanvasHolder->addChild(std::move(n1));
+            subcanvas->setAnchoring(ReyEngine::Anchor::FILL);
          }
 
       }

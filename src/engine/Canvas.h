@@ -1,5 +1,6 @@
 #pragma once
 #include "Widget.h"
+#include <stack>
 
 namespace ReyEngine {
    namespace WidgetStatus{
@@ -32,8 +33,9 @@ namespace ReyEngine {
       REYENGINE_OBJECT(Canvas)
       Canvas(){
          isGlobalTransformBoundary = true;
+         _isCanvas = true;
       }
-      virtual ~Canvas() { std::cout << "Goodbye from " << TYPE_NAME << "!!" << std::endl; }
+      ~Canvas() override { std::cout << "Goodbye from " << TYPE_NAME << "!!" << std::endl; }
       void _on_descendant_added_to_tree(TypeNode* child) override;
 
       ///walk the tree and pin any drawables to us
@@ -50,18 +52,18 @@ namespace ReyEngine {
    protected:
       //naive implementation for now. I assume there's a smarter way to do this
       // than backtracking all the way up a drawable's heirarchy and pushing the transformation matrices
-      template <typename T>
-      struct OrderableData {
-         OrderableData(T* data, TypeNode* node, size_t index, size_t parentIndex)
-         : data(data)
-         , node(node)
-         {}
-         T* data;
-         TypeNode* node;
-         size_t index;
-         size_t parentIndex;
-      };
-      RenderTarget& getRenderTarget(){return renderTarget;}
+//      template <typename T>
+//      struct OrderableData {
+//         OrderableData(T* data, TypeNode* node, size_t index, size_t parentIndex)
+//         : data(data)
+//         , node(node)
+//         {}
+//         T* data;
+//         TypeNode* node;
+//         size_t index;
+//         size_t parentIndex;
+//      };
+      RenderTarget* getRenderTarget() override {return &renderTarget;}
       Handled __process_unhandled_input(const InputEvent& event) override;
       void __process_hover(const InputEventMouseMotion& event);
    private:
@@ -113,6 +115,15 @@ namespace ReyEngine {
       std::array<Widget*, std::tuple_size_v<WidgetStatus::StatusTypes>> statusWidgetStorage = {0};
       RenderTarget renderTarget;
       Transform2D modalXform;
+//      Transform2D globalXform; //for switching canvas contexts
+
+      struct TransformStack{
+         void pushTransform(Transform2D* transform2D);
+         void popTransform();
+      private:
+         std::stack<Transform2D*> globalTransformStack;
+         Transform2D globalTransform;
+      } transformStack;
    public:
       void setHover(Widget* w){setStatus<WidgetStatus::Hover>(w);}
       void setFocus(Widget* w){setStatus<WidgetStatus::Focus>(w);}

@@ -73,13 +73,13 @@ namespace ReyEngine {
          if (auto parent = getNode()->getParent()) {
             if (parent) {
                if (auto parentIsWidget = parent->as<Widget>()) {
-                  parentIsWidget.value()->_on_child_rect_changed();
+                  parentIsWidget.value()->_on_child_rect_changed(this);
                }
             }
          }
       }
       void calculateAnchoring(const Rect<R_FLOAT>& oldRect);
-      virtual void _on_child_rect_changed(){};
+      virtual void _on_child_rect_changed(Widget*){};
       virtual void _on_rect_changed(){};
       Anchor _anchor = Anchor::NONE;
       friend class Layout;

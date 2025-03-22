@@ -171,6 +171,7 @@ add_library(ReyEngine2D STATIC
         src/2d/LineEdit.cpp
         src/2d/TabContainer.cpp
         src/2d/ComboBox.cpp
+        src/2d/ScrollArea.cpp
 )
 
 target_include_directories(ReyEngine2D PUBLIC

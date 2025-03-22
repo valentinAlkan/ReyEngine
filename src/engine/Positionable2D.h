@@ -50,6 +50,10 @@ namespace ReyEngine::Internal {
          auto parent = selfNode->getParent();
          while (parent){
             if (auto isPositionable = parent->tag<Positionable2D>()){
+               //break on global transform boundaries - they are NOT part of the global transform for children
+               if (isPositionable.value()->isGlobalTransformBoundary){
+                  break;
+               }
                retval *= isPositionable.value()->transform2D;
             }
             parent = parent->getParent();

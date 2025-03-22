@@ -14,7 +14,7 @@ namespace ReyEngine{
 
    #define REYENGINE_OBJECT(CLASSNAME) \
    TYPENAME(CLASSNAME) \
-   std::string getTypeName() override {return TYPE_NAME;}
+   [[nodiscard]] std::string getTypeName() const override {return TYPE_NAME;}
    //satisfies typewrappable
    namespace Internal{
       struct ReyObject : public TreeStorable
@@ -23,8 +23,8 @@ namespace ReyEngine{
             uniqueValue = Application::generateUniqueValue();
          }
          TYPENAME(ReyObject)
-         virtual std::string getTypeName() {return TYPE_NAME;}
-         std::string getName(){return _node ? _node->name : "";}
+         [[nodiscard]] virtual std::string getTypeName() const {return TYPE_NAME;}
+         std::string getName() const {return _node ? _node->name : "";}
          std::vector<TypeNode*> getChildren(){return _node ? _node->getChildren() : std::vector<TypeNode*>();}
          const std::vector<TypeNode*> getChildren() const {return const_cast<ReyObject*>(this)->getChildren();}
          std::optional<TypeNode*> getChild(const std::string& name){return _node ? _node->getChild(name) : std::nullopt;}

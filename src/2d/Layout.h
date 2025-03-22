@@ -46,7 +46,7 @@ namespace ReyEngine{
       void _on_child_added_to_tree(TypeNode*) override;
       void _on_child_removed_from_tree(TypeNode*) override;
       void _on_rect_changed() override {arrangeChildren();}
-      void _on_child_rect_changed() override {arrangeChildren();}
+      void _on_child_rect_changed(Widget*) override {arrangeChildren();}
       void render2DEnd() override;
       virtual void arrangeChildren();
       ColorRGBA _debugColor = ColorRGBA::random(255);
