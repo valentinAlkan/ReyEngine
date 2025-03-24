@@ -123,10 +123,14 @@ void Canvas::tryRender(TypeNode *thisNode, optional<Drawable2D*> isSelfDrawable,
    if (isSelfDrawable){
       auto& drawable = isSelfDrawable.value();
       if (drawable->_isCanvas){
-         //this is the root canvas or a subcanvas
-//         drawable->render2DBegin();
-//         drawable->render2D();
-//         drawable->render2DEnd();
+         auto canvas = thisNode->as<Canvas>();
+         if (canvas.value() != this) {
+            //subcanvas
+            getRenderTarget()->endRenderMode();
+            canvas.value()->renderProcess();
+            rlMultMatrixf(MatrixToFloat(transformStack.getGloablTransform().matrix));
+            getRenderTarget()->beginRenderMode();
+         }
       } else {
          //normal render
          if (!drawable->_modal || drawModal) {

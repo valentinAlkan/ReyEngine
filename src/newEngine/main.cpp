@@ -173,8 +173,13 @@ int main(){
          // add a subcanvas
          {
             auto [subcanvas, n1] = make_node<Canvas>("SubCanvas");
-            subCanvasHolder->addChild(std::move(n1));
+            auto subcanvasNode = subCanvasHolder->addChild(std::move(n1));
             subcanvas->setAnchoring(ReyEngine::Anchor::FILL);
+
+            //add a label to the subcanvas
+            auto [label, n2] = make_node<Label>("SubCanvasLabel", "ah fuck");
+            subcanvasNode->addChild(std::move(n2));
+            label->setPosition({100,100});
          }
 
       }

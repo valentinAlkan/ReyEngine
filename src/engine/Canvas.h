@@ -121,6 +121,7 @@ namespace ReyEngine {
       struct TransformStack{
          void pushTransform(Transform2D* transform2D);
          void popTransform();
+         const Transform2D& getGloablTransform() const {return globalTransform;}
       private:
          std::stack<Transform2D*> globalTransformStack;
          Transform2D globalTransform;
