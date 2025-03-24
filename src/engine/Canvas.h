@@ -1,6 +1,7 @@
 #pragma once
 #include "Widget.h"
 #include <stack>
+#include "rlgl.h"
 
 namespace ReyEngine {
    namespace WidgetStatus{
@@ -44,7 +45,63 @@ namespace ReyEngine {
       void render2D() const override;
       void render2DBegin() override;
       void render2DEnd() override;
-      void tryRender(TypeNode *thisNode, std::optional<Internal::Drawable2D*> selfDrawable, bool drawModal);
+
+      struct RenderProcess{};
+      struct HandleInputProcess{};
+      struct HoverProcess{};
+
+      template <typename ProcessType>
+      void tryRender(TypeNode *thisNode, std::optional<Internal::Drawable2D*> isSelfDrawable, bool drawModal){
+            //ignore invisible
+            if (isSelfDrawable && !isSelfDrawable.value()->_visible) return;
+
+            //draws actual drawable itself
+            if (isSelfDrawable){
+               Transformer transformer(*this, isSelfDrawable);
+               auto& drawable = isSelfDrawable.value();
+               if (drawable->_isCanvas){
+                  auto canvas = thisNode->as<Canvas>().value();
+                  if (canvas != this) {
+                     //subcanvas
+                     rlPopMatrix();
+                     if constexpr (std::is_same_v<ProcessType, RenderProcess>) {
+                        getRenderTarget()->endRenderMode();
+                        canvas->renderProcess();
+                        getRenderTarget()->beginRenderMode();
+                     }
+//                     if constexpr (std::is_same_v<ProcessType, RenderProcess>) {
+//
+//                     }
+//
+//                     if constexpr (std::is_same_v<ProcessType, RenderProcess>) {
+//
+//                     }
+                     rlPushMatrix();
+                     rlMultMatrixf(MatrixToFloat(transformStack.getGloablTransform().matrix));
+
+                     if constexpr (std::is_same_v<ProcessType, RenderProcess>) {
+                        auto _renderTarget = canvas->getRenderTarget();
+                        DrawTextureRec(_renderTarget->getRenderTexture(), {0, 0, (float) _renderTarget->getSize().x, -(float) getSize().y}, {0, 0}, WHITE);
+                     }
+                     //does not dispatch draw to children as this is done by renderProcess
+                  }
+               } else {
+                  //normal render with child dispatch
+                  if (!drawable->_modal || drawModal) {
+                     drawable->render2DBegin();
+                     drawable->render2D();
+                     drawable->render2DEnd();
+                  }
+                  tryRenderChildren(thisNode, drawModal);
+               }
+               // go no further
+               return;
+            }
+
+            //non-drawable node with children - drawables should never reach this
+            tryRenderChildren(thisNode, drawModal);
+      }
+      void tryRenderChildren(TypeNode *thisNode, bool drawModal);
       Handled tryHandle(InputEvent& event, TypeNode* node, const Transform2D& inputTransform);
       Widget* tryHover(InputEventMouseMotion& event, TypeNode* node, const Transform2D& inputTransform) const;
       CanvasSpace<Pos<float>> getMousePos();
@@ -116,8 +173,8 @@ namespace ReyEngine {
       std::array<Widget*, std::tuple_size_v<WidgetStatus::StatusTypes>> statusWidgetStorage = {0};
       RenderTarget renderTarget;
       Transform2D modalXform;
-//      Transform2D globalXform; //for switching canvas contexts
 
+      //////////////////////////
       struct TransformStack{
          void pushTransform(Transform2D* transform2D);
          void popTransform();
@@ -126,6 +183,22 @@ namespace ReyEngine {
          std::stack<Transform2D*> globalTransformStack;
          Transform2D globalTransform;
       } transformStack;
+
+      //////////////////////////
+      //Scoped Helper
+      struct Transformer {
+         inline Transformer(Canvas& canvas, std::optional<Drawable2D*>& isSelfDrawable)
+         : canvas(canvas)
+         {
+            canvas.transformStack.pushTransform(&isSelfDrawable.value()->getTransform());
+         }
+         inline ~Transformer(){
+            canvas.transformStack.popTransform();
+         }
+      private:
+         Canvas& canvas;
+      };
+
    public:
       void setHover(Widget* w){setStatus<WidgetStatus::Hover>(w);}
       void setFocus(Widget* w){setStatus<WidgetStatus::Focus>(w);}

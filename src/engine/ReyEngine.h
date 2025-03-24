@@ -994,7 +994,7 @@ namespace ReyEngine {
       Transform2D(): Transform<2>(){}
       Transform2D(const Matrix& m): Transform<2>(m){}
       // Enhanced 2D transform function with more arguments
-      [[nodiscard]] Vec2<float> transform(const Vec2<float>& point,
+      [[nodiscard]] inline Vec2<float> transform(const Vec2<float>& point,
                                           bool applyScale = true,
                                           bool applyRotation = true,
                                           bool applyTranslation = true) const {
@@ -1028,26 +1028,26 @@ namespace ReyEngine {
       }
 
       // Additional utility functions for 2D
-      [[nodiscard]] Vec2<float> extractTranslation() const {
+      [[nodiscard]] inline Vec2<float> extractTranslation() const {
          return Vec2<float>{matrix.m12, matrix.m13};
       }
 
-      [[nodiscard]] float extractRotation() const {
+      [[nodiscard]] inline float extractRotation() const {
          // Extract rotation angle from the matrix
          return atan2f(matrix.m1, matrix.m0);
       }
 
-      [[nodiscard]] Vec2<float> extractScale() const {
+      [[nodiscard]] inline Vec2<float> extractScale() const {
          // Extract scale from the matrix
          float scaleX = Vector2Length({matrix.m0, matrix.m4});
          float scaleY = Vector2Length({matrix.m1, matrix.m5});
          return Vec2<float>{scaleX, scaleY};
       }
 
-      [[nodiscard]] Transform2D inverse() const {return MatrixInvert(matrix);}
+      [[nodiscard]] inline Transform2D inverse() const {return MatrixInvert(matrix);}
 
       // Enhanced 2D rotate with optional center point
-      void rotate(const Radians& r, const Vec2<float>& centerPoint = {0.0f, 0.0f}) {
+      void inline rotate(const Radians& r, const Vec2<float>& centerPoint = {0.0f, 0.0f}) {
          if (centerPoint.x == 0.0f && centerPoint.y == 0.0f) {
             // Simple rotation around origin
             matrix = MatrixMultiply(MatrixRotate({0, 0, 1}, (float)r.get()), matrix);
@@ -1063,18 +1063,18 @@ namespace ReyEngine {
       }
 
       // Enhanced 2D translate with optional scale factor
-      void translate(const Vec2<float>& vec, float scaleFactor = 1.0f) {
+      void inline translate(const Vec2<float>& vec, float scaleFactor = 1.0f) {
          matrix = MatrixMultiply(MatrixTranslate(vec.x * scaleFactor, vec.y * scaleFactor, 0), matrix);
       }
 
       // Enhanced 2D translate with optional scale factor
-      void setPosition(const Vec2<float>& vec) {
+      void inline setPosition(const Vec2<float>& vec) {
          matrix.m12 = vec.x;
          matrix.m13 = vec.y;
       }
 
       // Enhanced 2D scale with optional center point
-      void scale(const Vec2<float>& scale, const Vec2<float>& centerPoint = {0.0f, 0.0f}) {
+      void inline scale(const Vec2<float>& scale, const Vec2<float>& centerPoint = {0.0f, 0.0f}) {
          if (centerPoint.x == 0.0f && centerPoint.y == 0.0f) {
             // Simple scaling around origin
             matrix = MatrixMultiply(MatrixScale(scale.x, scale.y, 1), matrix);
@@ -1090,7 +1090,7 @@ namespace ReyEngine {
       }
 
       // New function: shear transformation
-      void shear(float shearX, float shearY) {
+      void inline shear(float shearX, float shearY) {
          Matrix shearMatrix = {
                1.0f, shearY, 0.0f, 0.0f,
                shearX, 1.0f, 0.0f, 0.0f,
@@ -1101,7 +1101,7 @@ namespace ReyEngine {
       }
 
       // New function: reflect across a line defined by a point and angle
-      void reflect(const Vec2<float>& point, const Radians& angle) {
+      void inline reflect(const Vec2<float>& point, const Radians& angle) {
          // 1. Translate to origin
          translate(-point);
          // 2. Rotate to align with axis
@@ -1116,7 +1116,7 @@ namespace ReyEngine {
       }
 
       // New function: compose with another transform with blending factor
-      void compose(const Transform<2>& other, float blendFactor = 1.0f) {
+      void inline compose(const Transform<2>& other, float blendFactor = 1.0f) {
          if (blendFactor == 1.0f) {
             matrix = MatrixMultiply(other.matrix, matrix);
          } else {

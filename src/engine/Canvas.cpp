@@ -1,6 +1,4 @@
 #include "Canvas.h"
-#include <stack>
-#include "rlgl.h"
 #include "MiscTools.h"
 
 using namespace std;
@@ -110,37 +108,47 @@ void Canvas::updateGlobalTransforms() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Canvas::tryRender(TypeNode *thisNode, optional<Drawable2D*> isSelfDrawable, bool drawModal) {
-   //ignore invisible
-   if (isSelfDrawable && !isSelfDrawable.value()->_visible) return;
+//void Canvas::tryRender(TypeNode *thisNode, optional<Drawable2D*> isSelfDrawable, bool drawModal) {
+//   //ignore invisible
+//   if (isSelfDrawable && !isSelfDrawable.value()->_visible) return;
+//
+//   //draws actual drawable itself
+//   if (isSelfDrawable){
+//      Transformer transformer(*this, isSelfDrawable);
+//      auto& drawable = isSelfDrawable.value();
+//      if (drawable->_isCanvas){
+//         auto canvas = thisNode->as<Canvas>().value();
+//         if (canvas != this) {
+//            //subcanvas
+//            rlPopMatrix();
+//            getRenderTarget()->endRenderMode();
+//            canvas->renderProcess();
+//            getRenderTarget()->beginRenderMode();
+//            rlPushMatrix();
+//            rlMultMatrixf(MatrixToFloat(transformStack.getGloablTransform().matrix));
+//            auto _renderTarget = canvas->getRenderTarget();
+//            DrawTextureRec(_renderTarget->getRenderTexture(), {0, 0, (float) _renderTarget->getSize().x, -(float) getSize().y}, {0, 0}, WHITE);
+//            //does not dispatch draw to children as this is done by renderProcess
+//         }
+//      } else {
+//         //normal render with child dispatch
+//         if (!drawable->_modal || drawModal) {
+//            drawable->render2DBegin();
+//            drawable->render2D();
+//            drawable->render2DEnd();
+//         }
+//         tryRenderChildren(thisNode, drawModal);
+//      }
+//      // go no further
+//      return;
+//   }
+//
+//   //non-drawable node with children - drawables should never reach this
+//   tryRenderChildren(thisNode, drawModal);
+//}
 
-   //if we are drawable, push our matrix
-   if (isSelfDrawable) {
-      transformStack.pushTransform(&isSelfDrawable.value()->getTransform());
-   }
-
-   //draws actual drawable itself
-   if (isSelfDrawable){
-      auto& drawable = isSelfDrawable.value();
-      if (drawable->_isCanvas){
-         auto canvas = thisNode->as<Canvas>();
-         if (canvas.value() != this) {
-            //subcanvas
-            getRenderTarget()->endRenderMode();
-            canvas.value()->renderProcess();
-            rlMultMatrixf(MatrixToFloat(transformStack.getGloablTransform().matrix));
-            getRenderTarget()->beginRenderMode();
-         }
-      } else {
-         //normal render
-         if (!drawable->_modal || drawModal) {
-            drawable->render2DBegin();
-            drawable->render2D();
-            drawable->render2DEnd();
-         }
-      }
-   }
-
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::tryRenderChildren(TypeNode *thisNode, bool drawModal){
    //dispatch to children
    for (auto& child: thisNode->getChildren()) {
       if (auto childDrawable = child->as<Drawable2D>()){
@@ -151,12 +159,10 @@ void Canvas::tryRender(TypeNode *thisNode, optional<Drawable2D*> isSelfDrawable,
             // Note: This encodes the drawables local transform, which needs to be subtracted off later.
             modalXform = drawable->getGlobalTransform();
          } else {
-            tryRender(child, childDrawable, false);
+            tryRender<RenderProcess>(child, childDrawable, false);
          }
       }
    }
-
-   if (isSelfDrawable) transformStack.popTransform();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -172,6 +178,9 @@ Handled Canvas::tryHandle(InputEvent& event, TypeNode* node, const Transform2D& 
    //first transform the mouse coordinates so that they're relative to the current node
    auto mouseData = event.isMouse();
    if (mouseData) {
+      if (auto isCanvas = node->as<Canvas>()){
+
+      }
       if (auto isPositionable = node->tag<Positionable2D>()) {
          auto& positionable = isPositionable.value();
          mouseTransformer = make_unique<MouseEvent::ScopeTransformer>(*mouseData.value(), inputTransform, positionable->getSize());
@@ -231,11 +240,10 @@ Widget* Canvas::tryHover(InputEventMouseMotion& motion, TypeNode* node, const Tr
 void Canvas::renderProcess() {
    if (!_visible) return;
    getRenderTarget()->beginRenderMode();
-   ClearBackground(Colors::none);
-
+   drawRectangleGradientV(getRect().toSizeRect(), Colors::green, Colors::yellow);
    rlPushMatrix();
    //front render - first pass, don't draw modal
-   tryRender(_node, static_cast<Drawable2D*>(this), false);
+   tryRenderChildren(_node, static_cast<Drawable2D*>(this));
 
    //the modal widget's xform includes canvas xform, so we want to pop that off as if
    // we are rendering globally
@@ -248,7 +256,7 @@ void Canvas::renderProcess() {
       transformStack.pushTransform(&inverseXform);
 
 //      Logger::debug() << "Drawing " << modal->_node->getName() << " at " << modalXform.extractTranslation() + _node->as<Drawable2D>().value()->getPosition() << endl;
-      tryRender(modal->_node, modalDrawable, true);
+      tryRender<RenderProcess>(modal->_node, modalDrawable, true);
       transformStack.popTransform();
    }
 

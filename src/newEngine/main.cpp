@@ -177,7 +177,7 @@ int main(){
             subcanvas->setAnchoring(ReyEngine::Anchor::FILL);
 
             //add a label to the subcanvas
-            auto [label, n2] = make_node<Label>("SubCanvasLabel", "ah fuck");
+            auto [label, n2] = make_node<TestWidget>("SubCanvasTestWidget", "ah fuck");
             subcanvasNode->addChild(std::move(n2));
             label->setPosition({100,100});
          }
