@@ -77,7 +77,7 @@ void LineEdit::setText(const std::string& _newText, bool noPublish) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-Handled LineEdit::_unhandled_input(const InputEvent& event) {
+Widget* LineEdit::_unhandled_input(const InputEvent& event) {
    if (auto isMouse = event.isMouse()){
       auto& mouse = isMouse.value();
       switch (event.eventId) {
@@ -96,7 +96,7 @@ Handled LineEdit::_unhandled_input(const InputEvent& event) {
                      //grab iput
                      setFocused(true);
                      _caretPos = -1;
-                     return true;
+                     return this;
                   }
                }
             } else {
@@ -114,7 +114,7 @@ Handled LineEdit::_unhandled_input(const InputEvent& event) {
             const auto& charEvent = event.toEvent<InputEventChar>();
             _text += charEvent.ch;
             publishText();
-            return true;
+            return this;
          }
          case InputEventKey::getUniqueEventId(): {
             const auto& keyEvent = event.toEvent<InputEventKey>();
@@ -123,12 +123,12 @@ Handled LineEdit::_unhandled_input(const InputEvent& event) {
                   _text.pop_back();
                   publishText();
                }
-               return true;
+               return this;
             }
          }
       }
    }
-   return false;
+   return nullptr;
 }
 ///////////////////////////////////////////////////////////////////////////////////////
 void LineEdit::_on_focus_gained() {

@@ -62,7 +62,7 @@ namespace ReyEngine {
       void render2D() const override;
 
    protected:
-      Handled _unhandled_input(const InputEvent&) override;
+      Widget* _unhandled_input(const InputEvent&) override;
       [[nodiscard]] std::optional<size_t> getIndexAt(const Pos<float>&) const;
       void _on_modality_lost() override;
       std::string toolTip;

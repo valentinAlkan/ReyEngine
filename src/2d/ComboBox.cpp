@@ -35,7 +35,7 @@ void ComboBox::render2D() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled ComboBox::_unhandled_input(const InputEvent& event) {
+Widget* ComboBox::_unhandled_input(const InputEvent& event) {
    auto closeMenu = [this]() {
       setModal(false);
       _isOpen = false;
@@ -60,7 +60,7 @@ Handled ComboBox::_unhandled_input(const InputEvent& event) {
    if (auto isMouse = event.isMouse()) {
       auto& mouse = isMouse.value();
       //only accept inputs that are inside the main rect unless we are modal
-      if (!mouse->isInside() && !isModal()) return false;
+      if (!mouse->isInside() && !isModal()) return nullptr;
       //open the menu
       if (mouse) {
          switch (event.eventId) {
@@ -79,14 +79,14 @@ Handled ComboBox::_unhandled_input(const InputEvent& event) {
                            }
                         }
                      }
-                     return true;
+                     return this;
                   }
                }
                break;
             }
             case InputEventMouseButton::getUniqueEventId(): {
                auto mbEvent = event.toEvent<InputEventMouseButton>();
-               if (mbEvent.isDown) return false;
+               if (mbEvent.isDown) return nullptr;
                if (mouse->isInside()) {
                   //toggle menu visibility
                   _isOpen = !_isOpen;
@@ -97,7 +97,7 @@ Handled ComboBox::_unhandled_input(const InputEvent& event) {
                   } else {
                      closeMenu();
                   }
-                  return true;
+                  return this;
                } else {
                   //if the mouse was outside the widget's own rect, but the widget is receiving modal input
                   if (_selectionMenuRect.isInside(mouse->getLocalPos())) {
@@ -112,14 +112,14 @@ Handled ComboBox::_unhandled_input(const InputEvent& event) {
                   }
                   //close the menu
                   closeMenu();
-                  return true;
+                  return this;
                }
                break;
             }
          }
       }
    }
-return false;
+return nullptr;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

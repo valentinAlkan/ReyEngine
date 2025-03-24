@@ -3,8 +3,8 @@ using namespace std;
 using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled Button::_unhandled_input(const InputEvent& event) {
-    if (!enabled) return false;
+Widget* Button::_unhandled_input(const InputEvent& event) {
+    if (!enabled) return nullptr;
     if (event.isEvent<InputEventMouseButton>()) {
        auto mbEvent = event.toEvent<InputEventMouseButton>();
        if (mbEvent.button == InputInterface::MouseButton::LEFT) {
@@ -19,17 +19,17 @@ Handled Button::_unhandled_input(const InputEvent& event) {
                 publish<ButtonPressEvent>(press);
              }
              down = false;
-             return true;
+             return this;
           } else if (mbEvent.isDown && isInside) {
             //normal inside-click
              auto toggle = ButtonToggleEvent(this, mbEvent.isDown, isInside);
              publish<ButtonToggleEvent>(toggle);
              down = true;
-             return true;
+             return this;
           }
        }
     }
-    return false;
+    return nullptr;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

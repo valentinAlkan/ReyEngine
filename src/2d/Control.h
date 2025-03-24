@@ -6,14 +6,14 @@ namespace ReyEngine{
    public:
        REYENGINE_OBJECT(Control);
        void _process(float dt) override;
-       Handled _unhandled_input(const InputEvent&) override;
+       Widget* _unhandled_input(const InputEvent&) override;
        void _on_mouse_enter() override;
        void _on_mouse_exit() override;
 //       void _on_rect_changed() override;
 //       void registerProperties() override {};
        void setRenderCallback(std::function<void(const Control&)> fx){renderCallback = fx;}
        void setProcessCallback(std::function<void(Control&, float)> fx){processCallback = fx;}
-       void setUnhandledInputCallback(std::function<Handled(Control&, const InputEvent&)> fx){unhandledInputCallback = fx;}
+       void setUnhandledInputCallback(std::function<Widget*(Control&, const InputEvent&)> fx){unhandledInputCallback = fx;}
        void setMouseEnterCallback(std::function<void(Control&)> fx){mouseEnterCallback=fx; acceptsHover=true;}
        void setMouseExitCallback(std::function<void(Control&)> fx){mouseExitCallback=fx; acceptsHover=true;}
        void setRectChangedCallback(std::function<void(Control&)> fx){rectChangedCallback=fx;}
@@ -30,7 +30,7 @@ namespace ReyEngine{
        std::function<void(const Control&)> renderCallback;
        std::function<void(Control&, float dt)> processCallback;
        std::function<void(Control&)> rectChangedCallback;
-       std::function<Handled(Control&, const InputEvent&)> unhandledInputCallback;
+       std::function<Widget*(Control&, const InputEvent&)> unhandledInputCallback;
        ReyEngine::Rect<int> scissorArea;
    };
 }

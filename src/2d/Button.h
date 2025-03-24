@@ -24,7 +24,7 @@ namespace ReyEngine{
    public:
       bool down = false;
    protected:
-      Handled _unhandled_input(const InputEvent&) override;
+      Widget* _unhandled_input(const InputEvent&) override;
       void setDown(bool newDown, bool noEvents=false);
    };
 

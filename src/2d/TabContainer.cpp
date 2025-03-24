@@ -86,25 +86,25 @@ void TabContainer::arrangeChildren() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled TabContainer::_unhandled_input(const InputEvent& event){
+Widget* TabContainer::_unhandled_input(const InputEvent& event){
    if (auto isMouse = event.isMouse()) {
       switch (event.eventId) {
          case InputEventMouseButton::getUniqueEventId(): {
             auto mouseEvent = event.toEvent<InputEventMouseButton>();
-            if (mouseEvent.isDown) return false; //only want uppies
+            if (mouseEvent.isDown) return nullptr; //only want uppies
             auto localPos = isMouse.value()->getLocalPos();
             for (auto& tabData : _tabs){
                if (tabData.tabRect.isInside(localPos)) {
                   //clicked on the tab - set current index
                   setCurrentTab(tabData.widget);
-                  return true;
+                  return this;
                }
             }
          }
             break;
          default:
-            return false;
+            return nullptr;
       }
    }
-   return false;
+   return nullptr;
 }

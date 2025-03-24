@@ -12,7 +12,7 @@ namespace ReyEngine{
       void setCurrentTab(Widget*);
       std::optional<Widget*> getCurrentTab(){return currentTab;}
    protected:
-      Handled _unhandled_input(const InputEvent&) override;
+      Widget* _unhandled_input(const InputEvent&) override;
       void arrangeChildren() override;
       std::optional<Widget*> currentTab;
 

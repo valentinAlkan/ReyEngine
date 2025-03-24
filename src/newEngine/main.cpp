@@ -32,7 +32,7 @@ protected:
    void _on_rect_changed() override {
      cout << "new position = " << getPosition() << endl;
   }
-   Handled _unhandled_input(const InputEvent& event) override {
+   Widget* _unhandled_input(const InputEvent& event) override {
      if (auto isMouse = event.isMouse()){
         localMousePos = isMouse.value()->getLocalPos();
         isInside = isMouse.value()->isInside();
@@ -41,11 +41,11 @@ protected:
               auto& mbEvent = event.toEvent<InputEventMouseButton>();
               if (isInside && mbEvent.isDown) {
                  isDown = true;
-                 return true;
+                 return this;
               }
               if (isDown && !mbEvent.isDown){
                  isDown = false;
-                 return true;
+                 return this;
               }
               break;}
            case InputEventMouseMotion::ID:{
@@ -57,7 +57,7 @@ protected:
         }
      }
 
-     return false;
+     return nullptr;
   }
   Pos<int> localMousePos;
   bool isInside = false;

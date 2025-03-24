@@ -47,7 +47,7 @@ namespace ReyEngine {
       void render2DEnd() override;
 
 
-      Handled tryHandle(InputEvent& event, TypeNode* node, const Transform2D& inputTransform);
+      Widget* tryHandle(InputEvent& event, TypeNode* node, const Transform2D& inputTransform);
       Widget* tryHover(InputEventMouseMotion& event, TypeNode* node, const Transform2D& inputTransform) const;
       CanvasSpace<Pos<float>> getMousePos();
       void updateGlobalTransforms();
@@ -66,7 +66,7 @@ namespace ReyEngine {
 //         size_t parentIndex;
 //      };
       RenderTarget* getRenderTarget() override {return &renderTarget;}
-      Handled __process_unhandled_input(const InputEvent& event) override;
+      Widget* __process_unhandled_input(const InputEvent& event) override;
       void __process_hover(const InputEventMouseMotion& event);
    private:
       void _on_rect_changed() override;
@@ -121,7 +121,7 @@ namespace ReyEngine {
       struct TransformStack{
          void pushTransform(Transform2D* transform2D);
          void popTransform();
-         const Transform2D& getGloablTransform() const {return globalTransform;}
+         const Transform2D& getGlobalTransform() const {return globalTransform;}
       private:
          std::stack<Transform2D*> globalTransformStack;
          Transform2D globalTransform;
@@ -147,9 +147,11 @@ namespace ReyEngine {
       };
 
 
+      ////////// RENDERING
       //return value = not meaningful
       struct RenderProcess : public TreeProcess{
-         RenderProcess(Canvas* thisCanvas, Widget* processedWidget)
+         template <typename ...Args>
+         RenderProcess(Canvas* thisCanvas, Widget* processedWidget, Args&&... args)
          : TreeProcess(thisCanvas, processedWidget)
          {
          }
@@ -173,22 +175,56 @@ namespace ReyEngine {
             return nullptr; //arbitrary return value
          };
       };
+
+      ////////// INPUT
       // return value = who handled
       struct InputProcess : public TreeProcess {
-         InputProcess(Canvas* thisCanvas, Widget* processedWidget)
+         InputProcess(Canvas* thisCanvas, Widget* processedWidget, const InputEvent& event, const Transform2D& inputTransform)
          : TreeProcess(thisCanvas, processedWidget)
-         {}
+         , event(event)
+         , inputTransform(inputTransform)
+         {
+            if (auto mouseData = event.isMouse()) {
+//               printMatrix(inputTransform.matrix);
+               mouseTransformer = std::make_unique<MouseEvent::ScopeTransformer>(*mouseData.value(), inputTransform, processedWidget->getSize());
+            }
+         }
+
+         Widget* subcanvasProcess(){
+            return subCanvas->__process_unhandled_input(event);
+         }
+
+         void subcanvasCleanup() const {}
+
+         Widget* process(){
+            return processedWidget->_unhandled_input(event);
+         };
+         //transforms mouse coordinates
+         std::unique_ptr<MouseEvent::ScopeTransformer> mouseTransformer;
+         const Transform2D& inputTransform;
+         const InputEvent& event;
       };
+
+      ////////// HOVERING
       // return value = who hovered
       struct HoverProcess : public TreeProcess {
          HoverProcess(Canvas* thisCanvas, Widget* processedWidget)
          : TreeProcess(thisCanvas, processedWidget)
          {}
+
+         Widget* subcanvasProcess(){
+            return nullptr;
+         }
+
+         void subcanvasCleanup() const {
+
+         }
+
       };
 
 
-      template <typename ProcessType>
-      void processChildren(TypeNode *thisNode, bool drawModal){
+      template <typename ProcessType, typename... Args>
+      Widget* processChildren(TypeNode *thisNode, Args&&... args) {
          //dispatch to children
          for (auto& child: thisNode->getChildren()) {
             if (auto childWidget = child->as<Widget>()){
@@ -199,44 +235,71 @@ namespace ReyEngine {
                   // Note: This encodes the drawables local transform, which needs to be subtracted off later.
                   modalXform = widget->getGlobalTransform();
                } else {
-                  processTree<ProcessType>(child, false);
+                  auto handled = processTree<ProcessType>(child, false, std::forward<Args>(args)...);
+                  if (handled) return handled;
                }
+               // modal widgets do not propogate to children except explicitly
+               continue;
             }
+            auto handled = processTree<ProcessType>(child, false, std::forward<Args>(args)...);
+            if (handled) return handled;
          }
+         return nullptr;
       };
 
 
-      template <typename ProcessType>
-      Widget* processTree(TypeNode *thisNode, bool isModal){
+      template <typename ProcessType, typename... Args>
+      Widget* processTree(TypeNode *thisNode, bool isModal, Args&&... args ){
          auto isWidget = thisNode->as<Widget>();
-         //draws actual drawable itself
+         //processes actual widget itself
          if (!isWidget) {
             //non-widget node with children - widgets should never reach this
-            processChildren<ProcessType>(thisNode, isModal);
-            return nullptr;
+            return processChildren<ProcessType>(thisNode, std::forward<Args>(args)...);
          }
-
+         Widget* handled = nullptr;
          auto& widget = isWidget.value();
          //ignore invisible
          if (!widget->_visible) return nullptr;
-         ProcessType processTransformer(this, widget);
+
+         //template magic!
+         // Create the appropriate arguments tuple based on ProcessType
+         auto createProcessTransformer = [this, &widget, &args...](auto paramters) {
+            if constexpr (std::is_same_v<ProcessType, InputProcess>) {
+               const auto& event = std::get<0>(std::forward_as_tuple(std::forward<Args>(args)...));
+               const auto& inputTransform = std::get<1>(std::forward_as_tuple(std::forward<Args>(args)...));
+               return ProcessType(this, widget, event, inputTransform);
+            } else {
+               // For other types like RenderProcess, don't pass the extra args
+               return ProcessType(this, widget);
+            }
+         };
+
+         // Call the lambda with a dummy parameter to trigger template deduction
+         auto processTransformer = createProcessTransformer( isModal ? modalXform : widget->getLocalTransform());
+
+
+//         ProcessType processTransformer(this, widget, event, widget->getLocalTransform()); //pushes local transform
          if (processTransformer.subCanvas && processTransformer.subCanvas != this){
                // for Subcanvases, revert global transform and reapply after processing
                rlPopMatrix();
-               processTransformer.subcanvasProcess();
+               handled = processTransformer.subcanvasProcess();
                rlPushMatrix();
-               rlMultMatrixf(MatrixToFloat(transformStack.getGloablTransform().matrix));
+               rlMultMatrixf(MatrixToFloat(transformStack.getGlobalTransform().matrix));
                processTransformer.subcanvasCleanup();
                //does not dispatch to children as this is handled explicitly by canvas
          } else {
             //normal process (self-first) with child dispatch
             if (!widget->_modal || isModal) {
-               processTransformer.process();
+               handled = processTransformer.process();
+               if (handled) {
+                  return handled;
+               }
             }
-            processChildren<ProcessType>(thisNode, isModal);
+            handled = processChildren<ProcessType>(thisNode, std::forward<Args>(args)...);
          }
          // go no further as a widget
-         return nullptr;
+         // pop local transform (processTransformer falls out of scope)
+         return handled;
       }
 
 

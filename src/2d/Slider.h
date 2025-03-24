@@ -38,9 +38,9 @@ namespace ReyEngine{
          _range = {minSliderValue, maxSlidervalue};
       }
    protected:
-      Handled _unhandled_input(const InputEvent& e) override {
+      Widget* _unhandled_input(const InputEvent& e) override {
          auto mouseEvent = e.isMouse();
-         if (!mouseEvent) return false;
+         if (!mouseEvent) return nullptr;
          auto localPos = mouseEvent.value()->getLocalPos();
          if (e.isEvent<InputEventMouseMotion>()){
             if (_is_dragging) {
@@ -60,7 +60,7 @@ namespace ReyEngine{
                   _compute_appearance();
                   _publish_slider_val();
                }
-               return true;
+               return this;
             }
          }
 
@@ -69,15 +69,15 @@ namespace ReyEngine{
             if (mouseEvent.value()->isInside() && buttonEvent.isDown && _grabber.isInside(localPos)) {
                _cursor_down = true;
                _is_dragging = _cursor_down;
-               return true;
+               return this;
             }
             if (!buttonEvent.isDown && _is_dragging) {
                _cursor_down = buttonEvent.isDown;
                _is_dragging = false;
-               return true;
+               return this;
             }
          }
-         return false;
+         return nullptr;
       }
       void render2D() const override {
          //draw slider

@@ -48,9 +48,9 @@ void Control::_process(float dt) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled Control::_unhandled_input(const InputEvent& event) {
+Widget* Control::_unhandled_input(const InputEvent& event) {
    if (unhandledInputCallback) return unhandledInputCallback(*this, event);
-   return false;
+   return nullptr;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

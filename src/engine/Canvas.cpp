@@ -151,7 +151,7 @@ void Canvas::updateGlobalTransforms() {
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled Canvas::tryHandle(InputEvent& event, TypeNode* node, const Transform2D& inputTransform) {
+Widget* Canvas::tryHandle(InputEvent& event, TypeNode* node, const Transform2D& inputTransform) {
 //   cout << "\"" << node->name << "\"" << " processing input event at parent's pos " << event.isMouse().value()->getLocalPos() << endl;
    //----------------------------------------------------------------------------------------------------
    //lazy initialization and auto-cleanup of mouse transformations. When this falls out of scope, it will
@@ -178,7 +178,7 @@ Handled Canvas::tryHandle(InputEvent& event, TypeNode* node, const Transform2D& 
    for (auto& child: node->getChildren()) {
       if (auto isHandler = child->tag<Widget>()) {
          auto handled = tryHandle(event, child, isHandler.value()->getTransform());
-         if (handled) { return true; }
+         if (handled) return handled;
       }
    }
    //if no children want this event, we try to process it ourselves
@@ -192,7 +192,7 @@ Handled Canvas::tryHandle(InputEvent& event, TypeNode* node, const Transform2D& 
       }
       return iswidget.value()->__process_unhandled_input(event);
    }
-   return false;
+   return nullptr;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -228,7 +228,7 @@ void Canvas::renderProcess() {
    drawRectangleGradientV(getRect().toSizeRect(), Colors::green, Colors::yellow);
    rlPushMatrix();
    //front render - first pass, don't draw modal
-   processChildren<RenderProcess>(_node, static_cast<Widget*>(this));
+   processChildren<RenderProcess>(_node);
 
    //the modal widget's xform includes canvas xform, so we want to pop that off as if
    // we are rendering globally
@@ -266,10 +266,11 @@ void Canvas::__process_hover(const InputEventMouseMotion& event){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled Canvas::__process_unhandled_input(const InputEvent& event) {
+Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
    //modal widgets eat input
    auto& event_non_const = const_cast<InputEvent&>(event);
    if (auto modal = getModal()){
+//      return processTree<InputProcess>(modal->_node, true, event, modalXform);
       return tryHandle(event_non_const, modal->_node, modalXform);
    }
 

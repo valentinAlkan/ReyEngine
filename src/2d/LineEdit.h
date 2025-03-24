@@ -32,7 +32,7 @@ namespace ReyEngine {
       void _on_focus_gained() override;
       void _on_focus_lost() override;
       void _on_rect_changed() override;
-      Handled _unhandled_input(const InputEvent&) override;
+      Widget* _unhandled_input(const InputEvent&) override;
       virtual void _on_default_text_changed(const std::string &){};
       virtual void _on_text_changed(const std::string &){};
    private:
