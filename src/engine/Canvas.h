@@ -127,56 +127,63 @@ namespace ReyEngine {
          Transform2D globalTransform;
       } transformStack;
 
-      //////////////////////////
-      //Scoped Helper
-      struct Transformer {
-         inline Transformer(Canvas& canvas, Widget* widget)
-         : canvas(canvas)
-         {
-            canvas.transformStack.pushTransform(&widget->getTransform());
-         }
-         inline ~Transformer(){
-            canvas.transformStack.popTransform();
-         }
-      private:
-         Canvas& canvas;
-      };
 
-
-
+      //Scoping helpers
       struct TreeProcess{
-         TreeProcess(Canvas* thisCanvas, Canvas* subCanvas)
+         TreeProcess(Canvas* thisCanvas, Widget* processedWidget)
          : thisCanvas(thisCanvas)
-         , subCanvas(subCanvas)
-         {}
-      protected:
+         , processedWidget(processedWidget)
+         , subCanvas(dynamic_cast<Canvas*>(processedWidget))
+         {
+            thisCanvas->transformStack.pushTransform(&processedWidget->getTransform());
+         }
+         ~TreeProcess(){
+            thisCanvas->transformStack.popTransform();
+         }
+
          Canvas* thisCanvas;
-         Canvas* subCanvas;
+         Widget* processedWidget;
+         Canvas* subCanvas; //only valid if the processed widget is a canvas
       };
 
 
       //return value = not meaningful
       struct RenderProcess : public TreeProcess{
-         RenderProcess(Canvas* thisCanvas, Canvas* subCanvas) : TreeProcess(thisCanvas, subCanvas){
+         RenderProcess(Canvas* thisCanvas, Widget* processedWidget)
+         : TreeProcess(thisCanvas, processedWidget)
+         {
+         }
+
+         Widget* subcanvasProcess(){
             thisCanvas->getRenderTarget()->endRenderMode();
             subCanvas->renderProcess();
             thisCanvas->getRenderTarget()->beginRenderMode();
+            return nullptr;
          }
 
-         ~RenderProcess(){
+         void subcanvasCleanup() const {
             auto _renderTarget = subCanvas->getRenderTarget();
             DrawTextureRec(_renderTarget->getRenderTexture(), {0, 0, (float) _renderTarget->getSize().x, -(float) subCanvas->getSize().y}, {0, 0}, WHITE);
          }
+
+         Widget* process(){
+            processedWidget->render2DBegin();
+            processedWidget->render2D();
+            processedWidget->render2DEnd();
+            return nullptr; //arbitrary return value
+         };
       };
       // return value = who handled
       struct InputProcess : public TreeProcess {
-         InputProcess(Canvas* thisCanvas, Canvas* subCanvas) : TreeProcess(thisCanvas, subCanvas){}
-         ~InputProcess(){}
+         InputProcess(Canvas* thisCanvas, Widget* processedWidget)
+         : TreeProcess(thisCanvas, processedWidget)
+         {}
       };
       // return value = who hovered
       struct HoverProcess : public TreeProcess {
-         HoverProcess(Canvas* thisCanvas, Canvas* subCanvas) : TreeProcess(thisCanvas, subCanvas){}
-         ~HoverProcess(){}
+         HoverProcess(Canvas* thisCanvas, Widget* processedWidget)
+         : TreeProcess(thisCanvas, processedWidget)
+         {}
       };
 
 
@@ -184,15 +191,15 @@ namespace ReyEngine {
       void processChildren(TypeNode *thisNode, bool drawModal){
          //dispatch to children
          for (auto& child: thisNode->getChildren()) {
-            if (auto childDrawable = child->as<Widget>()){
-               auto& drawable = childDrawable.value();
-               if (drawable->_modal) {
+            if (auto childWidget = child->as<Widget>()){
+               auto& widget = childWidget.value();
+               if (widget->_modal) {
                 //save off global transformation matrix so we can redraw this widget
                   // later in its proper position
                   // Note: This encodes the drawables local transform, which needs to be subtracted off later.
-                  modalXform = drawable->getGlobalTransform();
+                  modalXform = widget->getGlobalTransform();
                } else {
-                  processTree<RenderProcess>(child, false);
+                  processTree<ProcessType>(child, false);
                }
             }
          }
@@ -202,39 +209,33 @@ namespace ReyEngine {
       template <typename ProcessType>
       Widget* processTree(TypeNode *thisNode, bool isModal){
          auto isWidget = thisNode->as<Widget>();
-
          //draws actual drawable itself
-         if (isWidget){
-            auto& widget = isWidget.value();
-            //ignore invisible
-            if (!isWidget.value()->_visible) return nullptr;
-            Transformer transformer(*this, widget);
-            if (widget->_isCanvas){
-               auto canvas = thisNode->as<Canvas>().value();
-               if (canvas != this) {
-                  // for Subcanvases, revert global transform and reapply after processing
-                  rlPopMatrix();
-                  /*<------ process ctor*/ ProcessType process(this, canvas);
-                  rlPushMatrix();
-                  rlMultMatrixf(MatrixToFloat(transformStack.getGloablTransform().matrix));
-                  //<------ process dtor
-                  //does not dispatch draw to children as this is done by renderProcess
-               }
-            } else {
-               //normal render with child dispatch
-               if (!widget->_modal || isModal) {
-                  widget->render2DBegin();
-                  widget->render2D();
-                  widget->render2DEnd();
-               }
-               processChildren<ProcessType>(thisNode, isModal);
-            }
-            // go no further
+         if (!isWidget) {
+            //non-widget node with children - widgets should never reach this
+            processChildren<ProcessType>(thisNode, isModal);
             return nullptr;
          }
 
-         //non-widget node with children - widgets should never reach this
-         processChildren<ProcessType>(thisNode, isModal);
+         auto& widget = isWidget.value();
+         //ignore invisible
+         if (!widget->_visible) return nullptr;
+         ProcessType processTransformer(this, widget);
+         if (processTransformer.subCanvas && processTransformer.subCanvas != this){
+               // for Subcanvases, revert global transform and reapply after processing
+               rlPopMatrix();
+               processTransformer.subcanvasProcess();
+               rlPushMatrix();
+               rlMultMatrixf(MatrixToFloat(transformStack.getGloablTransform().matrix));
+               processTransformer.subcanvasCleanup();
+               //does not dispatch to children as this is handled explicitly by canvas
+         } else {
+            //normal process (self-first) with child dispatch
+            if (!widget->_modal || isModal) {
+               processTransformer.process();
+            }
+            processChildren<ProcessType>(thisNode, isModal);
+         }
+         // go no further as a widget
          return nullptr;
       }
 
