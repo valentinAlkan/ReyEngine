@@ -67,6 +67,7 @@ namespace ReyEngine {
       Handled __process_unhandled_input(const InputEvent& event) override;
       void __process_hover(const InputEventMouseMotion& event);
    private:
+      void _on_rect_changed() override;
       template <WidgetStatus::StatusType Status>
       void setStatus(Widget* newWidget){
          constexpr std::size_t statusIndex = WidgetStatus::tuple_type_index_v<Status, WidgetStatus::StatusTypes>;

@@ -308,7 +308,9 @@ void Window::exec(){
 //         Application::getWindow(0).pushRenderTarget(_renderTarget);
 //         _renderTarget.clear();
 //         rlLoadIdentity();
+//         rlPushMatrix();
          canvas->renderProcess();
+//         rlPopMatrix();
 //         Application::getWindow(0).popRenderTarget(); //debug
 
          //do physics synchronously for now

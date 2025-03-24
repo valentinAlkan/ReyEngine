@@ -11,16 +11,16 @@ using namespace Internal;
 void Canvas::render2DBegin() {
    //save the global matrix transform off
 //   globalXform = getGlobalTransform();
-   rlPushMatrix();
-   rlLoadIdentity();
-   getRenderTarget()->beginRenderMode();
+//   rlPushMatrix();
+//   rlLoadIdentity();
+//   getRenderTarget()->beginRenderMode();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::render2DEnd() {
 //   rlMultMatrixf(MatrixToFloat(globalXform.matrix));
-   rlPopMatrix();
-   getRenderTarget()->endRenderMode();
+//   rlPopMatrix();
+//   getRenderTarget()->endRenderMode();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -28,6 +28,10 @@ void Canvas::render2D() const {
    Logger::debug() << "Rendering canvas " << getName() << endl;
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::_on_rect_changed() {
+   renderTarget.setSize(getSize());
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::_on_descendant_added_to_tree(TypeNode *n) {
@@ -120,9 +124,9 @@ void Canvas::tryRender(TypeNode *thisNode, optional<Drawable2D*> isSelfDrawable,
       auto& drawable = isSelfDrawable.value();
       if (drawable->_isCanvas){
          //this is the root canvas or a subcanvas
-         drawable->render2DBegin();
-         drawable->render2D();
-         drawable->render2DEnd();
+//         drawable->render2DBegin();
+//         drawable->render2D();
+//         drawable->render2DEnd();
       } else {
          //normal render
          if (!drawable->_modal || drawModal) {
@@ -222,8 +226,10 @@ Widget* Canvas::tryHover(InputEventMouseMotion& motion, TypeNode* node, const Tr
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::renderProcess() {
    if (!_visible) return;
+   getRenderTarget()->beginRenderMode();
    ClearBackground(Colors::none);
 
+   rlPushMatrix();
    //front render - first pass, don't draw modal
    tryRender(_node, static_cast<Drawable2D*>(this), false);
 
@@ -242,7 +248,8 @@ void Canvas::renderProcess() {
       transformStack.popTransform();
    }
 
-   render2DEnd();
+   rlPopMatrix();
+   getRenderTarget()->endRenderMode();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -276,7 +283,6 @@ Handled Canvas::__process_unhandled_input(const InputEvent& event) {
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::TransformStack::pushTransform(Transform2D* transform2D) {
-   rlPushMatrix();
    rlMultMatrixf(MatrixToFloat(transform2D->matrix));
    globalTransformStack.push(transform2D);
    globalTransform = rlGetMatrixTransform();
@@ -284,7 +290,7 @@ void Canvas::TransformStack::pushTransform(Transform2D* transform2D) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::TransformStack::popTransform() {
+   rlMultMatrixf(MatrixToFloat(globalTransformStack.top()->inverse().matrix));
    globalTransformStack.pop();
-   rlPopMatrix();
    globalTransform = rlGetMatrixTransform();
 }
