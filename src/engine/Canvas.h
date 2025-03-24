@@ -46,62 +46,7 @@ namespace ReyEngine {
       void render2DBegin() override;
       void render2DEnd() override;
 
-      struct RenderProcess{};
-      struct HandleInputProcess{};
-      struct HoverProcess{};
 
-      template <typename ProcessType>
-      void tryRender(TypeNode *thisNode, std::optional<Internal::Drawable2D*> isSelfDrawable, bool drawModal){
-            //ignore invisible
-            if (isSelfDrawable && !isSelfDrawable.value()->_visible) return;
-
-            //draws actual drawable itself
-            if (isSelfDrawable){
-               Transformer transformer(*this, isSelfDrawable);
-               auto& drawable = isSelfDrawable.value();
-               if (drawable->_isCanvas){
-                  auto canvas = thisNode->as<Canvas>().value();
-                  if (canvas != this) {
-                     //subcanvas
-                     rlPopMatrix();
-                     if constexpr (std::is_same_v<ProcessType, RenderProcess>) {
-                        getRenderTarget()->endRenderMode();
-                        canvas->renderProcess();
-                        getRenderTarget()->beginRenderMode();
-                     }
-//                     if constexpr (std::is_same_v<ProcessType, RenderProcess>) {
-//
-//                     }
-//
-//                     if constexpr (std::is_same_v<ProcessType, RenderProcess>) {
-//
-//                     }
-                     rlPushMatrix();
-                     rlMultMatrixf(MatrixToFloat(transformStack.getGloablTransform().matrix));
-
-                     if constexpr (std::is_same_v<ProcessType, RenderProcess>) {
-                        auto _renderTarget = canvas->getRenderTarget();
-                        DrawTextureRec(_renderTarget->getRenderTexture(), {0, 0, (float) _renderTarget->getSize().x, -(float) getSize().y}, {0, 0}, WHITE);
-                     }
-                     //does not dispatch draw to children as this is done by renderProcess
-                  }
-               } else {
-                  //normal render with child dispatch
-                  if (!drawable->_modal || drawModal) {
-                     drawable->render2DBegin();
-                     drawable->render2D();
-                     drawable->render2DEnd();
-                  }
-                  tryRenderChildren(thisNode, drawModal);
-               }
-               // go no further
-               return;
-            }
-
-            //non-drawable node with children - drawables should never reach this
-            tryRenderChildren(thisNode, drawModal);
-      }
-      void tryRenderChildren(TypeNode *thisNode, bool drawModal);
       Handled tryHandle(InputEvent& event, TypeNode* node, const Transform2D& inputTransform);
       Widget* tryHover(InputEventMouseMotion& event, TypeNode* node, const Transform2D& inputTransform) const;
       CanvasSpace<Pos<float>> getMousePos();
@@ -150,14 +95,12 @@ namespace ReyEngine {
          }
          if constexpr (std::is_same_v<Status, WidgetStatus::Modal>){
             //only drawables can be modal so we can set some extra statuses to help us out
-            auto oldDrawable = static_cast<Internal::Drawable2D*>(oldWidget);
-            auto newDrawable = static_cast<Internal::Drawable2D*>(newWidget);
             if (oldWidget && statusChange){
-               oldDrawable->_modal = false;
+               oldWidget->_modal = false;
                oldWidget->_on_modality_lost();
             }
             if (newWidget && statusChange){
-               newDrawable->_modal = true;
+               newWidget->_modal = true;
                newWidget->_on_modality_gained();
             }
          }
@@ -187,10 +130,10 @@ namespace ReyEngine {
       //////////////////////////
       //Scoped Helper
       struct Transformer {
-         inline Transformer(Canvas& canvas, std::optional<Drawable2D*>& isSelfDrawable)
+         inline Transformer(Canvas& canvas, Widget* widget)
          : canvas(canvas)
          {
-            canvas.transformStack.pushTransform(&isSelfDrawable.value()->getTransform());
+            canvas.transformStack.pushTransform(&widget->getTransform());
          }
          inline ~Transformer(){
             canvas.transformStack.popTransform();
@@ -198,6 +141,111 @@ namespace ReyEngine {
       private:
          Canvas& canvas;
       };
+
+
+
+      struct TreeProcess{
+         TreeProcess(Canvas* thisCanvas, Canvas* subCanvas)
+         : thisCanvas(thisCanvas)
+         , subCanvas(subCanvas)
+         {}
+      protected:
+         Canvas* thisCanvas;
+         Canvas* subCanvas;
+      };
+
+
+      //return value = not meaningful
+      struct RenderProcess : public TreeProcess{
+         RenderProcess(Canvas* thisCanvas, Canvas* subCanvas) : TreeProcess(thisCanvas, subCanvas){
+            thisCanvas->getRenderTarget()->endRenderMode();
+            subCanvas->renderProcess();
+            thisCanvas->getRenderTarget()->beginRenderMode();
+         }
+
+         ~RenderProcess(){
+            auto _renderTarget = subCanvas->getRenderTarget();
+            DrawTextureRec(_renderTarget->getRenderTexture(), {0, 0, (float) _renderTarget->getSize().x, -(float) subCanvas->getSize().y}, {0, 0}, WHITE);
+         }
+      };
+      // return value = who handled
+      struct InputProcess : public TreeProcess {
+         InputProcess(Canvas* thisCanvas, Canvas* subCanvas) : TreeProcess(thisCanvas, subCanvas){}
+         ~InputProcess(){}
+      };
+      // return value = who hovered
+      struct HoverProcess : public TreeProcess {
+         HoverProcess(Canvas* thisCanvas, Canvas* subCanvas) : TreeProcess(thisCanvas, subCanvas){}
+         ~HoverProcess(){}
+      };
+
+
+      template <typename ProcessType>
+      void processChildren(TypeNode *thisNode, bool drawModal){
+         //dispatch to children
+         for (auto& child: thisNode->getChildren()) {
+            if (auto childDrawable = child->as<Widget>()){
+               auto& drawable = childDrawable.value();
+               if (drawable->_modal) {
+                //save off global transformation matrix so we can redraw this widget
+                  // later in its proper position
+                  // Note: This encodes the drawables local transform, which needs to be subtracted off later.
+                  modalXform = drawable->getGlobalTransform();
+               } else {
+                  processTree<RenderProcess>(child, false);
+               }
+            }
+         }
+      };
+
+
+      template <typename ProcessType>
+      Widget* processTree(TypeNode *thisNode, bool isModal){
+         auto isWidget = thisNode->as<Widget>();
+
+         //draws actual drawable itself
+         if (isWidget){
+            auto& widget = isWidget.value();
+            //ignore invisible
+            if (!isWidget.value()->_visible) return nullptr;
+            Transformer transformer(*this, widget);
+            if (widget->_isCanvas){
+               auto canvas = thisNode->as<Canvas>().value();
+               if (canvas != this) {
+                  // for Subcanvases, revert global transform and reapply after processing
+                  rlPopMatrix();
+                  /*<------ process ctor*/ ProcessType process(this, canvas);
+                  rlPushMatrix();
+                  rlMultMatrixf(MatrixToFloat(transformStack.getGloablTransform().matrix));
+                  //<------ process dtor
+                  //does not dispatch draw to children as this is done by renderProcess
+               }
+            } else {
+               //normal render with child dispatch
+               if (!widget->_modal || isModal) {
+                  widget->render2DBegin();
+                  widget->render2D();
+                  widget->render2DEnd();
+               }
+               processChildren<ProcessType>(thisNode, isModal);
+            }
+            // go no further
+            return nullptr;
+         }
+
+         //non-widget node with children - widgets should never reach this
+         processChildren<ProcessType>(thisNode, isModal);
+         return nullptr;
+      }
+
+
+
+
+
+
+
+
+
 
    public:
       void setHover(Widget* w){setStatus<WidgetStatus::Hover>(w);}

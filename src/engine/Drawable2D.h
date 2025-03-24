@@ -23,7 +23,6 @@ namespace ReyEngine {
          virtual void render2DBegin(){}
          virtual void render2DEnd(){}
          bool _visible = true;
-         bool _modal = false;
          bool _isCanvas = false; //whether or not this drawable is a canvas
          Window* window = nullptr;
          virtual RenderTarget* getRenderTarget(){return nullptr;}

@@ -148,22 +148,7 @@ void Canvas::updateGlobalTransforms() {
 //}
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Canvas::tryRenderChildren(TypeNode *thisNode, bool drawModal){
-   //dispatch to children
-   for (auto& child: thisNode->getChildren()) {
-      if (auto childDrawable = child->as<Drawable2D>()){
-         auto& drawable = childDrawable.value();
-         if (drawable->_modal) {
-            //save off global transformation matrix so we can redraw this widget
-            // later in its proper position
-            // Note: This encodes the drawables local transform, which needs to be subtracted off later.
-            modalXform = drawable->getGlobalTransform();
-         } else {
-            tryRender<RenderProcess>(child, childDrawable, false);
-         }
-      }
-   }
-}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Handled Canvas::tryHandle(InputEvent& event, TypeNode* node, const Transform2D& inputTransform) {
@@ -243,12 +228,12 @@ void Canvas::renderProcess() {
    drawRectangleGradientV(getRect().toSizeRect(), Colors::green, Colors::yellow);
    rlPushMatrix();
    //front render - first pass, don't draw modal
-   tryRenderChildren(_node, static_cast<Drawable2D*>(this));
+   processChildren<RenderProcess>(_node, static_cast<Widget*>(this));
 
    //the modal widget's xform includes canvas xform, so we want to pop that off as if
    // we are rendering globally
    if (auto modal = getModal()){
-      auto modalDrawable = modal->_node->as<Drawable2D>();
+      auto modalDrawable = modal->_node->as<Widget>();
       transformStack.pushTransform(&modalXform);
 
       //invert (subtract off) the modal widget's own position since it's already encoded in modalXform.
@@ -256,7 +241,7 @@ void Canvas::renderProcess() {
       transformStack.pushTransform(&inverseXform);
 
 //      Logger::debug() << "Drawing " << modal->_node->getName() << " at " << modalXform.extractTranslation() + _node->as<Drawable2D>().value()->getPosition() << endl;
-      tryRender<RenderProcess>(modal->_node, modalDrawable, true);
+      processTree<RenderProcess>(modal->_node, true);
       transformStack.popTransform();
    }
 

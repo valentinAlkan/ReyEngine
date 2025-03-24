@@ -82,6 +82,9 @@ namespace ReyEngine {
       virtual void _on_child_rect_changed(Widget*){};
       virtual void _on_rect_changed(){};
       Anchor _anchor = Anchor::NONE;
+
+   private:
+      bool _modal = false;
       friend class Layout;
       friend class Canvas;
    };
