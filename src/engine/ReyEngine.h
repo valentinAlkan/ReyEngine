@@ -1332,6 +1332,7 @@ namespace ReyEngine {
       printf("[%.3f  %.3f  %.3f  %.3f]\n", m.m12, m.m13, m.m14, m.m15);
       fflush(stdout);
    }
+   inline void printMatrix(const Transform2D& t) { printMatrix(t.matrix);}
 
 }
 

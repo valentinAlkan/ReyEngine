@@ -51,7 +51,13 @@ protected:
            case InputEventMouseMotion::ID:{
               auto& mmEvent = event.toEvent<InputEventMouseMotion>();
               if (isDown){
+                 cout << "----------------------" << endl;
+                 cout << getName() << endl;
+                 cout << "Mouse delta = " << mmEvent.mouseDelta << endl;
+                 cout << "current position = " << getPosition() << endl;
+                 cout << "new position = " << mmEvent.mouseDelta + getPosition() << endl;
                  setPosition(getPosition() + mmEvent.mouseDelta);
+                 return this;
               }
               break;}
         }

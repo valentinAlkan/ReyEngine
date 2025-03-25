@@ -5,21 +5,6 @@ using namespace std;
 using namespace ReyEngine;
 using namespace Tools;
 using namespace Internal;
-/////////////////////////////////////////////////////////////////////////////////////////
-void Canvas::render2DBegin() {
-   //save the global matrix transform off
-//   globalXform = getGlobalTransform();
-//   rlPushMatrix();
-//   rlLoadIdentity();
-//   getRenderTarget()->beginRenderMode();
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void Canvas::render2DEnd() {
-//   rlMultMatrixf(MatrixToFloat(globalXform.matrix));
-//   rlPopMatrix();
-//   getRenderTarget()->endRenderMode();
-}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::render2D() const {
@@ -226,6 +211,8 @@ void Canvas::renderProcess() {
    if (!_visible) return;
    getRenderTarget()->beginRenderMode();
    drawRectangleGradientV(getRect().toSizeRect(), Colors::green, Colors::yellow);
+   drawText("THIS IS A SUB-CANVAS!", {0,0}, theme->font);
+   ClearBackground(Colors::none);
    rlPushMatrix();
    //front render - first pass, don't draw modal
    processChildren<RenderProcess>(_node);
@@ -268,13 +255,11 @@ void Canvas::__process_hover(const InputEventMouseMotion& event){
 /////////////////////////////////////////////////////////////////////////////////////////
 Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
    //modal widgets eat input
-   auto& event_non_const = const_cast<InputEvent&>(event);
    if (auto modal = getModal()){
-//      return processTree<InputProcess>(modal->_node, true, event, modalXform);
-      return tryHandle(event_non_const, modal->_node, modalXform);
+      return processTree<InputProcess>(modal->_node, true, event, modalXform);
    }
 
-   return tryHandle(event_non_const, _node, getLocalTransform());
+   return processTree<InputProcess>(_node, false, event, getLocalTransform());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
