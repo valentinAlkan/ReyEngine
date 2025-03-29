@@ -5,6 +5,17 @@
 #include "Application.h"
 
 namespace ReyEngine{
+   // promote node making functions to ReyEngine namespace
+   template <typename T>
+   using MakeNodeReturnType = Internal::Tree::MakeNodeReturnType<T>;
+   template<typename T, typename InstanceName, typename... Args>
+   Internal::Tree::MakeNodeReturnType<T> make_node(InstanceName&& instanceName, Args&&... args){
+      return Internal::Tree::_make_node<T>(instanceName, std::forward<Args>(args)...);
+   }
+   template<typename T, typename InstanceName>
+   Internal::Tree::MakeNodeReturnType<T> make_node(InstanceName&& instanceName, std::unique_ptr<T>&& ptr){
+      return Internal::Tree::_make_node(instanceName, std::move(ptr));
+   }
    using TypeNode = Internal::Tree::TypeNode;
    using TreeStorable = Internal::Tree::TreeStorable;
    using TypeTag = Internal::Tree::TypeTag;

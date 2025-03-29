@@ -13,7 +13,8 @@ void Canvas::render2D() const {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::_on_rect_changed() {
-   renderTarget.setSize(getSize());
+   _renderTarget.setSize(getSize());
+   _viewport = getSizeRect();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -209,14 +210,18 @@ Widget* Canvas::tryHover(InputEventMouseMotion& motion, TypeNode* node, const Tr
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::renderProcess() {
    if (!_visible) return;
-   getRenderTarget()->beginRenderMode();
-   drawRectangleGradientV(getRect().toSizeRect(), Colors::green, Colors::yellow);
-   drawText("THIS IS A SUB-CANVAS!", {0,0}, theme->font);
-   ClearBackground(Colors::none);
+   _renderTarget.beginRenderMode();
    rlPushMatrix();
+   render2DBegin();
+   ClearBackground(Colors::none);
+   drawRectangleGradientV(getRect().toSizeRect(), Colors::green, Colors::yellow);
+   drawText(getName(), {0,0}, theme->font);
+
+   for (auto& intrinsicChild : _intrinsicChildren){
+      processTree<RenderProcess>(intrinsicChild.get(), false);
+   }
    //front render - first pass, don't draw modal
    processChildren<RenderProcess>(_node);
-
    //the modal widget's xform includes canvas xform, so we want to pop that off as if
    // we are rendering globally
    if (auto modal = getModal()){
@@ -231,9 +236,9 @@ void Canvas::renderProcess() {
       processTree<RenderProcess>(modal->_node, true);
       transformStack.popTransform();
    }
-
    rlPopMatrix();
-   getRenderTarget()->endRenderMode();
+   render2DEnd();
+   _renderTarget.endRenderMode();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -245,6 +250,9 @@ CanvasSpace<Pos<float>> Canvas::getMousePos() {
 void Canvas::__process_hover(const InputEventMouseMotion& event){
    //modal widgets eat input
    auto& event_non_const = const_cast<InputEventMouseMotion&>(event);
+   if (!_intrinsicChildren.empty()){
+
+   }
    if (auto modal = getModal()){
       setHover(tryHover(event_non_const, modal->_node, modalXform));
    } else {

@@ -78,7 +78,7 @@ void Window::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
 //   root->ReyEngine::Internal::TypeContainer<ReyEngine::BaseWidget>::setRoot(true);
 //   root->setAnchoring(BaseWidget::Anchor::FILL); //canvas is filled by default
 //   //make sure we init the root
-   auto [canvas, node] = Tree::make_node<Canvas>("root");
+   auto [canvas, node] = make_node<Canvas>("root");
    _root = std::move(node);
    canvas->setSize(getSize());
    canvas->window = this;
@@ -328,8 +328,10 @@ void Window::exec(){
          //render the canvas to the window
 
          BeginDrawing();
-         auto _renderTarget = canvas->getRenderTarget();
-         DrawTextureRec(_renderTarget->getRenderTexture(), {0, 0, (float) _renderTarget->getSize().x, -(float) getSize().y}, {0, 0}, WHITE);
+         auto& _renderTarget = canvas->getRenderTarget();
+//         Rect<R_FLOAT> rect = getSize().toRect();
+//         drawRenderTargetRect(_renderTarget, rect, rect, Colors::none);
+         DrawTextureRec(_renderTarget.getTexture(), {0, 0, (float) _renderTarget.getSize().x, -(float) getSize().y}, {0, 0}, WHITE);
          EndDrawing();
          _frameCounter++;
 //      } // release scoped lock here

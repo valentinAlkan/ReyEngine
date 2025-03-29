@@ -14,7 +14,7 @@ namespace ReyEngine {
    , public EventSubscriber
    {
    public:
-      EVENT_ARGS(ResizeEvent, 329874, const Rect<float>& r)
+      EVENT_ARGS(RectChangedEvent, 329874, const Rect<float>& r)
       , rect(r)
       {}
          Rect<float> rect;
@@ -22,7 +22,9 @@ namespace ReyEngine {
       Widget(): theme(new Theme){}
       REYENGINE_OBJECT(Widget)
       Theme& getTheme(){return *theme;}
+      std::optional<Widget*> getParentWidget() const;
       void setAnchoring(Anchor newAnchor);
+      Rect<R_FLOAT> getChildBoundingBox() const;
       [[nodiscard]] Anchor getAnchoring() const {return _anchor;}
       [[nodiscard]] FrameCount getFrameCount() const;
       [[nodiscard]] bool isHovered() const;
@@ -31,9 +33,9 @@ namespace ReyEngine {
       void setHovered(bool);
       void setFocused(bool);
       void setModal(bool);
+      virtual Widget* _unhandled_input(const InputEvent&){return nullptr;} //pass input to children if they want it and then process it for ourselves if necessary
    protected:
       //input
-      virtual Widget* _unhandled_input(const InputEvent&){return nullptr;} //pass input to children if they want it and then process it for ourselves if necessary
       virtual Widget* __process_unhandled_input(const InputEvent& event){ return _unhandled_input(event);}
       virtual Widget* _process_unhandled_editor_input(const InputEvent&){return nullptr;} //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)
       InputFilter _inputFilter = InputFilter::INPUT_FILTER_PASS_AND_PROCESS;
@@ -56,7 +58,7 @@ namespace ReyEngine {
             calculateAnchoring(getRect());
          }
          _on_rect_changed();
-         auto event = ResizeEvent(this, oldRect);
+         auto event = RectChangedEvent(this, oldRect);
          publish(event);
 
          //try to inform children of resize in case they're anchored or need to do other logic
@@ -70,11 +72,9 @@ namespace ReyEngine {
          //might not be in tree yet.
          if (!getNode()) return;
          if (byLayout) return; //layouts don't inform their parents when the child rect is changed
-         if (auto parent = getNode()->getParent()) {
+         if (auto parent = getParentWidget()) {
             if (parent) {
-               if (auto parentIsWidget = parent->as<Widget>()) {
-                  parentIsWidget.value()->_on_child_rect_changed(this);
-               }
+               parent.value()->_on_child_rect_changed(this);
             }
          }
       }
@@ -84,6 +84,8 @@ namespace ReyEngine {
       Anchor _anchor = Anchor::NONE;
 
    private:
+      void __on_added_to_tree() override;
+      Widget* _parentWidget = nullptr; //the closest related parent that is a widget.
       bool _modal = false;
       friend class Layout;
       friend class Canvas;

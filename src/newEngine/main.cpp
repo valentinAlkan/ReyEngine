@@ -8,6 +8,7 @@
 #include "LineEdit.h"
 #include "TabContainer.h"
 #include "ComboBox.h"
+#include "ScrollArea.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -24,13 +25,13 @@ struct TestWidget : public Widget {
    void render2D() const override {
       drawRectangle(getRect().toSizeRect(), isInside ? color : Colors::lightGray);
       drawText(text, {0,0}, getDefaultFont());
-      drawText("P = " + Pos<int>(getPosition()).toString(), {0,20}, getDefaultFont());
+      drawText("P = " + Pos<int>(getPos()).toString(), {0, 20}, getDefaultFont());
       drawText("S = " + Size<int>(getSize()).toString(), {0,40}, getDefaultFont());
       drawText(localMousePos, {0,60}, getDefaultFont());
    }
 protected:
    void _on_rect_changed() override {
-     cout << "new position = " << getPosition() << endl;
+     cout << "new position = " << getPos() << endl;
   }
    Widget* _unhandled_input(const InputEvent& event) override {
      if (auto isMouse = event.isMouse()){
@@ -54,9 +55,9 @@ protected:
                  cout << "----------------------" << endl;
                  cout << getName() << endl;
                  cout << "Mouse delta = " << mmEvent.mouseDelta << endl;
-                 cout << "current position = " << getPosition() << endl;
-                 cout << "new position = " << mmEvent.mouseDelta + getPosition() << endl;
-                 setPosition(getPosition() + mmEvent.mouseDelta);
+                 cout << "current position = " << getPos() << endl;
+                 cout << "new position = " << mmEvent.mouseDelta + getPos() << endl;
+                 setPosition(getPos() + mmEvent.mouseDelta);
                  return this;
               }
               break;}
@@ -115,16 +116,17 @@ int main(){
          TypeNode* buttonHolder;
          TypeNode* tabHolder;
          TypeNode* subCanvasHolder;
+         TypeNode* scrollAreaHolder;
          // add some children to the layout
          {
             auto [widget1, n1] = make_node<TestWidget>("Child1", "firstchild");
-            auto [widget2, n2] = make_node<TestWidget>("Child2", "secondchild");
-            auto [widget3, n3] = make_node<TestWidget>("SubCanvasHolder", "SubCanvasHolder");
+            auto [widget2, n2] = make_node<Layout>("ScrollArea Holder", Layout::LayoutDir::VERTICAL);
+            auto [widget3, n3] = make_node<Layout>("SubCanvasHolder", Layout::LayoutDir::VERTICAL);
             auto [widget4, n4] = make_node<Layout>("TabLayout", Layout::LayoutDir::VERTICAL);
             auto [widget5, n5] = make_node<Layout>("WidgetsLayout", Layout::LayoutDir::VERTICAL);
             auto [widget6, n6] = make_node<Layout>("ButtonLayout", Layout::LayoutDir::VERTICAL);
             layoutl->addChild(std::move(n1));
-            layoutl->addChild(std::move(n2));
+            scrollAreaHolder = layoutl->addChild(std::move(n2));
             subCanvasHolder = layoutl->addChild(std::move(n3));
             tabHolder = layoutr->addChild(std::move(n4));
             widgetsHolder = layoutr->addChild(std::move(n5));
@@ -188,7 +190,23 @@ int main(){
             label->setPosition({100,100});
          }
 
+         // add a scroll area
+         {
+            auto [scrollArea, n1] = make_node<ScrollArea>("ScrollArea");
+            auto scrollAreaNode = scrollAreaHolder->addChild(std::move(n1));
+
+            //add a label to the scrollArea
+            auto [testWidget, n2] = make_node<TestWidget>("ScrollAreaTestWidget", "scrollTest");
+            scrollAreaNode->addChild(std::move(n2));
+            testWidget->setPosition({400, 400});
+         }
+
       }
+
+//      //scroll area
+//      auto [scrollArea, node] = make_node<ScrollArea>("ScrollArea");
+//      TypeNode* root->getNode()->addChild(std::move(node));
+//      scrollArea->setRect(100, 200, 500, 500);
 
       window.exec();
    }

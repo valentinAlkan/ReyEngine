@@ -9,7 +9,8 @@ namespace ReyEngine::Internal {
       {}
       [[nodiscard]] inline Rect<R_FLOAT> getRect() const {return {transform2D.extractTranslation(), size};}
       [[nodiscard]] inline Size<R_FLOAT> getSize() const {return size;}
-      [[nodiscard]] inline Pos<R_FLOAT> getPosition() const {return transform2D.extractTranslation();}
+      [[nodiscard]] inline Rect<R_FLOAT> getSizeRect() const {return {0,0,size.x, size.y};}
+      [[nodiscard]] inline Pos<R_FLOAT> getPos() const {return transform2D.extractTranslation();}
       [[nodiscard]] inline Radians getRotation() const {return transform2D.extractRotation();}
       [[nodiscard]] inline Vec2<R_FLOAT> getScale() const {return transform2D.extractScale();}
 
@@ -19,6 +20,7 @@ namespace ReyEngine::Internal {
          transform2D.setPosition(newPosition);
          __on_rect_changed(r);
       }
+      inline void setPosition(R_FLOAT x, R_FLOAT y){setPosition({x, y});}
       inline void setRotation(const Radians& newRotation){
          if (isLocked) return;
          auto r = getRect();
@@ -37,6 +39,7 @@ namespace ReyEngine::Internal {
          size = newSize;
          __on_rect_changed(r);
       }
+      inline void setSize(R_FLOAT x, R_FLOAT y){setSize({x, y});}
       inline void setRect(const Rect<R_FLOAT>& newRect){
          if (isLocked) return;
          size = newRect.size();
@@ -44,6 +47,7 @@ namespace ReyEngine::Internal {
          transform2D.setPosition(newRect.pos());
          __on_rect_changed(r);
       }
+      inline void setRect(R_FLOAT x, R_FLOAT y, R_FLOAT width, R_FLOAT height){setRect({x,y,width,height});}
       inline Transform2D& getLocalTransform(){return transform2D;}
       inline Transform2D getGlobalTransform(){
          auto retval = getLocalTransform();

@@ -25,7 +25,6 @@ namespace ReyEngine {
          bool _visible = true;
          bool _isCanvas = false; //whether or not this drawable is a canvas
          Window* window = nullptr;
-         virtual RenderTarget* getRenderTarget(){return nullptr;}
       private:
          Canvas* canvas = nullptr;
       friend class ReyEngine::Canvas;

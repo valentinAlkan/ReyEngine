@@ -63,9 +63,9 @@ namespace ReyEngine::Internal::Tree {
    protected:
       TypeNode* selfNode;
       template<typename T, typename InstanceName, typename... Args>
-      friend MakeNodeReturnType<T> make_node(InstanceName&&, Args&&...);
+      friend MakeNodeReturnType<T> _make_node(InstanceName&&, Args&&...);
       template<typename U, typename InstanceName, typename... Args>
-      friend MakeNodeReturnType<U> make_node(InstanceName&&, Args&&...);
+      friend MakeNodeReturnType<U> _make_node(InstanceName&&, Args&&...);
    };
    template<typename T>
    concept TypeTagged = std::is_base_of_v<TypeTag, T> && !std::is_base_of_v<T, TreeStorable>;
@@ -96,7 +96,7 @@ namespace ReyEngine::Internal::Tree {
 
       // Declare make_node as a friend
       template<typename U, typename InstanceName, typename... Args>
-      friend MakeNodeReturnType<U> make_node(InstanceName&&, Args&&...);
+      friend MakeNodeReturnType<U> _make_node(InstanceName&&, Args&&...);
    };
 
    // Convert type-erased data to a format that can be stored in the tree
@@ -120,9 +120,11 @@ namespace ReyEngine::Internal::Tree {
       }
       [[nodiscard]] TypeBase* getData() const { return _data.get(); }
       inline TypeNode* getParent(){return _parent;}
+      inline const TypeNode* getParent() const {return _parent;}
       inline TypeNode* getRoot(){return _root;}
-      inline std::string getName(){return name;}
-      inline std::string getScenePath(){return _scenePath;}
+      inline const TypeNode* getRoot() const {return _root;}
+      inline std::string getName() const {return name;}
+      inline std::string getScenePath() const {return _scenePath;}
       // Add child with a name for lookup
       TypeNode* addChild(std::unique_ptr<TypeNode>&& child) {
          if (this == nullptr){
@@ -257,7 +259,7 @@ namespace ReyEngine::Internal::Tree {
 
       // Make make_node a friend so it can access the protected constructor
       template<typename T, typename InstanceName, typename... Args>
-      friend MakeNodeReturnType<T> make_node(InstanceName&&, Args&&...);
+      friend MakeNodeReturnType<T> _make_node(InstanceName&&, Args&&...);
 
       friend struct ReyEngine::Internal::Tree::ProtectedFunctionAccessor;
    };
@@ -274,7 +276,7 @@ namespace ReyEngine::Internal::Tree {
 
    // Primary template for when arguments are provided
    template<typename T, typename InstanceName, typename... Args>
-   MakeNodeReturnType<T> make_node(InstanceName&& instanceName, Args&&... args) {
+   MakeNodeReturnType<T> _make_node(InstanceName&& instanceName, Args&&... args) {
       auto ptr = new T(std::forward<Args>(args)...);
       auto wrapper = std::unique_ptr<TypeWrapper<T>>(new TypeWrapper<T>(ptr));
       auto node = std::unique_ptr<TypeNode>(new TypeNode(std::move(wrapper), instanceName, T::TYPE_NAME));
@@ -286,8 +288,8 @@ namespace ReyEngine::Internal::Tree {
    }
 
    //secondary template with move semantics
-   template<typename T, typename InstanceName, typename... Args>
-   MakeNodeReturnType<T> make_node(InstanceName&& instanceName, std::unique_ptr<T>&& ptr) {
+   template<typename T, typename InstanceName>
+   MakeNodeReturnType<T> _make_node(InstanceName&& instanceName, std::unique_ptr<T>&& ptr) {
       auto wrapper = std::make_unique<TypeWrapper<T>>(ptr);
       auto node = std::unique_ptr<TypeNode>(new TypeNode(std::move(wrapper), instanceName, T::TYPE_NAME));
       //assign typetag self if applicable

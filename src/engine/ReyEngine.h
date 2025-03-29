@@ -581,7 +581,7 @@ namespace ReyEngine {
       constexpr inline Rect& operator-=(const Rect<T>& rhs){x -= rhs.x; y -= rhs.y; width -= rhs.width; height -= rhs.height; return *this;}
       constexpr inline Rect& operator*=(const Rect<T>& rhs){x *= rhs.x; y *= rhs.y; width *= rhs.width; height *= rhs.height; return *this;}
       constexpr inline Rect& operator/=(const Rect<T>& rhs){x /= rhs.x; y /= rhs.y; width /= rhs.width; height /= rhs.height; return *this;}
-      constexpr inline operator Rectangle() {return {x,y,width,height};}
+      constexpr inline operator Rectangle() const {return {x,y,width,height};}
       constexpr inline Rect centerOnPoint(const Pos<R_FLOAT>& p) const {return {{p - size() / 2}, {size()}};} /// Return the pos of the rect such that it would be centered on point p
       constexpr inline Rect embiggen(T amt) const {return *this + Rect<T>(-amt, -amt, 2*amt, 2*amt);} //shrink/expand borders evenly
       constexpr inline Rect emtallen(T amt) const {return  *this + Rect<T>(0, -amt, 0, 2*amt);}//embiggen tallness
@@ -1250,7 +1250,6 @@ namespace ReyEngine {
    ReyEngineFont getFont(const std::string& fileName);
 
    struct ReyTexture{
-      ReyTexture(){};
       ReyTexture(const FileSystem::File& file);
        ReyTexture(ReyTexture&& other) noexcept
       :  size(other.size)
@@ -1277,6 +1276,26 @@ namespace ReyEngine {
       bool _texLoaded = false;
    };
 
+   //Underlying RenderTexture2D is different from ReyTexture's underlying Texture2D. So these are not interchangeable.
+   // Use this when you are drawing to a texture.
+   class RenderTarget{
+   public:
+      explicit RenderTarget();
+      RenderTarget(const Size<int>& size);
+      ~RenderTarget();
+      RenderTarget& operator=(const RenderTarget&) = delete;
+      void setSize(const Size<int>& newSize);
+      inline Size<int> getSize() const {return _size;}
+      inline void beginRenderMode(){BeginTextureMode(_tex);}
+      inline void endRenderMode(){EndTextureMode();}
+      inline bool ready() const {return _texLoaded;}
+      [[nodiscard]] inline const Texture2D& getTexture() const {return _tex.texture;}
+   protected:
+      bool _texLoaded = false;
+      RenderTexture2D _tex;
+      Size<int> _size;
+   };
+
    Pos<R_FLOAT> getScreenCenter();
    Size<int> getScreenSize();
    ReyEngine::Size<int> getWindowSize();
@@ -1301,27 +1320,12 @@ namespace ReyEngine {
    void drawCircleSectorLines(const CircleSector&, const ReyEngine::ColorRGBA&  color, int segments);
    void drawLine(const Line<R_FLOAT>&, float lineThick, const ReyEngine::ColorRGBA& color);
    void drawArrow(const Line<R_FLOAT>&, float lineThick, const ReyEngine::ColorRGBA& color, float headSize=20); //Head drawn at A
-   void drawTexture(const ReyTexture& texture, const Rect<R_FLOAT>& source, const Rect<R_FLOAT>& dest, float rotation, const ReyEngine::ColorRGBA& tint);
+   void drawTexture(const ReyTexture& texture, const Rect<R_FLOAT>& source, const Rect<R_FLOAT>& dest, const ReyEngine::ColorRGBA& tint);
+   void drawRenderTarget(const RenderTarget&, const Pos<R_FLOAT>&, const ColorRGBA&);
+   void drawRenderTargetRect(const RenderTarget&, const Rect<R_FLOAT>&, const Rect<R_FLOAT>&, const ColorRGBA&);
+   void drawTexture(const ReyTexture&, const Rect<R_FLOAT>& src, const Rect<R_FLOAT>& dst, const ColorRGBA& tint);
    inline float getFrameDelta() {return GetFrameTime();}
    inline Size<R_FLOAT> measureText(const std::string& text, const ReyEngineFont& font){return MeasureTextEx(font.font, text.c_str(), font.size, font.spacing);}
-
-   class RenderTarget{
-      public:
-         explicit RenderTarget();
-         RenderTarget(const Size<int>& size);
-         ~RenderTarget();
-         void setSize(const Size<int>& newSize);
-         inline Size<int> getSize() const {return _size;}
-         inline void beginRenderMode(){BeginTextureMode(_tex);}
-         inline void endRenderMode(){EndTextureMode();}
-         inline void clear(Color color=WHITE) const {ClearBackground(color);}
-         inline bool ready() const {return _texLoaded;}
-         [[nodiscard]] inline const Texture2D& getRenderTexture() const {return _tex.texture;}
-      protected:
-         bool _texLoaded = false;
-         RenderTexture2D _tex;
-         Size<int> _size;
-      };
 
    inline void printMatrix(const Matrix& m) {
       // Print in row-major format for readability

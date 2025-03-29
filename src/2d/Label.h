@@ -14,7 +14,7 @@ namespace ReyEngine{
       {
          auto expandOpt = needsExpand();
          if (expandOpt){
-            applyRect({getPosition(), expandOpt.value()});
+            applyRect({getPos(), expandOpt.value()});
             minSize = expandOpt.value();
          }
          theme->background.fill = Style::Fill::NONE;

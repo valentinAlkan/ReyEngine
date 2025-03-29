@@ -7,6 +7,32 @@
 using namespace std;
 using namespace ReyEngine;
 
+/////////////////////////////////////////////////////////////////////////////////////////
+void Widget::__on_added_to_tree() {
+   auto parent = _node->getParent();
+   while (parent){
+      if (auto isWidget = parent->as<Widget>()){
+         _parentWidget = isWidget.value();
+         break;
+      }
+      parent = parent->getParent();
+   }
+   Internal::ReyObject::__on_added_to_tree();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Rect<R_FLOAT> Widget::getChildBoundingBox() const {
+   Size<R_FLOAT> childRect;
+   for (const auto& child : getChildren()){
+      if (auto isWidget = child->as<Widget>()) {
+         auto& child = isWidget.value();
+         auto totalOffset = child->getRect().size() + Size<R_FLOAT>(child->getPos().x, child->getPos().y);
+         childRect = childRect.max(totalOffset);
+      }
+   }
+   return {{0, 0}, {childRect}};
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 void Widget::calculateAnchoring(const Rect<R_FLOAT>& r){
 
@@ -93,15 +119,17 @@ void Widget::calculateAnchoring(const Rect<R_FLOAT>& r){
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 void Widget::setAnchoring(Anchor newAnchor) {
-   if (_node->getParent()->as<Layout>()){
-      Logger::error() << _node->getScenePath() << ": Children of layouts cannot have anchoring!";
+   auto parent = _node->getParent();
+   if (!parent){
+         Logger::error() << _node->getScenePath() << ": Anchoring failure : " << getName() << " has no parent!" << endl;
+         return;
+      }
+   if (parent->as<Layout>()) {
+      Logger::error() << _node->getScenePath() << ": Children of layouts cannot have anchoring!" << endl;
       return;
    }
    _anchor = newAnchor;
-   if (!_node->getParent()) return;
-   if (auto hasParent = _node->getParent()->as<Widget>()) {
-      setRect(getRect());
-   }
+   setRect(getRect());
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -144,6 +172,19 @@ void Widget::setHovered(bool newValue) {
    } else {
       Logger::error() << "Unable to set status on widget that is not associated with any Canvas" << endl;
    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+std::optional<Widget*> Widget::getParentWidget() const {
+   auto parent = _node->getParent();
+   while (parent) {
+      if (auto isWidget = parent->as<Widget>()) {
+         return isWidget.value();
+      } else {
+         parent = parent->getParent();
+      }
+   }
+   return {};
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

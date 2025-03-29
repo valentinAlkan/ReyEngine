@@ -126,14 +126,6 @@ void ReyEngine::drawArrow(const Line<R_FLOAT>& line, float lineThick, const ReyE
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawTexture(const ReyTexture& texture, const Rect<R_FLOAT> &source, const Rect<R_FLOAT> &dest, float rotation, const ReyEngine::ColorRGBA &tint) {
-   auto tex = texture.getTexture();
-   Rectangle rSource =  {(float)source.x, (float)source.y, (float)source.width, (float)source.height};
-   Rectangle rDest =  {(float)dest.x, (float)dest.y, (float)dest.width, (float)dest.height};
-   DrawTexturePro(tex, rSource, rDest, {0,0},  rotation, tint);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font){
    drawTextCentered(text, pos, font, font.color, font.size, font.spacing);
 }
@@ -157,7 +149,30 @@ void ReyEngine::drawTextRelative(const std::string& text, const Pos<R_FLOAT>& re
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyEngine::RenderTarget::RenderTarget(){}
+void ReyEngine::drawTexture(const ReyTexture& texture, const Rect<R_FLOAT> &source, const Rect<R_FLOAT> &dest, const ReyEngine::ColorRGBA &tint) {
+   //Note: this is not y-flipped. That's a renderTexture thing.
+   auto tex = texture.getTexture();
+   DrawTexturePro(tex, source, dest, {0,0},  0, tint);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawRenderTargetRect(const RenderTarget& renderTarget, const Rect<R_FLOAT>& src, const Rect<R_FLOAT>& dst, const ColorRGBA& tint){
+   // NOTE: Render texture must be y-flipped due to default OpenGL coordinates (left-bottom)
+   DrawTexturePro(renderTarget.getTexture(), {src.x, src.y, src.width, -src.height}, dst, {0,0}, 0, tint);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawRenderTarget(const RenderTarget& target, const Pos<R_FLOAT>& pos, const ColorRGBA& tint){
+   auto rect = pos.toRect(target.getSize());
+   drawRenderTargetRect(target, rect, rect, tint);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+ReyEngine::RenderTarget::RenderTarget(){
+   // make sure you initialize at some point
+}
 ReyEngine::RenderTarget::RenderTarget(const Size<int>& size) {
    setSize(size);
 }

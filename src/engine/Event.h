@@ -132,9 +132,9 @@ namespace ReyEngine{
       std::map<EventId, EventCallbackMap> _eventMap;
    protected:
       template <typename T>
-      requires (std::is_base_of_v<T, BaseEvent>)
+      requires (std::is_base_of_v<BaseEvent, T>)
       void addSubscriber(EventSubscriber* subscriber, std::function<void(const BaseEvent&)> fx) {
-         auto eventId = T::eventId;
+         auto eventId = T::ID;
          auto _ev = _eventMap.find(eventId);
          if (_ev == _eventMap.end()){
             //registered publisher doesn't have any events to publish

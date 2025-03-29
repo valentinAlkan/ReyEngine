@@ -62,10 +62,10 @@ namespace ReyEngine {
 //         size_t index;
 //         size_t parentIndex;
 //      };
-      RenderTarget* getRenderTarget() override {return &renderTarget;}
+      const RenderTarget& getRenderTarget() const {return _renderTarget;}
       Widget* __process_unhandled_input(const InputEvent& event) override;
       void __process_hover(const InputEventMouseMotion& event);
-   private:
+   protected:
       void _on_rect_changed() override;
       template <WidgetStatus::StatusType Status>
       void setStatus(Widget* newWidget){
@@ -111,7 +111,7 @@ namespace ReyEngine {
       template <WidgetStatus::StatusType Status>
       [[nodiscard]] const Widget* getStatus() const {return const_cast<Canvas*>(this)->getStatus<Status>();}
       std::array<Widget*, std::tuple_size_v<WidgetStatus::StatusTypes>> statusWidgetStorage = {0};
-      RenderTarget renderTarget;
+      RenderTarget _renderTarget;
       Transform2D modalXform;
 
       //////////////////////////
@@ -155,13 +155,12 @@ namespace ReyEngine {
 
          Widget* subcanvasProcess(){
             rlPopMatrix();
-            thisCanvas->getRenderTarget()->endRenderMode();
+            thisCanvas->_renderTarget.endRenderMode();
             subCanvas->renderProcess();
-            thisCanvas->getRenderTarget()->beginRenderMode();
+            thisCanvas->_renderTarget.beginRenderMode();
             rlPushMatrix();
             rlMultMatrixf(MatrixToFloat(thisCanvas->transformStack.getGlobalTransform().matrix));
-            auto _renderTarget = subCanvas->getRenderTarget();
-            DrawTextureRec(_renderTarget->getRenderTexture(), {0, 0, (float) _renderTarget->getSize().x, -(float) subCanvas->getSize().y}, {0, 0}, WHITE);
+            drawRenderTargetRect(subCanvas->getRenderTarget(), subCanvas->_viewport, subCanvas->getRect(), Colors::none);
             return nullptr;
          }
 
@@ -226,7 +225,6 @@ namespace ReyEngine {
                   modalXform = widget->getGlobalTransform();
                   // modal widgets do not propogate to children except explicitly
                   continue;
-                  return nullptr;
                } else {
                   auto handled = processTree<ProcessType>(child, false, std::forward<Args>(args)...);
                   if (handled) return handled;
@@ -298,14 +296,8 @@ namespace ReyEngine {
          return handled;
       }
 
-
-
-
-
-
-
-
-
+      std::vector<std::unique_ptr<TypeNode>> _intrinsicChildren; //children that belong to the canvas but are treated differently for various reasons
+      Rect<R_FLOAT> _viewport; //the portion of the render target we want to draw
 
    public:
       void setHover(Widget* w){setStatus<WidgetStatus::Hover>(w);}

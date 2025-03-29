@@ -36,7 +36,12 @@ class NamedTypeImpl : public Skills<NamedTypeImpl<T, Parameter, Ratio, Skills...
 {
 public:
    // constructor
-   constexpr NamedTypeImpl() = default;
+   constexpr NamedTypeImpl(){
+      //initialize to zero, if possible
+      if constexpr (requires { T(0); }) {
+         _value = T(0);
+      }
+   }
    constexpr NamedTypeImpl(T const& value) : _value(value) {}
    constexpr NamedTypeImpl(const NamedTypeImpl& other): _value(other._value){}
 //   template<typename T_ = T> constexpr NamedTypeImpl(T&& value, typename std::enable_if<!std::is_reference<T_>{}, std::nullptr_t>::type = nullptr) : _value(std::move(value)) {}
