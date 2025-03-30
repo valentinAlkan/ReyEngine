@@ -70,7 +70,7 @@ namespace ReyEngine{
    private:
       CanvasSpace<Pos<float>> _canvasPos;
       Pos<float> _localPos;
-      bool _isInside;
+      bool _isInside = false;
    };
 
    EVENT_ARGS(InputEventMouseButton, 111111, const Pos<float>& pos, InputInterface::MouseButton button, bool isDown)

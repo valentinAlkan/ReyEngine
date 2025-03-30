@@ -49,7 +49,7 @@ namespace ReyEngine::Internal {
       }
       inline void setRect(R_FLOAT x, R_FLOAT y, R_FLOAT width, R_FLOAT height){setRect({x,y,width,height});}
       inline Transform2D& getLocalTransform(){return transform2D;}
-      inline Transform2D getGlobalTransform(){
+      inline CanvasSpace<Transform2D> getGlobalTransform(){
          auto retval = getLocalTransform();
          auto parent = selfNode->getParent();
          while (parent){
@@ -63,6 +63,11 @@ namespace ReyEngine::Internal {
             parent = parent->getParent();
          }
          return retval;
+      }
+      inline CanvasSpace<Rect<R_FLOAT>> getGloablRect(){
+         auto gpos = getGlobalTransform().get().extractTranslation();
+         Rect<R_FLOAT> rect = {gpos,size};
+         return rect;
       }
       inline Size<R_FLOAT> getMinSize() const {return minSize;}
       inline Size<R_FLOAT> getMaxSize() const {return maxSize;}

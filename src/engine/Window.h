@@ -7,6 +7,7 @@
 
 namespace ReyEngine{
    class Canvas;
+   class Widget;
    class Window : public EventPublisher {
    public:
 
@@ -40,6 +41,7 @@ namespace ReyEngine{
 //      std::optional<std::shared_ptr<Draggable>>getDragNDrop(){if (_dragNDrop) return _dragNDrop; return std::nullopt;}
       inline void keyInput(InputInterface::KeyCode){};
       int getFPS() const {return GetFPS();}
+      std::optional<Widget*> processInput(const InputEvent&);
    protected:
       Window(const std::string& title, int width, int height, const std::vector<WindowFlags>& flags, int targetFPS);
       void initialize(std::optional<std::shared_ptr<Canvas>> root);

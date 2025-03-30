@@ -473,3 +473,11 @@ Window::~Window(){
 std::shared_ptr<Canvas> Window::getCanvas() {
    return _root->ref<Canvas>();
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////
+std::optional<Widget *> Window::processInput(const InputEvent& event) {
+   // live dangerously. (roots must be canvases)
+   auto handler = ReyEngine::Internal::Tree::ProtectedFunctionAccessor(_root.get()).dangerousIs<Canvas>()->__process_unhandled_input(event);
+   if (handler) return handler;
+   return {};
+}

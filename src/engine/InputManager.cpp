@@ -37,7 +37,7 @@ char InputManager::getCharPressed() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 InputInterface::MouseButton InputManager::getMouseButtonPressed() {
-   for (auto btn : MouseButtons) {
+   for (auto btn : MouseButtonsArray) {
       if (InputInterface::isMouseButtonDown(btn) && !isInQueue(mouseButtonQueue, btn)) {
          mouseButtonQueue.push_back(btn);
          return btn;

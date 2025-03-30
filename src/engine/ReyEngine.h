@@ -591,10 +591,10 @@ namespace ReyEngine {
       constexpr inline Rect chopRight(T amt) const {auto retval = *this; retval.width-=amt; return retval;} //remove the rightmost amt of the rectangle and return the remainder (cuts width)
       constexpr inline Rect chopLeft(T amt) const {auto retval = *this; retval.x+=amt; retval.width-=amt; return retval;} //remove the leftmost amt of the rectangle and return the remainder (moves x, cuts width)
       constexpr inline bool isInside(const Vec2<T>& point) const {return isInsideX(point) && isInsideY(point);}
-      constexpr inline bool isInside(const Rect& other) const {return other.x+other.width <= x+width && other.x >= x && other.y >= y && other.y+other.height <= y+height;}
-      constexpr inline bool isInsideX(const Vec2<T>& point) const {return (point.x >= x && point.x <= x + width);}
-      constexpr inline bool isInsideY(const Vec2<T>& point) const {return (point.y >= y && point.y <= y + height);}
-      constexpr inline Rect enclosing(const Pos<T>& origin={0,0}) const {return {origin, {pos() + size() - origin}};} //returns a rectangle, starting at origin, that exactly encloses the point
+      constexpr inline bool isInside(const Rect& other) const {return other.x+other.width < x+width && other.x >= x && other.y >= y && other.y+other.height < y+height;}
+      constexpr inline bool isInsideX(const Vec2<T>& point) const {return (point.x >= x && point.x < x + width);}
+      constexpr inline bool isInsideY(const Vec2<T>& point) const {return (point.y >= y && point.y < y + height);}
+      constexpr inline Rect createEnclosingRect(const Pos<T>& origin={0,0}) const {return {origin, {pos() + size() - origin}};} //returns a rectangle, starting at origin, that exactly encloses the point
       constexpr inline void clampWidth(const Vec2<T>& widthRange){if (width < widthRange.x) width = widthRange.x; if (width > widthRange.y) width = widthRange.y;}
       constexpr inline void clampHeight(const Vec2<T>& heightRange){if (height < heightRange.x) height = heightRange.x; if (height > heightRange.y) height = heightRange.y;}
       // constrain this rectangle's position so that it is INSIDE the larger rectangle
@@ -1471,7 +1471,7 @@ namespace InputInterface{
    };
 
    //array of all mouse buttons
-   static constexpr std::array<MouseButton, 7> MouseButtons = {
+   static constexpr std::array<MouseButton, 7> MouseButtonsArray = {
          MouseButton::LEFT,
          MouseButton::RIGHT,
          MouseButton::MIDDLE,

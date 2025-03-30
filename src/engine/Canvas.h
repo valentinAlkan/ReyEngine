@@ -182,7 +182,7 @@ namespace ReyEngine {
          {
             if (auto mouseData = event.isMouse()) {
                mouseTransformer = std::make_unique<MouseEvent::ScopeTransformer>(*mouseData.value(), inputTransform, processedWidget->getSize());
-//               std::cout << "Widget: " << processedWidget->getName() << " G " << mouseData.value()->getCanvasPos().get() << " ---> L " << mouseData.value()->getLocalPos() << " X: " << inputTransform.extractTranslation() << std::endl;
+               std::cout << "Widget: <" << processedWidget->getName() << "> :  G " << mouseData.value()->getCanvasPos().get() << " ---> L " << mouseData.value()->getLocalPos() << " X: " << inputTransform.extractTranslation() << " : inside = " << mouseData.value()->isInside() << std::endl;
             }
          }
 
@@ -217,12 +217,11 @@ namespace ReyEngine {
          //dispatch to children
          for (auto& child: thisNode->getChildren()) {
             if (auto childWidget = child->as<Widget>()){
-               auto& widget = childWidget.value();
-               if (widget->_modal) {
-                //save off global transformation matrix so we can redraw this widget
-                  // later in its proper position
+               auto& _childWidget = childWidget.value();
+               if (_childWidget->_modal) {
+                //save off global transformation matrix so we can redraw this widget later in its proper position
                   // Note: This encodes the drawables local transform, which needs to be subtracted off later.
-                  modalXform = widget->getGlobalTransform();
+                  modalXform = _childWidget->getGlobalTransform().get();
                   // modal widgets do not propogate to children except explicitly
                   continue;
                } else {

@@ -79,23 +79,23 @@ int main(){
       auto& window = Application::createWindowPrototype("window", 1920, 1080, {WindowFlags::RESIZE}, 60)->createWindow();
       auto root = window.getCanvas();
 
-      std::vector<TypeNode*> labels;
-      {
-         auto [widget2, _] = make_node<TestWidget>("Parent", "Parent");
-         labels.push_back(root->getNode()->addChild(std::move(_)));
-         widget2->setPosition({0, 0});
-      }
-      {
-         auto [widget3, _] = make_node<TestWidget>("Child", "child");
-         labels.push_back(labels.at(0)->addChild(std::move(_)));
-         widget3->setPosition({150, 150});
-      }
-
-      {
-         auto [label, _] = make_node<Label>("Label", "Hey baby");
-         labels.push_back(labels.at(0)->addChild(std::move(_)));
-         label->setPosition({100, 500});
-      }
+//      std::vector<TypeNode*> labels;
+//      {
+//         auto [widget2, _] = make_node<TestWidget>("LabelParent", "Parent");
+//         labels.push_back(root->getNode()->addChild(std::move(_)));
+//         widget2->setPosition({0, 0});
+//      }
+//      {
+//         auto [widget3, _] = make_node<TestWidget>("LabelChild", "child");
+//         labels.push_back(labels.at(0)->addChild(std::move(_)));
+//         widget3->setPosition({150, 150});
+//      }
+//
+//      {
+//         auto [label, _] = make_node<Label>("LabelHeyBabe", "Hey baby");
+//         labels.push_back(labels.at(0)->addChild(std::move(_)));
+//         label->setPosition({100, 500});
+//      }
 
       //create a layout
       {
@@ -119,7 +119,7 @@ int main(){
          TypeNode* scrollAreaHolder;
          // add some children to the layout
          {
-            auto [widget1, n1] = make_node<TestWidget>("Child1", "firstchild");
+            auto [widget1, n1] = make_node<TestWidget>("TestWidget1", "firstchild");
             auto [widget2, n2] = make_node<Layout>("ScrollArea Holder", Layout::LayoutDir::VERTICAL);
             auto [widget3, n3] = make_node<Layout>("SubCanvasHolder", Layout::LayoutDir::VERTICAL);
             auto [widget4, n4] = make_node<Layout>("TabLayout", Layout::LayoutDir::VERTICAL);
@@ -199,6 +199,10 @@ int main(){
             auto [testWidget, n2] = make_node<TestWidget>("ScrollAreaTestWidget", "scrollTest");
             scrollAreaNode->addChild(std::move(n2));
             testWidget->setPosition({400, 400});
+
+            //create a mouse event and test it
+            InputEventMouseButton eventMouseButton(&window, scrollArea->getGloablRect().get().pos(), InputInterface::MouseButton::LEFT, true);
+            window.processInput(eventMouseButton);
          }
 
       }
