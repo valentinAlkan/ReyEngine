@@ -29,14 +29,7 @@ namespace ReyEngine {
       template <typename T>
       concept StatusType = is_in_tuple_v<T, StatusTypes>;
    }
-   struct CanvasRenderType{};
-   struct IntrinsicInternalOverlay : private CanvasRenderType{};
-   struct IntrinsicInternalUnderlay : private CanvasRenderType{};
-   struct IntrinsicExternalOverlay : private CanvasRenderType{};
-   struct IntrinsicExternalUnderlay : private CanvasRenderType{};
-   template <typename T> concept IsRenderType = std::is_base_of_v<CanvasRenderType, T>;
-   template <typename T> concept IsIntrinsicInternal = std::is_base_of_v<IntrinsicInternalOverlay, T> || std::is_base_of_v<IntrinsicInternalUnderlay, T>;
-   template <typename T> concept IsIntrinsicExternal = std::is_base_of_v<IntrinsicExternalOverlay, T> || std::is_base_of_v<IntrinsicExternalUnderlay, T>;
+   enum class RenderProcessType { IntrinsicInternalOverlay, IntrinsicInternalUnderlay, IntrinsicExternalOverlay, IntrinsicExternalUnderlay};
 
    class Canvas: public Widget {
    public:
@@ -57,6 +50,7 @@ namespace ReyEngine {
       void updateGlobalTransforms();
 
    protected:
+      virtual void renderProcess();
       const RenderTarget& getRenderTarget() const {return _renderTarget;}
       Widget* __process_unhandled_input(const InputEvent& event) override;
       void __process_hover(const InputEventMouseMotion& event);
@@ -145,7 +139,6 @@ namespace ReyEngine {
       /////////////////////////////////////////////////////////////////////////////////////////
       ////////// RENDERING
       //return value = not meaningful
-      template <IsRenderType RenderType>
       struct RenderProcess : public TreeProcess{
          RenderProcess(Canvas* thisCanvas, Widget* processedWidget)
          : TreeProcess(thisCanvas, processedWidget)
@@ -153,16 +146,9 @@ namespace ReyEngine {
          }
 
          Widget* subcanvasProcess(){
-            //draw intrinsic children on the parent canvas as an underlay (behind subcanvas)
-            if constexpr (std::is_same_v<RenderType, IntrinsicExternalUnderlay>){
-               subCanvas->renderProcess<RenderType>();
-            }
             rlPopMatrix();
             thisCanvas->_renderTarget.endRenderMode();
-            //draw intrinsic children on the subcanvas
-            if constexpr (IsIntrinsicInternal<RenderType>) {
-               subCanvas->renderProcess<RenderType>();
-            }
+            subCanvas->renderProcess();
             thisCanvas->_renderTarget.beginRenderMode();
             rlPushMatrix();
             rlMultMatrixf(MatrixToFloat(thisCanvas->transformStack.getGlobalTransform().matrix));
@@ -178,15 +164,6 @@ namespace ReyEngine {
          };
       };
 
-      //helper templates so we can detect if the ProcessType is a render process without
-      // having to specify what type of RenderProcess it is (since we wouldn't know and would have to check them all)
-      // keeps us from having to specify NoRender or something like that for non-rendering processes.
-      template <typename T>
-      struct is_render_process : std::false_type {};
-      template <typename RType>
-      struct is_render_process<RenderProcess<RType>> : std::true_type {};
-      template <typename T>
-      inline static constexpr bool is_render_process_v = is_render_process<T>::value;
       /////////////////////////////////////////////////////////////////////////////////////////
       ////////// INPUT
       // return value = who handled
@@ -257,7 +234,7 @@ namespace ReyEngine {
       /////////////////////////////////////////////////////////////////////////////////////////
       /////////////////////////////////////////////////////////////////////////////////////////
       /////////////////////////////////////////////////////////////////////////////////////////
-      template <typename ProcessType, typename OptionalRendertype, typename... Args>
+      template <typename ProcessType, typename... Args>
       Widget* processNode(TypeNode *thisNode, bool isModal, Args&&... args )  {
          auto isWidget = thisNode->as<Widget>();
          //processes actual widget itself
@@ -297,7 +274,8 @@ namespace ReyEngine {
          } else {
             //render process (self-first) with child dispatch
 
-            if constexpr (is_render_process_v<ProcessType>) {
+            //renderer processes parents first
+            if constexpr (std::is_same_v<ProcessType, RenderProcess>) {
                if (!widget->_modal || isModal) {
                   handled = processTransformer.process();
                   if (handled) return handled;
@@ -319,53 +297,6 @@ namespace ReyEngine {
          // pop local transform (processTransformer falls out of scope)
          return handled;
       }
-
-
-      /////////////////////////////////////////////////////////////////////////////////////////
-      template <IsRenderType RenderType>
-      void renderProcess() {
-         if (!_visible) return;
-         _renderTarget.beginRenderMode();
-         rlPushMatrix();
-         render2DBegin();
-         ClearBackground(Colors::none);
-         drawRectangleGradientV(getRect().toSizeRect(), Colors::green, Colors::yellow);
-         drawText(getName(), {0,0}, theme->font);
-
-         if constexpr (std::is_same_v<RenderType, IntrinsicIntegralUnderlay>){
-            for (auto& intrinsicChild : _intrinsicChildren){
-               processNode<RenderProcess<RenderType>>(intrinsicChild.get(), false);
-            }
-         }
-
-         //normal front render - first pass, don't draw modal
-         processChildren<RenderProcess<RenderType>>(_node);
-
-         if constexpr (std::is_same_v<RenderType, IntrinsicIntegralOverlay>){
-            for (auto& intrinsicChild : _intrinsicChildren){
-               processNode<RenderProcess<RenderType>>(intrinsicChild.get(), false);
-            }
-         }
-
-         //the modal widget's xform includes canvas xform, so we want to pop that off as if
-         // we are rendering globally
-         if (auto modal = getModal()){
-            auto modalDrawable = modal->_node->as<Widget>();
-            transformStack.pushTransform(&modalXform);
-
-            //invert (subtract off) the modal widget's own position since it's already encoded in modalXform.
-            auto inverseXform = modalDrawable.value()->getTransform().inverse();
-            transformStack.pushTransform(&inverseXform);
-
-            // Logger::debug() << "Drawing " << modal->_node->getName() << " at " << modalXform.extractTranslation() + _node->as<Drawable2D>().value()->getPosition() << endl;
-            processNode<RenderProcess<RenderType>>(modal->_node, true);
-            transformStack.popTransform();
-         }
-         rlPopMatrix();
-         render2DEnd();
-         _renderTarget.endRenderMode();
-      }
-
 
       /////////////////////////////////////////////////////////////////////////////////////////
       std::vector<std::unique_ptr<TypeNode>> _intrinsicChildren; //children that belong to the canvas but are treated differently for various reasons

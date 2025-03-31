@@ -208,6 +208,48 @@ Widget* Canvas::tryHover(InputEventMouseMotion& motion, TypeNode* node, const Tr
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::renderProcess() {
+   if (!_visible) return;
+   _renderTarget.beginRenderMode();
+   rlPushMatrix();
+   render2DBegin();
+   ClearBackground(Colors::none);
+   drawRectangleGradientV(getRect().toSizeRect(), Colors::green, Colors::yellow);
+   drawText(getName(), {0,0}, theme->font);
+
+   for (auto& intrinsicChild : _intrinsicChildren){
+      processNode<RenderProcess>(intrinsicChild.get(), false);
+   }
+
+   //normal front render - first pass, don't draw modal
+   processChildren<RenderProcess>(_node);
+
+//   if constexpr (std::is_same_v<RenderType, IntrinsicInternalOverlay>){
+//      for (auto& intrinsicChild : _intrinsicChildren){
+//         processNode<RenderProcess<RenderType>>(intrinsicChild.get(), false);
+//      }
+//   }
+
+   //the modal widget's xform includes canvas xform, so we want to pop that off as if
+   // we are rendering globally
+   if (auto modal = getModal()){
+      auto modalDrawable = modal->_node->as<Widget>();
+      transformStack.pushTransform(&modalXform);
+
+      //invert (subtract off) the modal widget's own position since it's already encoded in modalXform.
+      auto inverseXform = modalDrawable.value()->getTransform().inverse();
+      transformStack.pushTransform(&inverseXform);
+
+      // Logger::debug() << "Drawing " << modal->_node->getName() << " at " << modalXform.extractTranslation() + _node->as<Drawable2D>().value()->getPosition() << endl;
+      processNode<RenderProcess>(modal->_node, true);
+      transformStack.popTransform();
+   }
+   rlPopMatrix();
+   render2DEnd();
+   _renderTarget.endRenderMode();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 CanvasSpace<Pos<float>> Canvas::getMousePos() {
    return InputManager::getMousePos().get();
 }
