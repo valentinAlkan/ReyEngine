@@ -72,21 +72,6 @@ void ScrollArea::_on_child_rect_changed(Widget* child){
 }
 
 
-/////////////////////////////////////////////////////////////////////////////////////////
-//void ScrollArea::_on_child_rect_changed(Widget *child) {
-//   if (auto isWidget = n->as<Widget>()) {
-//      auto& child = isWidget.value();
-//      //expand scroll size to fit children
-//
-//      // reconfigure ourselves when our children's size changes (but ignore the sliders)
-//      auto cb = [&](const RectChangedEvent& e) { _on_rect_changed(); };
-//
-//      if (child != vslider && child != hslider) {
-//         //recalculate
-//         _on_rect_changed();
-//      }
-//   }
-//}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::updateViewport(){
@@ -118,25 +103,6 @@ void ScrollArea::updateViewport(){
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::_init(){
 
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-Widget* ScrollArea::_unhandled_input(const InputEvent& event) {
-   //we want to give priority to sliders, then pass input to everyone else
-   if (auto isMouse = event.isMouse()) {
-      auto& mouse = isMouse.value();
-      if (vslider && vslider->_unhandled_input(event)) return vslider;
-      if (hslider && hslider->_unhandled_input(event)) return hslider;
-      for (auto& child: getChildren()) {
-         if (auto isWidget = child->as<Widget>()) {
-            auto& widget = isWidget.value();
-            if (widget != vslider && widget != hslider) {
-               if (widget->_unhandled_input(event)) return widget;
-            }
-         }
-      }
-   }
-   return nullptr;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

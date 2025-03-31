@@ -198,7 +198,7 @@ int main(){
             //add a label to the scrollArea
             auto [testWidget, n2] = make_node<TestWidget>("ScrollAreaTestWidget", "scrollTest");
             scrollAreaNode->addChild(std::move(n2));
-            testWidget->setPosition({400, 400});
+            testWidget->setPosition({100, 100});
 
             //create a mouse event and test it
             InputEventMouseButton eventMouseButton(&window, scrollArea->getGloablRect().get().pos(), InputInterface::MouseButton::LEFT, true);

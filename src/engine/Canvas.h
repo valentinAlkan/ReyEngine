@@ -29,6 +29,13 @@ namespace ReyEngine {
       template <typename T>
       concept StatusType = is_in_tuple_v<T, StatusTypes>;
    }
+   struct CanvasRenderType{};
+   struct IntrinsicIntegral : private CanvasRenderType{}; //intrinsic children are integral to the type (they render normally
+   struct IntrinsicOverlayPre : private CanvasRenderType{};
+   struct IntrinsicOverlayPost : private CanvasRenderType{};
+   template <typename T>
+   concept IsRenderType = std::is_base_of_v<CanvasRenderType, T>;
+
    class Canvas: public Widget {
    public:
       REYENGINE_OBJECT(Canvas)
@@ -41,7 +48,40 @@ namespace ReyEngine {
 
       ///walk the tree and pin any drawables to us
       void cacheTree(size_t drawOrderSize, size_t inputOrderSize);
-      void renderProcess();
+
+      template <IsRenderType RenderType>
+      void renderProcess(){
+         if (!_visible) return;
+         _renderTarget.beginRenderMode();
+         rlPushMatrix();
+         render2DBegin();
+         ClearBackground(Colors::none);
+         drawRectangleGradientV(getRect().toSizeRect(), Colors::green, Colors::yellow);
+         drawText(getName(), {0,0}, theme->font);
+
+         for (auto& intrinsicChild : _intrinsicChildren){
+            processNode<RenderProcess<RenderType>>(intrinsicChild.get(), false);
+         }
+         //front render - first pass, don't draw modal
+         processChildren<RenderProcess<RenderType>>(_node);
+         //the modal widget's xform includes canvas xform, so we want to pop that off as if
+         // we are rendering globally
+         if (auto modal = getModal()){
+            auto modalDrawable = modal->_node->as<Widget>();
+            transformStack.pushTransform(&modalXform);
+
+            //invert (subtract off) the modal widget's own position since it's already encoded in modalXform.
+            auto inverseXform = modalDrawable.value()->getTransform().inverse();
+            transformStack.pushTransform(&inverseXform);
+
+            //Logger::debug() << "Drawing " << modal->_node->getName() << " at " << modalXform.extractTranslation() + _node->as<Drawable2D>().value()->getPosition() << endl;
+            processNode<RenderProcess<RenderType>>(modal->_node, true);
+            transformStack.popTransform();
+         }
+         rlPopMatrix();
+         render2DEnd();
+         _renderTarget.endRenderMode();
+      }
       void render2D() const override;
 
       Widget* tryHandle(InputEvent& event, TypeNode* node, const Transform2D& inputTransform);
@@ -146,6 +186,7 @@ namespace ReyEngine {
 
       ////////// RENDERING
       //return value = not meaningful
+      template <IsRenderType RenderType>
       struct RenderProcess : public TreeProcess{
          template <typename ...Args>
          RenderProcess(Canvas* thisCanvas, Widget* processedWidget, Args&&... args)
@@ -156,7 +197,7 @@ namespace ReyEngine {
          Widget* subcanvasProcess(){
             rlPopMatrix();
             thisCanvas->_renderTarget.endRenderMode();
-            subCanvas->renderProcess();
+            subCanvas->renderProcess<IntrinsicIntegral>();
             thisCanvas->_renderTarget.beginRenderMode();
             rlPushMatrix();
             rlMultMatrixf(MatrixToFloat(thisCanvas->transformStack.getGlobalTransform().matrix));
@@ -172,6 +213,15 @@ namespace ReyEngine {
          };
       };
 
+      //helper templates so we can detect if the ProcessType is a render process without
+      // having to specify what type of RenderProcess it is (since we wouldn't know and would have to check them all)
+      // keeps us from having to specify NoRender or something like that for non-rendering processes.
+      template <typename T>
+      struct is_render_process : std::false_type {};
+      template <typename RType>
+      struct is_render_process<RenderProcess<RType>> : std::true_type {};
+      template <typename T>
+      inline static constexpr bool is_render_process_v = is_render_process<T>::value;
       ////////// INPUT
       // return value = who handled
       struct InputProcess : public TreeProcess {
@@ -225,19 +275,19 @@ namespace ReyEngine {
                   // modal widgets do not propogate to children except explicitly
                   continue;
                } else {
-                  auto handled = processTree<ProcessType>(child, false, std::forward<Args>(args)...);
+                  auto handled = processNode<ProcessType>(child, false, std::forward<Args>(args)...);
                   if (handled) return handled;
                }
             }
-            auto handled = processTree<ProcessType>(child, false, std::forward<Args>(args)...);
+            auto handled = processNode<ProcessType>(child, false, std::forward<Args>(args)...);
             if (handled) return handled;
          }
          return nullptr;
       };
 
 
-      template <typename ProcessType, typename... Args>
-      Widget* processTree(TypeNode *thisNode, bool isModal, Args&&... args ){
+      template <typename ProcessType, typename OptionalRendertype=IntrinsicIntegral, typename... Args>
+      Widget* processNode(TypeNode *thisNode, bool isModal, Args&&... args ){
          auto isWidget = thisNode->as<Widget>();
          //processes actual widget itself
          if (!isWidget) {
@@ -252,6 +302,9 @@ namespace ReyEngine {
 
          //template magic!
          // Create the appropriate arguments based on ProcessType
+         // Basically what we're doing is taking arbitrary args to the processNode function and
+         //  seeing if we can match them to the ctor for the given ProcessType. Each ctor is conditionally compiled
+         //  so that only one actaually exists.
          auto createProcessTransformer = [this, &widget, &args...](const Transform2D& inputTransform) {
             if constexpr (std::is_same_v<ProcessType, InputProcess>) {
                const auto& event = std::get<0>(std::forward_as_tuple(std::forward<Args>(args)...));
@@ -272,7 +325,8 @@ namespace ReyEngine {
                //does not dispatch to children as this is handled explicitly by canvas
          } else {
             //render process (self-first) with child dispatch
-            if constexpr (std::is_same_v<ProcessType, RenderProcess>) {
+
+            if constexpr (is_render_process_v<ProcessType>) {
                if (!widget->_modal || isModal) {
                   handled = processTransformer.process();
                   if (handled) return handled;

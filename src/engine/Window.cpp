@@ -309,7 +309,7 @@ void Window::exec(){
 //         _renderTarget.clear();
 //         rlLoadIdentity();
 //         rlPushMatrix();
-         canvas->renderProcess();
+         canvas->renderProcess<IntrinsicIntegral>();
 //         rlPopMatrix();
 //         Application::getWindow(0).popRenderTarget(); //debug
 

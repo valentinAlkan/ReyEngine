@@ -23,7 +23,6 @@ namespace ReyEngine {
         void _on_child_rect_changed(Widget*) override;
 //        void _on_child_added_to_tree(TypeNode* child) override;
         void _init() override;
-        Widget* _unhandled_input (const InputEvent&) override;
 //        std::optional<Widget*> askHover(const Pos<R_FLOAT>& globalPos) override;
 
         Percent scrollOffsetX;
