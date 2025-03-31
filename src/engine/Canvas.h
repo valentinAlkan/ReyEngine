@@ -30,11 +30,13 @@ namespace ReyEngine {
       concept StatusType = is_in_tuple_v<T, StatusTypes>;
    }
    struct CanvasRenderType{};
-   struct IntrinsicIntegral : private CanvasRenderType{}; //intrinsic children are integral to the type (they render normally
-   struct IntrinsicOverlayPre : private CanvasRenderType{};
-   struct IntrinsicOverlayPost : private CanvasRenderType{};
-   template <typename T>
-   concept IsRenderType = std::is_base_of_v<CanvasRenderType, T>;
+   struct IntrinsicInternalOverlay : private CanvasRenderType{};
+   struct IntrinsicInternalUnderlay : private CanvasRenderType{};
+   struct IntrinsicExternalOverlay : private CanvasRenderType{};
+   struct IntrinsicExternalUnderlay : private CanvasRenderType{};
+   template <typename T> concept IsRenderType = std::is_base_of_v<CanvasRenderType, T>;
+   template <typename T> concept IsIntrinsicInternal = std::is_base_of_v<IntrinsicInternalOverlay, T> || std::is_base_of_v<IntrinsicInternalUnderlay, T>;
+   template <typename T> concept IsIntrinsicExternal = std::is_base_of_v<IntrinsicExternalOverlay, T> || std::is_base_of_v<IntrinsicExternalUnderlay, T>;
 
    class Canvas: public Widget {
    public:
@@ -48,65 +50,20 @@ namespace ReyEngine {
 
       ///walk the tree and pin any drawables to us
       void cacheTree(size_t drawOrderSize, size_t inputOrderSize);
-
-      template <IsRenderType RenderType>
-      void renderProcess(){
-         if (!_visible) return;
-         _renderTarget.beginRenderMode();
-         rlPushMatrix();
-         render2DBegin();
-         ClearBackground(Colors::none);
-         drawRectangleGradientV(getRect().toSizeRect(), Colors::green, Colors::yellow);
-         drawText(getName(), {0,0}, theme->font);
-
-         for (auto& intrinsicChild : _intrinsicChildren){
-            processNode<RenderProcess<RenderType>>(intrinsicChild.get(), false);
-         }
-         //front render - first pass, don't draw modal
-         processChildren<RenderProcess<RenderType>>(_node);
-         //the modal widget's xform includes canvas xform, so we want to pop that off as if
-         // we are rendering globally
-         if (auto modal = getModal()){
-            auto modalDrawable = modal->_node->as<Widget>();
-            transformStack.pushTransform(&modalXform);
-
-            //invert (subtract off) the modal widget's own position since it's already encoded in modalXform.
-            auto inverseXform = modalDrawable.value()->getTransform().inverse();
-            transformStack.pushTransform(&inverseXform);
-
-            //Logger::debug() << "Drawing " << modal->_node->getName() << " at " << modalXform.extractTranslation() + _node->as<Drawable2D>().value()->getPosition() << endl;
-            processNode<RenderProcess<RenderType>>(modal->_node, true);
-            transformStack.popTransform();
-         }
-         rlPopMatrix();
-         render2DEnd();
-         _renderTarget.endRenderMode();
-      }
       void render2D() const override;
-
       Widget* tryHandle(InputEvent& event, TypeNode* node, const Transform2D& inputTransform);
       Widget* tryHover(InputEventMouseMotion& event, TypeNode* node, const Transform2D& inputTransform) const;
       CanvasSpace<Pos<float>> getMousePos();
       void updateGlobalTransforms();
+
    protected:
-      //naive implementation for now. I assume there's a smarter way to do this
-      // than backtracking all the way up a drawable's heirarchy and pushing the transformation matrices
-//      template <typename T>
-//      struct OrderableData {
-//         OrderableData(T* data, TypeNode* node, size_t index, size_t parentIndex)
-//         : data(data)
-//         , node(node)
-//         {}
-//         T* data;
-//         TypeNode* node;
-//         size_t index;
-//         size_t parentIndex;
-//      };
       const RenderTarget& getRenderTarget() const {return _renderTarget;}
       Widget* __process_unhandled_input(const InputEvent& event) override;
       void __process_hover(const InputEventMouseMotion& event);
-   protected:
       void _on_rect_changed() override;
+      /////////////////////////////////////////////////////////////////////////////////////////
+      /////////////////////////////////////////////////////////////////////////////////////////
+      /////////////////////////////////////////////////////////////////////////////////////////
       template <WidgetStatus::StatusType Status>
       void setStatus(Widget* newWidget){
          constexpr std::size_t statusIndex = WidgetStatus::tuple_type_index_v<Status, WidgetStatus::StatusTypes>;
@@ -154,7 +111,7 @@ namespace ReyEngine {
       RenderTarget _renderTarget;
       Transform2D modalXform;
 
-      //////////////////////////
+      /////////////////////////////////////////////////////////////////////////////////////////
       struct TransformStack{
          void pushTransform(Transform2D* transform2D);
          void popTransform();
@@ -164,7 +121,7 @@ namespace ReyEngine {
          Transform2D globalTransform;
       } transformStack;
 
-
+      /////////////////////////////////////////////////////////////////////////////////////////
       //Scoping helpers
       struct TreeProcess{
          TreeProcess(Canvas* thisCanvas, Widget* processedWidget)
@@ -183,21 +140,29 @@ namespace ReyEngine {
          Canvas* subCanvas; //only valid if the processed widget is a canvas
       };
 
-
+      /////////////////////////////////////////////////////////////////////////////////////////
+      /////////////////////////////////////////////////////////////////////////////////////////
+      /////////////////////////////////////////////////////////////////////////////////////////
       ////////// RENDERING
       //return value = not meaningful
       template <IsRenderType RenderType>
       struct RenderProcess : public TreeProcess{
-         template <typename ...Args>
-         RenderProcess(Canvas* thisCanvas, Widget* processedWidget, Args&&... args)
+         RenderProcess(Canvas* thisCanvas, Widget* processedWidget)
          : TreeProcess(thisCanvas, processedWidget)
          {
          }
 
          Widget* subcanvasProcess(){
+            //draw intrinsic children on the parent canvas as an underlay (behind subcanvas)
+            if constexpr (std::is_same_v<RenderType, IntrinsicExternalUnderlay>){
+               subCanvas->renderProcess<RenderType>();
+            }
             rlPopMatrix();
             thisCanvas->_renderTarget.endRenderMode();
-            subCanvas->renderProcess<IntrinsicIntegral>();
+            //draw intrinsic children on the subcanvas
+            if constexpr (IsIntrinsicInternal<RenderType>) {
+               subCanvas->renderProcess<RenderType>();
+            }
             thisCanvas->_renderTarget.beginRenderMode();
             rlPushMatrix();
             rlMultMatrixf(MatrixToFloat(thisCanvas->transformStack.getGlobalTransform().matrix));
@@ -222,6 +187,7 @@ namespace ReyEngine {
       struct is_render_process<RenderProcess<RType>> : std::true_type {};
       template <typename T>
       inline static constexpr bool is_render_process_v = is_render_process<T>::value;
+      /////////////////////////////////////////////////////////////////////////////////////////
       ////////// INPUT
       // return value = who handled
       struct InputProcess : public TreeProcess {
@@ -232,7 +198,7 @@ namespace ReyEngine {
          {
             if (auto mouseData = event.isMouse()) {
                mouseTransformer = std::make_unique<MouseEvent::ScopeTransformer>(*mouseData.value(), inputTransform, processedWidget->getSize());
-               std::cout << "Widget: <" << processedWidget->getName() << "> :  G " << mouseData.value()->getCanvasPos().get() << " ---> L " << mouseData.value()->getLocalPos() << " X: " << inputTransform.extractTranslation() << " : inside = " << mouseData.value()->isInside() << std::endl;
+//               std::cout << "Widget: <" << processedWidget->getName() << "> :  G " << mouseData.value()->getCanvasPos().get() << " ---> L " << mouseData.value()->getLocalPos() << " X: " << inputTransform.extractTranslation() << " : inside = " << mouseData.value()->isInside() << std::endl;
             }
          }
 
@@ -249,6 +215,7 @@ namespace ReyEngine {
          const InputEvent& event;
       };
 
+      /////////////////////////////////////////////////////////////////////////////////////////
       ////////// HOVERING
       // return value = who hovered
       struct HoverProcess : public TreeProcess {
@@ -261,7 +228,9 @@ namespace ReyEngine {
          }
       };
 
-
+      /////////////////////////////////////////////////////////////////////////////////////////
+      /////////////////////////////////////////////////////////////////////////////////////////
+      /////////////////////////////////////////////////////////////////////////////////////////
       template <typename ProcessType, typename... Args>
       Widget* processChildren(TypeNode *thisNode, Args&&... args) {
          //dispatch to children
@@ -285,9 +254,11 @@ namespace ReyEngine {
          return nullptr;
       };
 
-
-      template <typename ProcessType, typename OptionalRendertype=IntrinsicIntegral, typename... Args>
-      Widget* processNode(TypeNode *thisNode, bool isModal, Args&&... args ){
+      /////////////////////////////////////////////////////////////////////////////////////////
+      /////////////////////////////////////////////////////////////////////////////////////////
+      /////////////////////////////////////////////////////////////////////////////////////////
+      template <typename ProcessType, typename OptionalRendertype, typename... Args>
+      Widget* processNode(TypeNode *thisNode, bool isModal, Args&&... args )  {
          auto isWidget = thisNode->as<Widget>();
          //processes actual widget itself
          if (!isWidget) {
@@ -349,6 +320,54 @@ namespace ReyEngine {
          return handled;
       }
 
+
+      /////////////////////////////////////////////////////////////////////////////////////////
+      template <IsRenderType RenderType>
+      void renderProcess() {
+         if (!_visible) return;
+         _renderTarget.beginRenderMode();
+         rlPushMatrix();
+         render2DBegin();
+         ClearBackground(Colors::none);
+         drawRectangleGradientV(getRect().toSizeRect(), Colors::green, Colors::yellow);
+         drawText(getName(), {0,0}, theme->font);
+
+         if constexpr (std::is_same_v<RenderType, IntrinsicIntegralUnderlay>){
+            for (auto& intrinsicChild : _intrinsicChildren){
+               processNode<RenderProcess<RenderType>>(intrinsicChild.get(), false);
+            }
+         }
+
+         //normal front render - first pass, don't draw modal
+         processChildren<RenderProcess<RenderType>>(_node);
+
+         if constexpr (std::is_same_v<RenderType, IntrinsicIntegralOverlay>){
+            for (auto& intrinsicChild : _intrinsicChildren){
+               processNode<RenderProcess<RenderType>>(intrinsicChild.get(), false);
+            }
+         }
+
+         //the modal widget's xform includes canvas xform, so we want to pop that off as if
+         // we are rendering globally
+         if (auto modal = getModal()){
+            auto modalDrawable = modal->_node->as<Widget>();
+            transformStack.pushTransform(&modalXform);
+
+            //invert (subtract off) the modal widget's own position since it's already encoded in modalXform.
+            auto inverseXform = modalDrawable.value()->getTransform().inverse();
+            transformStack.pushTransform(&inverseXform);
+
+            // Logger::debug() << "Drawing " << modal->_node->getName() << " at " << modalXform.extractTranslation() + _node->as<Drawable2D>().value()->getPosition() << endl;
+            processNode<RenderProcess<RenderType>>(modal->_node, true);
+            transformStack.popTransform();
+         }
+         rlPopMatrix();
+         render2DEnd();
+         _renderTarget.endRenderMode();
+      }
+
+
+      /////////////////////////////////////////////////////////////////////////////////////////
       std::vector<std::unique_ptr<TypeNode>> _intrinsicChildren; //children that belong to the canvas but are treated differently for various reasons
       Rect<R_FLOAT> _viewport; //the portion of the render target we want to draw
 

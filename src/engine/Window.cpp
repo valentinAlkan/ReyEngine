@@ -309,7 +309,7 @@ void Window::exec(){
 //         _renderTarget.clear();
 //         rlLoadIdentity();
 //         rlPushMatrix();
-         canvas->renderProcess<IntrinsicIntegral>();
+         canvas->renderProcess();
 //         rlPopMatrix();
 //         Application::getWindow(0).popRenderTarget(); //debug
 
@@ -329,9 +329,8 @@ void Window::exec(){
 
          BeginDrawing();
          auto& _renderTarget = canvas->getRenderTarget();
-//         Rect<R_FLOAT> rect = getSize().toRect();
-//         drawRenderTargetRect(_renderTarget, rect, rect, Colors::none);
-         DrawTextureRec(_renderTarget.getTexture(), {0, 0, (float) _renderTarget.getSize().x, -(float) getSize().y}, {0, 0}, WHITE);
+         Rect<R_FLOAT> rect = getSize().toRect();
+         drawRenderTargetRect(_renderTarget, rect, rect, Colors::none);
          EndDrawing();
          _frameCounter++;
 //      } // release scoped lock here

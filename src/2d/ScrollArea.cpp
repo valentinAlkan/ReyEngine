@@ -52,15 +52,17 @@ void ScrollArea::_on_rect_changed(){
     //get the box that contains all our children, except for the sliders.
     // Make sure it's at least as big as the scrollArea
    boundingBox = getChildBoundingBox();
-    auto ourSize = getSize();
-    if (boundingBox.width < ourSize.x){
-       boundingBox.width = ourSize.x;
-    }
-    if (boundingBox.height < ourSize.y){
-       boundingBox.height = ourSize.y;
-    }
-    _renderTarget.setSize(boundingBox.size());
-    updateViewport();
+   auto ourSize = getSize();
+   if (boundingBox.width < ourSize.x){
+      boundingBox.width = ourSize.x;
+   }
+   if (boundingBox.height < ourSize.y){
+      boundingBox.height = ourSize.y;
+   }
+   if (boundingBox.size() != Size<R_FLOAT>(_renderTarget.getSize())) {
+      _renderTarget.setSize(boundingBox.size());
+      updateViewport();
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -77,27 +79,25 @@ void ScrollArea::_on_child_rect_changed(Widget* child){
 void ScrollArea::updateViewport(){
    auto ourSize = getRect().size();
    _viewport = ourSize.toRect();
-   auto vsliderNewRect = ReyEngine::Rect<float>((ourSize.x - sliderSize), 0, sliderSize, ourSize.y) + getPos();
-   auto hsliderNewRect = ReyEngine::Rect<float>(0,(ourSize.y - sliderSize), (ourSize.x - sliderSize), sliderSize) + getPos();
-   bool xTooBig = boundingBox.width > ourSize.x;
-   auto yTooBig = boundingBox.height > ourSize.y;
+   auto vsliderNewRect = Rect<float>((ourSize.x - sliderSize), 0, sliderSize, ourSize.y) + getPos();
+   auto hsliderNewRect = Rect<float>(0,(ourSize.y - sliderSize), (ourSize.x - sliderSize), sliderSize) + getPos();
+   bool needShowHSlider = boundingBox.width > ourSize.x;
+   auto needShowVSlider = boundingBox.height > ourSize.y;
 
    //subtract the slider sizes before updating viewport since each dimension depends on the other
-   if (xTooBig) _viewport.height = getHeight() - sliderSize; //subtract slider
-   if (yTooBig) _viewport.width -= sliderSize; //subtract slider
-   _viewport.x = (boundingBox.width - _viewport.width) * (float)Perunum(scrollOffsetX).get();
-   _viewport.y = (boundingBox.height - _viewport.height) * (float)Perunum(scrollOffsetY).get();
+   if (needShowHSlider) _viewport.height = getHeight() - sliderSize;
+   if (needShowVSlider) _viewport.width = getWidth() - sliderSize;
+   _viewport.x = (boundingBox.width) * (float)Perunum(scrollOffsetX).get();
+   _viewport.y = (boundingBox.height) * (float)Perunum(scrollOffsetY).get();
    if (hslider) {
       hslider->setRect(hsliderNewRect);
-      hslider->setVisible(!_hideHSlider && xTooBig);
+      hslider->setVisible(!_hideHSlider && needShowHSlider);
    }
 
    if (vslider) {
-      vslider->setRect(vsliderNewRect + (vslider->getVisible() ? Size() : Size<float>(sliderSize, 0)));
-      vslider->setVisible(!_hideVSlider && yTooBig);
+      vslider->setRect(vsliderNewRect);
+      vslider->setVisible(!_hideVSlider && needShowVSlider);
    }
-   _window.setSize(_viewport.size());
-
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

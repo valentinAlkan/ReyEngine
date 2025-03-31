@@ -31,7 +31,6 @@ namespace ReyEngine {
         Slider* hslider;
         Rect<R_FLOAT> boundingBox; //contains all children, is at least as big as scrollArea. RenderTarget takes its size
         //_viewport and window should always be the same size, but have different positions
-        Rect<R_FLOAT> _window; //the area where we draw the rect (size of the scrollArea widget - sliders)
         bool _hideVSlider = false;
         bool _hideHSlider = false;
     private:

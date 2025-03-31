@@ -85,6 +85,8 @@ namespace ReyEngine{
          drawRectangle(r, _cursor_in_slider || _is_dragging ? Colors::green : Colors::red);
          //draw grabber
          drawRectangle(_grabber, _cursor_down && _cursor_in_grabber || _is_dragging ? Colors::yellow : Colors::blue);
+         drawRectangleLines(_grabber, 1.0, Colors::black);
+         drawRectangleLines(getSizeRect(), 1.0, Colors::black);
          if constexpr (false) {
             //debug
             auto x = Vec2<float>(0, getWidth());
