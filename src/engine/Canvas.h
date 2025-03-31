@@ -29,7 +29,6 @@ namespace ReyEngine {
       template <typename T>
       concept StatusType = is_in_tuple_v<T, StatusTypes>;
    }
-   enum class RenderProcessType { IntrinsicInternalOverlay, IntrinsicInternalUnderlay, IntrinsicExternalOverlay, IntrinsicExternalUnderlay};
 
    class Canvas: public Widget {
    public:
@@ -39,22 +38,28 @@ namespace ReyEngine {
          _isCanvas = true;
       }
       ~Canvas() override { std::cout << "Goodbye from " << TYPE_NAME << "!!" << std::endl; }
+      enum class IntrinsicRenderType {
+         CanvasOverlay, // intrinsic children are drawn like any other - on top of the canvas, using the canvas' own transform (however are drawn before real children)
+         CanvasUnderlay, // intrinsic children are drawn behind the canvas, using the canvas' own transform
+         ViewportOverlay, // intrinsic children are drawn on top of the canvas, using the canvas' parent transform (pinned to viewport)
+         ViewportUnderlay// intrinsic children are drawn behind the canvas, using the canvas' parent transform (pinned to viewport)
+      };
       void _on_descendant_added_to_tree(TypeNode* child) override;
-
-      ///walk the tree and pin any drawables to us
-      void cacheTree(size_t drawOrderSize, size_t inputOrderSize);
       void render2D() const override;
       Widget* tryHandle(InputEvent& event, TypeNode* node, const Transform2D& inputTransform);
       Widget* tryHover(InputEventMouseMotion& event, TypeNode* node, const Transform2D& inputTransform) const;
       CanvasSpace<Pos<float>> getMousePos();
-      void updateGlobalTransforms();
-
    protected:
       virtual void renderProcess();
       const RenderTarget& getRenderTarget() const {return _renderTarget;}
       Widget* __process_unhandled_input(const InputEvent& event) override;
       void __process_hover(const InputEventMouseMotion& event);
       void _on_rect_changed() override;
+      virtual IntrinsicRenderType getIntrinsicRenderType(){return _intrinsicRenderType;}
+
+      std::vector<std::unique_ptr<TypeNode>> _intrinsicChildren; //children that belong to the canvas but are treated differently for various reasons
+      Rect<R_FLOAT> _viewport; //the portion of the render target we want to draw
+      IntrinsicRenderType _intrinsicRenderType = IntrinsicRenderType::CanvasOverlay;
       /////////////////////////////////////////////////////////////////////////////////////////
       /////////////////////////////////////////////////////////////////////////////////////////
       /////////////////////////////////////////////////////////////////////////////////////////
@@ -146,6 +151,12 @@ namespace ReyEngine {
          }
 
          Widget* subcanvasProcess(){
+            //render intrinsic viewport underlay
+            if (subCanvas->getIntrinsicRenderType() == IntrinsicRenderType::ViewportUnderlay){
+               for (auto& intrinsicChild : subCanvas->_intrinsicChildren){
+                  subCanvas->processNode<RenderProcess>(intrinsicChild.get(), false);
+               }
+            }
             rlPopMatrix();
             thisCanvas->_renderTarget.endRenderMode();
             subCanvas->renderProcess();
@@ -153,6 +164,12 @@ namespace ReyEngine {
             rlPushMatrix();
             rlMultMatrixf(MatrixToFloat(thisCanvas->transformStack.getGlobalTransform().matrix));
             drawRenderTargetRect(subCanvas->getRenderTarget(), subCanvas->_viewport, subCanvas->getRect(), Colors::none);
+            //render intrinsic viewport overlay
+            if (subCanvas->getIntrinsicRenderType() == IntrinsicRenderType::ViewportOverlay){
+               for (auto& intrinsicChild : subCanvas->_intrinsicChildren){
+                  subCanvas->processNode<RenderProcess>(intrinsicChild.get(), false);
+               }
+            }
             return nullptr;
          }
 
@@ -273,8 +290,6 @@ namespace ReyEngine {
                //does not dispatch to children as this is handled explicitly by canvas
          } else {
             //render process (self-first) with child dispatch
-
-            //renderer processes parents first
             if constexpr (std::is_same_v<ProcessType, RenderProcess>) {
                if (!widget->_modal || isModal) {
                   handled = processTransformer.process();
@@ -297,10 +312,6 @@ namespace ReyEngine {
          // pop local transform (processTransformer falls out of scope)
          return handled;
       }
-
-      /////////////////////////////////////////////////////////////////////////////////////////
-      std::vector<std::unique_ptr<TypeNode>> _intrinsicChildren; //children that belong to the canvas but are treated differently for various reasons
-      Rect<R_FLOAT> _viewport; //the portion of the render target we want to draw
 
    public:
       void setHover(Widget* w){setStatus<WidgetStatus::Hover>(w);}

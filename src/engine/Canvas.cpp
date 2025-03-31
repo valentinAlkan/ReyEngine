@@ -42,101 +42,6 @@ void Canvas::_on_descendant_added_to_tree(TypeNode *n) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Canvas::cacheTree(size_t drawOrderSize, size_t inputOrderSize) {
-   //walk the tree and cache all our drawables in the correct rendering order
-//   drawOrder.clear();
-//   drawOrder.reserve(drawOrderSize); //keep the vector from reallocating
-//   inputOrder.clear();
-//   inputOrder.reserve(inputOrderSize); //keep the vector from reallocating
-//
-//   cout << _node->name << endl;
-//   size_t doParent = numeric_limits<size_t>::max();
-//   size_t ihParent = numeric_limits<size_t>::max();
-//   function<vector<TypeNode*>(TypeNode*)> searchTree = [&](TypeNode* node){
-//
-//      //update global transform to account for this nodes transform, if applicable
-//      for (auto& child : node->getChildren()){
-//         cout << indent << child->name << endl;
-//         if (auto isDrawable = child->as<Drawable2D>()){
-//            auto& drawable = isDrawable.value();
-//            drawOrder.emplace_back(drawable, node, drawOrder.size(), );
-//         }
-//         if (auto isHandler = child->tag<InputHandler>()){
-//            auto& handler = isHandler.value();
-//            inputOrder.emplace_back(handler, ihParent, child);
-//         }
-//         //do not cache the children of canvases
-//         if (child->as<Canvas>()) continue;
-//         doParent =
-//      }
-//      indent.resize(indent.length() - 3);
-//      return node->getChildren();
-//   };
-//
-//   searchTree(_node);
-//   cout << "New Draw order is: " << endl;
-//   for (auto& orderable : drawOrder){
-//      cout << orderable.data->getNode()->getScenePath() << ",";
-//   }
-//
-//   cout << "New input order is: " << endl;
-//   for (auto& orderable : inputOrder){
-//
-//   }
-//   cout << endl;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void Canvas::updateGlobalTransforms() {
-//   for (auto& drawable : drawOrder){
-////      drawable.second
-//   }
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-//void Canvas::tryRender(TypeNode *thisNode, optional<Drawable2D*> isSelfDrawable, bool drawModal) {
-//   //ignore invisible
-//   if (isSelfDrawable && !isSelfDrawable.value()->_visible) return;
-//
-//   //draws actual drawable itself
-//   if (isSelfDrawable){
-//      Transformer transformer(*this, isSelfDrawable);
-//      auto& drawable = isSelfDrawable.value();
-//      if (drawable->_isCanvas){
-//         auto canvas = thisNode->as<Canvas>().value();
-//         if (canvas != this) {
-//            //subcanvas
-//            rlPopMatrix();
-//            getRenderTarget()->endRenderMode();
-//            canvas->renderProcess();
-//            getRenderTarget()->beginRenderMode();
-//            rlPushMatrix();
-//            rlMultMatrixf(MatrixToFloat(transformStack.getGloablTransform().matrix));
-//            auto _renderTarget = canvas->getRenderTarget();
-//            DrawTextureRec(_renderTarget->getRenderTexture(), {0, 0, (float) _renderTarget->getSize().x, -(float) getSize().y}, {0, 0}, WHITE);
-//            //does not dispatch draw to children as this is done by renderProcess
-//         }
-//      } else {
-//         //normal render with child dispatch
-//         if (!drawable->_modal || drawModal) {
-//            drawable->render2DBegin();
-//            drawable->render2D();
-//            drawable->render2DEnd();
-//         }
-//         tryRenderChildren(thisNode, drawModal);
-//      }
-//      // go no further
-//      return;
-//   }
-//
-//   //non-drawable node with children - drawables should never reach this
-//   tryRenderChildren(thisNode, drawModal);
-//}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////////////////
 Widget* Canvas::tryHandle(InputEvent& event, TypeNode* node, const Transform2D& inputTransform) {
 //   cout << "\"" << node->name << "\"" << " processing input event at parent's pos " << event.isMouse().value()->getLocalPos() << endl;
    //----------------------------------------------------------------------------------------------------
@@ -217,18 +122,20 @@ void Canvas::renderProcess() {
    drawRectangleGradientV(getRect().toSizeRect(), Colors::green, Colors::yellow);
    drawText(getName(), {0,0}, theme->font);
 
-   for (auto& intrinsicChild : _intrinsicChildren){
-      processNode<RenderProcess>(intrinsicChild.get(), false);
+   if (_intrinsicRenderType == IntrinsicRenderType::CanvasUnderlay){
+      for (auto& intrinsicChild : _intrinsicChildren){
+         processNode<RenderProcess>(intrinsicChild.get(), false);
+      }
    }
 
    //normal front render - first pass, don't draw modal
    processChildren<RenderProcess>(_node);
 
-//   if constexpr (std::is_same_v<RenderType, IntrinsicInternalOverlay>){
-//      for (auto& intrinsicChild : _intrinsicChildren){
-//         processNode<RenderProcess<RenderType>>(intrinsicChild.get(), false);
-//      }
-//   }
+   if (_intrinsicRenderType == IntrinsicRenderType::CanvasOverlay){
+      for (auto& intrinsicChild : _intrinsicChildren){
+         processNode<RenderProcess>(intrinsicChild.get(), false);
+      }
+   }
 
    //the modal widget's xform includes canvas xform, so we want to pop that off as if
    // we are rendering globally

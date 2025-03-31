@@ -5,6 +5,7 @@ using namespace std;
 using namespace ReyEngine;
 ScrollArea::ScrollArea() {
    _inputFilter = InputFilter::INPUT_FILTER_PROCESS_AND_STOP;
+   _intrinsicRenderType = Canvas::IntrinsicRenderType::ViewportOverlay;
    //create scrollbars
    auto [_vslider, vsnode] = make_node<Slider>(std::string(VSLIDER_NAME), Slider::SliderType::VERTICAL);
    auto [_hslider, hsnode] = make_node<Slider>(std::string(HSLIDER_NAME), Slider::SliderType::HORIZONTAL);
