@@ -39,15 +39,6 @@ void ScrollArea::hideHSlider(bool hidden) {
     if (hslider) hslider->setVisible(!hidden);
 }
 
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void ScrollArea::render2DBegin() {
-   drawRectangle(getRect(), Colors::blue);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void ScrollArea::render2DEnd() {
-}
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::_on_rect_changed(){
     //get the box that contains all our children, except for the sliders.
@@ -78,16 +69,16 @@ void ScrollArea::_on_child_rect_changed(Widget* child){
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::updateViewport(){
-   auto ourSize = getRect().size();
-   _viewport = ourSize.toRect();
-   auto vsliderNewRect = Rect<float>((ourSize.x - sliderSize), 0, sliderSize, ourSize.y) + getPos();
-   auto hsliderNewRect = Rect<float>(0,(ourSize.y - sliderSize), (ourSize.x - sliderSize), sliderSize) + getPos();
-   bool needShowHSlider = boundingBox.width > ourSize.x;
-   auto needShowVSlider = boundingBox.height > ourSize.y;
+   auto areaSize = getRect().size();
+   _viewport = areaSize.toRect();
+   auto vsliderNewRect = Rect<float>((areaSize.x - sliderSize), 0, sliderSize, areaSize.y) + getPos();
+   auto hsliderNewRect = Rect<float>(0, (areaSize.y - sliderSize), (areaSize.x - sliderSize), sliderSize) + getPos();
+   bool needShowHSlider = boundingBox.width > areaSize.x;
+   auto needShowVSlider = boundingBox.height > areaSize.y;
 
    //subtract the slider sizes before updating viewport since each dimension depends on the other
-   if (needShowHSlider) _viewport.height = getHeight() - sliderSize;
-   if (needShowVSlider) _viewport.width = getWidth() - sliderSize;
+   if (needShowHSlider) _viewport.height -= sliderSize;
+   if (needShowVSlider) _viewport.width -= sliderSize;
    _viewport.x = (boundingBox.width) * (float)Perunum(scrollOffsetX).get();
    _viewport.y = (boundingBox.height) * (float)Perunum(scrollOffsetY).get();
    if (hslider) {

@@ -52,14 +52,16 @@ namespace ReyEngine{
                      newValue = _range.lerp(heightRange.pct(localPos.y));
                      sliderValue = _range.clamp(newValue);
                   }
-                     break;
-                  case SliderType::HORIZONTAL:
+                  break;
+                  case SliderType::HORIZONTAL: {
                      auto widthRange = Vec2<float>(0, getWidth());
                      newValue = _range.lerp(widthRange.pct(localPos.x));
                      sliderValue = _range.clamp(newValue);
-                  _compute_appearance();
-                  _publish_slider_val();
+                  }
+                  break;
                }
+               _compute_appearance();
+               _publish_slider_val();
                return this;
             }
          }

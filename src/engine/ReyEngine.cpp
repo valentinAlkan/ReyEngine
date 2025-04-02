@@ -26,10 +26,6 @@ void ReyTexture::loadTexture(const FileSystem::File &file) {
 //   Application::registerForApplicationReady(doReady);
 }
 /////////////////////////////////////////////////////////////////////////////////////////
-template<> Rect<float> Size<float>::toRect(){return {0,0,x,y};}
-template<> Rect<double> Size<double>::toRect(){return {0,0,x,y};}
-template<> Rect<int> Size<int>::toRect(){return {0,0,x,y};}
-/////////////////////////////////////////////////////////////////////////////////////////
 template<> Rect<float> Pos<float>::toRect() const {return {x,y,0,0};}
 template<> Rect<double> Pos<double>::toRect() const {return {x,y,0,0};}
 template<> Rect<int> Pos<int>::toRect() const {return {x,y,0,0};}
@@ -156,9 +152,19 @@ void ReyEngine::drawTexture(const ReyTexture& texture, const Rect<R_FLOAT> &sour
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawRenderTargetRect(const RenderTarget& renderTarget, const Rect<R_FLOAT>& src, const Rect<R_FLOAT>& dst, const ColorRGBA& tint){
+void ReyEngine::drawRenderTargetRect(const RenderTarget& target, const Rect<R_FLOAT>& src, const Rect<R_FLOAT>& dst, const ColorRGBA& tint){
    // NOTE: Render texture must be y-flipped due to default OpenGL coordinates (left-bottom)
-   DrawTexturePro(renderTarget.getTexture(), {src.x, src.y, src.width, -src.height}, dst, {0,0}, 0, tint);
+   // NOTE: Using DrawTexturePro() we can easily rotate and scale the part of the texture we draw
+   // sourceRec defines the part of the texture we use for drawing
+   // destRec defines the rectangle where our texture part will fit (scaling it to fit)
+   // origin defines the point of the texture used as reference for rotation and scaling
+   // rotation defines the texture rotation (using origin as rotation point)
+   // Flip the Y coordinates of the source rectangle
+   // NOTE: don't understand the math but it seems to work.  ¯\_(ツ)_/¯
+   auto newSrc = src;
+   newSrc.y = (float)target.getTexture().height - newSrc.y - newSrc.height;
+   newSrc.height = -newSrc.height;
+   DrawTexturePro(target.getTexture(), newSrc, dst, {0, 0}, 0, tint);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
