@@ -48,11 +48,15 @@ namespace ReyEngine{
    public:
       //friend access
       struct ScopeTransformer {
-         ScopeTransformer(MouseEvent& mouseEvent, const Transform2D& xform, const Size<float>& localSize)
+         ScopeTransformer(MouseEvent& mouseEvent, const Transform2D& xform, const Size<float>& localSize, std::optional<Transform2D> cameraTransform = {})
          : mouseEvent(mouseEvent)
+         , cameraTransform(cameraTransform)
          , _isinside_cached(mouseEvent._isInside)
          , _localPos_cached(mouseEvent._localPos)
          {
+            if (cameraTransform) {
+               mouseEvent.transformLocalPos(cameraTransform.value());
+            }
             mouseEvent.transformLocalPos(xform);
             mouseEvent._isInside = localSize.toRect().isInside(getLocalPos());
          }
@@ -64,8 +68,9 @@ namespace ReyEngine{
          [[nodiscard]] CanvasSpace<Pos<float>> getCanvasPos() const {return mouseEvent._canvasPos;}
       private:
          MouseEvent& mouseEvent;
-         bool _isinside_cached;
-         Pos<float> _localPos_cached;
+         std::optional<Transform2D> cameraTransform;
+         bool _isinside_cached; //for recall on dtor
+         Pos<float> _localPos_cached; //for recall on dtor
       };
    private:
       CanvasSpace<Pos<float>> _canvasPos;

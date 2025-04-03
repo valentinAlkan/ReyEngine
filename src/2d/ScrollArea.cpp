@@ -51,7 +51,8 @@ void ScrollArea::hideHSlider(bool hidden) {
 void ScrollArea::_on_rect_changed(){
     //get the box that contains all our children, except for the sliders.
     // Make sure it's at least as big as the scrollArea
-   boundingBox = getChildBoundingBox();
+   _viewport = getSizeRect();
+    boundingBox = getChildBoundingBox();
    auto ourSize = getSize();
    if (boundingBox.width < ourSize.x){
       boundingBox.width = ourSize.x;
@@ -76,17 +77,16 @@ void ScrollArea::_on_child_rect_changed(Widget* child){
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::updateViewport(){
    auto areaSize = getRect().size();
-//   _viewport = areaSize.toRect();
    auto vsliderNewRect = Rect<float>((areaSize.x - sliderSize), 0, sliderSize, areaSize.y) + getPos();
    auto hsliderNewRect = Rect<float>(0, (areaSize.y - sliderSize), (areaSize.x - sliderSize), sliderSize) + getPos();
-   bool needShowHSlider = boundingBox.width > areaSize.x;
-   auto needShowVSlider = boundingBox.height > areaSize.y;
+   bool needShowHSlider = boundingBox.width > _viewport.width;
+   auto needShowVSlider = boundingBox.height > _viewport.height;
 
    //subtract the slider sizes before updating viewport since each dimension depends on the other
-//   if (needShowHSlider) _viewport.height -= sliderSize;
-//   if (needShowVSlider) _viewport.width -= sliderSize;
-//   _viewport.x = (boundingBox.width - areaSize.x) * (float)Perunum(scrollOffsetX).get();
-//   _viewport.y = (boundingBox.height - areaSize.y) * (float)Perunum(scrollOffsetY).get();
+   if (needShowHSlider) _viewport.height -= sliderSize;
+   if (needShowVSlider) _viewport.width -= sliderSize;
+   _viewport.x = (boundingBox.width - areaSize.x) * (float)Perunum(scrollOffsetX).get();
+   _viewport.y = (boundingBox.height - areaSize.y) * (float)Perunum(scrollOffsetY).get();
    if (hslider) {
       hslider->setRect(hsliderNewRect);
       hslider->setVisible(!_hideHSlider && needShowHSlider);
@@ -99,8 +99,12 @@ void ScrollArea::updateViewport(){
 //   _projectionPort.setSize(_viewport.size());
 //   inputOffset.setPosition(_viewport.pos()/2);
 //   inputOffset = inputOffset.inverse();
-   std::cout << "input offset = " << inputOffset << endl;
-   _intrinsicChildren.at(2)->as<Label>().value()->setText("Input Offset = " + Vec2<int>(inputOffset.extractTranslation()).toString());
+//   std::cout << "input offset = " << inputOffset << endl;
+   std::string msg = "Camera Offset = " + Vec2<int>(camera.offset).toString();
+   msg += "\n" + matrixToString(GetCameraMatrix2D(camera));
+
+   _intrinsicChildren.at(2)->as<Label>().value()->setText(msg);
+   camera.offset = {-_viewport.pos().x, -_viewport.pos().y};
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -59,6 +59,11 @@ namespace ReyEngine {
       std::cout << m << std::endl;
       fflush(stdout);
    }
+   inline std::string matrixToString(const Matrix& m) {
+      std::stringstream ss;
+      ss << m;
+      return ss.str();
+   }
 
    // Canvas Coordinates - relative to current canvas
    template <typename T>

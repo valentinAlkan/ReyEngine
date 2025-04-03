@@ -36,6 +36,8 @@ namespace ReyEngine {
       Canvas(){
          isGlobalTransformBoundary = true;
          _isCanvas = true;
+         camera = {0};
+         camera.zoom = 1.0f;
       }
       ~Canvas() override { std::cout << "Goodbye from " << TYPE_NAME << "!!" << std::endl; }
       enum class IntrinsicRenderType {
@@ -56,11 +58,8 @@ namespace ReyEngine {
       void __process_hover(const InputEventMouseMotion& event);
       void _on_rect_changed() override;
       virtual IntrinsicRenderType getIntrinsicRenderType(){return _intrinsicRenderType;}
-
-      Transform2D inputOffset; //useful for transforming input positions
+      Camera2D camera;
       std::vector<std::unique_ptr<TypeNode>> _intrinsicChildren; //children that belong to the canvas but are treated differently for various reasons
-//      Rect<R_FLOAT> _viewport; //the portion of the render target we want to draw
-//      Rect<R_FLOAT> _projectionPort; //where we want to draw the render target. USUALLY the same as the subcanvas area, but not necessarily
       IntrinsicRenderType _intrinsicRenderType = IntrinsicRenderType::CanvasOverlay;
       bool rejectOutsideInput = false; //rejects input that is outside the canvas
       /////////////////////////////////////////////////////////////////////////////////////////
@@ -188,7 +187,6 @@ namespace ReyEngine {
       ////////// INPUT
       // return value = who handled
       struct InputProcess : public TreeProcess {
-         enum class IgnoreInputOffset{ NO, YES };
          InputProcess(Canvas* thisCanvas, Widget* processedWidget, const InputEvent& event, const Transform2D& inputTransform)
          : TreeProcess(thisCanvas, processedWidget)
          , event(event)
@@ -196,7 +194,6 @@ namespace ReyEngine {
          {
             if (auto mouseData = event.isMouse()) {
                mouseTransformer = std::make_unique<MouseEvent::ScopeTransformer>(*mouseData.value(), inputTransform, processedWidget->getSize());
-//               std::cout << "Widget: <" << processedWidget->getName() << "> :  G " << mouseData.value()->getCanvasPos().get() << " ---> L " << mouseData.value()->getLocalPos() << " X: " << inputTransform.extractTranslation() << " : inside = " << mouseData.value()->isInside() << std::endl;
             }
          }
 
@@ -280,20 +277,7 @@ namespace ReyEngine {
             if constexpr (std::is_same_v<ProcessType, InputProcess>) {
                constexpr size_t argCount = sizeof...(args);
                const auto& event = std::get<0>(std::forward_as_tuple(std::forward<Args>(args)...));
-               InputProcess::IgnoreInputOffset ignoreInputOffset = InputProcess::IgnoreInputOffset::NO;
-               if constexpr (argCount > 1){
-                  ignoreInputOffset = std::get<1>(std::forward_as_tuple(std::forward<Args>(args)...));
-               }
-
-               auto transformCache = inputTransform;
-               //transform w/ input offset (for integral and intrinsic canvas children, typically)
-               if (widget->_isCanvas && ignoreInputOffset == InputProcess::IgnoreInputOffset::NO){
-                  auto subCanvas = widget->_node->as<Canvas>().value();
-                  transformCache *= subCanvas->inputOffset;
-               } else {
-
-               }
-               return ProcessType(this, widget, event, transformCache);
+               return ProcessType(this, widget, event, inputTransform);
             } else {
                // For other types like RenderProcess, don't pass the extra args
                return ProcessType(this, widget);

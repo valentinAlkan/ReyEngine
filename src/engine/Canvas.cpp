@@ -92,10 +92,10 @@ Widget* Canvas::tryHover(InputEventMouseMotion& motion, TypeNode* node, const Tr
    //see tryHandle for explanation
    unique_ptr<MouseEvent::ScopeTransformer> mouseTransformer;
 
-   if (auto isPositionable = node->tag<Positionable2D>()) {
-      auto& positionable = isPositionable.value();
-      mouseTransformer = make_unique<MouseEvent::ScopeTransformer>(motion.mouse, inputTransform, positionable->getSize());
-   }
+//   if (auto isPositionable = node->tag<Positionable2D>()) {
+//      auto& positionable = isPositionable.value();
+//      mouseTransformer = make_unique<MouseEvent::ScopeTransformer>(motion.mouse, inputTransform, positionable->getSize());
+//   }
 
    for (auto& child: node->getChildren()) {
       if (auto isWidget = child->tag<Widget>()) {
@@ -119,6 +119,7 @@ void Canvas::renderProcess() {
    _renderTarget.beginRenderMode();
    rlPushMatrix();
    render2DBegin();
+   BeginMode2D(camera);
    ClearBackground(Colors::none);
    drawRectangleGradientV(getRect().toSizeRect(), Colors::green, Colors::yellow);
    drawText(getName(), {0,0}, theme->font);
@@ -152,6 +153,7 @@ void Canvas::renderProcess() {
       processNode<RenderProcess>(modal->_node, true);
       transformStack.popTransform();
    }
+   EndMode2D();
    rlPopMatrix();
    render2DEnd();
    _renderTarget.endRenderMode();
@@ -190,7 +192,7 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
 
    //query intrinsic children first
    for (auto& intrinsicChild : _intrinsicChildren) {
-      auto handled = processNode<InputProcess>(intrinsicChild.get(), false, event, InputProcess::IgnoreInputOffset::YES);
+      auto handled = processNode<InputProcess>(intrinsicChild.get(), false, event);
       if (handled) return handled;
    }
 
@@ -199,6 +201,7 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
       return processNode<InputProcess>(modal->_node, true, event);
    }
 
+   auto cameraTransformer = MouseEvent::ScopeTransformer(*event.isMouse().value(), MatrixIdentity(), getSize(), GetCameraMatrix2D(camera));
    return processNode<InputProcess>(_node, false, event);
 }
 

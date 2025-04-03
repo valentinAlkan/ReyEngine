@@ -207,13 +207,13 @@ void Widget::setModal(bool newValue) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 Transform2D Widget::getGlobalInputOffset() const {
-   auto retval = _isCanvas ? dynamic_cast<const Canvas*>(this)->inputOffset : Transform2D();
-   auto canvas = getCanvas();
-   while (canvas){
-      retval *= canvas.value()->inputOffset;
-      canvas = canvas.value()->getCanvas();
-   }
-   return retval;
+//   auto retval = _isCanvas ? dynamic_cast<const Canvas*>(this)->inputOffset : Transform2D();
+//   auto canvas = getCanvas();
+//   while (canvas){
+//      retval *= canvas.value()->inputOffset;
+//      canvas = canvas.value()->getCanvas();
+//   }
+//   return retval;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
