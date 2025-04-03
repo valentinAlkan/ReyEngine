@@ -25,17 +25,15 @@ struct TestWidget : public Widget {
    void render2D() const override {
       drawRectangle(getRect().toSizeRect(), isInside ? color : Colors::lightGray);
       drawText(text, {0,0}, getDefaultFont());
-      drawText("P = " + Pos<int>(getPos()).toString(), {0, 20}, getDefaultFont());
-      drawText("S = " + Size<int>(getSize()).toString(), {0,40}, getDefaultFont());
-      drawText(localMousePos, {0,60}, getDefaultFont());
+      drawText("Pos = " + Pos<int>(getPos()).toString(), {0, 20}, getDefaultFont());
+      drawText("Siz = " + Size<int>(getSize()).toString(), {0,40}, getDefaultFont());
+      drawText("G" + globalMousePos.toString(), {0,60}, getDefaultFont());
+      drawText("L" + localMousePos.toString(), {0,80}, getDefaultFont());
    }
 protected:
-   void _on_rect_changed() override {
-     cout << "new position = " << getPos() << endl;
-  }
+   void _on_rect_changed() override {}
    Widget* _unhandled_input(const InputEvent& event) override {
      if (auto isMouse = event.isMouse()){
-        localMousePos = isMouse.value()->getLocalPos();
         isInside = isMouse.value()->isInside();
         switch (event.eventId) {
            case InputEventMouseButton::ID:{
@@ -50,13 +48,15 @@ protected:
               }
               break;}
            case InputEventMouseMotion::ID:{
+              globalMousePos = isMouse.value()->getCanvasPos().get();
+              localMousePos = isMouse.value()->getLocalPos();
               auto& mmEvent = event.toEvent<InputEventMouseMotion>();
               if (isDown){
-                 cout << "----------------------" << endl;
-                 cout << getName() << endl;
-                 cout << "Mouse delta = " << mmEvent.mouseDelta << endl;
-                 cout << "current position = " << getPos() << endl;
-                 cout << "new position = " << mmEvent.mouseDelta + getPos() << endl;
+//                 cout << "----------------------" << endl;
+//                 cout << getName() << endl;
+//                 cout << "Mouse delta = " << mmEvent.mouseDelta << endl;
+//                 cout << "current position = " << getPos() << endl;
+//                 cout << "new position = " << mmEvent.mouseDelta + getPos() << endl;
                  setPosition(getPos() + mmEvent.mouseDelta);
                  return this;
               }
@@ -67,6 +67,7 @@ protected:
      return nullptr;
   }
   Pos<int> localMousePos;
+  Pos<int> globalMousePos;
   bool isInside = false;
   std::string text;
   ColorRGBA color;
@@ -79,23 +80,23 @@ int main(){
       auto& window = Application::createWindowPrototype("window", 1920, 1080, {WindowFlags::RESIZE}, 60)->createWindow();
       auto root = window.getCanvas();
 
-//      std::vector<TypeNode*> labels;
-//      {
-//         auto [widget2, _] = make_node<TestWidget>("LabelParent", "Parent");
-//         labels.push_back(root->getNode()->addChild(std::move(_)));
-//         widget2->setPosition({0, 0});
-//      }
-//      {
-//         auto [widget3, _] = make_node<TestWidget>("LabelChild", "child");
-//         labels.push_back(labels.at(0)->addChild(std::move(_)));
-//         widget3->setPosition({150, 150});
-//      }
-//
-//      {
-//         auto [label, _] = make_node<Label>("LabelHeyBabe", "Hey baby");
-//         labels.push_back(labels.at(0)->addChild(std::move(_)));
-//         label->setPosition({100, 500});
-//      }
+      std::vector<TypeNode*> labels;
+      {
+         auto [widget2, _] = make_node<TestWidget>("LabelParent", "Parent");
+         labels.push_back(root->getNode()->addChild(std::move(_)));
+         widget2->setPosition({0, 0});
+      }
+      {
+         auto [widget3, _] = make_node<TestWidget>("LabelChild", "child");
+         labels.push_back(labels.at(0)->addChild(std::move(_)));
+         widget3->setPosition({150, 150});
+      }
+
+      {
+         auto [label, _] = make_node<Label>("LabelHeyBabe", "Hey baby");
+         labels.push_back(labels.at(0)->addChild(std::move(_)));
+         label->setPosition({100, 500});
+      }
 
       //create a layout
       {

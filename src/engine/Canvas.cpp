@@ -14,7 +14,8 @@ void Canvas::render2D() const {
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::_on_rect_changed() {
    _renderTarget.setSize(getSize());
-   _viewport = getSizeRect();
+//   _viewport = getSizeRect();
+//   _projectionPort = getSizeRect();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -177,12 +178,23 @@ void Canvas::__process_hover(const InputEventMouseMotion& event){
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
-   //query intrinsic children first
-   for (auto& intrinsicChild : _intrinsicChildren){
-      processNode<InputProcess>(intrinsicChild.get(), false, event);
+   //reject canvas input from outside the canvas
+   if (rejectOutsideInput) {
+      if (auto isMouse = event.isMouse()) {
+         auto mouseTransformer = MouseEvent::ScopeTransformer(*event.isMouse().value(), getLocalTransform(), getSize());
+         if (!event.isMouse().value()->isInside()) {
+            return nullptr;
+         }
+      }
    }
 
-   //modal widgets eat input
+   //query intrinsic children first
+   for (auto& intrinsicChild : _intrinsicChildren) {
+      auto handled = processNode<InputProcess>(intrinsicChild.get(), false, event, InputProcess::IgnoreInputOffset::YES);
+      if (handled) return handled;
+   }
+
+   //then modal widgets
    if (auto modal = getModal()){
       return processNode<InputProcess>(modal->_node, true, event);
    }

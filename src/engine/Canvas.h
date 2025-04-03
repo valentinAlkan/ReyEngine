@@ -57,9 +57,12 @@ namespace ReyEngine {
       void _on_rect_changed() override;
       virtual IntrinsicRenderType getIntrinsicRenderType(){return _intrinsicRenderType;}
 
+      Transform2D inputOffset; //useful for transforming input positions
       std::vector<std::unique_ptr<TypeNode>> _intrinsicChildren; //children that belong to the canvas but are treated differently for various reasons
-      Rect<R_FLOAT> _viewport; //the portion of the render target we want to draw
+//      Rect<R_FLOAT> _viewport; //the portion of the render target we want to draw
+//      Rect<R_FLOAT> _projectionPort; //where we want to draw the render target. USUALLY the same as the subcanvas area, but not necessarily
       IntrinsicRenderType _intrinsicRenderType = IntrinsicRenderType::CanvasOverlay;
+      bool rejectOutsideInput = false; //rejects input that is outside the canvas
       /////////////////////////////////////////////////////////////////////////////////////////
       /////////////////////////////////////////////////////////////////////////////////////////
       /////////////////////////////////////////////////////////////////////////////////////////
@@ -163,7 +166,7 @@ namespace ReyEngine {
             thisCanvas->_renderTarget.beginRenderMode();
             rlPushMatrix();
             rlMultMatrixf(MatrixToFloat(thisCanvas->transformStack.getGlobalTransform().matrix));
-            drawRenderTargetRect(subCanvas->getRenderTarget(), subCanvas->_viewport, subCanvas->getRect(), Colors::none);
+            drawRenderTargetRect(subCanvas->getRenderTarget(), subCanvas->getSizeRect(), subCanvas->getRect(), Colors::none);
             //render intrinsic viewport overlay
             if (subCanvas->getIntrinsicRenderType() == IntrinsicRenderType::ViewportOverlay){
                for (auto& intrinsicChild : subCanvas->_intrinsicChildren){
@@ -185,6 +188,7 @@ namespace ReyEngine {
       ////////// INPUT
       // return value = who handled
       struct InputProcess : public TreeProcess {
+         enum class IgnoreInputOffset{ NO, YES };
          InputProcess(Canvas* thisCanvas, Widget* processedWidget, const InputEvent& event, const Transform2D& inputTransform)
          : TreeProcess(thisCanvas, processedWidget)
          , event(event)
@@ -205,7 +209,7 @@ namespace ReyEngine {
          };
          //transforms mouse coordinates
          std::unique_ptr<MouseEvent::ScopeTransformer> mouseTransformer;
-         const Transform2D& inputTransform;
+         Transform2D inputTransform;
          const InputEvent& event;
       };
 
@@ -269,11 +273,27 @@ namespace ReyEngine {
          // Create the appropriate arguments based on ProcessType
          // Basically what we're doing is taking arbitrary args to the processNode function and
          //  seeing if we can match them to the ctor for the given ProcessType. Each ctor is conditionally compiled
-         //  so that only one actaually exists.
+         //  so that only one actaually exists at any given time. This keeps us from having to write
+         //  two large and similar blocks of code that both iterate over the tree and 'doStuff' in slightly
+         //  different ways.
          auto createProcessTransformer = [this, &widget, &args...](const Transform2D& inputTransform) {
             if constexpr (std::is_same_v<ProcessType, InputProcess>) {
+               constexpr size_t argCount = sizeof...(args);
                const auto& event = std::get<0>(std::forward_as_tuple(std::forward<Args>(args)...));
-               return ProcessType(this, widget, event, inputTransform);
+               InputProcess::IgnoreInputOffset ignoreInputOffset = InputProcess::IgnoreInputOffset::NO;
+               if constexpr (argCount > 1){
+                  ignoreInputOffset = std::get<1>(std::forward_as_tuple(std::forward<Args>(args)...));
+               }
+
+               auto transformCache = inputTransform;
+               //transform w/ input offset (for integral and intrinsic canvas children, typically)
+               if (widget->_isCanvas && ignoreInputOffset == InputProcess::IgnoreInputOffset::NO){
+                  auto subCanvas = widget->_node->as<Canvas>().value();
+                  transformCache *= subCanvas->inputOffset;
+               } else {
+
+               }
+               return ProcessType(this, widget, event, transformCache);
             } else {
                // For other types like RenderProcess, don't pass the extra args
                return ProcessType(this, widget);
@@ -283,8 +303,6 @@ namespace ReyEngine {
          // Call the lambda to trigger template deduction
          auto processTransformer = createProcessTransformer( isModal ? modalXform : widget->getLocalTransform());
 
-
-//         ProcessType processTransformer(this, widget, event, widget->getLocalTransform()); //pushes local transform
          if (processTransformer.subCanvas && processTransformer.subCanvas != this){
                handled = processTransformer.subcanvasProcess();
                //does not dispatch to children as this is handled explicitly by canvas

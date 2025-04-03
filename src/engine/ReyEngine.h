@@ -46,6 +46,19 @@ namespace ReyEngine {
       static constexpr std::size_t hash(std::string_view str) {std::size_t hash = 5381;for (char c: str) {hash = ((hash << 5) + hash) + static_cast<std::size_t>(c);}return hash;}
    };
 
+   inline std::ostream& operator<<(std::ostream& os, const Matrix& m) {
+      os << "[" << std::fixed << std::setprecision(3) << m.m0 << "  " << m.m1 << "  " << m.m2 << "  " << m.m3 << "]\n";
+      os << "[" << std::fixed << std::setprecision(3) << m.m4 << "  " << m.m5 << "  " << m.m6 << "  " << m.m7 << "]\n";
+      os << "[" << std::fixed << std::setprecision(3) << m.m8 << "  " << m.m9 << "  " << m.m10 << "  " << m.m11 << "]\n";
+      os << "[" << std::fixed << std::setprecision(3) << m.m12 << "  " << m.m13 << "  " << m.m14 << "  " << m.m15 << "]\n";
+      return os;
+   }
+   inline void printMatrix(const Matrix& m) {
+      // Print in row-major format for readability
+      printf("Matrix (column-major):\n");
+      std::cout << m << std::endl;
+      fflush(stdout);
+   }
 
    // Canvas Coordinates - relative to current canvas
    template <typename T>
@@ -1022,6 +1035,8 @@ namespace ReyEngine {
    struct Transform2D : public Transform<2> {
       Transform2D(): Transform<2>(){}
       Transform2D(const Matrix& m): Transform<2>(m){}
+      Transform2D& operator*=(const Transform2D& rhs){matrix = MatrixMultiply(matrix, rhs.matrix);return *this;}
+      Transform2D operator*(const Transform2D& rhs){return MatrixMultiply(matrix, rhs.matrix);}
       // Enhanced 2D transform function with more arguments
       [[nodiscard]] inline Vec2<float> transform(const Vec2<float>& point,
                                           bool applyScale = true,
@@ -1162,6 +1177,7 @@ namespace ReyEngine {
             matrix = blendedMatrix;
          }
       }
+      inline friend std::ostream& operator<<(std::ostream& os, const Transform2D& t) {std::cout << t.matrix << std::endl; return os;}
    };
 
    // Specialization for 3D transforms
@@ -1355,18 +1371,7 @@ namespace ReyEngine {
    void drawTexture(const ReyTexture&, const Rect<R_FLOAT>& src, const Rect<R_FLOAT>& dst, const ColorRGBA& tint);
    inline float getFrameDelta() {return GetFrameTime();}
    inline Size<R_FLOAT> measureText(const std::string& text, const ReyEngineFont& font){return MeasureTextEx(font.font, text.c_str(), font.size, font.spacing);}
-
-   inline void printMatrix(const Matrix& m) {
-      // Print in row-major format for readability
-      printf("Matrix (column-major):\n");
-      printf("[%.3f  %.3f  %.3f  %.3f]\n", m.m0, m.m1, m.m2,  m.m3);
-      printf("[%.3f  %.3f  %.3f  %.3f]\n", m.m4, m.m5, m.m6,  m.m7);
-      printf("[%.3f  %.3f  %.3f  %.3f]\n", m.m8, m.m9, m.m10, m.m11);
-      printf("[%.3f  %.3f  %.3f  %.3f]\n", m.m12, m.m13, m.m14, m.m15);
-      fflush(stdout);
-   }
    inline void printMatrix(const Transform2D& t) { printMatrix(t.matrix);}
-
 }
 
 namespace InputInterface{

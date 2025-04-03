@@ -18,7 +18,6 @@ namespace ReyEngine {
          [[nodiscard]] inline bool getVisible(){return _visible;}
          inline void setVisible(bool newValue){_visible = newValue;}
       protected:
-         void render2DChain();
          virtual void render2D() const = 0;
          virtual void render2DBegin(){}
          virtual void render2DEnd(){}

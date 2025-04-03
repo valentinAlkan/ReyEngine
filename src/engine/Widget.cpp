@@ -204,3 +204,28 @@ void Widget::setModal(bool newValue) {
       Logger::error() << "Unable to set status on widget that is not associated with any Canvas" << endl;
    }
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////
+Transform2D Widget::getGlobalInputOffset() const {
+   auto retval = _isCanvas ? dynamic_cast<const Canvas*>(this)->inputOffset : Transform2D();
+   auto canvas = getCanvas();
+   while (canvas){
+      retval *= canvas.value()->inputOffset;
+      canvas = canvas.value()->getCanvas();
+   }
+   return retval;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+Pos<float> Widget::getLocalMousePos() const {
+   auto globaltransform = getGlobalTransform(false).get();
+   auto inputOffset = getGlobalInputOffset();
+   auto mousepos = InputManager::getMousePos().get();
+   return (globaltransform.inverse() * inputOffset.inverse()).transform(mousepos);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+CanvasSpace<Pos<float>> Widget::toCanvasSpace(const Pos<float>& p) {
+   auto globaltransform = getGlobalTransform().get();
+   return {globaltransform.transform(p)};
+}

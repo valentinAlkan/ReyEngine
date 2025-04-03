@@ -1,6 +1,7 @@
 #include "Window.h"
 #include "ScrollArea.h"
 #include "rlgl.h"
+#include "Label.h"
 using namespace std;
 using namespace ReyEngine;
 ScrollArea::ScrollArea() {
@@ -26,6 +27,13 @@ ScrollArea::ScrollArea() {
    };
    subscribe<Slider::EventSliderValueChanged>(hslider, setOffsetX);
    subscribe<Slider::EventSliderValueChanged>(vslider, setOffsetY);
+
+   //debug
+   _vslider->drawDebug = true;
+   _hslider->drawDebug = true;
+   auto [_debugLabel, debugLabelNode] = make_node<Label>("DebugLabel", "DebugLabel");
+   _intrinsicChildren.push_back(std::move(debugLabelNode));
+   _debugLabel->setPosition(0,20);
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::hideVSlider(bool hidden) {
@@ -65,22 +73,20 @@ void ScrollArea::_on_child_rect_changed(Widget* child){
    }
 }
 
-
-
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::updateViewport(){
    auto areaSize = getRect().size();
-   _viewport = areaSize.toRect();
+//   _viewport = areaSize.toRect();
    auto vsliderNewRect = Rect<float>((areaSize.x - sliderSize), 0, sliderSize, areaSize.y) + getPos();
    auto hsliderNewRect = Rect<float>(0, (areaSize.y - sliderSize), (areaSize.x - sliderSize), sliderSize) + getPos();
    bool needShowHSlider = boundingBox.width > areaSize.x;
    auto needShowVSlider = boundingBox.height > areaSize.y;
 
    //subtract the slider sizes before updating viewport since each dimension depends on the other
-   if (needShowHSlider) _viewport.height -= sliderSize;
-   if (needShowVSlider) _viewport.width -= sliderSize;
-   _viewport.x = (boundingBox.width) * (float)Perunum(scrollOffsetX).get();
-   _viewport.y = (boundingBox.height) * (float)Perunum(scrollOffsetY).get();
+//   if (needShowHSlider) _viewport.height -= sliderSize;
+//   if (needShowVSlider) _viewport.width -= sliderSize;
+//   _viewport.x = (boundingBox.width - areaSize.x) * (float)Perunum(scrollOffsetX).get();
+//   _viewport.y = (boundingBox.height - areaSize.y) * (float)Perunum(scrollOffsetY).get();
    if (hslider) {
       hslider->setRect(hsliderNewRect);
       hslider->setVisible(!_hideHSlider && needShowHSlider);
@@ -90,6 +96,11 @@ void ScrollArea::updateViewport(){
       vslider->setRect(vsliderNewRect);
       vslider->setVisible(!_hideVSlider && needShowVSlider);
    }
+//   _projectionPort.setSize(_viewport.size());
+//   inputOffset.setPosition(_viewport.pos()/2);
+//   inputOffset = inputOffset.inverse();
+   std::cout << "input offset = " << inputOffset << endl;
+   _intrinsicChildren.at(2)->as<Label>().value()->setText("Input Offset = " + Vec2<int>(inputOffset.extractTranslation()).toString());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

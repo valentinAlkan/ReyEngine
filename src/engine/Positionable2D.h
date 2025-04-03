@@ -49,13 +49,14 @@ namespace ReyEngine::Internal {
       }
       inline void setRect(R_FLOAT x, R_FLOAT y, R_FLOAT width, R_FLOAT height){setRect({x,y,width,height});}
       inline Transform2D& getLocalTransform(){return transform2D;}
-      inline CanvasSpace<Transform2D> getGlobalTransform(){
+      inline const Transform2D& getLocalTransform() const {return transform2D;}
+      inline CanvasSpace<Transform2D> getGlobalTransform(bool respectGlobalTransformBoundary=true) const {
          auto retval = getLocalTransform();
          auto parent = selfNode->getParent();
          while (parent){
             if (auto isPositionable = parent->tag<Positionable2D>()){
                //break on global transform boundaries - they are NOT part of the global transform for children
-               if (isPositionable.value()->isGlobalTransformBoundary){
+               if (isPositionable.value()->isGlobalTransformBoundary && respectGlobalTransformBoundary){
                   break;
                }
                retval *= isPositionable.value()->transform2D;

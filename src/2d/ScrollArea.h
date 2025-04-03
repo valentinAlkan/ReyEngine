@@ -8,8 +8,8 @@ namespace ReyEngine {
         ScrollArea();
         void hideVSlider(bool hidden);
         void hideHSlider(bool hidden);
-        Rect<R_FLOAT> getViewPort(){return _viewport;}
-        Rect<R_FLOAT> getRenderBox(){return boundingBox;}
+//        Rect<R_FLOAT> getViewPort(){return _viewport;}
+//        Rect<R_FLOAT> getRenderBox(){return boundingBox;}
     protected:
         static constexpr std::string_view VSLIDER_NAME = "__vslider";
         static constexpr std::string_view HSLIDER_NAME = "__hslider";
@@ -21,6 +21,9 @@ namespace ReyEngine {
 //        void _on_child_added_to_tree(TypeNode* child) override;
         void _init() override;
 //        std::optional<Widget*> askHover(const Pos<R_FLOAT>& globalPos) override;
+         void render2DEnd() override {
+            drawLine({{0, 0}, getLocalMousePos()}, 1.0, Colors::purple);
+         }
 
         Percent scrollOffsetX;
         Percent scrollOffsetY;

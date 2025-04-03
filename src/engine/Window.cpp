@@ -210,8 +210,8 @@ void Window::exec(){
          //UPS
          for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
             auto btnUp = InputManager::instance().getMouseButtonReleased();
-            auto pos = InputManager::getMousePos();
             if (btnUp != InputInterface::MouseButton::NONE) {
+               auto pos = InputManager::getMousePos();
                if (btnUp == InputInterface::MouseButton::LEFT) {
                   //check for drag n drop
 //                  if (_dragNDrop.has_value() && _isDragging) {

@@ -29,10 +29,10 @@ namespace ReyEngine{
          constexpr float MAX_SIZE = 50;
          switch (sliderDir){
             case SliderType::HORIZONTAL:
-               maxSize = {std::numeric_limits<decltype(size.x)>::max(), MAX_SIZE};
+               maxSize = {std::numeric_limits<float>::max(), MAX_SIZE};
                break;
             case SliderType::VERTICAL:
-               maxSize = {MAX_SIZE, std::numeric_limits<decltype(size.x)>::max()};
+               maxSize = {MAX_SIZE, std::numeric_limits<float>::max()};
                break;
          }
          _range = {minSliderValue, maxSlidervalue};
@@ -43,6 +43,7 @@ namespace ReyEngine{
          if (!mouseEvent) return nullptr;
          auto localPos = mouseEvent.value()->getLocalPos();
          if (e.isEvent<InputEventMouseMotion>()){
+            _localPos = e.isMouse().value()->getLocalPos();
             if (_is_dragging) {
                //set new slider value based on input
                double newValue;
@@ -89,13 +90,8 @@ namespace ReyEngine{
          drawRectangle(_grabber, _cursor_down && _cursor_in_grabber || _is_dragging ? Colors::yellow : Colors::blue);
          drawRectangleLines(_grabber, 1.0, Colors::black);
          drawRectangleLines(getSizeRect(), 1.0, Colors::black);
-         if constexpr (false) {
-            //debug
-            auto x = Vec2<float>(0, getWidth());
-            auto y = Vec2<float>(0, getHeight());
-            auto s = getSliderValue();
-            Circle c({x.lerp(Percent(s)), y.lerp(Percent(s))}, 2);
-            drawCircle(c, Colors::black);
+         if (drawDebug) {
+            drawLine({{0, 0}, _localPos}, 1.0, Colors::purple);
          }
       }
       void _on_rect_changed() override {
@@ -138,6 +134,8 @@ namespace ReyEngine{
       bool _is_dragging = false;
       Rect<float> _grabber = {0, 0, 0, 0};
       Vec2<float> _range = {0,0};
+      Pos<float> _localPos;
+      bool drawDebug = false;
       friend class ScrollArea;
    };
 }
