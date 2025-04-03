@@ -7,6 +7,7 @@ using namespace ReyEngine;
 ScrollArea::ScrollArea() {
    _inputFilter = InputFilter::INPUT_FILTER_PROCESS_AND_STOP;
    _intrinsicRenderType = Canvas::IntrinsicRenderType::ViewportOverlay;
+   _rejectOutsideInput = true;
    //create scrollbars
    auto [_vslider, vsnode] = make_node<Slider>(std::string(VSLIDER_NAME), Slider::SliderType::VERTICAL);
    auto [_hslider, hsnode] = make_node<Slider>(std::string(HSLIDER_NAME), Slider::SliderType::HORIZONTAL);
@@ -27,13 +28,6 @@ ScrollArea::ScrollArea() {
    };
    subscribe<Slider::EventSliderValueChanged>(hslider, setOffsetX);
    subscribe<Slider::EventSliderValueChanged>(vslider, setOffsetY);
-
-   //debug
-   _vslider->drawDebug = true;
-   _hslider->drawDebug = true;
-   auto [_debugLabel, debugLabelNode] = make_node<Label>("DebugLabel", "DebugLabel");
-   _intrinsicChildren.push_back(std::move(debugLabelNode));
-   _debugLabel->setPosition(0,20);
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::hideVSlider(bool hidden) {
@@ -73,6 +67,12 @@ void ScrollArea::_on_child_rect_changed(Widget* child){
       _on_rect_changed();
    }
 }
+/////////////////////////////////////////////////////////////////////////////////////////
+void ScrollArea::_on_child_added_to_tree(TypeNode* typeNode) {
+   if (auto isWidget = typeNode->as<Widget>()) {
+      _on_child_rect_changed(isWidget.value());
+   }
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::updateViewport(){
@@ -81,6 +81,7 @@ void ScrollArea::updateViewport(){
    auto hsliderNewRect = Rect<float>(0, (areaSize.y - sliderSize), (areaSize.x - sliderSize), sliderSize) + getPos();
    bool needShowHSlider = boundingBox.width > _viewport.width;
    auto needShowVSlider = boundingBox.height > _viewport.height;
+   if (!needShowVSlider) hsliderNewRect.stretchRight(sliderSize);
 
    //subtract the slider sizes before updating viewport since each dimension depends on the other
    if (needShowHSlider) _viewport.height -= sliderSize;
@@ -96,14 +97,6 @@ void ScrollArea::updateViewport(){
       vslider->setRect(vsliderNewRect);
       vslider->setVisible(!_hideVSlider && needShowVSlider);
    }
-//   _projectionPort.setSize(_viewport.size());
-//   inputOffset.setPosition(_viewport.pos()/2);
-//   inputOffset = inputOffset.inverse();
-//   std::cout << "input offset = " << inputOffset << endl;
-   std::string msg = "Camera Offset = " + Vec2<int>(camera.offset).toString();
-   msg += "\n" + matrixToString(GetCameraMatrix2D(camera));
-
-   _intrinsicChildren.at(2)->as<Label>().value()->setText(msg);
    camera.offset = {-_viewport.pos().x, -_viewport.pos().y};
 }
 

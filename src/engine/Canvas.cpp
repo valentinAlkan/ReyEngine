@@ -92,10 +92,10 @@ Widget* Canvas::tryHover(InputEventMouseMotion& motion, TypeNode* node, const Tr
    //see tryHandle for explanation
    unique_ptr<MouseEvent::ScopeTransformer> mouseTransformer;
 
-//   if (auto isPositionable = node->tag<Positionable2D>()) {
-//      auto& positionable = isPositionable.value();
-//      mouseTransformer = make_unique<MouseEvent::ScopeTransformer>(motion.mouse, inputTransform, positionable->getSize());
-//   }
+   if (auto isPositionable = node->tag<Positionable2D>()) {
+      auto& positionable = isPositionable.value();
+      mouseTransformer = make_unique<MouseEvent::ScopeTransformer>(motion.mouse, inputTransform, positionable->getSize());
+   }
 
    for (auto& child: node->getChildren()) {
       if (auto isWidget = child->tag<Widget>()) {
@@ -180,8 +180,14 @@ void Canvas::__process_hover(const InputEventMouseMotion& event){
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
+   //query intrinsic children first
+   for (auto& intrinsicChild : _intrinsicChildren) {
+      auto handled = processNode<InputProcess>(intrinsicChild.get(), false, event);
+      if (handled) return handled;
+   }
+
    //reject canvas input from outside the canvas
-   if (rejectOutsideInput) {
+   if (_rejectOutsideInput) {
       if (auto isMouse = event.isMouse()) {
          auto mouseTransformer = MouseEvent::ScopeTransformer(*event.isMouse().value(), getLocalTransform(), getSize());
          if (!event.isMouse().value()->isInside()) {
@@ -190,11 +196,6 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
       }
    }
 
-   //query intrinsic children first
-   for (auto& intrinsicChild : _intrinsicChildren) {
-      auto handled = processNode<InputProcess>(intrinsicChild.get(), false, event);
-      if (handled) return handled;
-   }
 
    //then modal widgets
    if (auto modal = getModal()){

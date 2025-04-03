@@ -61,7 +61,7 @@ namespace ReyEngine {
       Camera2D camera;
       std::vector<std::unique_ptr<TypeNode>> _intrinsicChildren; //children that belong to the canvas but are treated differently for various reasons
       IntrinsicRenderType _intrinsicRenderType = IntrinsicRenderType::CanvasOverlay;
-      bool rejectOutsideInput = false; //rejects input that is outside the canvas
+      bool _rejectOutsideInput = false; //rejects input that is outside the canvas
       /////////////////////////////////////////////////////////////////////////////////////////
       /////////////////////////////////////////////////////////////////////////////////////////
       /////////////////////////////////////////////////////////////////////////////////////////

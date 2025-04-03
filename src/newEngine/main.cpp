@@ -193,8 +193,18 @@ int main(){
 
          // add a scroll area
          {
-            auto [scrollArea, n1] = make_node<ScrollArea>("ScrollArea");
-            auto scrollAreaNode = scrollAreaHolder->addChild(std::move(n1));
+            TypeNode* scrollAreaNode;
+            auto [scrollArea, _n1] = make_node<ScrollArea>("ScrollArea");
+            {
+               scrollAreaNode = scrollAreaHolder->addChild(std::move(_n1));
+            }
+
+            {
+               //add a layout to the scroll area
+               auto [_scrollAreaBackground, nscrolllayout] = make_node<Control>("ScrollAreaControl");
+               _scrollAreaBackground->setSize({1000, 1000});
+               scrollAreaNode->addChild(std::move(nscrolllayout));
+            }
 
             //add a label to the scrollArea
             auto [testWidget, n2] = make_node<TestWidget>("ScrollAreaTestWidget", "scrollTest");

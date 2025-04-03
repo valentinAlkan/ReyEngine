@@ -90,9 +90,6 @@ namespace ReyEngine{
          drawRectangle(_grabber, _cursor_down && _cursor_in_grabber || _is_dragging ? Colors::yellow : Colors::blue);
          drawRectangleLines(_grabber, 1.0, Colors::black);
          drawRectangleLines(getSizeRect(), 1.0, Colors::black);
-         if (drawDebug) {
-            drawLine({{0, 0}, _localPos}, 1.0, Colors::purple);
-         }
       }
       void _on_rect_changed() override {
          _compute_appearance();
@@ -135,7 +132,6 @@ namespace ReyEngine{
       Rect<float> _grabber = {0, 0, 0, 0};
       Vec2<float> _range = {0,0};
       Pos<float> _localPos;
-      bool drawDebug = false;
       friend class ScrollArea;
    };
 }
