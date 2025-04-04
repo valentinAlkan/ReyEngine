@@ -520,6 +520,7 @@ namespace ReyEngine {
       }
       constexpr inline Line<T> to(const Pos& other) const {return Line<T>(*this, other);}
       inline std::string toString() const {return Vec2<T>::toString();}
+      bool isInside(const Rect<T>& rect);
    };
 
 //   template <typename T>
@@ -1377,6 +1378,13 @@ namespace ReyEngine {
    inline float getFrameDelta() {return GetFrameTime();}
    inline Size<R_FLOAT> measureText(const std::string& text, const ReyEngineFont& font){return MeasureTextEx(font.font, text.c_str(), font.size, font.spacing);}
    inline void printMatrix(const Transform2D& t) { printMatrix(t.matrix);}
+
+
+   /////////////////////////////////////////////////////////////////////////////////////////
+   template <typename T>
+   bool Pos<T>::isInside(const Rect<T>& r) {
+      return r.isInside(*this);
+   }
 }
 
 namespace InputInterface{

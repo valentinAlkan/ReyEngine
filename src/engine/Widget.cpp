@@ -206,26 +206,23 @@ void Widget::setModal(bool newValue) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-Transform2D Widget::getGlobalInputOffset() const {
-//   auto retval = _isCanvas ? dynamic_cast<const Canvas*>(this)->inputOffset : Transform2D();
-//   auto canvas = getCanvas();
-//   while (canvas){
-//      retval *= canvas.value()->inputOffset;
-//      canvas = canvas.value()->getCanvas();
-//   }
-//   return retval;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
 Pos<float> Widget::getLocalMousePos() const {
+   auto hasCanvas = getCanvas();
+   if (!hasCanvas) return {};
    auto globaltransform = getGlobalTransform(false).get();
-   auto inputOffset = getGlobalInputOffset();
+   auto cameraTransform = hasCanvas.value()->getCameraTransform();
    auto mousepos = InputManager::getMousePos().get();
-   return (globaltransform.inverse() * inputOffset.inverse()).transform(mousepos);
+   return (globaltransform * cameraTransform).inverse().transform(mousepos);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 CanvasSpace<Pos<float>> Widget::toCanvasSpace(const Pos<float>& p) {
+   auto globaltransform = getGlobalTransform().get();
+   return {globaltransform.transform(p)};
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+WindowSpace<Pos<float>> Widget::toWindowSpace(const Pos<float>& p) {
    auto globaltransform = getGlobalTransform().get();
    return {globaltransform.transform(p)};
 }

@@ -272,8 +272,9 @@ void Window::exec(){
 //         //check the mouse delta compared to last frame
          auto mouseDelta = InputManager::getMouseDelta();
          if (mouseDelta) {
-            InputEventMouseMotion event(this, InputManager::getMousePos().get(), mouseDelta);
-            event.mouseDelta = mouseDelta;
+            auto pos = InputManager::getMousePos().get();
+            InputEventMouseHover hoverEvent(this, pos);
+            InputEventMouseMotion motionEvent(this, pos, mouseDelta);
 
             //don't do hovering or mouse input if we're dragging and dropping
 //            static constexpr unsigned int DRAG_THRESHOLD = 20;
@@ -292,8 +293,9 @@ void Window::exec(){
 //                  clearHover();
 //               }
 //            if (_isEditor) continue;
-            canvas->__process_hover(event);
-            canvas->__process_unhandled_input(event);
+            if (!canvas->__process_unhandled_input(motionEvent)) {
+               canvas->__process_hover(hoverEvent);
+            }
 //            }
          }
 

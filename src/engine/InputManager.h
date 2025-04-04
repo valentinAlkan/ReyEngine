@@ -104,6 +104,12 @@ namespace ReyEngine{
       Vec2<float> mouseDelta;
    };
 
+   EVENT_ARGS(InputEventMouseHover, 3434343434, const Pos<float>& pos)
+      , mouse(pos)
+      {}
+      MouseEvent mouse;
+   };
+
    // other types
    EVENT(InputEventController, 4444444444444)
    {}
@@ -116,6 +122,7 @@ namespace ReyEngine{
          InputEventKey* key;
          InputEventChar* chr;
          InputEventMouseMotion* motion;
+         InputEventMouseHover* hover;
          InputEventMouseButton* button;
          InputEventMouseWheel* wheel;
          InputEventController* controller;
@@ -133,6 +140,9 @@ namespace ReyEngine{
          if constexpr (T::ID == InputEventMouseMotion::ID){
             _mouseData = &_union.motion->mouse;
          }
+         if constexpr (T::ID == InputEventMouseHover::ID){
+            _mouseData = &_union.hover->mouse;
+         }
          if constexpr (T::ID == InputEventMouseButton::ID){
             _mouseData = &_union.button->mouse;
          }
@@ -143,12 +153,13 @@ namespace ReyEngine{
       }
       Internal::InputUnion _union = {};
    public:
-      InputEvent(InputEventKey& event){assign<std::remove_cvref_t<decltype(event)>>(_union.key, event);}
-      InputEvent(InputEventChar& event){assign<std::remove_cvref_t<decltype(event)>>(_union.chr, event);}
-      InputEvent(InputEventMouseMotion& event){assign<std::remove_cvref_t<decltype(event)>>(_union.motion, event);}
-      InputEvent(InputEventMouseButton& event){assign<std::remove_cvref_t<decltype(event)>>(_union.button, event);}
-      InputEvent(InputEventMouseWheel& event){assign<std::remove_cvref_t<decltype(event)>>(_union.wheel, event);}
-      InputEvent(InputEventController& event){assign<std::remove_cvref_t<decltype(event)>>(_union.controller, event);}
+      InputEvent(InputEventKey& event)          {assign<std::remove_cvref_t<decltype(event)>>(_union.key          , event);}
+      InputEvent(InputEventChar& event)         {assign<std::remove_cvref_t<decltype(event)>>(_union.chr          , event);}
+      InputEvent(InputEventMouseMotion& event)  {assign<std::remove_cvref_t<decltype(event)>>(_union.motion       , event);}
+      InputEvent(InputEventMouseHover& event)   {assign<std::remove_cvref_t<decltype(event)>>(_union.hover        , event);}
+      InputEvent(InputEventMouseButton& event)  {assign<std::remove_cvref_t<decltype(event)>>(_union.button       , event);}
+      InputEvent(InputEventMouseWheel& event)   {assign<std::remove_cvref_t<decltype(event)>>(_union.wheel        , event);}
+      InputEvent(InputEventController& event)   {assign<std::remove_cvref_t<decltype(event)>>(_union.controller   , event);}
       template <typename T>
       std::optional<const T*> isEvent() const {return eventBase->isEvent<T>();} //get base address
       template <typename T>
@@ -156,6 +167,11 @@ namespace ReyEngine{
       constexpr const T& toEvent() const {
          if constexpr (T::ID == InputEventMouseMotion::ID){
             auto member = _union.motion;
+            static_assert(std::is_same_v<decltype(member), T*>);
+            return static_cast<const T&>(*member);
+         }
+         if constexpr (T::ID == InputEventMouseHover::ID){
+            auto member = _union.hover;
             static_assert(std::is_same_v<decltype(member), T*>);
             return static_cast<const T&>(*member);
          }

@@ -25,7 +25,6 @@ namespace ReyEngine {
       std::optional<Widget*> getParentWidget() const;
       void setAnchoring(Anchor newAnchor);
       Rect<R_FLOAT> getChildBoundingBox() const;
-      Transform2D getGlobalInputOffset() const;
       [[nodiscard]] Anchor getAnchoring() const {return _anchor;}
       [[nodiscard]] FrameCount getFrameCount() const;
       [[nodiscard]] bool isHovered() const;
@@ -36,6 +35,7 @@ namespace ReyEngine {
       void setModal(bool);
       Pos<float> getLocalMousePos() const;
       CanvasSpace<Pos<float>> toCanvasSpace(const Pos<float>&);
+      WindowSpace<Pos<float>> toWindowSpace(const Pos<float>&);
       virtual Widget* _unhandled_input(const InputEvent&){return nullptr;} //pass input to children if they want it and then process it for ourselves if necessary
    protected:
       //input

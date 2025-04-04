@@ -47,15 +47,16 @@ namespace ReyEngine {
          ViewportUnderlay// intrinsic children are drawn behind the canvas, using the canvas' parent transform (pinned to viewport)
       };
       void _on_descendant_added_to_tree(TypeNode* child) override;
-      void render2D() const override;
-      Widget* tryHandle(InputEvent& event, TypeNode* node, const Transform2D& inputTransform);
-      Widget* tryHover(InputEventMouseMotion& event, TypeNode* node, const Transform2D& inputTransform) const;
+      void render2D() const override {};
       CanvasSpace<Pos<float>> getMousePos();
+      inline const Transform2D getCameraTransform() const {return GetCameraMatrix2D(camera);}
+      inline Transform2D getCameraTransform() {return GetCameraMatrix2D(camera);}
+      void setCaptureOutsideInput(bool newValue){_rejectOutsideInput = newValue;}
    protected:
       virtual void renderProcess();
-      const RenderTarget& getRenderTarget() const {return _renderTarget;}
+      [[nodiscard]] const RenderTarget& getRenderTarget() const {return _renderTarget;}
       Widget* __process_unhandled_input(const InputEvent& event) override;
-      void __process_hover(const InputEventMouseMotion& event);
+      Widget* __process_hover(const InputEventMouseHover& event);
       void _on_rect_changed() override;
       virtual IntrinsicRenderType getIntrinsicRenderType(){return _intrinsicRenderType;}
       Camera2D camera;
@@ -213,14 +214,21 @@ namespace ReyEngine {
       /////////////////////////////////////////////////////////////////////////////////////////
       ////////// HOVERING
       // return value = who hovered
-      struct HoverProcess : public TreeProcess {
-         HoverProcess(Canvas* thisCanvas, Widget* processedWidget)
-         : TreeProcess(thisCanvas, processedWidget)
+      struct HoverProcess : public InputProcess {
+         HoverProcess(Canvas* thisCanvas, Widget* processedWidget, const InputEvent& event, const Transform2D& inputTransform)
+         : InputProcess(thisCanvas, processedWidget, event, inputTransform)
          {}
 
          Widget* subcanvasProcess(){
             return nullptr;
          }
+
+         Widget* process(){
+            if (processedWidget->acceptsHover && event.isMouse().value()->isInside()){
+               return processedWidget;
+            }
+            return nullptr;
+         };
       };
 
       /////////////////////////////////////////////////////////////////////////////////////////
@@ -274,7 +282,7 @@ namespace ReyEngine {
          //  two large and similar blocks of code that both iterate over the tree and 'doStuff' in slightly
          //  different ways.
          auto createProcessTransformer = [this, &widget, &args...](const Transform2D& inputTransform) {
-            if constexpr (std::is_same_v<ProcessType, InputProcess>) {
+            if constexpr (std::is_same_v<ProcessType, InputProcess> || std::is_same_v<ProcessType, HoverProcess>) {
                constexpr size_t argCount = sizeof...(args);
                const auto& event = std::get<0>(std::forward_as_tuple(std::forward<Args>(args)...));
                return ProcessType(this, widget, event, inputTransform);
@@ -300,7 +308,7 @@ namespace ReyEngine {
                return processChildren<ProcessType>(thisNode, std::forward<Args>(args)...);
             }
 
-            if constexpr (std::is_same_v<ProcessType, InputProcess>) {
+            if constexpr (std::is_same_v<ProcessType, InputProcess> || std::is_same_v<ProcessType, HoverProcess>) {
                //process children first for input
                handled = processChildren<ProcessType>(thisNode, std::forward<Args>(args)...);
                if (handled) return handled;
