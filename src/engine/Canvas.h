@@ -220,7 +220,7 @@ namespace ReyEngine {
          {}
 
          Widget* subcanvasProcess(){
-            return nullptr;
+            return subCanvas->__process_hover(event.toEvent<InputEventMouseHover>());
          }
 
          Widget* process(){

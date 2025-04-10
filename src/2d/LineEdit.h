@@ -4,14 +4,18 @@
 namespace ReyEngine {
    class LineEdit : public Widget {
    public:
-      EVENT_ARGS(EventLineEditDefaultTextChanged, 754321525, const std::string& newText)
+      EVENT_ARGS(EventLineEditDefaultTextChanged, 754321525, const std::string& oldText, const std::string& newText)
+      , oldText(oldText)
       , newText(newText)
       {}
+         const std::string oldText;
          const std::string newText;
       };
-      EVENT_ARGS(EventLineEditTextChanged, 754321526, const std::string& newText)
+      EVENT_ARGS(EventLineEditTextChanged, 754321526, const std::string& oldText, const std::string& newText)
       , newText(newText)
+      , oldText(oldText)
       {}
+         const std::string oldText;
          const std::string newText;
       };
 
@@ -33,10 +37,10 @@ namespace ReyEngine {
       void _on_focus_lost() override;
       void _on_rect_changed() override;
       Widget* _unhandled_input(const InputEvent&) override;
-      virtual void _on_default_text_changed(const std::string &){};
-      virtual void _on_text_changed(const std::string &){};
+      virtual void _on_default_text_changed(const std::string& old, const std::string& _new){};
+      virtual void _on_text_changed(const std::string& old, const std::string& _new){};
    private:
-      void publishText();
+      void publishText(const std::string&);
       std::string _defaultText;
       std::string _text;
       Rect<int> _scissorArea;

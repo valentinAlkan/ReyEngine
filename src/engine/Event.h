@@ -130,6 +130,14 @@ namespace ReyEngine{
    struct EventPublisher {
       virtual ~EventPublisher();
       std::map<EventId, EventCallbackMap> _eventMap;
+      template <typename T>
+      std::optional<const T*> as() const {
+         auto thiz = dynamic_cast<const T*>(this);
+         if (thiz){
+            return thiz;
+         }
+         return {};
+      }
    protected:
       template <typename T>
       requires (std::is_base_of_v<BaseEvent, T>)

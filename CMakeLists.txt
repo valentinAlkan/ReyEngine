@@ -164,6 +164,7 @@ add_library(ReyEngine2D STATIC
         src/meta/Logger.cpp
         src/meta/FileSystem.cpp
         src/meta/SystemTime.cpp
+        src/meta/StringTools.cpp
 
         src/2d/Control.cpp
         src/2d/Layout.cpp

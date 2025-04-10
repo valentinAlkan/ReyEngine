@@ -446,7 +446,6 @@ bool string_tools::contains(const std::string &s, const std::string& substr) {
     return s.find(substr) != string::npos;
 }
 
-
 std::string AnsiColor::Foreground::EscapeBlack(std::string_view str){return std::string(EscapeCodes::Black) + std::string(str) + std::string(EscapeCodes::Reset);}
 std::string AnsiColor::Foreground::EscapeRed(std::string_view str){return std::string(EscapeCodes::Red) + std::string(str) + std::string(EscapeCodes::Reset);}
 std::string AnsiColor::Foreground::EscapeGreen(std::string_view str){return std::string(EscapeCodes::Green) + std::string(str) + std::string(EscapeCodes::Reset);}

@@ -3,6 +3,9 @@ using namespace std;
 using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
 Widget* Button::_unhandled_input(const InputEvent& event) {
     if (!enabled) return nullptr;
     if (event.isEvent<InputEventMouseButton>()) {
@@ -11,19 +14,14 @@ Widget* Button::_unhandled_input(const InputEvent& event) {
           bool isInside = event.isMouse().value()->isInside();
           if (down && !mbEvent.isDown) {
             //button is down and it was just released *somewhere*
-             auto toggle = ButtonToggleEvent(this, mbEvent.isDown, isInside);
-             publish<ButtonToggleEvent>(toggle);
-             if (isInside) {
-               //if it was released on the button, it is a press
-                auto press = ButtonPressEvent(this, mbEvent.isDown);
-                publish<ButtonPressEvent>(press);
-             }
+             publish<ButtonPressEvent>(ButtonPressEvent(this));
+            //if it was released on the button, it is a press
+             publish<ButtonUpEvent>(ButtonUpEvent(this, isInside));
              down = false;
              return this;
           } else if (mbEvent.isDown && isInside) {
             //normal inside-click
-             auto toggle = ButtonToggleEvent(this, mbEvent.isDown, isInside);
-             publish<ButtonToggleEvent>(toggle);
+             publish<ButtonDownEvent>(ButtonDownEvent(this));
              down = true;
              return this;
           }
@@ -35,10 +33,14 @@ Widget* Button::_unhandled_input(const InputEvent& event) {
 /////////////////////////////////////////////////////////////////////////////////////////
 void Button::setDown(bool newDown, bool noEvents){
    down = newDown;
-   auto toggle = ButtonToggleEvent(this, newDown, false);
-   publish<ButtonToggleEvent>(toggle);
-   auto press = ButtonPressEvent(this, newDown);
-   publish<ButtonPressEvent>(press);
+   if (!noEvents) {
+      if (down) {
+         publish<ButtonDownEvent>(ButtonDownEvent(this));
+      } else {
+         publish<ButtonUpEvent>(ButtonUpEvent(this, true));
+         publish<ButtonPressEvent>(ButtonPressEvent(this));
+      }
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -60,5 +62,5 @@ void PushButton::render2D() const {
     }
     drawRectangleRounded(getRect().toSizeRect(), theme->outline.roundness, SEGMENTS, backgroundColor);
     drawRectangleRoundedLines(getRect().toSizeRect().embiggen(-THICKNESS), theme->outline.roundness, SEGMENTS, THICKNESS, COLORS::black);
-    drawTextCentered(text, getRect().toSizeRect().center(), theme->font, textColor, theme->font.size, theme->font.spacing);
+    drawTextCentered(text, getSizeRect().center(), theme->font, textColor, theme->font.size, theme->font.spacing);
 }

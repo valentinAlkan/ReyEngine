@@ -4,51 +4,47 @@
 namespace ReyEngine{
    class Button : public Widget {
    public:
-      //emitted when button is "pressed" (ie released on the button itself)
-      EVENT_ARGS(ButtonPressEvent, 11111112, bool down)
-      , down(down)
-      {}
-         bool down;
-      };
-      //emitted everytime the state of the button is changed, regardless of where the mouse is
-      EVENT_ARGS(ButtonToggleEvent, 11111112, bool down, bool mouseEscaped)
-      , down(down)
+      // when the button is down
+      EVENT(ButtonDownEvent, 11111111){}};
+      EVENT_ARGS(ButtonUpEvent, 11111112, bool mouseEscaped)
       , mouseEscaped(mouseEscaped)
       {}
-         bool down;
          //whether or not the mouse was actually in the button's rect.
          // useful for ignoring an up event if the user dragged the mouse away (which is typical
          // when the user wants that input ignored)
-         bool mouseEscaped;
+         const bool mouseEscaped;
       };
+   //an up that was inside the button
+   EVENT(ButtonPressEvent, 11111113){}};
    public:
       bool down = false;
-   protected:
-      Widget* _unhandled_input(const InputEvent&) override;
+      [[nodiscard]] std::string getText() const {return text;}
+      void setText(const std::string& newText){
+         text = newText;
+         setMinSize(measureText(newText, getTheme().font) + Size<float>(10,10));
+      }
       void setDown(bool newDown, bool noEvents=false);
+   protected:
+      std::string text;
+      Widget* _unhandled_input(const InputEvent&) override;
    };
 
    /////////////////////////////////////////////////////////////////////////////////////////
    class PushButton : public Button{
    public:
       explicit PushButton(const std::string& text="Push Button")
-      : text(text)
       {
+         setText(text);
          acceptsHover = true;
          theme->background.colorPrimary = COLORS::gray;
          theme->background.colorSecondary = COLORS::lightGray;
          theme->background.colorTertiary = COLORS::blue;
       }
       void render2D() const override;
-      std::string text;
-   public:
-      std::string getText(){return text;}
-      void setText(const std::string& newText){
-         text = newText;
-         setMinSize(measureText(newText, getTheme().font));
-      }
-   protected:
 
+   public:
+   protected:
+      void _on_rect_changed() override {};
    };
 
 }

@@ -14,6 +14,37 @@ using namespace std;
 using namespace ReyEngine;
 using namespace ReyEngine::Internal::Tree;
 
+struct DrawTestWidget1 : public Widget {
+   REYENGINE_OBJECT(DrawTestWidget1)
+   void render2D() const override {
+      //draw rectangles
+      auto splitRectH = getSizeRect().splitH();
+      auto splitRectVL = splitRectH.at(0).splitV();
+      auto splitRectVR = splitRectH.at(1).splitV();
+      for (const auto& r : {splitRectH.at(0), splitRectH.at(1), splitRectVL.at(0), splitRectVL.at(1), splitRectVR.at(0), splitRectVR.at(1)}) {
+         drawRectangleLines(r, 1.0, Colors::red);
+      }
+
+      //split some more
+      {
+         auto [_1, _2] = splitRectVL.at(0).splitV();
+         drawRectangle(_1, Colors::red);
+         drawRectangle(_2, Colors::black);
+      }
+
+      {
+         auto [_1, _2, _3, _4] = splitRectVR.at(1).splitH(10, 20, 30);
+         drawRectangle(_1, Colors::red);
+         drawRectangle(_2, Colors::black);
+         drawRectangle(_3, Colors::red);
+         drawRectangle(_4, Colors::blue);
+      }
+
+      drawText("Splits Test", {0,0}, theme->font);
+   }
+};
+
+
 struct TestWidget : public Widget {
   REYENGINE_OBJECT(TestWidget)
   TestWidget(const std::string& text)
@@ -75,29 +106,29 @@ protected:
   bool isDown = false;
 };
 
+struct SliderReactWidget : public Widget {
+   REYENGINE_OBJECT(SliderReactWidget)
+   SliderReactWidget() {
+      setMaxSize({1000, 30});
+   }
+   void render2D() const override {
+      auto rect = getSizeRect().splitH(_pct).at(0);
+      auto rect2 = getSizeRect().splitH(10, 20, 30,40);
+      drawRectangleGradientH(rect, Colors::blue, Colors::black);
+   }
+
+   void setValue(const Percent& pct){
+      cout << "Reaction pct = " << _pct << endl;
+      _pct = pct;
+   }
+   Percent _pct;
+};
+
 int main(){
    //create window
    {
       auto& window = Application::createWindowPrototype("window", 1920, 1080, {WindowFlags::RESIZE}, 60)->createWindow();
       auto root = window.getCanvas();
-
-//      std::vector<TypeNode*> labels;
-//      {
-//         auto [widget2, _] = make_node<TestWidget>("LabelParent", "Parent");
-//         labels.push_back(root->getNode()->addChild(std::move(_)));
-//         widget2->setPosition({0, 0});
-//      }
-//      {
-//         auto [widget3, _] = make_node<TestWidget>("LabelChild", "child");
-//         labels.push_back(labels.at(0)->addChild(std::move(_)));
-//         widget3->setPosition({150, 150});
-//      }
-//
-//      {
-//         auto [label, _] = make_node<Label>("LabelHeyBabe", "Hey baby");
-//         labels.push_back(labels.at(0)->addChild(std::move(_)));
-//         label->setPosition({100, 500});
-//      }
 
       //create a layout
       {
@@ -114,11 +145,12 @@ int main(){
             auto [_layoutr, noder] = make_node<Layout>("Layoutr", Layout::LayoutDir::HORIZONTAL);
             layoutr = layout->getNode()->addChild(std::move(noder));
          }
-         TypeNode* widgetsHolder;
-         TypeNode* buttonHolder;
-         TypeNode* tabHolder;
-         TypeNode* subCanvasHolder;
-         TypeNode* scrollAreaHolder;
+         TypeNode* widgetsHolder = nullptr;
+         TypeNode* buttonHolder = nullptr;
+         TypeNode* tabHolder = nullptr;
+         TypeNode* subCanvasHolder = nullptr;
+         TypeNode* scrollAreaHolder = nullptr;
+         TypeNode* popupNode = nullptr;
          // add some children to the layout
          {
 //            auto [widget1, n1] = make_node<TestWidget>("TestWidget1", "firstchild");
@@ -138,17 +170,31 @@ int main(){
          {
             auto [slider1, n1] = make_node<Slider>("slider1", Slider::SliderType::HORIZONTAL);
             widgetsHolder->addChild(std::move(n1));
+            auto [sliderReact, sr1] = make_node<SliderReactWidget>("sliderReact1");
+            widgetsHolder->addChild(std::move(sr1));
+
+            //add slider reaction callback
+            auto srCallback = [sliderReact](const Slider::EventSliderValueChanged& event){
+               sliderReact->setValue(event.pct);
+            };
+            sliderReact->subscribe<Slider::EventSliderValueChanged>(slider1.get(), srCallback);
+
             auto [lineedit1, n2] = make_node<LineEdit>("LineEdit", "Try clicking on this line edit");
             widgetsHolder->addChild(std::move(n2));
             auto [combobox1, n3] = make_node<ComboBox>("ComboBox");
             combobox1->addItems({"this", "are", "some", "items"});
             widgetsHolder->addChild(std::move(n3));
-         }
 
+            auto lineEditCB = [&](const LineEdit::EventLineEditTextChanged& event){
+               cout << "New Line Edit Text Old = " << event.oldText << endl;
+               cout << "New Line Edit Text New = " << event.newText << endl;
+            };
+            lineedit1->subscribe<LineEdit::EventLineEditTextChanged>(lineedit1.get(), lineEditCB);
+         }
 
          //add some buttons
          {
-            auto [button1, n1] = make_node<PushButton>("btnPopup", "Summon Popup");
+            auto [summonButton, n1] = make_node<PushButton>("btnPopup", "Summon Popup");
             auto [button2, n2] = make_node<PushButton>("button2");
             auto [button3, n3] = make_node<PushButton>("button3");
             auto [button4, n4] = make_node<PushButton>("button4");
@@ -157,9 +203,15 @@ int main(){
             buttonHolder->addChild(std::move(n3));
             buttonHolder->addChild(std::move(n4));
 
-//            auto cbPopup = [](const ){
-
-//            };
+            auto cbPopup = [&](const PushButton::ButtonPressEvent& event){
+               auto isWidget = popupNode->as<Widget>();
+               if (isWidget){
+                  auto& popup = isWidget.value();
+                  popup->setVisible(true);
+                  popup->setModal(true);
+               }
+            };
+            summonButton->subscribe<PushButton::ButtonPressEvent>(summonButton.get(), cbPopup);
 
          }
 
@@ -171,10 +223,10 @@ int main(){
                tabContainer = tabHolder->addChild(std::move(n));
             }
 
-            //make takes
+            //make tabs
             {
                //add some stuff ot differentiate the pages
-               auto [label1, n1] = make_node<Label>("Label1", "Page1");
+               auto [drawTest, n1] = make_node<DrawTestWidget1>("DrawTest");
                auto [label2, n2] = make_node<Label>("Label2", "Page2");
                auto [label3, n3] = make_node<Label>("Label3", "Page3");
                auto [label4, n4] = make_node<Label>("Label4", "Page4");
@@ -182,6 +234,7 @@ int main(){
                tabContainer->addChild(std::move(n2));
                tabContainer->addChild(std::move(n3));
                tabContainer->addChild(std::move(n4));
+               drawTest->setAnchoring(ReyEngine::Anchor::FILL);
             }
          }
 
@@ -192,7 +245,7 @@ int main(){
             subcanvas->setAnchoring(ReyEngine::Anchor::FILL);
 
             //add a label to the subcanvas
-            auto [label, n2] = make_node<TestWidget>("SubCanvasTestWidget", "ah fuck");
+            auto [label, n2] = make_node<TestWidget>("SubCanvasTestWidget", "test");
             subcanvasNode->addChild(std::move(n2));
             label->setPosition({100,100});
          }
@@ -212,22 +265,73 @@ int main(){
                scrollAreaNode->addChild(std::move(nscrolllayout));
             }
 
-            //add a label to the scrollArea
-            auto [testWidget, n2] = make_node<TestWidget>("ScrollAreaTestWidget", "scrollTest");
-            scrollAreaNode->addChild(std::move(n2));
-            testWidget->setPosition({100, 100});
+            //add a widget to the scrollArea
+            {
+               auto [testWidget, n2] = make_node<TestWidget>("ScrollAreaTestWidget", "scrollTest");
+               scrollAreaNode->addChild(std::move(n2));
+               testWidget->setPosition({100, 100});
+            }
+
+            //add a button to the scrollArea
+            {
+               auto [scrollButton, n3] = make_node<PushButton>("ScrollAreaTestBtn", "Scroll Button");
+               scrollAreaNode->addChild(std::move(n3));
+               scrollButton->setPosition(200,350);
+            }
 
             //create a mouse event and test it
             InputEventMouseButton eventMouseButton(&window, scrollArea->getGloablRect().get().pos(), InputInterface::MouseButton::LEFT, true);
             window.processInput(eventMouseButton);
          }
 
+         //create popup control
+         {
+            Control* popupCtl = nullptr;
+            {
+               auto [_popup, n1] = make_node<Control>("Popup");
+               popupNode = root->getNode()->addChild(std::move(n1));
+               popupCtl = _popup.get();
+            }
+            popupCtl->setSize(300, 100);
+            popupCtl->setPosition(popupCtl->getRect().centerOnPoint(root->getRect().center()).pos());
+            auto cbRender = [](const Control& ctrl){
+               drawRectangleRounded(ctrl.getSizeRect(), .1, 5, Colors::orange);
+               drawRectangleRoundedLines(ctrl.getSizeRect(), .1, 5, 2.0, Colors::black);
+            };
+            //put some buttons on the control
+
+            {
+               auto onBtn = [&](const PushButton::ButtonPressEvent& event){
+                  popupCtl->setVisible(false);
+                  popupCtl->setModal(false);
+                  if (auto isButton = event.publisher->as<PushButton>()){
+                     cout << isButton.value()->getText() << endl;
+                  }
+               };
+
+               auto [btnOk, nOk] = make_node<PushButton>("btnOk", "ok");
+               auto [btnCancel, nCancel] = make_node<PushButton>("btnCancel", "cancel");
+               popupCtl->getNode()->addChild(std::move(nOk));
+               popupCtl->getNode()->addChild(std::move(nCancel));
+               btnOk->setRect(popupCtl->getSizeRect().splitH().at(0).embiggen(-20));
+               btnCancel->setRect(popupCtl->getSizeRect().splitH().at(1).embiggen(-20));
+
+               btnOk->subscribe<PushButton::ButtonPressEvent>(btnOk.get(), onBtn);
+               btnOk->subscribe<PushButton::ButtonPressEvent>(btnCancel.get(), onBtn);
+            }
+            popupCtl->setRenderCallback(cbRender);
+            popupCtl->setVisible(false);
+         }
+
       }
 
-//      //scroll area
+      //scroll area
 //      auto [scrollArea, node] = make_node<ScrollArea>("ScrollArea");
-//      TypeNode* root->getNode()->addChild(std::move(node));
-//      scrollArea->setRect(100, 200, 500, 500);
+//      TypeNode* scrollAreaNode = root->getNode()->addChild(std::move(node));
+//      scrollArea->setRect(0, 0, 500, 500);
+//      auto [btn, btnnode] = make_node<PushButton>("PushButton", "THIS IS SOME TEXT!");
+//      scrollAreaNode->addChild(std::move(btnnode));
+//      btn->setPosition(200,200);
 
       window.exec();
    }

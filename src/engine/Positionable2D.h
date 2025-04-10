@@ -72,8 +72,8 @@ namespace ReyEngine::Internal {
       }
       inline Size<R_FLOAT> getMinSize() const {return minSize;}
       inline Size<R_FLOAT> getMaxSize() const {return maxSize;}
-      inline void setMinSize(const Size<float>& newMin){minSize = newMin;}
-      inline void setMaxSize(const Size<float>& newMax){maxSize = newMax;}
+      inline void setMinSize(const Size<float>& newMin){minSize = newMin; setSize(getSize());}
+      inline void setMaxSize(const Size<float>& newMax){maxSize = newMax; setSize(getSize());}
       inline R_FLOAT getWidth() const {return size.x;}
       inline R_FLOAT getHeight() const {return size.y;}
       inline Size<R_FLOAT> clampedSize(const Size<R_FLOAT>& rhs) const {
@@ -101,5 +101,21 @@ namespace ReyEngine::Internal {
       //when this is true, do not propogate global transform requests any further up the chain.
       // For the most part, this should only be true for canvases.
       bool isGlobalTransformBoundary = false;
+   private:
+      Positionable2D* getParentPositionable(bool respectGlobalTransformBoundary = true) {
+         auto parent = selfNode->getParent();
+         while (parent) {
+            if (auto isPositionable = parent->tag<Positionable2D>()) {
+               return isPositionable.value();
+            }
+            parent = parent->getParent();
+         }
+         return nullptr;
+      }
+      void triggerParentResize(){
+         if (auto hasParent = getParentPositionable()) {
+            getParentPositionable()->setSize(hasParent->getSize());
+         }
+      }
    };
 }

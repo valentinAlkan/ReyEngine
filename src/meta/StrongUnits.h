@@ -23,8 +23,8 @@ template <typename T> struct ToInt : Units::crtp<T, ToInt>       {explicit const
 template <typename T> struct ToFloat : Units::crtp<T, ToFloat>   {explicit constexpr operator double() const { return static_cast<float>(this->underlying().get());}};
 
 namespace Units {
-   template<typename T, typename Parameter, template<typename> class... Skills>
-   std::ostream &operator<<(std::ostream &os, NamedType<T, Parameter, Skills...> const &object) {
+   template<typename T, typename Parameter, typename Ratio, template<typename> class... Skills>
+   std::ostream &operator<<(std::ostream &os, NamedTypeImpl<T, Parameter, Ratio, Skills...> const &object) {
       os << object.get();
       return os;
    }
@@ -35,7 +35,35 @@ template <typename T, typename Parameter, typename Ratio, template<typename> cla
 class NamedTypeImpl : public Skills<NamedTypeImpl<T, Parameter, Ratio, Skills...>>...
 {
 public:
-   // constructor
+   // Literal detection helper
+   template <typename U>
+   static constexpr bool is_literal(U) {
+      return std::is_constant_evaluated();
+   }
+
+   // Special case for literals of this type
+   template <auto Value>
+   static constexpr bool is_literal_of_type = true;
+
+
+   // Add inside NamedTypeImpl class
+   template <typename... Args>
+   static constexpr bool are_all_literals(Args&&... args) {
+      // Use a dummy lambda that depends on each parameter
+      auto dummy = [](auto&& arg) {
+         (void)arg; // Touch the parameter without using it
+         return true;
+      };
+
+      // The fold expression uses the parameter pack
+      (... && dummy(args));
+
+      // Then check if in a constexpr context
+      return std::is_constant_evaluated();
+   }
+
+
+
    constexpr NamedTypeImpl(){
       //initialize to zero, if possible
       if constexpr (requires { T(0); }) {
@@ -48,7 +76,7 @@ public:
 
    // get
    constexpr T& get() { return _value; }
-   constexpr T const& get() const {return _value; }
+   [[nodiscard]] constexpr T const& get() const {return _value; }
 
    // conversions with ratios
    template <typename Ratio2>

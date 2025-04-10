@@ -61,19 +61,21 @@ void LineEdit::render2D() const {
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void LineEdit::setDefaultText(const std::string& _newDefaultText, bool noPublish) {
+   auto oldText = _defaultText;
    _defaultText = _newDefaultText;
-   _on_default_text_changed(_defaultText);
+   _on_default_text_changed(oldText, _defaultText);
    if (!noPublish) {
-      EventLineEditDefaultTextChanged event(this, _defaultText);
+      EventLineEditDefaultTextChanged event(this, oldText, _defaultText);
       publish(event);
    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void LineEdit::setText(const std::string& _newText, bool noPublish) {
+   auto oldText = _text;
    _text = _newText;
-   _on_text_changed(_text);
-   if (!noPublish) publishText();
+   _on_text_changed(oldText, _text);
+   if (!noPublish) publishText(oldText);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -112,16 +114,18 @@ Widget* LineEdit::_unhandled_input(const InputEvent& event) {
       switch (event.eventId) {
          case InputEventChar::getUniqueEventId(): {
             const auto& charEvent = event.toEvent<InputEventChar>();
+            auto oldText = _text;
             _text += charEvent.ch;
-            publishText();
+            publishText(oldText);
             return this;
          }
          case InputEventKey::getUniqueEventId(): {
             const auto& keyEvent = event.toEvent<InputEventKey>();
             if (keyEvent.isDown && keyEvent.key == InputInterface::KeyCode::KEY_BACKSPACE) {
                if (!_text.empty()) {
+                  auto oldText = _text;
                   _text.pop_back();
-                  publishText();
+                  publishText(oldText);
                }
                return this;
             }
@@ -140,8 +144,8 @@ void LineEdit::_on_focus_lost() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void LineEdit::publishText() {
-   EventLineEditTextChanged event(this, _text);
+void LineEdit::publishText(const std::string& oldText) {
+   EventLineEditTextChanged event(this, oldText, _text);
    publish(event);
 }
 

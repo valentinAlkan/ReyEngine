@@ -50,22 +50,22 @@ Size<int> ReyEngine::getScreenSize() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawText(const std::string &text, const ReyEngine::Pos<R_FLOAT>& pos, const ReyEngineFont& font) {
+void ReyEngine::drawText(const std::string &text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font) {
    drawText(text, pos, font, font.color, font.size, font.spacing);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawText(const std::string& text, const ReyEngine::Pos<R_FLOAT>& pos, const ReyEngine::ReyEngineFont& font, const ReyEngine::ColorRGBA& color, R_FLOAT size, R_FLOAT spacing) {
+void ReyEngine::drawText(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngine::ReyEngineFont& font, const ReyEngine::ColorRGBA& color, R_FLOAT size, R_FLOAT spacing) {
    DrawTextPro(font.font, text.c_str(), {(float)pos.x, (float)pos.y}, {0, 0}, 0, size, spacing, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawRectangle(const ReyEngine::Rect<R_FLOAT>& r, const ReyEngine::ColorRGBA& color) {
-   DrawRectangle(r.x, r.y, r.width, r.height, color);
+void ReyEngine::drawRectangle(const Rect<R_FLOAT>& r, const ReyEngine::ColorRGBA& color) {
+   DrawRectangle((int)r.x, (int)r.y, (int)r.width, (int)r.height, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawRectangleRounded(const ReyEngine::Rect<R_FLOAT>& r, float roundness, int segments, const ReyEngine::ColorRGBA& color) {
+void ReyEngine::drawRectangleRounded(const Rect<R_FLOAT>& r, float roundness, int segments, const ReyEngine::ColorRGBA& color) {
    DrawRectangleRounded({r.x, r.y, r.width, r.height}, roundness, segments, color);
 }
 
@@ -76,28 +76,32 @@ void ReyEngine::drawRectangleLines(const Rect<R_FLOAT>& r, float lineThick, cons
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawRectangleRoundedLines(const ReyEngine::Rect<R_FLOAT>& r, float roundness, int segments, float lineThick, const ReyEngine::ColorRGBA& color) {
+void ReyEngine::drawRectangleRoundedLines(const Rect<R_FLOAT>& r, float roundness, int segments, float lineThick, const ReyEngine::ColorRGBA& color) {
    DrawRectangleRoundedLines({r.x, r.y, r.width, r.height}, roundness, segments, lineThick, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawRectangleGradientV(const ReyEngine::Rect<R_FLOAT>& rect, const ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2) {
-   DrawRectangleGradientV(rect.x, rect.y, rect.width, rect.height, color1, color2);
+void ReyEngine::drawRectangleGradientV(const Rect<R_FLOAT>& rect, const ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2) {
+   DrawRectangleGradientV((int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height, color1, color2);
+}
+
+void ReyEngine::drawRectangleGradientH(const Rect<R_FLOAT>& rect, const ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2) {
+   DrawRectangleGradientH((int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height, color1, color2);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::drawCircle(const Circle& circle, const ReyEngine::ColorRGBA &color) {
-   DrawCircle(circle.center.x, circle.center.y, circle.radius, color);
+   DrawCircle((int)circle.center.x, (int)circle.center.y, circle.radius, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::drawCircleLines(const Circle& circle, const ReyEngine::ColorRGBA &color) {
-   DrawCircleLines(circle.center.x, circle.center.y, circle.radius, color);
+   DrawCircleLines((int)circle.center.x, (int)circle.center.y, circle.radius, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::drawCircleSector(const CircleSector& sector, const ReyEngine::ColorRGBA &color, int segments) {
-   DrawCircleSector((Vector2)sector.center, sector.radius, sector.startAngle, sector.endAngle, segments, color);
+   DrawCircleSector((Vector2)sector.center, sector.radius, (float)sector.startAngle, (float)sector.endAngle, segments, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -128,10 +132,10 @@ void ReyEngine::drawTextCentered(const std::string& text, const Pos<R_FLOAT>& po
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::drawTextCentered(const std::string &text, const Pos<float> &pos, const ReyEngineFont &font, const ReyEngine::ColorRGBA &color, float size, float spacing) {
-   auto textWidth = MeasureText(text.c_str(), font.size);
+   auto textWidth = MeasureText(text.c_str(), size);
    float newX = (float)pos.x - (float)textWidth / 2;
-   float newY = (float)pos.y - (float)font.size / 2;
-   drawText(text, Vec2<R_FLOAT>(newX, newY), font, color, size, spacing);
+   float newY = (float)pos.y - (float)size / 2;
+   drawText(text, {newX, newY}, font, color, size, spacing);
 }
 
 
@@ -210,12 +214,12 @@ Size<int> ReyEngine::getWindowSize() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyEngine::Pos<int> ReyEngine::getWindowPosition() {
+Pos<int> ReyEngine::getWindowPosition() {
    return GetWindowPosition();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::setWindowPosition(ReyEngine::Pos<int> pos) {
+void ReyEngine::setWindowPosition(Pos<int> pos) {
    SetWindowPosition(pos.x, pos.y);
 }
 
@@ -231,12 +235,12 @@ void ReyEngine::minimizeWindow() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-template<> Circle ReyEngine::Rect<double>::circumscribe() const {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/0.70710678118/2};}
-template<> Circle ReyEngine::Rect<int>::circumscribe() const {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/0.70710678118/2};}
-template<> Circle ReyEngine::Rect<float>::circumscribe() const {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/0.70710678118/2};}
-template<> Circle ReyEngine::Rect<double>::inscribe() const {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/2};}
-template<> Circle ReyEngine::Rect<int>::inscribe() const {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/2};}
-template<> Circle ReyEngine::Rect<float>::inscribe() const {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/2};}
+template<> Circle Rect<double>::circumscribe() const {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/0.70710678118/2};}
+template<> Circle Rect<int>::circumscribe() const {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/0.70710678118/2};}
+template<> Circle Rect<float>::circumscribe() const {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/0.70710678118/2};}
+template<> Circle Rect<double>::inscribe() const {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/2};}
+template<> Circle Rect<int>::inscribe() const {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/2};}
+template<> Circle Rect<float>::inscribe() const {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/2};}
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////

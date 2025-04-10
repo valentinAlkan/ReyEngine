@@ -620,6 +620,81 @@ namespace ReyEngine {
       constexpr inline Rect& mirrorLeft(){x-= width; return *this;}
       constexpr inline Rect& mirrorUp(){y-= height; return *this;}
       constexpr inline Rect& mirrorDown(){y+= height; return *this;}
+      /*
+       * Splits a rectangle into percentages.size() + 1 smaller rectangles, the width of each
+       * is decided by the percentage of the whole. The last rectangle will take up as much space
+       * as is necessary to add up to 100 percent of the rectangle.
+       *
+       */
+      template <typename... Percentages>
+      constexpr inline auto splitH(Percentages... percentages) {
+         // Dynamic check for runtime evaluation
+         const auto sum = (... + percentages);
+         if (sum > 100) {
+            throw std::invalid_argument("Values in percentages must add up to less than or equal to 100 percent");
+         }
+
+         constexpr size_t SplitCount = sizeof...(Percentages) + 1;
+
+         // Convert variadic arguments to an array
+         std::array<Percent, SplitCount-1> pct{percentages...};
+
+         std::array<Rect, SplitCount> result;
+         // First rectangle starts at the original rectangle's left edge
+         T currentX = x;
+
+         // Process all but the last rectangle
+         for (size_t i = 0; i < SplitCount - 1; i++) {
+            // Calculate width based on percentage
+            T rectWidth = width * pct[i].get() / 100.0;
+
+            // Create rectangle with calculated width
+            result[i] = *this;
+            result[i].x = currentX;
+            result[i].width = rectWidth;
+
+            // Move starting position for next rectangle
+            currentX += rectWidth;
+         }
+
+         // Last rectangle takes remaining width
+         result[SplitCount - 1] = *this;
+         result[SplitCount - 1].x = currentX;
+         result[SplitCount - 1].width = (x + width) - currentX;
+
+         return result;
+      }
+      // Specialization for no arguments (default to one split at 50%)
+      constexpr inline auto splitH() {return splitH(Percent{50});}
+
+      template <size_t SplitCount=2>
+      constexpr inline std::array<Rect, SplitCount> splitV(const std::array<Percent, SplitCount-1>& pct={50}){  //split rectangle vertically
+         std::array<Rect, SplitCount> result;
+
+         // First rectangle starts at the original rectangle's top edge
+         T currentY = y;
+
+         // Process all but the last rectangle
+         for (size_t i = 0; i < SplitCount - 1; i++) {
+            // Calculate height based on percentage
+            T rectHeight = height * pct[i].get() / 100.0;
+
+            // Create rectangle with calculated height
+            result[i] = *this;
+            result[i].y = currentY;
+            result[i].height = rectHeight;
+
+            // Move starting position for next rectangle
+            currentY += rectHeight;
+         }
+
+         // Last rectangle takes remaining height
+         result[SplitCount - 1] = *this;
+         result[SplitCount - 1].y = currentY;
+         result[SplitCount - 1].height = (y + height) - currentY;
+
+         return result;
+      }
       [[nodiscard]] constexpr inline Rect embiggen(T amt) const {return *this + Rect<T>(-amt, -amt, 2*amt, 2*amt);}
       [[nodiscard]] constexpr inline Rect emtallen(T amt) const {return  *this + Rect<T>(0, -amt, 0, 2*amt);}
       [[nodiscard]] constexpr inline Rect emwiden(T amt) const {return  *this + Rect<T>(-amt, 0, 2*amt, 0);}
@@ -1365,6 +1440,7 @@ namespace ReyEngine {
    void drawRectangleLines(const Rect<float>&, float lineThick, const ReyEngine::ColorRGBA& color);
    void drawRectangleRoundedLines(const Rect<float>&, float roundness, int segments, float lineThick, const ReyEngine::ColorRGBA& color);
    void drawRectangleGradientV(const Rect<R_FLOAT>&, const ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2);
+   void drawRectangleGradientH(const Rect<R_FLOAT>&, const ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2);
    void drawCircle(const Circle&, const ReyEngine::ColorRGBA&  color);
    void drawCircleLines(const Circle&, const ReyEngine::ColorRGBA&  color);
    void drawCircleSector(const CircleSector&, const ReyEngine::ColorRGBA&  color, int segments);

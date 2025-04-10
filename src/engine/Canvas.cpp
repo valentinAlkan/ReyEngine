@@ -86,7 +86,8 @@ CanvasSpace<Pos<float>> Canvas::getMousePos() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Widget* Canvas::__process_hover(const InputEventMouseHover& event){
-   auto accepted = __process_unhandled_input(const_cast<InputEventMouseHover&>(event));
+   auto _event = const_cast<InputEventMouseHover&>(event); //should not be rvalue
+   auto accepted = __process_unhandled_input(_event);
    setHover(accepted);
    return accepted;
 }
