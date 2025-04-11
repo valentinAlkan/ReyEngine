@@ -182,7 +182,7 @@ int main(){
 
             auto [lineedit1, n2] = make_node<LineEdit>("LineEdit", "Try clicking on this line edit");
             widgetsHolder->addChild(std::move(n2));
-            auto [combobox1, n3] = make_node<ComboBox>("ComboBox");
+            auto [combobox1, n3] = make_node<ComboBox<int>>("ComboBox");
             combobox1->addItems({"this", "are", "some", "items"});
             widgetsHolder->addChild(std::move(n3));
 
@@ -227,14 +227,35 @@ int main(){
             //make tabs
             {
                //add some stuff ot differentiate the pages
-               auto [drawTest, n1] = make_node<DrawTestWidget1>("DrawTest");
-               auto [textureRect, n2] = make_node<TextureRect>("TextureTest", "test/spritesheet.png", TextureRect::FitType::NONE);
-               auto [label3, n3] = make_node<Label>("Label3", "Page3");
-               auto [label4, n4] = make_node<Label>("Label4", "Page4");
-               tabContainer->addChild(std::move(n1));
-               tabContainer->addChild(std::move(n2));
-               tabContainer->addChild(std::move(n3));
-               tabContainer->addChild(std::move(n4));
+               std::unique_ptr<TypeNode> p2;
+               {
+                  auto [textureTestLayout, n1] = make_node<Layout>("TextureTestLayout", Layout::LayoutDir::VERTICAL);
+                  std::vector<std::pair<std::string, TextureRect::FitType>> fitTypes = {
+                        {"FitRect", TextureRect::FitType::FIT_RECT},
+                        {"FitWidth", TextureRect::FitType::FIT_WIDTH},
+                        {"FitHeight", TextureRect::FitType::FIT_HEIGHT},
+                        {"None", TextureRect::FitType::NONE}
+                  };
+                  auto [textureTestComboBox, n2] = make_node<ComboBox<TextureRect::FitType>>("TextureTestComboBox", fitTypes);
+                  auto [textureRect, n3] = make_node<TextureRect>("TextureTest", "test/spritesheet.png", TextureRect::FitType::FIT_RECT);
+                  n1->addChild(std::move(n2));
+                  n1->addChild(std::move(n3));
+                  p2 = std::move(n1);
+
+                  auto fitMenuCB = [textureRect](const ComboBox<TextureRect::FitType>::EventComboBoxItemSelected& event){
+                     cout << event.field->text << " at index " << event.itemIndex << " = " << (int)event.field->data << endl;
+                     textureRect->setFitType(event.field->data);
+                  };
+                  textureTestComboBox->subscribe<ComboBox<TextureRect::FitType>::EventComboBoxItemSelected>(textureTestComboBox, fitMenuCB);
+               }
+
+               auto [drawTest, p1] = make_node<DrawTestWidget1>("DrawTest");
+               auto [label3, p3] = make_node<Label>("Label3", "Page3");
+               auto [label4, p4] = make_node<Label>("Label4", "Page4");
+               tabContainer->addChild(std::move(p1));
+               tabContainer->addChild(std::move(p2));
+               tabContainer->addChild(std::move(p3));
+               tabContainer->addChild(std::move(p4));
                drawTest->setAnchoring(ReyEngine::Anchor::FILL);
             }
          }

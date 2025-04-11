@@ -227,6 +227,8 @@ namespace ReyEngine{
 //         publisher->addSubscriber<T>(me, adapter);
 //      }
       template <typename T>
+      void subscribe(const std::shared_ptr<EventPublisher>& publisher, std::function<void(const T&)> typedEventHandler){subscribe(publisher.get(), typedEventHandler);}
+      template <typename T>
       void subscribe(EventPublisher* publisher, std::function<void(const T&)> typedEventHandler){
          static_assert(std::is_base_of_v<BaseEvent, T>);
          auto adapter = [typedEventHandler](const BaseEvent& baseEvent){

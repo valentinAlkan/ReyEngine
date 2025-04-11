@@ -166,7 +166,14 @@ namespace ReyEngine::Internal::Tree {
          as<TreeStorable>().value()->__on_child_added_to_tree(childptr);
          auto ancestor = this;
          while (ancestor){
-            ancestor->as<TreeStorable>().value()->__on_descendant_added_to_tree(childptr);
+            //call on all that child's descendents
+            std::function<void(TypeNode*)> callOnDesc = [&](TypeNode* currentNode){
+               ancestor->as<TreeStorable>().value()->__on_descendant_added_to_tree(currentNode);
+               for (auto& child : currentNode->getChildren()){
+                  callOnDesc(child);
+               }
+            };
+            callOnDesc(childptr);
             ancestor = ancestor->_parent;
          }
          return childptr;
