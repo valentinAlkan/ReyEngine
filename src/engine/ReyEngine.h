@@ -151,29 +151,29 @@ namespace ReyEngine {
       inline Vec2& operator-=(const Vec2& rhs){x -= rhs.x; y -= rhs.y; return *this;}
       inline Vec2 operator*(double rhs) const {Vec2 retval(*this); retval.x *= rhs; retval.y *= rhs; return retval;}
 //      inline Vec2& operator*=(const Vec2& rhs){x *= rhs.x; y *= rhs.y; return *this;}
-      inline Vec2& operator*=(double rhs){x *= rhs; y *= rhs; return *this;}
-      inline Vec2<R_FLOAT> operator/(double rhs) const {Vec2<R_FLOAT> retval(*this); retval.x /= rhs; retval.y /= rhs; return retval;}
-      inline Vec2& operator/=(const Vec2& rhs){x /= rhs.x; y /= rhs.y; return *this;}
-      inline Vec2& operator=(const Vec2& rhs){x = rhs.x; y=rhs.y; return *this;}
-      inline bool operator==(const Vec2& rhs) const {return x==rhs.x && y==rhs.y;}
-      inline bool operator!=(const Vec2& rhs) const {return x!=rhs.x || y!=rhs.y;}
-      inline Vec2 operator-() const {return {-x, -y};}
-      inline void operator=(Size<T>&) = delete;
+      inline constexpr Vec2& operator*=(double rhs){x *= rhs; y *= rhs; return *this;}
+      inline constexpr Vec2<R_FLOAT> operator/(double rhs) const {Vec2<R_FLOAT> retval(*this); retval.x /= rhs; retval.y /= rhs; return retval;}
+      inline constexpr Vec2& operator/=(const Vec2& rhs){x /= rhs.x; y /= rhs.y; return *this;}
+      inline constexpr Vec2& operator=(const Vec2& rhs){x = rhs.x; y=rhs.y; return *this;}
+      inline constexpr bool operator==(const Vec2& rhs) const {return x==rhs.x && y==rhs.y;}
+      inline constexpr bool operator!=(const Vec2& rhs) const {return x!=rhs.x || y!=rhs.y;}
+      inline constexpr Vec2 operator-() const {return {-x, -y};}
+      inline constexpr void operator=(Size<T>&) = delete;
 
       virtual inline void operator=(Pos<T>&) = delete;
-      inline explicit operator Vector2() const {return {(float)x,(float)y};}
+      inline explicit constexpr operator Vector2() const {return {(float)x,(float)y};}
       inline constexpr T magnitude() const {return std::sqrt(x * x + y * y);}
       static inline constexpr T magnitude(T x, T y) {return std::sqrt(x * x + y * y);}
       UnitVector2 direction(const Vec2<T>& dest) const; //get the unit vector that points at dest from this point's perspective
 //      inline constexpr Vec2 midpoint() const {return {x/2, y / 2};} does this make sense?
-      inline Vec2 min(const Vec2& other) const {Vec2 r; r.x = Math::min(Vec2::x, other.x); r.y = Math::min(Vec2::y, other.y); return r;}
-      inline Vec2 max(const Vec2& other) const {Vec2 r; r.x = Math::max(Vec2::x, other.x); r.y = Math::max(Vec2::y, other.y); return r;}
-      inline Perunum pct(R_FLOAT input) const {return (input-x)/(y - x);} //given an input value, what percentage of the range is it from 0 to 1?
-      inline R_FLOAT lerp(Perunum lerpVal) const {return lerpVal.get() * (y - x) + x;} //given a value from 0 to 1, what is the value of the range that corresponds to it?
-      inline Vec2 lerp(Vec2 otherPoint, R_FLOAT xprm) const {return {xprm, y + (((xprm - x) * (otherPoint.y - y)) / (otherPoint.x - x))};}
-      inline Vec2 extend(R_FLOAT distance) const {Vec2<T> normalized = normalize();return normalized * distance;}
-      inline T clamp(T value) const {if (value < x) return x; if (value > y) return y; return value;}
-      inline Vec2 clamp(Vec2 clampA, Vec2 clampB) const {
+      inline constexpr Vec2 min(const Vec2& other) const {Vec2 r; r.x = Math::min(Vec2::x, other.x); r.y = Math::min(Vec2::y, other.y); return r;}
+      inline constexpr Vec2 max(const Vec2& other) const {Vec2 r; r.x = Math::max(Vec2::x, other.x); r.y = Math::max(Vec2::y, other.y); return r;}
+      inline constexpr Perunum pct(R_FLOAT input) const {return (input-x)/(y - x);} //given an input value, what percentage of the range is it from 0 to 1?
+      inline constexpr R_FLOAT lerp(Perunum lerpVal) const {return lerpVal.get() * (y - x) + x;} //given a value from 0 to 1, what is the value of the range that corresponds to it?
+      inline constexpr Vec2 lerp(Vec2 otherPoint, R_FLOAT xprm) const {return {xprm, y + (((xprm - x) * (otherPoint.y - y)) / (otherPoint.x - x))};}
+      inline constexpr Vec2 extend(R_FLOAT distance) const {Vec2<T> normalized = normalize();return normalized * distance;}
+      inline constexpr T clamp(T value) const {if (value < x) return x; if (value > y) return y; return value;}
+      inline constexpr Vec2 clamp(Vec2 clampA, Vec2 clampB) const {
          Vec2 retval = {x, y};
          if (x < clampA.x) retval.x = clampA.x;
          if (x > clampB.x) retval.x = clampB.x;
@@ -1392,7 +1392,7 @@ namespace ReyEngine {
          }
          _file.clear();
       }
-      const Texture2D& getTexture() const {return _tex;}
+      [[nodiscard]] const Texture2D& getTexture() const {return _tex;}
       operator bool() const {return _texLoaded;}
       std::string getPath(){return _file;}
       Size<int> size;
@@ -1450,7 +1450,6 @@ namespace ReyEngine {
    void drawTexture(const ReyTexture& texture, const Rect<R_FLOAT>& source, const Rect<R_FLOAT>& dest, const ReyEngine::ColorRGBA& tint);
    void drawRenderTarget(const RenderTarget&, const Pos<R_FLOAT>&, const ColorRGBA&);
    void drawRenderTargetRect(const RenderTarget&, const Rect<R_FLOAT>&, const Rect<R_FLOAT>&, const ColorRGBA&);
-   void drawTexture(const ReyTexture&, const Rect<R_FLOAT>& src, const Rect<R_FLOAT>& dst, const ColorRGBA& tint);
    inline float getFrameDelta() {return GetFrameTime();}
    inline Size<R_FLOAT> measureText(const std::string& text, const ReyEngineFont& font){return MeasureTextEx(font.font, text.c_str(), font.size, font.spacing);}
    inline void printMatrix(const Transform2D& t) { printMatrix(t.matrix);}
@@ -1461,6 +1460,12 @@ namespace ReyEngine {
    bool Pos<T>::isInside(const Rect<T>& r) {
       return r.isInside(*this);
    }
+
+   struct ScopeScissor {
+      constexpr inline ScopeScissor(const Rect<R_FLOAT>& r){ BeginScissorMode((int)r.x, (int)r.y, (int)r.width, (int)r.height);}
+      inline ~ScopeScissor(){EndScissorMode();}
+   };
+
 }
 
 namespace InputInterface{

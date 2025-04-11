@@ -46,7 +46,7 @@ Widget* ComboBox::_unhandled_input(const InputEvent& event) {
       setModal(true);
       auto textSize = theme->font.size;
       //build the menu rect
-      _selectionMenuRect = Rect<int>(0, getHeight(), getWidth(), textSize * fields.size());
+      _selectionMenuRect = Rect<float>(0, getHeight(), getWidth(), textSize * fields.size());
       //build the item rects
       _selectionMenuItemRects.clear();
       for (int i=0; i < fields.size(); i++) {
@@ -85,7 +85,7 @@ Widget* ComboBox::_unhandled_input(const InputEvent& event) {
                break;
             }
             case InputEventMouseButton::getUniqueEventId(): {
-               auto mbEvent = event.toEvent<InputEventMouseButton>();
+               auto& mbEvent = event.toEvent<InputEventMouseButton>();
                if (mbEvent.isDown) return nullptr;
                if (mouse->isInside()) {
                   //toggle menu visibility
@@ -116,6 +116,10 @@ Widget* ComboBox::_unhandled_input(const InputEvent& event) {
                }
                break;
             }
+            case InputEventMouseWheel::getUniqueEventId():
+               auto& mwEvent = event.toEvent<InputEventMouseWheel>();
+//               mwEvent.wheelMove.pct()
+               break;
          }
       }
    }

@@ -7,14 +7,28 @@ using namespace ReyEngine;
 ///////////////////////////////////////////////////////////////////////////////////////
 void TextureRect::render2D() const {
    if (_texture) {
-      drawTextureRect(*_texture, {{0,0}, _texture->size}, getRect().toSizeRect(), 0.0, Colors::none);
+      Rect<float> srcRect = {{0, 0}, _texture->size};
+      Rect<float> dstRect = getSizeRect();
+      switch(_fitType) {
+         case FitType::FIT_RECT: break;
+         case FitType::FIT_WIDTH:
+            dstRect.height = srcRect.height;
+            break;
+         case FitType::FIT_HEIGHT:
+            dstRect.width = srcRect.width;
+            break;
+         case FitType::NONE:
+            srcRect = dstRect;
+            break;
+      }
+      drawTexture(*_texture, srcRect, dstRect, Colors::none);
    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void TextureRect::_init() {
-   if (!_texturePath.value.empty() && !_texture){
-      setTexture(_texturePath.value);
+   if (!_texturePath.empty() && !_texture){
+      setTexture(_texturePath);
    }
    if (_fitScheduled && _texture){
       setRect({getPos(), _texture->size});
@@ -31,7 +45,7 @@ void TextureRect::setTexture(const FileSystem::File& _newPath) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void TextureRect::setTexture(shared_ptr<ReyTexture>& newTexture){
+void TextureRect::setTexture(const shared_ptr<ReyTexture>& newTexture){
     _texturePath = newTexture->getPath();
     if (Application::isReady()) {
         _texture = newTexture;

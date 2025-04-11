@@ -9,6 +9,7 @@
 #include "TabContainer.h"
 #include "ComboBox.h"
 #include "ScrollArea.h"
+#include "TextureRect.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -227,7 +228,7 @@ int main(){
             {
                //add some stuff ot differentiate the pages
                auto [drawTest, n1] = make_node<DrawTestWidget1>("DrawTest");
-               auto [label2, n2] = make_node<Label>("Label2", "Page2");
+               auto [textureRect, n2] = make_node<TextureRect>("TextureTest", "test/spritesheet.png", TextureRect::FitType::NONE);
                auto [label3, n3] = make_node<Label>("Label3", "Page3");
                auto [label4, n4] = make_node<Label>("Label4", "Page4");
                tabContainer->addChild(std::move(n1));

@@ -18,7 +18,7 @@ ReyTexture::ReyTexture(const FileSystem::File& file)
 void ReyTexture::loadTexture(const FileSystem::File &file) {
    auto path = file.abs();
    if (!file.exists()){
-      Logger::warn() << "LoadTexture failure: Texture file " << file.abs() << " does not exist!" << endl;
+      Logger::error() << "LoadTexture failure: Texture file " << file.abs() << " does not exist!" << endl;
    }
    _tex = LoadTexture(path.c_str());
    _texLoaded = true;
@@ -151,8 +151,7 @@ void ReyEngine::drawTextRelative(const std::string& text, const Pos<R_FLOAT>& re
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::drawTexture(const ReyTexture& texture, const Rect<R_FLOAT> &source, const Rect<R_FLOAT> &dest, const ReyEngine::ColorRGBA &tint) {
    //Note: this is not y-flipped. That's a renderTexture thing.
-   auto tex = texture.getTexture();
-   DrawTexturePro(tex, source, dest, {0,0},  0, tint);
+   DrawTexturePro(texture.getTexture(), source, dest, {0,0},  0, tint);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

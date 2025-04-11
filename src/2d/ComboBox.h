@@ -8,8 +8,8 @@ namespace ReyEngine {
    struct ComboBoxDataField {
       ComboBoxDataField(const std::string& text)
       : text(text)
-      , checkable("checkable")
-      , checked("checked")
+      , checkable(true)
+      , checked(true)
       {}
       std::string text;
       bool checkable;
@@ -70,7 +70,7 @@ namespace ReyEngine {
       std::optional<size_t> currentIndex;
 
    private:
-      float fieldSelectionRectHeight;
+      float fieldSelectionRectHeight{};
       bool _isOpen = false;
       Rect<int> _selectionMenuRect;
       std::vector<Rect<float>> _selectionMenuItemRects;
