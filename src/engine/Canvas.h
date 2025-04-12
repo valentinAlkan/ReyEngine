@@ -111,7 +111,6 @@ namespace ReyEngine {
       [[nodiscard]] const Widget* getStatus() const {return const_cast<Canvas*>(this)->getStatus<Status>();}
       std::array<Widget*, std::tuple_size_v<WidgetStatus::StatusTypes>> statusWidgetStorage = {0};
       RenderTarget _renderTarget;
-      Transform2D modalXform;
 
       /////////////////////////////////////////////////////////////////////////////////////////
       struct TransformStack{
@@ -241,10 +240,7 @@ namespace ReyEngine {
             if (auto childWidget = child->as<Widget>()){
                auto& _childWidget = childWidget.value();
                if (_childWidget->_modal) {
-                //save off global transformation matrix so we can redraw this widget later in its proper position
-                  // Note: This encodes the drawables local transform, which needs to be subtracted off later.
-                  modalXform = _childWidget->getGlobalTransform().get();
-                  // modal widgets do not propogate to children except explicitly
+                  //we will come back to this later
                   continue;
                } else {
                   auto handled = processNode<ProcessType>(child, false, std::forward<Args>(args)...);
@@ -261,7 +257,7 @@ namespace ReyEngine {
       /////////////////////////////////////////////////////////////////////////////////////////
       /////////////////////////////////////////////////////////////////////////////////////////
       template <typename ProcessType, typename... Args>
-      Widget* processNode(TypeNode *thisNode, bool isModal, Args&&... args )  {
+      Widget* processNode(TypeNode *thisNode, bool isGlobal, Args&&... args )  {
          auto isWidget = thisNode->as<Widget>();
          //processes actual widget itself
          if (!isWidget) {
@@ -293,7 +289,7 @@ namespace ReyEngine {
          };
 
          // Call the lambda to trigger template deduction
-         auto processTransformer = createProcessTransformer( isModal ? modalXform : widget->getLocalTransform());
+         auto processTransformer = createProcessTransformer(isGlobal ? widget->getGlobalTransform().get() : widget->getLocalTransform());
 
          if (processTransformer.subCanvas && processTransformer.subCanvas != this){
                handled = processTransformer.subcanvasProcess();
@@ -301,7 +297,7 @@ namespace ReyEngine {
          } else {
             //render process (self-first) with child dispatch
             if constexpr (std::is_same_v<ProcessType, RenderProcess>) {
-               if (!widget->_modal || isModal) {
+               if (!widget->_modal || isGlobal) {
                   handled = processTransformer.process();
                   if (handled) return handled;
                }
@@ -312,7 +308,7 @@ namespace ReyEngine {
                //process children first for input
                handled = processChildren<ProcessType>(thisNode, std::forward<Args>(args)...);
                if (handled) return handled;
-               if (!widget->_modal || isModal) {
+               if (!widget->_modal || isGlobal) {
                   handled = processTransformer.process();
                   if (handled) return handled;
                }

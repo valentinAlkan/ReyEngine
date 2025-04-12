@@ -63,7 +63,7 @@ void Canvas::renderProcess() {
    // we are rendering globally
    if (auto modal = getModal()){
       auto modalDrawable = modal->_node->as<Widget>();
-      transformStack.pushTransform(&modalXform);
+      transformStack.pushTransform(&getModal()->getGlobalTransform().get());
 
       //invert (subtract off) the modal widget's own position since it's already encoded in modalXform.
       auto inverseXform = modalDrawable.value()->getTransform().inverse();
