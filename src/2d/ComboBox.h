@@ -22,6 +22,7 @@ namespace ReyEngine {
 
    template <typename T>
    class ComboBox : public Widget {
+      static constexpr float DROP_HANDLE_WIDTH = 20;
    public:
       EVENT_ARGS(EventComboBoxItemSelected, 654654654, size_t itemIndex, const ComboBoxDataField<T>* field)
                , itemIndex(itemIndex)
@@ -117,7 +118,25 @@ namespace ReyEngine {
       }
       void render2D() const override{
          //draw the background
-         drawRectangle(getRect().toSizeRect(), theme->background.colorPrimary);
+         drawRectangle(getSizeRect(), theme->background.colorPrimary);
+         drawRectangleLines(getSizeRect(), 1.0, theme->background.colorSecondary);
+
+         //draw the dropdown arrow
+         //configure the drop handle
+         auto dropRect = getSizeRect().chopLeft(getWidth()-DROP_HANDLE_WIDTH);
+         if (_isOpen) {
+            //color in rect if its open
+            drawRectangle(dropRect, theme->background.colorActive);
+            drawRectangleLines(dropRect, 1.0, theme->background.colorSecondary);
+         }
+         //draw drop arrow
+         auto center = dropRect.center();
+         auto line = center.to(dropRect.top().midpoint()).scale(80);
+//         line += Pos<float>(0, -3);
+         static constexpr auto rotate_amt = Degrees(60);
+         drawLine(line.copy().rotate(center, rotate_amt), 2.0, theme->background.colorSecondary);
+         drawLine(line.rotate(center, -rotate_amt), 2.0, theme->background.colorSecondary);
+
 
          auto& font = theme->font;
 

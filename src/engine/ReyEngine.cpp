@@ -118,11 +118,23 @@ void ReyEngine::drawLine(const Line<R_FLOAT>& line, float lineThick, const ReyEn
 void ReyEngine::drawArrow(const Line<R_FLOAT>& line, float lineThick, const ReyEngine::ColorRGBA &color, float headSize) {
     DrawLineEx((Vector2)line.a, (Vector2)line.b, lineThick, color);
     static constexpr auto rotation = 25_deg;
-    auto pctLine = line.project(headSize);
+    auto _line = line;
+    auto pctLine = _line.project(headSize);
     auto headline = pctLine.rotate(pctLine.a, rotation);
     DrawLineEx((Vector2)headline.a, (Vector2)headline.b, lineThick, color);
     headline = pctLine.rotate(pctLine.a, -rotation);
     DrawLineEx((Vector2)headline.a, (Vector2)headline.b, lineThick, color);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawArrowHead(const Line<R_FLOAT>& line, float lineThick, const ReyEngine::ColorRGBA &color, float headSize) {
+//   DrawLineEx((Vector2)line.a, (Vector2)line.b, lineThick, color);
+//   static constexpr auto rotation = 25_deg;
+//   auto pctLine = line.project(headSize);
+//   auto headline = pctLine.rotate(pctLine.a, rotation);
+//   DrawLineEx((Vector2)headline.a, (Vector2)headline.b, lineThick, color);
+//   headline = pctLine.rotate(pctLine.a, -rotation);
+//   DrawLineEx((Vector2)headline.a, (Vector2)headline.b, lineThick, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

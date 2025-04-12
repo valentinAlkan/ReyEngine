@@ -428,35 +428,55 @@ namespace ReyEngine {
       constexpr Line(): a(0,0), b(0,0){}
       constexpr Line(Pos<T> a, Pos<T> b): a(a), b(b){}
       constexpr Line(const T x1, const T y1, const T x2, const T y2): Line({x1, y1}, {x2, y2}){}
+      constexpr Line copy(){return *this;}
       constexpr Pos<T> midpoint() const {return {a.x/2+b.x/2, a.y/2+b.y/2};}
       constexpr Pos<T> lerp(double xprm) const {return a.lerp(b, xprm);}
       constexpr double distance() const {return a.distanceTo(b);}
       inline std::string toString() const {return "{" + a.toString() + ", " + b.toString() + "}";}
       constexpr Line& operator+=(const Pos<T>& pos){a += pos; b += pos; return *this;}
       constexpr Line operator+(const Pos<T>& pos) const {Line<T> l(*this); l.a += pos; l.b += pos; return l;}
+      constexpr Line& operator-=(const Pos<T>& pos){a -= pos; b -= pos; return *this;}
+      constexpr Line operator-(const Pos<T>& pos) const {Line<T> l(*this); l.a -= pos; l.b -= pos; return l;}
       //Find the angle from horizontal between points and a b
-      inline Radians angle() const {
+      constexpr inline Radians angle() const {
           auto dx = static_cast<R_FLOAT>(b.x - a.x);
           auto dy = static_cast<R_FLOAT>(b.y - a.y);
           return atan2(dy, dx);
       }
-       //rotate the line around A by r radians
-      inline Line rotate(Pos<T> basis, Radians r) const {return {a.rotatePoint(basis, r), b.rotatePoint(basis, r)};}
-      inline Line pctOf(Percent pct) const {
+      //rotate the line around A by r radians
+      constexpr inline Line& rotate(Pos<T> basis, Radians r){a.rotatePoint(basis, r); b.rotatePoint(basis, r); return *this;}
+      constexpr inline Line& scale(Percent pct) {
           // Calculate the direction vector from a to b
           auto direction = b - a;
           // Scale the direction vector by the percentage
-          auto extensionVector = direction *Perunum(pct).get();
+          auto extensionVector = direction * Perunum(pct).get();
           auto newB = a + Pos(extensionVector.x, extensionVector.y);
-          return {a, newB};
+          b = newB;
+          return *this;
       }
+      constexpr inline Line& extend(float amt) {
+         // Get the direction vector
+         auto dir = b - a;
+         // Normalize it
+         auto length = distance();
+         if (length == 0) return *this; // Prevent division by zero
+
+         // Scale the direction vector by the amount to extend
+         auto extensionVector = dir * (amt / length);
+         // Create a new endpoint by adding the extension vector to b
+         auto newB = b + Pos<T>(extensionVector.x, extensionVector.y);
+         b = newB;
+         return *this;
+      }
+
+      constexpr inline Line& shorten(float amt) {return extend(-amt);}
       //project a line a fixed amount from the start point
-      inline Line project(double amount) const {return {a, a.project(b, amount)};}
-      inline T slope(){
+      constexpr inline Line& project(double amount) {b = a.project(b, amount); return *this;}
+      constexpr inline T slope(){
          if (a.x == b.x) throw std::runtime_error("Undefined slope (vertical line)");
          return (b.y - a.y) / (b.x - a.x);
       }
-      inline std::pair<Line, Line> normals(){
+      constexpr inline std::pair<Line, Line> normals(){
          auto dx = b.x - a.x;
          auto dy = b.y - a.y;
          return {{-dy, dx}, {dy, -dx}};
@@ -491,19 +511,19 @@ namespace ReyEngine {
       [[nodiscard]] constexpr inline Pos clamp(Pos clampA, Pos clampB) const { return Pos(Vec2<T>::clamp(clampA, clampB));}
 //      inline Pos& operator=(const Vec2<T>& other){Pos::x = other.x; Pos::y = other.y; return *this;}
 //      Rotate around a basis point
-      constexpr inline Pos rotatePoint(const Pos<int>& basis, Radians r) const {
+      constexpr inline Pos& rotatePoint(const Pos<T>& basis, Radians r) {
            double radians = r.get();
            // Translate point to origin
            double xTranslated = Pos::x - basis.x;
            double yTranslated = Pos::y - basis.y;
            // Apply rotation and translate back
            Pos<int> p_rotated;
-           p_rotated.x = static_cast<int>(xTranslated * cos(radians) - yTranslated * sin(radians) + basis.x);
-           p_rotated.y = static_cast<int>(xTranslated * sin(radians) + yTranslated * cos(radians) + basis.y);
-           return p_rotated;
+           Pos::x = static_cast<T>(xTranslated * cos(radians) - yTranslated * sin(radians) + basis.x);
+           Pos::y = static_cast<T>(xTranslated * sin(radians) + yTranslated * cos(radians) + basis.y);
+           return *this;
        }
       // Function to project a point distance d from point a along the line ab
-      constexpr inline Pos project(const Pos& b, double d) const {
+      constexpr inline Pos& project(const Pos& b, double d) {
           // Calculate the direction vector from a to b
           Pos direction = b - *this;
           // Normalize the direction vector
@@ -511,8 +531,8 @@ namespace ReyEngine {
           // Scale the normalized vector by distance d
           Pos scaledDirection = unitDirection * d;
           // Calculate the new point by adding the scaled direction to point a
-          Pos projectedPoint = *this + Pos(scaledDirection.x, scaledDirection.y);
-          return projectedPoint;
+          *this += Pos(scaledDirection.x, scaledDirection.y);
+          return *this;
       }
       constexpr inline double distanceTo(const Pos& other) const {
          auto diff = *this - other;
@@ -1335,6 +1355,7 @@ namespace ReyEngine {
    namespace Colors{
       static constexpr ColorRGBA gray = {130, 130, 130, 255};
       static constexpr ColorRGBA disabledGray = {230, 230, 230, 255};
+      static constexpr ColorRGBA activeBlue = {32, 155, 238, 255};
       static constexpr ColorRGBA lightGray = {200, 200, 200, 255};
       static constexpr ColorRGBA red = {230, 41, 55, 255};
       static constexpr ColorRGBA green = { 0, 228, 48, 255};
@@ -1447,6 +1468,7 @@ namespace ReyEngine {
    void drawCircleSectorLines(const CircleSector&, const ReyEngine::ColorRGBA&  color, int segments);
    void drawLine(const Line<R_FLOAT>&, float lineThick, const ReyEngine::ColorRGBA& color);
    void drawArrow(const Line<R_FLOAT>&, float lineThick, const ReyEngine::ColorRGBA& color, float headSize=20); //Head drawn at A
+   void drawArrowHead(const Line<R_FLOAT>&, float lineThick, const ReyEngine::ColorRGBA& color, float headSize=20); //Head drawn at A
    void drawTexture(const ReyTexture& texture, const Rect<R_FLOAT>& source, const Rect<R_FLOAT>& dest, const ReyEngine::ColorRGBA& tint);
    void drawRenderTarget(const RenderTarget&, const Pos<R_FLOAT>&, const ColorRGBA&);
    void drawRenderTargetRect(const RenderTarget&, const Rect<R_FLOAT>&, const Rect<R_FLOAT>&, const ColorRGBA&);

@@ -72,11 +72,13 @@ namespace ReyEngine{
             if (mouseEvent.value()->isInside() && buttonEvent.isDown && _grabber.isInside(localPos)) {
                _cursor_down = true;
                _is_dragging = _cursor_down;
+               setFocused(true);
                return this;
             }
             if (!buttonEvent.isDown && _is_dragging) {
                _cursor_down = buttonEvent.isDown;
                _is_dragging = false;
+               setFocused(false);
                return this;
             }
          }

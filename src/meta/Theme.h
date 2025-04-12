@@ -42,6 +42,8 @@ namespace ReyEngine {
          ColorRGBA colorSecondary; //for gradient
          ColorRGBA colorTertiary; //for whatever
          ColorRGBA colorDisabled; //for whatever
+         ColorRGBA colorActive;
+         ColorRGBA colorHighlight;
          Fill fill = Fill::NONE;
          Outline outline = Outline::NONE;
          float roundness = 0.2;
@@ -117,11 +119,14 @@ namespace ReyEngine {
       Theme(const std::string& instanceName = "DefaultTheme"){
          //apply defaults
          background.fill = Style::Fill::SOLID;
-         background.colorPrimary = ReyEngine::Colors::lightGray;
-         background.colorSecondary = ReyEngine::Colors::black;
-         background.colorTertiary = ReyEngine::Colors::white;
-         background.colorDisabled = ReyEngine::Colors::disabledGray;
-         foreground.colorDisabled = ReyEngine::Colors::white;
+         background.colorPrimary = Colors::lightGray;
+         background.colorSecondary = Colors::black;
+         background.colorTertiary = Colors::white;
+         background.colorDisabled = Colors::disabledGray;
+         background.colorActive = Colors::activeBlue;
+         background.colorHighlight = Colors::blue;
+         foreground.colorPrimary = Colors::black;
+         foreground.colorDisabled = Colors::white;
       }
 
       Style::StyleRole background;

@@ -104,7 +104,6 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
       return processNode<InputProcess>(thisNode, isModal, event);
    };
 
-
    //query intrinsic children first
    for (auto& intrinsicChild : _intrinsicChildren) {
       auto handled = createProcessNodeForEvent(intrinsicChild.get(), false, event);
@@ -124,6 +123,11 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
    //then modal widgets
    if (auto modal = getModal()){
       return createProcessNodeForEvent(modal->_node, true, event);
+   }
+
+   //then focused widgets
+   if (auto focus = getFocus()){
+      return createProcessNodeForEvent(focus->_node, true, event);
    }
 
    if (isMouse) {
