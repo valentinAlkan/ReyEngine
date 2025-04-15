@@ -76,6 +76,7 @@ namespace ReyEngine::Internal {
       inline void setMaxSize(const Size<float>& newMax){maxSize = newMax; setSize(getSize());}
       inline R_FLOAT getWidth() const {return size.x;}
       inline R_FLOAT getHeight() const {return size.y;}
+      inline Pos<float> getCenter() const {return getRect().center();}
       inline Size<R_FLOAT> clampedSize(const Size<R_FLOAT>& rhs) const {
          auto newX = ReyEngine::Vec2<R_FLOAT>(minSize.x, maxSize.x).clamp(size.x);
          auto newY = ReyEngine::Vec2<R_FLOAT>(minSize.y, maxSize.y).clamp(size.y);
