@@ -179,7 +179,7 @@ namespace ReyEngine::Internal::Tree {
          return childptr;
       }
 
-      std::unique_ptr<TypeNode> removeChild (std::string& name){
+      std::unique_ptr<TypeNode> removeChild (const std::string& name){
          throw std::runtime_error("not implemented");
       };
 
