@@ -1364,6 +1364,7 @@ namespace ReyEngine {
       static constexpr ColorRGBA yellow = {253, 249, 0, 255};
       static constexpr ColorRGBA orange = {255, 165, 0, 255};
       static constexpr ColorRGBA purple = {127, 0, 127, 255};
+      static constexpr ColorRGBA ta = {186, 129, 8, 255};
       static constexpr ColorRGBA white = {255, 255, 255, 255};
       static constexpr ColorRGBA transparent = {0, 0, 0, 0};
       static constexpr ColorRGBA none = {255, 255, 255, 255};
