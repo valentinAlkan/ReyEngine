@@ -56,7 +56,7 @@ struct TestWidget : public Widget {
   }
    void render2D() const override {
       bool _isInsideAtRenderTime = getLocalMousePos().isInside(getSizeRect());
-      drawRectangle(getRect().toSizeRect(), _isInsideAtRenderTime ? color : Colors::lightGray);
+      drawRectangle(getSizeRect(), _isInsideAtRenderTime ? color : Colors::lightGray);
       drawText(text, {0,0}, getDefaultFont());
       drawText("Pos = " + Pos<int>(getPos()).toString(), {0, 20}, getDefaultFont());
       drawText("Siz = " + Size<int>(getSize()).toString(), {0,40}, getDefaultFont());

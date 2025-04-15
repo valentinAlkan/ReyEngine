@@ -622,7 +622,7 @@ namespace ReyEngine {
       constexpr inline Rect& operator-=(const Rect<T>& rhs){x -= rhs.x; y -= rhs.y; width -= rhs.width; height -= rhs.height; return *this;}
       constexpr inline Rect& operator*=(const Rect<T>& rhs){x *= rhs.x; y *= rhs.y; width *= rhs.width; height *= rhs.height; return *this;}
       constexpr inline Rect& operator/=(const Rect<T>& rhs){x /= rhs.x; y /= rhs.y; width /= rhs.width; height /= rhs.height; return *this;}
-      constexpr inline Rect& centerOnPoint(const Pos<R_FLOAT>& p) {return setPos(p - size() / 2);} /// Return the pos of the rect such that it would be centered on point p
+      constexpr inline Rect& centerOnPoint(const Pos<R_FLOAT>& p) {return setPos(p - size() / 2);} /// Return the rect such that it would be centered on point p
       constexpr inline Rect& embiggen(T amt) {return *this += Rect<T>(-amt, -amt, 2*amt, 2*amt);} //shrink/expand borders evenly
       constexpr inline Rect& emtallen(T amt) {return *this += Rect<T>(0, -amt, 0, 2*amt);}//embiggen tallness evenly
       constexpr inline Rect& emwiden(T amt) {return *this += Rect<T>(-amt, 0, 2*amt, 0);}//embiggen wideness evenly
@@ -841,7 +841,6 @@ namespace ReyEngine {
          }
       }
       [[nodiscard]] constexpr inline Pos<T> center() const {return {x+width/2, y+height/2};}
-      constexpr inline void setCenter(const Pos<T>& center) {x = center.x-width/2; y= center.y - height / 2;}
       [[nodiscard]] inline std::string toString() const {
          return "{" + std::to_string(x) + ", " + std::to_string(y) + ", " +
          std::to_string(width) + ", " + std::to_string(height) + "}";
@@ -894,7 +893,7 @@ namespace ReyEngine {
          // Return a new Rect with top-left corner and dimensions
          return Rect(_left, _top, _width, _height);
       }
-      constexpr inline Rect getBoundingRect(const Rect& a, const Rect& b) const {
+      static constexpr inline Rect getBoundingRect(const Rect& a, const Rect& b) {
          return a.getBoundingRect(b);
       }
 
