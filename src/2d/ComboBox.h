@@ -20,21 +20,21 @@ namespace ReyEngine {
       const T data;
    };
 
-   template <typename T>
+   template <typename T=int>
    class ComboBox : public Widget {
       static constexpr float DROP_HANDLE_WIDTH = 20;
    public:
       EVENT_ARGS(EventComboBoxItemSelected, 654654654, size_t itemIndex, const ComboBoxDataField<T>* field)
-               , itemIndex(itemIndex)
-               , field(field)
+         , itemIndex(itemIndex)
+         , field(field)
          {}
          const size_t itemIndex;
          const ComboBoxDataField<T>* field;
       };
 
       EVENT_ARGS(EventComboBoxItemHovered, 654654655, size_t itemIndex, const ComboBoxDataField<T>* field)
-               , field(field)
-               , itemIndex(itemIndex)
+         , field(field)
+         , itemIndex(itemIndex)
          {}
          const size_t itemIndex;
          const ComboBoxDataField<T>* field;
@@ -75,6 +75,10 @@ namespace ReyEngine {
          }
       }
       inline ComboBoxDataField<T>* addItem(const std::string& item) {
+         static_assert(std::is_arithmetic_v<T>, "When using default addItem, T must be arithmetic in nature (int/uint/size_t, etc). "
+                                                "Otherwise you must explicitly specify the stored value using one of the "
+                                                "other addItem functions, since we cannot meaningfully infer what value T "
+                                                "should map to in the default case");
          //guess what the next data value should be. Increment last field's value.
          if (auto hasField = getLastField()) {
             return addItem(item, hasField.value()->data + 1);
