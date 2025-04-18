@@ -32,9 +32,9 @@ namespace ReyEngine{
       {
          TYPENAME(ReyObject)
          [[nodiscard]] virtual std::string getTypeName() const {return TYPE_NAME;}
-         std::string getName() const {return _node ? _node->name : "";}
+         [[nodiscard]] std::string getName() const {return _node ? _node->name : "";}
          std::vector<TypeNode*> getChildren(){return _node ? _node->getChildren() : std::vector<TypeNode*>();}
-         const std::vector<TypeNode*> getChildren() const {return const_cast<ReyObject*>(this)->getChildren();}
+         [[nodiscard]] const std::vector<TypeNode*> getChildren() const {return const_cast<ReyObject*>(this)->getChildren();}
          std::optional<TypeNode*> getChild(const std::string& name){return _node ? _node->getChild(name) : std::nullopt;}
 
          template <typename T>

@@ -161,6 +161,8 @@ add_library(ReyEngine2D STATIC
         src/engine/InputManager.cpp
         src/engine/Application.cpp
         src/engine/ReyEngine.cpp
+        src/engine/Processable.cpp
+
         src/meta/Logger.cpp
         src/meta/FileSystem.cpp
         src/meta/SystemTime.cpp

@@ -44,7 +44,7 @@ Window& WindowPrototype::createWindow() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-//Window2& WindowPrototype2::createWindow(std::shared_ptr<Canvas> &root) {
+//Window& WindowPrototype2::createWindow(std::shared_ptr<Canvas> &root) {
 //   use();
 //   return Application2::instance().createWindow(*this, root);
 //}
@@ -76,8 +76,8 @@ void Window::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
 //      optRoot = Canvas::build("root");
 //   }
 //   auto& root = optRoot.value();
-//   root->ReyEngine::Internal::TypeContainer<ReyEngine::BaseWidget>::setRoot(true);
-//   root->setAnchoring(BaseWidget::Anchor::FILL); //canvas is filled by default
+//   root->ReyEngine::Internal::TypeContainer<ReyEngine::Widget>::setRoot(true);
+//   root->setAnchoring(Widget::Anchor::FILL); //canvas is filled by default
 //   //make sure we init the root
    auto [canvas, node] = make_node<Canvas>("root");
    _root = std::move(node);
@@ -86,21 +86,12 @@ void Window::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
 //   root->_init();
 //   root->_has_inited = true;
 //   root->setRect(Rect<int>(0, 0, startingWidth, startingHeight)); //initialize to be the same size as the window
-//   TypeContainer<BaseWidget>::addChild(root);
+//   TypeContainer<Widget>::addChild(root);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Window::exec(){
    InputInterface::setExitKey(InputInterface::KeyCode::KEY_ESCAPE);
-   //set widgets as processed
-   //NOTE: This must be done here, because widgets can be created and loaded before a window exists
-   // Since the window controls the process list, it might not exist yet.
-//   std::function<void(shared_ptr<BaseWidget>)> applyProcess = [&](shared_ptr<BaseWidget> widget){
-//      for (auto& child : widget->getChildren()){
-//         applyProcess(child);
-//      }
-//      if (widget->_isProcessed.value) widget->setProcess(true);
-//   };
    auto canvas = _root->ref<Canvas>();
 //   applyProcess(canvas);
    Size<float> size = getSize();
@@ -303,9 +294,9 @@ void Window::exec(){
          //process timers and call their callbacks
 //         SystemTime::processTimers();
 
+         //process logic
          float dt = getFrameDelta();
-         //process widget logic
-//         _processList.processAll(dt);
+         _processList.processAll(dt);
 
          //draw the canvas to our render texture
 //         Application::getWindow(0).pushRenderTarget(_renderTarget);
@@ -338,7 +329,7 @@ void Window::exec(){
          _frameCounter++;
 //      } // release scoped lock here
    }
-//   _processList.clear();
+   _processList.clear();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -346,131 +337,66 @@ Window::~Window(){
    Logger::debug() << "Deleting Window" << endl;
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
+bool Window::setProcess(bool process, ReyEngine::Internal::Processable* processable) {
+   //return if the operation was successful
+   return process ? _processList.add(processable) != nullopt : _processList.remove(processable) != nullopt;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////
-//bool Window2::setProcess(bool process, std::shared_ptr<BaseWidget> widget) {
-//   //return if the operation was successful
-//   return process ? _processList.add(widget) != nullopt : _processList.remove(widget) != nullopt;
-//}
-//
+bool Window::isProcessed(const ReyEngine::Internal::Processable* processable) const {
+   return _processList.find(processable).has_value();
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+std::optional<ReyEngine::Internal::Processable*> Window::ProcessList::add(ReyEngine::Internal::Processable* processable) {
+   unique_lock<mutex> lock(_mtx);
+   auto retval = _list.insert(processable);
+   if (retval.second){
+      return processable;
+   }
+   return nullopt;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+std::optional<ReyEngine::Internal::Processable*> Window::ProcessList::remove(ReyEngine::Internal::Processable* processable) {
+   unique_lock<mutex> lock(_mtx);
+   auto it = _list.find(processable);
+   if (it != _list.end()){
+      //only remove if found;
+      _list.erase(it);
+      return processable;
+   }
+   return nullopt;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void Window::ProcessList::processAll(R_FLOAT dt) {
+   unique_lock<mutex> lock(_mtx);
+   for (auto& processable : _list) {
+      processable->_process(dt);
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+std::optional<ReyEngine::Internal::Processable*> Window::ProcessList::find(const ReyEngine::Internal::Processable* processable) const {
+   auto it = std::find(_list.begin(), _list.end(), processable);
+   if (it != _list.end()){
+      return *it;
+   }
+   return nullopt;
+}
 /////////////////////////////////////////////////////////////////////////////////////////////
-//bool Window2::isProcessed(const std::shared_ptr<BaseWidget>& widget) const {
-//   return _processList.find(widget).has_value();
-//}
-//
-/////////////////////////////////////////////////////////////////////////////////////////////
-//std::optional<shared_ptr<BaseWidget>> Window2::ProcessList::add(std::shared_ptr<BaseWidget>& widget) {
-//   unique_lock<mutex> lock(_mtx);
-//   auto retval = _list.insert(widget);
-//   if (retval.second){
-//      return widget;
-//   }
-//   return nullopt;
-//}
-//
-/////////////////////////////////////////////////////////////////////////////////////////////
-//std::optional<std::shared_ptr<BaseWidget>> Window2::ProcessList::remove(std::shared_ptr<BaseWidget>& widget) {
-//   unique_lock<mutex> lock(_mtx);
-//   auto it = _list.find(widget);
-//   if (it != _list.end()){
-//      //only remove if found;
-//      _list.erase(it);
-//      return widget;
-//   }
-//   return nullopt;
-//}
-//
-/////////////////////////////////////////////////////////////////////////////////////////////
-//void Window2::ProcessList::processAll(double dt) {
-//   unique_lock<mutex> lock(_mtx);
-//   for (auto &widget : _list) {
-//      widget->_process(dt);
-//   }
-//}
-//
-/////////////////////////////////////////////////////////////////////////////////////////////
-//WindowSpace<Pos<float>> Window2::getMousePos(){
-//   return InputManager2::getMousePos();
-//}
-//
-/////////////////////////////////////////////////////////////////////////////////////////////
-//Vec2<double> Window2::getMousePct() {
-//   auto pos = getMousePos().get();
-//   auto screenSize = ReyEngine::getScreenSize();
-//   auto xRange = Vec2<int>(0,(int)screenSize.x);
-//   auto yRange = Vec2<int>(0,(int)screenSize.y);
-//   return {xRange.pct(pos.x).get(), yRange.pct(pos.y).get()};
-//}
-//
-/////////////////////////////////////////////////////////////////////////////////////////////
-//std::optional<std::shared_ptr<BaseWidget>> Window2::ProcessList::find(const std::shared_ptr<BaseWidget> &widget) const {
-//   auto it = std::find(_list.begin(), _list.end(), widget);
-//   if (it != _list.end()){
-//      return *it;
-//   }
-//   return nullopt;
-//}
-/////////////////////////////////////////////////////////////////////////////////////////////
-////void Window2::setCanvas(std::shared_ptr<Canvas>& newRoot) {
+////void Window::setCanvas(std::shared_ptr<Canvas>& newRoot) {
 ////   makeRoot(newRoot, getSize());
 ////}
 //
 /////////////////////////////////////////////////////////////////////////////////////////////
-//void Window2::setSize(Size<int> newSize) {
+//void Window::setSize(Size<int> newSize) {
 //   setWindowSize(newSize);
 //   getCanvas()->setSize(newSize);
 //}
-///////////////////////////////////////////////////////////////////////////////////////////
-//void Window2::clearHover() {
-//   auto locked =  _hovered.lock();
-//   if (locked) {
-//      locked->_hovered = false;
-//      locked->_on_mouse_exit();
-//   }
-//   _hovered.reset();
-//}
-//
-///////////////////////////////////////////////////////////////////////////////////////////
-//void Window2::setHover(std::shared_ptr<BaseWidget>& widget) {
-//   auto locked =  _hovered.lock();
-//   if (locked) {
-//      if (locked !=  widget){
-//         locked->_hovered = false;
-//         locked->_on_mouse_exit();
-//         _hovered.reset();
-//      } else {
-//         return;
-//      }
-//   }
-//   _hovered = widget;
-//   widget->_hovered = true;
-//   InputInterface::setCursor(widget->cursor);
-//   widget->_on_mouse_enter();
-//}
-//
-///////////////////////////////////////////////////////////////////////////////////////////
-//std::optional<std::weak_ptr<BaseWidget>> Window2::getHovered() {
-//   if (_hovered.expired()) return nullopt;
-//   return _hovered;
-//}
-//
-///////////////////////////////////////////////////////////////////////////////////////////
-//void Window2::pushRenderTarget(ReyEngine::RenderTarget& newTarget) {
-//   if (!renderStack.empty()) {
-//      renderStack.top()->endRenderMode();
-//   }
-//   renderStack.push(&newTarget);
-//   renderStack.top()->beginRenderMode();
-//}
-//
-///////////////////////////////////////////////////////////////////////////////////////////
-//void Window2::popRenderTarget() {
-//   renderStack.top()->endRenderMode();
-//   renderStack.pop();
-//   if (!renderStack.empty()) {
-//      renderStack.top()->beginRenderMode();
-//   }
-//}
-//
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<Canvas> Window::getCanvas() {
    return _root->ref<Canvas>();
@@ -478,7 +404,7 @@ std::shared_ptr<Canvas> Window::getCanvas() {
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 std::optional<Widget *> Window::processInput(const InputEvent& event) {
-   // live dangerously. (roots must be canvases)
+   // live dangerously. (roots MUST be canvases or you will crash and burn and die too probably)
    auto handler = ReyEngine::Internal::Tree::ProtectedFunctionAccessor(_root.get()).dangerousIs<Canvas>()->__process_unhandled_input(event);
    if (handler) return handler;
    return {};

@@ -63,7 +63,6 @@ namespace ReyEngine {
       virtual void _on_modality_lost(){}
       virtual void _on_focus_gained(){}
       virtual void _on_focus_lost(){}
-      void _process(float dt) override {};
       bool acceptsHover = false;
       bool isLayout = false;
       bool enabled = true; //changes visuals and (typically) ingores input

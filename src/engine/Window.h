@@ -4,6 +4,7 @@
 #include "InputHandler.h"
 #include <unordered_set>
 #include "WeakUnits.h"
+#include "Processable.h"
 
 namespace ReyEngine{
    class Canvas;
@@ -24,9 +25,9 @@ namespace ReyEngine{
       virtual void exec();
       ~Window();
 
-//      bool isProcessed(const std::shared_ptr<BaseWidget>&) const;
       bool isEditor(){return _isEditor;}
-//      bool setProcess(bool, std::shared_ptr<BaseWidget>); //returns whether operation was successful. Returns false if widget already being processed or is not found.
+      bool isProcessed(const ReyEngine::Internal::Processable*) const;
+      bool setProcess(bool, ReyEngine::Internal::Processable*); //returns whether operation was successful. Returns false if widget already being processed or is not found.
 //      void setCanvas(std::shared_ptr<Canvas>&);
       static WindowSpace<Pos<float>> getMousePos(); //returns global mouse position
       static Vec2<double> getMousePct(); //returns global mouse position as a percentage of the window size from 0 to 1
@@ -67,16 +68,16 @@ namespace ReyEngine{
       class ProcessList {
       public:
          ~ProcessList(){clear();}
-//         std::optional<std::shared_ptr<BaseWidget>> add(std::shared_ptr<BaseWidget>& widget);
-//         std::optional<std::shared_ptr<BaseWidget>> remove(std::shared_ptr<BaseWidget>& widget);
-//         std::optional<std::shared_ptr<BaseWidget>> find(const std::shared_ptr<BaseWidget>& widget) const;
-         void processAll(double dt);
+         std::optional<ReyEngine::Internal::Processable*> add(ReyEngine::Internal::Processable*);
+         std::optional<ReyEngine::Internal::Processable*> remove(ReyEngine::Internal::Processable*);
+         std::optional<ReyEngine::Internal::Processable*> find(const ReyEngine::Internal::Processable*) const;
+         void processAll(R_FLOAT dt);
          void clear(){
             std::unique_lock<std::mutex> sl(_mtx);
             _list.clear();
          }
       private:
-         std::unordered_set<TreeStorable*> _list; //list of widgets that require processing. No specific order.
+         std::unordered_set<ReyEngine::Internal::Processable*> _list; //list of widgets that require processing. No specific order.
          std::mutex _mtx;
       } _processList;
       /////////////////////

@@ -20,6 +20,7 @@ namespace ReyEngine::Internal::Tree {
    class TypeNode;
    struct TreeStorable {
       static constexpr char TYPE_NAME[] = "TreeCallable";
+      virtual void _process(R_FLOAT delta_ms){};
       virtual void __init(){}; //added to tree for first time
       virtual void __on_added_to_tree(){}; //every time when added to tree
       virtual void __on_child_added_to_tree(TypeNode *n) {}; // direct children only

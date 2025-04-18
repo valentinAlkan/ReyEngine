@@ -1,8 +1,15 @@
 #pragma once
 
-namespace ReyEngine::Internal{
-   struct Processable{
-      virtual void _process(float dt) = 0;
-   };
+namespace ReyEngine{
+   class Window;
+   namespace Internal{
 
+      struct Processable{
+         virtual void _process(float dt){};
+         void setProcess(bool);
+         [[nodiscard]] bool isProcessed() const;
+      };
+
+
+   }
 }
