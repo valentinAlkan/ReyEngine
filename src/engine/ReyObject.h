@@ -30,9 +30,6 @@ namespace ReyEngine{
    namespace Internal{
       struct ReyObject : public TreeStorable
       {
-         ReyObject(){
-            uniqueValue = Application::generateUniqueValue();
-         }
          TYPENAME(ReyObject)
          [[nodiscard]] virtual std::string getTypeName() const {return TYPE_NAME;}
          std::string getName() const {return _node ? _node->name : "";}
@@ -83,6 +80,10 @@ namespace ReyEngine{
          virtual void _on_child_removed_from_tree(TypeNode*){};
          virtual void _on_descendant_removed_from_tree(TypeNode*){};
          virtual inline bool operator==(const ReyObject& rhs){return uniqueValue == rhs.uniqueValue;}
+      protected:
+         ReyObject(){
+            uniqueValue = Application::generateUniqueValue();
+         }
       private:
          UniqueValue uniqueValue;
       };

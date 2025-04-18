@@ -30,6 +30,9 @@ namespace ReyEngine::Internal::Tree {
       TypeNode* getNode(){return _node;}
       [[nodiscard]] const TypeNode* getNode() const {return _node;}
    protected:
+      TreeStorable(){} //cant create directly
+      TreeStorable(const TreeStorable& other) = delete; //nocopy
+      TreeStorable& operator=(const TreeStorable& other) = delete; //nocopy
       TypeNode* _node = nullptr;
       bool _has_inited = false;
    private:
