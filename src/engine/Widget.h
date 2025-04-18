@@ -30,7 +30,9 @@ namespace ReyEngine {
          bool handled = false;
       };
 
-      Widget(): theme(new Theme){}
+      Widget(): theme(new Theme){
+//         isLocked = true; //unlocked during init. prevents layout weirdness
+      }
       REYENGINE_OBJECT(Widget)
       Theme& getTheme(){return *theme;}
       std::optional<Widget*> getParentWidget() const;
@@ -66,7 +68,7 @@ namespace ReyEngine {
       bool isLayout = false;
       bool enabled = true; //changes visuals and (typically) ingores input
 
-      RefCounted<Theme> theme;
+      std::shared_ptr<Theme> theme;
 
       void __on_rect_changed(const Rect<R_FLOAT>& oldRect, bool byLayout = false) override {
          if (!byLayout) {
@@ -100,6 +102,7 @@ namespace ReyEngine {
       Anchor _anchor = Anchor::NONE;
 
    private:
+      void __init() override;
       void __on_added_to_tree() override;
       Widget* _parentWidget = nullptr; //the closest related parent that is a widget.
       bool _modal = false;

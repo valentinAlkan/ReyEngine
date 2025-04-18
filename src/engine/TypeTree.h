@@ -160,10 +160,10 @@ namespace ReyEngine::Internal::Tree {
          childptr->_scenePath = _scenePath + "\\" + name;
 
          //////callbacks
-         //init, if needed
-         if (!addedStorable->_has_inited) addedStorable->__init();
-         addedStorable->__on_added_to_tree();
+         // this order is really important, particularly for layouts.
+         // it means that
          as<TreeStorable>().value()->__on_child_added_to_tree(childptr);
+         addedStorable->__on_added_to_tree();
          auto ancestor = this;
          while (ancestor){
             //call on all that child's descendents
@@ -176,6 +176,8 @@ namespace ReyEngine::Internal::Tree {
             callOnDesc(childptr);
             ancestor = ancestor->_parent;
          }
+         //init, if needed
+         if (!addedStorable->_has_inited) addedStorable->__init();
          return childptr;
       }
 

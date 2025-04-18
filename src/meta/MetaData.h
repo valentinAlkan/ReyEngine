@@ -83,11 +83,11 @@ namespace ReyEngine {
       }
       template <typename T>
       std::optional<T> hasMetaData(const std::string& name) const {
-         MetaData::instance().hasMetaData<T>(base_addr(), name);
+         return MetaData::instance().hasMetaData<T>(base_addr(), name);
       }
       template <typename T>
       std::optional<T> getMetaData(const std::string& name) const {
-         MetaData::instance().getMetaData<T>(base_addr(), name);
+         return MetaData::instance().getMetaData<T>(base_addr(), name);
       }
       void removeMetaData(const std::string& name) {
          MetaData::instance().removeMetaData(base_addr(), name);

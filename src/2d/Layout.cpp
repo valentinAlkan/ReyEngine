@@ -149,6 +149,7 @@ void Layout::arrangeChildren() {
       }
    } else {
       const auto expandingDimension = dir == LayoutDir::HORIZONTAL ? getWidth() : getHeight();
+      if (expandingDimension <= 0) return; //do not try to allocate for 0 sizes
       // For front and back alignment, set all widgets to their minimum/maximum size, then allocate the leftover space to nothing.
       switch (alignment){
          case Alignment::FRONT:{

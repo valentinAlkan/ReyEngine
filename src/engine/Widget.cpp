@@ -8,6 +8,12 @@ using namespace std;
 using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void Widget::__init(){
+   Internal::ReyObject::__init();
+//   isLocked = false; //really important for layout stuff
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void Widget::__on_added_to_tree() {
    auto parent = _node->getParent();
    while (parent){
