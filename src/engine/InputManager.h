@@ -4,18 +4,18 @@
 #include "ReyEngine.h"
 #include <algorithm>
 
-#define CONSTEXPR_EVENTID(EVENT_ID) static constexpr EventId ID = EVENT_ID; \
-                                    static constexpr EventId getUniqueEventId(){return ID;} //temporary <- eases porting
+#define CONSTEXPR_EVENTID(EVENT_ID) static constexpr ReyEngine::EventId ID = EVENT_ID; \
+                                    static constexpr ReyEngine::EventId getUniqueEventId(){return ID;} //temporary <- eases porting
 #define EVENT(EVENT_NAME, UNIQUE_EVENT_ID) \
-   struct EVENT_NAME : public Event<EVENT_NAME, UNIQUE_EVENT_ID> { \
+   struct EVENT_NAME : public ReyEngine::Event<EVENT_NAME, UNIQUE_EVENT_ID> { \
       CONSTEXPR_EVENTID(UNIQUE_EVENT_ID)                   \
-      explicit EVENT_NAME(const EventPublisher* publisher) : Event<EVENT_NAME, UNIQUE_EVENT_ID>(publisher)
+      explicit EVENT_NAME(const ReyEngine::EventPublisher* publisher) : ReyEngine::Event<EVENT_NAME, UNIQUE_EVENT_ID>(publisher)
 
 
 #define EVENT_ARGS(EVENT_NAME, UNIQUE_EVENT_ID, ...) \
-   struct EVENT_NAME : public Event<EVENT_NAME, UNIQUE_EVENT_ID> { \
+   struct EVENT_NAME : public ReyEngine::Event<EVENT_NAME, UNIQUE_EVENT_ID> { \
       CONSTEXPR_EVENTID(UNIQUE_EVENT_ID)             \
-      explicit EVENT_NAME(const EventPublisher* publisher, __VA_ARGS__) : Event<EVENT_NAME, UNIQUE_EVENT_ID>(publisher)
+      explicit EVENT_NAME(const ReyEngine::EventPublisher* publisher, __VA_ARGS__) : Event<EVENT_NAME, UNIQUE_EVENT_ID>(publisher)
 
 namespace ReyEngine{
    EVENT(InputEventKey, 13234646664){}

@@ -1488,13 +1488,13 @@ int main(int argc, char** argv) {
 
                 auto hoverCB = [&](const ComboBox::EventComboBoxItemHovered &event) {
                     auto combobox = event.publisher->toPublisherType<BaseWidget>()->toType<ComboBox>();
-                    auto data = static_pointer_cast<ColorData>(event.field.data);
+                    auto data = static_pointer_cast<ColorData>(event.field.metaData);
                     combobox->getTheme()->background.colorPrimary = data->color;
                 };
 
                 auto selectCB = [&](const ComboBox::EventComboBoxItemSelected &event) {
                     auto combobox = event.publisher->toPublisherType<BaseWidget>()->toType<ComboBox>();
-                    auto data = static_pointer_cast<ColorData>(event.field.data);
+                    auto data = static_pointer_cast<ColorData>(event.field.metaData);
                     combobox->getTheme()->background.colorPrimary = data->color;
                 };
 
@@ -1504,14 +1504,14 @@ int main(int argc, char** argv) {
 
                 auto menuCloseCB = [&](const ComboBox::EventComboBoxMenuClosed &event) {
                     auto combobox = event.publisher->toPublisherType<BaseWidget>()->toType<ComboBox>();
-                    auto data = static_pointer_cast<ColorData>(combobox->getCurrentField().data);
+                    auto data = static_pointer_cast<ColorData>(combobox->getCurrentField().metaData);
                     combobox->getTheme()->background.colorPrimary = data->color;
                 };
 
                 //pack the comboboxes with the data
                 for (auto &color: colors) {
                     combobox->addItem(color->name);
-                    combobox->getLastField().data = color;
+                    combobox->getLastField().metaData = color;
                     combobox->subscribe<ComboBox::EventComboBoxItemHovered>(combobox, hoverCB);
                     combobox->subscribe<ComboBox::EventComboBoxMenuOpened>(combobox, menuOpenCB);
                     combobox->subscribe<ComboBox::EventComboBoxMenuClosed>(combobox, menuCloseCB);

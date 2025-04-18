@@ -82,6 +82,7 @@ namespace ReyEngine::Internal {
          auto newY = ReyEngine::Vec2<R_FLOAT>(minSize.y, maxSize.y).clamp(size.y);
          return {newX, newY};
       }
+      bool isInside(const Pos<R_FLOAT>& pos) const { return getSizeRect().isInside(pos);}
 
    protected:
       /// Bypasses normal mechanisms and just directly sets a rect without calling callbacks

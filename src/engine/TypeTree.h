@@ -183,6 +183,11 @@ namespace ReyEngine::Internal::Tree {
          throw std::runtime_error("not implemented");
       };
 
+      std::unique_ptr<TypeNode> removeAllChildren (){
+         throw std::runtime_error("not implemented");
+      };
+
+
       inline std::optional<TypeNode*> getChild(const std::string& name) {
          auto it = _childMap.find(std::hash<std::string>{}(name));
          if (it != _childMap.end()) return {it->second.get()};

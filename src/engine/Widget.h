@@ -4,6 +4,7 @@
 #include "Processable.h"
 #include "Theme.h"
 #include "WeakUnits.h"
+#include "MetaData.h"
 
 namespace ReyEngine {
    enum class Anchor{NONE, LEFT, RIGHT, TOP, BOTTOM, FILL, TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, CENTER};
@@ -12,6 +13,7 @@ namespace ReyEngine {
    , public Internal::Processable
    , public EventPublisher
    , public EventSubscriber
+   , public MetaDataInterface
    {
    public:
       EVENT_ARGS(RectChangedEvent, 329874, const Rect<float>& r)
@@ -37,6 +39,9 @@ namespace ReyEngine {
       CanvasSpace<Pos<float>> toCanvasSpace(const Pos<float>&);
       WindowSpace<Pos<float>> toWindowSpace(const Pos<float>&);
       virtual Widget* _unhandled_input(const InputEvent&){return nullptr;} //pass input to children if they want it and then process it for ourselves if necessary
+
+      void setEnabled(bool newState){enabled = newState;}
+      bool getIsEnabled() const {return enabled;}
    protected:
       //input
       virtual Widget* __process_unhandled_input(const InputEvent& event){ return _unhandled_input(event);}
@@ -92,5 +97,29 @@ namespace ReyEngine {
       bool _modal = false;
       friend class Layout;
       friend class Canvas;
+
+public:
+   //convenience forwards
+   template <typename... Args>
+   auto addChild(Args&& ...args){
+      if (auto hasNode = getNode()) {
+         return getNode()->addChild(std::forward<Args>(args)...);
+      }
+      throw std::runtime_error("Invalid Node for Widget::addChild");
+   }
+      template <typename... Args>
+      auto removeChild(Args&& ...args){
+         if (auto hasNode = getNode()) {
+            return getNode()->removeChild(std::forward<Args>(args)...);
+         }
+         throw std::runtime_error("Invalid Node for Widget::removeChild");
+      }
+      template <typename... Args>
+      auto removeAllChildren(Args&& ...args){
+         if (auto hasNode = getNode()) {
+            return getNode()->removeAllChildren(std::forward<Args>(args)...);
+         }
+         throw std::runtime_error("Invalid Node for Widget::removeChild");
+      }
    };
 }

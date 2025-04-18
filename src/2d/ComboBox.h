@@ -81,7 +81,7 @@ namespace ReyEngine {
                                                 "should map to in the default case");
          //guess what the next data value should be. Increment last field's value.
          if (auto hasField = getLastField()) {
-            return addItem(item, hasField.value()->data + 1);
+            return addItem(item, hasField.value()->metaData + 1);
          }
          //try setting a zero value if there are no fields.
          return addItem(item, 0);
