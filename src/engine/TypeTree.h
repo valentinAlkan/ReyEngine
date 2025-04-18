@@ -184,12 +184,28 @@ namespace ReyEngine::Internal::Tree {
          return childptr;
       }
 
+      /**
+       * removes the node with the given name from the _childMap
+       * @param name : name of the wanted node
+       * @return : the unique_ptr of the node if it existed, nullptr if it did not;
+       */
       std::unique_ptr<TypeNode> removeChild (const std::string& name){
-         throw std::runtime_error("not implemented");
+         std::unique_ptr<TypeNode> removedNode = nullptr;
+         auto it = _childMap.find(std::hash<std::string>{}(name));
+         if(it != _childMap.end()){
+            removedNode = std::move(it->second);
+            _childMap.erase(it);
+         }
+         return removedNode;
       };
 
-      std::unique_ptr<TypeNode> removeAllChildren (){
-         throw std::runtime_error("not implemented");
+      std::vector<std::unique_ptr<TypeNode>> removeAllChildren (){
+         std::vector<std::unique_ptr<TypeNode>> retVector;
+         for(auto it = _childMap.begin(); it != _childMap.end(); it++){
+            retVector.push_back(std::move(it->second));
+         }
+         _childMap.empty();
+         return retVector;
       };
 
 
