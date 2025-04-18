@@ -47,6 +47,8 @@ namespace ReyEngine::Internal {
          transform2D.setPosition(newRect.pos());
          __on_rect_changed(r);
       }
+      inline void setWidth(R_FLOAT x){setSize({x, getHeight()});}
+      inline void setHeight(R_FLOAT y){setSize({getWidth(), y});}
       inline void setRect(R_FLOAT x, R_FLOAT y, R_FLOAT width, R_FLOAT height){setRect({x,y,width,height});}
       inline Transform2D& getLocalTransform(){return transform2D;}
       inline const Transform2D& getLocalTransform() const {return transform2D;}

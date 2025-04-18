@@ -228,7 +228,7 @@ WindowSpace<Pos<float>> Widget::toWindowSpace(const Pos<float>& p) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-Widget *Widget::_unhandled_input(const InputEvent& event) {
+Widget* Widget::_unhandled_input(const InputEvent& event) {
    //for now just blast these bad boys out, but really we should check if we're supposed to
    auto publishInputEvent = [&]() -> Handled {
       WidgetUnhandledInputEvent unhandledInputEvent(this, event);
@@ -236,4 +236,5 @@ Widget *Widget::_unhandled_input(const InputEvent& event) {
       return unhandledInputEvent.handled;
    };
    publishInputEvent();
+   return nullptr;
 }

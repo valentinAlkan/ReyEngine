@@ -218,7 +218,7 @@ namespace ReyEngine{
          }
       }
       template <typename T>
-      void subscribeMutable(const std::shared_ptr<EventPublisher>& publisher, std::function<void(const T&)> typedEventHandler){subscribeMutable(publisher.get(), typedEventHandler);}
+      void subscribeMutable(const std::shared_ptr<EventPublisher>& publisher, std::function<void(T&)> typedEventHandler){subscribeMutable(publisher.get(), typedEventHandler);}
       template <typename T>
       void subscribeMutable(EventPublisher* publisher, std::function<void(T&)> typedEventHandler){
          auto adapter = [typedEventHandler](const BaseEvent& baseEvent) {
