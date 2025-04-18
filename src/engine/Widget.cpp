@@ -226,3 +226,14 @@ WindowSpace<Pos<float>> Widget::toWindowSpace(const Pos<float>& p) {
    auto globaltransform = getGlobalTransform().get();
    return {globaltransform.transform(p)};
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////
+Widget *Widget::_unhandled_input(const InputEvent& event) {
+   //for now just blast these bad boys out, but really we should check if we're supposed to
+   auto publishInputEvent = [&]() -> Handled {
+      WidgetUnhandledInputEvent unhandledInputEvent(this, event);
+      publishMutable<WidgetUnhandledInputEvent>(unhandledInputEvent);
+      return unhandledInputEvent.handled;
+   };
+   publishInputEvent();
+}

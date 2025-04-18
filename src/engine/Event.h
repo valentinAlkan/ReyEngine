@@ -217,15 +217,16 @@ namespace ReyEngine{
             cancelSubscription(_subscriptions.begin()->first);
          }
       }
-//      template <typename T>
-//      void subscribeMutable(EventPublisher* publisher, std::function<void(T&)> typedEventHandler){
-//         std::shared_ptr<EventSubscriber> me = std::shared_from_this();
-//         auto adapter = [typedEventHandler](const BaseEvent& baseEvent) {
-//            auto& s = const_cast<T&>(static_cast<const T&>(baseEvent));
-//            typedEventHandler(s);
-//         };
-//         publisher->addSubscriber<T>(me, adapter);
-//      }
+      template <typename T>
+      void subscribeMutable(const std::shared_ptr<EventPublisher>& publisher, std::function<void(const T&)> typedEventHandler){subscribeMutable(publisher.get(), typedEventHandler);}
+      template <typename T>
+      void subscribeMutable(EventPublisher* publisher, std::function<void(T&)> typedEventHandler){
+         auto adapter = [typedEventHandler](const BaseEvent& baseEvent) {
+            auto& s = const_cast<T&>(static_cast<const T&>(baseEvent));
+            typedEventHandler(s);
+         };
+         publisher->addSubscriber<T>(this, adapter);
+      }
       template <typename T>
       void subscribe(const std::shared_ptr<EventPublisher>& publisher, std::function<void(const T&)> typedEventHandler){subscribe(publisher.get(), typedEventHandler);}
       template <typename T>

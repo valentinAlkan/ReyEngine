@@ -21,6 +21,15 @@ namespace ReyEngine {
       {}
          Rect<float> rect;
       };
+
+      EVENT_ARGS(WidgetUnhandledInputEvent, 329875, const InputEvent& fwdEvent)
+         , fwdEvent(fwdEvent)
+         {}
+         Rect<R_FLOAT> rect;
+         const InputEvent& fwdEvent;
+         bool handled = false;
+      };
+
       Widget(): theme(new Theme){}
       REYENGINE_OBJECT(Widget)
       Theme& getTheme(){return *theme;}
@@ -38,8 +47,7 @@ namespace ReyEngine {
       Pos<float> getLocalMousePos() const;
       CanvasSpace<Pos<float>> toCanvasSpace(const Pos<float>&);
       WindowSpace<Pos<float>> toWindowSpace(const Pos<float>&);
-      virtual Widget* _unhandled_input(const InputEvent&){return nullptr;} //pass input to children if they want it and then process it for ourselves if necessary
-
+      virtual Widget* _unhandled_input(const InputEvent&);
       void setEnabled(bool newState){enabled = newState;}
       bool getIsEnabled() const {return enabled;}
    protected:
