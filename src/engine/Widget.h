@@ -33,6 +33,7 @@ namespace ReyEngine {
       Widget(): theme(new Theme){
 //         isLocked = true; //unlocked during init. prevents layout weirdness
       }
+      ~Widget(){std::cout << "Goodbye from " << getName() << "!!" << std::endl;}
       REYENGINE_OBJECT(Widget)
       Theme& getTheme(){return *theme;}
       std::optional<Widget*> getParentWidget() const;

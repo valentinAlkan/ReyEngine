@@ -9,7 +9,6 @@ namespace ReyEngine {
          , public Positionable2D {
       public:
          REYENGINE_OBJECT(Drawable2D)
-         ~Drawable2D() { std::cout << "Goodbye from " << TYPE_NAME << "!!" << std::endl; }
          [[nodiscard]] inline Transform2D& getTransform(){return transform2D;}
          [[nodiscard]] inline std::optional<Window*> getWindow(){if (window) { return window; } else {return std::nullopt;}}
          [[nodiscard]] inline std::optional<const Window*> getWindow() const {if (window) { return window; } else {return std::nullopt;}}

@@ -189,13 +189,24 @@ namespace ReyEngine::Internal::Tree {
        * @param name : name of the wanted node
        * @return : the unique_ptr of the node if it existed, nullptr if it did not;
        */
-      std::unique_ptr<TypeNode> removeChild (const std::string& name){
+      std::optional<std::unique_ptr<TypeNode>> removeChild (const std::string& name){
+         //remove first from child order
+         //remove also from the order vector
+         for (auto it = _childOrder.begin(); it != _childOrder.end(); ++it){
+            auto& ptr = *it;
+            if (ptr->name == name){
+               _childOrder.erase(it);
+               break;
+            }
+         }
+
          auto it = _childMap.find(std::hash<std::string>{}(name));
          if(it != _childMap.end()){
             auto removedNode = std::move(it->second);
             _childMap.erase(it);
             return removedNode;
          }
+         Logger::error() << "Unable to remove child " << name << " from node " << getScenePath() << std::endl;
          return {};
       };
 
@@ -205,6 +216,7 @@ namespace ReyEngine::Internal::Tree {
             retVector.push_back(std::move(it->second));
          }
          _childMap.clear();
+         _childOrder.clear();
          return retVector;
       };
 
