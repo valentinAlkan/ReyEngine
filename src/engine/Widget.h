@@ -31,9 +31,12 @@ namespace ReyEngine {
       };
 
       Widget(): theme(new Theme){
-//         isLocked = true; //unlocked during init. prevents layout weirdness
       }
-      ~Widget(){std::cout << "Goodbye from " << getName() << "!!" << std::endl;}
+      ~Widget(){
+         if constexpr (isDebugBuild) {
+            std::cout << "Goodbye from " << _name << "!!" << std::endl;
+         }
+      }
       REYENGINE_OBJECT(Widget)
       Theme& getTheme(){return *theme;}
       std::optional<Widget*> getParentWidget() const;
@@ -106,6 +109,15 @@ namespace ReyEngine {
       void __on_added_to_tree() override;
       Widget* _parentWidget = nullptr; //the closest related parent that is a widget.
       bool _modal = false;
+
+   #ifndef NDEBUG
+      // Debug build
+      static constexpr bool isDebugBuild = true;
+      std::string _name = "nobody";
+   #else
+      static constexpr bool isDebugBuild = false;
+   #endif
+
       friend class Layout;
       friend class Canvas;
 
