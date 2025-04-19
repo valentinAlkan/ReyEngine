@@ -190,13 +190,13 @@ namespace ReyEngine::Internal::Tree {
        * @return : the unique_ptr of the node if it existed, nullptr if it did not;
        */
       std::unique_ptr<TypeNode> removeChild (const std::string& name){
-         std::unique_ptr<TypeNode> removedNode = nullptr;
          auto it = _childMap.find(std::hash<std::string>{}(name));
          if(it != _childMap.end()){
-            removedNode = std::move(it->second);
+            auto removedNode = std::move(it->second);
             _childMap.erase(it);
+            return removedNode;
          }
-         return removedNode;
+         return {};
       };
 
       std::vector<std::unique_ptr<TypeNode>> removeAllChildren (){
@@ -204,7 +204,7 @@ namespace ReyEngine::Internal::Tree {
          for(auto it = _childMap.begin(); it != _childMap.end(); it++){
             retVector.push_back(std::move(it->second));
          }
-         _childMap.empty();
+         _childMap.clear();
          return retVector;
       };
 
