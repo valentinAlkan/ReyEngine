@@ -49,8 +49,7 @@ namespace ReyEngine{
       void _on_child_rect_changed(Widget*) override {arrangeChildren();}
       void render2DEnd() override;
       virtual void arrangeChildren();
-      ColorRGBA _debugColor = ColorRGBA::random(255);
-      void render2D() const override {drawRectangle(getRect().toSizeRect(), _debugColor);}
+      void render2D() const override {drawRectangleLines(getRect().toSizeRect(), 1.0, Colors::black);}
       const LayoutDir dir;
 
    };

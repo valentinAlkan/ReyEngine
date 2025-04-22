@@ -121,28 +121,34 @@ namespace ReyEngine {
       friend class Layout;
       friend class Canvas;
 
-public:
-   //convenience forwards
-   template <typename... Args>
-   auto addChild(Args&& ...args){
-      if (auto hasNode = getNode()) {
-         return getNode()->addChild(std::forward<Args>(args)...);
+   public:
+      //convenience forwards
+      template <typename... Args>
+      auto addChild(Args&& ...args){
+         if (auto hasNode = getNode()) {
+            return getNode()->addChild(std::forward<Args>(args)...);
+         }
+         throw std::runtime_error(std::string(INVALID_NODE_ERR_MSG));
       }
-      throw std::runtime_error("Invalid Node for Widget::addChild");
-   }
       template <typename... Args>
       auto removeChild(Args&& ...args){
          if (auto hasNode = getNode()) {
             return getNode()->removeChild(std::forward<Args>(args)...);
          }
-         throw std::runtime_error("Invalid Node for Widget::removeChild");
+         throw std::runtime_error(std::string(INVALID_NODE_ERR_MSG));
       }
       template <typename... Args>
       auto removeAllChildren(Args&& ...args){
          if (auto hasNode = getNode()) {
             return getNode()->removeAllChildren(std::forward<Args>(args)...);
          }
-         throw std::runtime_error("Invalid Node for Widget::removeChild");
+         throw std::runtime_error(std::string(INVALID_NODE_ERR_MSG));
       }
+   private:
+      static constexpr std::string_view INVALID_NODE_ERR_MSG = "Invalid Node for child add/remove. Did you call this from a Widget constructor? That doesn't \n"
+                                                               "work since the associated node hasn't been built yet. Override _on_made() or _init() to ensure that the \n"
+                                                               "node associated with an object has been fully built. _on_made() occurs when make_node is called, \n"
+                                                               "_init() is called when the node is first added to the tree. _init() should be your first choice \n"
+                                                               "unless you need to do things at build time, as the node will know who its parent is during _init()";
    };
 }

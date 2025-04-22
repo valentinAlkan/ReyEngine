@@ -22,6 +22,7 @@ namespace ReyEngine::Internal::Tree {
       static constexpr char TYPE_NAME[] = "TreeCallable";
       virtual void _process(R_FLOAT delta_ms){};
       virtual void __init(){}; //added to tree for first time
+      virtual void __on_made(){}; // when the node is built. A constructor of sorts, but the associated Node is valid.
       virtual void __on_added_to_tree(){}; //every time when added to tree
       virtual void __on_child_added_to_tree(TypeNode *n) {}; // direct children only
       virtual void __on_descendant_added_to_tree(TypeNode *n) {};
@@ -64,7 +65,8 @@ namespace ReyEngine::Internal::Tree {
    // Node data can be cast to base storables OR applicable typetags
    struct TypeTag{
    protected:
-      TypeNode* selfNode;
+      TypeNode* selfNode; //allows TypeTag system to communicate with underlying TypeNode system. Typetags MUST inherit
+                           // from TreeStorable, so this should always be valid. It is assigned in make_node.
       template<typename T, typename InstanceName, typename... Args>
       friend MakeNodeReturnType<T> _make_node(InstanceName&&, Args&&...);
       template<typename U, typename InstanceName, typename... Args>
@@ -329,6 +331,7 @@ namespace ReyEngine::Internal::Tree {
       if (auto isTagged = node->tag<TypeTag>()){
          isTagged.value()->selfNode = node.get();
       }
+      node->as<TreeStorable>().value()->__on_made();
       return {node->ref<T>(), std::move(node)};
    }
 
@@ -341,6 +344,7 @@ namespace ReyEngine::Internal::Tree {
       if (auto isTagged = node->tag<TypeTag>()){
          isTagged.value()->selfNode = node.get();
       }
+      node->as<TreeStorable>().value()->__on_made();
       return {node->ref<T>(), std::move(node)};
    }
 }

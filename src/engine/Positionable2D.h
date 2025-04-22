@@ -79,7 +79,7 @@ namespace ReyEngine::Internal {
       inline void setMaxHeight(float newMax){maxSize = {maxSize.x, newMax}; setSize(getSize());}
       inline void setMaxWidth(float newMax){maxSize = {newMax, maxSize.y}; setSize(getSize());}
       inline void setMinWidth(float newMin){minSize = {newMin, minSize.y}; setSize(getSize());}
-      inline void setMinHeight(float& newMin){minSize = {minSize.x, newMin}; setSize(getSize());}
+      inline void setMinHeight(float newMin){minSize = {minSize.x, newMin}; setSize(getSize());}
       inline R_FLOAT getWidth() const {return size.x;}
       inline R_FLOAT getHeight() const {return size.y;}
       inline Pos<float> getCenter() const {return getRect().center();}
