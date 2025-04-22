@@ -10,6 +10,7 @@
 #include "ComboBox.h"
 #include "ScrollArea.h"
 #include "TextureRect.h"
+#include "Dialog.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -196,8 +197,8 @@ int main(){
          //add some buttons
          {
             auto [summonButton, n1] = make_node<PushButton>("btnPopup", "Summon Popup");
-            auto [button2, n2] = make_node<PushButton>("button2");
-            auto [button3, n3] = make_node<PushButton>("button3");
+            auto [dialogHButton, n2] = make_node<PushButton>("btnDialogH", "Summon Horizontal Dialog");
+            auto [dialogVButton, n3] = make_node<PushButton>("btnDialogV", "Summon Vertical Dialog");
             auto [button4, n4] = make_node<PushButton>("button4");
             buttonHolder->addChild(std::move(n1));
             buttonHolder->addChild(std::move(n2));
@@ -213,6 +214,23 @@ int main(){
                }
             };
             summonButton->subscribe<PushButton::ButtonPressEvent>(summonButton.get(), cbPopup);
+
+            //create dialog test
+            auto cbDialogH = [&](const PushButton::ButtonPressEvent& event){
+               std::array<string_view, 4> options;
+               options[0] = "test1";
+               options[1] = "test2";
+               options[2] = "test3";
+               options[3] = "test4";
+
+               enum testEnum {
+                  test1, test2, test3, test4
+               };
+               std::array<testEnum, 4> enums;
+               auto pair = make_node<Dialog<std::array<string_view, 4>, std::array<testEnum, 4>>>("dialogH", options, enums, "Test Text");
+
+            };
+            dialogHButton->subscribe<PushButton::ButtonPressEvent>(dialogHButton.get(), cbDialogH);
 
          }
 
