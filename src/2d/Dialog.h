@@ -22,11 +22,11 @@ namespace ReyEngine {
    class Dialog : public Control {
    public:
       REYENGINE_OBJECT(Dialog);
-      Dialog(Options options, Enums enums, Layout::LayoutDir layoutDirection = Layout::LayoutDir::HORIZONTAL, std::string_view text = "")
+      Dialog(Options options, Enums enums, std::string_view text = "", Layout::LayoutDir layoutDirection = Layout::LayoutDir::HORIZONTAL)
       : options(options)
       , enums(enums)
-      , layoutDirection(layoutDirection)
       , text(text)
+            , layoutDirection(layoutDirection)
       {
          static_assert(is_string_view_array<Options>::value, "Options must be a std::array<std::string_view, N>");
          static_assert(is_enum_array<Enums>::value, "Enums must be a std::array<Enum, N>");
@@ -39,7 +39,7 @@ namespace ReyEngine {
         //create buttonLayout
         auto buttonLayoutPair = make_node<Layout>("buttonLayout", layoutDirection);
         if(!text.empty()) {
-           auto textPair = make_node<Label>("textLabel", text);
+           auto textPair = make_node<Label>("textLabel", std::string(text));
            if (layoutDirection == Layout::LayoutDir::HORIZONTAL) { //Create a vertical layout for the text on top first
               auto layoutPair = make_node<Layout>("textLayout", Layout::LayoutDir::VERTICAL);
               layoutPair.second->addChild(std::move(textPair.second));
@@ -49,9 +49,9 @@ namespace ReyEngine {
         }
 
          for(int i = 0; i < options.size(); i++){
-            auto optionPair= make_node<PushButton>(options[i] + "Button");
-            optionPair.first->setText(options[i]);
-            buttonLayoutPair.second->addChild(optionPair);
+            auto optionPair= make_node<PushButton>(std::string(options[i]) + "Button");
+            optionPair.first->setText(std::string(options[i]));
+            buttonLayoutPair.second->addChild(std::move(optionPair.second));
          }
       getNode()->addChild(std::move(buttonLayoutPair.second));
       }

@@ -228,7 +228,8 @@ int main(){
                };
                std::array<testEnum, 4> enums;
                auto pair = make_node<Dialog<std::array<string_view, 4>, std::array<testEnum, 4>>>("dialogH", options, enums, "Test Text");
-
+               pair.first->setVisible(true);
+               pair.first->setModal(true);
             };
             dialogHButton->subscribe<PushButton::ButtonPressEvent>(dialogHButton.get(), cbDialogH);
 
@@ -362,6 +363,8 @@ int main(){
             popupCtl->setRenderCallback(cbRender);
             popupCtl->setVisible(false);
          }
+
+         //create dialog control
 
       }
 
