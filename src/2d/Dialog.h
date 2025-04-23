@@ -18,17 +18,16 @@ namespace ReyEngine {
    template <typename E, size_t N>
    struct is_enum_array<std::array<E, N>> : std::integral_constant<bool, std::is_enum_v<E>> {};
 
-   template <typename Enum, size_t N>
+   template <typename R, size_t N>
    class Dialog : public Control {
    public:
       REYENGINE_OBJECT(Dialog);
-      constexpr Dialog(const std::array<std::string_view, 4>& options, const std::array<Enum, N>& enums, std::string_view text = "", Layout::LayoutDir layoutDirection = Layout::LayoutDir::HORIZONTAL)
+      constexpr Dialog(const std::array<std::string_view, N>& options, const std::array<R, N>& retvals, std::string_view text = "", Layout::LayoutDir layoutDirection = Layout::LayoutDir::HORIZONTAL)
       : options(options)
-      , enums(enums)
+      , retvals(retvals)
       , text(text)
       , layoutDirection(layoutDirection)
-      {
-      }
+      {}
 
    protected:
       void _init() override{
@@ -57,7 +56,7 @@ namespace ReyEngine {
 
    private:
       std::array<std::string_view, N> options;
-      std::array<Enum, N> enums;
+      std::array<R, N> retvals;
       Layout::LayoutDir layoutDirection;
       std::string_view text;
    };
