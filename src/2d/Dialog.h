@@ -36,6 +36,7 @@ namespace ReyEngine {
 
    protected:
       void _init() override{
+         setSize(1000, 1000); //todo: find minimum size
         //create buttonLayout
         auto buttonLayoutPair = make_node<Layout>("buttonLayout", layoutDirection);
         if(!text.empty()) {
@@ -53,6 +54,8 @@ namespace ReyEngine {
             optionPair.first->setText(std::string(options[i]));
             buttonLayoutPair.second->addChild(std::move(optionPair.second));
          }
+
+         //todo: add button callbacks
       getNode()->addChild(std::move(buttonLayoutPair.second));
       }
 

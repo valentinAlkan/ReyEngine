@@ -18,12 +18,14 @@ using namespace ReyEngine::Internal::Tree;
 
 struct DrawTestWidget1 : public Widget {
    REYENGINE_OBJECT(DrawTestWidget1)
+
    void render2D() const override {
       //draw rectangles
       auto splitRectH = getSizeRect().splitH();
       auto splitRectVL = splitRectH.at(0).splitV();
       auto splitRectVR = splitRectH.at(1).splitV();
-      for (const auto& r : {splitRectH.at(0), splitRectH.at(1), splitRectVL.at(0), splitRectVL.at(1), splitRectVR.at(0), splitRectVR.at(1)}) {
+      for (const auto& r: {splitRectH.at(0), splitRectH.at(1), splitRectVL.at(0), splitRectVL.at(1), splitRectVR.at(0),
+                           splitRectVR.at(1)}) {
          drawRectangleLines(r, 1.0, Colors::red);
       }
 
@@ -42,94 +44,103 @@ struct DrawTestWidget1 : public Widget {
          drawRectangle(_4, Colors::blue);
       }
 
-      drawText("Splits Test", {0,0}, theme->font);
+      drawText("Splits Test", {0, 0}, theme->font);
    }
 };
 
 
 struct TestWidget : public Widget {
-  REYENGINE_OBJECT(TestWidget)
-  TestWidget(const std::string& text)
-  : text(text)
-  , color(Colors::randColor())
-  {
-     setSize({200,200});
-  }
+   REYENGINE_OBJECT(TestWidget)
+
+   TestWidget(const std::string& text)
+         : text(text), color(Colors::randColor()) {
+      setSize({200, 200});
+   }
+
    void render2D() const override {
       bool _isInsideAtRenderTime = getLocalMousePos().isInside(getSizeRect());
       drawRectangle(getSizeRect(), _isInsideAtRenderTime ? color : Colors::lightGray);
-      drawText(text, {0,0}, getDefaultFont());
+      drawText(text, {0, 0}, getDefaultFont());
       drawText("Pos = " + Pos<int>(getPos()).toString(), {0, 20}, getDefaultFont());
-      drawText("Siz = " + Size<int>(getSize()).toString(), {0,40}, getDefaultFont());
-      drawText("G" + globalMousePos.toString(), {0,60}, getDefaultFont());
-      drawText("L" + localMousePos.toString(), {0,80}, getDefaultFont());
+      drawText("Siz = " + Size<int>(getSize()).toString(), {0, 40}, getDefaultFont());
+      drawText("G" + globalMousePos.toString(), {0, 60}, getDefaultFont());
+      drawText("L" + localMousePos.toString(), {0, 80}, getDefaultFont());
    }
+
 protected:
    void _on_rect_changed() override {}
+
    Widget* _unhandled_input(const InputEvent& event) override {
-     if (auto isMouse = event.isMouse()){
-        isInside = isMouse.value()->isInside();
-        switch (event.eventId) {
-           case InputEventMouseButton::ID:{
-              auto& mbEvent = event.toEvent<InputEventMouseButton>();
-              if (isInside && mbEvent.isDown) {
-                 isDown = true;
-                 return this;
-              }
-              if (isDown && !mbEvent.isDown){
-                 isDown = false;
-                 return this;
-              }
-              break;}
-           case InputEventMouseMotion::ID:{
-              globalMousePos = isMouse.value()->getCanvasPos().get();
-              localMousePos = isMouse.value()->getLocalPos();
-              auto& mmEvent = event.toEvent<InputEventMouseMotion>();
-              if (isDown){
+      if (auto isMouse = event.isMouse()) {
+         isInside = isMouse.value()->isInside();
+         switch (event.eventId) {
+            case InputEventMouseButton::ID: {
+               auto& mbEvent = event.toEvent<InputEventMouseButton>();
+               if (isInside && mbEvent.isDown) {
+                  isDown = true;
+                  return this;
+               }
+               if (isDown && !mbEvent.isDown) {
+                  isDown = false;
+                  return this;
+               }
+               break;
+            }
+            case InputEventMouseMotion::ID: {
+               globalMousePos = isMouse.value()->getCanvasPos().get();
+               localMousePos = isMouse.value()->getLocalPos();
+               auto& mmEvent = event.toEvent<InputEventMouseMotion>();
+               if (isDown) {
 //                 cout << "----------------------" << endl;
 //                 cout << getName() << endl;
 //                 cout << "Mouse delta = " << mmEvent.mouseDelta << endl;
 //                 cout << "current position = " << getPos() << endl;
 //                 cout << "new position = " << mmEvent.mouseDelta + getPos() << endl;
-                 setPosition(getPos() + mmEvent.mouseDelta);
-                 return this;
-              }
-              break;}
-        }
-     }
+                  setPosition(getPos() + mmEvent.mouseDelta);
+                  return this;
+               }
+               break;
+            }
+         }
+      }
 
-     return nullptr;
-  }
-  Pos<int> localMousePos;
-  Pos<int> globalMousePos;
-  bool isInside = false;
-  std::string text;
-  ColorRGBA color;
-  bool isDown = false;
+      return nullptr;
+   }
+
+   Pos<int> localMousePos;
+   Pos<int> globalMousePos;
+   bool isInside = false;
+   std::string text;
+   ColorRGBA color;
+   bool isDown = false;
 };
 
 struct SliderReactWidget : public Widget {
    REYENGINE_OBJECT(SliderReactWidget)
+
    SliderReactWidget() {
       setMaxSize({1000, 30});
    }
+
    void render2D() const override {
       auto rect = getSizeRect().splitH(_pct).at(0);
-      auto rect2 = getSizeRect().splitH(10, 20, 30,40);
+      auto rect2 = getSizeRect().splitH(10, 20, 30, 40);
       drawRectangleGradientH(rect, Colors::blue, Colors::black);
    }
 
-   void setValue(const Percent& pct){
+   void setValue(const Percent& pct) {
       cout << "Reaction pct = " << _pct << endl;
       _pct = pct;
    }
+
    Percent _pct;
 };
 
-int main(){
+int main() {
    //create window
    {
-      auto& window = Application::createWindowPrototype("window", 1920, 1080, {WindowFlags::RESIZE}, 60)->createWindow();
+      auto& window = Application::createWindowPrototype("window", 1920, 1080, {WindowFlags::RESIZE},
+                                                        60)->createWindow();
       auto root = window.getCanvas();
 
       //create a layout
@@ -153,6 +164,9 @@ int main(){
          TypeNode* subCanvasHolder = nullptr;
          TypeNode* scrollAreaHolder = nullptr;
          TypeNode* popupNode = nullptr;
+         TypeNode* dialogHNode = nullptr;
+         TypeNode* dialogVNode = nullptr;
+
          // add some children to the layout
          {
 //            auto [widget1, n1] = make_node<TestWidget>("TestWidget1", "firstchild");
@@ -176,7 +190,7 @@ int main(){
             widgetsHolder->addChild(std::move(sr1));
 
             //add slider reaction callback
-            auto srCallback = [sliderReact](const Slider::EventSliderValueChanged& event){
+            auto srCallback = [sliderReact](const Slider::EventSliderValueChanged& event) {
                sliderReact->setValue(event.pct);
             };
             sliderReact->subscribe<Slider::EventSliderValueChanged>(slider1.get(), srCallback);
@@ -187,7 +201,7 @@ int main(){
             combobox1->addItems({"this", "are", "some", "items"});
             widgetsHolder->addChild(std::move(n3));
 
-            auto lineEditCB = [&](const LineEdit::EventLineEditTextChanged& event){
+            auto lineEditCB = [&](const LineEdit::EventLineEditTextChanged& event) {
                cout << "New Line Edit Text Old = " << event.oldText << endl;
                cout << "New Line Edit Text New = " << event.newText << endl;
             };
@@ -205,9 +219,9 @@ int main(){
             buttonHolder->addChild(std::move(n3));
             buttonHolder->addChild(std::move(n4));
 
-            auto cbPopup = [&](const PushButton::ButtonPressEvent& event){
+            auto cbPopup = [&](const PushButton::ButtonPressEvent& event) {
                auto isWidget = popupNode->as<Widget>();
-               if (isWidget){
+               if (isWidget) {
                   auto& popup = isWidget.value();
                   popup->setVisible(true);
                   popup->setModal(true);
@@ -216,22 +230,25 @@ int main(){
             summonButton->subscribe<PushButton::ButtonPressEvent>(summonButton.get(), cbPopup);
 
             //create dialog test
-            auto cbDialogH = [&](const PushButton::ButtonPressEvent& event){
-               std::array<string_view, 4> options;
-               options[0] = "test1";
-               options[1] = "test2";
-               options[2] = "test3";
-               options[3] = "test4";
-
-               enum testEnum {
-                  test1, test2, test3, test4
-               };
-               std::array<testEnum, 4> enums;
-               auto pair = make_node<Dialog<std::array<string_view, 4>, std::array<testEnum, 4>>>("dialogH", options, enums, "Test Text");
-               pair.first->setVisible(true);
-               pair.first->setModal(true);
+            auto cbDialogH = [&](const PushButton::ButtonPressEvent& event) {
+               auto isWidget = dialogHNode->as<Widget>();
+               if (isWidget) {
+                  auto& dialog = isWidget.value();
+                  dialog->setVisible(true);
+                  dialog->setModal(true);
+               }
             };
             dialogHButton->subscribe<PushButton::ButtonPressEvent>(dialogHButton.get(), cbDialogH);
+
+            auto cbDialogV = [&](const PushButton::ButtonPressEvent& event) {
+               auto isWidget = dialogVNode->as<Widget>();
+               if (isWidget) {
+                  auto& dialog = isWidget.value();
+                  dialog->setVisible(true);
+                  dialog->setModal(true);
+               }
+            };
+            dialogVButton->subscribe<PushButton::ButtonPressEvent>(dialogVButton.get(), cbDialogV);
 
          }
 
@@ -250,22 +267,27 @@ int main(){
                {
                   auto [textureTestLayout, n1] = make_node<Layout>("TextureTestLayout", Layout::LayoutDir::VERTICAL);
                   std::vector<std::pair<std::string, TextureRect::FitType>> fitTypes = {
-                        {"FitRect", TextureRect::FitType::FIT_RECT},
-                        {"FitWidth", TextureRect::FitType::FIT_WIDTH},
+                        {"FitRect",   TextureRect::FitType::FIT_RECT},
+                        {"FitWidth",  TextureRect::FitType::FIT_WIDTH},
                         {"FitHeight", TextureRect::FitType::FIT_HEIGHT},
-                        {"None", TextureRect::FitType::NONE}
+                        {"None",      TextureRect::FitType::NONE}
                   };
-                  auto [textureTestComboBox, n2] = make_node<ComboBox<TextureRect::FitType>>("TextureTestComboBox", fitTypes);
-                  auto [textureRect, n3] = make_node<TextureRect>("TextureTest", "test/spritesheet.png", TextureRect::FitType::FIT_RECT);
+                  auto [textureTestComboBox, n2] = make_node<ComboBox<TextureRect::FitType>>("TextureTestComboBox",
+                                                                                             fitTypes);
+                  auto [textureRect, n3] = make_node<TextureRect>("TextureTest", "test/spritesheet.png",
+                                                                  TextureRect::FitType::FIT_RECT);
                   n1->addChild(std::move(n2));
                   n1->addChild(std::move(n3));
                   p2 = std::move(n1);
 
-                  auto fitMenuCB = [textureRect](const ComboBox<TextureRect::FitType>::EventComboBoxItemSelected& event){
-                     cout << event.field->text << " at index " << event.itemIndex << " = " << (int)event.field->data << endl;
+                  auto fitMenuCB = [textureRect](
+                        const ComboBox<TextureRect::FitType>::EventComboBoxItemSelected& event) {
+                     cout << event.field->text << " at index " << event.itemIndex << " = " << (int) event.field->data
+                          << endl;
                      textureRect->setFitType(event.field->data);
                   };
-                  textureTestComboBox->subscribe<ComboBox<TextureRect::FitType>::EventComboBoxItemSelected>(textureTestComboBox, fitMenuCB);
+                  textureTestComboBox->subscribe<ComboBox<TextureRect::FitType>::EventComboBoxItemSelected>(
+                        textureTestComboBox, fitMenuCB);
                }
 
                auto [drawTest, p1] = make_node<DrawTestWidget1>("DrawTest");
@@ -288,7 +310,7 @@ int main(){
             //add a label to the subcanvas
             auto [label, n2] = make_node<TestWidget>("SubCanvasTestWidget", "test");
             subcanvasNode->addChild(std::move(n2));
-            label->setPosition({100,100});
+            label->setPosition({100, 100});
          }
 
          // add a scroll area
@@ -317,11 +339,12 @@ int main(){
             {
                auto [scrollButton, n3] = make_node<PushButton>("ScrollAreaTestBtn", "Scroll Button");
                scrollAreaNode->addChild(std::move(n3));
-               scrollButton->setPosition(200,350);
+               scrollButton->setPosition(200, 350);
             }
 
             //create a mouse event and test it
-            InputEventMouseButton eventMouseButton(&window, scrollArea->getGloablRect().get().pos(), InputInterface::MouseButton::LEFT, true);
+            InputEventMouseButton eventMouseButton(&window, scrollArea->getGloablRect().get().pos(),
+                                                   InputInterface::MouseButton::LEFT, true);
             window.processInput(eventMouseButton);
          }
 
@@ -335,17 +358,17 @@ int main(){
             }
             popupCtl->setSize(300, 100);
             popupCtl->setPosition(popupCtl->getRect().centerOnPoint(root->getRect().center()).pos());
-            auto cbRender = [](const Control& ctrl){
+            auto cbRender = [](const Control& ctrl) {
                drawRectangleRounded(ctrl.getSizeRect(), .1, 5, Colors::orange);
                drawRectangleRoundedLines(ctrl.getSizeRect(), .1, 5, 2.0, Colors::black);
             };
             //put some buttons on the control
 
             {
-               auto onBtn = [&](const PushButton::ButtonPressEvent& event){
+               auto onBtn = [&](const PushButton::ButtonPressEvent& event) {
                   popupCtl->setVisible(false);
                   popupCtl->setModal(false);
-                  if (auto isButton = event.publisher->as<PushButton>()){
+                  if (auto isButton = event.publisher->as<PushButton>()) {
                      cout << isButton.value()->getText() << endl;
                   }
                };
@@ -364,11 +387,60 @@ int main(){
             popupCtl->setVisible(false);
          }
 
-         //create dialog control
+         //create dialog H control
+         {
+            Control* dialogHCtl = nullptr;
+            {
+               std::array<string_view, 4> options;
+               options[0] = "test1";
+               options[1] = "test2";
+               options[2] = "test3";
+               options[3] = "test4";
 
-      }
+               enum testEnum {
+                  test1, test2, test3, test4
+               };
+               std::array<testEnum, 4> enums;
+               auto [_dialog, n1] = make_node<Dialog<std::array<string_view, 4>, std::array<testEnum, 4>>>("dialogH",
+                                                                                                           options,
+                                                                                                           enums,
+                                                                                                           "Test Text");
+               dialogHNode = root->getNode()->addChild(std::move(n1));
+               dialogHCtl = _dialog.get();
+            }
+            dialogHCtl->setPosition(dialogHCtl->getRect().centerOnPoint(root->getRect().center()).pos());
 
-      //scroll area
+            dialogHCtl->setVisible(false);
+         }
+
+         //create dialog V control
+         {
+            Control* dialogVCtl = nullptr;
+
+            std::array<string_view, 4> options;
+            options[0] = "test1";
+            options[1] = "test2";
+            options[2] = "test3";
+            options[3] = "test4";
+
+            enum testEnum {
+               test1, test2, test3, test4
+            };
+            std::array<testEnum, 4> enums;
+            auto [_dialog, n1] = make_node<Dialog<std::array<string_view, 4>, std::array<testEnum, 4>>>("dialogV",
+                                                                                                        options,
+                                                                                                        enums,
+                                                                                                        "Test Text",
+                                                                                                        Layout::LayoutDir::VERTICAL);
+            dialogVNode = root->getNode()->addChild(std::move(n1));
+            dialogVCtl = _dialog.get();
+
+            dialogVCtl->setPosition(dialogVCtl->getRect().centerOnPoint(root->getRect().center()).pos());
+
+            dialogVCtl->setVisible(false);
+         }
+
+         //scroll area
 //      auto [scrollArea, node] = make_node<ScrollArea>("ScrollArea");
 //      TypeNode* scrollAreaNode = root->getNode()->addChild(std::move(node));
 //      scrollArea->setRect(0, 0, 500, 500);
@@ -376,8 +448,9 @@ int main(){
 //      scrollAreaNode->addChild(std::move(btnnode));
 //      btn->setPosition(200,200);
 
-      window.exec();
-   }
-   return 0;
+         window.exec();
+      }
+      return 0;
 
+   }
 }
