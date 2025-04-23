@@ -397,14 +397,11 @@ int main() {
                options[2] = "test3";
                options[3] = "test4";
 
-               enum testEnum {
+               enum class testEnum {
                   test1, test2, test3, test4
                };
-               std::array<testEnum, 4> enums;
-               auto [_dialog, n1] = make_node<Dialog<std::array<string_view, 4>, std::array<testEnum, 4>>>("dialogH",
-                                                                                                           options,
-                                                                                                           enums,
-                                                                                                           "Test Text");
+               std::array<testEnum, 4> enums = {testEnum::test1, testEnum::test2, testEnum::test3, testEnum::test4};
+               auto [_dialog, n1] = make_node<Dialog<testEnum, 4>>("dialogH", options, enums, "Test Text");
                dialogHNode = root->getNode()->addChild(std::move(n1));
                dialogHCtl = _dialog.get();
             }
@@ -427,11 +424,7 @@ int main() {
                test1, test2, test3, test4
             };
             std::array<testEnum, 4> enums;
-            auto [_dialog, n1] = make_node<Dialog<std::array<string_view, 4>, std::array<testEnum, 4>>>("dialogV",
-                                                                                                        options,
-                                                                                                        enums,
-                                                                                                        "Test Text",
-                                                                                                        Layout::LayoutDir::VERTICAL);
+            auto [_dialog, n1] = make_node<Dialog<testEnum, 4>>("dialogV", options, enums, "Test Text", Layout::LayoutDir::VERTICAL);
             dialogVNode = root->getNode()->addChild(std::move(n1));
             dialogVCtl = _dialog.get();
 

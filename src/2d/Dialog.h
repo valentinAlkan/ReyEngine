@@ -18,20 +18,16 @@ namespace ReyEngine {
    template <typename E, size_t N>
    struct is_enum_array<std::array<E, N>> : std::integral_constant<bool, std::is_enum_v<E>> {};
 
-   template <typename Options, typename Enums>
+   template <typename Enum, size_t N>
    class Dialog : public Control {
    public:
       REYENGINE_OBJECT(Dialog);
-      Dialog(Options options, Enums enums, std::string_view text = "", Layout::LayoutDir layoutDirection = Layout::LayoutDir::HORIZONTAL)
+      constexpr Dialog(const std::array<std::string_view, 4>& options, const std::array<Enum, N>& enums, std::string_view text = "", Layout::LayoutDir layoutDirection = Layout::LayoutDir::HORIZONTAL)
       : options(options)
       , enums(enums)
       , text(text)
-            , layoutDirection(layoutDirection)
+      , layoutDirection(layoutDirection)
       {
-         static_assert(is_string_view_array<Options>::value, "Options must be a std::array<std::string_view, N>");
-         static_assert(is_enum_array<Enums>::value, "Enums must be a std::array<Enum, N>");
-
-         static_assert(options.size() == enums.size(), "options and enums must have the same number of elements");
       }
 
    protected:
@@ -60,8 +56,8 @@ namespace ReyEngine {
       }
 
    private:
-      Options options;
-      Enums enums;
+      std::array<std::string_view, N> options;
+      std::array<Enum, N> enums;
       Layout::LayoutDir layoutDirection;
       std::string_view text;
    };
