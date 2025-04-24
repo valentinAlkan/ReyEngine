@@ -682,6 +682,7 @@ namespace ReyEngine {
       }
       // Specialization for no arguments (default to one split at 50%)
       constexpr inline auto splitH() {return splitH(Percent{50});}
+      constexpr inline auto splitH(const std::vector<Percent>&) {return splitH(Percent{50});}
 
       template <size_t SplitCount=2>
       constexpr inline std::array<Rect, SplitCount> splitV(const std::array<Percent, SplitCount-1>& pct={50}){  //split rectangle vertically
