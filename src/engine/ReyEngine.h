@@ -477,6 +477,30 @@ namespace ReyEngine {
          auto dy = b.y - a.y;
          return {{-dy, dx}, {dy, -dx}};
       }
+      constexpr inline std::optional<Pos<T>> intersectionOf(const Line<T>& other) const {
+         // Get coordinates of the points
+         const T x1 = a.x;
+         const T y1 = a.y;
+         const T x2 = b.x;
+         const T y2 = b.y;
+         const T x3 = other.a.x;
+         const T y3 = other.a.y;
+         const T x4 = other.b.x;
+         const T y4 = other.b.y;
+
+         // Calculate denominator
+         const T denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+
+         // Check if lines are parallel (denominator = 0)
+         if (denominator == 0) return {};
+
+         // Calculate intersection point
+         const T numeratorX = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4));
+         const T numeratorY = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4));
+
+         return Pos<T>(numeratorX / denominator, numeratorY / denominator);
+      }
+
       friend std::ostream& operator<<(std::ostream& os, Line r) {os << r.toString(); return os;}
       Pos<T> a;
       Pos<T> b;
@@ -619,7 +643,7 @@ namespace ReyEngine {
       constexpr inline Rect& operator*=(const Rect<T>& rhs){x *= rhs.x; y *= rhs.y; width *= rhs.width; height *= rhs.height; return *this;}
       constexpr inline Rect& operator/=(const Rect<T>& rhs){x /= rhs.x; y /= rhs.y; width /= rhs.width; height /= rhs.height; return *this;}
       constexpr inline Rect& centerOnPoint(const Pos<R_FLOAT>& p) {return setPos(p - size() / 2);} /// Return the rect such that it would be centered on point p
-      constexpr inline Rect& embiggen(T amt) {return *this += Rect<T>(-amt, -amt, 2*amt, 2*amt);} //shrink/expand borders evenly
+      constexpr inline Rect& embiggen(T amt) {return *this += Rect<T>(-amt, -amt, 2*amt, 2*amt);} //shrink/expand borders evenly. Perfectly cromulent name.
       constexpr inline Rect& emtallen(T amt) {return *this += Rect<T>(0, -amt, 0, 2*amt);}//embiggen tallness evenly
       constexpr inline Rect& emwiden(T amt) {return *this += Rect<T>(-amt, 0, 2*amt, 0);}//embiggen wideness evenly
       constexpr inline Rect& chopTop(T amt) {y+= amt; height-=amt; return *this;} //remove the topmost amt of the rectangle and return the remainder (moves y, cuts height)
@@ -636,82 +660,202 @@ namespace ReyEngine {
       constexpr inline Rect& mirrorLeft(){x-= width; return *this;}
       constexpr inline Rect& mirrorUp(){y-= height; return *this;}
       constexpr inline Rect& mirrorDown(){y+= height; return *this;}
-      /*
-       * Splits a rectangle into percentages.size() + 1 smaller rectangles, the width of each
-       * is decided by the percentage of the whole. The last rectangle will take up as much space
-       * as is necessary to add up to 100 percent of the rectangle.
-       *
-       */
-      template <typename... Percentages>
-      constexpr inline auto splitH(Percentages... percentages) {
-         // Dynamic check for runtime evaluation
-         const auto sum = (... + percentages);
-         if (sum > 100) {
-            throw std::invalid_argument("Values in percentages must add up to less than or equal to 100 percent");
+      constexpr inline Line<T> centerLineH() const { auto c = center(); return {0, c.y, width, c.y}; }
+      constexpr inline Line<T> centerLineV() const { auto c = center(); return {c.x, 0, c.x, height}; }
+
+
+
+   private:
+      // Private implementation function with a templated bool parameter
+      template <bool isVertical>
+      [[nodiscard]] std::vector<Rect<T>> splitImpl(const std::vector<Percent>& percentages) const {
+         std::vector<Rect<T>> result;
+
+         // If no percentages provided, split into two equal parts
+         if (percentages.empty()) {
+            result.reserve(2);
+            Rect<T> firstHalf = *this;
+            Rect<T> secondHalf = *this;
+
+            if (isVertical) {
+               // Vertical split in half
+               firstHalf.height = height / 2;
+
+               secondHalf.height = height / 2;
+               secondHalf.y = y + height / 2;
+            } else {
+               // Horizontal split in half
+               firstHalf.width = width / 2;
+
+               secondHalf.width = width / 2;
+               secondHalf.x = x + width / 2;
+            }
+
+            result.push_back(firstHalf);
+            result.push_back(secondHalf);
+            return result;
          }
 
-         constexpr size_t SplitCount = sizeof...(Percentages) + 1;
+         // Normal case with percentages provided
+         result.reserve(percentages.size() + 1);
 
-         // Convert variadic arguments to an array
-         std::array<Percent, SplitCount-1> pct{percentages...};
-
-         std::array<Rect, SplitCount> result;
-         // First rectangle starts at the original rectangle's left edge
-         T currentX = x;
-
-         // Process all but the last rectangle
-         for (size_t i = 0; i < SplitCount - 1; i++) {
-            // Calculate width based on percentage
-            T rectWidth = width * pct[i].get() / 100.0;
-
-            // Create rectangle with calculated width
-            result[i] = *this;
-            result[i].x = currentX;
-            result[i].width = rectWidth;
-
-            // Move starting position for next rectangle
-            currentX += rectWidth;
+         // Calculate the total percentage from the input vector
+         double totalPercentage = 0.0;
+         for (const auto& percent : percentages) {
+            totalPercentage += percent.get();
          }
 
-         // Last rectangle takes remaining width
-         result[SplitCount - 1] = *this;
-         result[SplitCount - 1].x = currentX;
-         result[SplitCount - 1].width = (x + width) - currentX;
+         // Calculate the remaining percentage for the last rectangle
+         double remainingPercentage = 100.0 - totalPercentage;
+
+         // Make sure the total doesn't exceed 100%
+         if (remainingPercentage < -1e-6) {
+            // Handle error - return a reasonable fallback (split in half)
+            result.clear();
+            return splitImpl<isVertical>(std::vector<Percent>());
+         }
+
+         // The dimension we're splitting (width for horizontal, height for vertical)
+         T totalDimension = isVertical ? height : width;
+
+         // Current position offset
+         T currentPos = isVertical ? y : x;
+
+         // Create rectangles for each percentage in the vector
+         for (const auto& percent : percentages) {
+            Rect<T> newRect = *this;
+
+            // Calculate the new dimension based on the percentage
+            T newDimension = static_cast<T>(totalDimension * (percent.get() / 100.0));
+
+            if (isVertical) {
+               newRect.height = newDimension;
+               newRect.y = currentPos;
+               currentPos += newDimension;
+            } else {
+               newRect.width = newDimension;
+               newRect.x = currentPos;
+               currentPos += newDimension;
+            }
+
+            result.push_back(newRect);
+         }
+
+         // Create the final (N+1)th rectangle with the remaining percentage
+         Rect<T> lastRect = *this;
+         T lastDimension = static_cast<T>(totalDimension * (std::max(0.0, remainingPercentage) / 100.0));
+
+         if (isVertical) {
+            lastRect.height = lastDimension;
+            lastRect.y = currentPos;
+         } else {
+            lastRect.width = lastDimension;
+            lastRect.x = currentPos;
+         }
+
+         result.push_back(lastRect);
 
          return result;
       }
-      // Specialization for no arguments (default to one split at 50%)
-      constexpr inline auto splitH() {return splitH(Percent{50});}
-      constexpr inline auto splitH(const std::vector<Percent>&) {return splitH(Percent{50});}
-
-      template <size_t SplitCount=2>
-      constexpr inline std::array<Rect, SplitCount> splitV(const std::array<Percent, SplitCount-1>& pct={50}){  //split rectangle vertically
-         std::array<Rect, SplitCount> result;
-
-         // First rectangle starts at the original rectangle's top edge
-         T currentY = y;
-
-         // Process all but the last rectangle
-         for (size_t i = 0; i < SplitCount - 1; i++) {
-            // Calculate height based on percentage
-            T rectHeight = height * pct[i].get() / 100.0;
-
-            // Create rectangle with calculated height
-            result[i] = *this;
-            result[i].y = currentY;
-            result[i].height = rectHeight;
-
-            // Move starting position for next rectangle
-            currentY += rectHeight;
-         }
-
-         // Last rectangle takes remaining height
-         result[SplitCount - 1] = *this;
-         result[SplitCount - 1].y = currentY;
-         result[SplitCount - 1].height = (y + height) - currentY;
-
-         return result;
+      // Helper function to create a tuple from a vector
+      template <std::size_t... I>
+      auto make_tuple_from_vector(const std::vector<Rect<T>>& vec, std::index_sequence<I...>) const {
+         return std::make_tuple(vec[I]...);
       }
+
+   public:
+      // Unified splitH function that handles all cases correctly
+      template <bool AsTuple = false>
+      [[nodiscard]] auto splitH() const {
+         std::vector<Rect<T>> resultVec = splitImpl<false>(std::vector<Percent>{});
+
+         if constexpr (AsTuple) {
+            return make_tuple_from_vector(resultVec, std::make_index_sequence<2>{});
+         } else {
+            return resultVec;
+         }
+      }
+
+      // Overload for a single Percent value
+      template <bool AsTuple = false>
+      [[nodiscard]] auto splitH(const Percent& percent) const {
+         std::vector<Percent> percentages{percent};
+         std::vector<Rect<T>> resultVec = splitImpl<false>(percentages);
+
+         if constexpr (AsTuple) {
+            return make_tuple_from_vector(resultVec, std::make_index_sequence<2>{});
+         } else {
+            return resultVec;
+         }
+      }
+
+      // Vector input version
+      [[nodiscard]] std::vector<Rect<T>> splitH(const std::vector<Percent>& percentages) const {
+         return splitImpl<false>(percentages);
+      }
+
+      // Variadic template version for multiple values
+      template <bool AsTuple = false, typename... Args, typename = std::enable_if_t<(sizeof...(Args) > 1)>>
+      [[nodiscard]] auto splitH(const Args&... args) const {
+         std::vector<Percent> percentages;
+         percentages.reserve(sizeof...(args));
+
+         // Use a fold expression with the comma operator
+         (percentages.push_back(Percent(static_cast<double>(args))), ...);
+
+         std::vector<Rect<T>> resultVec = splitImpl<false>(percentages);
+
+         if constexpr (AsTuple) {
+            return make_tuple_from_vector(resultVec, std::make_index_sequence<sizeof...(Args) + 1>{});
+         } else {
+            return resultVec;
+         }
+      }
+
+      // Same pattern for splitV
+      template <bool AsTuple = false>
+      [[nodiscard]] auto splitV() const {
+         std::vector<Rect<T>> resultVec = splitImpl<true>(std::vector<Percent>{});
+
+         if constexpr (AsTuple) {
+            return make_tuple_from_vector(resultVec, std::make_index_sequence<2>{});
+         } else {
+            return resultVec;
+         }
+      }
+
+      template <bool AsTuple = false>
+      [[nodiscard]] auto splitV(const Percent& percent) const {
+         std::vector<Percent> percentages{percent};
+         std::vector<Rect<T>> resultVec = splitImpl<true>(percentages);
+
+         if constexpr (AsTuple) {
+            return make_tuple_from_vector(resultVec, std::make_index_sequence<2>{});
+         } else {
+            return resultVec;
+         }
+      }
+
+      [[nodiscard]] std::vector<Rect<T>> splitV(const std::vector<Percent>& percentages) const {
+         return splitImpl<true>(percentages);
+      }
+
+      template <bool AsTuple = false, typename... Args, typename = std::enable_if_t<(sizeof...(Args) > 1)>>
+      [[nodiscard]] auto splitV(const Args&... args) const {
+         std::vector<Percent> percentages;
+         percentages.reserve(sizeof...(args));
+
+         (percentages.push_back(Percent(static_cast<double>(args))), ...);
+
+         std::vector<Rect<T>> resultVec = splitImpl<true>(percentages);
+
+         if constexpr (AsTuple) {
+            return make_tuple_from_vector(resultVec, std::make_index_sequence<sizeof...(Args) + 1>{});
+         } else {
+            return resultVec;
+         }
+      }
+
       [[nodiscard]] constexpr inline Rect embiggen(T amt) const {return *this + Rect<T>(-amt, -amt, 2*amt, 2*amt);}
       [[nodiscard]] constexpr inline Rect emtallen(T amt) const {return  *this + Rect<T>(0, -amt, 0, 2*amt);}
       [[nodiscard]] constexpr inline Rect emwiden(T amt) const {return  *this + Rect<T>(-amt, 0, 2*amt, 0);}
@@ -869,6 +1013,8 @@ namespace ReyEngine {
       [[nodiscard]] constexpr inline const Size<T> size() const {return {width, height};}
       [[nodiscard]] constexpr inline const Rect<T> toSizeRect() const {return {0,0,width, height};}
       constexpr inline Rect& setSize(const ReyEngine::Size<T>& size){width = size.x; height = size.y; return *this;}
+      constexpr inline Rect& setHeight(T size){height = size; return *this;}
+      constexpr inline Rect& setWidth(T size){width = size; return *this;}
       constexpr inline Rect& setPos(const ReyEngine::Pos<T>& pos){x = pos.x; y = pos.y; return *this;}
 
       //return the smallest rect that contains both rects a and b

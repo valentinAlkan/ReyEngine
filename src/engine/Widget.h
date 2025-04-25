@@ -67,11 +67,29 @@ namespace ReyEngine {
       virtual void _on_modality_lost(){}
       virtual void _on_focus_gained(){}
       virtual void _on_focus_lost(){}
+      virtual void _on_visibility_changed(){}
+      virtual void _on_child_rect_changed(Widget*){};
+      virtual void _on_rect_changed(){};
+
       bool acceptsHover = false;
       bool isLayout = false;
       bool enabled = true; //changes visuals and (typically) ingores input
 
       std::shared_ptr<Theme> theme;
+
+      Anchor _anchor = Anchor::NONE;
+
+   private:
+      void __init() override;
+      void __on_added_to_tree() override;
+      void __on_visibility_changed() override {
+         if (!_visible && getCanvas()) {
+            //strip widgets of focus and modality when they are no longer visible. Otherwise we can softlock.
+            setFocused(false);
+            setModal(false);
+         }
+         _on_visibility_changed();
+      }
 
       void __on_rect_changed(const Rect<R_FLOAT>& oldRect, bool byLayout = false) override {
          if (!byLayout) {
@@ -100,13 +118,7 @@ namespace ReyEngine {
          }
       }
       void calculateAnchoring(const Rect<R_FLOAT>& oldRect);
-      virtual void _on_child_rect_changed(Widget*){};
-      virtual void _on_rect_changed(){};
-      Anchor _anchor = Anchor::NONE;
 
-   private:
-      void __init() override;
-      void __on_added_to_tree() override;
       Widget* _parentWidget = nullptr; //the closest related parent that is a widget.
       bool _modal = false;
 

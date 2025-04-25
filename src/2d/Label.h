@@ -43,6 +43,7 @@ namespace ReyEngine{
       };
 
       void clear(){text.clear();}
+      void setText(const std::string_view newText){setText(std::string(newText));}
       void setText(const std::string& newText){
          text = newText;
          auto expandOpt = needsExpand();

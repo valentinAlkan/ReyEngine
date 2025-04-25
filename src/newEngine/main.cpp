@@ -21,23 +21,22 @@ struct DrawTestWidget1 : public Widget {
 
    void render2D() const override {
       //draw rectangles
-      auto splitRectH = getSizeRect().splitH();
-      auto splitRectVL = splitRectH.at(0).splitV();
-      auto splitRectVR = splitRectH.at(1).splitV();
-      for (const auto& r: {splitRectH.at(0), splitRectH.at(1), splitRectVL.at(0), splitRectVL.at(1), splitRectVR.at(0),
-                           splitRectVR.at(1)}) {
+      auto [splitRectHL, splitRectHR] = getSizeRect().splitH<true>();
+      auto [splitRectVLL, splitRectVLR] = splitRectHL.splitV<true>();
+      auto [splitRectVRL, splitRectVRR]  = splitRectHR.splitV<true>();
+      for (const auto& r: {splitRectHL, splitRectHR, splitRectVLL, splitRectVLR, splitRectVRL, splitRectVRR}) {
          drawRectangleLines(r, 1.0, Colors::red);
       }
 
       //split some more
       {
-         auto [_1, _2] = splitRectVL.at(0).splitV();
+         auto [_1, _2] = splitRectVLL.splitV<true>();
          drawRectangle(_1, Colors::red);
          drawRectangle(_2, Colors::black);
       }
 
       {
-         auto [_1, _2, _3, _4] = splitRectVR.at(1).splitH(10, 20, 30);
+         auto [_1, _2, _3, _4] = splitRectVRR.splitH<true>(10, 20, 30);
          drawRectangle(_1, Colors::red);
          drawRectangle(_2, Colors::black);
          drawRectangle(_3, Colors::red);
@@ -123,9 +122,8 @@ struct SliderReactWidget : public Widget {
    }
 
    void render2D() const override {
-      auto rect = getSizeRect().splitH(_pct).at(0);
-      auto rect2 = getSizeRect().splitH(10, 20, 30, 40);
-      drawRectangleGradientH(rect, Colors::blue, Colors::black);
+      auto [rectL, rectR] = getSizeRect().splitH<true>(_pct);
+      drawRectangleGradientH(rectL, Colors::blue, Colors::black);
    }
 
    void setValue(const Percent& pct) {
@@ -377,8 +375,9 @@ int main() {
                auto [btnCancel, nCancel] = make_node<PushButton>("btnCancel", "cancel");
                popupCtl->getNode()->addChild(std::move(nOk));
                popupCtl->getNode()->addChild(std::move(nCancel));
-               btnOk->setRect(popupCtl->getSizeRect().splitH().at(0).embiggen(-20));
-               btnCancel->setRect(popupCtl->getSizeRect().splitH().at(1).embiggen(-20));
+               auto [L, R] = popupCtl->getSizeRect().splitH<true>();
+               btnOk->setRect(L.embiggen(-20));
+               btnCancel->setRect(R.embiggen(-20));
 
                btnOk->subscribe<PushButton::ButtonPressEvent>(btnOk.get(), onBtn);
                btnOk->subscribe<PushButton::ButtonPressEvent>(btnCancel.get(), onBtn);
@@ -387,63 +386,47 @@ int main() {
             popupCtl->setVisible(false);
          }
 
+         enum class testEnum { test1, test2, test3, test4};
+         using namespace std::literals; // For string_view literals
+         std::array options = {
+               std::pair{"dialog1"sv, testEnum::test1},
+               std::pair{"dialog2"sv, testEnum::test2},
+               std::pair{"dialog3"sv, testEnum::test3},
+               std::pair{"dialog4"sv, testEnum::test4}
+         };
+         using TestDialog = Dialog<testEnum, 4>;
+         TestDialog* dialogHCtl = nullptr;
+         TestDialog* dialogVCtl = nullptr;
+         //add a callback
+         auto dialogCB = [](const TestDialog::DialogCloseEvent& e){
+            Logger::info() << "Dialog box " << e.publisher->as<TestDialog>().value()->getNode()->name << " selected option " << e.option << " which corresponds to an int value of " << (int)e.value << endl;
+         };
          //create dialog H control
          {
-            Control* dialogHCtl = nullptr;
             {
-               std::array<string_view, 4> options;
-               options[0] = "test1";
-               options[1] = "test2";
-               options[2] = "test3";
-               options[3] = "test4";
-
-               enum class testEnum {
-                  test1, test2, test3, test4
-               };
-               std::array<testEnum, 4> enums = {testEnum::test1, testEnum::test2, testEnum::test3, testEnum::test4};
-               auto [_dialog, n1] = make_node<Dialog<testEnum, 4>>("dialogH", options, enums, "Test Text");
+               auto [_dialog, n1] = make_node<TestDialog>("dialogH", options, "Test Text");
                dialogHNode = root->getNode()->addChild(std::move(n1));
                dialogHCtl = _dialog.get();
             }
             dialogHCtl->setPosition(dialogHCtl->getRect().centerOnPoint(root->getRect().center()).pos());
-
             dialogHCtl->setVisible(false);
          }
 
          //create dialog V control
          {
-            Control* dialogVCtl = nullptr;
-
-            std::array<string_view, 4> options;
-            options[0] = "test1";
-            options[1] = "test2";
-            options[2] = "test3";
-            options[3] = "test4";
-
-            enum class testEnum {
-               test1, test2, test3, test4
-            };
-            std::array<testEnum, 4> enums = {testEnum::test1, testEnum::test2, testEnum::test3, testEnum::test4};
-            auto [_dialog, n1] = make_node<Dialog<testEnum, 4>>("dialogV", options, enums, "Test Text", Layout::LayoutDir::VERTICAL);
-            dialogVNode = root->getNode()->addChild(std::move(n1));
-            dialogVCtl = _dialog.get();
-
+            {
+               auto [_dialog, n1] = make_node<TestDialog>("dialogV", options, "Test Text", Layout::LayoutDir::VERTICAL);
+               dialogVNode = root->getNode()->addChild(std::move(n1));
+               dialogVCtl = _dialog.get();
+            }
             dialogVCtl->setPosition(dialogVCtl->getRect().centerOnPoint(root->getRect().center()).pos());
-
             dialogVCtl->setVisible(false);
          }
 
-         //scroll area
-//      auto [scrollArea, node] = make_node<ScrollArea>("ScrollArea");
-//      TypeNode* scrollAreaNode = root->getNode()->addChild(std::move(node));
-//      scrollArea->setRect(0, 0, 500, 500);
-//      auto [btn, btnnode] = make_node<PushButton>("PushButton", "THIS IS SOME TEXT!");
-//      scrollAreaNode->addChild(std::move(btnnode));
-//      btn->setPosition(200,200);
-
-         window.exec();
+         dialogHCtl->subscribe<TestDialog::DialogCloseEvent>(dialogHCtl, dialogCB);
+         dialogVCtl->subscribe<TestDialog::DialogCloseEvent>(dialogVCtl, dialogCB);
       }
+      window.exec();
       return 0;
-
    }
 }
