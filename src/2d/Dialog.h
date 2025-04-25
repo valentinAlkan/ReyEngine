@@ -9,11 +9,14 @@ namespace ReyEngine {
    class Dialog : public Control {
    public:
       REYENGINE_OBJECT(Dialog);
-      Dialog(const std::array<std::pair<std::string_view, T>, N>& options, std::string_view text = "", Layout::LayoutDir layoutDirection = Layout::LayoutDir::HORIZONTAL)
+      Dialog(const std::array<std::pair<std::string, T>, N>& options, const std::string& message, Layout::LayoutDir layoutDirection = Layout::LayoutDir::HORIZONTAL)
       : options(options)
-      , messageText(text)
+      , message(message)
       , layoutDirection(layoutDirection)
       {
+         if (layoutDirection != Layout::LayoutDir::HORIZONTAL && layoutDirection != Layout::LayoutDir::VERTICAL) {
+            Logger::error() << "Dialogs do not support this layout direction. Defaulting to Horizontal" << std::endl;
+         }
          setSize(320, 240); //todo: find minimum size
       }
       EVENT_ARGS(DialogOpenEvent, 6454983, const Dialog& dialog)
@@ -40,12 +43,13 @@ namespace ReyEngine {
          }
          //create manual layout since these things can't be resized (easily)
          std::vector<Rect<float>> rects;
-         if(!messageText.empty()) {
+         if(!message.empty()) {
             //split the main rect into smaller rects
             switch (layoutDirection){
                case Layout::LayoutDir::VERTICAL:
                   rects = getSizeRect().splitV(percents);
                   break;
+               default:
                case Layout::LayoutDir::HORIZONTAL:
                   rects = getSizeRect().splitH(percents);
                   break;
@@ -91,16 +95,22 @@ namespace ReyEngine {
 
          //add the label
          {
-            auto [label, node] = make_node<Label>("MessageLabel", messageText);
+            auto [label, node] = make_node<Label>("MessageLabel", message);
             addChild(std::move(node));
             //todo: center correctly
          }
+      }
 
+      void _on_visibility_changed() override {
+         if (_visible) {
+            DialogOpenEvent event(this, *this);
+            publish(event);
+         }
       }
 
    private:
-      const std::array<std::pair<std::string_view, T>, N> options;
+      const std::array<std::pair<std::string, T>, N> options;
       const Layout::LayoutDir layoutDirection;
-      const std::string messageText;
+      const std::string message;
    };
 }

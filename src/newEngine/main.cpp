@@ -389,10 +389,10 @@ int main() {
          enum class testEnum { test1, test2, test3, test4};
          using namespace std::literals; // For string_view literals
          std::array options = {
-               std::pair{"dialog1"sv, testEnum::test1},
-               std::pair{"dialog2"sv, testEnum::test2},
-               std::pair{"dialog3"sv, testEnum::test3},
-               std::pair{"dialog4"sv, testEnum::test4}
+               std::pair{std::string("dialog1"), testEnum::test1},
+               std::pair{std::string("dialog2"), testEnum::test2},
+               std::pair{std::string("dialog3"), testEnum::test3},
+               std::pair{std::string("dialog4"), testEnum::test4}
          };
          using TestDialog = Dialog<testEnum, 4>;
          TestDialog* dialogHCtl = nullptr;
