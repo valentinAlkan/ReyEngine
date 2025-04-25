@@ -176,6 +176,7 @@ add_library(ReyEngine2D STATIC
         src/2d/TabContainer.cpp
         src/2d/ScrollArea.cpp
         src/2d/TextureRect.cpp
+        src/2d/Sprite.cpp
 )
 
 target_include_directories(ReyEngine2D PUBLIC

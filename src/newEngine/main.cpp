@@ -16,9 +16,8 @@ using namespace std;
 using namespace ReyEngine;
 using namespace ReyEngine::Internal::Tree;
 
-struct DrawTestWidget1 : public Widget {
-   REYENGINE_OBJECT(DrawTestWidget1)
-
+struct DrawTestWidget : public Widget {
+   REYENGINE_OBJECT(DrawTestWidget)
    void render2D() const override {
       //draw rectangles
       auto [splitRectHL, splitRectHR] = getSizeRect().splitH<true>();
@@ -116,21 +115,15 @@ protected:
 
 struct SliderReactWidget : public Widget {
    REYENGINE_OBJECT(SliderReactWidget)
-
-   SliderReactWidget() {
-      setMaxSize({1000, 30});
-   }
-
+   SliderReactWidget() {setMaxSize({1000, 30});}
    void render2D() const override {
       auto [rectL, rectR] = getSizeRect().splitH<true>(_pct);
       drawRectangleGradientH(rectL, Colors::blue, Colors::black);
    }
-
    void setValue(const Percent& pct) {
-      cout << "Reaction pct = " << _pct << endl;
+      Logger::info() << "Reaction pct = " << _pct << endl;
       _pct = pct;
    }
-
    Percent _pct;
 };
 
@@ -270,10 +263,8 @@ int main() {
                         {"FitHeight", TextureRect::FitType::FIT_HEIGHT},
                         {"None",      TextureRect::FitType::NONE}
                   };
-                  auto [textureTestComboBox, n2] = make_node<ComboBox<TextureRect::FitType>>("TextureTestComboBox",
-                                                                                             fitTypes);
-                  auto [textureRect, n3] = make_node<TextureRect>("TextureTest", "test/spritesheet.png",
-                                                                  TextureRect::FitType::FIT_RECT);
+                  auto [textureTestComboBox, n2] = make_node<ComboBox<TextureRect::FitType>>("TextureTestComboBox", fitTypes);
+                  auto [textureRect, n3] = make_node<TextureRect>("TextureTest", "test/spritesheet.png", TextureRect::FitType::FIT_RECT);
                   n1->addChild(std::move(n2));
                   n1->addChild(std::move(n3));
                   p2 = std::move(n1);
@@ -288,7 +279,7 @@ int main() {
                         textureTestComboBox, fitMenuCB);
                }
 
-               auto [drawTest, p1] = make_node<DrawTestWidget1>("DrawTest");
+               auto [drawTest, p1] = make_node<DrawTestWidget>("DrawTest");
                auto [label3, p3] = make_node<Label>("Label3", "Page3");
                auto [label4, p4] = make_node<Label>("Label4", "Page4");
                tabContainer->addChild(std::move(p1));

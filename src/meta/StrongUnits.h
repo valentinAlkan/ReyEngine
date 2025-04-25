@@ -179,7 +179,7 @@ namespace StrongUnitParameters{
    struct MetersHAEParameter{};
    struct MetersMSLParameter{};
    struct MetersPerSecondParameter{};
-   struct Perunit{};
+   struct Fraction{};
 }
 
 //our implementations
@@ -218,10 +218,10 @@ constexpr MetersMSL  operator"" _m_msl(long double value){return {(double)value}
 using MetersPerSecond = NamedType<double, StrongUnitParameters::MetersPerSecondParameter, ToDouble>;
 using Knots = MultipleOf<MetersPerSecond, std::ratio<100000000000, 194384449244>>;
 
-using Perunum = NamedType<double, StrongUnitParameters::Perunit, ToDouble>;
-using Perdeca = MultipleOf<Perunum, std::deci>;
-using Percent = MultipleOf<Perunum, std::centi>;
-using Permille = MultipleOf<Perunum, std::milli>;
+using Fraction = NamedType<double, StrongUnitParameters::Fraction, ToDouble>;
+using Perdeca = MultipleOf<Fraction, std::deci>;
+using Percent = MultipleOf<Fraction, std::centi>;
+using Permille = MultipleOf<Fraction, std::milli>;
 constexpr Percent       operator"" _pct(unsigned long long value){return {(double)value};}
 constexpr Percent       operator"" _pct(long double value){return {(double)value};}
 

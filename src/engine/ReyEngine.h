@@ -164,8 +164,8 @@ namespace ReyEngine {
 //      inline constexpr Vec2 midpoint() const {return {x/2, y / 2};} does this make sense?
       inline constexpr Vec2 min(const Vec2& other) const {Vec2 r; r.x = Math::min(Vec2::x, other.x); r.y = Math::min(Vec2::y, other.y); return r;}
       inline constexpr Vec2 max(const Vec2& other) const {Vec2 r; r.x = Math::max(Vec2::x, other.x); r.y = Math::max(Vec2::y, other.y); return r;}
-      inline constexpr Perunum pct(R_FLOAT input) const {return (input-x)/(y - x);} //given an input value, what percentage of the range is it from 0 to 1?
-      inline constexpr R_FLOAT lerp(Perunum lerpVal) const {return lerpVal.get() * (y - x) + x;} //given a value from 0 to 1, what is the value of the range that corresponds to it?
+      inline constexpr Fraction pct(R_FLOAT input) const {return (input - x) / (y - x);} //given an input value, what percentage of the range is it from 0 to 1?
+      inline constexpr R_FLOAT lerp(Fraction lerpVal) const {return lerpVal.get() * (y - x) + x;} //given a value from 0 to 1, what is the value of the range that corresponds to it?
       inline constexpr Vec2 lerp(Vec2 otherPoint, R_FLOAT xprm) const {return {xprm, y + (((xprm - x) * (otherPoint.y - y)) / (otherPoint.x - x))};}
       inline constexpr Vec2 extend(R_FLOAT distance) const {Vec2<T> normalized = normalize();return normalized * distance;}
       inline constexpr T clamp(T value) const {if (value < x) return x; if (value > y) return y; return value;}
@@ -401,8 +401,8 @@ namespace ReyEngine {
       inline explicit Range(const Vector3& v)     : Vec3<T>::Vec3(v){}
       template <typename R>
       inline explicit Range(const Vec3<R>& v)   : Vec3<T>::Vec3(v){}
-      inline Perunum getpct(){return getRange().pct(getValue());};
-      inline void setLerp(Perunum pct){setValue(getRange().lerp(pct));}
+      inline Fraction getpct(){return getRange().pct(getValue());};
+      inline void setLerp(Fraction pct){setValue(getRange().lerp(pct));}
       inline T getMin() const {return Vec3<T>::x;}
       inline T getMax() const {return Vec3<T>::y;}
       inline T getValue() const {return Vec3<T>::z;}
@@ -445,7 +445,7 @@ namespace ReyEngine {
           // Calculate the direction vector from a to b
           auto direction = b - a;
           // Scale the direction vector by the percentage
-          auto extensionVector = direction * Perunum(pct).get();
+          auto extensionVector = direction * Fraction(pct).get();
           auto newB = a + Pos(extensionVector.x, extensionVector.y);
           b = newB;
           return *this;
@@ -877,6 +877,7 @@ namespace ReyEngine {
       [[nodiscard]] constexpr inline bool isInside(const Rect& other) const {return other.x+other.width < x+width && other.x >= x && other.y >= y && other.y+other.height < y+height;}
       [[nodiscard]] constexpr inline bool isInsideX(const Vec2<T>& point) const {return (point.x >= x && point.x < x + width);}
       [[nodiscard]] constexpr inline bool isInsideY(const Vec2<T>& point) const {return (point.y >= y && point.y < y + height);}
+      [[nodiscard]] constexpr inline bool contains(const Rect<T>& other) const {return other.x >= x && other.y >= y && other.width <= width && other.height <= height;}
       [[nodiscard]] constexpr inline Rect createEnclosingRect(const Pos<T>& origin={0,0}) const {return {origin, {pos() + size() - origin}};} //returns a rectangle, starting at origin, that exactly encloses the point
       constexpr inline void clampWidth(const Vec2<T>& widthRange){if (width < widthRange.x) width = widthRange.x; if (width > widthRange.y) width = widthRange.y;}
       constexpr inline void clampHeight(const Vec2<T>& heightRange){if (height < heightRange.x) height = heightRange.x; if (height > heightRange.y) height = heightRange.y;}

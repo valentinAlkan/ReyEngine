@@ -8,7 +8,7 @@ namespace ReyEngine{
       EVENT(EventSliderValueChanged, 812735879612)
          {}
          double value;
-         Perunum pct;
+         Fraction pct;
       };
 
       enum class SliderType{VERTICAL, HORIZONTAL};
@@ -20,8 +20,8 @@ namespace ReyEngine{
       }
       inline double getSliderValue() const {return sliderValue;}
       inline void setSliderValue(float value, bool publish=true){sliderValue = value; if (publish)_publish_slider_val();_compute_appearance();}
-      inline Perunum getSliderPct() const {return _range.pct(sliderValue);}
-      inline void setSliderPct(Perunum pct, bool publish=true){setSliderValue(_range.lerp(pct), publish);}
+      inline Fraction getSliderPct() const {return _range.pct(sliderValue);}
+      inline void setSliderPct(Fraction pct, bool publish=true){setSliderValue(_range.lerp(pct), publish);}
 
       Slider(SliderType sliderDir)
       : sliderType(sliderDir)
@@ -101,7 +101,7 @@ namespace ReyEngine{
       void _publish_slider_val(){
          auto event = EventSliderValueChanged(this);
          event.value = getSliderValue();
-         event.pct = Perunum(getSliderPct()).get();
+         event.pct = Fraction(getSliderPct()).get();
          publish<EventSliderValueChanged>(event);
       }
       void _compute_appearance(){

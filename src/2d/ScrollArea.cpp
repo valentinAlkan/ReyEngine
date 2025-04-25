@@ -86,8 +86,8 @@ void ScrollArea::updateViewport(){
    //subtract the slider sizes before updating viewport since each dimension depends on the other
    if (needShowHSlider) _viewport.height -= sliderSize;
    if (needShowVSlider) _viewport.width -= sliderSize;
-   _viewport.x = (boundingBox.width - areaSize.x) * (float)Perunum(scrollOffsetX).get();
-   _viewport.y = (boundingBox.height - areaSize.y) * (float)Perunum(scrollOffsetY).get();
+   _viewport.x = (boundingBox.width - areaSize.x) * (float)Fraction(scrollOffsetX).get();
+   _viewport.y = (boundingBox.height - areaSize.y) * (float)Fraction(scrollOffsetY).get();
    if (hslider) {
       hslider->setRect(hsliderNewRect);
       hslider->setVisible(!_hideHSlider && needShowHSlider);
