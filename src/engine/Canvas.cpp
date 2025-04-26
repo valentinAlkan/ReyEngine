@@ -13,7 +13,6 @@ void Canvas::_on_rect_changed() {
 void Canvas::_on_descendant_added_to_tree(TypeNode *n) {
    static constexpr char INDENT = '-';
    string indent;
-   cout << "------------------------" << endl;
    function<void(TypeNode*)> catTree = [&](TypeNode* n){
       cout << indent << n->name << "" << endl;
       indent += INDENT;
@@ -22,7 +21,8 @@ void Canvas::_on_descendant_added_to_tree(TypeNode *n) {
       }
       indent.resize(indent.length() - sizeof(INDENT)/sizeof(char));
    };
-   catTree(_node);
+//   cout << "------------------------" << endl;
+//   catTree(_node);
    //assign the object to its owning canvas (if not done so already)
    if (auto isDrawable = n->as<Drawable2D>()){
       if (!isDrawable.value()->canvas) {

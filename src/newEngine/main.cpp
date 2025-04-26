@@ -11,6 +11,7 @@
 #include "ScrollArea.h"
 #include "TextureRect.h"
 #include "Dialog.h"
+#include "Sprite.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -130,8 +131,7 @@ struct SliderReactWidget : public Widget {
 int main() {
    //create window
    {
-      auto& window = Application::createWindowPrototype("window", 1920, 1080, {WindowFlags::RESIZE},
-                                                        60)->createWindow();
+      auto& window = Application::createWindowPrototype("window", 1920, 1080, {WindowFlags::RESIZE}, 60)->createWindow();
       auto root = window.getCanvas();
 
       //create a layout
@@ -255,6 +255,7 @@ int main() {
             {
                //add some stuff ot differentiate the pages
                std::unique_ptr<TypeNode> p2;
+               std::unique_ptr<TypeNode> p3;
                {
                   auto [textureTestLayout, n1] = make_node<Layout>("TextureTestLayout", Layout::LayoutDir::VERTICAL);
                   std::vector<std::pair<std::string, TextureRect::FitType>> fitTypes = {
@@ -280,7 +281,27 @@ int main() {
                }
 
                auto [drawTest, p1] = make_node<DrawTestWidget>("DrawTest");
-               auto [label3, p3] = make_node<Label>("Label3", "Page3");
+               {
+                  {
+                     auto [spriteContainer, ctlnode] = make_node<Control>("SpritesTest");
+                     p3 = std::move(ctlnode);
+                  }
+                  {
+                     auto [sprite, spriteNode] = make_node<Sprite>("Sprite", "test/characters.png", Rect<R_FLOAT>(3, 4, 16, 16));
+                     p3->addChild(std::move(spriteNode));
+                     sprite->setRect(20,20,64,64);
+                  }
+                  {
+                     constexpr Rect<R_FLOAT> _r = {3, 4, 16, 16};
+                     std::vector<Rect<R_FLOAT>> regions = {
+                        _r,
+                        _r + Pos<R_FLOAT>(16, 0),
+                     };
+                     auto [animatedSprite, spriteNode] = make_node<AnimatedSprite>("AnimatedSprite", "test/characters.png", regions);
+                     p3->addChild(std::move(spriteNode));
+                     animatedSprite->setRect(100,20,64,64);
+                  }
+               }
                auto [label4, p4] = make_node<Label>("Label4", "Page4");
                tabContainer->addChild(std::move(p1));
                tabContainer->addChild(std::move(p2));

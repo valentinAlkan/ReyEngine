@@ -14,59 +14,35 @@ void Sprite::render2D() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Sprite::_init(){
-   if (texPath && !_texture) {
-      setTexture(texPath);
-   }
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-bool Sprite::setTexture(FileSystem::File& path){ //no temporaries!
-   //try load
-   if (path.exists()){
-      setTexture(std::make_shared<ReyTexture>(path));
-   } else {
-      Logger::error() << "Sprite " << getName() << " 'setTexture' failed: Path does not exist: " << path.abs() << std::endl;
-      return false;
-   }
-   return true;
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////
-bool Sprite::setTexture(const shared_ptr<ReyTexture>& other) {
-   _texture = other;
-   if (!isValidRegion()){
-      region.setSize(_texture->size);
-      applyRect(region);
-   } else if (_fitNextTexture){
-      region = Rect<double>({0, 0}, _texture->size);
-      _fitNextTexture = false;
-   }
-   return true;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 void AnimatedSprite::render2D() const {
    if (_texture) {
       //cast to mutable reference
       auto& mutableFrameIndex = const_cast<decltype(frameIndex)&>(frameIndex);
-      //always verify frame index BEFORE trying to draw it - in case someone sets it at the wrong time
-      if (frameIndex>=region.size()){
-         mutableFrameIndex=0;
+      auto now = std::chrono::steady_clock::now();
+      if (now - _ts > frameTime) {
+         //set time stamp
+         const_cast<std::chrono::time_point<std::chrono::steady_clock>&>(_ts) = now;
+         //always verify frame index BEFORE trying to draw it - in case someone sets it to an invalid value at the wrong time.
+         // for performance reasons, we are not verifying the index any other way.
+         if (++mutableFrameIndex >= region.size()) {
+            // if we run off the end, reset to 0;
+            mutableFrameIndex = 0;
+         }
       }
       drawTexture(*_texture, region[frameIndex], getSizeRect(), Colors::none);
-      //increment frameCounter and then verify that it is not off the end
-
    }
    if (_drawDebugRect){
+      //draw sprite sheet visualization
+
+
       drawRectangleLines(getSizeRect(), 1.0, Colors::blue);
    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-AnimatedSprite::AnimatedSprite(const FileSystem::File& texPath, Size<R_FLOAT> spriteSize, FrameIndex frameStart, FrameIndex frameCount)
+AnimatedSprite::AnimatedSprite(const FileSystem::File& texPath, const Size<R_FLOAT> &spriteSize, FrameIndex frameStart, FrameIndex frameCount)
 : BaseSprite(texPath, {})
 {
    //determine the region rectangles based on the given texture, sprite size, and start and end frames, assuming left->right top->bottom convention

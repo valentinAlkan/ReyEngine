@@ -234,7 +234,7 @@ namespace ReyEngine {
                         return this;
                      } else {
                         //if the mouse was outside the widget's own rect, but the widget is receiving modal input
-                        if (_selectionMenuRect.isInside(mouse->getLocalPos())) {
+                        if (_selectionMenuRect.contains(mouse->getLocalPos())) {
                            //the mouse is inside the selectionmenu rect - treat it as item selection input
                            auto indexAt = getIndexAt(mouse->getLocalPos());
                            if (indexAt) {
@@ -264,7 +264,7 @@ namespace ReyEngine {
          //get the item in the dropdown list at the specified location
          for (int i = 0; i < fields.size(); i++) {
             auto& selectionRect = _selectionMenuItemRects.at(i);
-            if (selectionRect.isInside(pos)) {
+            if (selectionRect.contains(pos)) {
                return i;
             }
          }

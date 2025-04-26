@@ -33,16 +33,30 @@ namespace ReyEngine{
             _fitNextTexture = true;
          }
       }
+      bool setTexture(FileSystem::File& path) { //no temporaries!
+         //try load
+         if (path.exists()){
+            setTexture(std::make_shared<ReyTexture>(path));
+         } else {
+            Logger::error() << "BaseSprite " << getName() << " 'setTexture' failed: Path does not exist: " << path.abs() << std::endl;
+            return false;
+         }
+         return true;
+      }
+      bool setTexture(const std::shared_ptr<ReyTexture>& other){
+         _texture = other;
+         return true;
+      }
+      void _init() override{
+         if (texPath && !_texture) {
+            setTexture(texPath);
+         }
+      }
    protected:
       BaseSprite(const std::string& texPath, const T& region)
       : texPath(texPath)
       , region(region)
       {}
-      bool _drawDebugRect = true; //true if we want to see what the box looks like
-      bool _fitNextTexture = false; //if we dont' yet have a texture (because window isn't loaded), then fit the texture when we do have one
-      T region;
-      FileSystem::File texPath;
-      std::shared_ptr<ReyTexture> _texture;
       //determines if the region set for the sprite is valid (inside the texture and non-null).
       // For animated sprites, also determines if there is a region at all.
       bool isValidRegion(){
@@ -59,16 +73,19 @@ namespace ReyEngine{
          }
          return true;
       }
+
+      bool _drawDebugRect = true; //true if we want to see what the box looks like
+      bool _fitNextTexture = false; //if we dont' yet have a texture (because window isn't loaded), then fit the texture when we do have one
+      T region;
+      FileSystem::File texPath;
+      std::shared_ptr<ReyTexture> _texture;
    };
 
    class Sprite : public BaseSprite<Rect<R_FLOAT>> {
    public:
       REYENGINE_OBJECT(Sprite)
-      Sprite(const FileSystem::File& texPath, const Rect<double>& region): BaseSprite<Rect<float>>(texPath, region){}
+      Sprite(const FileSystem::File& texPath, const Rect<R_FLOAT>& region): BaseSprite<Rect<R_FLOAT>>(texPath, region){}
       void render2D() const override;
-      void _init() override;
-      bool setTexture(FileSystem::File& path); //no temporaries!
-      bool setTexture(const std::shared_ptr<ReyTexture>& other);
    };
 
 
@@ -77,11 +94,14 @@ namespace ReyEngine{
    public:
       REYENGINE_OBJECT(AnimatedSprite)
       AnimatedSprite(const FileSystem::File& texPath, const std::vector<Rect<R_FLOAT>>& regions): BaseSprite(texPath, regions){}
-      AnimatedSprite(const FileSystem::File& texPath, Size<R_FLOAT> spriteSize, FrameIndex frameStart, FrameIndex frameCount);
+      AnimatedSprite(const FileSystem::File& texPath, const Size<R_FLOAT>& spriteSize, FrameIndex frameStart, FrameIndex frameCount);
       void render2D() const override;
       void setFrameIndex(FrameIndex newIndex){frameIndex = newIndex >= region.size() ? 0 : newIndex;}
       FrameIndex getFrameIndex(){return frameIndex >= region.size() ? 0 : frameIndex;}
    protected:
       FrameIndex frameIndex = 0;
+      std::chrono::milliseconds frameTime = std::chrono::milliseconds(250); //the amount of time each frame is displayed
+   private:
+      std::chrono::time_point<std::chrono::steady_clock> _ts;
    };
 }

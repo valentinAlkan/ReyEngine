@@ -58,7 +58,7 @@ namespace ReyEngine{
                mouseEvent.transformLocalPos(cameraTransform.value());
             }
             mouseEvent.transformLocalPos(xform);
-            mouseEvent._isInside = localSize.toRect().isInside(getLocalPos());
+            mouseEvent._isInside = localSize.toRect().contains(getLocalPos());
          }
          ~ScopeTransformer(){
             mouseEvent.transformLocalPos(_localPos_cached);

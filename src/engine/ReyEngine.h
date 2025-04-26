@@ -616,7 +616,7 @@ namespace ReyEngine {
       template <typename R>
       constexpr inline Rect(const Rect<R>& r): x((T)r.x), y((T)r.y), width((T)r.width), height((T)r.height){}
       inline explicit Rect(const Vec2<T>&) = delete;
-      constexpr inline Rect copy() const {return *this;}
+      [[nodiscard]] constexpr inline Rect copy() const {return *this;}
       constexpr inline explicit Rect(const Pos<T>& v): x((T)v.x), y((T)v.y), width(0), height(0){}
       constexpr inline explicit Rect(const Size<T>& v): x(0), y(0), width((T)v.x), height((T)v.y){}
       constexpr inline operator bool(){return x || y || width || height;}
@@ -663,6 +663,246 @@ namespace ReyEngine {
       constexpr inline Line<T> centerLineH() const { auto c = center(); return {0, c.y, width, c.y}; }
       constexpr inline Line<T> centerLineV() const { auto c = center(); return {c.x, 0, c.x, height}; }
 
+      [[nodiscard]] constexpr inline Rect embiggen(T amt) const {return *this + Rect<T>(-amt, -amt, 2*amt, 2*amt);}
+      [[nodiscard]] constexpr inline Rect emtallen(T amt) const {return  *this + Rect<T>(0, -amt, 0, 2*amt);}
+      [[nodiscard]] constexpr inline Rect emwiden(T amt) const {return  *this + Rect<T>(-amt, 0, 2*amt, 0);}
+      [[nodiscard]] constexpr inline Rect chopTop(T amt) const {auto retval = *this; retval.y+= amt; retval.height-=amt; return retval;}
+      [[nodiscard]] constexpr inline Rect chopBottom(T amt) const {auto retval = *this; retval.height-=amt; return retval;}
+      [[nodiscard]] constexpr inline Rect chopRight(T amt) const {auto retval = *this; retval.width-=amt; return retval;}
+      [[nodiscard]] constexpr inline Rect chopLeft(T amt) const {auto retval = *this; retval.x+=amt; retval.width-=amt; return retval;}
+      [[nodiscard]] constexpr inline Rect pushX(T amt) const {auto retval = *this; retval.x += amt; return retval;}
+      [[nodiscard]] constexpr inline Rect pushY(T amt) const {auto retval = *this; retval.y += amt; return retval;}
+      [[nodiscard]] constexpr inline Rect stretchLeft(T amt) const {auto retval = *this; retval.x-= amt; retval.width += amt; return retval;}
+      [[nodiscard]] constexpr inline Rect stretchRight(T amt) const {auto retval = *this; retval.width += amt; return retval;}
+      [[nodiscard]] constexpr inline Rect stretchDown(T amt) const {auto retval = *this; retval.height += amt; return retval;}
+      [[nodiscard]] constexpr inline Rect stretchUp(T amt) const {auto retval = *this; retval.y-= amt; retval.height += amt; return retval;}
+      [[nodiscard]] constexpr inline Rect mirrorRight() const {auto retval = *this; retval.x+= width; return retval;}
+      [[nodiscard]] constexpr inline Rect mirrorLeft() const {auto retval = *this; retval.x-= width; return retval;}
+      [[nodiscard]] constexpr inline Rect mirrorUp() const {auto retval = *this; retval.y-= height; return retval;}
+      [[nodiscard]] constexpr inline Rect mirrorDown() const {auto retval = *this; retval.y+= height; return retval;}
+      [[nodiscard]] constexpr inline bool containsX(const Vec2<T>& point) const {return (point.x >= x && point.x < x + width);}
+      [[nodiscard]] constexpr inline bool containsY(const Vec2<T>& point) const {return (point.y >= y && point.y < y + height);}
+      [[nodiscard]] constexpr inline bool contains(const Rect<T>& other) const {return other.x >= x && other.y >= y && other.width <= width && other.height <= height;}
+      [[nodiscard]] constexpr inline bool contains(const Vec2<T>& point) const {return containsX(point) && containsY(point);}
+      [[nodiscard]] constexpr inline Rect createEnclosingRect(const Pos<T>& origin={0,0}) const {return {origin, {pos() + size() - origin}};} //returns a rectangle, starting at origin, that exactly encloses the point
+      constexpr inline void clampWidth(const Vec2<T>& widthRange){if (width < widthRange.x) width = widthRange.x; if (width > widthRange.y) width = widthRange.y;}
+      constexpr inline void clampHeight(const Vec2<T>& heightRange){if (height < heightRange.x) height = heightRange.x; if (height > heightRange.y) height = heightRange.y;}
+
+      // constrains this rectangle's position so that it is INSIDE the larger rectangle, otherwise does nothing
+      constexpr inline Rect& restrictTo(const Rect& larger){
+         if (x+width > larger.x+larger.width) x = larger.x+larger.width - width;
+         if (x < larger.x) x += larger.x - x;
+         if (y+height > larger.y+larger.height) y = larger.y+larger.height - height;
+         if (y < larger.y) y += larger.y - y;
+         return *this;
+      }
+      constexpr inline Pos<T> topLeft() const {return {x, y};}
+      constexpr inline Pos<T> topRight() const {return {x+width, y};}
+      constexpr inline Pos<T> bottomRight() const {return {x+width, y+height};}
+      constexpr inline Pos<T> bottomLeft() const {return {x, y+height};}
+      constexpr inline Line<T> leftSide() const {return {topLeft(), bottomLeft()};}
+      constexpr inline Line<T> rightSide() const {return {topRight(), bottomRight()};}
+      constexpr inline Line<T> top() const {return {topLeft(), topRight()};}
+      constexpr inline Line<T> bottom() const {return {bottomLeft(), bottomRight()};}
+      // return a rectangle that would render the same but has positive width and height
+      constexpr inline void normalize() {
+         if (width < 0){
+            x += width;
+            width = -width;
+         }
+         if (height < 0){
+            y += height;
+            height = -height;
+         }
+      }
+      constexpr inline Rect normalized() const {
+         auto retval = Rect(*this);
+         retval.normalize();
+         return retval;
+      }
+      constexpr inline bool collides(const Rect& other) const {
+         return ((x < (other.x + other.width) && (x + width) > other.x) &&
+             (y < (other.y + other.height) && (y + height) > other.y));
+      }
+      constexpr inline int getCollisionType(const Rect& other) const {
+         int pointCount = 0;
+         if (contains(other.topLeft())) pointCount++;
+         if (contains(other.topRight())) pointCount++;
+         if (contains(other.bottomRight())) pointCount++;
+         if (pointCount == 3) return 3;
+         if (contains(other.bottomLeft())) pointCount++;
+         return pointCount;
+      }
+      constexpr inline Rect getOverlap(const Rect& other) const {
+         //this is pretty naive, but whatever
+         //tag the coordinates
+         auto& xl = x < other.x ? x : other.x;
+         auto& xr = x > other.x ? x : other.x;
+         auto& yt = y < other.y ? y : other.y;
+         auto& yb = y > other.y ? y : other.y;
+         auto& xlw = x < other.x ? width : other.width;
+         auto& xrw = x > other.x ? width : other.width;
+         auto& yth = y < other.y ? height : other.height;
+         auto& ybh = y > other.y ? height : other.height;
+
+         //a primary collision is when other bisects us (in a 2 point collision)
+         int collisionType = getCollisionType(other);
+         bool isSecondaryCollision = false;
+         if (!collisionType){
+            collisionType = other.getCollisionType(*this);
+            isSecondaryCollision = true;
+         }
+         auto& primaryRect = isSecondaryCollision ? other : *this;
+         auto& secondaryRect = isSecondaryCollision ? *this : other;
+         switch (collisionType){
+            case 0:
+               //potentially a collision or not
+               if (xr > xl+xlw || yb > yt+yth) return {}; //no collision
+               //cross collision
+               return {xr, yb, xrw, ybh};
+            case 2:
+               //2 point collision
+               //determine if its a full width/height collision and should therefore take 1 point form
+               if (primaryRect.x != secondaryRect.x && primaryRect.y != secondaryRect.y) {
+                  //determine if its horizontal or vertical form
+                  auto xprime = secondaryRect.x > primaryRect.x;
+                  auto yprime = secondaryRect.y > primaryRect.y;
+                  bool horizontalForm = true;
+                  if (xprime && yprime){
+                     //need to distinguish between forms 1 and 2 which both have the top left prime point inside the rect
+                     if (contains(secondaryRect.bottomLeft())){
+                        //form 2
+                        horizontalForm = false;
+                     }
+                  } else if ((!xprime && yprime) || (!xprime && !yprime)){
+                     horizontalForm = false;
+                  }
+                  if (horizontalForm) return {xr, yb, xrw, yt+yth-yb};
+                  return {xr, yb, xl+xlw-xr, ybh};
+               }
+               //otherwise fall through to 1 point form
+            case 1:
+               //corner collision, full width/height 2 point collisions
+               return {xr, yb, xl+xlw-xr, yt+yth-yb};
+            default:
+               //fully inside, 3 or 4 point collisions (we won't actually get 4 point but its handled here just in case
+               return secondaryRect;
+         }
+      }
+
+      [[nodiscard]] inline std::string toString() const {
+         return "{" + std::to_string(x) + ", " + std::to_string(y) + ", " +
+         std::to_string(width) + ", " + std::to_string(height) + "}";
+      }
+      inline static ReyEngine::Rect<T> fromString(const std::string& s){
+         std::string sanitized;
+         for (const auto& c : s){
+            if (::isdigit(c) || c == '-' || c==',' || c=='.'){
+               sanitized += c;
+            }
+         }
+         auto split = string_tools::split(sanitized, ",");
+         if (split.size() != 4){
+            return ReyEngine::Rect<T>();
+         }
+
+         ReyEngine::Rect<T> retval;
+         retval.x = std::stoi(split[0]);
+         retval.y = std::stoi(split[1]);
+         retval.width = std::stoi(split[2]);
+         retval.height = std::stoi(split[3]);
+         return retval;
+      }
+      friend std::ostream& operator<<(std::ostream& os, const Rect<T>& r){
+         os << r.toString();
+         return os;
+      }
+
+      [[nodiscard]] constexpr inline Pos<T> center() const {return {x+width/2, y+height/2};}
+      [[nodiscard]] constexpr inline const Pos<T> pos() const {return {x, y};}
+      [[nodiscard]] constexpr inline const Size<T> size() const {return {width, height};}
+      [[nodiscard]] constexpr inline const Rect<T> toSizeRect() const {return {0,0,width, height};}
+      constexpr inline Rect& setSize(const ReyEngine::Size<T>& size){width = size.x; height = size.y; return *this;}
+      constexpr inline Rect& setHeight(T size){height = size; return *this;}
+      constexpr inline Rect& setWidth(T size){width = size; return *this;}
+      constexpr inline Rect& setPos(const ReyEngine::Pos<T>& pos){x = pos.x; y = pos.y; return *this;}
+
+      //return the smallest rect that contains both rects a and b
+      constexpr inline Rect getBoundingRect(const Rect& other) const {
+         // Find the bottom-right corner coordinates for both rectangles
+         int _right1 = x + width;
+         int _bottom1 = y + height;
+         int _right2 = other.x + other.width;
+         int _bottom2 = other.y + other.height;
+         // Find the top-left corner coordinates of the bounding rectangle
+         int _left = std::min(x, other.x);
+         int _top = std::min(y, other.y);
+         // Find the bottom-right corner coordinates of the bounding rectangle
+         int _right = std::max(_right1, _right2);
+         int _bottom = std::max(_bottom1, _bottom2);
+         // Ensure width and height are non-negative (handles cases where rectangles don't intersect)
+         int _width = std::max(0, _right - _left);
+         int _height = std::max(0, _bottom - _top);
+         // Return a new Rect with top-left corner and dimensions
+         return Rect(_left, _top, _width, _height);
+      }
+      static constexpr inline Rect getBoundingRect(const Rect& a, const Rect& b) {
+         return a.getBoundingRect(b);
+      }
+
+      //returns the 'index' of a subrect, as if it were read left-to-right, top-to-bottom
+      constexpr inline int getSubRectIndex(const Size<R_FLOAT>& size, const Pos<R_FLOAT>& pos) const {
+         auto coord = getSubRectCoord(size, pos);
+         auto columnCount = width / size.x;
+         return coord.y * columnCount + coord.x;
+      }
+
+      //Get the sub-rectangle (of size Size) that contains pos Pos. Think tilemaps.
+      constexpr inline Rect getSubRectAtPos(const Size<R_FLOAT>& size, const Pos<R_FLOAT>& pos) const {
+         auto subx = pos.x / size.x;
+         auto suby = pos.y / size.y;
+         return Rect(subx * size.x, suby*size.y, size.x, size.y);
+      }
+
+       //Get the sub-rectangle (of size Size) at SubRectCoords coords.
+       constexpr inline Rect getSubRectAtCoords(const Size<R_FLOAT>& size, const SubRectCoords& coords) const {
+           return Rect(coords.x * size.x, coords.y*size.y, size.x, size.y);
+       }
+
+      //returns the coordinates of the above subrect in grid-form (ie the 3rd subrect from the left would be {3,0}
+      constexpr inline SubRectCoords getSubRectCoord(const Size<R_FLOAT>& size, const Pos<R_FLOAT>& pos) const {
+         //divide by 0?
+         auto subx = pos.x / size.x;
+         auto suby = pos.y / size.y;
+         return {(int)subx, (int)suby};
+      }
+
+      //get an actual subrect given a subrect size and an index
+      constexpr inline Rect getSubRect(const Size<R_FLOAT>& size, int index) const {
+         int columnCount = width / size.x;
+         int coordY = index / columnCount;
+         int coordX = index % columnCount;
+         R_FLOAT posX = (float)coordX * size.x;
+         R_FLOAT posY = (float)coordY * size.y;
+         return Rect(posX, posY, size.x, size.y);
+      }
+      //get the rectangle that contains the subrects at start and stop indices (as topleft and bottom right respectively)
+      constexpr inline Rect getSubRect(const Size<R_FLOAT>& size, int indexStart, int indexStop) const {
+         auto a = getSubRect(size, indexStart);
+         auto b = getSubRect(size, indexStop);
+         return getBoundingRect(a,b);
+      }
+      Circle circumscribe() const;
+      Circle inscribe() const;
+      constexpr inline void clear(){x=0,y=0,width=0;height=0;}
+      constexpr inline std::array<Vec2<R_FLOAT>, 4> transform(const Matrix& m) const {
+         std::array<Vec2<R_FLOAT>, 4> corners;
+         corners[0] = topLeft().transform(m);
+         corners[1] = topRight().transform(m);
+         corners[2] = bottomLeft().transform(m);
+         corners[3] = bottomRight().transform(m);
+         return corners;
+      }
 
 
    private:
@@ -789,22 +1029,13 @@ namespace ReyEngine {
          }
       }
 
-      // Vector input version
-      [[nodiscard]] std::vector<Rect<T>> splitH(const std::vector<Percent>& percentages) const {
-         return splitImpl<false>(percentages);
-      }
-
-      // Variadic template version for multiple values
+      [[nodiscard]] std::vector<Rect<T>> splitH(const std::vector<Percent>& percentages) const {return splitImpl<false>(percentages);}
       template <bool AsTuple = false, typename... Args, typename = std::enable_if_t<(sizeof...(Args) > 1)>>
       [[nodiscard]] auto splitH(const Args&... args) const {
          std::vector<Percent> percentages;
          percentages.reserve(sizeof...(args));
-
-         // Use a fold expression with the comma operator
          (percentages.push_back(Percent(static_cast<double>(args))), ...);
-
          std::vector<Rect<T>> resultVec = splitImpl<false>(percentages);
-
          if constexpr (AsTuple) {
             return make_tuple_from_vector(resultVec, std::make_index_sequence<sizeof...(Args) + 1>{});
          } else {
@@ -812,11 +1043,9 @@ namespace ReyEngine {
          }
       }
 
-      // Same pattern for splitV
       template <bool AsTuple = false>
       [[nodiscard]] auto splitV() const {
          std::vector<Rect<T>> resultVec = splitImpl<true>(std::vector<Percent>{});
-
          if constexpr (AsTuple) {
             return make_tuple_from_vector(resultVec, std::make_index_sequence<2>{});
          } else {
@@ -828,273 +1057,25 @@ namespace ReyEngine {
       [[nodiscard]] auto splitV(const Percent& percent) const {
          std::vector<Percent> percentages{percent};
          std::vector<Rect<T>> resultVec = splitImpl<true>(percentages);
-
          if constexpr (AsTuple) {
             return make_tuple_from_vector(resultVec, std::make_index_sequence<2>{});
          } else {
             return resultVec;
          }
       }
-
-      [[nodiscard]] std::vector<Rect<T>> splitV(const std::vector<Percent>& percentages) const {
-         return splitImpl<true>(percentages);
-      }
-
+      [[nodiscard]] std::vector<Rect<T>> splitV(const std::vector<Percent>& percentages) const {return splitImpl<true>(percentages);}
       template <bool AsTuple = false, typename... Args, typename = std::enable_if_t<(sizeof...(Args) > 1)>>
       [[nodiscard]] auto splitV(const Args&... args) const {
          std::vector<Percent> percentages;
          percentages.reserve(sizeof...(args));
-
          (percentages.push_back(Percent(static_cast<double>(args))), ...);
-
          std::vector<Rect<T>> resultVec = splitImpl<true>(percentages);
-
          if constexpr (AsTuple) {
             return make_tuple_from_vector(resultVec, std::make_index_sequence<sizeof...(Args) + 1>{});
          } else {
             return resultVec;
          }
       }
-
-      [[nodiscard]] constexpr inline Rect embiggen(T amt) const {return *this + Rect<T>(-amt, -amt, 2*amt, 2*amt);}
-      [[nodiscard]] constexpr inline Rect emtallen(T amt) const {return  *this + Rect<T>(0, -amt, 0, 2*amt);}
-      [[nodiscard]] constexpr inline Rect emwiden(T amt) const {return  *this + Rect<T>(-amt, 0, 2*amt, 0);}
-      [[nodiscard]] constexpr inline Rect chopTop(T amt) const {auto retval = *this; retval.y+= amt; retval.height-=amt; return retval;}
-      [[nodiscard]] constexpr inline Rect chopBottom(T amt) const {auto retval = *this; retval.height-=amt; return retval;}
-      [[nodiscard]] constexpr inline Rect chopRight(T amt) const {auto retval = *this; retval.width-=amt; return retval;}
-      [[nodiscard]] constexpr inline Rect chopLeft(T amt) const {auto retval = *this; retval.x+=amt; retval.width-=amt; return retval;}
-      [[nodiscard]] constexpr inline Rect pushX(T amt) const {auto retval = *this; retval.x += amt; return retval;}
-      [[nodiscard]] constexpr inline Rect pushY(T amt) const {auto retval = *this; retval.y += amt; return retval;}
-      [[nodiscard]] constexpr inline Rect stretchLeft(T amt) const {auto retval = *this; retval.x-= amt; retval.width += amt; return retval;}
-      [[nodiscard]] constexpr inline Rect stretchRight(T amt) const {auto retval = *this; retval.width += amt; return retval;}
-      [[nodiscard]] constexpr inline Rect stretchDown(T amt) const {auto retval = *this; retval.height += amt; return retval;}
-      [[nodiscard]] constexpr inline Rect stretchUp(T amt) const {auto retval = *this; retval.y-= amt; retval.height += amt; return retval;}
-      [[nodiscard]] constexpr inline Rect mirrorRight() const {auto retval = *this; retval.x+= width; return retval;}
-      [[nodiscard]] constexpr inline Rect mirrorLeft() const {auto retval = *this; retval.x-= width; return retval;}
-      [[nodiscard]] constexpr inline Rect mirrorUp() const {auto retval = *this; retval.y-= height; return retval;}
-      [[nodiscard]] constexpr inline Rect mirrorDown() const {auto retval = *this; retval.y+= height; return retval;}
-      [[nodiscard]] constexpr inline bool isInside(const Vec2<T>& point) const {return isInsideX(point) && isInsideY(point);}
-      [[nodiscard]] constexpr inline bool isInside(const Rect& other) const {return other.x+other.width < x+width && other.x >= x && other.y >= y && other.y+other.height < y+height;}
-      [[nodiscard]] constexpr inline bool isInsideX(const Vec2<T>& point) const {return (point.x >= x && point.x < x + width);}
-      [[nodiscard]] constexpr inline bool isInsideY(const Vec2<T>& point) const {return (point.y >= y && point.y < y + height);}
-      [[nodiscard]] constexpr inline bool contains(const Rect<T>& other) const {return other.x >= x && other.y >= y && other.width <= width && other.height <= height;}
-      [[nodiscard]] constexpr inline Rect createEnclosingRect(const Pos<T>& origin={0,0}) const {return {origin, {pos() + size() - origin}};} //returns a rectangle, starting at origin, that exactly encloses the point
-      constexpr inline void clampWidth(const Vec2<T>& widthRange){if (width < widthRange.x) width = widthRange.x; if (width > widthRange.y) width = widthRange.y;}
-      constexpr inline void clampHeight(const Vec2<T>& heightRange){if (height < heightRange.x) height = heightRange.x; if (height > heightRange.y) height = heightRange.y;}
-      // constrain this rectangle's position so that it is INSIDE the larger rectangle
-      constexpr inline Rect& restrictTo(const Rect& larger){
-         if (x+width > larger.x+larger.width) x = larger.x+larger.width - width;
-         if (x < larger.x) x += larger.x - x;
-         if (y+height > larger.y+larger.height) y = larger.y+larger.height - height;
-         if (y < larger.y) y += larger.y - y;
-         return *this;
-      }
-      constexpr inline Pos<T> topLeft() const {return {x, y};}
-      constexpr inline Pos<T> topRight() const {return {x+width, y};}
-      constexpr inline Pos<T> bottomRight() const {return {x+width, y+height};}
-      constexpr inline Pos<T> bottomLeft() const {return {x, y+height};}
-      constexpr inline Line<T> leftSide() const {return {topLeft(), bottomLeft()};}
-      constexpr inline Line<T> rightSide() const {return {topRight(), bottomRight()};}
-      constexpr inline Line<T> top() const {return {topLeft(), topRight()};}
-      constexpr inline Line<T> bottom() const {return {bottomLeft(), bottomRight()};}
-      // return a rectangle that would render the same but has positive width and height
-      constexpr inline void normalize() {
-         if (width < 0){
-            x += width;
-            width = -width;
-         }
-         if (height < 0){
-            y += height;
-            height = -height;
-         }
-      }
-      constexpr inline Rect normalized() const {
-         auto retval = Rect(*this);
-         retval.normalize();
-         return retval;
-      }
-      constexpr inline bool collides(const Rect& other) const {
-         return ((x < (other.x + other.width) && (x + width) > other.x) &&
-             (y < (other.y + other.height) && (y + height) > other.y));
-      }
-      constexpr inline int getCollisionType(const Rect& other) const {
-         int pointCount = 0;
-         if (isInside(other.topLeft())) pointCount++;
-         if (isInside(other.topRight())) pointCount++;
-         if (isInside(other.bottomRight())) pointCount++;
-         if (pointCount == 3) return 3;
-         if (isInside(other.bottomLeft())) pointCount++;
-         return pointCount;
-      }
-      constexpr inline Rect getOverlap(const Rect& other) const {
-         //this is pretty naive, but whatever
-         //tag the coordinates
-         auto& xl = x < other.x ? x : other.x;
-         auto& xr = x > other.x ? x : other.x;
-         auto& yt = y < other.y ? y : other.y;
-         auto& yb = y > other.y ? y : other.y;
-         auto& xlw = x < other.x ? width : other.width;
-         auto& xrw = x > other.x ? width : other.width;
-         auto& yth = y < other.y ? height : other.height;
-         auto& ybh = y > other.y ? height : other.height;
-
-         //a primary collision is when other bisects us (in a 2 point collision)
-         int collisionType = getCollisionType(other);
-         bool isSecondaryCollision = false;
-         if (!collisionType){
-            collisionType = other.getCollisionType(*this);
-            isSecondaryCollision = true;
-         }
-         auto& primaryRect = isSecondaryCollision ? other : *this;
-         auto& secondaryRect = isSecondaryCollision ? *this : other;
-         switch (collisionType){
-            case 0:
-               //potentially a collision or not
-               if (xr > xl+xlw || yb > yt+yth) return {}; //no collision
-               //cross collision
-               return {xr, yb, xrw, ybh};
-            case 2:
-               //2 point collision
-               //determine if its a full width/height collision and should therefore take 1 point form
-               if (primaryRect.x != secondaryRect.x && primaryRect.y != secondaryRect.y) {
-                  //determine if its horizontal or vertical form
-                  auto xprime = secondaryRect.x > primaryRect.x;
-                  auto yprime = secondaryRect.y > primaryRect.y;
-                  bool horizontalForm = true;
-                  if (xprime && yprime){
-                     //need to distinguish between forms 1 and 2 which both have the top left prime point inside the rect
-                     if (isInside(secondaryRect.bottomLeft())){
-                        //form 2
-                        horizontalForm = false;
-                     }
-                  } else if ((!xprime && yprime) || (!xprime && !yprime)){
-                     horizontalForm = false;
-                  }
-                  if (horizontalForm) return {xr, yb, xrw, yt+yth-yb};
-                  return {xr, yb, xl+xlw-xr, ybh};
-               }
-               //otherwise fall through to 1 point form
-            case 1:
-               //corner collision, full width/height 2 point collisions
-               return {xr, yb, xl+xlw-xr, yt+yth-yb};
-            default:
-               //fully inside, 3 or 4 point collisions (we won't actually get 4 point but its handled here just in case
-               return secondaryRect;
-         }
-      }
-      [[nodiscard]] constexpr inline Pos<T> center() const {return {x+width/2, y+height/2};}
-      [[nodiscard]] inline std::string toString() const {
-         return "{" + std::to_string(x) + ", " + std::to_string(y) + ", " +
-         std::to_string(width) + ", " + std::to_string(height) + "}";
-      }
-      inline static ReyEngine::Rect<T> fromString(const std::string& s){
-         std::string sanitized;
-         for (const auto& c : s){
-            if (::isdigit(c) || c == '-' || c==',' || c=='.'){
-               sanitized += c;
-            }
-         }
-         auto split = string_tools::split(sanitized, ",");
-         if (split.size() != 4){
-            return ReyEngine::Rect<T>();
-         }
-
-         ReyEngine::Rect<T> retval;
-         retval.x = std::stoi(split[0]);
-         retval.y = std::stoi(split[1]);
-         retval.width = std::stoi(split[2]);
-         retval.height = std::stoi(split[3]);
-         return retval;
-      }
-      friend std::ostream& operator<<(std::ostream& os, const Rect<T>& r){
-         os << r.toString();
-         return os;
-      }
-      [[nodiscard]] constexpr inline const Pos<T> pos() const {return {x, y};}
-      [[nodiscard]] constexpr inline const Size<T> size() const {return {width, height};}
-      [[nodiscard]] constexpr inline const Rect<T> toSizeRect() const {return {0,0,width, height};}
-      constexpr inline Rect& setSize(const ReyEngine::Size<T>& size){width = size.x; height = size.y; return *this;}
-      constexpr inline Rect& setHeight(T size){height = size; return *this;}
-      constexpr inline Rect& setWidth(T size){width = size; return *this;}
-      constexpr inline Rect& setPos(const ReyEngine::Pos<T>& pos){x = pos.x; y = pos.y; return *this;}
-
-      //return the smallest rect that contains both rects a and b
-      constexpr inline Rect getBoundingRect(const Rect& other) const {
-         // Find the bottom-right corner coordinates for both rectangles
-         int _right1 = x + width;
-         int _bottom1 = y + height;
-         int _right2 = other.x + other.width;
-         int _bottom2 = other.y + other.height;
-         // Find the top-left corner coordinates of the bounding rectangle
-         int _left = std::min(x, other.x);
-         int _top = std::min(y, other.y);
-         // Find the bottom-right corner coordinates of the bounding rectangle
-         int _right = std::max(_right1, _right2);
-         int _bottom = std::max(_bottom1, _bottom2);
-         // Ensure width and height are non-negative (handles cases where rectangles don't intersect)
-         int _width = std::max(0, _right - _left);
-         int _height = std::max(0, _bottom - _top);
-         // Return a new Rect with top-left corner and dimensions
-         return Rect(_left, _top, _width, _height);
-      }
-      static constexpr inline Rect getBoundingRect(const Rect& a, const Rect& b) {
-         return a.getBoundingRect(b);
-      }
-
-      //returns the 'index' of a subrect, as if it were read left-to-right, top-to-bottom
-      constexpr inline int getSubRectIndex(const Size<R_FLOAT>& size, const Pos<R_FLOAT>& pos) const {
-         auto coord = getSubRectCoord(size, pos);
-         auto columnCount = width / size.x;
-         return coord.y * columnCount + coord.x;
-      }
-
-      //Get the sub-rectangle (of size Size) that contains pos Pos. Think tilemaps.
-      constexpr inline Rect getSubRectAtPos(const Size<R_FLOAT>& size, const Pos<R_FLOAT>& pos) const {
-         auto subx = pos.x / size.x;
-         auto suby = pos.y / size.y;
-         return Rect(subx * size.x, suby*size.y, size.x, size.y);
-      }
-
-       //Get the sub-rectangle (of size Size) at SubRectCoords coords.
-       constexpr inline Rect getSubRectAtCoords(const Size<R_FLOAT>& size, const SubRectCoords& coords) const {
-           return Rect(coords.x * size.x, coords.y*size.y, size.x, size.y);
-       }
-
-      //returns the coordinates of the above subrect in grid-form (ie the 3rd subrect from the left would be {3,0}
-      constexpr inline SubRectCoords getSubRectCoord(const Size<R_FLOAT>& size, const Pos<R_FLOAT>& pos) const {
-         //divide by 0?
-         auto subx = pos.x / size.x;
-         auto suby = pos.y / size.y;
-         return {(int)subx, (int)suby};
-      }
-
-      //get an actual subrect given a subrect size and an index
-      constexpr inline Rect getSubRect(const Size<R_FLOAT>& size, int index) const {
-         int columnCount = width / size.x;
-         int coordY = index / columnCount;
-         int coordX = index % columnCount;
-         R_FLOAT posX = (float)coordX * size.x;
-         R_FLOAT posY = (float)coordY * size.y;
-         return Rect(posX, posY, size.x, size.y);
-      }
-      //get the rectangle that contains the subrects at start and stop indices (as topleft and bottom right respectively)
-      constexpr inline Rect getSubRect(const Size<R_FLOAT>& size, int indexStart, int indexStop) const {
-         auto a = getSubRect(size, indexStart);
-         auto b = getSubRect(size, indexStop);
-         return getBoundingRect(a,b);
-      }
-      Circle circumscribe() const;
-      Circle inscribe() const;
-      constexpr inline void clear(){x=0,y=0,width=0;height=0;}
-      constexpr inline std::array<Vec2<R_FLOAT>, 4> transform(const Matrix& m) const {
-         std::array<Vec2<R_FLOAT>, 4> corners;
-         corners[0] = topLeft().transform(m);
-         corners[1] = topRight().transform(m);
-         corners[2] = bottomLeft().transform(m);
-         corners[3] = bottomRight().transform(m);
-         return corners;
-      }
-
 
       T x;
       T y;
@@ -1624,7 +1605,7 @@ namespace ReyEngine {
    /////////////////////////////////////////////////////////////////////////////////////////
    template <typename T>
    bool Pos<T>::isInside(const Rect<T>& r) {
-      return r.isInside(*this);
+      return r.contains(*this);
    }
 
    struct ScopeScissor {

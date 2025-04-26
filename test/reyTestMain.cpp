@@ -317,7 +317,7 @@ int main(int argc, char** argv) {
 
             auto inputcb = [&](Control &, const InputEvent &event,
                                const std::optional<UnhandledMouseInput> &mouse) -> Handled {
-                if (!mouse || !mouse.value().isInside) return false;
+                if (!mouse || !mouse.value().contains) return false;
                 switch (event.eventId) {
                     case InputEventMouseButton::getUniqueEventId(): {
                         const auto &mbEvent = event.toEventType<InputEventMouseButton>();
@@ -580,7 +580,7 @@ int main(int argc, char** argv) {
                 switch (event.eventId) {
                     case InputEventMouseButton::getUniqueEventId(): {
                         auto mbEvent = event.toEventType<InputEventMouseButton>();
-                        if (mbEvent.isDown && mouse->isInside) {
+                        if (mbEvent.isDown && mouse->contains) {
                             down = true;
                         } else if (!mbEvent.isDown) {
                             down = false;
@@ -1018,7 +1018,7 @@ int main(int argc, char** argv) {
             //source texture input callback
             auto cbSrcInput = [&](const Control& ctl, const InputEvent &event,
                                   const std::optional<UnhandledMouseInput> &mouse) -> bool {
-                if (mouse && mouse->isInside) {
+                if (mouse && mouse->contains) {
                     auto subrect = srcTexRect->getRect().getSubRectAtPos({SRC_TILE_SIZE, SRC_TILE_SIZE}, mouse->localPos);
                     switch (event.eventId) {
                         case InputEventMouseMotion::getUniqueEventId(): {
