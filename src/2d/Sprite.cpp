@@ -2,6 +2,7 @@
 
 using namespace ReyEngine;
 using namespace std;
+using namespace chrono;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Sprite::render2D() const {
@@ -20,10 +21,11 @@ void AnimatedSprite::render2D() const {
    if (_texture) {
       //cast to mutable reference
       auto& mutableFrameIndex = const_cast<decltype(frameIndex)&>(frameIndex);
-      auto now = std::chrono::steady_clock::now();
+      auto now = steady_clock::now();
       if (now - _ts > frameTime) {
          //set time stamp
-         const_cast<std::chrono::time_point<std::chrono::steady_clock>&>(_ts) = now;
+
+         const_cast<time_point<steady_clock>&>(_ts) = now;
          //always verify frame index BEFORE trying to draw it - in case someone sets it to an invalid value at the wrong time.
          // for performance reasons, we are not verifying the index any other way.
          if (++mutableFrameIndex >= region.size()) {
