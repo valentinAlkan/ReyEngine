@@ -9,7 +9,7 @@ project(ReyEngine)
 #set(THREADS_PREFER_PTHREAD_FLAG ON)
 
 # add lua
-#add_subdirectory(src/thirdParty/lua)
+add_subdirectory(src/thirdParty/lua)
 
 set (CMAKE_CXX_STANDARD 20)
 
@@ -177,6 +177,7 @@ add_library(ReyEngine2D STATIC
         src/2d/ScrollArea.cpp
         src/2d/TextureRect.cpp
         src/2d/Sprite.cpp
+        src/2d/TileMap.cpp
 )
 
 target_include_directories(ReyEngine2D PUBLIC

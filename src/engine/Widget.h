@@ -133,6 +133,10 @@ namespace ReyEngine {
       friend class Layout;
       friend class Canvas;
 
+      [[noreturn]] void throwEx(auto widget, auto operation) {
+         throw std::runtime_error(std::string("Widget failed operation \"") + operation + "\" on " + widget->getName() + " : " + std::string(INVALID_NODE_ERR_MSG));
+      }
+
    public:
       //convenience forwards
       template <typename... Args>
@@ -140,27 +144,28 @@ namespace ReyEngine {
          if (auto hasNode = getNode()) {
             return getNode()->addChild(std::forward<Args>(args)...);
          }
-         throw std::runtime_error(std::string(INVALID_NODE_ERR_MSG));
+         throwEx(std::get<0>(std::forward_as_tuple(std::forward<Args>(args)...)), "addChild");
       }
       template <typename... Args>
       auto removeChild(Args&& ...args){
          if (auto hasNode = getNode()) {
             return getNode()->removeChild(std::forward<Args>(args)...);
          }
-         throw std::runtime_error(std::string(INVALID_NODE_ERR_MSG));
+         throwEx(std::get<0>(std::forward_as_tuple(std::forward<Args>(args)...)), "removeChild");
       }
       template <typename... Args>
       auto removeAllChildren(Args&& ...args){
          if (auto hasNode = getNode()) {
             return getNode()->removeAllChildren(std::forward<Args>(args)...);
          }
-         throw std::runtime_error(std::string(INVALID_NODE_ERR_MSG));
+         throwEx(std::get<0>(std::forward_as_tuple(std::forward<Args>(args)...)), "removeAllChildren");
       }
    private:
-      static constexpr std::string_view INVALID_NODE_ERR_MSG = "Invalid Node for child add/remove. Did you call this from a Widget constructor? That doesn't \n"
-                                                               "work since the associated node hasn't been built yet. Override _on_made() or _init() to ensure that the \n"
-                                                               "node associated with an object has been fully built. _on_made() occurs when make_node is called, \n"
-                                                               "_init() is called when the node is first added to the tree. _init() should be your first choice \n"
-                                                               "unless you need to do things at build time, as the node will know who its parent is during _init()";
+      static constexpr std::string_view INVALID_NODE_ERR_MSG = "Invalid Node for operation. \n"
+                                                               "Did you call this from a Widget constructor? That doesn't work since the associated node hasn't been built yet.\n"
+                                                               "Override _on_made() or _init() to ensure that the node associated with an object has been fully built.\n"
+                                                               "_on_made() occurs when make_node is called, _init() is called when the node is first added to the tree.\n"
+                                                               "_init() should be your first choice unless you need to do things at build time, as the node will know who \n"
+                                                               "its parent is during _init()";
    };
 }

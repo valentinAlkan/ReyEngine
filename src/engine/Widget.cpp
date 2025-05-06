@@ -127,6 +127,9 @@ void Widget::calculateAnchoring(const Rect<R_FLOAT>& r){
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 void Widget::setAnchoring(Anchor newAnchor) {
+   if (!_node){
+      throwEx(this, "setAnchoring");
+   }
    auto parent = _node->getParent();
    if (!parent){
          Logger::error() << _node->getScenePath() << ": Anchoring failure : " << getName() << " has no parent!" << endl;

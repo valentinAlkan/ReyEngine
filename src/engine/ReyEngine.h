@@ -850,27 +850,36 @@ namespace ReyEngine {
          return a.getBoundingRect(b);
       }
 
+      //Subrects
+      // A subrect is a smaller rectangle that makes up a part of a larger rectangle. Think spritesheets.
+
       //returns the 'index' of a subrect, as if it were read left-to-right, top-to-bottom
-      constexpr inline int getSubRectIndex(const Size<R_FLOAT>& size, const Pos<R_FLOAT>& pos) const {
+      // ex.
+      //   0  1  2  3
+      // 0  |------|=|  <-- subrect {3,0}, which is of size Size<T>
+      // 1  |--------|
+      // 2  |--------|
+      // 3  |--------|
+      [[nodiscard]] constexpr inline int getSubRectIndex(const Size<R_FLOAT>& size, const Pos<R_FLOAT>& pos) const {
          auto coord = getSubRectCoord(size, pos);
          auto columnCount = width / size.x;
          return coord.y * columnCount + coord.x;
       }
 
       //Get the sub-rectangle (of size Size) that contains pos Pos. Think tilemaps.
-      constexpr inline Rect getSubRectAtPos(const Size<R_FLOAT>& size, const Pos<R_FLOAT>& pos) const {
+      [[nodiscard]] constexpr inline Rect getSubRectAtPos(const Size<R_FLOAT>& size, const Pos<R_FLOAT>& pos) const {
          auto subx = pos.x / size.x;
          auto suby = pos.y / size.y;
          return Rect(subx * size.x, suby*size.y, size.x, size.y);
       }
 
        //Get the sub-rectangle (of size Size) at SubRectCoords coords.
-       constexpr inline Rect getSubRectAtCoords(const Size<R_FLOAT>& size, const SubRectCoords& coords) const {
+       [[nodiscard]] constexpr inline Rect getSubRectAtCoords(const Size<R_FLOAT>& size, const SubRectCoords& coords) const {
            return Rect(coords.x * size.x, coords.y*size.y, size.x, size.y);
        }
 
       //returns the coordinates of the above subrect in grid-form (ie the 3rd subrect from the left would be {3,0}
-      constexpr inline SubRectCoords getSubRectCoord(const Size<R_FLOAT>& size, const Pos<R_FLOAT>& pos) const {
+      [[nodiscard]] constexpr inline SubRectCoords getSubRectCoord(const Size<R_FLOAT>& size, const Pos<R_FLOAT>& pos) const {
          //divide by 0?
          auto subx = pos.x / size.x;
          auto suby = pos.y / size.y;
@@ -878,7 +887,7 @@ namespace ReyEngine {
       }
 
       //get an actual subrect given a subrect size and an index
-      constexpr inline Rect getSubRect(const Size<R_FLOAT>& size, int index) const {
+      [[nodiscard]] constexpr inline Rect getSubRect(const Size<R_FLOAT>& size, int index) const {
          int columnCount = width / size.x;
          int coordY = index / columnCount;
          int coordX = index % columnCount;
@@ -886,14 +895,16 @@ namespace ReyEngine {
          R_FLOAT posY = (float)coordY * size.y;
          return Rect(posX, posY, size.x, size.y);
       }
+
       //get the rectangle that contains the subrects at start and stop indices (as topleft and bottom right respectively)
-      constexpr inline Rect getSubRect(const Size<R_FLOAT>& size, int indexStart, int indexStop) const {
+      [[nodiscard]] constexpr inline Rect getSubRect(const Size<R_FLOAT>& size, int indexStart, int indexStop) const {
          auto a = getSubRect(size, indexStart);
          auto b = getSubRect(size, indexStop);
          return getBoundingRect(a,b);
       }
-      Circle circumscribe() const;
-      Circle inscribe() const;
+
+      [[nodiscard]] Circle circumscribe() const;
+      [[nodiscard]] Circle inscribe() const;
       constexpr inline void clear(){x=0,y=0,width=0;height=0;}
       constexpr inline std::array<Vec2<R_FLOAT>, 4> transform(const Matrix& m) const {
          std::array<Vec2<R_FLOAT>, 4> corners;
@@ -1540,7 +1551,7 @@ namespace ReyEngine {
       }
       [[nodiscard]] const Texture2D& getTexture() const {return _tex;}
       operator bool() const {return _texLoaded;}
-      std::string getPath(){return _file;}
+      std::string getPath() const {return _file;}
       Size<int> size;
    protected:
       FileSystem::File _file;
