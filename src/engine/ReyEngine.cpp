@@ -194,6 +194,7 @@ void ReyEngine::drawRenderTarget(const RenderTarget& target, const Pos<R_FLOAT>&
 ReyEngine::RenderTarget::RenderTarget(){
    // make sure you initialize at some point
 }
+
 ReyEngine::RenderTarget::RenderTarget(const Size<int>& size) {
    setSize(size);
 }
@@ -214,6 +215,8 @@ void ReyEngine::RenderTarget::setSize(const Size<int> &newSize) {
    _size = newSize;
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::setWindowSize(ReyEngine::Size<int> size) {
    SetWindowSize(size.x, size.y);

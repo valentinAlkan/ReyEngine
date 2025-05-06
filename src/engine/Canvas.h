@@ -63,6 +63,7 @@ namespace ReyEngine {
       std::vector<std::unique_ptr<TypeNode>> _intrinsicChildren; //children that belong to the canvas but are treated differently for various reasons
       IntrinsicRenderType _intrinsicRenderType = IntrinsicRenderType::CanvasOverlay;
       bool _rejectOutsideInput = false; //rejects input that is outside the canvas
+      bool _retained = false; //set to true if you want to retain the image between draw calls. Requires manually clearing the render target.
       /////////////////////////////////////////////////////////////////////////////////////////
       /////////////////////////////////////////////////////////////////////////////////////////
       /////////////////////////////////////////////////////////////////////////////////////////

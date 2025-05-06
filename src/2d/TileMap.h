@@ -1,16 +1,16 @@
 #pragma once
 #include <map>
-#include "Widget.h"
+#include "Canvas.h"
 
 namespace ReyEngine {
-   class TileMap : public Widget {
+   class TileMap : public Canvas {
    public:
       REYENGINE_OBJECT(TileMap)
       struct TileCoord : public Vec2<int> {
+           constexpr TileCoord(): Vec2(){}
            constexpr TileCoord(int x, int y): Vec2(x,y){}
            constexpr TileCoord(const Vec2<int>& other): Vec2(other){}
       };
-      using TileIndex = size_t;
       using LayerIndex = size_t;
 
       struct SpriteAtlas {
@@ -40,16 +40,13 @@ namespace ReyEngine {
             _columnCount = texture.size.y / _tileSize.y;
             _needsUpdate = true;
          }
-         [[nodiscard]] inline TileIndex getTileIndex(const Pos<int>& pos) const {
-            //find the index of the tile at the position
-            auto rect = Rect<int>(texture.size);
-            return rect.getSubRectIndex(_tileSize, pos);
-         }
-         [[nodiscard]] inline Rect<R_FLOAT> getTile(const TileIndex index) const {
-            //convert tile index to {x,y}
-            R_FLOAT src_x = index % _columnCount;
-            R_FLOAT src_y = index / _columnCount;
-            Pos<R_FLOAT> src = {(R_FLOAT) _tileSize.x * src_x + (_padding.x * src_x + 1) + _offset.x, (R_FLOAT) _tileSize.y * src_y + (_padding.y * src_y + 1) + _offset.y};
+//         [[nodiscard]] inline TileIndex getTileIndex(const Pos<int>& pos) const {
+//            //find the index of the tile at the position
+//            auto rect = Rect<int>(texture.size);
+//            return rect.getSubRectIndex(_tileSize, pos);
+//         }
+         [[nodiscard]] inline Rect<R_FLOAT> getTile(const TileCoord coords) const {
+            Pos<R_FLOAT> src = {(R_FLOAT) _tileSize.x * coords.x + (_padding.x * coords.x + 1) + _offset.x, (R_FLOAT) _tileSize.y * coords.y + (_padding.y * coords.y + 1) + _offset.y};
             return {src, _tileSize};
          }
          [[nodiscard]] inline Size<int> getTileSize() const {return _tileSize;}
@@ -70,13 +67,13 @@ namespace ReyEngine {
       struct TileMapLayer{
          TileMapLayer(TileMap& tileMap, SpriteAtlas* atlas): tileMap(tileMap), atlas(atlas){}
          inline std::optional<SpriteAtlas*> getAtlas(){return atlas;}
-         void setTileByIndex(const TileCoord&, TileIndex);
+//         void setTileByIndex(const TileCoord&, TileIndex);
          void setTileByCoords(const TileCoord& src, const TileCoord& target);
-         std::optional<TileIndex> getTileIndex(const TileCoord& pos); //slow
+//         std::optional<TileIndex> getTileIndex(const TileCoord& pos); //slow
          void removeTileIndex(const TileCoord& pos);
       protected:
          //x, y
-         std::map<int, std::map<int, TileIndex>> tiles;
+         std::map<int, std::map<int, TileCoord>> tiles;
       private:
          SpriteAtlas* atlas = nullptr;
          TileMap& tileMap;
@@ -122,7 +119,12 @@ namespace ReyEngine {
       [[nodiscard]] Size<int> getTileSize() const {return _tileSize;}
       void redraw(){_needsRedraw = true;}
    protected:
+      virtual Handled _on_hovered(const TileCoord&){return false;}
+      virtual Handled _on_clicked(const TileCoord&){return false;}
+      void render2DBegin() override;
       void render2D() const override;
+      void render2DEnd() override;
+      void _init();
       Widget* _unhandled_input(const InputEvent&) override;
       void _on_rect_changed() override;
       std::map<LayerIndex, std::unique_ptr<TileMapLayer>> _layers;
@@ -135,7 +137,6 @@ private:
       Size<int> _tileSize;
       bool _needsRedraw = false;
       std::optional<TileCoord> currentHover;
-      RenderTarget _renderTarget;
 
       /////////////////////////////////////////////////////////////////////////////////////////
       // Iterator class for layers

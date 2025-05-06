@@ -40,9 +40,12 @@ void Canvas::renderProcess() {
    rlPushMatrix();
    render2DBegin();
    BeginMode2D(camera);
-   ClearBackground(Colors::none);
-   drawRectangleGradientV(getRect().toSizeRect(), Colors::green, Colors::yellow);
-   drawText(getName(), {0,0}, theme->font);
+
+   if (!_retained) {
+      ClearBackground(Colors::none);
+      drawRectangleGradientV(getRect().toSizeRect(), Colors::green, Colors::yellow);
+      drawText(getName(), {0,0}, theme->font);
+   }
 
    if (_intrinsicRenderType == IntrinsicRenderType::CanvasUnderlay){
       for (auto& intrinsicChild : _intrinsicChildren){
@@ -59,8 +62,7 @@ void Canvas::renderProcess() {
       }
    }
 
-   //the modal widget's xform includes canvas xform, so we want to pop that off as if
-   // we are rendering globally
+   //the modal widget's xform includes canvas xform, so we want to pop that off as if we are rendering globally
    if (auto modal = getModal()){
       auto modalDrawable = modal->_node->as<Widget>();
       transformStack.pushTransform(&getModal()->getGlobalTransform().get());
@@ -69,7 +71,6 @@ void Canvas::renderProcess() {
       auto inverseXform = modalDrawable.value()->getTransform().inverse();
       transformStack.pushTransform(&inverseXform);
 
-      // Logger::debug() << "Drawing " << modal->_node->getName() << " at " << modalXform.extractTranslation() + _node->as<Drawable2D>().value()->getPosition() << endl;
       processNode<RenderProcess>(modal->_node, true);
       transformStack.popTransform();
    }

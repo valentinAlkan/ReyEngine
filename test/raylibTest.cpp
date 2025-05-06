@@ -20,6 +20,7 @@ int main(){
    constexpr Rect<float> src = {0,0,targetSize.x, targetSize.y};
    constexpr Rect<float> viewport = targetSize.toRect({100,100});
    RenderTarget target(targetSize);
+   RenderTarget subTarget(targetSize);
    auto font = getDefaultFont();
    while (!WindowShouldClose())
    {

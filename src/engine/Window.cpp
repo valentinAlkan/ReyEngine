@@ -33,6 +33,7 @@ WindowPrototype::WindowPrototype(const std::string &title, int width, int height
       }
    }
 
+   SetConfigFlags(FLAG_VSYNC_HINT);
    InitWindow(width, height, title.c_str());
    Application::instance()._is_ready = true;
 }

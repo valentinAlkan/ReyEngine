@@ -3,49 +3,65 @@
 
 using namespace ReyEngine;
 using namespace std;
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void TileMap::_init() {
+   _retained = true;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void TileMap::render2DBegin() {
+   render2D();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void TileMap::render2DEnd() {
+   if (_needsRedraw) {
+      _needsRedraw = false;
+   }
+}
 /////////////////////////////////////////////////////////////////////////////////////////
 void TileMap::render2D() const {
-//   if (!_needsRedraw){ return;}
-   auto& mutableThis = const_cast<TileMap&>(*this);
+   if (!_needsRedraw) return;
+   ClearBackground(Colors::none);
    //draw all tiles in the layer
-   for (auto& layer : _layers){
-      for (auto& [x, yMap] : layer.second->tiles){
-         for (auto& [y, index] : yMap){
-            auto pos = getCellPos({x,y});
-            auto srcRect = layer.second->atlas->getTile(index);
-            auto dstRect = Rect<R_FLOAT>(pos, {(R_FLOAT)_tileSize.x, (R_FLOAT)_tileSize.y});
-            auto &tex = layer.second->atlas->texture;
+   for (auto& layer: _layers) {
+      for (auto& [x, yMap]: layer.second->tiles) {
+         for (auto& [y, atlasCoords]: yMap) {
+            auto pos = getCellPos({x, y});
+            auto srcRect = layer.second->atlas->getTile(atlasCoords);
+            auto dstRect = Rect<R_FLOAT>(pos, {(R_FLOAT) _tileSize.x, (R_FLOAT) _tileSize.y});
+            auto& tex = layer.second->atlas->texture;
             drawTexture(tex, srcRect, dstRect, Colors::none);
          }
       }
    }
 
    //draw grid on top of tiles
-   if (_showGrid){
-      drawRectangleLines(getRect().toSizeRect(), 1.0, theme->background.colorSecondary);
-      switch (_gridType){
-         case GridType::SQUARE:{
-            auto xLineCount = getWidth() / (float)_tileSize.x;
-            auto yLineCount = getHeight() / (float)_tileSize.y;
-            for (int x=1; x<(int)xLineCount; x++) {
-               auto _x = x*_tileSize.x;
-               auto linex = Line<R_FLOAT>({(float)_x, 0}, {(float)_x, getHeight()});
+   if (_showGrid) {
+      drawRectangleLines(getSizeRect(), 1.0, theme->background.colorSecondary);
+      switch (_gridType) {
+         case GridType::SQUARE: {
+            auto xLineCount = getWidth() / (float) _tileSize.x + 1;
+            auto yLineCount = getHeight() / (float) _tileSize.y + 1;
+            for (int x = 1; x < (int) xLineCount; x++) {
+               auto _x = x * _tileSize.x;
+               auto linex = Line<R_FLOAT>({(float) _x, 0}, {(float) _x, getHeight()});
                drawLine(linex, 1, theme->background.colorSecondary);
-               for (int y = 1; y < yLineCount +1; y++){
-                  auto _y = y*_tileSize.y;
-                  auto liney = Line<R_FLOAT>({0, (float)_y}, {getWidth(), (float)_y});
+               for (int y = 1; y < yLineCount + 1; y++) {
+                  auto _y = y * _tileSize.y;
+                  auto liney = Line<R_FLOAT>({0, (float) _y}, {getWidth(), (float) _y});
                   drawLine(liney, 1, theme->background.colorSecondary);
                }
             }
-            break;}
+            break;
+         }
          case GridType::HEX:
             break;
          case GridType::SQUARE_OFFSET:
             break;
       }
    }
-//   mutableThis._renderTarget.endRenderMode();
-   mutableThis._needsRedraw = false;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -148,8 +164,10 @@ Widget* TileMap::_unhandled_input(const InputEvent& event) {
             float dt = (float)cellPos.x - ((float)mouse.value()->getLocalPos().x / (float)_tileSize.x);
             if (cellPos != currentHover) {
                currentHover = cellPos;
-               EventTileMapCellHovered _event(this, currentHover.value());
-               publish(_event);
+               if (!_on_hovered(cellPos)) {
+                  EventTileMapCellHovered _event(this, currentHover.value());
+                  publish(_event);
+               }
                return this;
             }
          break;
@@ -157,8 +175,10 @@ Widget* TileMap::_unhandled_input(const InputEvent& event) {
          case InputEventMouseButton::getUniqueEventId():
             auto mbEvent = event.toEvent<InputEventMouseButton>();
             if (mbEvent.isDown && mbEvent.button == InputInterface::MouseButton::LEFT){
-               EventTileMapCellClicked _event(this, currentHover.value());
-               publish(_event);
+               if (!_on_clicked(currentHover.value())) {
+                  EventTileMapCellClicked _event(this, currentHover.value());
+                  publish(_event);
+               }
                return this;
             }
          break;
@@ -169,22 +189,12 @@ Widget* TileMap::_unhandled_input(const InputEvent& event) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void TileMap::_on_rect_changed() {
-   _renderTarget.setSize(getSize());
+   Canvas::_on_rect_changed();
    _needsRedraw = true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-optional<TileMap::TileIndex> TileMap::TileMapLayer::getTileIndex(const TileCoord &pos) {
-   try {
-      return tiles.at(pos.x).at(pos.y);
-   } catch (const out_of_range& e) {
-      Logger::debug() << "Tile layer " << atlas->getPath() << " has no index at coordinates " << pos << endl;
-   }
-   return nullopt;
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////
 void TileMap::TileMapLayer::removeTileIndex(const TileCoord &pos) {
    auto xFound = tiles.find(pos.x);
@@ -200,15 +210,8 @@ void TileMap::TileMapLayer::removeTileIndex(const TileCoord &pos) {
    tileMap._needsRedraw = true;
 }
 
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void TileMap::TileMapLayer::setTileByIndex(const TileCoord& coords, TileIndex index) {
-   tiles[coords.x][coords.y] = index;
-   tileMap._needsRedraw = true;
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////
 void TileMap::TileMapLayer::setTileByCoords(const TileCoord& target, const TileCoord& source) {
-   tiles[target.x][target.y] = source.x * atlas->_columnCount * source.x + source.y;
+   tiles[target.x][target.y] = source;
    tileMap._needsRedraw = true;
 }
