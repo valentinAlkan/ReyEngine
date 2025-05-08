@@ -192,6 +192,15 @@ target_include_directories(ReyEngine2D PUBLIC
     src/physics
 )
 
+add_executable(TileEditor
+    apps/TileEditor/src/main.cpp
+    apps/TileEditor/src/UI.cpp
+    apps/TileEditor/src/TileEditor.cpp
+)
+
+target_include_directories(TileEditor PUBLIC apps/TileEditor/src)
+target_link_libraries(TileEditor ReyEngine2D)
+
 #add_library(ReyEngine3D STATIC
 #    src/3d/DrawInterface3D.cpp
 #    src/3d/Viewport.cpp
@@ -277,3 +286,4 @@ install_file(./test/spritesheet.png ./test/spritesheet.png)
 install_file(./test/csvTest.csv ./test/csvTest.csv)
 install_file(./test/3d/suzanne.obj ./test/suzanne.obj)
 install_file(./test/10x10_checkered_board.png ./test/10x10_checkered_board.png)
+install_file(./test/tiles.png ./test/tiles.png)

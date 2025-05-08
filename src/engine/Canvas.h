@@ -46,13 +46,14 @@ namespace ReyEngine {
          ViewportOverlay, // intrinsic children are drawn on top of the canvas, using the canvas' parent transform (pinned to viewport)
          ViewportUnderlay// intrinsic children are drawn behind the canvas, using the canvas' parent transform (pinned to viewport)
       };
-      void _on_descendant_added_to_tree(TypeNode* child) override;
-      void render2D() const override {};
       CanvasSpace<Pos<float>> getMousePos();
       inline const Transform2D getCameraTransform() const {return GetCameraMatrix2D(camera);}
       inline Transform2D getCameraTransform() {return GetCameraMatrix2D(camera);}
       void setCaptureOutsideInput(bool newValue){_rejectOutsideInput = newValue;}
+      Camera2D& getCamera(){return camera;}
    protected:
+      void _on_descendant_added_to_tree(TypeNode* child) override;
+      void render2D() const override {};
       virtual void renderProcess();
       [[nodiscard]] const RenderTarget& getRenderTarget() const {return _renderTarget;}
       Widget* __process_unhandled_input(const InputEvent& event) override;
