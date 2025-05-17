@@ -256,6 +256,7 @@ int main() {
                //add some stuff ot differentiate the pages
                std::unique_ptr<TypeNode> p2;
                std::unique_ptr<TypeNode> p3;
+               std::unique_ptr<TypeNode> p4;
                {
                   auto [textureTestLayout, n1] = make_node<Layout>("TextureTestLayout", Layout::LayoutDir::VERTICAL);
                   std::vector<std::pair<std::string, TextureRect::FitType>> fitTypes = {
@@ -272,8 +273,7 @@ int main() {
 
                   auto fitMenuCB = [textureRect](
                         const ComboBox<TextureRect::FitType>::EventComboBoxItemSelected& event) {
-                     cout << event.field->text << " at index " << event.itemIndex << " = " << (int) event.field->data
-                          << endl;
+                     cout << event.field->text << " at index " << event.itemIndex << " = " << (int) event.field->data << endl;
                      textureRect->setFitType(event.field->data);
                   };
                   textureTestComboBox->subscribe<ComboBox<TextureRect::FitType>::EventComboBoxItemSelected>(
@@ -302,7 +302,42 @@ int main() {
                      animatedSprite->setRect(100,20,64,64);
                   }
                }
-               auto [label4, p4] = make_node<Label>("Label4", "Page4");
+               {
+                  auto [zoomCanvas, _p4] = make_node<Canvas>("ZoomTest");
+                  zoomCanvas->setInputFiltering(InputFilter::PUBLISH_ONLY);
+                  // connect to unhandled input signal
+
+                  auto cbUnhandledInput = [zoomCanvas](Widget::WidgetUnhandledInputEvent& event){
+                     if (event.fwdEvent.isEvent<InputEventMouseWheel>()){
+                        const auto& mwEvent = event.fwdEvent.toEvent<InputEventMouseWheel>().wheelMove;
+                        zoomCanvas->getCamera().zoom += zoomCanvas->getCamera().zoom * mwEvent.y * .1;
+                        cout << "zoom = " << zoomCanvas->getCamera().zoom << endl;
+                        event.handler = zoomCanvas.get();
+                     }
+                  };
+
+                  zoomCanvas->subscribeMutable<Widget::WidgetUnhandledInputEvent&>(zoomCanvas, cbUnhandledInput);
+
+                  //add a texture rect to the canvas' background
+                  {
+                     auto [texRect, node] = make_node<TextureRect>("ZoomTextureRect");
+                     zoomCanvas->addChild(std::move(node));
+                     zoomCanvas->setAnchoring(ReyEngine::Anchor::FILL);
+                     texRect->setTexture("test/spritesheet.png");
+                     texRect->setAnchoring(ReyEngine::Anchor::FILL);
+                     texRect->setFitType(ReyEngine::TextureRect::FitType::NONE);
+                  }
+                  {
+//                      add some ui to the canvas
+                     auto [label, node] = make_node<Label>("UILabel", "This should be on the foreground");
+                     label->setPosition({5,50});
+                     zoomCanvas->addChild(std::move(node));
+                     zoomCanvas->moveToForeground(label.get());
+                  }
+
+
+                  p4 = std::move(_p4);
+               }
                tabContainer->addChild(std::move(p1));
                tabContainer->addChild(std::move(p2));
                tabContainer->addChild(std::move(p3));

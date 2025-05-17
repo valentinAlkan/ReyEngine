@@ -159,6 +159,13 @@ namespace ReyEngine{
    //           std::cout << "subscribing to event " << eventId << std::endl;
          _eventMap[eventId][subscriber].push_back(fx);
       }
+
+      template <typename T>
+      requires (std::is_base_of_v<BaseEvent, T>)
+      void addSubscriber(EventSubscriber* subscriber, std::function<void(BaseEvent&)>& fx) {
+         auto constAdapter = [fx](const BaseEvent& event){ fx(const_cast<BaseEvent&>(event));};
+         addSubscriber<T>(subscriber, constAdapter);
+      }
 //
       void removeSubscriptions(EventSubscriber* cancellingSubscriber) {
          for (auto itouter = _eventMap.begin(); itouter!=_eventMap.end();/**/){

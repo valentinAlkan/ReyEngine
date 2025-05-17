@@ -5,6 +5,21 @@ using namespace ReyEngine;
 using namespace Internal;
 
 ////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::__on_child_added_to_tree(TypeNode *child) {
+   //move all nodes to background by default
+   _background.add(child);
+   ReyObject::__on_child_added_to_tree(child);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::__on_child_removed_from_tree(TypeNode *n) {
+   _foreground.remove(n);
+   _background.remove(n);
+   ReyObject::__on_child_added_to_tree(n);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::_on_rect_changed() {
    _renderTarget.setSize(getSize());
 }
@@ -34,12 +49,14 @@ void Canvas::_on_descendant_added_to_tree(TypeNode *n) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Canvas::renderProcess() {
+void Canvas::renderProcess(RenderTarget& parentTarget) {
    if (!_visible) return;
+   if (&parentTarget != &_renderTarget) {
+      parentTarget.endRenderMode();
+   }
    _renderTarget.beginRenderMode();
    rlPushMatrix();
    render2DBegin();
-   BeginMode2D(camera);
 
    if (!_retained) {
       ClearBackground(Colors::none);
@@ -47,20 +64,11 @@ void Canvas::renderProcess() {
       drawText(getName(), {0,0}, theme->font);
    }
 
-   if (_intrinsicRenderType == IntrinsicRenderType::CanvasUnderlay){
-      for (auto& intrinsicChild : _intrinsicChildren){
-         processNode<RenderProcess>(intrinsicChild.get(), false);
-      }
+   BeginMode2D(camera);
+   for (auto& child : _background.getValues()){
+      processNode<RenderProcess>(child, false);
    }
-
-   //normal front render - first pass, don't draw modal
-   processChildren<RenderProcess>(_node);
-
-   if (_intrinsicRenderType == IntrinsicRenderType::CanvasOverlay){
-      for (auto& intrinsicChild : _intrinsicChildren){
-         processNode<RenderProcess>(intrinsicChild.get(), false);
-      }
-   }
+   EndMode2D();
 
    //the modal widget's xform includes canvas xform, so we want to pop that off as if we are rendering globally
    if (auto modal = getModal()){
@@ -74,10 +82,17 @@ void Canvas::renderProcess() {
       processNode<RenderProcess>(modal->_node, true);
       transformStack.popTransform();
    }
-   EndMode2D();
+
+//   for (auto& child : _foreground.getValues()){
+//      processNode<RenderProcess>(child, false);
+//   }
+
    rlPopMatrix();
    render2DEnd();
    _renderTarget.endRenderMode();
+   if (&parentTarget != &_renderTarget) {
+      parentTarget.beginRenderMode();
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -105,13 +120,7 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
       return processNode<InputProcess>(thisNode, isModal, event);
    };
 
-   //query intrinsic children first
-   for (auto& intrinsicChild : _intrinsicChildren) {
-      auto handled = createProcessNodeForEvent(intrinsicChild.get(), false, event);
-      if (handled) return handled;
-   }
-
-   //reject canvas input from outside the canvas
+   //reject mouse input from outside the canvas
    if (_rejectOutsideInput) {
       if (isMouse) {
          auto mouseTransformer = MouseEvent::ScopeTransformer(*event.isMouse().value(), getLocalTransform(), getSize());
@@ -121,21 +130,68 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
       }
    }
 
-   //then modal widgets
+   Widget* handled = nullptr;
+   //query modal widgets first. A modal widget consumes input even if unhandled.
    if (auto modal = getModal()){
       return createProcessNodeForEvent(modal->_node, true, event);
    }
 
    //then focused widgets
    if (auto focus = getFocus()){
-      return createProcessNodeForEvent(focus->_node, true, event);
+      handled = createProcessNodeForEvent(focus->_node, true, event);
+      if (handled) return handled;
    }
 
+   //then foreground
+   for (auto& child : _foreground.getValues()) {
+      handled = createProcessNodeForEvent(child, false, event);
+      if (handled) return handled;
+   }
+
+   //then background - which is affected by camera
    if (isMouse) {
       auto cameraTransformer = MouseEvent::ScopeTransformer(*event.isMouse().value(), Transform2D(), getSize(), getCameraTransform());
-      return createProcessNodeForEvent(_node, false, event);
+      handled = createProcessNodeForEvent(_node, false, event);
+   } else {
+      //propagate to children
+       handled = createProcessNodeForEvent(_node, false, event);
    }
-   return createProcessNodeForEvent(_node, false, event);
+
+   return handled;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::moveToForeground(Widget* widget) {
+   if (!widget) {
+      Logger::error() << "Canvas: moveToForeground - Null widget!" << endl;
+      return;
+   }
+
+   auto node = widget->getNode();
+   if (!widget->getNode()) {
+      Logger::error() << "Canvas: moveToForeground - Null node!" << endl;
+      return;
+   }
+   _background.remove(node);
+   _foreground.add(node);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::moveToBackground(Widget* widget) {
+   if (!widget) {
+      Logger::error() << "Canvas: moveToForeground - Null widget!" << endl;
+      return;
+   }
+
+   auto node = widget->getNode();
+   if (!node) {
+      Logger::error() << "Canvas: moveToBackground - Null node!" << endl;
+      return;
+   }
+   _foreground.remove(node);
+   _background.add(node);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

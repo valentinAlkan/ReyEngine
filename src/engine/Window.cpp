@@ -33,6 +33,7 @@ WindowPrototype::WindowPrototype(const std::string &title, int width, int height
       }
    }
 
+   SetTraceLogLevel(LOG_NONE);
    SetConfigFlags(FLAG_VSYNC_HINT);
    InitWindow(width, height, title.c_str());
    Application::instance()._is_ready = true;
@@ -304,7 +305,7 @@ void Window::exec(){
 //         _renderTarget.clear();
 //         rlLoadIdentity();
 //         rlPushMatrix();
-         canvas->renderProcess();
+         canvas->renderProcess(canvas->_renderTarget);
 //         rlPopMatrix();
 //         Application::getWindow(0).popRenderTarget(); //debug
 

@@ -11,6 +11,18 @@ namespace ReyEngine{
          Fraction pct;
       };
 
+      EVENT(EventSliderPressed, 812735879613)
+         {}
+         double value;
+         Fraction pct;
+      };
+
+      EVENT(EventSliderReleased, 812735879614)
+         {}
+         double value;
+         Fraction pct;
+      };
+
       enum class SliderType{VERTICAL, HORIZONTAL};
       Vec2<double> getRange(){return _range;}
       void setRange(Vec2<double> newRange){
@@ -19,7 +31,11 @@ namespace ReyEngine{
          _range = {minSliderValue, maxSlidervalue};
       }
       inline double getSliderValue() const {return sliderValue;}
-      inline void setSliderValue(float value, bool publish=true){sliderValue = value; if (publish)_publish_slider_val();_compute_appearance();}
+      inline void setSliderValue(float value, bool publish=true){
+         sliderValue = value;
+         if (publish) _publish_slider_val<EventSliderValueChanged>();
+         _compute_appearance();
+      }
       inline Fraction getSliderPct() const {return _range.pct(sliderValue);}
       inline void setSliderPct(Fraction pct, bool publish=true){setSliderValue(_range.lerp(pct), publish);}
 
@@ -62,7 +78,7 @@ namespace ReyEngine{
                   break;
                }
                _compute_appearance();
-               _publish_slider_val();
+               _publish_slider_val<EventSliderValueChanged>();
                return this;
             }
          }
@@ -73,12 +89,14 @@ namespace ReyEngine{
                _cursor_down = true;
                _is_dragging = _cursor_down;
                setFocused(true);
+               _publish_slider_val<EventSliderPressed>();
                return this;
             }
             if (!buttonEvent.isDown && _is_dragging) {
                _cursor_down = buttonEvent.isDown;
                _is_dragging = false;
                setFocused(false);
+               _publish_slider_val<EventSliderReleased>();
                return this;
             }
          }
@@ -98,11 +116,12 @@ namespace ReyEngine{
       };
       void _process(float dt) override {}
    private:
+      template <typename EventType>
       void _publish_slider_val(){
-         auto event = EventSliderValueChanged(this);
+         auto event = EventType(this);
          event.value = getSliderValue();
          event.pct = Fraction(getSliderPct()).get();
-         publish<EventSliderValueChanged>(event);
+         publish<EventType>(event);
       }
       void _compute_appearance(){
          switch(sliderType){

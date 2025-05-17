@@ -1,5 +1,6 @@
 #pragma once
 #include "Widget.h"
+#include "CacheVectorMap.h"
 #include <stack>
 #include "rlgl.h"
 
@@ -32,39 +33,45 @@ namespace ReyEngine {
 
    class Canvas: public Widget {
    public:
+      enum class CanvasLayer {FOREGROUND, BACKGROUND};
       REYENGINE_OBJECT(Canvas)
-      Canvas(){
+      Canvas()
+      : camera({0}){
          isGlobalTransformBoundary = true;
          _isCanvas = true;
-         camera = {0};
          camera.zoom = 1.0f;
+         camera.target = (Vector2)(size / 2);
       }
-      ~Canvas() override { std::cout << "Goodbye from " << TYPE_NAME << "!!" << std::endl; }
-      enum class IntrinsicRenderType {
-         CanvasOverlay, // intrinsic children are drawn like any other - on top of the canvas, using the canvas' own transform (however are drawn before real children)
-         CanvasUnderlay, // intrinsic children are drawn behind the canvas, using the canvas' own transform
-         ViewportOverlay, // intrinsic children are drawn on top of the canvas, using the canvas' parent transform (pinned to viewport)
-         ViewportUnderlay// intrinsic children are drawn behind the canvas, using the canvas' parent transform (pinned to viewport)
-      };
+      ~Canvas() override = default;
+      enum class Viewport{FOREGRUOND, BACKGROUND};
       CanvasSpace<Pos<float>> getMousePos();
       inline const Transform2D getCameraTransform() const {return GetCameraMatrix2D(camera);}
       inline Transform2D getCameraTransform() {return GetCameraMatrix2D(camera);}
       void setCaptureOutsideInput(bool newValue){_rejectOutsideInput = newValue;}
       Camera2D& getCamera(){return camera;}
+      void moveToForeground(Widget*);
+      void moveToBackground(Widget*);
    protected:
       void _on_descendant_added_to_tree(TypeNode* child) override;
       void render2D() const override {};
-      virtual void renderProcess();
+      virtual void renderProcess(RenderTarget& parentTarget); //provide the parent's render target. so we can control stuff.
       [[nodiscard]] const RenderTarget& getRenderTarget() const {return _renderTarget;}
       Widget* __process_unhandled_input(const InputEvent& event) override;
       Widget* __process_hover(const InputEventMouseHover& event);
       void _on_rect_changed() override;
-      virtual IntrinsicRenderType getIntrinsicRenderType(){return _intrinsicRenderType;}
+
+//      virtual IntrinsicRenderType getIntrinsicRenderType(){return _intrinsicRenderType;}
+      RenderTarget _renderTarget;
       Camera2D camera;
-      std::vector<std::unique_ptr<TypeNode>> _intrinsicChildren; //children that belong to the canvas but are treated differently for various reasons
-      IntrinsicRenderType _intrinsicRenderType = IntrinsicRenderType::CanvasOverlay;
       bool _rejectOutsideInput = false; //rejects input that is outside the canvas
       bool _retained = false; //set to true if you want to retain the image between draw calls. Requires manually clearing the render target.
+
+      std::map<size_t, std::vector<Widget*>> _processLayers; //different layers of widgets that can be processed differently
+
+
+
+      OrderedCache<TypeNode*> _foreground;
+      OrderedCache<TypeNode*> _background;
       /////////////////////////////////////////////////////////////////////////////////////////
       /////////////////////////////////////////////////////////////////////////////////////////
       /////////////////////////////////////////////////////////////////////////////////////////
@@ -112,7 +119,6 @@ namespace ReyEngine {
       template <WidgetStatus::StatusType Status>
       [[nodiscard]] const Widget* getStatus() const {return const_cast<Canvas*>(this)->getStatus<Status>();}
       std::array<Widget*, std::tuple_size_v<WidgetStatus::StatusTypes>> statusWidgetStorage = {0};
-      RenderTarget _renderTarget;
 
       /////////////////////////////////////////////////////////////////////////////////////////
       struct TransformStack{
@@ -155,24 +161,14 @@ namespace ReyEngine {
          }
 
          Widget* subcanvasProcess(){
-            //render intrinsic viewport underlay
-            if (subCanvas->getIntrinsicRenderType() == IntrinsicRenderType::ViewportUnderlay){
-               for (auto& intrinsicChild : subCanvas->_intrinsicChildren){
-                  subCanvas->processNode<RenderProcess>(intrinsicChild.get(), false);
-               }
-            }
             rlPopMatrix();
-            thisCanvas->_renderTarget.endRenderMode();
-            subCanvas->renderProcess();
-            thisCanvas->_renderTarget.beginRenderMode();
+            subCanvas->renderProcess(thisCanvas->_renderTarget);
             rlPushMatrix();
             rlMultMatrixf(MatrixToFloat(thisCanvas->transformStack.getGlobalTransform().matrix));
             drawRenderTargetRect(subCanvas->getRenderTarget(), subCanvas->getSizeRect(), subCanvas->getRect(), Colors::none);
-            //render intrinsic viewport overlay
-            if (subCanvas->getIntrinsicRenderType() == IntrinsicRenderType::ViewportOverlay){
-               for (auto& intrinsicChild : subCanvas->_intrinsicChildren){
-                  subCanvas->processNode<RenderProcess>(intrinsicChild.get(), false);
-               }
+            //render foreground
+            for (auto& foregroudChild : subCanvas->_foreground.getValues()){
+               subCanvas->processNode<RenderProcess>(foregroudChild, false);
             }
             return nullptr;
          }
@@ -206,6 +202,13 @@ namespace ReyEngine {
          Widget* process(){
             return processedWidget->_unhandled_input(event);
          };
+
+         Widget* publish(){
+            Widget::WidgetUnhandledInputEvent _event(processedWidget, event);
+            processedWidget->publishMutable(_event);
+            return _event.handler;
+         }
+
          //transforms mouse coordinates
          std::unique_ptr<MouseEvent::ScopeTransformer> mouseTransformer;
          Transform2D inputTransform;
@@ -276,12 +279,11 @@ namespace ReyEngine {
          // Create the appropriate arguments based on ProcessType
          // Basically what we're doing is taking arbitrary args to the processNode function and
          //  seeing if we can match them to the ctor for the given ProcessType. Each ctor is conditionally compiled
-         //  so that only one actaually exists at any given time. This keeps us from having to write
+         //  so that only one actually exists at any given time. This keeps us from having to write
          //  two large and similar blocks of code that both iterate over the tree and 'doStuff' in slightly
          //  different ways.
          auto createProcessTransformer = [this, &widget, &args...](const Transform2D& inputTransform) {
             if constexpr (std::is_same_v<ProcessType, InputProcess> || std::is_same_v<ProcessType, HoverProcess>) {
-               constexpr size_t argCount = sizeof...(args);
                const auto& event = std::get<0>(std::forward_as_tuple(std::forward<Args>(args)...));
                return ProcessType(this, widget, event, inputTransform);
             } else {
@@ -306,13 +308,34 @@ namespace ReyEngine {
                return processChildren<ProcessType>(thisNode, std::forward<Args>(args)...);
             }
 
+            //input and hover
             if constexpr (std::is_same_v<ProcessType, InputProcess> || std::is_same_v<ProcessType, HoverProcess>) {
                //process children first for input
-               handled = processChildren<ProcessType>(thisNode, std::forward<Args>(args)...);
-               if (handled) return handled;
+               auto pass = [&](){return processChildren<ProcessType>(thisNode, std::forward<Args>(args)...);};
+               auto publish = [&](){return processTransformer.publish();};
+               auto process = [&](){ return processTransformer.process();};
+               #define RETURN if (handled) return handled
                if (!widget->_modal || isGlobal) {
-                  handled = processTransformer.process();
-                  if (handled) return handled;
+                  switch(widget->_inputFilter) {
+                     case InputFilter::PASS_ONLY: handled = pass(); RETURN; break;
+                     case InputFilter::PROCESS_ONLY: handled = process(); RETURN; break;
+                     case InputFilter::PUBLISH_ONLY: handled = publish(); RETURN; break;
+                     case InputFilter::PASS_AND_PROCESS: handled = pass(); RETURN; handled = process(); RETURN; break;
+                     case InputFilter::PROCESS_AND_PASS: handled = process(); RETURN; handled = pass(); RETURN; break;
+                     case InputFilter::PROCESS_AND_STOP: handled = process(); RETURN; break;
+                     case InputFilter::IGNORE_AND_PASS: handled = pass(); RETURN; break;
+                     case InputFilter::IGNORE_AND_STOP: break;
+                     case InputFilter::PUBLISH_AND_PASS: publish(); RETURN; pass(); RETURN; break;
+                     case InputFilter::PASS_AND_PUBLISH: pass(); RETURN; publish(); RETURN; break;
+                     case InputFilter::PUBLISH_AND_STOP: publish(); RETURN; break;
+                     case InputFilter::PASS_PUBLISH_PROCESS: pass(); RETURN; publish(); RETURN; process(); RETURN; break;
+                     case InputFilter::PASS_PROCESS_PUBLISH: pass();  RETURN; process(); RETURN; publish(); RETURN; break;
+                     case InputFilter::PROCESS_PUBLISH_PASS: process(); RETURN; publish(); RETURN; pass(); RETURN; break;
+                     case InputFilter::PROCESS_PASS_PUBLISH: process(); RETURN; pass(); RETURN; publish(); RETURN; break;
+                     case InputFilter::PUBLISH_PASS_PROCESS: publish(); RETURN; pass(); RETURN; process(); RETURN; break;
+                     case InputFilter::PUBLISH_PROCESS_PASS: publish(); RETURN; process(); RETURN; pass(); RETURN; break;
+                  }
+                  return nullptr;
                }
             }
          }
@@ -320,6 +343,9 @@ namespace ReyEngine {
          // pop local transform (processTransformer falls out of scope)
          return handled;
       }
+   private:
+      void __on_child_added_to_tree(TypeNode* child) override;
+      void __on_child_removed_from_tree(TypeNode* child) override;
 
    public:
       void setHover(Widget* w){setStatus<WidgetStatus::Hover>(w);}

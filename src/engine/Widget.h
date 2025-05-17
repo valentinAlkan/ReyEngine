@@ -27,7 +27,7 @@ namespace ReyEngine {
          {}
          Rect<R_FLOAT> rect;
          const InputEvent& fwdEvent;
-         bool handled = false;
+         Widget* handler = nullptr;
       };
 
       Widget(): theme(new Theme){
@@ -53,14 +53,15 @@ namespace ReyEngine {
       Pos<float> getLocalMousePos() const;
       CanvasSpace<Pos<float>> toCanvasSpace(const Pos<float>&);
       WindowSpace<Pos<float>> toWindowSpace(const Pos<float>&);
-      virtual Widget* _unhandled_input(const InputEvent&);
       void setEnabled(bool newState){enabled = newState;}
       bool getIsEnabled() const {return enabled;}
+      void setInputFiltering(InputFilter newFilter){ _inputFilter = newFilter;}
+      InputFilter getInputFiltering() const {return _inputFilter;}
    protected:
       //input
       virtual Widget* __process_unhandled_input(const InputEvent& event){ return _unhandled_input(event);}
+      virtual Widget* _unhandled_input(const InputEvent&){return nullptr;}
       virtual Widget* _process_unhandled_editor_input(const InputEvent&){return nullptr;} //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)
-      InputFilter _inputFilter = InputFilter::INPUT_FILTER_PASS_AND_PROCESS;
       virtual void _on_mouse_enter(){};
       virtual void _on_mouse_exit(){};
       virtual void _on_modality_gained(){}
@@ -74,11 +75,10 @@ namespace ReyEngine {
       bool acceptsHover = false;
       bool isLayout = false;
       bool enabled = true; //changes visuals and (typically) ingores input
-
-      std::shared_ptr<Theme> theme;
-
+      InputFilter _inputFilter = InputFilter::PASS_AND_PROCESS;
       Anchor _anchor = Anchor::NONE;
 
+      std::shared_ptr<Theme> theme;
    private:
       void __init() override;
       void __on_added_to_tree() override;

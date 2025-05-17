@@ -4,17 +4,25 @@
 #include "Label.h"
 using namespace std;
 using namespace ReyEngine;
+
 ScrollArea::ScrollArea() {
-   _inputFilter = InputFilter::INPUT_FILTER_PROCESS_AND_STOP;
-   _intrinsicRenderType = Canvas::IntrinsicRenderType::ViewportOverlay;
    _rejectOutsideInput = true;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ScrollArea::_init() {
    //create scrollbars
-   auto [_vslider, vsnode] = make_node<Slider>(std::string(VSLIDER_NAME), Slider::SliderType::VERTICAL);
-   auto [_hslider, hsnode] = make_node<Slider>(std::string(HSLIDER_NAME), Slider::SliderType::HORIZONTAL);
-   vslider = _vslider.get();
-   hslider = _hslider.get();
-   _intrinsicChildren.push_back(std::move(vsnode));
-   _intrinsicChildren.push_back(std::move(hsnode));
+   {
+      auto [_vslider, vsnode] = make_node<Slider>(std::string(VSLIDER_NAME), Slider::SliderType::VERTICAL);
+      auto [_hslider, hsnode] = make_node<Slider>(std::string(HSLIDER_NAME), Slider::SliderType::HORIZONTAL);
+      moveToForeground(_vslider.get());
+      moveToForeground(_hslider.get());
+      addChild(std::move(vsnode));
+      addChild(std::move(hsnode));
+      vslider = _vslider.get();
+      hslider = _hslider.get();
+   }
+
    vslider->setVisible(true);
    hslider->setVisible(true);
 
@@ -22,13 +30,23 @@ ScrollArea::ScrollArea() {
       scrollOffsetX = event.pct;
       updateViewport();
    };
-   auto setOffsetY = [this](const Slider::EventSliderValueChanged &event) {
+   auto setOffsetY = [this](const Slider::EventSliderValueChanged& event) {
       scrollOffsetY = event.pct;
       updateViewport();
    };
+
+   //make sure we capture outside input only when the sliders are being used
+   auto cbSliderPress = [this](const Slider::EventSliderPressed& event){_rejectOutsideInput = false;};
+   auto cbSliderRelease = [this](const Slider::EventSliderReleased& event){_rejectOutsideInput = true;};
+
    subscribe<Slider::EventSliderValueChanged>(hslider, setOffsetX);
    subscribe<Slider::EventSliderValueChanged>(vslider, setOffsetY);
+   subscribe<Slider::EventSliderPressed>(vslider, cbSliderPress);
+   subscribe<Slider::EventSliderPressed>(hslider, cbSliderPress);
+   subscribe<Slider::EventSliderReleased>(vslider, cbSliderRelease);
+   subscribe<Slider::EventSliderReleased>(hslider, cbSliderRelease);
 }
+
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::hideVSlider(bool hidden) {
     _hideVSlider = hidden;
@@ -98,11 +116,6 @@ void ScrollArea::updateViewport(){
       vslider->setVisible(!_hideVSlider && needShowVSlider);
    }
    camera.offset = {-_viewport.pos().x, -_viewport.pos().y};
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void ScrollArea::_init(){
-
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

@@ -21,8 +21,8 @@ namespace ReyEngine {
 
         Percent scrollOffsetX;
         Percent scrollOffsetY;
-        Slider* vslider;
-        Slider* hslider;
+        Slider* vslider = nullptr;
+        Slider* hslider = nullptr;
         Rect<R_FLOAT> boundingBox; //contains all children, is at least as big as scrollArea. RenderTarget takes its size
         Rect<R_FLOAT> _viewport;
         bool _hideVSlider = false;
