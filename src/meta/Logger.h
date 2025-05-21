@@ -46,13 +46,14 @@ namespace ReyEngine{
       static bool hasHistory();
       static Logger& getInstance();
       ~Logger();
-   private:
-      Logger() = default;
       Logger(const Logger&) = delete;
       Logger& operator=(const Logger&) = delete;
+   private:
+      Logger() = default;
       static std::unique_ptr<Logger> _self;
 
       std::queue<std::string> _history;
       std::mutex _mutex;
    };
+
 }

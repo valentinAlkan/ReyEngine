@@ -163,35 +163,52 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
-void Canvas::moveToForeground(Widget* widget) {
-   if (!widget) {
-      Logger::error() << "Canvas: moveToForeground - Null widget!" << endl;
-      return;
+optional<TypeNode*> moveLayerSafetyChecks(Canvas* canvas, Widget* widget, const std::string& fxName){
+   //check canvas is in good state
+   if (!canvas){
+      Logger::error() << "Canvas: " << fxName << " - Null canvas!" << endl;
+      return {};
    }
 
-   auto node = widget->getNode();
-   if (!widget->getNode()) {
-      Logger::error() << "Canvas: moveToForeground - Null node!" << endl;
-      return;
+   //check null widget
+   if (!widget) {
+      Logger::error() << "Canvas: " << fxName << " - Null widget!" << endl;
+      return {};
    }
-   _background.remove(node);
-   _foreground.add(node);
+
+   //check null node
+   auto node = widget->getNode();
+   if (!node) {
+      Logger::error() << "Canvas: " << fxName << " - Null node!" << endl;
+      return {};
+   }
+
+   //ensure the widget is a child of the canvas
+   TypeNode* parent = node->getParent();
+   if (!parent){
+      Logger::error() << "Canvas: " << fxName << " - widget must be a child of this canvas at this time" << endl;
+      return {};
+   } else if (node->getParent() != canvas->getNode()){
+      Logger::error() << "Canvas: " << fxName << " - widget must be a child of this canvas" << endl;
+      return {};
+   }
+   return node;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::moveToForeground(Widget* widget) {
+   if (auto node = moveLayerSafetyChecks(this, widget, "moveToForeground")) {
+      _background.remove(node.value());
+      _foreground.add(node.value());
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::moveToBackground(Widget* widget) {
-   if (!widget) {
-      Logger::error() << "Canvas: moveToForeground - Null widget!" << endl;
-      return;
+   if (auto node = moveLayerSafetyChecks(this, widget, "moveToBackground")) {
+      _foreground.remove(node.value());
+      _background.add(node.value());
    }
-
-   auto node = widget->getNode();
-   if (!node) {
-      Logger::error() << "Canvas: moveToBackground - Null node!" << endl;
-      return;
-   }
-   _foreground.remove(node);
-   _background.add(node);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
