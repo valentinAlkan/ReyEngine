@@ -153,12 +153,12 @@ namespace ReyEngine {
          }
          throwEx(std::get<0>(std::forward_as_tuple(std::forward<Args>(args)...)), "removeChild");
       }
-      template <typename... Args>
-      auto removeAllChildren(Args&& ...args){
+
+      auto removeAllChildren(){
          if (auto hasNode = getNode()) {
-            return getNode()->removeAllChildren(std::forward<Args>(args)...);
+            return getNode()->removeAllChildren();
          }
-         throwEx(std::get<0>(std::forward_as_tuple(std::forward<Args>(args)...)), "removeAllChildren");
+         throwEx(this, "removeAllChildren");
       }
    private:
       static constexpr std::string_view INVALID_NODE_ERR_MSG = "Invalid Node for operation. \n"
