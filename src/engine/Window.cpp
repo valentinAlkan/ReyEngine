@@ -306,6 +306,10 @@ void Window::exec(){
 //         rlLoadIdentity();
 //         rlPushMatrix();
          canvas->renderProcess(canvas->_renderTarget);
+         //after invoking the normal render process, we have to draw foreground objects
+//         for (auto& foregroudChild : canvas->_foreground.getValues()){
+//            canvas->processNode<Canvas::RenderProcess>(foregroudChild, false);
+//         }
 //         rlPopMatrix();
 //         Application::getWindow(0).popRenderTarget(); //debug
 

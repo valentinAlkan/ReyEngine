@@ -6,7 +6,7 @@
 class UI : public ReyEngine::Widget {
 public:
    REYENGINE_OBJECT(UI)
-   UI();
+   UI(std::shared_ptr<TileEditor>& editor);
 protected:
    void render2D() const override {}
    void _init() override;

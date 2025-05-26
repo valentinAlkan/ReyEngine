@@ -83,11 +83,15 @@ void Canvas::renderProcess(RenderTarget& parentTarget) {
       transformStack.popTransform();
    }
 
-//   for (auto& child : _foreground.getValues()){
-//      processNode<RenderProcess>(child, false);
-//   }
-
    rlPopMatrix();
+
+   //root canvas has no parent canvas. So ensure root canvas draws its foreground.
+   if (!getCanvas()) {
+      for (auto& child : _foreground.getValues()){
+         processNode<RenderProcess>(child, false);
+      }
+   }
+
    render2DEnd();
    _renderTarget.endRenderMode();
    if (&parentTarget != &_renderTarget) {
