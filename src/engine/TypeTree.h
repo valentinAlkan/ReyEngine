@@ -24,10 +24,12 @@ namespace ReyEngine::Internal::Tree {
       virtual void __init(){}; //added to tree for first time
       virtual void __on_made(){}; // when the node is built. A constructor of sorts, but the associated Node is valid.
       virtual void __on_added_to_tree(){}; //every time when added to tree
+      virtual void __on_removed_from_tree(){}; //every time when removed from the tree
       virtual void __on_child_added_to_tree(TypeNode *n) {}; // direct children only
       virtual void __on_descendant_added_to_tree(TypeNode *n) {};
       virtual void __on_child_removed_from_tree(TypeNode*){}; // direct children only
       virtual void __on_descendant_removed_from_tree(TypeNode*){};
+      virtual void __on_ancestor_removed_from_tree(TypeNode*){};
       virtual void __on_orphaned(TypeNode*){}; //when the node has been orphaned (ancestor removed from tree)
       TypeNode* getNode(){return _node;}
       [[nodiscard]] const TypeNode* getNode() const {return _node;}
@@ -186,6 +188,32 @@ namespace ReyEngine::Internal::Tree {
          return childptr;
       }
 
+      //call necessary callbacks
+      void cleanupOnRemoval(){
+         //when a node is removed from the tree, we have to call a bunch of callbacks
+
+         //notify ancestors that we were removed
+         {
+            auto ancestor = getParent();
+            while (ancestor) {
+               ancestor->as<TreeStorable>().value()->__on_descendant_removed_from_tree(this);
+               ancestor = ancestor->_parent;
+            }
+         }
+         //notify descendents that we were removed
+         for (auto& descendent : getChildren()) {
+            std::function<void(TypeNode *)> callOnDescendent = [&](TypeNode* removedNode) {
+               descendent->as<TreeStorable>().value()->__on_ancestor_removed_from_tree(removedNode);
+               //descendent must do its own cleanup too at this point too since it is also being removed from the tree
+               descendent->cleanupOnRemoval();
+            };
+            callOnDescendent(this);
+         }
+
+         //call our own cleanup
+         as<TreeStorable>().value()->__on_removed_from_tree();
+      }
+
       /**
        * removes the node with the given name from the _childMap
        * @param name : name of the wanted node
@@ -206,6 +234,7 @@ namespace ReyEngine::Internal::Tree {
          if(it != _childMap.end()){
             auto removedNode = std::move(it->second);
             _childMap.erase(it);
+            removedNode->cleanupOnRemoval();
             return removedNode;
          }
          Logger::error() << "Unable to remove child " << name << " from node " << getScenePath() << std::endl;

@@ -25,7 +25,7 @@ void Canvas::_on_rect_changed() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Canvas::_on_descendant_added_to_tree(TypeNode *n) {
+void Canvas::__on_descendant_added_to_tree(TypeNode *n) {
    static constexpr char INDENT = '-';
    string indent;
    function<void(TypeNode*)> catTree = [&](TypeNode* n){
@@ -46,6 +46,31 @@ void Canvas::_on_descendant_added_to_tree(TypeNode *n) {
       //assign the object to its owning window
       isDrawable.value()->window = window;
    }
+   //make sure to call dispatchers
+   ReyObject::__on_descendant_added_to_tree(n);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::__on_descendant_removed_from_tree(TypeNode *n) {
+   //remove all statuses from widgets
+   if (auto widget = n->as<Widget>()){
+      _removeAllStatus(widget.value());
+   }
+
+   ReyObject::__on_descendant_removed_from_tree(n);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::_removeAllStatus(Widget* widget) {
+   auto removeStatusForType = [this, widget]<typename StatusType>() {
+      constexpr std::size_t statusIndex = WidgetStatus::tuple_type_index_v<StatusType, WidgetStatus::StatusTypes>;
+      if (statusWidgetStorage[statusIndex] == widget) {
+         setStatus<StatusType>(nullptr);
+      }
+   };
+
+   //use std apply to unpack each status type, instantiate it, and pass it to the lambda
+   std::apply([&removeStatusForType](auto... statusTypes) {(removeStatusForType.template operator()<decltype(statusTypes)>(), ...);}, WidgetStatus::StatusTypes{});
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -7,9 +7,9 @@
 namespace ReyEngine {
    namespace WidgetStatus{
       //give special status to widgets - define new status here and add to tuple
-      struct Modal{};
-      struct Focus{};
-      struct Hover{};
+      struct Modal{static constexpr char NAME[] = "Modal";};
+      struct Focus{static constexpr char NAME[] = "Focus";};
+      struct Hover{static constexpr char NAME[] = "Hover";};
       using StatusTypes = std::tuple<Modal, Focus, Hover>;
       // Type trait to check if a type is in the tuple
       template <typename T, typename Tuple> struct is_in_tuple;
@@ -52,24 +52,22 @@ namespace ReyEngine {
       void moveToForeground(Widget*);
       void moveToBackground(Widget*);
    protected:
-      void _on_descendant_added_to_tree(TypeNode* child) override;
+      void __on_descendant_added_to_tree(TypeNode* child) override;
+      void __on_descendant_removed_from_tree(TypeNode* child) override;
       void render2D() const override {};
       virtual void renderProcess(RenderTarget& parentTarget); //provide the parent's render target. so we can control stuff.
       [[nodiscard]] const RenderTarget& getRenderTarget() const {return _renderTarget;}
       Widget* __process_unhandled_input(const InputEvent& event) override;
       Widget* __process_hover(const InputEventMouseHover& event);
       void _on_rect_changed() override;
+      void _removeAllStatus(Widget*);
 
-//      virtual IntrinsicRenderType getIntrinsicRenderType(){return _intrinsicRenderType;}
       RenderTarget _renderTarget;
       Camera2D camera;
       bool _rejectOutsideInput = false; //rejects input that is outside the canvas
       bool _retained = false; //set to true if you want to retain the image between draw calls. Requires manually clearing the render target.
 
       std::map<size_t, std::vector<Widget*>> _processLayers; //different layers of widgets that can be processed differently
-
-
-
       OrderedCache<TypeNode*> _foreground;
       OrderedCache<TypeNode*> _background;
       /////////////////////////////////////////////////////////////////////////////////////////
@@ -82,29 +80,22 @@ namespace ReyEngine {
          auto oldWidget = statusWidgetStorage[statusIndex];
          statusWidgetStorage[statusIndex] = newWidget;
          bool statusChange = newWidget != oldWidget;
+         if (!statusChange) return;
          if constexpr (std::is_same_v<Status, WidgetStatus::Hover>){
-            if (oldWidget && statusChange){
-               oldWidget->_on_mouse_exit();
-            }
-            if (newWidget && statusChange){
-               newWidget->_on_mouse_enter();
-            }
+               if (oldWidget) oldWidget->_on_mouse_exit();
+               if (newWidget) newWidget->_on_mouse_enter();
          }
          if constexpr (std::is_same_v<Status, WidgetStatus::Focus>){
-            if (oldWidget && statusChange){
-               oldWidget->_on_focus_lost();
-            }
-            if (newWidget && statusChange){
-               newWidget->_on_focus_gained();
-            }
+               if (oldWidget) oldWidget->_on_focus_lost();
+               if (newWidget) newWidget->_on_focus_gained();
          }
          if constexpr (std::is_same_v<Status, WidgetStatus::Modal>){
             //only drawables can be modal so we can set some extra statuses to help us out
-            if (oldWidget && statusChange){
+            if (oldWidget){
                oldWidget->_modal = false;
                oldWidget->_on_modality_lost();
             }
-            if (newWidget && statusChange){
+            if (newWidget){
                newWidget->_modal = true;
                newWidget->_on_modality_gained();
             }
