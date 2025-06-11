@@ -28,6 +28,7 @@ Widget* UI::_unhandled_input(const InputEvent& event){
          auto& camera = getCanvas().value()->getCamera();
          const float zoomAmt = camera.zoom * .1;
          mwEvent.wheelMove.y > 0 ? camera.zoom += zoomAmt : camera.zoom -= zoomAmt;
+         camera.target
          return this;
    }
    return nullptr;
