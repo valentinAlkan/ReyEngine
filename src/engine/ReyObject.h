@@ -66,6 +66,12 @@ namespace ReyEngine{
          //   AND CVRST BE HE Yt MOVES MY CODES
          // Seriously. don't override these unless you
          // really know what you're doing.
+         // (for real though, the intention here is internal engine
+         // functionality can override them but then they should explicitly
+         // call this version of the function so that the calls can be dispatched
+         // correctly. The problem if you override them is you might not know
+         // all the places they are being overridden, which could cause some
+         // calls to be missed if you don't call them explicitly)
          void __init() override {_init();}
          void __on_added_to_tree() override {_on_added_to_tree();}
          void __on_child_added_to_tree(TypeNode *n) override { _on_child_added_to_tree(n);}

@@ -22,6 +22,11 @@ void TextureRect::render2D() const {
             break;
       }
       drawTexture(*_texture, srcRect, dstRect, Colors::none);
+   } else {
+      auto sizeRect = getSizeRect();
+      drawRectangleLines(sizeRect, 2.0, Colors::red);
+      drawLine({sizeRect.topLeft(), sizeRect.bottomRight()}, 2.0, Colors::red);
+      drawLine({sizeRect.bottomLeft(), sizeRect.topRight()}, 2.0, Colors::red);
    }
 }
 
