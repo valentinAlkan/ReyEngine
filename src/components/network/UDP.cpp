@@ -1,56 +1,21 @@
 #include "Network.h"
 #include "UDP.h"
 #include "Logger.h"
-#include <sstream>
 #include <iostream>
+
 #ifdef PLATFORM_WINDOWS
-#include <ws2tcpip.h>
+#include <Winsock2.h>
+#include <WS2tcpip.h>
 #include <ws2ipdef.h>
-#elif defined(PLATFORM_LINUX)
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <cstring>
 #endif
 
 using namespace std;
 using namespace Sockets;
 using namespace ReyEngine;
 
-UDPSocket::AddressInfo::AddressInfo(const std::string& addr, uint32_t port)
-: _port(port)
-{
-#ifdef PLATFORM_WINDOWS
-   //load winsock
-   WinNet::WinSockInit::instance();
-#endif
-
-   snprintf(_decimal_port, sizeof(_decimal_port), "%d", _port);
-   _decimal_port[sizeof(_decimal_port) / sizeof(_decimal_port[0]) - 1] = '\0';
-
-   addrinfo hints{};
-   hints.ai_family = AF_INET;        // Force IPv4
-   hints.ai_socktype = SOCK_DGRAM;
-   hints.ai_protocol = IPPROTO_UDP;
-
-   int r = getaddrinfo(addr.c_str(), _decimal_port, &hints, &_addrinfo);
-   if(r != 0 || _addrinfo == nullptr){
-      NetworkError e;
-      Logger::error() << "UDPSocket AddressInfo error :  " << e.err << " : " << e.msg << endl;
-      Logger::error() << "getaddrinfo error code: " << r << endl;
-      throw UDPRuntimeError(("invalid address or port for UDP socket: \"" + addr + ":" + _decimal_port + "\"").c_str());
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////////////
-UDPSocket::AddressInfo::~AddressInfo(){
-   freeaddrinfo(_addrinfo);
-};
-
 ////////////////////////////////////////////////////////////////////////////////////////
 UDPSocket::UDPSocket(const std::string& addr, uint32_t port, bool so_reuse){
-   last_srcaddr = new sockaddr_in;
+   last_recvaddr = new sockaddr_in;
    bind(addr, port, so_reuse);
 }
 
@@ -59,7 +24,7 @@ UDPSocket::~UDPSocket(){
    if (_isValid) {
       close(sockfd);
    }
-   delete last_srcaddr;
+   delete last_recvaddr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -125,7 +90,7 @@ void UDPSocket::bind(const std::string& addr, uint32_t port, bool reuseAddr){
       bindAddr = make_unique<AddressInfo>(addr, actual_port);
 
       if (port == 0) {
-         Logger::info() << "UDPSocket: System assigned port " << actual_port << endl;
+         Logger::info() << "UDPSocket: Port 0 was assigned to " << actual_port << " by the system" << endl;
       }
    } else {
       // Fallback: create AddressInfo with requested port
@@ -149,46 +114,22 @@ void UDPSocket::bind(const std::string& addr, uint32_t port, bool reuseAddr){
  int UDPSocket::recv(char* recvBuf, size_t max_size){
    // our socket will already have data
    socklen_t addrlen = sizeof(struct sockaddr_in);
-   return ::recvfrom(sockfd, recvBuf, (int)max_size, 0, (sockaddr*)last_srcaddr, &addrlen);
+   return ::recvfrom(sockfd, recvBuf, (int)max_size, 0, (sockaddr*)last_recvaddr, &addrlen);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
  HostInfo UDPSocket::getRecvAddr() const {
-     return {parseClientIP(last_srcaddr), parseClientPort(last_srcaddr)};
+     return {last_recvaddr};
  }
+
+////////////////////////////////////////////////////////////////////////////////////////
+HostInfo UDPSocket::getBindAddr() const {
+   return {bindAddr->_strAddr, bindAddr->_port};
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////
 void UDPSocket::setSendAddr(const std::string& host, uint32_t port) {
    sendAddr = make_unique<AddressInfo>(host, port);
-}
-
-////////////////////////////////////////////////////////////////////////////////////////
-std::string UDPSocket::parseClientIP(sockaddr_in* srcaddr) const {
-   char ip_str[INET_ADDRSTRLEN];
-
-   if (inet_ntop(AF_INET, &(srcaddr->sin_addr), ip_str, INET_ADDRSTRLEN) != nullptr) {
-      return std::string(ip_str);
-   }
-
-   //fallback
-   unsigned char addrBytes[4];
-   addrBytes[0] = srcaddr->sin_addr.s_addr & 0xFF;
-   addrBytes[1] = (srcaddr->sin_addr.s_addr >> 8) & 0xFF;
-   addrBytes[2] = (srcaddr->sin_addr.s_addr >> 16) & 0xFF;
-   addrBytes[3] = (srcaddr->sin_addr.s_addr >> 24) & 0xFF;
-
-   std::stringstream ss;
-   ss << static_cast<int>(addrBytes[0]) << "."
-      << static_cast<int>(addrBytes[1]) << "."
-      << static_cast<int>(addrBytes[2]) << "."
-      << static_cast<int>(addrBytes[3]);
-   return ss.str();
-}
-
-////////////////////////////////////////////////////////////////////////////////////////
-int UDPSocket::parseClientPort(sockaddr_in* srcaddr) const {
-   // Convert from network byte order to host byte order
-   return ntohs(srcaddr->sin_port);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -222,35 +163,47 @@ std::unique_ptr<UDPSocket> UDPListener::takeSocket(UDPSocket* socket) {
 
 ///////////////////////////////////////////////////////////////////////////////
 UDPSocket* UDPListener::getNextReady(std::chrono::milliseconds timeout) {
+   fd_set readfds;
+   FD_ZERO(&readfds);
+
+   SOCKFD max_fd = 0;
    for (auto& socket : _sockets) {
-      fd_set readfds;
+      SOCKFD fd = socket->sockfd;
+      FD_SET(fd, &readfds);
+      max_fd = max(max_fd, fd);
+   }
 
-      FD_ZERO(&readfds);
-      FD_SET(socket->sockfd, &readfds);
+   timeval timeout_tv;
+   auto seconds = std::chrono::duration_cast<std::chrono::seconds>(timeout);
+   auto remaining_ms = timeout - seconds;
 
-      timeval timeout_tv;
-      auto seconds = std::chrono::duration_cast<std::chrono::seconds>(timeout);
-      auto remaining_ms = timeout - seconds;
+   timeout_tv.tv_sec = static_cast<decltype(timeout_tv.tv_usec)>(seconds.count());
+   timeout_tv.tv_usec = static_cast<decltype(timeout_tv.tv_usec)>(std::chrono::duration_cast<std::chrono::microseconds>(remaining_ms).count());
 
-      timeout_tv.tv_sec = static_cast<decltype(timeout_tv.tv_usec)>(seconds.count());
-      timeout_tv.tv_usec = static_cast<decltype(timeout_tv.tv_usec)>(std::chrono::duration_cast<std::chrono::microseconds>(remaining_ms).count());
+   // Wait for activity on any of the file descriptors
+   int ready = select(static_cast<int>(max_fd) + 1, &readfds, nullptr, nullptr, &timeout_tv);
 
-      // Wait for activity on any of the file descriptors
-      int activity = select(static_cast<int>(socket->sockfd), &readfds, nullptr, nullptr, &timeout_tv);
-
-      if (activity < 0) {
-         std::cerr << "UDPListener:: Select error: " << strerror(errno) << std::endl;
-         break;
-      } else if (activity == 0) {
-         // Timeout occurred
-         continue;
+   if (ready < 0) {
+      NetworkError err;
+      std::cerr << "UDPListener:: Select error: " << strerror(errno) << std::endl;
+   } else if (ready == 0) {
+      //no sockets ready
+      return {};
+   } else {
+      //a socket has data
+      // Check which sockets are ready
+      for (auto& socket : _sockets) {
+         if (FD_ISSET(socket->sockfd, &readfds)) {
+            return socket.get();
+         }
       }
-
-      // Check if there's data on the UDP socket
-      if (FD_ISSET(socket->sockfd, &readfds)) return socket.get();
    }
    return nullptr;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

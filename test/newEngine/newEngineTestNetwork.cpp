@@ -56,21 +56,30 @@ int main() {
       auto& window = Application::createWindowPrototype("window", 1920, 1080, {WindowFlags::RESIZE}, 60)->createWindow();
       auto root = window.getCanvas();
 
-      //create a udp sender to send messages from
-      UDPSender sender("localhost", 8888);
+      vector<int> ports;
+      for (auto i=8888; i<8900; i++){
+         ports.push_back(i);
+      }
+
       UDPListener listener;
-      listener.listen("localhost", 8888);
+      for (const auto& port : ports){
+         listener.listen("localhost", port);
+      }
 
       std::string msg = "helloworld!";
-      sender.send(msg);
+      for (const auto& port : ports) {
+         UDPSender sender("localhost", port);
+         sender.send(to_string(port));
+      }
 
       //print out the message
       while (auto sock = listener.getNextReady(100ms)) {
          //print the message out
          char buf[128] = {0};
          auto bytesRead = sock->recv(buf, sizeof(buf));
-         cout << "Got message : " << string(buf) << " from sender " << sock->getRecvAddr() << endl;
+         Logger::info() << "Socket " << sock->getBindAddr() << " got " << bytesRead << " bytes : " << string(buf) << " from sender " << sock->getRecvAddr() << endl;
       }
+      Logger::info() << "done!" << endl;
 
       window.exec();
       return 0;

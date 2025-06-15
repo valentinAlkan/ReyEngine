@@ -46,3 +46,28 @@ struct NetworkError {
     std::string msg;
     int err;
 };
+
+struct addrinfo;
+struct sockaddr_in;
+namespace Sockets {
+   //addrinfo helper
+   struct AddressInfo{
+      ~AddressInfo();
+      AddressInfo(const std::string& addr, uint32_t port);
+      int                 _port;
+      std::string         _strAddr;
+      std::string         _strPort;
+      addrinfo*           _addrinfo;
+      char                _decimal_port[16];
+      static std::string parseIp(sockaddr_in* srcaddr);
+      static int parsePort(sockaddr_in* srcaddr);
+   };
+
+   struct HostInfo {
+      HostInfo(const std::string& ip, int port);
+      HostInfo(sockaddr_in* srcaddr);
+      const std::string ip;
+      const int port;
+      friend std::ostream& operator<<(std::ostream& os, const HostInfo& host) {return os << host.ip << ":" << host.port;}
+   };
+}
