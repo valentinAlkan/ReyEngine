@@ -1,7 +1,7 @@
 #include "FileSystem.h"
+#include "StringTools.h"
 #include <iostream>
 #include <cstring>
-#include "StringTools.h"
 
 using namespace std;
 using namespace ReyEngine::FileSystem;
@@ -13,6 +13,9 @@ std::shared_ptr<FileHandle> File::open() const {
    return std::shared_ptr<FileHandle>(new FileHandle(*this));
 }
 
+///////////////////////////////////////////////////////////////////////////////////////
+File::File(const char *path): Path(path){}
+File::File(const File& other): Path(other){}
 ///////////////////////////////////////////////////////////////////////////////////////
 std::vector<char> FileHandle::readFile(){
    auto end = _ifs.tellg();

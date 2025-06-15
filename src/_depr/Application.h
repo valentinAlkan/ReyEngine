@@ -67,9 +67,9 @@ namespace ReyEngine{
 
    private:
       UniqueValue _nextUniqueValue = 0;
-      #ifdef REYENGINE_PLATFORM_WINDOWS
+      #ifdef PLATFORM_WINDOWS
          static constexpr Platform PLATFORM = Platform::WINDOWS;
-      #elif defined(REYENGINE_PLATFORM_LINUX)
+      #elif defined(PLATFORM_LINUX)
          static constexpr Platform PLATFORM = Platform::LINUX;
       #endif
       bool _is_ready = false;

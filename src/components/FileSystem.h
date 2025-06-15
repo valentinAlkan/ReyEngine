@@ -60,8 +60,8 @@ namespace ReyEngine::FileSystem {
       File(){}
       File(const std::string& path): Path(path){}
       File(std::string_view path): File(std::string(path)){}
-      File(const char* path): Path(path){}
-      File(const File& other): Path(other){}
+      File(const char* path);
+      File(const File& other);
       void clear(){_path.clear();}
       using Path::operator=;
       Directory dir();

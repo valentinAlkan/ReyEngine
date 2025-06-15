@@ -97,61 +97,37 @@ set(CUSTOM_SOURCES
     test/RootWidget.hpp
 )
 
-add_library(ReyEngineUtil INTERFACE)
+add_library(ComponentLogger STATIC src/components/Logger.cpp)
+target_include_directories(ComponentLogger PUBLIC src/components)
 
-target_include_directories(ReyEngineUtil INTERFACE
-    src/lib
+add_library(ComponentStringTools STATIC src/components/StringTools.cpp)
+target_include_directories(ComponentStringTools PUBLIC src/components)
+
+add_library(ComponentFilesystem STATIC src/components/FileSystem.cpp)
+target_include_directories(ComponentFilesystem PUBLIC src/components)
+
+add_library(ComponentNetwork STATIC
+    src/components/network/Network.cpp
+    src/components/network/UDP.cpp
+    src/components/network/TCP.cpp
+    src/components/Platform.cpp
+    src/components/CircBuf.cpp
+    src/components/SystemTime.cpp
+)
+target_link_libraries(ComponentNetwork PUBLIC ComponentLogger)
+target_include_directories(ComponentNetwork PUBLIC
+    src/components/network
+    src/components
 )
 
-#add_library(ReyEngine2D STATIC
-#    src/meta/ReyEngine.cpp
-#    src/meta/ArgParse.cpp
-#    src/meta/FileSystem.cpp
-#    src/meta/StringTools.cpp
-#    src/meta/Application.cpp
-#    src/meta/TypeTree.cpp
-#    src/meta/Thread.cpp
-#    src/meta/TypeManager.cpp
-#    src/meta/Window.cpp
-#    src/meta/Scene.cpp
-#    src/meta/Property.cpp
-#    src/meta/Logger.cpp
-#    src/meta/XML.cpp
-#    src/meta/SystemTime.cpp
-#    src/meta/InputManager.cpp
-#    src/meta/Timer.hpp
-#    src/meta/Theme.cpp
-#    src/meta/Font.hpp
-#    src/meta/Component.cpp
-#    src/meta/Config.cpp
-#    src/meta/CSVParser.cpp
-#    src/meta/Platform.cpp
-#    src/2d/Renderable2D.cpp
-#    src/2d/BaseWidget.cpp
-#    src/2d/ComboBox.cpp
-#    src/2d/Control.cpp
-#    src/2d/Canvas.cpp
-#    src/2d/Panel.cpp
-#    src/2d/TabContainer.cpp
-#    src/2d/Slider.hpp
-#    src/2d/Button.cpp
-#    src/2d/Label.hpp
-#    src/2d/Sprite.cpp
-#    src/2d/Layout.cpp
-#    src/2d/ScrollArea.cpp
-#    src/2d/Tree.cpp
-#    src/2d/TileMap.cpp
-#    src/2d/LineEdit.cpp
-#    src/2d/TextureRect.cpp
-#    src/2d/CustomTypes.cpp
-#    src/2d/Camera2D.cpp
-#    src/2d/Positionable2D.cpp
-#    src/pathfinding/AStar.cpp
-#    src/physics/CollisionShape.cpp
-#    src/physics/Physics.cpp
-#    ${CUSTOM_SOURCES}
-#)
+#link platform specific libraries
+if(WIN32)
+    target_link_libraries(ComponentNetwork PUBLIC ws2_32)
+ELSE()
+#    target_link_libraries(core PUBLIC dl)
+ENDIF()
 
+##### ReyEngine2D
 add_library(ReyEngine2D STATIC
         src/engine/Canvas.cpp
         src/engine/Widget.cpp
@@ -163,11 +139,8 @@ add_library(ReyEngine2D STATIC
         src/engine/ReyEngine.cpp
         src/engine/Processable.cpp
 
-        src/meta/Logger.cpp
-        src/meta/FileSystem.cpp
-        src/meta/SystemTime.cpp
-        src/meta/StringTools.cpp
-        src/meta/MetaData.cpp
+        src/components/SystemTime.cpp
+        src/components/MetaData.cpp
 
         src/2d/Control.cpp
         src/2d/Layout.cpp
@@ -185,13 +158,19 @@ target_include_directories(ReyEngine2D PUBLIC
     src/engine
     src/meta
     src/2d
+    src/lib
     test
     src/thirdParty/xml
     src/thirdParty/uuid
     src/pathfinding
     src/physics
 )
+target_link_libraries(ReyEngine2D raylib lua Threads::Threads yaml-cpp::yaml-cpp ComponentStringTools ComponentFilesystem ComponentLogger)
+if (UNIX)
+    target_link_libraries(ReyEngine2D stdc++fs)
+endif (UNIX)
 
+##### TILE EDITOR
 add_executable(TileEditor
     apps/TileEditor/src/main.cpp
     apps/TileEditor/src/UI.cpp
@@ -225,12 +204,8 @@ target_link_libraries(TileEditor ReyEngine2D)
 #    src/3d
 #)
 
-#target_link_libraries(ReyEngine2D raylib ReyEngineUtil lua Threads::Threads Eigen3::Eigen yaml-cpp::yaml-cpp)
-target_link_libraries(ReyEngine2D raylib ReyEngineUtil lua Threads::Threads yaml-cpp::yaml-cpp)
 
-if (UNIX)
-    target_link_libraries(ReyEngine2D stdc++fs)
-endif (UNIX)
+
 
 #target_link_libraries(ReyEngine3D ReyEngine2D)
 
@@ -242,24 +217,26 @@ endif (UNIX)
 #target_link_libraries(Editor PUBLIC ReyEngine2D ReyEngine3D)
 
 # Test Project
-add_executable( ReyEngineTest test/reyTestMain.cpp)
-target_link_libraries(ReyEngineTest Editor)
+#add_executable( ReyEngineTest test/reyTestMain.cpp)
+#target_link_libraries(ReyEngineTest Editor)
 
 # Test Project
-add_executable( AbstractTreeTest test/treeTest.cpp src/meta/Logger.cpp)
-target_include_directories(AbstractTreeTest PUBLIC src/lib src/meta)
-target_link_libraries(AbstractTreeTest raylib)
+#add_executable( AbstractTreeTest test/treeTest.cpp src/meta/Logger.cpp)
+#target_include_directories(AbstractTreeTest PUBLIC src/lib src/meta)
+#target_link_libraries(AbstractTreeTest raylib)
 
 # Test Project
-add_executable( NewEngine
-    src/newEngine/main.cpp
-)
-target_link_libraries(NewEngine ReyEngine2D)
+add_executable( NewEngineMain test/newEngine/newEngineTestMain.cpp)
+target_link_libraries(NewEngineMain ReyEngine2D)
 
+
+# Test Project
+add_executable( NewEngineNetwork test/newEngine/newEngineTestNetwork.cpp)
+target_link_libraries(NewEngineNetwork ReyEngine2D ComponentNetwork)
 
 # Project for testing the build system
-add_executable( ReyEngineBuildTest test/buildTest.cpp)
-target_link_libraries(ReyEngineBuildTest ReyEngine2D)
+#add_executable( ReyEngineBuildTest test/buildTest.cpp)
+#target_link_libraries(ReyEngineBuildTest ReyEngine2D)
 
 ##########################################
 # for testing basic raylib stuff

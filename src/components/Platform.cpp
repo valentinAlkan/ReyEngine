@@ -2,11 +2,11 @@
 #include <stdexcept>
 #include <algorithm>
 
-#ifdef REYENGINE_PLATFORM_WINDOWS
+#ifdef PLATFORM_WINDOWS
 #include "windows.h"
 #endif
 
-#ifdef REYENGINE_PLATFORM_LINUX
+#ifdef PLATFORM_LINUX
 #include <unistd.h>
 #include <limits.h>
 #include <stdio.h>
@@ -18,7 +18,7 @@ using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 string CrossPlatform::getExePath() {
-#ifdef REYENGINE_PLATFORM_WINDOWS
+#ifdef PLATFORM_WINDOWS
    TCHAR szDir[MAX_PATH] = { 0 };
    GetModuleFileNameA(nullptr, szDir, MAX_PATH);
 
@@ -53,7 +53,7 @@ string CrossPlatform::getExePath() {
    return retval;
 #endif
 
-#ifdef REYENGINE_PLATFORM_LINUX
+#ifdef PLATFORM_LINUX
     char dest[PATH_MAX];
     memset(dest, 0, sizeof(dest)); // readlink does not null terminate!
     if (readlink("/proc/self/exe", dest, PATH_MAX) == -1) {
