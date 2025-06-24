@@ -66,10 +66,9 @@ int main() {
          listener.listen("localhost", port);
       }
 
-      std::string msg = "helloworld!";
       for (const auto& port : ports) {
          UDPSender sender("localhost", port);
-         sender.send(to_string(port));
+         sender.send("hello port " + to_string(port));
       }
 
       //print out the message
@@ -77,7 +76,7 @@ int main() {
          //print the message out
          char buf[128] = {0};
          auto bytesRead = sock->recv(buf, sizeof(buf));
-         Logger::info() << "Socket " << sock->getBindAddr() << " got " << bytesRead << " bytes : " << string(buf) << " from sender " << sock->getRecvAddr() << endl;
+         Logger::info() << "Socket " << sock->getBindAddr() << " received the following " << bytesRead << " bytes : \"" << string(buf) << "\" from sender " << sock->getRecvAddr() << endl;
       }
       Logger::info() << "done!" << endl;
 

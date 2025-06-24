@@ -34,7 +34,7 @@ namespace ReyEngine {
       }
       ~Widget(){
          if constexpr (isDebugBuild) {
-            std::cout << "Goodbye from " << _name << "!!" << std::endl;
+            std::cout << "Goodbye from " << getName() << "!!" << std::endl;
          }
       }
       REYENGINE_OBJECT(Widget)
