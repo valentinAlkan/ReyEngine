@@ -52,6 +52,8 @@ namespace Sockets {
    class UDPSender{
    public:
       UDPSender(const std::string& addr, uint32_t port, bool so_reuse=true);
+      UDPSender(const std::string& addr, uint32_t port, uint32_t localPort, bool so_reuse=true);
+      UDPSender(const std::string& addr, uint32_t port, const std::string& localAddr, uint32_t localPort, bool so_reuse=true);
       void send(char* buf, size_t size);
       void send(const std::string& str);
       void bindLocalAddr(const std::string& addr, uint32_t port);

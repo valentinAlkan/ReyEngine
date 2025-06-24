@@ -49,7 +49,7 @@ struct NetworkWidget : public Widget {
    }
 };
 
-
+string addr = "localhost";
 int main() {
    //create window
    {
@@ -63,11 +63,11 @@ int main() {
 
       UDPListener listener;
       for (const auto& port : ports){
-         listener.listen("localhost", port);
+         listener.listen(addr, port);
       }
 
       for (const auto& port : ports) {
-         UDPSender sender("localhost", port);
+         UDPSender sender(addr, port, addr, 8889);
          sender.send("hello port " + to_string(port));
       }
 

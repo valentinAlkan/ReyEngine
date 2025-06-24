@@ -14,6 +14,44 @@ using namespace Sockets;
 using namespace ReyEngine;
 
 ////////////////////////////////////////////////////////////////////////////////////////
+// Helper function to resolve hostname to IP address
+std::string resolveHostname(const std::string& hostname) {
+   if (hostname == "0.0.0.0" || hostname.empty()) {
+      return "0.0.0.0";  // INADDR_ANY case
+   }
+
+   if (hostname == "localhost") {
+      return "127.0.0.1";
+   }
+
+   // Check if it's already an IP address
+   struct sockaddr_in sa;
+   if (inet_pton(AF_INET, hostname.c_str(), &(sa.sin_addr)) == 1) {
+      return hostname;  // Already an IP address
+   }
+
+   // Resolve hostname using getaddrinfo
+   struct addrinfo hints, *result;
+   memset(&hints, 0, sizeof(hints));
+   hints.ai_family = AF_INET;        // IPv4
+   hints.ai_socktype = SOCK_DGRAM;   // UDP
+   hints.ai_protocol = IPPROTO_UDP;
+
+   int status = getaddrinfo(hostname.c_str(), nullptr, &hints, &result);
+   if (status != 0) {
+      throw UDPRuntimeError(("hostname resolution failed for: \"" + hostname + "\", error: " + gai_strerror(status)).c_str());
+   }
+
+   // Extract IP address from first result
+   struct sockaddr_in* addr_in = (struct sockaddr_in*)result->ai_addr;
+   char ip_str[INET_ADDRSTRLEN];
+   inet_ntop(AF_INET, &(addr_in->sin_addr), ip_str, INET_ADDRSTRLEN);
+
+   freeaddrinfo(result);
+   return std::string(ip_str);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
 UDPSocket::UDPSocket(const std::string& addr, uint32_t port, bool so_reuse){
    last_recvaddr = new sockaddr_in;
    bind(addr, port, so_reuse);
@@ -32,12 +70,22 @@ void UDPSocket::bind(const std::string& addr, uint32_t port, bool reuseAddr){
 #ifdef PLATFORM_WINDOWS
    WinNet::WinSockInit::instance();
 #endif
+
+   // Resolve hostname to IP address
+   std::string resolved_addr;
+   try {
+      resolved_addr = resolveHostname(addr);
+   } catch (const UDPRuntimeError& e) {
+      throw UDPRuntimeError(("could not resolve hostname for binding: \"" + addr + "\", error: " + e.what()).c_str());
+   }
+
+
    // Create socket
    sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
    if(sockfd == -1) {
       NetworkError e;
       Logger::error() << "UDPSocket socket() creation failed, errno " << e.err << " : " << e.msg << endl;
-      throw UDPRuntimeError(("could not create UDP socket for: \"" + addr + "\", error: " + e.msg).c_str());
+      throw UDPRuntimeError(("could not create UDP socket for: \"" + resolved_addr + "\", error: " + e.msg).c_str());
    }
 
    // Set SO_REUSEADDR if requested
@@ -62,14 +110,14 @@ void UDPSocket::bind(const std::string& addr, uint32_t port, bool reuseAddr){
    bind_addr.sin_port = htons(port);  // htons(0) for auto-assign
 
    // Handle address
-   if (addr == "0.0.0.0" || addr.empty()) {
+   if (resolved_addr == "0.0.0.0" || resolved_addr.empty()) {
       bind_addr.sin_addr.s_addr = INADDR_ANY;
-   } else if (addr == "localhost") {
+   } else if (resolved_addr == "localhost") {
       bind_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
    } else {
-      if (inet_pton(AF_INET, addr.c_str(), &bind_addr.sin_addr) != 1) {
+      if (inet_pton(AF_INET, resolved_addr.c_str(), &bind_addr.sin_addr) != 1) {
          close(sockfd);
-         throw UDPRuntimeError(("invalid address: \"" + addr + "\"").c_str());
+         throw UDPRuntimeError(("invalid address: \"" + resolved_addr + "\"").c_str());
       }
    }
 
@@ -78,7 +126,7 @@ void UDPSocket::bind(const std::string& addr, uint32_t port, bool reuseAddr){
       NetworkError e;
       Logger::error() << "UDPSocket Bind errno " << e.err << " : " << e.msg << endl;
       close(sockfd);
-      throw UDPRuntimeError(("could not bind UDP socket with: \"" + addr + ":" + std::to_string(port) + "\"").c_str());
+      throw UDPRuntimeError(("could not bind UDP socket with: \"" + resolved_addr + ":" + std::to_string(port) + "\"").c_str());
    }
 
    // Get the actual bound address and port (important for port 0)
@@ -87,14 +135,14 @@ void UDPSocket::bind(const std::string& addr, uint32_t port, bool reuseAddr){
       uint32_t actual_port = ntohs(bind_addr.sin_port);
 
       // Create AddressInfo with the actual bound port
-      bindAddr = make_unique<AddressInfo>(addr, actual_port);
+      bindAddr = make_unique<AddressInfo>(resolved_addr, actual_port);
 
       if (port == 0) {
          Logger::info() << "UDPSocket: Port 0 was assigned to " << actual_port << " by the system" << endl;
       }
    } else {
       // Fallback: create AddressInfo with requested port
-      bindAddr = make_unique<AddressInfo>(addr, port);
+      bindAddr = make_unique<AddressInfo>(resolved_addr, port);
    }
 
    _isValid = true;
@@ -208,8 +256,19 @@ UDPSocket* UDPListener::getNextReady(std::chrono::milliseconds timeout) {
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-UDPSender::UDPSender(const std::string& addr, uint32_t port, bool so_reuse){
-   socket = unique_ptr<UDPSocket>(new UDPSocket("0.0.0.0", 0, true));
+UDPSender::UDPSender(const std::string& addr, uint32_t port, bool so_reuse)
+: UDPSender(addr, port, "0.0.0.0", 0, so_reuse)
+{}
+
+///////////////////////////////////////////////////////////////////////////////
+UDPSender::UDPSender(const std::string& addr, uint32_t port, uint32_t localPort, bool so_reuse)
+: UDPSender(addr, port, "0.0.0.0", localPort, so_reuse)
+{}
+
+///////////////////////////////////////////////////////////////////////////////
+UDPSender::UDPSender(const std::string& addr, uint32_t port, const std::string& localAddr, uint32_t localPort, bool so_reuse)
+{
+   socket = unique_ptr<UDPSocket>(new UDPSocket(localAddr, localPort, so_reuse));
    socket->setSendAddr(addr, port);
 }
 
