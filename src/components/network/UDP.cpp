@@ -238,7 +238,7 @@ UDPSocket* UDPListener::getNextReady(std::chrono::milliseconds timeout) {
       //no sockets ready
       return {};
    } else {
-      //a socket has data
+      // a socket has data
       // Check which sockets are ready
       for (auto& socket : _sockets) {
          if (FD_ISSET(socket->sockfd, &readfds)) {
