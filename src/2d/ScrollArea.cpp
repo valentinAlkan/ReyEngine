@@ -74,8 +74,8 @@ void ScrollArea::_on_rect_changed(){
    }
    if (boundingBox.size() != Size<R_FLOAT>(_renderTarget.getSize()) && _autoResize) {
       _renderTarget.setSize(boundingBox.size());
-      updateViewport();
    }
+   updateViewport();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
