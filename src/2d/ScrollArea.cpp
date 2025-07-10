@@ -15,10 +15,10 @@ void ScrollArea::_init() {
    {
       auto [_vslider, vsnode] = make_node<Slider>(std::string(VSLIDER_NAME), Slider::SliderType::VERTICAL);
       auto [_hslider, hsnode] = make_node<Slider>(std::string(HSLIDER_NAME), Slider::SliderType::HORIZONTAL);
-      moveToForeground(_vslider.get());
-      moveToForeground(_hslider.get());
       addChild(std::move(vsnode));
       addChild(std::move(hsnode));
+      moveToForeground(_vslider.get());
+      moveToForeground(_hslider.get());
       vslider = _vslider.get();
       hslider = _hslider.get();
    }

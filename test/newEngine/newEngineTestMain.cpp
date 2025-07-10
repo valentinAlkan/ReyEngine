@@ -388,8 +388,7 @@ int main() {
             }
 
             //create a mouse event and test it
-            InputEventMouseButton eventMouseButton(&window, scrollArea->getGloablRect().get().pos(),
-                                                   InputInterface::MouseButton::LEFT, true);
+            InputEventMouseButton eventMouseButton(&window, scrollArea->getGloablRect().get().pos(), InputInterface::MouseButton::LEFT, true);
             window.processInput(eventMouseButton);
          }
 
