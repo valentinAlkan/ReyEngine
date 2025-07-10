@@ -1,6 +1,6 @@
 #pragma once
 #include <map>
-#include <ranges>
+//#include <ranges>
 #include <memory>
 
 namespace ReyEngine::lib{
