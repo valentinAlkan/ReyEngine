@@ -1641,7 +1641,7 @@ namespace ReyEngine {
    }
 
    struct ScopeScissor {
-      constexpr inline ScopeScissor(const Rect<R_FLOAT>& r){ BeginScissorMode((int)r.x, (int)r.y, (int)r.width, (int)r.height);}
+      inline ScopeScissor(const Rect<R_FLOAT>& r){ BeginScissorMode((int)r.x, (int)r.y, (int)r.width, (int)r.height);}
       inline ~ScopeScissor(){EndScissorMode();}
    };
 
