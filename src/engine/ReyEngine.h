@@ -782,6 +782,7 @@ namespace ReyEngine {
                   return {xr, yb, xl+xlw-xr, ybh};
                }
                //otherwise fall through to 1 point form
+               [[fallthrough]];
             case 1:
                //corner collision, full width/height 2 point collisions
                return {xr, yb, xl+xlw-xr, yt+yth-yb};
@@ -856,11 +857,11 @@ namespace ReyEngine {
 
       //returns the 'index' of a subrect, as if it were read left-to-right, top-to-bottom
       // ex.
-      //   0  1  2  3
-      // 0  |------|=|  <-- subrect {3,0}, which is of size Size<T>
-      // 1  |--------|
-      // 2  |--------|
-      // 3  |--------|
+      //     0 1 2 3
+      // 0  |- - - |=|  <-- subrect {3,0}
+      // 1  |- -|=|- |  <-- subrect {2,1}
+      // 2  |=|- - - |  <-- subrect {0,2}
+      // 3  |-|=|- - |  <-- subrect {1,3}
       [[nodiscard]] constexpr inline int getSubRectIndex(const Size<R_FLOAT>& size, const Pos<R_FLOAT>& pos) const {
          auto coord = getSubRectCoord(size, pos);
          auto columnCount = width / size.x;
