@@ -158,8 +158,8 @@ namespace ReyEngine {
             rlMultMatrixf(MatrixToFloat(thisCanvas->transformStack.getGlobalTransform().matrix));
             drawRenderTargetRect(subCanvas->getRenderTarget(), subCanvas->getSizeRect(), subCanvas->getRect(), Colors::none);
             //render foreground
-            for (auto& foregroudChild : subCanvas->_foreground.getValues()){
-               subCanvas->processNode<RenderProcess>(foregroudChild, false);
+            for (auto& foregroundChild : subCanvas->_foreground.getValues()){
+               subCanvas->processNode<RenderProcess>(foregroundChild, false);
             }
             return nullptr;
          }

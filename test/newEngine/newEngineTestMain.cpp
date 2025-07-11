@@ -116,7 +116,7 @@ protected:
 
 struct SliderReactWidget : public Widget {
    REYENGINE_OBJECT(SliderReactWidget)
-   SliderReactWidget() {setMaxSize({1000, 30});}
+   SliderReactWidget() {setMaxSize({ReyEngine::Size<R_FLOAT>::Max().x, 30});}
    void render2D() const override {
       auto [rectL, rectR] = getSizeRect().splitH<true>(_pct);
       drawRectangleGradientH(rectL, Colors::blue, Colors::black);

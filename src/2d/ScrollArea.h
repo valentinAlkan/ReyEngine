@@ -30,7 +30,6 @@ namespace ReyEngine {
     private:
         static constexpr float sliderSize = 20;
         bool _autoResize = true; // will cause the internal render target to resize automatically to fit children outside of the extents of the scroll area
-        void updateViewport();
     };
 
 }

@@ -28,11 +28,11 @@ void ScrollArea::_init() {
 
    auto setOffsetX = [this](const Slider::EventSliderValueChanged& event) {
       scrollOffsetX = event.pct;
-      updateViewport();
+      _on_rect_changed();
    };
    auto setOffsetY = [this](const Slider::EventSliderValueChanged& event) {
       scrollOffsetY = event.pct;
-      updateViewport();
+      _on_rect_changed();
    };
 
    //make sure we capture outside input only when the sliders are being used
@@ -75,25 +75,7 @@ void ScrollArea::_on_rect_changed(){
    if (boundingBox.size() != Size<R_FLOAT>(_renderTarget.getSize()) && _autoResize) {
       _renderTarget.setSize(boundingBox.size());
    }
-   updateViewport();
-}
 
-/////////////////////////////////////////////////////////////////////////////////////////
-void ScrollArea::_on_child_rect_changed(Widget* child){
-   if (child != vslider && child != hslider) {
-      //recalculate
-      _on_rect_changed();
-   }
-}
-/////////////////////////////////////////////////////////////////////////////////////////
-void ScrollArea::_on_child_added_to_tree(TypeNode* typeNode) {
-   if (auto isWidget = typeNode->as<Widget>()) {
-      _on_child_rect_changed(isWidget.value());
-   }
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void ScrollArea::updateViewport(){
    auto areaSize = getRect().size();
    auto vsliderNewRect = Rect<float>((areaSize.x - sliderSize), 0, sliderSize, areaSize.y) + getPos();
    auto hsliderNewRect = Rect<float>(0, (areaSize.y - sliderSize), (areaSize.x - sliderSize), sliderSize) + getPos();
@@ -116,6 +98,20 @@ void ScrollArea::updateViewport(){
       vslider->setVisible(!_hideVSlider && needShowVSlider);
    }
    camera.offset = {-_viewport.pos().x, -_viewport.pos().y};
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ScrollArea::_on_child_rect_changed(Widget* child){
+   if (child != vslider && child != hslider) {
+      //recalculate
+      _on_rect_changed();
+   }
+}
+/////////////////////////////////////////////////////////////////////////////////////////
+void ScrollArea::_on_child_added_to_tree(TypeNode* typeNode) {
+   if (auto isWidget = typeNode->as<Widget>()) {
+      _on_child_rect_changed(isWidget.value());
+   }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

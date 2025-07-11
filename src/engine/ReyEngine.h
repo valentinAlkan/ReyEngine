@@ -593,6 +593,7 @@ namespace ReyEngine {
       [[nodiscard]] constexpr inline Rect<T> toRect() const {return {{0,0}, {*this}};}
       [[nodiscard]] constexpr inline Rect<T> toRect(const Pos<T>& p) const {return {p, {*this}};}
       inline explicit operator std::string() const {return Vec2<T>::toString();}
+      inline static constexpr Size Max(){return {std::numeric_limits<T>::max(),std::numeric_limits<T>::max()};}
    };
 
 //   template <typename T>
