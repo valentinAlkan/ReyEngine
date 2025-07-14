@@ -28,7 +28,6 @@ namespace ReyEngine::FileSystem {
       Path(const File& file);
       Path(const char* path): _path(path){}
       Path(const std::string& path): _path(path){}
-      Path(const Path& other): _path(other._path){}
       bool exists() const {return std::filesystem::exists(_path);};
       Path head() const {return _path.filename().string();}
       std::optional<Path> tail() const {if (_path.has_parent_path())return _path.parent_path().string(); return std::nullopt;}
@@ -56,14 +55,15 @@ namespace ReyEngine::FileSystem {
    };
 
    struct File : public Path {
+      using Path::operator=;
       // A file that has been opened and is available to read from.
       File(){}
       File(const std::string& path): Path(path){}
       File(std::string_view path): File(std::string(path)){}
       File(const char* path);
-      File(const File& other);
+      File(const File& other) = default;
+      File& operator=(const File& other) = default;
       void clear(){_path.clear();}
-      using Path::operator=;
       Directory dir();
       operator Directory() = delete;
       std::shared_ptr<FileHandle> open() const;
@@ -93,8 +93,14 @@ namespace ReyEngine::FileSystem {
 
    public:
       // Iterator class for lines of text
-      class iterator : public std::iterator<std::forward_iterator_tag, std::string> {
+      class iterator {
       public:
+         // Iterator traits
+         using iterator_category = std::forward_iterator_tag;
+         using value_type = std::string;
+         using difference_type = std::ptrdiff_t;
+         using pointer = std::string*;
+         using reference = std::string&;
          iterator(std::optional<std::reference_wrapper<FileSystem::FileHandle>> file) : _file(file){
             if (_file) {
                _file.value().get().open();
