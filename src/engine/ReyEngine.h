@@ -146,11 +146,9 @@ namespace ReyEngine {
       inline Vec2& operator+=(const Vec2& rhs){x += rhs.x; y += rhs.y; return *this;}
       inline Vec2& operator-=(const Vec2& rhs){x -= rhs.x; y -= rhs.y; return *this;}
       inline Vec2 operator*(double rhs) const {Vec2 retval(*this); retval.x *= rhs; retval.y *= rhs; return retval;}
-//      inline Vec2& operator*=(const Vec2& rhs){x *= rhs.x; y *= rhs.y; return *this;}
       inline constexpr Vec2& operator*=(double rhs){x *= rhs; y *= rhs; return *this;}
       inline constexpr Vec2<R_FLOAT> operator/(double rhs) const {Vec2<R_FLOAT> retval(*this); retval.x /= rhs; retval.y /= rhs; return retval;}
       inline constexpr Vec2& operator/=(const Vec2& rhs){x /= rhs.x; y /= rhs.y; return *this;}
-      inline constexpr Vec2& operator=(const Vec2& rhs){x = rhs.x; y=rhs.y; return *this;}
       inline constexpr bool operator==(const Vec2& rhs) const {return x==rhs.x && y==rhs.y;}
       inline constexpr bool operator!=(const Vec2& rhs) const {return x!=rhs.x || y!=rhs.y;}
       inline constexpr Vec2 operator-() const {return {-x, -y};}
