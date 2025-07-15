@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.11) # FetchContent is available in 3.11+
-project(ReyEngine)
+cmake_minimum_required(VERSION 3.16)
+project(ReyEngine VERSION 0.1)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -14,15 +14,14 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 
-function(install_file SOURCE DEST)
+function(install_file SOURCE_PATH DESTINATION_PATH)
     # Use STATUS for informational messages during configuration
     message(STATUS "Installing file '${SOURCE_PATH}' to '${DESTINATION_PATH}'")
 
     # Use the 'install' command for proper installation
     # SOURCE_PATH should be relative to CMAKE_CURRENT_SOURCE_DIR, or an absolute path
     # DESTINATION_PATH is relative to CMAKE_INSTALL_PREFIX
-    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_PATH}"
-            DESTINATION "${DESTINATION_PATH}")
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_PATH}" DESTINATION "${DESTINATION_PATH}")
 
     # Optional: Add permissions if needed (e.g., for scripts or config files)
     # install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_PATH}"
@@ -248,14 +247,14 @@ add_executable( cppTest
 ##########################################
 
 
-install_file(./test/test.scn ./test/test.scn)
-install_file(./test/posTest.scn ./test/posTest.scn)
-install_file(./test/posTest.scn ./test/serializeTest.scn)
-install_file(./test/characters.png ./test/characters.png)
-install_file(./test/test.lua ./test/test.lua)
-install_file(./test/xmltest.xml ./test/xmltest.xml)
-install_file(./test/spritesheet.png ./test/spritesheet.png)
-install_file(./test/csvTest.csv ./test/csvTest.csv)
-install_file(./test/3d/suzanne.obj ./test/suzanne.obj)
-install_file(./test/10x10_checkered_board.png ./test/10x10_checkered_board.png)
-install_file(./test/tiles.png ./test/tiles.png)
+install_file(test/test.scn test/)
+install_file(test/posTest.scn test/)
+install_file(test/posTest.scn test/)
+install_file(test/characters.png test/)
+install_file(test/test.lua test/)
+install_file(test/xmltest.xml test/)
+install_file(test/spritesheet.png test/)
+install_file(test/csvTest.csv test/)
+install_file(test/3d/suzanne.obj test/)
+install_file(test/10x10_checkered_board.png test/)
+install_file(test/tiles.png test/)

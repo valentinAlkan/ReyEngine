@@ -8,9 +8,6 @@
 #include <functional>
 
 namespace ReyEngine::FileSystem {
-//   std::vector<char> readFile(const std::string& filePath);
-//   void writeFile(const std::string& filePath, const std::vector<char>&);
-
    static constexpr char SCENE_PATH_SEP = '/';
    static constexpr char _PATH_SEP_WIN = '\\';
    static constexpr char _PATH_SEP_OTHER = '/';
@@ -28,10 +25,10 @@ namespace ReyEngine::FileSystem {
       Path(const File& file);
       Path(const char* path): _path(path){}
       Path(const std::string& path): _path(path){}
-      bool exists() const {return std::filesystem::exists(_path);};
-      Path head() const {return _path.filename().string();}
-      std::optional<Path> tail() const {if (_path.has_parent_path())return _path.parent_path().string(); return std::nullopt;}
-      std::optional<FileHandle> toFile() const;
+      [[nodiscard]] bool exists() const {return std::filesystem::exists(_path);};
+      [[nodiscard]] Path head() const {return _path.filename().string();}
+      [[nodiscard]] std::optional<Path> tail() const {if (_path.has_parent_path())return _path.parent_path().string(); return std::nullopt;}
+      [[nodiscard]] std::optional<FileHandle> toFile() const;
       [[nodiscard]] std::string abs() const {return std::filesystem::absolute(_path).string();}
       [[nodiscard]] std::string str() const {return abs();}
       inline Path& operator+=(const Path& rhs) {_path /= rhs._path; return *this;}
@@ -56,7 +53,7 @@ namespace ReyEngine::FileSystem {
 
    struct File : public Path {
       using Path::operator=;
-      // A file that has been opened and is available to read from.
+      // A path to a disk. Cannot read from.
       File(){}
       File(const std::string& path): Path(path){}
       File(std::string_view path): File(std::string(path)){}
@@ -66,11 +63,11 @@ namespace ReyEngine::FileSystem {
       void clear(){_path.clear();}
       Directory dir();
       operator Directory() = delete;
-      std::shared_ptr<FileHandle> open() const;
+      [[nodiscard]] std::shared_ptr<FileHandle> open() const;
    };
 
    struct FileHandle {
-      // A file that has been opened and is available to read from.
+      // A handle to a file that has been opened and is available to read from.
       ~FileHandle(){close();}
       std::vector<char> readFile();
       std::vector<char> readBytes(long long count);

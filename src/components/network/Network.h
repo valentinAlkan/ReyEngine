@@ -1,6 +1,7 @@
 #pragma once
 #include "Platform.h"
 #include <string>
+#include <iostream>
 
 #ifdef PLATFORM_WINDOWS
 // ! WinSock2 MUST be included before winsock! you'll get a shitload of redefiniton errors if you don't
@@ -38,6 +39,7 @@ typedef SSIZE_T ssize_t;
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <sys/wait.h>
+#define SOCKFD unsigned int
 #endif
 
 //make WSA err readable
