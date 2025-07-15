@@ -52,7 +52,7 @@ struct TestWidget : public Widget {
    REYENGINE_OBJECT(TestWidget)
 
    TestWidget(const std::string& text)
-         : text(text), color(Colors::randColor()) {
+   : text(text), color(Colors::randColor()) {
       setSize({200, 200});
    }
 

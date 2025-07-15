@@ -98,8 +98,8 @@ namespace ReyEngine {
       constexpr inline Vec(): _elements({}){}
       constexpr inline Vec(const Vec& other) : _elements(other._elements) {}
       constexpr inline Vec(Vec&& other) noexcept : _elements(std::move(other._elements)) {}
-      constexpr inline Vec& operator=(const Vec& other) {_elements = other._elements;return *this;}
-      constexpr inline Vec& operator=(Vec&& other) noexcept {_elements = std::move(other._elements);return *this;}
+      constexpr inline Vec& operator=(const Vec& other) {_elements = other._elements; return *this;}
+      constexpr inline Vec& operator=(Vec&& other) noexcept {_elements = std::move(other._elements); return *this;}
       // Constrain variadic constructor to scalar types only
       template <typename ...Args>
       requires (sizeof...(Args) == SIZE && (std::is_arithmetic_v<std::decay_t<Args>> && ...))
@@ -139,8 +139,8 @@ namespace ReyEngine {
          retval += "}";
          return retval;
       }
+      [[nodiscard]] constexpr inline std::array<T, SIZE> getElements() {return _elements;}
       [[nodiscard]] const std::array<T, SIZE>& getElements() const {return _elements;}
-      [[nodiscard]] std::array<T, SIZE> getElements() {return _elements;};
    protected:
       std::array<T, SIZE> _elements;
    };
@@ -169,6 +169,19 @@ namespace ReyEngine {
       , x(Vec<T,2>::_elements[0])
       , y(Vec<T,2>::_elements[1])
       {}
+
+      constexpr inline Vec2(const Vec2& other)
+      : Vec<T, 2>(other)
+      , x(Vec<T,2>::_elements[0])
+      , y(Vec<T,2>::_elements[1])
+      {}
+
+      constexpr inline Vec2(Vec2&& other) noexcept
+      : Vec<T, 2>(std::move(other))
+      , x(Vec<T,2>::_elements[0])
+      , y(Vec<T,2>::_elements[1])
+      {}
+
       // Constrain variadic constructor to exclude Vector2 and Vec2 types
       template <typename ...Args>
       requires (sizeof...(Args) == 2 && (std::is_arithmetic_v<std::decay_t<Args>> && ...) && !(sizeof...(Args) == 1 && (std::is_same_v<std::decay_t<Args>, Vector2> || ...)))
@@ -186,11 +199,11 @@ namespace ReyEngine {
          return *this;
       }
       inline explicit operator bool() const {return x || y;}
-      inline Vec2 operator+(const Vec2& rhs) const {Vec2<T> val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
-      inline Vec2 operator-(const Vec2& rhs) const {Vec2<T> val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
-      inline Vec2& operator+=(const Vec2& rhs){x += rhs.x; y += rhs.y; return *this;}
-      inline Vec2& operator-=(const Vec2& rhs){x -= rhs.x; y -= rhs.y; return *this;}
-      inline Vec2 operator*(double rhs) const {Vec2 retval(*this); retval.x *= rhs; retval.y *= rhs; return retval;}
+      inline constexpr Vec2 operator+(const Vec2& rhs) const {return Vec2<T>(x + rhs.x, y + rhs.y);}
+      inline constexpr Vec2 operator-(const Vec2& rhs) const {return Vec2<T>(x - rhs.x, y - rhs.y);}
+      inline constexpr Vec2& operator+=(const Vec2& rhs){x += rhs.x; y += rhs.y; return *this;}
+      inline constexpr Vec2& operator-=(const Vec2& rhs){x -= rhs.x; y -= rhs.y; return *this;}
+      inline constexpr Vec2 operator*(double rhs) const {Vec2 retval(*this); retval.x *= rhs; retval.y *= rhs; return retval;}
       inline constexpr Vec2& operator*=(double rhs){x *= rhs; y *= rhs; return *this;}
       inline constexpr Vec2<R_FLOAT> operator/(double rhs) const {Vec2<R_FLOAT> retval(*this); retval.x /= rhs; retval.y /= rhs; return retval;}
       inline constexpr Vec2& operator/=(const Vec2& rhs){x /= rhs.x; y /= rhs.y; return *this;}
@@ -315,12 +328,20 @@ namespace ReyEngine {
       , y(Vec<T,3>::_elements[1])
       , z(Vec<T,3>::_elements[2])
       {}
-      constexpr inline Vec3(const Vec3& v)
-      : Vec<T, 3>((T)v.x, (T)v.y, (T)v.z)
+      constexpr inline Vec3(const Vec3& other)
+      : Vec<T, 3>(other)
       , x(Vec<T,3>::_elements[0])
       , y(Vec<T,3>::_elements[1])
       , z(Vec<T,3>::_elements[2])
       {}
+
+      constexpr inline Vec3(Vec3&& other) noexcept
+      : Vec<T, 3>(std::move(other))
+      , x(Vec<T, 3>::_elements[0])
+      , y(Vec<T, 3>::_elements[1])
+      , z(Vec<T, 3>::_elements[2])
+      {}
+
       // Constrain variadic constructor to exclude Vector2 and Vec2 types
       template <typename ...Args>
       requires (sizeof...(Args) == 3 && (std::is_arithmetic_v<std::decay_t<Args>> && ...) && !(sizeof...(Args) == 1 && (std::is_same_v<std::decay_t<Args>, Vector2> || ...)))
@@ -366,42 +387,54 @@ namespace ReyEngine {
        , y(Vec<T,4>::_elements[2])
        , z(Vec<T,4>::_elements[3])
        {}
-//        inline Vec4(const std::vector<T>& stdvec)
-//        : Vec<T, 4>()
-//        , 
-//        {
-//            if (stdvec.size() != 4) throw std::runtime_error("Invalid element count for Vec4! Expected 4, got " + stdvec.size());
-//            w = stdvec[0];
-//            x = stdvec[1];
-//            y = stdvec[2];
-//            z = stdvec[3];
-//        }
-        inline Vec4(const T& _w, const T& _x, const T& _y, const T& _z)
-        : Vec<T, 4>(_w, _x, _y, _z)
-       , w(Vec<T,4>::_elements[0])
-       , x(Vec<T,4>::_elements[1])
-       , y(Vec<T,4>::_elements[2])
-       , z(Vec<T,4>::_elements[3])
+      constexpr inline Vec4(const T& _w, const T& _x, const T& _y, const T& _z)
+      : Vec<T, 4>(_w, _x, _y, _z)
+      , w(Vec<T,4>::_elements[0])
+      , x(Vec<T,4>::_elements[1])
+      , y(Vec<T,4>::_elements[2])
+      , z(Vec<T,4>::_elements[3])
+      {}
+      constexpr inline explicit Vec4(const Vector4& v)
+      : Vec<T, 4>((T)v.w, (T)v.x, (T)v.y, (T)v.z)
+      , w(Vec<T,4>::_elements[0])
+      , x(Vec<T,4>::_elements[1])
+      , y(Vec<T,4>::_elements[2])
+      , z(Vec<T,4>::_elements[3])
+      {}
+
+       constexpr inline Vec4(const Vec4& other)
+       : Vec<T, 4>(other)
+       , w(Vec<T, 4>::_elements[0])
+       , x(Vec<T, 4>::_elements[1])
+       , y(Vec<T, 4>::_elements[2])
+       , z(Vec<T, 4>::_elements[3])
        {}
-        inline explicit Vec4(const Vector4& v) 
-        : Vec<T, 4>((T)v.w, (T)v.x, (T)v.y, (T)v.z)
-        , w(Vec<T,4>::_elements[0])
-        , x(Vec<T,4>::_elements[1])
-        , y(Vec<T,4>::_elements[2])
-        , z(Vec<T,4>::_elements[3])
-        {}
-        template <typename R>
-        inline Vec4(const Vec4<R>& v)        
-        : Vec<T, 4>(), w((T)v.w), x((T)v.x), y((T)v.y), z((T)v.z){}
-        inline Vec4& operator=(const Vec4& rhs){w = rhs.w, x = rhs.x; y=rhs.y; z=rhs.z; return *this;}
-        inline Vec4& operator-(){w = -w; x = -x; y =-y; z = -z; return *this;}
-        inline static std::vector<T> fromString(const std::string& s){return Vec<T, 4>::fromString(4, s);};
-        friend std::ostream& operator<<(std::ostream& os, Vec4 v) {os << v.toString(); return os;}
-        T& w;
-        T& x;
-        T& y;
-        T& z;
-    };
+
+       constexpr inline Vec4(Vec4&& other) noexcept
+       : Vec<T, 4>(std::move(other))
+       , w(Vec<T, 4>::_elements[0])
+       , x(Vec<T, 4>::_elements[1])
+       , y(Vec<T, 4>::_elements[2])
+       , z(Vec<T, 4>::_elements[3])
+       {}
+
+      template <typename R>
+      constexpr inline Vec4(const Vec4<R>& v)
+      : Vec<T, 4>()
+      , w((T)v.w)
+      , x((T)v.x)
+      , y((T)v.y)
+      , z((T)v.z)
+      {}
+      constexpr inline Vec4& operator=(const Vec4& rhs){w = rhs.w, x = rhs.x; y=rhs.y; z=rhs.z; return *this;}
+      constexpr inline Vec4& operator-(){w = -w; x = -x; y =-y; z = -z; return *this;}
+      constexpr inline static std::vector<T> fromString(const std::string& s){return Vec<T, 4>::fromString(4, s);};
+      constexpr friend std::ostream& operator<<(std::ostream& os, Vec4 v) {os << v.toString(); return os;}
+      T& w;
+      T& x;
+      T& y;
+      T& z;
+   };
 
 
    struct UnitVector3 {
@@ -723,19 +756,19 @@ namespace ReyEngine {
          return *this;
       }
 
-      inline void operator=(Pos<T>&) = delete;
-      inline void operator=(const Pos<T>&) = delete;
-      inline bool operator==(const Size<T>& rhs) const {return Size::x==rhs.x && Size::y==rhs.y;}
-      inline bool operator!=(const Size<T>& rhs) const {return Size::x!=rhs.x || Size::y!=rhs.y;}
-      inline Size operator+(const Size& rhs) const {auto val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
-      inline Size operator-(const Size& rhs) const {auto val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
-      inline Size& operator+=(const Size& rhs){this->x += rhs.x; this->y += rhs.y; return *this;}
-      inline Size& operator-=(const Size& rhs){this->x -= rhs.x; this->y -= rhs.y; return *this;}
+      constexpr inline void operator=(Pos<T>&) = delete;
+      constexpr inline void operator=(const Pos<T>&) = delete;
+      constexpr inline bool operator==(const Size<T>& rhs) const {return Size::x==rhs.x && Size::y==rhs.y;}
+      constexpr inline bool operator!=(const Size<T>& rhs) const {return Size::x!=rhs.x || Size::y!=rhs.y;}
+      constexpr inline Size operator+(const Size& rhs) const {auto val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
+      constexpr inline Size operator-(const Size& rhs) const {auto val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
+      constexpr inline Size& operator+=(const Size& rhs){this->x += rhs.x; this->y += rhs.y; return *this;}
+      constexpr inline Size& operator-=(const Size& rhs){this->x -= rhs.x; this->y -= rhs.y; return *this;}
       [[nodiscard]] constexpr inline Pos<T> center() const {return {this->x/2.0f,this->y/2.0f};}
       [[nodiscard]] constexpr inline Rect<T> toRect() const {return {{0,0}, {*this}};}
       [[nodiscard]] constexpr inline Rect<T> toRect(const Pos<T>& p) const {return {p, {*this}};}
-      inline explicit operator std::string() const {return Vec2<T>::toString();}
-      inline static constexpr Size Max(){return {std::numeric_limits<T>::max(),std::numeric_limits<T>::max()};}
+      constexpr inline explicit operator std::string() const {return Vec2<T>::toString();}
+      constexpr inline static Size Max(){return {std::numeric_limits<T>::max(),std::numeric_limits<T>::max()};}
    };
 
 //   template <typename T>
@@ -1787,6 +1820,20 @@ namespace ReyEngine {
       inline ScopeScissor(const Rect<R_FLOAT>& r){ BeginScissorMode((int)r.x, (int)r.y, (int)r.width, (int)r.height);}
       inline ~ScopeScissor(){EndScissorMode();}
    };
+
+   constexpr auto v2_0 = Vec2<R_FLOAT>(0,1);
+   constexpr auto v2_1 = Vec2<R_FLOAT>(0,1);
+   constexpr auto v3_0 = Vec3<R_FLOAT>(2,3,4);
+   constexpr auto v3_1 = Vec3<R_FLOAT>(2,3,4);
+   constexpr auto v4 = Vec4<R_FLOAT>(5,6,7,8);
+   constexpr auto p = Pos<R_FLOAT>(9, 10);
+   constexpr auto s = Size<R_FLOAT>(11,12);
+   static_assert(Vec<float, 1>(22).getElements()[0] == 22);
+   static_assert(Vec2<float>(0,1).x == 0);
+   static_assert(Vec2<float>(0,1).y == 1);
+   static_assert(v2_0 + v2_1 == Vec2<R_FLOAT>(0, 2));
+   static_assert(!(s != s));
+   static_assert(s == s);
 
 }
 

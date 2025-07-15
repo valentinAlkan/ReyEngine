@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.11) # FetchContent is available in 3.11+
 project(ReyEngine)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 # Component options
 option(REY_ENABLE_NETWORK "Enable the Network component" ON)
 option(REY_ENABLE_YAML "Enable YAML support" ON)
@@ -12,7 +15,19 @@ find_package(Threads REQUIRED)
 
 
 function(install_file SOURCE DEST)
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${DEST} COPYONLY)
+    # Use STATUS for informational messages during configuration
+    message(STATUS "Installing file '${SOURCE_PATH}' to '${DESTINATION_PATH}'")
+
+    # Use the 'install' command for proper installation
+    # SOURCE_PATH should be relative to CMAKE_CURRENT_SOURCE_DIR, or an absolute path
+    # DESTINATION_PATH is relative to CMAKE_INSTALL_PREFIX
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_PATH}"
+            DESTINATION "${DESTINATION_PATH}")
+
+    # Optional: Add permissions if needed (e.g., for scripts or config files)
+    # install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_PATH}"
+    #         DESTINATION "${DESTINATION_PATH}"
+    #         PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 endfunction()
 
 # Dependencies
@@ -95,6 +110,7 @@ add_library(ReyEngine2D STATIC
         src/engine/Widget.cpp
         src/engine/Positionable2D.cpp
         src/engine/Window.cpp
+        src/engine/WindowPrototype.cpp
         src/engine/Event.cpp
         src/engine/InputManager.cpp
         src/engine/Application.cpp
@@ -205,6 +221,8 @@ target_link_libraries(TileEditor ReyEngine2D)
 # Test Project
 add_executable( NewEngineMain test/newEngine/newEngineTestMain.cpp)
 target_link_libraries(NewEngineMain ReyEngine2D)
+add_executable( NewEngineBasic test/newEngine/NewEngineTestBasic.cpp)
+target_link_libraries(NewEngineBasic ReyEngine2D)
 
 
 # Test Project
