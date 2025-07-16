@@ -17,6 +17,7 @@ using namespace std;
 using namespace ReyEngine;
 using namespace ReyEngine::Internal::Tree;
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct DrawTestWidget : public Widget {
    REYENGINE_OBJECT(DrawTestWidget)
    void render2D() const override {
@@ -47,7 +48,7 @@ struct DrawTestWidget : public Widget {
    }
 };
 
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct TestWidget : public Widget {
    REYENGINE_OBJECT(TestWidget)
 
@@ -114,6 +115,7 @@ protected:
    bool isDown = false;
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct SliderReactWidget : public Widget {
    REYENGINE_OBJECT(SliderReactWidget)
    SliderReactWidget() {setMaxSize({ReyEngine::Size<R_FLOAT>::Max().x, 30});}
@@ -127,6 +129,23 @@ struct SliderReactWidget : public Widget {
    }
    Percent _pct;
 };
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+struct ScissorWidget : public Widget {
+   REYENGINE_OBJECT(ScissorWidget)
+   ScissorWidget() {
+      scissorRect = getSizeRect();
+   }
+   void render2D() const override {
+      ScopeScissor scissor(scissorRect);
+      drawRectangleGradientV(getSizeRect(), Colors::orange, Colors::purple);
+   }
+   void setScissorArea(const Rect<float>& r){
+      scissorRect = r;
+   }
+   Rect<float> scissorRect;
+};
+
 
 int main() {
    //create window
@@ -257,6 +276,7 @@ int main() {
                std::unique_ptr<TypeNode> p2;
                std::unique_ptr<TypeNode> p3;
                std::unique_ptr<TypeNode> p4;
+               std::unique_ptr<TypeNode> p5;
                {
                   auto [textureTestLayout, n1] = make_node<Layout>("TextureTestLayout", Layout::LayoutDir::VERTICAL);
                   std::vector<std::pair<std::string, TextureRect::FitType>> fitTypes = {
@@ -271,8 +291,7 @@ int main() {
                   n1->addChild(std::move(n3));
                   p2 = std::move(n1);
 
-                  auto fitMenuCB = [textureRect](
-                        const ComboBox<TextureRect::FitType>::EventComboBoxItemSelected& event) {
+                  auto fitMenuCB = [textureRect](const ComboBox<TextureRect::FitType>::EventComboBoxItemSelected& event) {
                      cout << event.field->text << " at index " << event.itemIndex << " = " << (int) event.field->data << endl;
                      textureRect->setFitType(event.field->data);
                   };
@@ -338,10 +357,19 @@ int main() {
 
                   p4 = std::move(_p4);
                }
+
+               {
+                  auto [scissorTest, _p5] = make_node<ScissorWidget>("ScissorTest");
+                  scissorTest->setScissorArea({20,20,50,50});
+                  p5 = std::move(_p5);
+               }
+
+
                tabContainer->addChild(std::move(p1));
                tabContainer->addChild(std::move(p2));
                tabContainer->addChild(std::move(p3));
                tabContainer->addChild(std::move(p4));
+               tabContainer->addChild(std::move(p5));
                drawTest->setAnchoring(ReyEngine::Anchor::FILL);
             }
          }

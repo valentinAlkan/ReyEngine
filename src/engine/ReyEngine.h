@@ -118,7 +118,7 @@ namespace ReyEngine {
       }
       
    template<typename ...Args>
-   [[nodiscard]] constexpr inline std::string _toString(Args &&... args) const {
+   [[nodiscard]] static inline std::string _toString(Args &&... args) {
       std::string retval = "{";
       auto addToString = [&retval](const auto &arg) {
          retval += std::to_string(arg);
@@ -220,11 +220,11 @@ namespace ReyEngine {
          auto retval = Vector3Transform({v.x, v.y, 0}, m);
          return Vec2(retval.x, retval.y);
       }
-      constexpr inline Vec2 transform(const Matrix& m) const {
+      [[nodiscard]] constexpr inline Vec2 transform(const Matrix& m) const {
          auto retval = Vector3Transform({x, y, 0}, m);
          return Vec2(retval.x, retval.y);
       }
-      constexpr inline std::string toString() const {return Vec<T, 2>::_toString(x, y);}
+      inline std::string toString() const {return Vec<T, 2>::_toString(x, y);}
       T x;
       T y;
    };
@@ -323,7 +323,7 @@ namespace ReyEngine {
         constexpr inline Vec4& operator=(const Vec4& rhs){w = rhs.w, x = rhs.x; y=rhs.y; z=rhs.z; return *this;}
         constexpr inline Vec4& operator-(){w = -w; x = -x; y =-y; z = -z; return *this;}
         constexpr inline static std::optional<Vec4<T>> fromString(const std::string& s){return Vec<T, 4>::fromString(s);};
-        constexpr inline std::string toString(){return Vec<T, 4>::toString(w, x, y, z);};
+        inline std::string toString(){return Vec<T, 4>::_toString(w, x, y, z);}
         constexpr friend std::ostream& operator<<(std::ostream& os, Vec4 v) {os << v.toString(); return os;}
         T w;
         T x;
@@ -612,7 +612,7 @@ namespace ReyEngine {
       [[nodiscard]] constexpr inline Pos<T> center() const {return {this->x/2.0f,this->y/2.0f};}
       [[nodiscard]] constexpr inline Rect<T> toRect() const {return {{0,0}, {*this}};}
       [[nodiscard]] constexpr inline Rect<T> toRect(const Pos<T>& p) const {return {p, {*this}};}
-      constexpr inline explicit operator std::string() const {return Vec2<T>::toString();}
+      inline explicit operator std::string() const {return Vec2<T>::toString();}
       constexpr inline static Size Max(){return {std::numeric_limits<T>::max(),std::numeric_limits<T>::max()};}
    };
 
@@ -911,8 +911,8 @@ namespace ReyEngine {
          std::array<Vec2<R_FLOAT>, 4> corners;
          corners[0] = topLeft().transform(m);
          corners[1] = topRight().transform(m);
-         corners[2] = bottomLeft().transform(m);
-         corners[3] = bottomRight().transform(m);
+         corners[2] = bottomRight().transform(m);
+         corners[3] = bottomLeft().transform(m);
          return corners;
       }
 
@@ -1641,8 +1641,31 @@ namespace ReyEngine {
    }
 
    struct ScopeScissor {
-      inline ScopeScissor(const Rect<R_FLOAT>& r){ BeginScissorMode((int)r.x, (int)r.y, (int)r.width, (int)r.height);}
+      inline ScopeScissor(const Rect<R_FLOAT>& r){area = r; doScissor();}
+      inline ScopeScissor(const CanvasSpace<Transform2D>& transform2D, const Rect<R_FLOAT>& r){
+         auto transformedCorners = r.transform(transform2D.get().matrix);
+
+         // Get the AABB of the transformed rectangle
+         float minX = transformedCorners[0].x;
+         float maxX = transformedCorners[0].x;
+         float minY = transformedCorners[0].y;
+         float maxY = transformedCorners[0].y;
+
+         for(int i = 1; i < 4; i++) {
+            minX = std::min(minX, transformedCorners[i].x);
+            maxX = std::max(maxX, transformedCorners[i].x);
+            minY = std::min(minY, transformedCorners[i].y);
+            maxY = std::max(maxY, transformedCorners[i].y);
+         }
+
+         area = {minX, minY, maxX - minX, maxY - minY};
+         doScissor();
+      }
       inline ~ScopeScissor(){EndScissorMode();}
+      inline Rect<R_FLOAT> getRect() const {return area;}
+   private:
+      void doScissor(){BeginScissorMode((int)area.x, (int)area.y, (int)area.width, (int)area.height);}
+      Rect<R_FLOAT> area;
    };
 
    constexpr auto v2_0 = Vec2<R_FLOAT>(0,1);

@@ -31,9 +31,6 @@ protected:
 
    Widget* _unhandled_input(const InputEvent& event) override {
       auto mousePos = InputManager::getMousePos().get();
-      cout << "MousePos elements = " << mousePos << endl;
-      cout << "MousePos x = " << mousePos.x << endl;
-      cout << "MousePos y = " << mousePos.y << endl;
       if (auto isMouse = event.isMouse()) {
          isInside = isMouse.value()->isInside();
          switch (event.eventId) {
@@ -78,12 +75,32 @@ protected:
    bool isDown = false;
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+struct ScissorWidget : public TestWidget {
+   REYENGINE_OBJECT(ScissorWidget)
+   ScissorWidget(const std::string& text) : TestWidget(text){
+      setSize({200,200});
+      scissorRect = getSizeRect();
+   }
+   void render2D() const override {
+      ScopeScissor scissor(getGlobalTransform(), scissorRect);
+      TestWidget::render2D();
+      cout << scissor.getRect() << endl;
+   }
+   void setScissorArea(const Rect<float>& r){
+      scissorRect = r;
+   }
+   Rect<float> scissorRect;
+};
+
 int main(){
    auto& window = Application::createWindowPrototype("window", 1920, 1080, {WindowFlags::RESIZE}, 60)->createWindow();
    auto root = window.getCanvas();
 
-   auto [testwidget, node] = make_node<TestWidget>("testWidget", "someTEXT!");
+   auto [scissorWidget, node] = make_node<ScissorWidget>("scissorWidget", "someText");
    root->addChild(std::move(node));
+
+   scissorWidget->setScissorArea({25, 25, 25, 25});
 
    window.exec();
    return 0;
