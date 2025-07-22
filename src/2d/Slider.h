@@ -27,8 +27,8 @@ namespace ReyEngine{
       Vec2<double> getRange(){return _range;}
       void setRange(Vec2<double> newRange){
          minSliderValue = newRange.x;
-         maxSliderValue = newRange.y;
-         _range = {minSliderValue, maxSliderValue};
+         maxSlidervalue = newRange.y;
+         _range = {minSliderValue, maxSlidervalue};
       }
       inline double getSliderValue() const {return sliderValue;}
       inline void setSliderValue(float value, bool publish=true){
@@ -42,16 +42,19 @@ namespace ReyEngine{
       Slider(SliderType sliderDir)
       : sliderType(sliderDir)
       {
+         constexpr float DEFAULT_SIZE = 20;
          constexpr float MAX_SIZE = 50;
          switch (sliderDir){
             case SliderType::HORIZONTAL:
                maxSize = {std::numeric_limits<float>::max(), MAX_SIZE};
+               setHeight(DEFAULT_SIZE);
                break;
             case SliderType::VERTICAL:
                maxSize = {MAX_SIZE, std::numeric_limits<float>::max()};
+               setWidth(DEFAULT_SIZE);
                break;
          }
-         _range = {minSliderValue, maxSliderValue};
+         _range = {minSliderValue, maxSlidervalue};
       }
    protected:
       Widget* _unhandled_input(const InputEvent& e) override {
@@ -144,7 +147,7 @@ namespace ReyEngine{
 
       float sliderValue = 0; //0 to 100
       float minSliderValue = 0;
-      float maxSliderValue = 100;
+      float maxSlidervalue = 100;
       SliderType sliderType;
       bool _cursor_in_slider = false;
       bool _cursor_in_grabber = false;
