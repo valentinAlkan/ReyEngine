@@ -217,10 +217,10 @@ optional<TypeNode*> moveLayerSafetyChecks(Canvas* canvas, Widget* widget, const 
    //ensure the widget is a child of the canvas
    TypeNode* parent = node->getParent();
    if (!parent){
-      Logger::error() << "Canvas: " << fxName << " - widget must be a child of this canvas at this time" << endl;
+      Logger::error() << "Canvas (" << canvas->getName() << "): " << fxName << " - widget " << node->getName() << " must be a child of this canvas at this time" << endl;
       return {};
    } else if (node->getParent() != canvas->getNode()){
-      Logger::error() << "Canvas: " << fxName << " - widget must be a child of this canvas" << endl;
+      Logger::error() << "Canvas (" << canvas->getName() <<  "): " << fxName << " - widget " << node->getName() << " must be a child of this canvas" << endl;
       return {};
    }
    return node;

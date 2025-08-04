@@ -15,7 +15,6 @@ std::shared_ptr<FileHandle> File::open() const {
 
 ///////////////////////////////////////////////////////////////////////////////////////
 File::File(const char *path): Path(path){}
-File::File(const File& other): Path(other){}
 ///////////////////////////////////////////////////////////////////////////////////////
 std::vector<char> FileHandle::readFile(){
    auto end = _ifs.tellg();
@@ -53,7 +52,7 @@ size_t ReyEngine::FileSystem::FileHandle::readBytesInPlace(long long count, std:
    if (count < 0) {throw std::invalid_argument("Count cannot be negative");}
    auto remaining = _end - _ptr;
    if (remaining == 0) return 0;
-   auto bytesToRead = std::min(count, remaining);
+   auto bytesToRead = std::min<long>(count, remaining);
    if (buffer.size() < bytesToRead) {
       buffer.resize(bytesToRead);
    }

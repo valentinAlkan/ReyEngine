@@ -1,6 +1,5 @@
 #include "Platform.h"
 #include <stdexcept>
-#include <algorithm>
 
 #ifdef PLATFORM_WINDOWS
 #include "windows.h"

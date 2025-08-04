@@ -10,6 +10,7 @@ namespace ReyEngine {
       public:
          REYENGINE_OBJECT(Drawable2D)
          [[nodiscard]] inline Transform2D& getTransform(){return transform2D;}
+         [[nodiscard]] inline Transform2D getTransform() const {return transform2D;}
          [[nodiscard]] inline std::optional<Window*> getWindow(){if (window) { return window; } else {return std::nullopt;}}
          [[nodiscard]] inline std::optional<const Window*> getWindow() const {if (window) { return window; } else {return std::nullopt;}}
          [[nodiscard]] inline std::optional<Canvas*> getCanvas(){if (canvas) { return canvas; } else {return std::nullopt;}}

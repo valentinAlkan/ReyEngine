@@ -7,9 +7,23 @@ namespace ReyEngine {
    public:
       REYENGINE_OBJECT(TileMap)
       struct TileCoord : public Vec2<int> {
-           constexpr TileCoord(): Vec2(){}
-           constexpr TileCoord(int x, int y): Vec2(x,y){}
-           constexpr TileCoord(const Vec2<int>& other): Vec2(other){}
+         constexpr TileCoord(): Vec2(){}
+         constexpr TileCoord(int x, int y): Vec2(x,y){}
+         constexpr TileCoord(const Vec2<int>& other): Vec2(other){}
+         constexpr TileCoord(const TileCoord& other) : Vec2<int>(other.x, other.y) {}
+         constexpr TileCoord(TileCoord&& other) noexcept : Vec2<int>(other.x, other.y) {}
+         constexpr TileCoord& operator=(const TileCoord& other) {
+            Vec2<int>::x = other.x;
+            Vec2<int>::y = other.y;
+            return *this;
+         }
+
+         constexpr TileCoord& operator=(TileCoord&& other) noexcept {
+            Vec2<int>::x = other.x;
+            Vec2<int>::y = other.y;
+            return *this;
+         }
+
       };
       using LayerIndex = size_t;
 

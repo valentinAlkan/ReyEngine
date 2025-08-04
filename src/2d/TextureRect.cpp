@@ -21,6 +21,7 @@ void TextureRect::render2D() const {
             srcRect = dstRect;
             break;
       }
+      ScopeScissor scopeScissor(getGlobalTransform(), getSizeRect());
       drawTexture(*_texture, srcRect, dstRect, Colors::none);
    } else {
       auto sizeRect = getSizeRect();

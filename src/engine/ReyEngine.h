@@ -93,83 +93,106 @@ namespace ReyEngine {
    template <typename T> struct Size;
    template <typename T> struct Pos;
    template <typename T> struct Rect;
-   template <typename T>
+   template <typename T, uint32_t SIZE>
    struct Vec {
-      constexpr explicit Vec(size_t size): size(size){}
-      inline static std::vector<T> fromString(size_t size, const std::string& s) {
+   protected:
+      template<typename R>
+      inline static std::optional<R> fromString(const std::string &s) {
          std::string sanitized;
          for (const auto &c: s) {
             if (::isdigit(c) || c == '-' || c == ',' || c == '.') {
                sanitized += c;
             }
          }
-         std::vector<T> retval;
+
          auto split = string_tools::split(sanitized, ",");
-         if (split.size() != size) {
-            return retval;
+         if (split.size() != SIZE) {
+            return {};
          }
 
-         for (size_t i = 0; i < size; i++) {
-            retval.push_back(std::stod(split[i]));
+         try {
+            return makeFromStrings<R>(split, std::make_index_sequence<SIZE>{});
+         } catch (const std::exception&) {
+            return {}; // Parse error
          }
-         return retval;
       }
-      [[nodiscard]] inline std::string toString() const {
-         auto elements = getElements();
-         std::string retval = "{";
-         for (const auto& element : elements){
-            retval += std::to_string(element);
-            retval += ", ";
-         }
-         //remeove trailing comma
+
+   template<typename ...Args>
+   [[nodiscard]] static inline std::string _toString(Args &&... args) {
+      std::string retval = "{";
+      auto addToString = [&retval](const auto &arg) {
+         retval += std::to_string(arg);
+         retval += ", ";
+      };
+
+      (addToString(args), ...);
+
+      //remove trailing space and comma if needed
+      if (sizeof...(args) > 0) {
          retval.pop_back();
          retval.pop_back();
-         retval += "}";
-         return retval;
       }
-      [[nodiscard]] virtual std::vector<T> getElements() const = 0;
-      const size_t size;
+      retval += "}";
+      return retval;
+   }
+
+   private:
+      template<typename R, size_t... Is>
+      static R makeFromStrings(const std::vector<std::string>& strings, std::index_sequence<Is...>) {
+         return R{parseValue(strings[Is])...};
+      }
+
+      static T parseValue(const std::string& str) {
+         if constexpr (std::is_same_v<T, float>) {
+            return std::stof(str);
+         } else if constexpr (std::is_same_v<T, double>) {
+            return std::stod(str);
+         } else if constexpr (std::is_integral_v<T>) {
+            return static_cast<T>(std::stoll(str));
+         } else {
+            static_assert(std::is_arithmetic_v<T>, "Unsupported type for parsing");
+         }
+      }
    };
 
    struct UnitVector2;
    template <typename T>
-   struct Vec2 : protected Vec<T> {
-      using Vec<T>::toString;
-      constexpr inline Vec2(): Vec<T>(2), x(0), y(0){}
-      constexpr inline Vec2(const T& x, const T& y) : Vec<T>(2), x(x), y(y){}
-      constexpr inline Vec2(const Vector2& v)     : Vec<T>(2), x((T)v.x), y((T)v.y){}
+   struct Vec2 : protected Vec<T, 2> {
+      constexpr inline Vec2(): Vec<T, 2>(), x(0), y(0){}
+      constexpr inline Vec2(const T& x, const T& y) : Vec<T, 2>(), x(x), y(y){}
+      constexpr inline Vec2(const Vector2& v) : Vec<T, 2>(), x((T)v.x), y((T)v.y){}
       template <typename R>
-      constexpr inline Vec2(const Vec2<R>& v): Vec<T>(2), x((T)v.x), y((T)v.y){}
-      inline explicit operator bool() const {return x || y;}
-      inline Vec2 operator+(const Vec2& rhs) const {Vec2<T> val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
-      inline Vec2 operator-(const Vec2& rhs) const {Vec2<T> val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
-      inline Vec2& operator+=(const Vec2& rhs){x += rhs.x; y += rhs.y; return *this;}
-      inline Vec2& operator-=(const Vec2& rhs){x -= rhs.x; y -= rhs.y; return *this;}
-      inline Vec2 operator*(double rhs) const {Vec2 retval(*this); retval.x *= rhs; retval.y *= rhs; return retval;}
+      constexpr inline Vec2(const Vec2<R>& v): Vec<T, 2>(), x((T)v.x), y((T)v.y){}
+      constexpr inline explicit operator bool() const {return x || y;}
+      constexpr inline Vec2 operator+(const Vec2& rhs) const {Vec2<T> val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
+      constexpr inline Vec2 operator-(const Vec2& rhs) const {Vec2<T> val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
+      constexpr inline Vec2& operator+=(const Vec2& rhs){x += rhs.x; y += rhs.y; return *this;}
+      constexpr inline Vec2& operator-=(const Vec2& rhs){x -= rhs.x; y -= rhs.y; return *this;}
+      constexpr inline Vec2 operator*(double rhs) const {Vec2 retval(*this); retval.x *= rhs; retval.y *= rhs; return retval;}
 //      inline Vec2& operator*=(const Vec2& rhs){x *= rhs.x; y *= rhs.y; return *this;}
-      inline constexpr Vec2& operator*=(double rhs){x *= rhs; y *= rhs; return *this;}
-      inline constexpr Vec2<R_FLOAT> operator/(double rhs) const {Vec2<R_FLOAT> retval(*this); retval.x /= rhs; retval.y /= rhs; return retval;}
-      inline constexpr Vec2& operator/=(const Vec2& rhs){x /= rhs.x; y /= rhs.y; return *this;}
-      inline constexpr Vec2& operator=(const Vec2& rhs){x = rhs.x; y=rhs.y; return *this;}
-      inline constexpr bool operator==(const Vec2& rhs) const {return x==rhs.x && y==rhs.y;}
-      inline constexpr bool operator!=(const Vec2& rhs) const {return x!=rhs.x || y!=rhs.y;}
-      inline constexpr Vec2 operator-() const {return {-x, -y};}
-      inline constexpr void operator=(Size<T>&) = delete;
+      constexpr inline Vec2& operator*=(double rhs){x *= rhs; y *= rhs; return *this;}
+      constexpr inline Vec2<R_FLOAT> operator/(double rhs) const {Vec2<R_FLOAT> retval(*this); retval.x /= rhs; retval.y /= rhs; return retval;}
+      constexpr inline Vec2& operator/=(const Vec2& rhs){x /= rhs.x; y /= rhs.y; return *this;}
+      constexpr inline Vec2& operator=(const Vec2& rhs){x = rhs.x; y=rhs.y; return *this;}
+      constexpr inline bool operator==(const Vec2& rhs) const {return x==rhs.x && y==rhs.y;}
+      constexpr inline bool operator!=(const Vec2& rhs) const {return x!=rhs.x || y!=rhs.y;}
+      constexpr inline Vec2 operator-() const {return {-x, -y};}
+      constexpr inline void operator=(Size<T>&) = delete;
 
       virtual inline void operator=(Pos<T>&) = delete;
       inline constexpr operator Vector2() const {return {(float)x,(float)y};}
-      inline constexpr T magnitude() const {return std::sqrt(x * x + y * y);}
-      static inline constexpr T magnitude(T x, T y) {return std::sqrt(x * x + y * y);}
+      constexpr inline T magnitude() const {return std::sqrt(x * x + y * y);}
+      static constexpr inline T magnitude(T x, T y) {return std::sqrt(x * x + y * y);}
       UnitVector2 direction(const Vec2<T>& dest) const; //get the unit vector that points at dest from this point's perspective
-//      inline constexpr Vec2 midpoint() const {return {x/2, y / 2};} does this make sense?
-      inline constexpr Vec2 min(const Vec2& other) const {Vec2 r; r.x = Math::min(Vec2::x, other.x); r.y = Math::min(Vec2::y, other.y); return r;}
-      inline constexpr Vec2 max(const Vec2& other) const {Vec2 r; r.x = Math::max(Vec2::x, other.x); r.y = Math::max(Vec2::y, other.y); return r;}
-      inline constexpr Fraction pct(R_FLOAT input) const {return (input - x) / (y - x);} //given an input value, what percentage of the range is it from 0 to 1?
-      inline constexpr R_FLOAT lerp(Fraction lerpVal) const {return lerpVal.get() * (y - x) + x;} //given a value from 0 to 1, what is the value of the range that corresponds to it?
-      inline constexpr Vec2 lerp(Vec2 otherPoint, R_FLOAT xprm) const {return {xprm, y + (((xprm - x) * (otherPoint.y - y)) / (otherPoint.x - x))};}
-      inline constexpr Vec2 extend(R_FLOAT distance) const {Vec2<T> normalized = normalize();return normalized * distance;}
-      inline constexpr T clamp(T value) const {if (value < x) return x; if (value > y) return y; return value;}
-      inline constexpr Vec2 clamp(Vec2 clampA, Vec2 clampB) const {
+//      constexpr inline Vec2 midpoint() const {return {x/2, y / 2};} does this make sense?
+      constexpr inline Vec2 min(const Vec2& other) const {Vec2 r; r.x = Math::min(Vec2::x, other.x); r.y = Math::min(Vec2::y, other.y); return r;}
+      constexpr inline Vec2 max(const Vec2& other) const {Vec2 r; r.x = Math::max(Vec2::x, other.x); r.y = Math::max(Vec2::y, other.y); return r;}
+      constexpr inline Fraction pct(R_FLOAT input) const {return (input - x) / (y - x);} //given an input value, what percentage of the range is it from 0 to 1?
+      constexpr inline R_FLOAT lerp(Fraction lerpVal) const {return lerpVal.get() * (y - x) + x;} //given a value from 0 to 1, what is the value of the range that corresponds to it?
+      constexpr inline Vec2 lerp(Vec2 otherPoint, R_FLOAT xprm) const {return {xprm, y + (((xprm - x) * (otherPoint.y - y)) / (otherPoint.x - x))};}
+      constexpr inline Vec2 extend(R_FLOAT distance) const {Vec2<T> normalized = normalize();return normalized * distance;}
+      constexpr inline T clamp(T value) const {if (value < x) return x; if (value > y) return y; return value;}
+      constexpr inline Vec2 clamp(Vec2 clampA, Vec2 clampB) const {
          Vec2 retval = {x, y};
          if (x < clampA.x) retval.x = clampA.x;
          if (x > clampB.x) retval.x = clampB.x;
@@ -182,7 +205,7 @@ namespace ReyEngine {
          T sinA = std::sin(r.get());
          return Vec2<T>(x * cosA - y * sinA,x * sinA + y * cosA);
       }
-      constexpr inline R_FLOAT length() const {return length(x, y);}
+      [[nodiscard]] constexpr inline R_FLOAT length() const {return length(x, y);}
       static constexpr inline double length(T x, T y) {return std::sqrt(x * x + y * y);}
       static constexpr inline Vec2<T> normalize(T x, T y) {
          T magnitude = std::sqrt(x * x + y * y);
@@ -190,20 +213,20 @@ namespace ReyEngine {
          return Vec2<T>(x / magnitude, y / magnitude);
       }
       inline Vec2<T> normalize() const {return normalize(x, y);}
-      inline static std::vector<T> fromString(const std::string& s){return Vec<T>::fromString(2, s);};
+      inline static std::vector<T> fromString(const std::string& s){return Vec<T, 4>::fromString(s);};
       friend std::ostream& operator<<(std::ostream& os, Vec2<T> v) {os << v.toString(); return os;}
       friend Vector2& operator+=(Vector2& in, Vec2<T> add) {in.x += add.x; in.y += add.y; return in;}
       static inline Vec2 transform(const Vec2& v, const Matrix& m) {
          auto retval = Vector3Transform({v.x, v.y, 0}, m);
          return Vec2(retval.x, retval.y);
       }
-      inline Vec2 transform(const Matrix& m) const {
+      [[nodiscard]] constexpr inline Vec2 transform(const Matrix& m) const {
          auto retval = Vector3Transform({x, y, 0}, m);
          return Vec2(retval.x, retval.y);
       }
+      inline std::string toString() const {return Vec<T, 2>::_toString(x, y);}
       T x;
       T y;
-      [[nodiscard]] inline std::vector<T> getElements() const override {return {x,y};}
    };
 
    // A unit vector. If the magnitude is not 1, then the vector is invalid.
@@ -252,23 +275,20 @@ namespace ReyEngine {
    };
 
    template <typename T>
-   struct Vec3 : protected Vec<T> {
-      using Vec<T>::toString;
-      constexpr inline Vec3(): Vec<T>(3), x(0), y(0), z(0){}
+   struct Vec3 : protected Vec<T, 3> {
+      constexpr inline Vec3(): Vec<T, 3>(), x(0), y(0), z(0){}
       constexpr inline operator Vector3() const {return {(float)x,(float)y,(float)z};}
-      constexpr inline Vec3(const T& _x, const T& y, const T& _z) : Vec<T>(3), x(_x), y(y),z(_z) {}
-      constexpr inline explicit Vec3(const Vector3& v)     : Vec<T>(3), x((T)v.x), y((T)v.y), z((T)v.z){}
-      constexpr inline Vec3(const Vec3& v): Vec<T>(3), x((T)v.x), y((T)v.y), z((T)v.z){}
+      constexpr inline Vec3(const T& _x, const T& y, const T& _z) : Vec<T, 3>(), x(_x), y(y),z(_z) {}
+      constexpr inline explicit Vec3(const Vector3& v)     : Vec<T, 3>(), x((T)v.x), y((T)v.y), z((T)v.z){}
+      constexpr inline Vec3(const Vec3& v): Vec<T, 3>(), x((T)v.x), y((T)v.y), z((T)v.z){}
       constexpr inline Vec3& operator=(const Vec3& rhs){x = rhs.x; y=rhs.y; z=rhs.z; return *this;}
       constexpr inline Vec3& operator-(){x = -x; y =-y; z = -z; return *this;}
       constexpr inline Vec3 operator-(const Vec3& rhs) const {Vec3 retval; retval.x=x-rhs.x; retval.y=y-rhs.y; retval.z=z-rhs.z; return retval;}
       constexpr inline Vec3 operator+(const Vec3& rhs) const {Vec3 retval; retval.x=x+rhs.x; retval.y=y+rhs.y; retval.z=z+rhs.z; return retval;}
       constexpr inline Vec3& operator-=(const Vec3& rhs){x-=rhs.x; y-=rhs.y; z-=rhs.z; return *this;}
       constexpr inline Vec3& operator+=(const Vec3& rhs){x+=rhs.x; y+=rhs.y; z+=rhs.z; return *this;}
-      inline static std::vector<T> fromString(const std::string& s){return Vec<T>::fromString(3, s);};
-      [[nodiscard]] inline std::vector<T> getElements() const override {return {x,y,z};}
       inline std::optional<Vec3<T>> normalize() const {return normalize(*this);}
-      inline constexpr static Vec3<T> normalize(const Vec3& other) {
+      constexpr inline static Vec3<T> normalize(const Vec3& other) {
          auto len = other.magnitude();
          if (len == T(0)) return {};
          return Vec3(other.x / len, other.y / len, other.z / len);
@@ -278,6 +298,8 @@ namespace ReyEngine {
       inline static T dot(const Vec3& a, const Vec3& b){return a.dot(b);}
       inline Vec3<T> cross(const Vec3& rhs) const {return {y * rhs.z - z * rhs.y,z * rhs.x - x * rhs.z,x * rhs.y - y * rhs.x};}
       inline static Vec3<T> cross(const Vec3& a, const Vec3& b){return a.cross(b);}
+      constexpr inline std::string toString(){return Vec<T, 3>::_toString(x, y, z);}
+      inline static std::optional<Vec3<T>> fromString(const std::string& s){return Vec<T,3>::fromString(s);};
       friend std::ostream& operator<<(std::ostream& os, const Vec3& v) {os << v.toString(); return os;}
       T x;
       T y;
@@ -285,25 +307,24 @@ namespace ReyEngine {
    };
 
     template <typename T>
-    struct Vec4 : protected Vec<T> {
-        inline Vec4(): Vec<T>(4), w(0), x(0), y(0), z(0){}
-        inline Vec4(const std::vector<T>& stdvec): Vec<T>(4){
+    struct Vec4 : protected Vec<T, 4> {
+        constexpr inline Vec4(): Vec<T, 4>(), w(0), x(0), y(0), z(0){}
+        constexpr inline Vec4(const std::vector<T>& stdvec): Vec<T, 4>(){
             if (stdvec.size() != 4) throw std::runtime_error("Invalid element count for Vec4! Expected 4, got " + stdvec.size());
             w = stdvec[0];
             x = stdvec[1];
             y = stdvec[2];
             z = stdvec[3];
         }
-        inline Vec4(const T& _w, const T& _x, const T& y, const T& _z) : Vec<T>(4), w(_w), x(_x), y(y),z(_z) {}
-        inline explicit Vec4(const Vector4& v) : Vec<T>(4), w((T)v.w), x((T)v.x), y((T)v.y), z((T)v.z){}
+        constexpr inline Vec4(const T& _w, const T& _x, const T& y, const T& _z) : Vec<T, 4>(), w(_w), x(_x), y(y),z(_z) {}
+        constexpr inline explicit Vec4(const Vector4& v) : Vec<T, 4>(), w((T)v.w), x((T)v.x), y((T)v.y), z((T)v.z){}
         template <typename R>
-        inline Vec4(const Vec4<R>& v)        : Vec<T>(4), w((T)v.w), x((T)v.x), y((T)v.y), z((T)v.z){}
-        inline Vec4& operator=(const Vec4& rhs){w = rhs.w, x = rhs.x; y=rhs.y; z=rhs.z; return *this;}
-        inline Vec4& operator-(){w = -w; x = -x; y =-y; z = -z; return *this;}
-        inline static std::vector<T> fromString(const std::string& s){return Vec<T>::fromString(4, s);};
-        [[nodiscard]] inline std::vector<T> getElements() const override {return {w,x,y,z};}
-        friend std::ostream& operator<<(std::ostream& os, Vec4 v) {os << v.toString(); return os;}
-        using ReyEngine::Vec<T>::toString;
+        constexpr inline Vec4(const Vec4<R>& v)        : Vec<T, 4>(), w((T)v.w), x((T)v.x), y((T)v.y), z((T)v.z){}
+        constexpr inline Vec4& operator=(const Vec4& rhs){w = rhs.w, x = rhs.x; y=rhs.y; z=rhs.z; return *this;}
+        constexpr inline Vec4& operator-(){w = -w; x = -x; y =-y; z = -z; return *this;}
+        constexpr inline static std::optional<Vec4<T>> fromString(const std::string& s){return Vec<T, 4>::fromString(s);};
+        inline std::string toString(){return Vec<T, 4>::_toString(w, x, y, z);}
+        constexpr friend std::ostream& operator<<(std::ostream& os, Vec4 v) {os << v.toString(); return os;}
         T w;
         T x;
         T y;
@@ -413,7 +434,6 @@ namespace ReyEngine {
       inline void setRange(Vec2<T> newRange){ setMin(newRange.x); setMax(newRange.y);}
       inline void setRange(T min, T max){ setMin(min); setMax(max);}
       inline static void fromString(const std::string& s){return Vec3<T>::fromString();};
-      inline std::vector<T> getElements() const override {return Vec3<T>::getElements();}
       friend std::ostream& operator<<(std::ostream& os, Range<T> r) {os << r.toString(); return os;}
    };
 
@@ -577,22 +597,23 @@ namespace ReyEngine {
    struct Size : public Vec2<T>{
       constexpr inline Size(): Vec2<T>(){}
       constexpr inline Size(const T& x, const T& y) : Vec2<T>(x, y){}
-      explicit inline Size(const T& edge): Size(edge, edge){}
+      constexpr inline explicit Size(const T& edge): Size(edge, edge){}
       constexpr inline Size(const Vector2& v)     : Vec2<T>(v.x,v.y){}
       template <typename R>
       constexpr inline Size(const Vec2<R>& v)   : Vec2<T>(v.x,v.y){}
-      inline Size(const Size<T>& v) : Vec2<T>(v){}
-      inline void operator=(Pos<T>&) = delete;
-      inline bool operator==(const Size<T>& rhs) const {return Size::x==rhs.x && Size::y==rhs.y;}
-      inline bool operator!=(const Size<T>& rhs) const {return Size::x!=rhs.x || Size::y!=rhs.y;}
-      inline Size operator+(const Size& rhs) const {auto val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
-      inline Size operator-(const Size& rhs) const {auto val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
-      inline Size& operator+=(const Size& rhs){this->x += rhs.x; this->y += rhs.y; return *this;}
-      inline Size& operator-=(const Size& rhs){this->x -= rhs.x; this->y -= rhs.y; return *this;}
+      constexpr inline Size(const Size<T>& v) : Vec2<T>(v){}
+      constexpr inline void operator=(Pos<T>&) = delete;
+      constexpr inline bool operator==(const Size<T>& rhs) const {return Size::x==rhs.x && Size::y==rhs.y;}
+      constexpr inline bool operator!=(const Size<T>& rhs) const {return Size::x!=rhs.x || Size::y!=rhs.y;}
+      constexpr inline Size operator+(const Size& rhs) const {auto val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
+      constexpr inline Size operator-(const Size& rhs) const {auto val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
+      constexpr inline Size& operator+=(const Size& rhs){this->x += rhs.x; this->y += rhs.y; return *this;}
+      constexpr inline Size& operator-=(const Size& rhs){this->x -= rhs.x; this->y -= rhs.y; return *this;}
       [[nodiscard]] constexpr inline Pos<T> center() const {return {this->x/2.0f,this->y/2.0f};}
       [[nodiscard]] constexpr inline Rect<T> toRect() const {return {{0,0}, {*this}};}
       [[nodiscard]] constexpr inline Rect<T> toRect(const Pos<T>& p) const {return {p, {*this}};}
       inline explicit operator std::string() const {return Vec2<T>::toString();}
+      constexpr inline static Size Max(){return {std::numeric_limits<T>::max(),std::numeric_limits<T>::max()};}
    };
 
 //   template <typename T>
@@ -781,6 +802,7 @@ namespace ReyEngine {
                   return {xr, yb, xl+xlw-xr, ybh};
                }
                //otherwise fall through to 1 point form
+               [[fallthrough]];
             case 1:
                //corner collision, full width/height 2 point collisions
                return {xr, yb, xl+xlw-xr, yt+yth-yb};
@@ -790,29 +812,8 @@ namespace ReyEngine {
          }
       }
 
-      [[nodiscard]] inline std::string toString() const {
-         return "{" + std::to_string(x) + ", " + std::to_string(y) + ", " +
-         std::to_string(width) + ", " + std::to_string(height) + "}";
-      }
-      inline static ReyEngine::Rect<T> fromString(const std::string& s){
-         std::string sanitized;
-         for (const auto& c : s){
-            if (::isdigit(c) || c == '-' || c==',' || c=='.'){
-               sanitized += c;
-            }
-         }
-         auto split = string_tools::split(sanitized, ",");
-         if (split.size() != 4){
-            return ReyEngine::Rect<T>();
-         }
-
-         ReyEngine::Rect<T> retval;
-         retval.x = std::stoi(split[0]);
-         retval.y = std::stoi(split[1]);
-         retval.width = std::stoi(split[2]);
-         retval.height = std::stoi(split[3]);
-         return retval;
-      }
+      [[nodiscard]] inline std::string toString() const {return Vec4(x,y,width,height).toString();}
+      inline static ReyEngine::Rect<T> fromString(const std::string& s){Vec4<T>::fromString(s);}
       friend std::ostream& operator<<(std::ostream& os, const Rect<T>& r){
          os << r.toString();
          return os;
@@ -855,11 +856,11 @@ namespace ReyEngine {
 
       //returns the 'index' of a subrect, as if it were read left-to-right, top-to-bottom
       // ex.
-      //   0  1  2  3
-      // 0  |------|=|  <-- subrect {3,0}, which is of size Size<T>
-      // 1  |--------|
-      // 2  |--------|
-      // 3  |--------|
+      //     0 1 2 3
+      // 0  |- - - |=|  <-- subrect {3,0}
+      // 1  |- -|=|- |  <-- subrect {2,1}
+      // 2  |=|- - - |  <-- subrect {0,2}
+      // 3  |-|=|- - |  <-- subrect {1,3}
       [[nodiscard]] constexpr inline int getSubRectIndex(const Size<R_FLOAT>& size, const Pos<R_FLOAT>& pos) const {
          auto coord = getSubRectCoord(size, pos);
          auto columnCount = width / size.x;
@@ -910,8 +911,8 @@ namespace ReyEngine {
          std::array<Vec2<R_FLOAT>, 4> corners;
          corners[0] = topLeft().transform(m);
          corners[1] = topRight().transform(m);
-         corners[2] = bottomLeft().transform(m);
-         corners[3] = bottomRight().transform(m);
+         corners[2] = bottomRight().transform(m);
+         corners[3] = bottomLeft().transform(m);
          return corners;
       }
 
@@ -1095,8 +1096,8 @@ namespace ReyEngine {
    };
 
    struct Circle{
-      inline constexpr Circle(const Pos<R_FLOAT>& center, double radius): center(center), radius(radius){}
-      inline constexpr Circle(const Circle& rhs): center(rhs.center), radius(rhs.radius){}
+      constexpr inline Circle(const Pos<R_FLOAT>& center, double radius): center(center), radius(radius){}
+      constexpr inline Circle(const Circle& rhs): center(rhs.center), radius(rhs.radius){}
       /// create the circle that comprises the three points
       static inline std::optional<Circle> fromPoints(const Pos<R_FLOAT>& a, const Pos<R_FLOAT>& b, const Pos<R_FLOAT>& c){
          // Convert input points to doubles for precise calculation
@@ -1213,10 +1214,10 @@ namespace ReyEngine {
       static CircleSector secondQuadrant(Pos<R_FLOAT> center, double radius){return CircleSector(center, radius, SECOND_QUADRANT_ANGLE, SECOND_QUADRANT_ANGLE+90);}
       static CircleSector thirdQuadrant(Pos<R_FLOAT> center, double radius){return CircleSector(center, radius, THIRD_QUADRANT_ANGLE, THIRD_QUADRANT_ANGLE+90);}
       static CircleSector fourthQuadrant(Pos<R_FLOAT> center, double radius){return CircleSector(center, radius, FOURTH_QUADRANT_ANGLE, FOURTH_QUADRANT_ANGLE+90);}
-      inline constexpr CircleSector(): Circle({},0), startAngle(0), endAngle(0){}
-      inline constexpr CircleSector(const Pos<R_FLOAT>& center, double radius, double startAngle, double endAngle): Circle(center, radius), startAngle(startAngle), endAngle(endAngle){}
-      inline constexpr CircleSector(const Circle& c, double startAngle, double endAngle): Circle(c), startAngle(startAngle), endAngle(endAngle){}
-      inline constexpr CircleSector(const CircleSector& rhs): Circle(rhs), startAngle(rhs.startAngle), endAngle(rhs.endAngle){}
+      constexpr inline CircleSector(): Circle({},0), startAngle(0), endAngle(0){}
+      constexpr inline CircleSector(const Pos<R_FLOAT>& center, double radius, double startAngle, double endAngle): Circle(center, radius), startAngle(startAngle), endAngle(endAngle){}
+      constexpr inline CircleSector(const Circle& c, double startAngle, double endAngle): Circle(c), startAngle(startAngle), endAngle(endAngle){}
+      constexpr inline CircleSector(const CircleSector& rhs): Circle(rhs), startAngle(rhs.startAngle), endAngle(rhs.endAngle){}
       inline void setDirection(const UnitVector2& newDirection){
          // Calculate the new center angle from the direction vector
          double newCenterAngle = std::atan2(newDirection.x(), newDirection.y()) * 180.0 / M_PI ;
@@ -1640,9 +1641,45 @@ namespace ReyEngine {
    }
 
    struct ScopeScissor {
-      constexpr inline ScopeScissor(const Rect<R_FLOAT>& r){ BeginScissorMode((int)r.x, (int)r.y, (int)r.width, (int)r.height);}
+      inline ScopeScissor(const Rect<R_FLOAT>& r){area = r; doScissor();}
+      inline ScopeScissor(const CanvasSpace<Transform2D>& transform2D, const Rect<R_FLOAT>& r){
+         auto transformedCorners = r.transform(transform2D.get().matrix);
+
+         // Get the AABB of the transformed rectangle
+         float minX = transformedCorners[0].x;
+         float maxX = transformedCorners[0].x;
+         float minY = transformedCorners[0].y;
+         float maxY = transformedCorners[0].y;
+
+         for(int i = 1; i < 4; i++) {
+            minX = std::min(minX, transformedCorners[i].x);
+            maxX = std::max(maxX, transformedCorners[i].x);
+            minY = std::min(minY, transformedCorners[i].y);
+            maxY = std::max(maxY, transformedCorners[i].y);
+         }
+
+         area = {minX, minY, maxX - minX, maxY - minY};
+         doScissor();
+      }
       inline ~ScopeScissor(){EndScissorMode();}
+      inline Rect<R_FLOAT> getRect() const {return area;}
+   private:
+      void doScissor(){BeginScissorMode((int)area.x, (int)area.y, (int)area.width, (int)area.height);}
+      Rect<R_FLOAT> area;
    };
+
+   constexpr auto v2_0 = Vec2<R_FLOAT>(0,1);
+   constexpr auto v2_1 = Vec2<R_FLOAT>(0,1);
+   constexpr auto v3_0 = Vec3<R_FLOAT>(2,3,4);
+   constexpr auto v3_1 = Vec3<R_FLOAT>(2,3,4);
+   constexpr auto v4 = Vec4<R_FLOAT>(5,6,7,8);
+   constexpr auto p = Pos<R_FLOAT>(9, 10);
+   constexpr auto s = Size<R_FLOAT>(11,12);
+   static_assert(Vec2<float>(0,1).x == 0);
+   static_assert(Vec2<float>(0,1).y == 1);
+   static_assert(v2_0 + v2_1 == Vec2<R_FLOAT>(0, 2));
+   static_assert(!(s != s));
+   static_assert(s == s);
 
 }
 
@@ -1801,7 +1838,7 @@ namespace InputInterface{
       NOT_ALLOWED = MOUSE_CURSOR_NOT_ALLOWED
    };
 
-   inline constexpr std::optional<char> toChar(KeyCode keyCode){ return (static_cast<int>(keyCode) <= 127) ? std::optional<char>{static_cast<char>(static_cast<int>(keyCode))} : std::nullopt;}
+   constexpr inline std::optional<char> toChar(KeyCode keyCode){ return (static_cast<int>(keyCode) <= 127) ? std::optional<char>{static_cast<char>(static_cast<int>(keyCode))} : std::nullopt;}
 
 //   // Define the friend function
 //   ReyEngine::Logger::Stream& operator<<(const InputInterface::KeyCode& keyCode, ReyEngine::Logger& logger) {

@@ -1,28 +1,32 @@
-cmake_minimum_required(VERSION 3.11) # FetchContent is available in 3.11+
-project(ReyEngine)
+cmake_minimum_required(VERSION 3.16)
+project(ReyEngine VERSION 0.1)
 
-#set(CMAKE_REQUIRED_FLAGS "-Wno-old-style-definitions")
-#set(CMAKE_THREAD_LIBS_INIT "-lpthread")
-#set(CMAKE_HAVE_THREADS_LIBRARY 1)
-#set(CMAKE_USE_WIN32_THREADS_INIT 0)
-#set(CMAKE_USE_PTHREADS_INIT 1)
-#set(THREADS_PREFER_PTHREAD_FLAG ON)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# add lua
-add_subdirectory(src/thirdParty/lua)
-
-set (CMAKE_CXX_STANDARD 20)
-
-# Add static linking flags for GCC and standard C++ libraries
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+# Component options
+option(REY_ENABLE_NETWORK "Enable the Network component" ON)
+option(REY_ENABLE_YAML "Enable YAML support" ON)
+option(REY_ENABLE_LUA "Enable LUA support" ON)
 
 # Ensure pthread is linked statically
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 
-function(install_file SOURCE DEST)
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${DEST} COPYONLY)
+function(install_file SOURCE_PATH DESTINATION_PATH)
+    # Use STATUS for informational messages during configuration
+    message(STATUS "Installing file '${SOURCE_PATH}' to '${DESTINATION_PATH}'")
+
+    # Use the 'install' command for proper installation
+    # SOURCE_PATH should be relative to CMAKE_CURRENT_SOURCE_DIR, or an absolute path
+    # DESTINATION_PATH is relative to CMAKE_INSTALL_PREFIX
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_PATH}" DESTINATION "${DESTINATION_PATH}")
+
+    # Optional: Add permissions if needed (e.g., for scripts or config files)
+    # install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_PATH}"
+    #         DESTINATION "${DESTINATION_PATH}"
+    #         PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 endfunction()
 
 # Dependencies
@@ -44,50 +48,22 @@ if (NOT raylib_FOUND) # If there's none, fetch and build raylib
     endif()
 endif()
 
-#set up eigen
-#message(CHECK_START "Fetching Eigen3")
-#list(APPEND CMAKE_MESSAGE_INDENT "  ")
-#
-#include(FetchContent)
-#FetchContent_Declare(
-#        Eigen
-#        GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
-#        GIT_TAG master
-#        GIT_SHALLOW TRUE
-#        GIT_PROGRESS TRUE)
-## note: To disable eigen tests,
-## you should put this code in a add_subdirectory to avoid to change
-## BUILD_TESTING for your own project too since variables are directory
-## scoped
-
-#set(BUILD_TESTING OFF)
-#set(EIGEN_BUILD_TESTING OFF)
-#set(EIGEN_MPL2_ONLY ON)
-#set(EIGEN_BUILD_PKGCONFIG OFF)
-#set(EIGEN_BUILD_DOC OFF)
-#FetchContent_MakeAvailable(Eigen)
-#message(CHECK_START "Fetching Eigen3")
-#list(APPEND CMAKE_MESSAGE_INDENT "  ")
-
-#find_package (Eigen3 3.3 REQUIRED NO_MODULE)
-
-#list(POP_BACK CMAKE_MESSAGE_INDENT)
-#message(CHECK_PASS "fetched")
-# /eigen
-
 # set up yaml-cpp
-include(FetchContent)
-FetchContent_Declare(
-        yaml-cpp
-        GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
-        GIT_TAG 0.8.0
-)
-# turn off yaml build targets
-set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
-set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "" FORCE)
-set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(yaml-cpp)
+if(REY_ENABLE_YAML)
+    include(FetchContent)
+    FetchContent_Declare(
+            yaml-cpp
+            GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+            GIT_TAG 0.8.0
+    )
+    # turn off yaml build targets
+    set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
+    set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "" FORCE)
+    set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(yaml-cpp)
+    set(YAML_AVAILABLE TRUE)
+endif()
 
 #####################################################################################
 
@@ -133,6 +109,7 @@ add_library(ReyEngine2D STATIC
         src/engine/Widget.cpp
         src/engine/Positionable2D.cpp
         src/engine/Window.cpp
+        src/engine/WindowPrototype.cpp
         src/engine/Event.cpp
         src/engine/InputManager.cpp
         src/engine/Application.cpp
@@ -165,7 +142,22 @@ target_include_directories(ReyEngine2D PUBLIC
     src/pathfinding
     src/physics
 )
-target_link_libraries(ReyEngine2D raylib lua Threads::Threads yaml-cpp::yaml-cpp ComponentStringTools ComponentFilesystem ComponentLogger)
+target_compile_features(ReyEngine2D PUBLIC cxx_std_20)
+target_compile_options(ReyEngine2D PUBLIC -pthread)
+
+#conditional compilations
+if(REY_ENABLE_LUA)
+    add_subdirectory(src/thirdParty/lua)
+    target_link_libraries(ReyEngine2D lua)
+endif()
+if(REY_ENABLE_YAML)
+    target_link_libraries(ReyEngine2D yaml-cpp::yaml-cpp)
+endif()
+
+#default compilations
+target_link_libraries(ReyEngine2D raylib Threads::Threads ComponentStringTools ComponentFilesystem ComponentLogger)
+
+
 if (UNIX)
     target_link_libraries(ReyEngine2D stdc++fs)
 endif (UNIX)
@@ -229,6 +221,8 @@ target_link_libraries(TileEditor ReyEngine2D)
 # Test Project
 add_executable( NewEngineMain test/newEngine/newEngineTestMain.cpp)
 target_link_libraries(NewEngineMain ReyEngine2D)
+add_executable( NewEngineBasic test/newEngine/NewEngineTestBasic.cpp)
+target_link_libraries(NewEngineBasic ReyEngine2D)
 
 
 # Test Project
@@ -254,14 +248,14 @@ add_executable( cppTest
 ##########################################
 
 
-install_file(./test/test.scn ./test/test.scn)
-install_file(./test/posTest.scn ./test/posTest.scn)
-install_file(./test/posTest.scn ./test/serializeTest.scn)
-install_file(./test/characters.png ./test/characters.png)
-install_file(./test/test.lua ./test/test.lua)
-install_file(./test/xmltest.xml ./test/xmltest.xml)
-install_file(./test/spritesheet.png ./test/spritesheet.png)
-install_file(./test/csvTest.csv ./test/csvTest.csv)
-install_file(./test/3d/suzanne.obj ./test/suzanne.obj)
-install_file(./test/10x10_checkered_board.png ./test/10x10_checkered_board.png)
-install_file(./test/tiles.png ./test/tiles.png)
+install_file(test/test.scn test/)
+install_file(test/posTest.scn test/)
+install_file(test/posTest.scn test/)
+install_file(test/characters.png test/)
+install_file(test/test.lua test/)
+install_file(test/xmltest.xml test/)
+install_file(test/spritesheet.png test/)
+install_file(test/csvTest.csv test/)
+install_file(test/3d/suzanne.obj test/)
+install_file(test/10x10_checkered_board.png test/)
+install_file(test/tiles.png test/)
