@@ -178,8 +178,8 @@ namespace ReyEngine {
       struct InputProcess : public TreeProcess {
          InputProcess(Canvas* thisCanvas, Widget* processedWidget, const InputEvent& event, const Transform2D& inputTransform)
          : TreeProcess(thisCanvas, processedWidget)
-         , event(event)
          , inputTransform(inputTransform)
+         , event(event)
          {
             if (auto mouseData = event.isMouse()) {
                mouseTransformer = std::make_unique<MouseEvent::ScopeTransformer>(*mouseData.value(), inputTransform, processedWidget->getSize());

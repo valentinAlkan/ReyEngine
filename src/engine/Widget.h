@@ -156,7 +156,7 @@ namespace ReyEngine {
 
       auto removeAllChildren(){
          if (auto hasNode = getNode()) {
-            return getNode()->removeAllChildren();
+            return hasNode->removeAllChildren();
          }
          throwEx(this, "removeAllChildren");
       }

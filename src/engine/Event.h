@@ -25,21 +25,6 @@ constexpr size_t hash ( const char (&s)[N] ) {
    return hash_calc<N>::apply(s);
 }
 
-// Helper macros for stringifying and concatenation
-//#define STRINGIFY(x) #x
-//#define TOSTRING(x) STRINGIFY(x)
-////
-//#define EVENT_GENERATE_UNIQUE_ID(CLASSNAME, PARENTCLASS) \
-//    static constexpr long long unsigned int CLASSNAME##_UNIQUE_ID = hash(TOSTRING(CLASSNAME) TOSTRING(PARENTCLASS));
-//    static constexpr long long unsigned int getUniqueEventId() { return CLASSNAME##_UNIQUE_ID; }
-//
-//#define EVENT_GET_NAME(CLASSNAME) \
-//    static std::string getEventName() { return #CLASSNAME + std::string("_") + std::to_string(CLASSNAME##_UNIQUE_ID); }
-//
-//#define EVENT_CTOR_SIMPLE(CLASSNAME, PARENTCLASS, ...) \
-//    EVENT_GENERATE_UNIQUE_ID(CLASSNAME, PARENTCLASS) \
-//    explicit CLASSNAME(const std::shared_ptr<ReyEngine::EventPublisher> publisher, ##__VA_ARGS__) : PARENTCLASS(CLASSNAME##_UNIQUE_ID, publisher)
-
 //not necessarily used but keeping here for later
 template <typename T>
 constexpr auto type_name() {

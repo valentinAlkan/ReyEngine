@@ -89,8 +89,8 @@ namespace ReyEngine{
    };
 
    EVENT_ARGS(InputEventMouseWheel, 22222222, const Pos<float>& pos, const Vec2<float>& wheelMove)
-      , wheelMove(wheelMove)
       , mouse(pos)
+      , wheelMove(wheelMove)
       {}
       MouseEvent mouse;
       Vec2<float> wheelMove;

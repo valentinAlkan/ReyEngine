@@ -227,6 +227,8 @@ namespace ReyEngine {
          auto retval = Vector3Transform({x, y, 0}, m);
          return Vec2(retval.x, retval.y);
       }
+      Pos<T> toPos() const {return {x, y};}
+      Size<T> toSize() const {return {x, y};}
       inline std::string toString() const {return Vec<T, 2>::_toString(x, y);}
       T x;
       T y;
@@ -604,7 +606,7 @@ namespace ReyEngine {
       constexpr inline Size(const Vector2& v)     : Vec2<T>(v.x,v.y){}
       template <typename R>
       constexpr inline Size(const Vec2<R>& v)   : Vec2<T>(v.x,v.y){}
-      constexpr inline Size(const Size<T>& v) : Vec2<T>(v){}
+//      constexpr inline Size(const Size<T>& v) : Vec2<T>(v){}
       constexpr inline void operator=(Pos<T>&) = delete;
       constexpr inline bool operator==(const Size<T>& rhs) const {return Size::x==rhs.x && Size::y==rhs.y;}
       constexpr inline bool operator!=(const Size<T>& rhs) const {return Size::x!=rhs.x || Size::y!=rhs.y;}
@@ -666,7 +668,7 @@ namespace ReyEngine {
       constexpr inline Rect& operator-=(const Rect<T>& rhs){x -= rhs.x; y -= rhs.y; width -= rhs.width; height -= rhs.height; return *this;}
       constexpr inline Rect& operator*=(const Rect<T>& rhs){x *= rhs.x; y *= rhs.y; width *= rhs.width; height *= rhs.height; return *this;}
       constexpr inline Rect& operator/=(const Rect<T>& rhs){x /= rhs.x; y /= rhs.y; width /= rhs.width; height /= rhs.height; return *this;}
-      constexpr inline Rect& centerOnPoint(const Pos<R_FLOAT>& p) {return setPos(p - size() / 2);} /// Return the rect such that it would be centered on point p
+      constexpr inline Rect& centerOnPoint(const Pos<R_FLOAT>& p) {return setPos(p - Pos<R_FLOAT>(size().toPos() / 2));} /// Return the rect such that it would be centered on point p
       constexpr inline Rect& embiggen(T amt) {return *this += Rect<T>(-amt, -amt, 2*amt, 2*amt);} //shrink/expand borders evenly. Perfectly cromulent name.
       constexpr inline Rect& emtallen(T amt) {return *this += Rect<T>(0, -amt, 0, 2*amt);}//embiggen tallness evenly
       constexpr inline Rect& emwiden(T amt) {return *this += Rect<T>(-amt, 0, 2*amt, 0);}//embiggen wideness evenly

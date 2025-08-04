@@ -1,5 +1,4 @@
 #include "Window.h"
-#include "Widget.h"
 #include "Canvas.h"
 #include "Label.h"
 #include "Layout.h"
@@ -96,7 +95,7 @@ protected:
 //                 cout << "Mouse delta = " << mmEvent.mouseDelta << endl;
 //                 cout << "current position = " << getPos() << endl;
 //                 cout << "new position = " << mmEvent.mouseDelta + getPos() << endl;
-                  setPosition(getPos() + mmEvent.mouseDelta);
+                  setPosition(getPos() + mmEvent.mouseDelta.toPos());
                   return this;
                }
                break;
