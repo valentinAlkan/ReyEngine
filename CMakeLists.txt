@@ -173,8 +173,9 @@ endif (UNIX)
 ##### TILE EDITOR
 add_executable(TileEditor
     apps/TileEditor/src/main.cpp
-    apps/TileEditor/src/UI.cpp
+    apps/TileEditor/src/ui/UI.cpp
     apps/TileEditor/src/TileEditor.cpp
+    apps/TileEditor/src/ui/TilePalette.cpp
 )
 
 target_include_directories(TileEditor PUBLIC apps/TileEditor/src)

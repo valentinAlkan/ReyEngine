@@ -111,11 +111,13 @@ void Canvas::renderProcess(RenderTarget& parentTarget) {
    rlPopMatrix();
 
    //root canvas has no parent canvas. So ensure root canvas draws its foreground.
+   rlPushMatrix();
    if (!getCanvas()) {
       for (auto& child : _foreground.getValues()){
          processNode<RenderProcess>(child, false);
       }
    }
+   rlPopMatrix();
 
    render2DEnd();
    _renderTarget.endRenderMode();

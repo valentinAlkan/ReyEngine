@@ -1,6 +1,6 @@
 #include "Window.h"
 #include "Canvas.h"
-#include "UI.h"
+#include "ui/UI.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -26,8 +26,6 @@ int main() {
          ui->setAnchoring(Anchor::FILL);
          root->moveToForeground(ui.get());
       }
-
-
 
       window.exec();
       return 0;

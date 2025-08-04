@@ -157,7 +157,7 @@ namespace ReyEngine {
       inline constexpr void operator=(Size<T>&) = delete;
 
       virtual inline void operator=(Pos<T>&) = delete;
-      inline explicit constexpr operator Vector2() const {return {(float)x,(float)y};}
+      inline constexpr operator Vector2() const {return {(float)x,(float)y};}
       inline constexpr T magnitude() const {return std::sqrt(x * x + y * y);}
       static inline constexpr T magnitude(T x, T y) {return std::sqrt(x * x + y * y);}
       UnitVector2 direction(const Vec2<T>& dest) const; //get the unit vector that points at dest from this point's perspective
@@ -1599,7 +1599,7 @@ namespace ReyEngine {
 //      void
 //   };
 
-   Pos<R_FLOAT> getScreenCenter();
+   CanvasSpace<Pos<R_FLOAT>> getScreenCenter();
    Size<int> getScreenSize();
    ReyEngine::Size<int> getWindowSize();
    void setWindowSize(ReyEngine::Size<int>);
