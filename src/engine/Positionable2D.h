@@ -7,10 +7,10 @@ namespace ReyEngine::Internal {
       Positionable2D()
       : maxSize({std::numeric_limits<R_FLOAT>::max()})
       {}
-      [[nodiscard]] inline Rect<R_FLOAT> getRect() const {return {transform2D.extractTranslation(), size};}
+      [[nodiscard]] inline Rect<R_FLOAT> getRect() const {return {Pos<R_FLOAT>(transform2D.extractTranslation()), size};}
       [[nodiscard]] inline Size<R_FLOAT> getSize() const {return size;}
       [[nodiscard]] inline Rect<R_FLOAT> getSizeRect() const {return {0,0,size.x, size.y};}
-      [[nodiscard]] inline Pos<R_FLOAT> getPos() const {return transform2D.extractTranslation();}
+      [[nodiscard]] inline Pos<R_FLOAT> getPos() const {return Pos<R_FLOAT>(transform2D.extractTranslation());}
       [[nodiscard]] inline Radians getRotation() const {return transform2D.extractRotation();}
       [[nodiscard]] inline Vec2<R_FLOAT> getScale() const {return transform2D.extractScale();}
 
@@ -69,7 +69,7 @@ namespace ReyEngine::Internal {
       }
       inline CanvasSpace<Rect<R_FLOAT>> getGloablRect(){
          auto gpos = getGlobalTransform().get().extractTranslation();
-         Rect<R_FLOAT> rect = {gpos,size};
+         Rect<R_FLOAT> rect = {Pos<R_FLOAT>(gpos),size};
          return rect;
       }
       inline Size<R_FLOAT> getMinSize() const {return minSize;}

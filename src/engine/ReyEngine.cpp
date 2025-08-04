@@ -34,9 +34,9 @@ template<> Rect<float> Pos<float>::toRect(const Size<float>& s) const {return {{
 template<> Rect<double> Pos<double>::toRect(const Size<double>& s) const {return {{x, y}, {s}};}
 template<> Rect<int> Pos<int>::toRect(const Size<int>& s) const {return {{x, y}, {s}};}
 /////////////////////////////////////////////////////////////////////////////////////////
-template<> Rect<float> Pos<float>::toCenterRect(const Size<float>& s) const {return {*this-s/2,{s}};}
-template<> Rect<double> Pos<double>::toCenterRect(const Size<double>& s) const {return {*this-s/2,{s}};}
-template<> Rect<int> Pos<int>::toCenterRect(const Size<int>& s) const {return {*this-s/2,{s}};}
+template<> Rect<float> Pos<float>::toCenterRect(const Size<float>& s) const {return {*this-Pos<float>(s/2),{s}};}
+template<> Rect<double> Pos<double>::toCenterRect(const Size<double>& s) const {return {*this-Pos<double>(s/2),{s}};}
+template<> Rect<int> Pos<int>::toCenterRect(const Size<int>& s) const {return {*this-Pos<int>(s/2),{s}};}
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////

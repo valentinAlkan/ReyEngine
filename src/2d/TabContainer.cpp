@@ -29,7 +29,7 @@ void TabContainer::render2D() const {
       drawLine(rect.rightSide(), 1.0, backgroundSecondary);
 //      drawRectangleLines(rect, 1.0, backgroundSecondary);
       //draw the tab child names
-      drawText(tab.widget->getName(), rect.pos() + Pos<int>(1,1), theme->font);
+      drawText(tab.widget->getName(), rect.pos() + Pos<R_FLOAT>(1,1), theme->font);
    }
 }
 

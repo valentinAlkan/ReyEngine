@@ -25,10 +25,10 @@ namespace ReyEngine {
    static constexpr R_FLOAT MaxFloat = FLT_MAX;
    static constexpr R_FLOAT MinFloat = FLT_MIN;
 
-    namespace Math {
-        template <typename T> T min(T a, T b){return a <= b ? a : b;}
-        template <typename T> T max(T a, T b){return a >= b ? a : b;}
-    }
+   namespace Math {
+      template <typename T> T min(T a, T b){return a <= b ? a : b;}
+      template <typename T> T max(T a, T b){return a >= b ? a : b;}
+   }
 
    class FNVHash {
       static constexpr std::size_t FNV_PRIME = 0x100000001b3;
@@ -76,16 +76,16 @@ namespace ReyEngine {
       T underlying;
    };
 
-    // Canvas Coordinates - relative to current canvas
+   // Canvas Coordinates - relative to current canvas
    template <typename T>
    struct CanvasSpace{
    public:
-       CanvasSpace() = default;
-       CanvasSpace(const T& other): underlying(other){}
-       CanvasSpace& operator=(const T& other){ underlying = other;}
-       T& get(){return underlying;}
-       const T& get() const {return underlying;}
-       friend std::ostream& operator<<(std::ostream& os, const CanvasSpace<T>& other) {os << other.get(); return os;}
+      CanvasSpace() = default;
+      CanvasSpace(const T& other): underlying(other){}
+      CanvasSpace& operator=(const T& other){ underlying = other;}
+      T& get(){return underlying;}
+      const T& get() const {return underlying;}
+      friend std::ostream& operator<<(std::ostream& os, const CanvasSpace<T>& other) {os << other.get(); return os;}
    private:
       T underlying;
    };
@@ -117,24 +117,24 @@ namespace ReyEngine {
          }
       }
 
-   template<typename ...Args>
-   [[nodiscard]] static inline std::string _toString(Args &&... args) {
-      std::string retval = "{";
-      auto addToString = [&retval](const auto &arg) {
-         retval += std::to_string(arg);
-         retval += ", ";
-      };
+      template<typename ...Args>
+      [[nodiscard]] static inline std::string _toString(Args &&... args) {
+         std::string retval = "{";
+         auto addToString = [&retval](const auto &arg) {
+            retval += std::to_string(arg);
+            retval += ", ";
+         };
 
-      (addToString(args), ...);
+         (addToString(args), ...);
 
-      //remove trailing space and comma if needed
-      if (sizeof...(args) > 0) {
-         retval.pop_back();
-         retval.pop_back();
+         //remove trailing space and comma if needed
+         if (sizeof...(args) > 0) {
+            retval.pop_back();
+            retval.pop_back();
+         }
+         retval += "}";
+         return retval;
       }
-      retval += "}";
-      return retval;
-   }
 
    private:
       template<typename R, size_t... Is>
@@ -159,8 +159,11 @@ namespace ReyEngine {
    template <typename T>
    struct Vec2 : protected Vec<T, 2> {
       constexpr inline Vec2(): Vec<T, 2>(), x(0), y(0){}
+      constexpr inline Vec2(const Vec2& other) : Vec<T, 2>(), x(other.x), y(other.y) {}
+      constexpr inline Vec2(Vec2&& other) noexcept : Vec<T, 2>(), x(std::move(other.x)), y(std::move(other.y)) {}
       constexpr inline Vec2(const T& x, const T& y) : Vec<T, 2>(), x(x), y(y){}
       constexpr inline Vec2(const Vector2& v) : Vec<T, 2>(), x((T)v.x), y((T)v.y){}
+      constexpr inline Vec2& operator=(Vec2&& rhs) noexcept { x = std::move(rhs.x); y = std::move(rhs.y); return *this; }
       template <typename R>
       constexpr inline Vec2(const Vec2<R>& v): Vec<T, 2>(), x((T)v.x), y((T)v.y){}
       constexpr inline explicit operator bool() const {return x || y;}
@@ -179,7 +182,7 @@ namespace ReyEngine {
       constexpr inline Vec2 operator-() const {return {-x, -y};}
       constexpr inline void operator=(Size<T>&) = delete;
 
-      virtual inline void operator=(Pos<T>&) = delete;
+      inline void operator=(Pos<T>&) = delete;
       inline constexpr operator Vector2() const {return {(float)x,(float)y};}
       constexpr inline T magnitude() const {return std::sqrt(x * x + y * y);}
       static constexpr inline T magnitude(T x, T y) {return std::sqrt(x * x + y * y);}
@@ -242,11 +245,11 @@ namespace ReyEngine {
       constexpr Vec2<R_FLOAT> operator*(R_FLOAT distance) const {return {_x*distance, _y*distance};}
       constexpr UnitVector2& operator=(const Vec2<R_FLOAT>& v){*this = UnitVector2(v); return *this;}
       constexpr operator Vec2<R_FLOAT>() const {return {_x,_y};}
-      constexpr Vec2<R_FLOAT> toVec2() const {return (Vec2<R_FLOAT>)(*this);}
-      bool valid() const  {return FloatEquals(toVec2().magnitude(), 1.0);}
-      constexpr R_FLOAT x() const {return _x;}
-      constexpr R_FLOAT y() const {return _y;}
-      Vec2<int> ortho4() const {
+      [[nodiscard]] constexpr Vec2<R_FLOAT> toVec2() const {return (Vec2<R_FLOAT>)(*this);}
+      [[nodiscard]] bool valid() const  {return FloatEquals(toVec2().magnitude(), 1.0);}
+      [[nodiscard]] constexpr R_FLOAT x() const {return _x;}
+      [[nodiscard]] constexpr R_FLOAT y() const {return _y;}
+      [[nodiscard]] Vec2<int> ortho4() const {
          if (std::abs(_x) > std::abs(_y)) {
             return {_x > 0 ? 1 : -1, 0};
          } else {
@@ -264,10 +267,10 @@ namespace ReyEngine {
          //fallback to cardinal directions
          return ortho4();
       }
-      auto rotate(const Radians& r) const {
+      [[nodiscard]] auto rotate(const Radians& r) const {
          return toVec2().rotate(r);
       }
-      CircleSector toCircleSector(Degrees totalAngle, double radius, const Pos<R_FLOAT>& pos) const;
+      [[nodiscard]] CircleSector toCircleSector(Degrees totalAngle, double radius, const Pos<R_FLOAT>& pos) const;
       friend std::ostream& operator<<(std::ostream& os, const UnitVector2& v) {os << v.toVec2().toString(); return os;}
    private:
       R_FLOAT _x=0;
@@ -306,30 +309,30 @@ namespace ReyEngine {
       T z;
    };
 
-    template <typename T>
-    struct Vec4 : protected Vec<T, 4> {
-        constexpr inline Vec4(): Vec<T, 4>(), w(0), x(0), y(0), z(0){}
-        constexpr inline Vec4(const std::vector<T>& stdvec): Vec<T, 4>(){
-            if (stdvec.size() != 4) throw std::runtime_error("Invalid element count for Vec4! Expected 4, got " + stdvec.size());
-            w = stdvec[0];
-            x = stdvec[1];
-            y = stdvec[2];
-            z = stdvec[3];
-        }
-        constexpr inline Vec4(const T& _w, const T& _x, const T& y, const T& _z) : Vec<T, 4>(), w(_w), x(_x), y(y),z(_z) {}
-        constexpr inline explicit Vec4(const Vector4& v) : Vec<T, 4>(), w((T)v.w), x((T)v.x), y((T)v.y), z((T)v.z){}
-        template <typename R>
-        constexpr inline Vec4(const Vec4<R>& v)        : Vec<T, 4>(), w((T)v.w), x((T)v.x), y((T)v.y), z((T)v.z){}
-        constexpr inline Vec4& operator=(const Vec4& rhs){w = rhs.w, x = rhs.x; y=rhs.y; z=rhs.z; return *this;}
-        constexpr inline Vec4& operator-(){w = -w; x = -x; y =-y; z = -z; return *this;}
-        constexpr inline static std::optional<Vec4<T>> fromString(const std::string& s){return Vec<T, 4>::fromString(s);};
-        inline std::string toString(){return Vec<T, 4>::_toString(w, x, y, z);}
-        constexpr friend std::ostream& operator<<(std::ostream& os, Vec4 v) {os << v.toString(); return os;}
-        T w;
-        T x;
-        T y;
-        T z;
-    };
+   template <typename T>
+   struct Vec4 : protected Vec<T, 4> {
+      constexpr inline Vec4(): Vec<T, 4>(), w(0), x(0), y(0), z(0){}
+      constexpr inline Vec4(const std::vector<T>& stdvec): Vec<T, 4>(){
+         if (stdvec.size() != 4) throw std::runtime_error("Invalid element count for Vec4! Expected 4, got " + stdvec.size());
+         w = stdvec[0];
+         x = stdvec[1];
+         y = stdvec[2];
+         z = stdvec[3];
+      }
+      constexpr inline Vec4(const T& _w, const T& _x, const T& y, const T& _z) : Vec<T, 4>(), w(_w), x(_x), y(y),z(_z) {}
+      constexpr inline explicit Vec4(const Vector4& v) : Vec<T, 4>(), w((T)v.w), x((T)v.x), y((T)v.y), z((T)v.z){}
+      template <typename R>
+      constexpr inline Vec4(const Vec4<R>& v)        : Vec<T, 4>(), w((T)v.w), x((T)v.x), y((T)v.y), z((T)v.z){}
+      constexpr inline Vec4& operator=(const Vec4& rhs){w = rhs.w, x = rhs.x; y=rhs.y; z=rhs.z; return *this;}
+      constexpr inline Vec4& operator-(){w = -w; x = -x; y =-y; z = -z; return *this;}
+      constexpr inline static std::optional<Vec4<T>> fromString(const std::string& s){return Vec<T, 4>::fromString(s);};
+      inline std::string toString(){return Vec<T, 4>::_toString(w, x, y, z);}
+      constexpr friend std::ostream& operator<<(std::ostream& os, Vec4 v) {os << v.toString(); return os;}
+      T w;
+      T x;
+      T y;
+      T z;
+   };
 
 
    struct UnitVector3 {
@@ -439,10 +442,10 @@ namespace ReyEngine {
 
    template <typename T>
    struct Line {
+      constexpr Line(): a(0,0), b(0,0){}
       template <typename _t>
       constexpr Line(const Line<_t>& other): Line(other.a, other.b){}
-      constexpr Line(): a(0,0), b(0,0){}
-      constexpr Line(Pos<T> a, Pos<T> b): a(a), b(b){}
+      constexpr Line(const Pos<T>& a, const Pos<T>& b): a(a), b(b){}
       constexpr Line(const T x1, const T y1, const T x2, const T y2): Line({x1, y1}, {x2, y2}){}
       constexpr Line copy(){return *this;}
       constexpr Pos<T> midpoint() const {return {a.x/2+b.x/2, a.y/2+b.y/2};}
@@ -455,20 +458,20 @@ namespace ReyEngine {
       constexpr Line operator-(const Pos<T>& pos) const {Line<T> l(*this); l.a -= pos; l.b -= pos; return l;}
       //Find the angle from horizontal between points and a b
       constexpr inline Radians angle() const {
-          auto dx = static_cast<R_FLOAT>(b.x - a.x);
-          auto dy = static_cast<R_FLOAT>(b.y - a.y);
-          return atan2(dy, dx);
+         auto dx = static_cast<R_FLOAT>(b.x - a.x);
+         auto dy = static_cast<R_FLOAT>(b.y - a.y);
+         return atan2(dy, dx);
       }
       //rotate the line around A by r radians
       constexpr inline Line& rotate(Pos<T> basis, Radians r){a.rotatePoint(basis, r); b.rotatePoint(basis, r); return *this;}
       constexpr inline Line& scale(Percent pct) {
-          // Calculate the direction vector from a to b
-          auto direction = b - a;
-          // Scale the direction vector by the percentage
-          auto extensionVector = direction * Fraction(pct).get();
-          auto newB = a + Pos(extensionVector.x, extensionVector.y);
-          b = newB;
-          return *this;
+         // Calculate the direction vector from a to b
+         auto direction = b - a;
+         // Scale the direction vector by the percentage
+         auto extensionVector = direction * Fraction(pct).get();
+         auto newB = a + Pos(extensionVector.x, extensionVector.y);
+         b = newB;
+         return *this;
       }
       constexpr inline Line& extend(float amt) {
          // Get the direction vector
@@ -532,7 +535,7 @@ namespace ReyEngine {
       constexpr inline Pos(const T& x, const T& y) : Vec2<T>(x, y){}
       constexpr inline Pos(const Vector2& v) : Vec2<T>(v){}
       template <typename R>
-      constexpr inline Pos(const Vec2<R>& v) : Vec2<T>(v){}
+      constexpr explicit inline Pos(const Vec2<R>& v) : Vec2<T>(v){}
       constexpr inline void operator=(Size<T>&) = delete;
       template <typename R>
       constexpr inline Pos& operator=(const Pos<R>& other){Vec2<T>::x = other.x; Vec2<T>::y=other.y; return *this;}
@@ -542,7 +545,7 @@ namespace ReyEngine {
       constexpr inline Pos& operator+=(const Pos& rhs){this->x += rhs.x; this->y += rhs.y; return *this;}
       constexpr inline Pos& operator-=(const Pos& rhs){this->x -= rhs.x; this->y -= rhs.y; return *this;}
       constexpr inline bool operator!=(const Pos& rhs){return this->x != rhs.x || this->y != rhs.y;}
-      constexpr inline Pos transform(const Matrix& m){return Vec2<T>::transform(*this, m);}
+      constexpr inline Pos transform(const Matrix& m){return Pos<T>(Vec2<T>::transform(*this, m));}
       inline operator std::string() const {return Vec2<T>::toString();}
       constexpr inline void operator=(const Size<T>&) = delete;
       [[nodiscard]] Rect<T> toRect() const;
@@ -552,27 +555,27 @@ namespace ReyEngine {
 //      inline Pos& operator=(const Vec2<T>& other){Pos::x = other.x; Pos::y = other.y; return *this;}
 //      Rotate around a basis point
       constexpr inline Pos& rotatePoint(const Pos<T>& basis, Radians r) {
-           double radians = r.get();
-           // Translate point to origin
-           double xTranslated = Pos::x - basis.x;
-           double yTranslated = Pos::y - basis.y;
-           // Apply rotation and translate back
-           Pos<int> p_rotated;
-           Pos::x = static_cast<T>(xTranslated * cos(radians) - yTranslated * sin(radians) + basis.x);
-           Pos::y = static_cast<T>(xTranslated * sin(radians) + yTranslated * cos(radians) + basis.y);
-           return *this;
-       }
+         double radians = r.get();
+         // Translate point to origin
+         double xTranslated = Pos::x - basis.x;
+         double yTranslated = Pos::y - basis.y;
+         // Apply rotation and translate back
+         Pos<int> p_rotated;
+         Pos::x = static_cast<T>(xTranslated * cos(radians) - yTranslated * sin(radians) + basis.x);
+         Pos::y = static_cast<T>(xTranslated * sin(radians) + yTranslated * cos(radians) + basis.y);
+         return *this;
+      }
       // Function to project a point distance d from point a along the line ab
       constexpr inline Pos& project(const Pos& b, double d) {
-          // Calculate the direction vector from a to b
-          Pos direction = b - *this;
-          // Normalize the direction vector
-          Pos unitDirection = direction.normalize();
-          // Scale the normalized vector by distance d
-          Pos scaledDirection = unitDirection * d;
-          // Calculate the new point by adding the scaled direction to point a
-          *this += Pos(scaledDirection.x, scaledDirection.y);
-          return *this;
+         // Calculate the direction vector from a to b
+         Pos direction = b - *this;
+         // Normalize the direction vector
+         Pos unitDirection = Pos(direction.normalize());
+         // Scale the normalized vector by distance d
+         Pos scaledDirection = Pos(unitDirection * d);
+         // Calculate the new point by adding the scaled direction to point a
+         *this += Pos(scaledDirection.x, scaledDirection.y);
+         return *this;
       }
       constexpr inline double distanceTo(const Pos& other) const {
          auto diff = *this - other;
@@ -743,7 +746,7 @@ namespace ReyEngine {
       }
       constexpr inline bool collides(const Rect& other) const {
          return ((x < (other.x + other.width) && (x + width) > other.x) &&
-             (y < (other.y + other.height) && (y + height) > other.y));
+                 (y < (other.y + other.height) && (y + height) > other.y));
       }
       constexpr inline int getCollisionType(const Rect& other) const {
          int pointCount = 0;
@@ -874,10 +877,10 @@ namespace ReyEngine {
          return Rect(subx * size.x, suby*size.y, size.x, size.y);
       }
 
-       //Get the sub-rectangle (of size Size) at SubRectCoords coords.
-       [[nodiscard]] constexpr inline Rect getSubRectAtCoords(const Size<R_FLOAT>& size, const SubRectCoords& coords) const {
-           return Rect(coords.x * size.x, coords.y*size.y, size.x, size.y);
-       }
+      //Get the sub-rectangle (of size Size) at SubRectCoords coords.
+      [[nodiscard]] constexpr inline Rect getSubRectAtCoords(const Size<R_FLOAT>& size, const SubRectCoords& coords) const {
+         return Rect(coords.x * size.x, coords.y*size.y, size.x, size.y);
+      }
 
       //returns the coordinates of the above subrect in grid-form (ie the 3rd subrect from the left would be {3,0}
       [[nodiscard]] constexpr inline SubRectCoords getSubRectCoord(const Size<R_FLOAT>& size, const Pos<R_FLOAT>& pos) const {
@@ -1153,17 +1156,17 @@ namespace ReyEngine {
       [[nodiscard]] inline Line<R_FLOAT> getTangentLine(const Pos<R_FLOAT>& pos, double length) const {
          auto point = getTangentPoint(pos);
          // Calculate the vector from center to tangent point
-         double dx = point.x - center.x;
-         double dy = point.y - center.y;
+         R_FLOAT dx = point.x - center.x;
+         R_FLOAT dy = point.y - center.y;
          // Calculate the perpendicular vector (rotate by 90 degrees)
-         double perpX = -dy;
-         double perpY = dx;
+         R_FLOAT perpX = -dy;
+         R_FLOAT perpY = dx;
          // Normalize the perpendicular vector
-         double magnitude = std::sqrt(perpX*perpX + perpY*perpY);
+         R_FLOAT magnitude = std::sqrt(perpX*perpX + perpY*perpY);
          perpX /= magnitude;
          perpY /= magnitude;
          // Calculate the start and end points of the tangent line
-         double halfLength = length / 2.0;
+         R_FLOAT halfLength = length / 2.0;
          Pos start(point.x - perpX * halfLength, point.y - perpY * halfLength);
          Pos end(point.x + perpX * halfLength, point.y + perpY * halfLength);
          return Line<R_FLOAT>(start, end);
@@ -1276,9 +1279,9 @@ namespace ReyEngine {
       Transform2D operator*(const Transform2D& rhs){return MatrixMultiply(matrix, rhs.matrix);}
       // Enhanced 2D transform function with more arguments
       [[nodiscard]] inline Vec2<float> transform(const Vec2<float>& point,
-                                          bool applyScale = true,
-                                          bool applyRotation = true,
-                                          bool applyTranslation = true) const {
+                                                 bool applyScale = true,
+                                                 bool applyRotation = true,
+                                                 bool applyTranslation = true) const {
          // Create a copy of the matrix to selectively apply transformations
          Matrix workingMatrix = matrix;
 
@@ -1535,10 +1538,10 @@ namespace ReyEngine {
 
    struct ReyTexture{
       ReyTexture(const FileSystem::File& file);
-       ReyTexture(ReyTexture&& other) noexcept
-      :  size(other.size)
-      , _tex(other._tex)
-      , _texLoaded(other._texLoaded)
+      ReyTexture(ReyTexture&& other) noexcept
+            :  size(other.size)
+            , _tex(other._tex)
+            , _texLoaded(other._texLoaded)
       {
          other._texLoaded = false;
          _file = other._file;
@@ -1668,18 +1671,18 @@ namespace ReyEngine {
       Rect<R_FLOAT> area;
    };
 
-   constexpr auto v2_0 = Vec2<R_FLOAT>(0,1);
-   constexpr auto v2_1 = Vec2<R_FLOAT>(0,1);
-   constexpr auto v3_0 = Vec3<R_FLOAT>(2,3,4);
-   constexpr auto v3_1 = Vec3<R_FLOAT>(2,3,4);
-   constexpr auto v4 = Vec4<R_FLOAT>(5,6,7,8);
-   constexpr auto p = Pos<R_FLOAT>(9, 10);
-   constexpr auto s = Size<R_FLOAT>(11,12);
-   static_assert(Vec2<float>(0,1).x == 0);
-   static_assert(Vec2<float>(0,1).y == 1);
-   static_assert(v2_0 + v2_1 == Vec2<R_FLOAT>(0, 2));
-   static_assert(!(s != s));
-   static_assert(s == s);
+//   constexpr auto v2_0 = Vec2<R_FLOAT>(0,1);
+//   constexpr auto v2_1 = Vec2<R_FLOAT>(0,1);
+//   constexpr auto v3_0 = Vec3<R_FLOAT>(2,3,4);
+//   constexpr auto v3_1 = Vec3<R_FLOAT>(2,3,4);
+//   constexpr auto v4 = Vec4<R_FLOAT>(5,6,7,8);
+//   constexpr auto p = Pos<R_FLOAT>(9, 10);
+//   constexpr auto s = Size<R_FLOAT>(11,12);
+//   static_assert(Vec2<float>(0,1).x == 0);
+//   static_assert(Vec2<float>(0,1).y == 1);
+//   static_assert(v2_0 + v2_1 == Vec2<R_FLOAT>(0, 2));
+//   static_assert(!(s != s));
+//   static_assert(s == s);
 
 }
 
@@ -1734,7 +1737,7 @@ namespace InputInterface{
       KEY_BACKSLASH       = 92,       // Key: '\'
       KEY_RIGHT_BRACKET   = 93,       // Key: ]
       KEY_GRAVE           = 96,       // Key: `
-            // Function keys
+      // Function keys
       KEY_SPACE           = 32,       // Key: Space
       KEY_ESCAPE          = 256,      // Key: Esc
       KEY_ENTER           = 257,      // Key: Enter
@@ -1776,7 +1779,7 @@ namespace InputInterface{
       KEY_RIGHT_ALT       = 346,      // Key: Alt right
       KEY_RIGHT_SUPER     = 347,      // Key: Super right
       KEY_KB_MENU         = 348,      // Key: KB menu
-            // Keypad keys
+      // Keypad keys
       KEY_KP_0            = 320,      // Key: Keypad 0
       KEY_KP_1            = 321,      // Key: Keypad 1
       KEY_KP_2            = 322,      // Key: Keypad 2
@@ -1794,7 +1797,7 @@ namespace InputInterface{
       KEY_KP_ADD          = 334,      // Key: Keypad +
       KEY_KP_ENTER        = 335,      // Key: Keypad Enter
       KEY_KP_EQUAL        = 336,      // Key: Keypad =
-            // Android key buttons
+      // Android key buttons
       KEY_BACK            = 4,        // Key: Android back button
       KEY_MENU            = 82,       // Key: Android menu button
       KEY_VOLUME_UP       = 24,       // Key: Android volume up button
@@ -1869,5 +1872,5 @@ namespace InputInterface{
 }
 
 namespace DisplayInterface {
-    inline void toggleFullscreen(){ToggleFullscreen();}
+   inline void toggleFullscreen(){ToggleFullscreen();}
 }

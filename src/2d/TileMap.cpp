@@ -134,7 +134,7 @@ Pos<R_FLOAT> TileMap::getCellPos(const TileCoord& coord) const {
 /////////////////////////////////////////////////////////////////////////////////////////
 Pos<R_FLOAT> TileMap::getCellPosCenter(const TileCoord& coord) const {
    auto pos = getCellPos(coord);
-   return pos + getTileSize()/2;
+   return pos + Pos<R_FLOAT>(getTileSize()/2);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

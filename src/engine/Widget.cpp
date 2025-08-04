@@ -214,23 +214,23 @@ void Widget::setModal(bool newValue) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-Pos<float> Widget::getLocalMousePos() const {
+Pos<R_FLOAT> Widget::getLocalMousePos() const {
    auto hasCanvas = getCanvas();
    if (!hasCanvas) return {};
    auto globaltransform = getGlobalTransform(false).get();
    auto cameraTransform = hasCanvas.value()->getCameraTransform();
    auto mousepos = InputManager::getMousePos().get();
-   return (globaltransform * cameraTransform).inverse().transform(mousepos);
+   return Pos<R_FLOAT>((globaltransform * cameraTransform).inverse().transform(mousepos));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-CanvasSpace<Pos<float>> Widget::toCanvasSpace(const Pos<float>& p) {
+CanvasSpace<Pos<R_FLOAT>> Widget::toCanvasSpace(const Pos<float>& p) {
    auto globaltransform = getGlobalTransform().get();
-   return {globaltransform.transform(p)};
+   return {Pos<R_FLOAT>(globaltransform.transform(p))};
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-WindowSpace<Pos<float>> Widget::toWindowSpace(const Pos<float>& p) {
+WindowSpace<Pos<R_FLOAT>> Widget::toWindowSpace(const Pos<float>& p) {
    auto globaltransform = getGlobalTransform().get();
-   return {globaltransform.transform(p)};
+   return {Pos<R_FLOAT>(globaltransform.transform(p))};
 }

@@ -69,9 +69,9 @@ void Window::exec(){
          }
 
          // see if the window has moved
-         Pos<float> newPos = getPosition();
+         Pos<R_FLOAT> newPos = Pos<R_FLOAT>(getPosition());
          if (newPos != position) {
-            WindowMoveEvent event(this, getPosition());
+            WindowMoveEvent event(this, Pos<R_FLOAT>(getPosition()));
             position = newPos;
             event.position = newPos;
             publish(event);
