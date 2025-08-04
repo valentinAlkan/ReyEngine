@@ -46,7 +46,7 @@ namespace ReyEngine {
          if (any.type() == typeid(T)) {
             return std::any_cast<T&>(any);
          }
-         Logger::error() << "getMetaData cannot return data from conflicting types";
+         Logger::error() << "getMetaData cannot return data from conflicting types" << std::endl;
          return {};
       }
       void removeMetaData(void* addr, const std::string& name) {

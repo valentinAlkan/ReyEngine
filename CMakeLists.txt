@@ -15,19 +15,36 @@ find_package(Threads REQUIRED)
 
 
 function(install_file SOURCE_PATH DESTINATION_PATH)
-    # Use STATUS for informational messages during configuration
-    message(STATUS "Installing file '${SOURCE_PATH}' to '${DESTINATION_PATH}'")
+    # Determine the absolute source path
+    if(IS_ABSOLUTE "${SOURCE_PATH}")
+        set(ABS_SOURCE_PATH "${SOURCE_PATH}")
+    else()
+        set(ABS_SOURCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_PATH}")
+    endif()
 
-    # Use the 'install' command for proper installation
-    # SOURCE_PATH should be relative to CMAKE_CURRENT_SOURCE_DIR, or an absolute path
-    # DESTINATION_PATH is relative to CMAKE_INSTALL_PREFIX
-    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_PATH}" DESTINATION "${DESTINATION_PATH}")
+    # Get just the filename for the final path
+    get_filename_component(FILENAME "${SOURCE_PATH}" NAME)
 
-    # Optional: Add permissions if needed (e.g., for scripts or config files)
-    # install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_PATH}"
-    #         DESTINATION "${DESTINATION_PATH}"
-    #         PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+    # Install to bin directory, preserving subdirectory structure
+    if(DESTINATION_PATH AND NOT DESTINATION_PATH STREQUAL "")
+        # Remove leading/trailing slashes and clean up the path
+        string(REGEX REPLACE "^/+" "" CLEAN_DEST "${DESTINATION_PATH}")
+        string(REGEX REPLACE "/+$" "" CLEAN_DEST "${CLEAN_DEST}")
+        set(INSTALL_DESTINATION "bin/${CLEAN_DEST}")
+    else()
+        set(INSTALL_DESTINATION "bin")
+    endif()
+
+    # Calculate final path
+    set(FINAL_INSTALL_PATH "${CMAKE_INSTALL_PREFIX}/${INSTALL_DESTINATION}/${FILENAME}")
+
+    # Print the absolute paths
+    message(STATUS "Will install '${ABS_SOURCE_PATH}' to '${FINAL_INSTALL_PATH}'")
+
+    # Install the file
+    install(FILES "${ABS_SOURCE_PATH}" DESTINATION "${INSTALL_DESTINATION}")
 endfunction()
+
 
 # Dependencies
 set(RAYLIB_VERSION 4.5.0)
@@ -248,7 +265,7 @@ add_executable( cppTest
 ##########################################
 
 
-install_file(test/test.scn test/)
+install_file(test/test.scn "")
 install_file(test/posTest.scn test/)
 install_file(test/posTest.scn test/)
 install_file(test/characters.png test/)
