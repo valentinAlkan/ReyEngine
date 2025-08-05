@@ -55,13 +55,51 @@ string CrossPlatform::getExePath() {
 #ifdef PLATFORM_LINUX
     char dest[PATH_MAX];
     memset(dest, 0, sizeof(dest)); // readlink does not null terminate!
-    if (readlink("/proc/self/exe", dest, PATH_MAX) == -1) {
-        perror("readlink");
-    } else {
-        printf("%s\n", dest);
-        throw std::runtime_error("Platform Linux: unable to determine self exe path");
+    int nbytes = readlink("/proc/self/exe", dest, PATH_MAX);
+   if (nbytes == -1) {
+       perror("readlink");
+       throw std::runtime_error("Platform Linux: unable to determine self exe path");
     }
-    return string(dest, PATH_MAX);
+    return string(dest, std::min<int>(nbytes, PATH_MAX));
 #endif
 
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+string CrossPlatform::getExeDir() {
+   string exePath = getExePath();
+
+#ifdef PLATFORM_WINDOWS
+   // Find the last backslash or forward slash (Windows accepts both)
+    size_t lastSlash = exePath.find_last_of("\\/");
+#else
+   // Find the last forward slash on Linux
+   size_t lastSlash = exePath.find_last_of('/');
+#endif
+
+   if (lastSlash != string::npos) {
+      return exePath.substr(0, lastSlash);
+   }
+
+   throw std::runtime_error("Unable to determine current exe directory!");
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+string CrossPlatform::getExeName() {
+   string exePath = getExePath();
+
+#ifdef PLATFORM_WINDOWS
+   // Find the last backslash or forward slash (Windows accepts both)
+    size_t lastSlash = exePath.find_last_of("\\/");
+#else
+   // Find the last forward slash on Linux
+   size_t lastSlash = exePath.find_last_of('/');
+#endif
+
+   if (lastSlash != string::npos) {
+      return exePath.substr(lastSlash + 1);
+   }
+
+   // If no path separator found, the whole string is the filename
+   return exePath;
 }

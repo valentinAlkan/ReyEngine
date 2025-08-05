@@ -56,7 +56,7 @@ protected:
 //                 cout << "Mouse delta = " << mmEvent.mouseDelta << endl;
 //                 cout << "current position = " << getPos() << endl;
 //                 cout << "new position = " << mmEvent.mouseDelta + getPos() << endl;
-                  setPosition(getPos() + mmEvent.mouseDelta);
+                  setPosition(getPos() + mmEvent.mouseDelta.toPos());
                   return this;
                }
                break;

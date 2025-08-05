@@ -9,4 +9,6 @@
 
 namespace CrossPlatform{
    std::string getExePath();
+   std::string getExeDir();
+   std::string getExeName();
 }
