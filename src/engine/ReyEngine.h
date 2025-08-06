@@ -547,6 +547,10 @@ namespace ReyEngine {
       constexpr inline Pos& operator+=(const Pos& rhs){this->x += rhs.x; this->y += rhs.y; return *this;}
       constexpr inline Pos& operator-=(const Pos& rhs){this->x -= rhs.x; this->y -= rhs.y; return *this;}
       constexpr inline bool operator!=(const Pos& rhs){return this->x != rhs.x || this->y != rhs.y;}
+      template <typename R>
+      constexpr inline Pos operator*(R amt) const {return {static_cast<T>(Vec2<T>::x*amt), static_cast<T>(Vec2<T>::y*amt)};}
+      template <typename R>
+      constexpr inline Pos operator/(R amt) const {return {Vec2<T>::x/amt, Vec2<T>::y/amt};}
       constexpr inline Pos transform(const Matrix& m){return Pos<T>(Vec2<T>::transform(*this, m));}
       inline operator std::string() const {return Vec2<T>::toString();}
       constexpr inline void operator=(const Size<T>&) = delete;
@@ -1101,25 +1105,25 @@ namespace ReyEngine {
    };
 
    struct Circle{
-      constexpr inline Circle(const Pos<R_FLOAT>& center, double radius): center(center), radius(radius){}
+      constexpr inline Circle(const Pos<R_FLOAT>& center, R_FLOAT radius): center(center), radius(radius){}
       constexpr inline Circle(const Circle& rhs): center(rhs.center), radius(rhs.radius){}
       /// create the circle that comprises the three points
       static inline std::optional<Circle> fromPoints(const Pos<R_FLOAT>& a, const Pos<R_FLOAT>& b, const Pos<R_FLOAT>& c){
          // Convert input points to doubles for precise calculation
-         double x1 = a.x, y1 = a.y;
-         double x2 = b.x, y2 = b.y;
-         double x3 = c.x, y3 = c.y;
+         R_FLOAT x1 = a.x, y1 = a.y;
+         R_FLOAT x2 = b.x, y2 = b.y;
+         R_FLOAT x3 = c.x, y3 = c.y;
 
          // Calculate the perpendicular bisector of two chords
-         double ux = 2 * (x2 - x1);
-         double uy = 2 * (y2 - y1);
-         double vx = 2 * (x3 - x1);
-         double vy = 2 * (y3 - y1);
-         double u = (x2*x2 - x1*x1 + y2*y2 - y1*y1);
-         double v = (x3*x3 - x1*x1 + y3*y3 - y1*y1);
+         R_FLOAT ux = 2 * (x2 - x1);
+         R_FLOAT uy = 2 * (y2 - y1);
+         R_FLOAT vx = 2 * (x3 - x1);
+         R_FLOAT vy = 2 * (y3 - y1);
+         R_FLOAT u = (x2*x2 - x1*x1 + y2*y2 - y1*y1);
+         R_FLOAT v = (x3*x3 - x1*x1 + y3*y3 - y1*y1);
 
          // Calculate determinant
-         double det = ux * vy - uy * vx;
+         R_FLOAT det = ux * vy - uy * vx;
 
          if (std::abs(det) < 1e-6) {
             //colinear points. not a circle.

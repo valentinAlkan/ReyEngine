@@ -12,7 +12,12 @@ namespace ReyEngine{
 //       void _on_rect_changed() override;
 //       void registerProperties() override {};
        void setRenderCallback(std::function<void(const Control&)> fx){renderCallback = fx;}
-       void setProcessCallback(std::function<void(Control&, float)> fx){processCallback = fx;}
+       void setProcessCallback(std::function<void(Control&, float)> fx, bool enableProcess=false){
+          processCallback = fx;
+          if (enableProcess){
+             setProcess(true);
+          }
+       }
        void setUnhandledInputCallback(std::function<Widget*(Control&, const InputEvent&)> fx){unhandledInputCallback = fx;}
        void setMouseEnterCallback(std::function<void(Control&)> fx){mouseEnterCallback=fx; acceptsHover=true;}
        void setMouseExitCallback(std::function<void(Control&)> fx){mouseExitCallback=fx; acceptsHover=true;}
