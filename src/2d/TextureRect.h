@@ -61,7 +61,6 @@ namespace ReyEngine {
 
          //for texture rects
          [[no_unique_address]] std::conditional_t<IsTextureRect<T>, std::shared_ptr<ReyTexture>, std::monostate>  _texture;
-         [[no_unique_address]] std::conditional_t<IsTextureRect<T>, std::string, std::monostate>  _texturePath;
 
          //for render targets
          [[no_unique_address]] std::conditional_t<IsTextureRect<T>, std::monostate, std::shared_ptr<RenderTarget>>  _renderTarget;

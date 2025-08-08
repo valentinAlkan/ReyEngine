@@ -157,8 +157,8 @@ protected:
 
 //add std::namespace junk here
 namespace std {
-   template<typename NamedType> constexpr bool isfinite(const NamedType &v) {return std::isfinite(v.get());}
-   template<typename NamedType> constexpr NamedType abs(const NamedType &v) {return std::abs(v.get());}
+   template<typename NamedType> constexpr auto isfinite(const NamedType &v) -> decltype(v.get(), bool{}) {return std::isfinite(v.get());}
+   template<typename NamedType> constexpr auto abs(const NamedType &v) -> decltype(v.get(), NamedType{}) {return std::abs(v.get());}
 };
 
 template <typename T, typename Parameter, template<typename> class... Skills>

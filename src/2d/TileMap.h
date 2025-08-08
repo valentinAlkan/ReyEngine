@@ -65,8 +65,8 @@ namespace ReyEngine {
          }
          [[nodiscard]] inline Size<int> getTileSize() const {return _tileSize;}
          [[nodiscard]] inline Size<int> getSheetSize() const {return {texture.size.x, texture.size.y};}
-         inline const FileSystem::File getFile() const {return texture.getPath();}
-         std::string getPath() {return texture.getPath();}
+//         inline const FileSystem::File getFile() const {return texture.getPath();}
+//         std::string getPath() {return texture.getPath();}
       protected:
          int _columnCount; //cached
          int _rowCount; //cached

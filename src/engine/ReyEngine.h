@@ -1542,29 +1542,56 @@ namespace ReyEngine {
    ReyEngineFont getDefaultFont(std::optional<R_FLOAT> fontSize = std::nullopt);
    ReyEngineFont getFont(const std::string& fileName);
 
+   struct ReyTexture;
+   struct ReyImage{
+      inline ReyImage(const Image& im){
+         _image = im;
+         _imageLoaded = _image.data != nullptr;
+      }
+      inline ReyImage(const char *fileType, const unsigned char *fileData, int dataSize){
+         _image = LoadImageFromMemory(fileType, fileData, dataSize);
+         _imageLoaded = _image.data != nullptr;
+      }
+      ReyImage() = default;
+      ~ReyImage(){
+         if (_imageLoaded) UnloadImage(_image);
+      }
+      inline ReyImage& operator=(const Image& other){_image = other; return *this;}
+      [[nodiscard]] void* getData() const {return _image.data;}
+      operator bool() const {return _imageLoaded;}
+   protected:
+      Image _image;
+      bool _imageLoaded = false;
+      friend class ReyTexture;
+   };
+
    struct ReyTexture{
-      ReyTexture(const FileSystem::File& file);
+      ReyTexture(){}
+      ReyTexture(const ReyImage&);
+      ReyTexture(const FileSystem::File&);
       ReyTexture(ReyTexture&& other) noexcept
-            :  size(other.size)
-            , _tex(other._tex)
-            , _texLoaded(other._texLoaded)
+      :  size(other.size)
+      , _tex(other._tex)
+      , _texLoaded(other._texLoaded)
       {
          other._texLoaded = false;
-         _file = other._file;
+      }
+      ReyTexture& operator=(ReyTexture&& other) noexcept {
+         size = other.size;
+         _tex = other._tex;
+         _texLoaded = other._texLoaded;
+         return *this;
       }
       void loadTexture(const FileSystem::File& file);
       ~ReyTexture(){
          if (_texLoaded) {
             UnloadTexture(_tex);
          }
-         _file.clear();
       }
       [[nodiscard]] const Texture2D& getTexture() const {return _tex;}
       operator bool() const {return _texLoaded;}
-      std::string getPath() const {return _file;}
       Size<int> size;
    protected:
-      FileSystem::File _file;
       Texture2D _tex;
       bool _texLoaded = false;
    };
