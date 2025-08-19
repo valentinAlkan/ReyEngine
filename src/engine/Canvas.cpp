@@ -85,8 +85,7 @@ void Canvas::renderProcess(RenderTarget& parentTarget) {
 
    if (!_retained) {
       ClearBackground(Colors::none);
-      drawRectangleGradientV(getRect().toSizeRect(), Colors::green, Colors::yellow);
-      drawText(getName(), {0,0}, theme->font);
+      drawRectangle(getSizeRect(), Colors::lightGray);
    }
 
    BeginMode2D(camera);
@@ -133,7 +132,7 @@ CanvasSpace<Pos<float>> Canvas::getMousePos() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Widget* Canvas::__process_hover(const InputEventMouseHover& event){
-   auto _event = const_cast<InputEventMouseHover&>(event); //should not be rvalue
+   auto& _event = const_cast<InputEventMouseHover&>(event); //should not be rvalue
    auto accepted = __process_unhandled_input(_event);
    setHover(accepted);
    return accepted;

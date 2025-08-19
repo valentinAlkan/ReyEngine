@@ -90,7 +90,7 @@ Widget* TabContainer::_unhandled_input(const InputEvent& event){
    if (auto isMouse = event.isMouse()) {
       switch (event.eventId) {
          case InputEventMouseButton::getUniqueEventId(): {
-            auto mouseEvent = event.toEvent<InputEventMouseButton>();
+            auto& mouseEvent = event.toEvent<InputEventMouseButton>();
             if (mouseEvent.isDown) return nullptr; //only want uppies
             auto localPos = isMouse.value()->getLocalPos();
             for (auto& tabData : _tabs){

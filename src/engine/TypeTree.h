@@ -215,25 +215,25 @@ namespace ReyEngine::Internal::Tree {
        * @param name : name of the wanted node
        * @return : the unique_ptr of the node if it existed, nullptr if it did not;
        */
-      std::optional<std::unique_ptr<TypeNode>> removeChild (const std::string& name){
+      std::optional<std::unique_ptr<TypeNode>> removeChild (const std::string& _name){
          //remove first from child order
          //remove also from the order vector
          for (auto it = _childOrder.begin(); it != _childOrder.end(); ++it){
             auto& ptr = *it;
-            if (ptr->name == name){
+            if (ptr->name == _name){
                _childOrder.erase(it);
                break;
             }
          }
 
-         auto it = _childMap.find(std::hash<std::string>{}(name));
+         auto it = _childMap.find(std::hash<std::string>{}(_name));
          if(it != _childMap.end()){
             auto removedNode = std::move(it->second);
             _childMap.erase(it);
             removedNode->cleanupOnRemoval();
             return removedNode;
          }
-         Logger::error() << "Unable to remove child " << name << " from node " << getScenePath() << std::endl;
+         Logger::error() << "Unable to remove child " << _name << " from node " << getScenePath() << std::endl;
          return {};
       };
 
@@ -247,9 +247,8 @@ namespace ReyEngine::Internal::Tree {
          return retVector;
       };
 
-
-      inline std::optional<TypeNode*> getChild(const std::string& name) {
-         auto it = _childMap.find(std::hash<std::string>{}(name));
+      inline std::optional<TypeNode*> getChild(const std::string& _name) {
+         auto it = _childMap.find(std::hash<std::string>{}(_name));
          if (it != _childMap.end()) return {it->second.get()};
          return std::nullopt;
       }
@@ -310,8 +309,8 @@ namespace ReyEngine::Internal::Tree {
       [[nodiscard]] const std::vector<TypeNode*>& getChildren() const {return _childOrder;}
       std::vector<TypeNode*>& getChildren() {return _childOrder;}
 
-      const std::string name;
       const std::string typeName;
+      const std::string name;
    protected:
 
       //direct, unsafe type conversion
@@ -371,5 +370,13 @@ namespace ReyEngine::Internal::Tree {
       }
       node->as<TreeStorable>().value()->__on_made();
       return {node->ref<T>(), std::move(node)};
+   }
+
+   //convenience function
+   template<typename T, typename InstanceName, typename... Args>
+   std::shared_ptr<T> _make_child(TypeNode* parent, InstanceName&& instanceName, Args&&... args) {
+      auto [obj, node] = _make_node<T>(instanceName, std::forward<Args>(args)...);
+      parent->addChild(std::move(node));
+      return obj;
    }
 }

@@ -3,6 +3,8 @@
 #include <functional>
 #include <type_traits>
 #include <cmath>
+#include <chrono>
+using namespace std::chrono_literals;
 
 namespace Units {
    template<typename T, template<typename> class crtpType>
@@ -36,6 +38,7 @@ template <typename T, typename Parameter, typename Ratio, template<typename> cla
 class NamedTypeImpl : public Skills<NamedTypeImpl<T, Parameter, Ratio, Skills...>>...
 {
 public:
+   using ParameterType = Parameter;
    // Literal detection helper
    template <typename U>
    static constexpr bool is_literal(U) {
@@ -46,8 +49,6 @@ public:
    template <auto Value>
    static constexpr bool is_literal_of_type = true;
 
-
-   // Add inside NamedTypeImpl class
    template <typename... Args>
    static constexpr bool are_all_literals(Args&&... args) {
       // Use a dummy lambda that depends on each parameter
@@ -144,13 +145,18 @@ public:
    constexpr NamedTypeImpl operator-() const {return -_value;}
    constexpr NamedTypeImpl operator+() const {return _value;}
 
-   template <typename NamedType>
-   constexpr NamedType toType() const{
-      //does not do conversion!!!!
-      return NamedType(_value);
-   }
+   template <typename TargetType>
+   [[nodiscard]] constexpr inline TargetType toType() const;
+
+   // Add fromType method
+   template <typename SourceType>
+   [[nodiscard]] static constexpr inline NamedTypeImpl fromType(const SourceType& source);
 
    constexpr bool isNan(){return std::isnan(_value);}
+
+
+
+
 protected:
    T _value;
 };
@@ -180,6 +186,7 @@ namespace StrongUnitParameters{
    struct MetersMSLParameter{};
    struct MetersPerSecondParameter{};
    struct Fraction{};
+   struct FrequencyParameter{};
 }
 
 //our implementations
@@ -234,6 +241,29 @@ template<> template<>
 constexpr Meters MetersMSL::toType<Meters>() const {
    return _value;
 }
+
+//frequency
+using Hertz = NamedType<double, StrongUnitParameters::FrequencyParameter, ToDouble>;
+constexpr inline Hertz  operator"" _hz(unsigned long long value){return {(double)value};}
+constexpr inline Hertz  operator"" _hz(long double value){return {(double)value};}
+template<> template<> constexpr inline std::chrono::seconds Hertz::toType<std::chrono::seconds>() const {return std::chrono::seconds(static_cast<long long>(1.0 / get()));}
+template<> template<> constexpr inline std::chrono::milliseconds Hertz::toType<std::chrono::milliseconds>() const {return std::chrono::milliseconds(static_cast<long long>(1000.0 / get()));}
+template<> template<> constexpr inline std::chrono::microseconds Hertz::toType<std::chrono::microseconds>() const {return std::chrono::milliseconds(static_cast<long long>(1000000.0 / get()));}
+template<> template<> constexpr inline std::chrono::nanoseconds Hertz::toType<std::chrono::nanoseconds>() const {return std::chrono::nanoseconds(static_cast<long long>(1000000000.0 / get()));}
+
+template<> template<> constexpr inline Hertz Hertz::fromType<std::chrono::milliseconds>(const std::chrono::milliseconds& source) {return Hertz(1000.0 / source.count());}
+template <typename CHRONO_TYPE> constexpr bool operator==(const Hertz& hz, const CHRONO_TYPE& t) {return hz.toType<CHRONO_TYPE>() == t;}
+template <typename CHRONO_TYPE> constexpr bool operator!=(const Hertz& hz, const CHRONO_TYPE& t) {return hz.toType<CHRONO_TYPE>() != t;}
+template <typename CHRONO_TYPE> constexpr bool operator<(const Hertz& hz, const CHRONO_TYPE& t) {return hz.toType<CHRONO_TYPE>() < t;}
+template <typename CHRONO_TYPE> constexpr bool operator>(const Hertz& hz, const CHRONO_TYPE& t) {return hz.toType<CHRONO_TYPE>() > t;}
+template <typename CHRONO_TYPE> constexpr bool operator>=(const Hertz& hz, const CHRONO_TYPE& t) {return hz.toType<CHRONO_TYPE>() >= t;}
+template <typename CHRONO_TYPE> constexpr bool operator<=(const Hertz& hz, const CHRONO_TYPE& t) {return hz.toType<CHRONO_TYPE>() <= t;}
+template <typename CHRONO_TYPE> constexpr bool operator==(const CHRONO_TYPE& t, const Hertz& hz) {return t == hz.toType<CHRONO_TYPE>();}
+template <typename CHRONO_TYPE> constexpr bool operator!=(const CHRONO_TYPE& t, const Hertz& hz) {return t != hz.toType<CHRONO_TYPE>();}
+template <typename CHRONO_TYPE> constexpr bool operator<(const CHRONO_TYPE& t, const Hertz& hz) {return t < hz.toType<CHRONO_TYPE>();}
+template <typename CHRONO_TYPE> constexpr bool operator>(const CHRONO_TYPE& t, const Hertz& hz) {return t > hz.toType<CHRONO_TYPE>();}
+template <typename CHRONO_TYPE> constexpr bool operator>=(const CHRONO_TYPE& t, const Hertz& hz) {return t >= hz.toType<CHRONO_TYPE>();}
+template <typename CHRONO_TYPE> constexpr bool operator<=(const CHRONO_TYPE& t, const Hertz& hz) {return t <= hz.toType<CHRONO_TYPE>();}
 
 //check our work
 #define ft Feet(3048_m)
@@ -298,6 +328,18 @@ static_assert(Knots(1.94384449244) == MetersPerSecond(1));
 static_assert(std::abs(Meters(-4)) == 4);
 static_assert(std::abs(Knots(4)) == 4);
 static_assert(Feet(1) == Inches(12));
+static_assert(Hertz(1).toType<std::chrono::milliseconds>() == 1000ms);
+static_assert(Hertz(2).toType<std::chrono::milliseconds>() == 500ms);
+static_assert(Hertz(3).toType<std::chrono::milliseconds>() == 333ms);
+static_assert(Hertz(0.5).toType<std::chrono::milliseconds>() == 2000ms);
+static_assert(Hertz::fromType(std::chrono::milliseconds(1000)) == 1_hz);
+static_assert(Hertz::fromType(std::chrono::milliseconds(100)) == 10_hz);
+static_assert(Hertz::fromType(std::chrono::milliseconds(10)) == 100_hz);
+static_assert(Hertz::fromType(std::chrono::milliseconds(1)) == 1000_hz);
+static_assert(Hertz(10) == std::chrono::milliseconds (100));
+static_assert(Hertz(10) >= std::chrono::milliseconds (100));
+static_assert(Hertz(9) >= std::chrono::milliseconds (100));
+static_assert(Hertz(10) <= std::chrono::milliseconds (100));
 #undef ft
 #undef pi2Rad
 #undef three_sixty_deg

@@ -54,6 +54,7 @@ constexpr auto type_name() {
 }
 
 namespace ReyEngine{
+   enum class PublishType {DO_PUBLISH, NO_PUBLISH};
    using EventId = size_t;
    struct EventPublisher;
    struct EventSubscriber;

@@ -1544,6 +1544,7 @@ namespace ReyEngine {
 
    struct ReyTexture;
    struct ReyImage{
+      ReyImage() = default;
       inline ReyImage(const Image& im){
          _image = im;
          _imageLoaded = _image.data != nullptr;
@@ -1552,11 +1553,14 @@ namespace ReyEngine {
          _image = LoadImageFromMemory(fileType, fileData, dataSize);
          _imageLoaded = _image.data != nullptr;
       }
-      ReyImage() = default;
       ~ReyImage(){
          if (_imageLoaded) UnloadImage(_image);
       }
-      inline ReyImage& operator=(const Image& other){_image = other; return *this;}
+      inline ReyImage& operator=(const Image& other){
+         _image = other;
+         _imageLoaded = true;
+         return *this;
+      }
       [[nodiscard]] void* getData() const {return _image.data;}
       operator bool() const {return _imageLoaded;}
    protected:
@@ -1568,6 +1572,7 @@ namespace ReyEngine {
    struct ReyTexture{
       ReyTexture(){}
       ReyTexture(const ReyImage&);
+      ReyTexture(ReyImage&&);
       ReyTexture(const FileSystem::File&);
       ReyTexture(ReyTexture&& other) noexcept
       :  size(other.size)
@@ -1580,6 +1585,7 @@ namespace ReyEngine {
          size = other.size;
          _tex = other._tex;
          _texLoaded = other._texLoaded;
+         other._texLoaded = false; //other texture releases ownership of data
          return *this;
       }
       void loadTexture(const FileSystem::File& file);
@@ -1589,6 +1595,7 @@ namespace ReyEngine {
          }
       }
       [[nodiscard]] const Texture2D& getTexture() const {return _tex;}
+      ReyTexture& operator=(ReyImage&&);
       operator bool() const {return _texLoaded;}
       Size<int> size;
    protected:

@@ -173,7 +173,7 @@ Widget* TileMap::_unhandled_input(const InputEvent& event) {
          break;
          }
          case InputEventMouseButton::getUniqueEventId():
-            auto mbEvent = event.toEvent<InputEventMouseButton>();
+            auto& mbEvent = event.toEvent<InputEventMouseButton>();
             if (mbEvent.isDown && mbEvent.button == InputInterface::MouseButton::LEFT){
                if (!_on_clicked(currentHover.value())) {
                   EventTileMapCellClicked _event(this, currentHover.value());

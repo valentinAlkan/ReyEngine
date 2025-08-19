@@ -22,6 +22,22 @@ ReyTexture::ReyTexture(const ReyImage& image)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+ReyTexture::ReyTexture(ReyImage&& image)
+{
+   _tex = LoadTextureFromImage(image._image);
+   size = {image._image.width, image._image.height};
+   _texLoaded = true;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+ReyTexture& ReyTexture::operator=(ReyEngine::ReyImage&& image){
+   _tex = LoadTextureFromImage(image._image);
+   size = {image._image.width, image._image.height};
+   _texLoaded = true;
+   return *this;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void ReyTexture::loadTexture(const FileSystem::File &file) {
    auto path = file.abs();
    if (!file.exists()){
