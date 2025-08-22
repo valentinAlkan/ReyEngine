@@ -27,6 +27,13 @@ void TextureRect::setTexture(const shared_ptr<ReyTexture>& newTexture){
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
+void TextureRect::setTexture(ReyTexture&& newTexture){
+   if (Application::isReady()) {
+      *_texture = std::move(newTexture);
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
 template <>
 void Internal::DrawArea<TextureRect>::fitTexture() {
    if (_has_inited) {

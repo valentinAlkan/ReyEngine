@@ -251,19 +251,30 @@ template<> template<> constexpr inline std::chrono::milliseconds Hertz::toType<s
 template<> template<> constexpr inline std::chrono::microseconds Hertz::toType<std::chrono::microseconds>() const {return std::chrono::milliseconds(static_cast<long long>(1000000.0 / get()));}
 template<> template<> constexpr inline std::chrono::nanoseconds Hertz::toType<std::chrono::nanoseconds>() const {return std::chrono::nanoseconds(static_cast<long long>(1000000000.0 / get()));}
 
+//constrain types only to std::chrono durations so that we don't overly broad linker errors for overloaded operators
+template <typename T>
+concept ChronoDuration = requires {typename T::rep; typename T::period;} && std::is_base_of_v<std::chrono::duration<typename T::rep, typename T::period>, T>;
 template<> template<> constexpr inline Hertz Hertz::fromType<std::chrono::milliseconds>(const std::chrono::milliseconds& source) {return Hertz(1000.0 / source.count());}
-template <typename CHRONO_TYPE> constexpr bool operator==(const Hertz& hz, const CHRONO_TYPE& t) {return hz.toType<CHRONO_TYPE>() == t;}
-template <typename CHRONO_TYPE> constexpr bool operator!=(const Hertz& hz, const CHRONO_TYPE& t) {return hz.toType<CHRONO_TYPE>() != t;}
-template <typename CHRONO_TYPE> constexpr bool operator<(const Hertz& hz, const CHRONO_TYPE& t) {return hz.toType<CHRONO_TYPE>() < t;}
-template <typename CHRONO_TYPE> constexpr bool operator>(const Hertz& hz, const CHRONO_TYPE& t) {return hz.toType<CHRONO_TYPE>() > t;}
-template <typename CHRONO_TYPE> constexpr bool operator>=(const Hertz& hz, const CHRONO_TYPE& t) {return hz.toType<CHRONO_TYPE>() >= t;}
-template <typename CHRONO_TYPE> constexpr bool operator<=(const Hertz& hz, const CHRONO_TYPE& t) {return hz.toType<CHRONO_TYPE>() <= t;}
-template <typename CHRONO_TYPE> constexpr bool operator==(const CHRONO_TYPE& t, const Hertz& hz) {return t == hz.toType<CHRONO_TYPE>();}
-template <typename CHRONO_TYPE> constexpr bool operator!=(const CHRONO_TYPE& t, const Hertz& hz) {return t != hz.toType<CHRONO_TYPE>();}
-template <typename CHRONO_TYPE> constexpr bool operator<(const CHRONO_TYPE& t, const Hertz& hz) {return t < hz.toType<CHRONO_TYPE>();}
-template <typename CHRONO_TYPE> constexpr bool operator>(const CHRONO_TYPE& t, const Hertz& hz) {return t > hz.toType<CHRONO_TYPE>();}
-template <typename CHRONO_TYPE> constexpr bool operator>=(const CHRONO_TYPE& t, const Hertz& hz) {return t >= hz.toType<CHRONO_TYPE>();}
-template <typename CHRONO_TYPE> constexpr bool operator<=(const CHRONO_TYPE& t, const Hertz& hz) {return t <= hz.toType<CHRONO_TYPE>();}
+//even though frequency and durations are not directly comparable, the intent is obvious since all frequencies can be reduced to
+// "1 occurrence per (duration)". so we will enable direct comparisons between frequency and duration with the understanding
+// that we are comparing the durations and not the number of occurrences
+// Thus we can write something like this:
+//    "if (duration > 1_hz){...}" which becomes "if (duration > 1s){...}"
+// or "if (duration < 10_hz){...}" which becomes "if (duration < 0.1s){...}"
+// etc.
+template <ChronoDuration CHRONO_TYPE> constexpr bool operator==(const Hertz& hz, const CHRONO_TYPE& t) {return hz.toType<CHRONO_TYPE>() == t;}
+template <ChronoDuration CHRONO_TYPE> constexpr bool operator!=(const Hertz& hz, const CHRONO_TYPE& t) {return hz.toType<CHRONO_TYPE>() != t;}
+template <ChronoDuration CHRONO_TYPE> constexpr bool operator<(const Hertz& hz, const CHRONO_TYPE& t) {return hz.toType<CHRONO_TYPE>() < t;}
+template <ChronoDuration CHRONO_TYPE> constexpr bool operator>(const Hertz& hz, const CHRONO_TYPE& t) {return hz.toType<CHRONO_TYPE>() > t;}
+template <ChronoDuration CHRONO_TYPE> constexpr bool operator>=(const Hertz& hz, const CHRONO_TYPE& t) {return hz.toType<CHRONO_TYPE>() >= t;}
+template <ChronoDuration CHRONO_TYPE> constexpr bool operator<=(const Hertz& hz, const CHRONO_TYPE& t) {return hz.toType<CHRONO_TYPE>() <= t;}
+template <ChronoDuration CHRONO_TYPE> constexpr bool operator==(const CHRONO_TYPE& t, const Hertz& hz) {return t == hz.toType<CHRONO_TYPE>();}
+template <ChronoDuration CHRONO_TYPE> constexpr bool operator!=(const CHRONO_TYPE& t, const Hertz& hz) {return t != hz.toType<CHRONO_TYPE>();}
+template <ChronoDuration CHRONO_TYPE> constexpr bool operator<(const CHRONO_TYPE& t, const Hertz& hz) {return t < hz.toType<CHRONO_TYPE>();}
+template <ChronoDuration CHRONO_TYPE> constexpr bool operator>(const CHRONO_TYPE& t, const Hertz& hz) {return t > hz.toType<CHRONO_TYPE>();}
+template <ChronoDuration CHRONO_TYPE> constexpr bool operator>=(const CHRONO_TYPE& t, const Hertz& hz) {return t >= hz.toType<CHRONO_TYPE>();}
+template <ChronoDuration CHRONO_TYPE> constexpr bool operator<=(const CHRONO_TYPE& t, const Hertz& hz) {return t <= hz.toType<CHRONO_TYPE>();}
+
 
 //check our work
 #define ft Feet(3048_m)

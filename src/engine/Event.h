@@ -259,3 +259,16 @@ namespace ReyEngine{
       friend class EventPublisher;
    };
 }
+
+#define CONSTEXPR_EVENTID(EVENT_ID) static constexpr ReyEngine::EventId ID = EVENT_ID; \
+                                    static constexpr ReyEngine::EventId getUniqueEventId(){return ID;} //temporary <- eases porting
+#define EVENT(EVENT_NAME, UNIQUE_EVENT_ID) \
+   struct EVENT_NAME : public ReyEngine::Event<EVENT_NAME, UNIQUE_EVENT_ID> { \
+      CONSTEXPR_EVENTID(UNIQUE_EVENT_ID)                   \
+      explicit EVENT_NAME(const ReyEngine::EventPublisher* publisher) : ReyEngine::Event<EVENT_NAME, UNIQUE_EVENT_ID>(publisher)
+
+
+#define EVENT_ARGS(EVENT_NAME, UNIQUE_EVENT_ID, ...) \
+   struct EVENT_NAME : public ReyEngine::Event<EVENT_NAME, UNIQUE_EVENT_ID> { \
+      CONSTEXPR_EVENTID(UNIQUE_EVENT_ID)             \
+      explicit EVENT_NAME(const ReyEngine::EventPublisher* publisher, __VA_ARGS__) : Event<EVENT_NAME, UNIQUE_EVENT_ID>(publisher)
