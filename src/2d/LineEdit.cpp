@@ -39,7 +39,7 @@ void LineEdit::render2D() const {
 
    //draw caret
    if (_isEditing) {
-      auto frameCounter = getFrameCount();
+      auto frameCounter = getEngineFrameCount();
       auto caretHigh = frameCounter % 60 > 30;
       if (caretHigh) {
          //measure the position of the text for where it should start

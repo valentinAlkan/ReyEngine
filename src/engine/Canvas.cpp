@@ -178,7 +178,8 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
       if (handled) return handled;
    }
 
-   //then background - which is affected by camera
+   //then background (which is affected by camera)
+   // this here is "normal" input
    if (isMouse) {
       auto cameraTransformer = MouseEvent::ScopeTransformer(*event.isMouse().value(), Transform2D(), getSize(), getCameraTransform());
       handled = createProcessNodeForEvent(_node, false, event);

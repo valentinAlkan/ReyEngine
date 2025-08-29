@@ -7,8 +7,8 @@
 namespace ReyEngine {
    namespace WidgetStatus{
       //give special status to widgets - define new status here and add to tuple
-      struct Modal{static constexpr char NAME[] = "Modal";};
-      struct Focus{static constexpr char NAME[] = "Focus";};
+      struct Modal{static constexpr char NAME[] = "Modal";}; // Focused widgets get first dibs on input events, *and consume those events that are not handled explicitly*
+      struct Focus{static constexpr char NAME[] = "Focus";}; // Focused widgets get first dibs on non-modal input events
       struct Hover{static constexpr char NAME[] = "Hover";};
       using StatusTypes = std::tuple<Modal, Focus, Hover>;
       // Type trait to check if a type is in the tuple
@@ -76,7 +76,7 @@ namespace ReyEngine {
       template <WidgetStatus::StatusType Status>
       void setStatus(Widget* newWidget){
          constexpr std::size_t statusIndex = WidgetStatus::tuple_type_index_v<Status, WidgetStatus::StatusTypes>;
-         //gauranteed safe against overflow by static index check so we can live dangerously by slicing arrays
+         //gauranteed safe against overflow by static index check, so we can live dangerously by slicing arrays
          auto oldWidget = statusWidgetStorage[statusIndex];
          statusWidgetStorage[statusIndex] = newWidget;
          bool statusChange = newWidget != oldWidget;
@@ -90,7 +90,7 @@ namespace ReyEngine {
                if (newWidget) newWidget->_on_focus_gained();
          }
          if constexpr (std::is_same_v<Status, WidgetStatus::Modal>){
-            //only drawables can be modal so we can set some extra statuses to help us out
+            //only drawables can be modal, so we can set some extra statuses to help us out
             if (oldWidget){
                oldWidget->_modal = false;
                oldWidget->_on_modality_lost();

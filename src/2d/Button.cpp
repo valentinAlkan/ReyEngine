@@ -3,23 +3,24 @@ using namespace std;
 using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Widget* PushButton::_unhandled_input(const InputEvent& event) {
-    if (!enabled) return nullptr;
+Widget* Button::_unhandled_input(const InputEvent& event) {
+   bool wasDown = down;
+   if (!enabled) return nullptr;
     if (event.isEvent<InputEventMouseButton>()) {
        auto& mbEvent = event.toEvent<InputEventMouseButton>();
        if (mbEvent.button == InputInterface::MouseButton::LEFT) {
           bool isInside = event.isMouse().value()->isInside();
-          if (down && !mbEvent.isDown) {
+          if (isFocused() && wasDown && !mbEvent.isDown) {
             //button is down and it was just released *somewhere*
-             publish<ButtonPressEvent>(ButtonPressEvent(this));
-            //if it was released on the button, it is a press
-             publish<ButtonUpEvent>(ButtonUpEvent(this, isInside));
              down = false;
+             setFocused(false);
+             _on_up(isInside);
              return this;
           } else if (mbEvent.isDown && isInside) {
             //normal inside-click
-             publish<ButtonDownEvent>(ButtonDownEvent(this));
              down = true;
+             setFocused(true);
+             _on_down();
              return this;
           }
        }
@@ -29,21 +30,23 @@ Widget* PushButton::_unhandled_input(const InputEvent& event) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Button::setDown(bool newDown, PublishType pubTybe){
+   bool wasDown = down;
    down = newDown;
    if (pubTybe == PublishType::DO_PUBLISH) {
-      if (down) {
-         publish<ButtonDownEvent>(ButtonDownEvent(this));
-      } else {
-         publish<ButtonUpEvent>(ButtonUpEvent(this, true));
-         if (as<PushButton>()) {
-            publish<PushButton::ButtonPressEvent>(PushButton::ButtonPressEvent(this));
-         }
+      if (down && !wasDown) {
+         _on_down();
+      } else if (!down && wasDown){
+         _on_up(false);
       }
    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
+void Button::click() {
+   setDown(true, PublishType::DO_PUBLISH);
+   setDown(false, PublishType::DO_PUBLISH);
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////
 void Button::_render2D() const {
     static constexpr int SEGMENTS = 10;
@@ -68,25 +71,24 @@ void Button::_render2D() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Widget* ToggleButton::_unhandled_input(const ReyEngine::InputEvent& event) {
-   if (!enabled) return nullptr;
-   if (event.isEvent<InputEventMouseButton>()) {
-      auto &mbEvent = event.toEvent<InputEventMouseButton>();
-      if (mbEvent.button == InputInterface::MouseButton::LEFT) {
-         bool isInside = event.isMouse().value()->isInside();
-         if (isInside && !mbEvent.isDown) {
-            //change state of button
-            down = !down;
-            //normal inside-click
-            if (down) {
-               publish<ButtonDownEvent>(ButtonDownEvent(this));
-            } else {
-               publish<ButtonUpEvent>(ButtonUpEvent(this, event.isMouse().value()->isInside()));
-            }
-            publish<ButtonToggleEvent>(ButtonToggleEvent(this));
-            return this;
-         }
-      }
-   }
-   return nullptr;
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+void ToggleButton::_on_down() {
+   Button::_on_down();
+   publish(ToggleButton::ButtonToggleEvent(this));
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ToggleButton::_on_up(bool mouseEscaped) {
+   Button::_on_up(mouseEscaped);
+   publish(ToggleButton::ButtonToggleEvent(this));
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+void PushButton::_on_up(bool mouseEscaped) {
+   Button::_on_up(mouseEscaped);
+   publish(PushButton::ButtonPressEvent(this));
+}
+

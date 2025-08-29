@@ -90,6 +90,49 @@ namespace ReyEngine {
       T underlying;
    };
 
+   /// This struct aids in remembering values. Using it like type T should always use the 'first' value,
+   /// but you can swap between two values, or march the values down the line to 'remember' the x most recent values
+   /// values[1] is most recent value, values.back() is least recent value
+   template <typename T, unsigned int COUNT=2>
+   struct MemoryValue{
+      MemoryValue(){
+         if constexpr (std::is_trivially_constructible_v<T>) {
+            values.fill(T{});
+         } else {
+            static_assert(false);
+         }
+      };
+      MemoryValue(const T& value) : values{} {
+         values.fill(T{});
+         values[0] = value;
+      }
+      template<typename ...Args>
+      MemoryValue(Args &&... args)
+      requires (sizeof...(args) > 1) && (sizeof...(args) == COUNT)
+      : values{static_cast<T>(std::forward<Args>(args))...}
+      {}
+      constexpr operator T() const { return values[0]; }
+      constexpr operator T&() { return values[0]; }
+      constexpr operator const T&() const { return values[0]; }
+      constexpr T& operator=(const T& other){march(); values[0] = other; return values[0];}
+      constexpr void swap() requires(COUNT == 2) {std::swap(values[0], values[1]);}
+      constexpr void march() requires(COUNT >= 2) {
+         if constexpr (COUNT > 2) {
+            T back = values[COUNT - 1];
+            for (std::size_t i = COUNT - 1; i > 0; --i) {
+               values[i] = values[i - 1];
+            }
+            values[0] = back;
+            return;
+         }
+         //otherwise do a swap
+         swap();
+      }
+      constexpr T operator[](unsigned int i){return values[i];}
+      constexpr T at(unsigned int i){return values.at(i);}
+      std::array<T, COUNT> values;
+   };
+
    template <typename T> struct Size;
    template <typename T> struct Pos;
    template <typename T> struct Rect;
@@ -1557,8 +1600,12 @@ namespace ReyEngine {
          if (_imageLoaded) UnloadImage(_image);
       }
       inline ReyImage& operator=(const Image& other){
+         if (_imageLoaded){
+            UnloadImage(_image);
+         }
          _image = other;
          _imageLoaded = true;
+//         other.data = nullptr;
          return *this;
       }
       [[nodiscard]] void* getData() const {return _image.data;}

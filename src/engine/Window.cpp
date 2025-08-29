@@ -12,7 +12,7 @@
 using namespace std;
 using namespace ReyEngine;
 using namespace Internal;
-
+using sc = chrono::steady_clock;
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -119,15 +119,15 @@ void Window::exec(){
          }
 
          //REPEATS
-         auto now = chrono::steady_clock::now();
-         static chrono::time_point<chrono::steady_clock> keyDownTimestamp = now;
+         auto now = sc::now();
+         static auto keyDownTimestamp = now;
          auto lastKey = InputManager::getLastKeyPressed();
          if (InputManager::isKeyDown(lastKey)) {
-            static chrono::time_point<chrono::steady_clock> keyRepeatTimestamp = now;
+            static auto keyRepeatTimestamp = now;
             if (now - keyDownTimestamp > _keyDownRepeatDelay) {
                //start sending repeats
                if (now - keyRepeatTimestamp > _keyDownRepeatRate) {
-                  keyRepeatTimestamp = chrono::steady_clock::now();
+                  keyRepeatTimestamp = sc::now();
                   InputEventKey event(this);
                   event.key = lastKey;
                   event.isDown = true;
@@ -142,7 +142,7 @@ void Window::exec(){
          for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
             auto keyDown = InputManager::instance().getKeyPressed();
             if ((int) keyDown) {
-               keyDownTimestamp = chrono::steady_clock::now();
+               keyDownTimestamp = sc::now();
                InputEventKey event(this);
                event.key = keyDown;
                event.isDown = true;

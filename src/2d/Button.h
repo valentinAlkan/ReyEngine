@@ -17,7 +17,7 @@ namespace ReyEngine{
       };
 
    public:
-      bool down = false;
+      void click(); // a down followed by an up.
       [[nodiscard]] std::string getText() const {return text;}
       void setText(const std::string& newText){
          text = newText;
@@ -28,6 +28,7 @@ namespace ReyEngine{
       void setToggle(bool isToggle){_toggle = isToggle;}
       [[nodiscard]] bool getToggle(){return _toggle;}
    protected:
+      bool down = false;
       using ColorPack = std::tuple<ColorRGBA, ColorRGBA, ColorRGBA>;
       Button(const std::string& text) {
          setText(text);
@@ -39,7 +40,9 @@ namespace ReyEngine{
          theme->background.colorTertiary = std::get<2>(colorPack);
       }
       void _render2D() const;
-
+      virtual void _on_down() {publish<ButtonDownEvent>(ButtonDownEvent(this));}
+      virtual void _on_up(bool mouseEscaped) {publish<ButtonUpEvent>(ButtonUpEvent(this, mouseEscaped));}
+      Widget* _unhandled_input(const InputEvent& event);
       std::string text;
       bool _toggle = false;
        ColorPack PUSHBUTTON_COLORS = {Colors::gray, Colors::lightGray, Colors::blue};
@@ -55,7 +58,8 @@ namespace ReyEngine{
          _applyTheme(PUSHBUTTON_COLORS);
       }
    protected:
-      Widget* _unhandled_input(const InputEvent&) override;
+      void _on_up(bool mouseEscaped) override;
+      void _on_down() override;
       void render2D() const override{_render2D();}
    };
    class PushButton : public Button{
@@ -69,7 +73,7 @@ namespace ReyEngine{
          _applyTheme(PUSHBUTTON_COLORS);
       }
    protected:
-      Widget* _unhandled_input(const InputEvent&) override;
+      void _on_up(bool mouseEscaped) override;
       void render2D() const override{_render2D();}
    };
 

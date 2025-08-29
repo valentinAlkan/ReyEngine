@@ -141,7 +141,7 @@ void Widget::setAnchoring(Anchor newAnchor) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-FrameCount Widget::getFrameCount() const {
+FrameCount Widget::getEngineFrameCount() const {
    if (auto hasWindow = getWindow()){
       return hasWindow.value()->getFrameCount();
    }
