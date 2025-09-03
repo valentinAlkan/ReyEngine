@@ -107,7 +107,7 @@ void Window::exec(){
          //do ups first so we don't process up and down on same frame
          for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
             auto keyUp = InputManager::instance().getKeyReleased();
-            if ((int) keyUp) {
+            if (keyUp != InputInterface::KeyCode::KEY_NULL) {
                InputEventKey event(this);
                event.key = keyUp;
                event.isDown = false;
@@ -141,7 +141,7 @@ void Window::exec(){
          //DOWNS
          for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
             auto keyDown = InputManager::instance().getKeyPressed();
-            if ((int) keyDown) {
+            if (keyDown != InputInterface::KeyCode::KEY_NULL) {
                keyDownTimestamp = sc::now();
                InputEventKey event(this);
                event.key = keyDown;

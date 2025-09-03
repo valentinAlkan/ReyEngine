@@ -32,16 +32,17 @@ namespace ReyEngine {
 
       Widget(): theme(new Theme){
       }
-      ~Widget(){
+      ~Widget() override{
          if constexpr (isDebugBuild) {
             std::cout << "Goodbye from " << getName() << "!!" << std::endl;
          }
       }
       REYENGINE_OBJECT(Widget)
       Theme& getTheme(){return *theme;}
-      std::optional<Widget*> getParentWidget() const;
+      void setTheme(std::shared_ptr<Theme>& newTheme){theme = newTheme;}
+      [[nodiscard]] std::optional<Widget*> getParentWidget() const;
       void setAnchoring(Anchor newAnchor);
-      Rect<R_FLOAT> getChildBoundingBox() const;
+      [[nodiscard]] Rect<R_FLOAT> getChildBoundingBox() const;
       [[nodiscard]] Anchor getAnchoring() const {return _anchor;}
       [[nodiscard]] FrameCount getEngineFrameCount() const;
       [[nodiscard]] bool isHovered() const;
@@ -50,13 +51,14 @@ namespace ReyEngine {
       void setHovered(bool);
       void setFocused(bool);
       void setModal(bool);
-      Pos<float> getLocalMousePos() const;
+      [[nodiscard]] Pos<float> getLocalMousePos() const;
       CanvasSpace<Pos<float>> toCanvasSpace(const Pos<float>&);
       WindowSpace<Pos<float>> toWindowSpace(const Pos<float>&);
       void setEnabled(bool newState){enabled = newState;}
-      bool getIsEnabled() const {return enabled;}
+      [[nodiscard]] bool getIsEnabled() const {return enabled;}
       void setInputFiltering(InputFilter newFilter){ _inputFilter = newFilter;}
-      InputFilter getInputFiltering() const {return _inputFilter;}
+      [[nodiscard]] InputFilter getInputFiltering() const {return _inputFilter;}
+      void setAcceptsHover(bool accepts);
    protected:
       //input
       virtual Widget* __process_unhandled_input(const InputEvent& event){ return _unhandled_input(event);}

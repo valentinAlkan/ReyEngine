@@ -11,6 +11,7 @@
 #include "TextureRect.h"
 #include "Dialog.h"
 #include "Sprite.h"
+#include "Panel.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -413,6 +414,10 @@ int main() {
                scrollAreaNode->addChild(std::move(n3));
                scrollButton->setPosition(200, 350);
             }
+
+            //add a panel to the scroll area
+            auto panel = make_child<Panel>(scrollAreaNode, "Panel");
+            panel->setRect(100, 300, 200, 200);
 
             //create a mouse event and test it
             InputEventMouseButton eventMouseButton(&window, scrollArea->getGloablRect().get().pos(), InputInterface::MouseButton::LEFT, true);

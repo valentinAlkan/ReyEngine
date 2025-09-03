@@ -146,6 +146,7 @@ add_library(ReyEngine2D STATIC
         src/2d/TextureRect.cpp
         src/2d/Sprite.cpp
         src/2d/TileMap.cpp
+        src/2d/Panel.cpp
 )
 
 target_include_directories(ReyEngine2D PUBLIC

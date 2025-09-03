@@ -234,3 +234,11 @@ WindowSpace<Pos<R_FLOAT>> Widget::toWindowSpace(const Pos<float>& p) {
    auto globaltransform = getGlobalTransform().get();
    return {Pos<R_FLOAT>(globaltransform.transform(p))};
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void Widget::setAcceptsHover(bool accepts) {
+   acceptsHover = accepts;
+   if (isHovered() && !acceptsHover){
+      setHovered(false);
+   }
+}

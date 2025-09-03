@@ -328,6 +328,7 @@ namespace ReyEngine {
                   }
                   return nullptr;
                }
+               #undef RETURN
             }
          }
          // go no further as a widget
