@@ -6,13 +6,24 @@ using namespace ReyEngine;
 using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////
+Panel::Panel()
+: REGION_NORTH(stretchRegion[0])
+, REGION_EAST(stretchRegion[1])
+, REGION_SOUTH(stretchRegion[2])
+, REGION_WEST(stretchRegion[3])
+{
+   theme->background.fill = Style::Fill::SOLID;
+   theme->background.colorPrimary = ReyEngine::ColorRGBA(94, 142, 181, 255);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void Panel::render2D() const {
-   drawRectangle(getSizeRect(), Colors::blue);
-//   auto color = theme->background.colorPrimary;
-//   //draw the menu bar top half that peeks out
-//   auto menuBarHeight = menuBar->getHeight();
-//   drawRectangle(menuBar->getRect(), theme->background.colorSecondary);
-//
+   auto color = theme->background.colorPrimary;
+   //draw the menu bar top half that peeks out
+   auto menuBarHeight = menuBar.bar.height;
+   drawRectangleLines(menuBar.bar, 1.0, theme->background.colorSecondary);
+   drawRectangleLines(getSizeRect(), 1.0, theme->background.colorSecondary);
+
 //
 //   if (!_isMinimized) {
 //      //dont need to draw these if we're minimized
@@ -31,9 +42,9 @@ void Panel::render2D() const {
 //
 //      //debug:
 ////      draw the stretch regions
-//      for (const auto &region: stretchRegion) {
-//         drawRectangle(region, ColorRGBA(255, 0, 0, 128));
-//      }
+      for (const auto &region: stretchRegion) {
+         drawRectangle(region, ColorRGBA(0, 0, 255, 128));
+      }
 //   }
 
 }
@@ -41,6 +52,11 @@ void Panel::render2D() const {
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::render2DBegin() {
 //   startScissor(_scissorArea);
+//   mask.beginRenderMode();
+//   ClearBackground(Colors::black);
+//   drawRectangleRounded(getSizeRect(), 5, 10, Colors::white);
+//   mask.endRenderMode();
+//   BeginDrawing();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -50,97 +66,101 @@ void Panel::render2DEnd() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::_init() {
+   _placementWidget = make_child<Control>("__placementWidget");
+   _placementWidget->setRect(window);
    setAcceptsHover(true);
    //create subwidgets
-   vlayout = make_child<Layout>(getNode(), VLAYOUT_NAME, Layout::LayoutDir::VERTICAL);
-   if (!window) window = make_child<Control>(vlayout->getNode(), WINDOW_NAME);
-   menuBar = make_child<Layout>(vlayout->getNode(), VLAYOUT_NAME, Layout::LayoutDir::HORIZONTAL);
-   menuBar->getTheme().layoutMargins.setAll(2);
+//   vlayout = make_child<Layout>(getNode(), VLAYOUT_NAME, Layout::LayoutDir::VERTICAL);
+//   if (!window) window = make_child<Control>(vlayout->getNode(), WINDOW_NAME);
+//   menuBar = make_child<Layout>(vlayout->getNode(), VLAYOUT_NAME, Layout::LayoutDir::HORIZONTAL);
+//   menuBar->getTheme().layoutMargins.setAll(2);
 
    //get rid of control background so we only see panel background
-   window->getTheme().background.fill = Style::Fill::NONE;
+//   window->getTheme().background.fill = Style::Fill::NONE;
 
-   vlayout->setAnchoring(Anchor::FILL);
-
-   //cap menu bar size
-   menuBar->setMaxSize({ReyEngine::MaxFloat, theme->font.size+4});
-   menuBar->getTheme().background.fill = Style::Fill::SOLID;
-
-   //add a spacer
-   auto lspacer = make_child<Control>(menuBar->getNode(), "__lspacer");
-   lspacer->setVisible(false);
-
-   titleLabel = make_child<Label>(menuBar->getNode(), TITLE_LABEL_NAME, "TEXT");
-   titleLabel->setTheme(theme);
-   titleLabel->setText(panelTitle.empty() ? getName() : panelTitle);
-
-   //add another spacer
-   auto rspacer = make_child<Control>(menuBar->getNode(), "__rspacer");
-   rspacer->setVisible(false);
-
+//   vlayout->setAnchoring(Anchor::FILL);
+//
+//   //cap menu bar size
+//   menuBar->setMaxSize({ReyEngine::MaxFloat, theme->font.size+4});
+//   menuBar->getTheme().background.fill = Style::Fill::SOLID;
+//
+//   //add a spacer
+//   auto lspacer = make_child<Control>(menuBar->getNode(), "__lspacer");
+//   lspacer->setVisible(false);
+//
+//   titleLabel = make_child<Label>(menuBar->getNode(), TITLE_LABEL_NAME, "TEXT");
+//   titleLabel->setTheme(theme);
+//   titleLabel->setText(panelTitle.empty() ? getName() : panelTitle);
+//
+//   //add another spacer
+//   auto rspacer = make_child<Control>(menuBar->getNode(), "__rspacer");
+//   rspacer->setVisible(false);
+//
    //add a button cluster on the right side of the menu bar
-   auto btnClusterRight = make_child<Layout>(menuBar->getNode(), "__btnClusterRight", Layout::LayoutDir::HORIZONTAL);
-   menuBar->layoutRatios = {1, 1, 1, .5};
+   menuBar.btnCluster = make_child_built_in<Layout>("__btnClusterRight", Layout::LayoutDir::HORIZONTAL);
+   menuBar.btnCluster->setMinWidth(20 * 3);
+   menuBar.btnCluster->setMinHeight(menuBar.bar.height);
 
    //add some buttons
-   auto btnMin = make_child<PushButton>(btnClusterRight->getNode(), BTN_MIN_NAME); btnMin->setText("_");
-   auto btnMax = make_child<PushButton>(btnClusterRight->getNode(), BTN_MAX_NAME); btnMax->setText("o");
-   auto btnClose = make_child<PushButton>(btnClusterRight->getNode(), BTN_CLOSE_NAME);
-   btnClose->setText("x");
-   btnClusterRight->getTheme().layoutMargins.setAll(2);
-   btnClusterRight->setMaxSize({100, 999999});
-
-   //connect to button signals
-   auto setScissor = [this](){_scissorArea = getScissorArea();};
-   auto toggleShowCB = [this](const PushButton::ButtonPressEvent& event){setVisible(false); return true;};
-   auto toggleMinCB = [this, setScissor](const PushButton::ButtonPressEvent& event){
-      _isMinimized = !_isMinimized;
-      setScissor();
-      window->setVisible(!_isMinimized);
-      _isResizable = !_isMinimized;
-      if (_isMinimized){
-         //record the input filter type so we can recall it later
-         _filterCache = window->getInputFiltering();
-         window->setInputFiltering(InputFilter::IGNORE_AND_STOP);
-      } else {
-         window->setInputFiltering(_filterCache);
-      }
-      setAcceptsHover(!_isMinimized);
-
-      return true;
-   };
-   auto toggleMaxCB = [this, toggleMinCB](const PushButton::ButtonPressEvent& event){
-      if (_isMinimized){
-         //deminimize
-         return toggleMinCB(event);
-      }
-
-      _isMaximized = !_isMaximized;
-      if (_isMaximized){
-         //maximize
-         cacheRect = getRect();
-         if (auto parent = getParentWidget()) {
-            setRect(parent.value()->getSizeRect());
-         }
-      } else {
-         //demaximize
-         setRect(cacheRect);
-      }
-      return true;
-   };
-   subscribe<PushButton::ButtonPressEvent>(btnClose, toggleShowCB);
-   subscribe<PushButton::ButtonPressEvent>(btnMin, toggleMinCB);
-   subscribe<PushButton::ButtonPressEvent>(btnMax, toggleMaxCB);
-
-   //window rect change callback
-   auto windowRectChangeCB = [&](Control& _window){
-      _window.setScissorArea(_window.getSizeRect().embiggen(-1));
-   };
-   window->setRectChangedCallback(windowRectChangeCB);
+   auto btnMin = ReyEngine::make_child<PushButton>(btnClusterRight->getNode(), BTN_MIN_NAME, "_");
+   auto btnMax = ReyEngine::make_child<PushButton>(btnClusterRight->getNode(), BTN_MAX_NAME, "o");
+   auto btnClose = ReyEngine::make_child<PushButton>(btnClusterRight->getNode(), BTN_CLOSE_NAME, "x");
+//   btnClusterRight->getTheme().layoutMargins.setAll(2);
+//   btnClusterRight->setMaxSize({100, 999999});
+//
+//   //connect to button signals
+//   auto setScissor = [this](){_scissorArea = getScissorArea();};
+//   auto toggleShowCB = [this](const PushButton::ButtonPressEvent& event){setVisible(false); return true;};
+//   auto toggleMinCB = [this, setScissor](const PushButton::ButtonPressEvent& event){
+//      _isMinimized = !_isMinimized;
+//      setScissor();
+//      window->setVisible(!_isMinimized);
+//      _isResizable = !_isMinimized;
+//      if (_isMinimized){
+//         //record the input filter type so we can recall it later
+//         _filterCache = window->getInputFiltering();
+//         window->setInputFiltering(InputFilter::IGNORE_AND_STOP);
+//      } else {
+//         window->setInputFiltering(_filterCache);
+//      }
+//      setAcceptsHover(!_isMinimized);
+//
+//      return true;
+//   };
+//   auto toggleMaxCB = [this, toggleMinCB](const PushButton::ButtonPressEvent& event){
+//      if (_isMinimized){
+//         //deminimize
+//         return toggleMinCB(event);
+//      }
+//
+//      _isMaximized = !_isMaximized;
+//      if (_isMaximized){
+//         //maximize
+//         cacheRect = getRect();
+//         if (auto parent = getParentWidget()) {
+//            setRect(parent.value()->getSizeRect());
+//         }
+//      } else {
+//         //demaximize
+//         setRect(cacheRect);
+//      }
+//      return true;
+//   };
+//   subscribe<PushButton::ButtonPressEvent>(btnClose, toggleShowCB);
+//   subscribe<PushButton::ButtonPressEvent>(btnMin, toggleMinCB);
+//   subscribe<PushButton::ButtonPressEvent>(btnMax, toggleMaxCB);
+//
+//   //window rect change callback
+//   auto windowRectChangeCB = [&](Control& _window){
+//      _window.setScissorArea(_window.getSizeRect().embiggen(-1));
+//   };
+//   window->setRectChangedCallback(windowRectChangeCB);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::_on_rect_changed(){
+   //update render masks
+
    //adjust stretch regions
    static constexpr int STRETCH_REGION_SIZE = 5;
    stretchRegion.at(0)= getSizeRect().chopBottom(getHeight() - STRETCH_REGION_SIZE);
@@ -148,51 +168,42 @@ void Panel::_on_rect_changed(){
    stretchRegion.at(2)= getSizeRect().chopTop(getHeight() - STRETCH_REGION_SIZE);
    stretchRegion.at(3)= getSizeRect().chopRight(getWidth() - STRETCH_REGION_SIZE);
    _scissorArea = getScissorArea();
+
+   //create rects
+   static constexpr float MENU_BAR_HEIGHT = 35;
+   static constexpr float BUTTON_SIZE = MENU_BAR_HEIGHT - 4;
+   menuBar.bar = Rect<float>(0,0,getWidth(), MENU_BAR_HEIGHT);
+   menuBar.btnClose = Rect<float>(getWidth() - BUTTON_SIZE,0, BUTTON_SIZE, BUTTON_SIZE);
+//   menuBar.btnExpand = Rect<float>(getWidth() - BUTTON_SIZE,0, BUTTON_SIZE, BUTTON_SIZE)
+//   menuBar.btnMinimize = Rect<float>(getWidth() - BUTTON_SIZE,0, BUTTON_SIZE, BUTTON_SIZE)
+   btnClusterRight->setPosition(getSizeRect().bottomLeft());
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+TypeNode *Panel::addChild(std::unique_ptr<TypeNode> &&child) {
+   auto thiz = dynamic_cast<TypeNode*>(this);
+   if (!thiz) throw std::runtime_error("Not sure how you managed to do this");
+   return thiz->addChild(std::move(child));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Widget *Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
    auto getStretchDir = [&]() -> ResizeDir {
-      auto cursorDir = ResizeDir::NONE;
       if (auto mouse = event.isMouse()) {
-         //set reszie cursor
-         //see if we're in a stretch region
-         auto stretchDir1 = ResizeDir::NONE;
-         auto stretchDir2 = ResizeDir::NONE;
-         for (int i = 0; i < 4; i++) {
-            //pick the appropriate stretch dir
-            auto& stretchDir = stretchDir1 == ResizeDir::NONE ? stretchDir1 : stretchDir2;
-            auto& region = stretchRegion.at(i);
-            if (region.contains(mouse.value()->getLocalPos())) {
-               //we're in a region. set the direction
-               switch (i) {
-                  case 0:
-                     stretchDir = ResizeDir::N;
-                     break;
-                  case 1:
-                     stretchDir = ResizeDir::E;
-                     break;
-                  case 2:
-                     stretchDir = ResizeDir::S;
-                     break;
-                  case 3:
-                     stretchDir = ResizeDir::W;
-                     break;
-               }
-            }
-            //early return - two stretch regions found
-            if (stretchDir1 != ResizeDir::NONE && stretchDir2 != ResizeDir::NONE) break;
+         auto localPos = mouse.value()->getLocalPos();
+         if (REGION_NORTH.contains(localPos)) {
+            if (REGION_EAST.contains(localPos)) return ResizeDir::NE;
+            if (REGION_WEST.contains(localPos)) return ResizeDir::NW;
+            return ResizeDir::N;
+         } else if (REGION_SOUTH.contains(localPos)) {
+            if (REGION_EAST.contains(localPos)) return ResizeDir::SE;
+            if (REGION_WEST.contains(localPos)) return ResizeDir::SW;
+            return ResizeDir::S;
          }
-         //set the resize direction
-         cursorDir = stretchDir1;
-         //because we go clockwise from top to left, stretchdir2 can only be a higher value than stretdir1. no need
-         // to check every possible condition since there are only 4 possible states.
-         if (stretchDir1 == ResizeDir::N && stretchDir2 == ResizeDir::E) cursorDir = ResizeDir::NE;
-         else if (stretchDir1 == ResizeDir::E && stretchDir2 == ResizeDir::S) cursorDir = ResizeDir::SE;
-         else if (stretchDir1 == ResizeDir::S && stretchDir2 == ResizeDir::W) cursorDir = ResizeDir::SW;
-         else if (stretchDir1 == ResizeDir::N && stretchDir2 == ResizeDir::W) cursorDir = ResizeDir::NW;
+         if (REGION_EAST.contains(localPos)) return ResizeDir::E;
+         if (REGION_WEST.contains(localPos)) return ResizeDir::W;
       }
-      return cursorDir;
+      return ResizeDir::NONE;
    };
 
    switch (event.eventId) {
@@ -202,7 +213,7 @@ Widget *Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
          if (mbEvent.isDown && !mbEvent.mouse.isInside()) break; //ingore downs that occur outside the rect
          dragStart = mbEvent.mouse.getLocalPos();
          resizeStartRect = getRect();
-         offset = (Pos<R_FLOAT>)mousePos - getPos(); //record position
+         offset = mbEvent.mouse.getLocalPos() - getPos(); //record position
 
          if (!_isMinimized && _isResizable && _resizeDir == ResizeDir::NONE){
             //if we're resizing, stop here and return
@@ -211,7 +222,7 @@ Widget *Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
          }
 
          //start dragging
-         if (!_isMaximized && _resizeDir == ResizeDir::NONE && menuBar->isInside(mbEvent.mouse.getLocalPos()) && mbEvent.isDown) {
+         if (!_isMaximized && _resizeDir == ResizeDir::NONE && menuBar.bar.contains(mbEvent.mouse.getLocalPos()) && mbEvent.isDown) {
             _isDragging = true;
             return this;
          } else if ((_isDragging || _resizeDir != ResizeDir::NONE) && !mbEvent.isDown){
@@ -226,15 +237,15 @@ Widget *Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
          auto& mmEvent = event.toEvent<InputEventMouseMotion>();
          //no dragging or resizing if we're maximized
          if (_isMaximized) break;
-         mousePos = mmEvent.mouse.getLocalPos();
-         auto delta = mousePos - dragStart;
+         auto delta = mmEvent.mouse.getLocalPos() - dragStart;
          //stretching overrides dragging
-         auto stretchN = [&](Rect<int> newRect){newRect.y+=delta.y; newRect.height -= delta.y; return newRect;};
-         auto stretchE = [&](Rect<int> newRect){newRect.width += delta.x; return newRect;};
-         auto stretchW = [&](Rect<int> newRect){newRect.x+=delta.x; newRect.width -= delta.x; return newRect;};
-         auto stretchS = [&](Rect<int> newRect){newRect.height += delta.y; return newRect;};
+         auto stretchN = [&](Rect<float> newRect){newRect.y+=delta.y; newRect.height -= delta.y; return newRect;};
+         auto stretchE = [&](Rect<float> newRect){newRect.width += delta.x; return newRect;};
+         auto stretchW = [&](Rect<float> newRect){newRect.x+=delta.x; newRect.width -= delta.x; return newRect;};
+         auto stretchS = [&](Rect<float> newRect){newRect.height += delta.y; return newRect;};
 
          if (_resizeDir != ResizeDir::NONE) {
+//            Logger::info() << "Old rect size = " << getRect() << endl;
             switch (_resizeDir){
                case ResizeDir::N: setRect(stretchN(resizeStartRect));break;
                case ResizeDir::E: setRect(stretchE(resizeStartRect)); break;
@@ -245,8 +256,14 @@ Widget *Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
                case ResizeDir::SE: setRect(stretchS(stretchE(resizeStartRect))); break;
                case ResizeDir::SW: setRect(stretchS(stretchW(resizeStartRect))); break;
             }
+//            Logger::info() << "New Rect size = " << getRect() << endl;
+//            Logger::info() << "Current Mouse pos = " << mmEvent.mouse.getLocalPos() << endl;
+//            Logger::info() << "Start rect = " << resizeStartRect << endl;
+//            Logger::info() << "Delta = " << delta << endl;
+//            Logger::info() << "-----------------" << endl;
+            return this;
          } else if (_isDragging) {
-            setPosition(mousePos - offset);
+            movePosition(mmEvent.mouse.getLocalPos() - dragStart);
             return this;
          } else {
             if (!mmEvent.mouse.isInside() || _isMinimized) break;
@@ -270,7 +287,7 @@ Widget *Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
                   InputInterface::setCursor(InputInterface::MouseCursor::RESIZE_NESW);
                   break;
                default:
-//                  InputInterface::setCursor();
+                  InputInterface::setCursor(InputInterface::MouseCursor::DEFAULT);
                   return nullptr;
             }
             return this;
@@ -282,7 +299,7 @@ Widget *Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::addChildToPanel(std::shared_ptr<Widget> child){
-   if (!window) window = make_child<Control>(child->getNode(), WINDOW_NAME);
+//   if (!window) window = make_child<Control>(child->getNode(), WINDOW_NAME);
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 //void Panel::registerProperties(){
@@ -292,7 +309,7 @@ void Panel::addChildToPanel(std::shared_ptr<Widget> child){
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::Rect<R_FLOAT> Panel::getScissorArea() {
    if (_isMinimized){
-      return menuBar->getRect();
+      return menuBar.bar;
    }
    return getSizeRect();
 }
@@ -305,7 +322,4 @@ void Panel::_on_mouse_exit() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::setTitle(const std::string &newtitle) {
    panelTitle = newtitle;
-   if (titleLabel) {
-      titleLabel->setText(newtitle);
-   }
 }

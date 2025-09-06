@@ -16,50 +16,64 @@ namespace ReyEngine{
       static constexpr char BTN_MIN_NAME[] = "__btn_min";
       static constexpr char BTN_MAX_NAME[] = "__btn_max";
       static constexpr char TITLE_LABEL_NAME[] = "__titleLabel";
-      Panel()
-      {
-         theme->background.fill = Style::Fill::SOLID;
-         theme->background.colorPrimary = ReyEngine::ColorRGBA(94, 142, 181, 255);
-      }
+      Panel();
    public:
-      void _init() override;
-      void _on_rect_changed() override;
-      Widget* _unhandled_input(const InputEvent&) override;
+      TypeNode* addChild(std::unique_ptr<TypeNode>&& child);
+      template<typename T, typename InstanceName, typename... Args>
+      std::shared_ptr<T> make_child(InstanceName&& instanceName, Args&&... args){
+         return Internal::Tree::_make_child<T>(getNode(), instanceName, std::forward<Args>(args)...);
+      }
+      /// Creates a child as part of the panel widget's built-in functionality, not as a child
+      /// of the viewable area
+      template<typename T, typename InstanceName, typename... Args>
+      std::shared_ptr<T> make_child_built_in(InstanceName&& instanceName, Args&&... args){
+         return Internal::Tree::_make_child<T>(getNode(), instanceName, std::forward<Args>(args)...);
+      }
       void addChild(Widget*) = delete;
       void render2DBegin() override;
       void render2DEnd() override;
       void render2D() const override;
-//      void addChildInternal(std::shared_ptr<Widget> child);
       void setTitle(const std::string& newtitle);
       void addChildToPanel(std::shared_ptr<Widget> child);
       inline void setResizable(bool resizeable){_isResizable = resizeable;}
       inline bool getResizable(){return _isResizable;}
 
    protected:
+      Widget* _unhandled_input(const InputEvent&) override;
       void _on_mouse_exit() override;
+      void _init() override;
+      void _on_rect_changed() override;
       ReyEngine::Rect<R_FLOAT> getScissorArea();
       enum class ResizeDir{NONE, N, E, S, W, NE, SE, SW, NW};
 
       std::string panelTitle;
       bool showHeader;
-      std::shared_ptr<Layout> vlayout;
-      std::shared_ptr<Layout> menuBar;
-      std::shared_ptr<Control> window;
-      std::shared_ptr<Label> titleLabel;
+      struct MenuBar {
+         Rect<float> bar;
+         std::shared_ptr<Layout> btnCluster;
+      };
+
+      MenuBar menuBar;
+      Rect<float> window;
+      Rect<float> titleLabel;
       ReyEngine::Pos<R_FLOAT> offset;
-      ReyEngine::Pos<R_FLOAT> mousePos;
       ReyEngine::Pos<R_FLOAT> dragStart;
       ReyEngine::Rect<R_FLOAT> resizeStartRect;
       ReyEngine::Rect<R_FLOAT> cacheRect; //for caching size before maximize
       bool _isDragging = false;
-      bool _isResizable;
-      bool _isMinimized;
-      bool _isMaximized;
+      bool _isResizable = true;
+      bool _isMinimized = false;
+      bool _isMaximized = false;
+      std::shared_ptr<ReyEngine::Control> _placementWidget; //any child added to the window will be moved to the placement widget
 
       InputFilter _filterCache;
 
       ResizeDir _resizeDir = ResizeDir::NONE;
       std::array<ReyEngine::Rect<R_FLOAT>, 4> stretchRegion; //top/right/bottom/left
+      ReyEngine::Rect<R_FLOAT>& REGION_NORTH;
+      ReyEngine::Rect<R_FLOAT>& REGION_EAST;
+      ReyEngine::Rect<R_FLOAT>& REGION_WEST;
+      ReyEngine::Rect<R_FLOAT>& REGION_SOUTH;
       ReyEngine::Rect<R_FLOAT> _scissorArea;
    };
 }

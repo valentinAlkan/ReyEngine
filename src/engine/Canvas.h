@@ -1,7 +1,8 @@
 #pragma once
+#include <stack>
+#include <ranges>
 #include "Widget.h"
 #include "CacheVectorMap.h"
-#include <stack>
 #include "rlgl.h"
 
 namespace ReyEngine {
@@ -29,6 +30,15 @@ namespace ReyEngine {
 
       template <typename T>
       concept StatusType = is_in_tuple_v<T, StatusTypes>;
+   }
+
+   namespace Internal::ProcessOrdering{
+      //ordering type helpers for tree processes - children must be processed in one of these two ways
+      struct OrderingRenderingOldestFirst{}; //older siblings are processed first; rendering
+      struct OrderingInputNewestFirst{}; //newer siblings are processed first; input
+      template<typename T>
+      concept OrderingType = std::same_as<T, OrderingRenderingOldestFirst> ||
+                             std::same_as<T, OrderingInputNewestFirst>;
    }
 
    class Canvas: public Widget {
@@ -123,7 +133,10 @@ namespace ReyEngine {
 
       /////////////////////////////////////////////////////////////////////////////////////////
       //Scoping helpers
+
+      template <ReyEngine::Internal::ProcessOrdering::OrderingType ProcessOrder>
       struct TreeProcess{
+         using ProcessOrderType = ProcessOrder;
          TreeProcess(Canvas* thisCanvas, Widget* processedWidget)
          : thisCanvas(thisCanvas)
          , processedWidget(processedWidget)
@@ -145,7 +158,7 @@ namespace ReyEngine {
       /////////////////////////////////////////////////////////////////////////////////////////
       ////////// RENDERING
       //return value = not meaningful
-      struct RenderProcess : public TreeProcess{
+   struct RenderProcess : public TreeProcess<Internal::ProcessOrdering::OrderingRenderingOldestFirst> {
          RenderProcess(Canvas* thisCanvas, Widget* processedWidget)
          : TreeProcess(thisCanvas, processedWidget)
          {
@@ -175,7 +188,7 @@ namespace ReyEngine {
       /////////////////////////////////////////////////////////////////////////////////////////
       ////////// INPUT
       // return value = who handled
-      struct InputProcess : public TreeProcess {
+      struct InputProcess : public TreeProcess<Internal::ProcessOrdering::OrderingInputNewestFirst> {
          InputProcess(Canvas* thisCanvas, Widget* processedWidget, const InputEvent& event, const Transform2D& inputTransform)
          : TreeProcess(thisCanvas, processedWidget)
          , inputTransform(inputTransform)
@@ -231,9 +244,22 @@ namespace ReyEngine {
       /////////////////////////////////////////////////////////////////////////////////////////
       template <typename ProcessType, typename... Args>
       Widget* processChildren(TypeNode *thisNode, Args&&... args) {
-         //dispatch to children
-         for (auto& child: thisNode->getChildren()) {
-            if (auto childWidget = child->as<Widget>()){
+         //dispatch to children in correct order:
+         // oldest (drawn on bottom) first for rendering
+         // newest (drawn on top) first for input
+         auto createProcessVector = [&](TypeNode* parentNode){
+            if constexpr (std::is_same_v<typename ProcessType::ProcessOrderType, Internal::ProcessOrdering::OrderingInputNewestFirst>){
+               //newest first - input
+               return parentNode->getChildren() | std::views::reverse;
+            }
+            else if constexpr (std::is_same_v<typename ProcessType::ProcessOrderType, Internal::ProcessOrdering::OrderingRenderingOldestFirst>){
+               //oldest first - rendering
+               return std::views::all(parentNode->getChildren());
+            }
+         };
+
+         for (auto& child : createProcessVector(thisNode)) {
+            if (auto childWidget = child->template as<Widget>()){
                auto& _childWidget = childWidget.value();
                if (_childWidget->_modal) {
                   //we will come back to this later

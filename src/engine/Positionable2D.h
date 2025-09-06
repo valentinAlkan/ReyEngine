@@ -21,6 +21,10 @@ namespace ReyEngine::Internal {
          __on_rect_changed(r);
       }
       inline void setPosition(R_FLOAT x, R_FLOAT y){setPosition({x, y});}
+      inline void movePosition(Pos<R_FLOAT> pos){ setPosition(pos + getPos());}
+      inline void movePosition(R_FLOAT x, R_FLOAT y){ setPosition(Pos<R_FLOAT>(x, y) + getPos());}
+      inline void moveX(R_FLOAT x){movePosition({x, 0});}
+      inline void moveY(R_FLOAT y){movePosition({0,y});}
       inline void setRotation(const Radians& newRotation){
          if (isLocked) return;
          auto r = getRect();

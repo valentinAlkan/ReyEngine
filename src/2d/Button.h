@@ -67,7 +67,7 @@ namespace ReyEngine{
       REYENGINE_OBJECT(PushButton)
       //an up that was inside the button
       EVENT(ButtonPressEvent, 11111114){}};
-      explicit PushButton(const std::string& text="Push Button")
+      PushButton(const std::string& text="Push Button")
       : Button(text)
       {
          _applyTheme(PUSHBUTTON_COLORS);

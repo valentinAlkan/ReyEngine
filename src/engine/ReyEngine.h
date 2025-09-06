@@ -690,6 +690,7 @@ namespace ReyEngine {
 //   };
 
    struct Circle;
+   struct CircleSector;
    template <typename T>
    struct Rect {
       using SubRectCoords = Vec2<int>;
@@ -728,8 +729,8 @@ namespace ReyEngine {
       constexpr inline Rect& operator/=(const Rect<T>& rhs){x /= rhs.x; y /= rhs.y; width /= rhs.width; height /= rhs.height; return *this;}
       constexpr inline Rect& centerOnPoint(const Pos<R_FLOAT>& p) {return setPos(p - Pos<R_FLOAT>(size().toPos() / 2));} /// Return the rect such that it would be centered on point p
       constexpr inline Rect& embiggen(T amt) {return *this += Rect<T>(-amt, -amt, 2*amt, 2*amt);} //shrink/expand borders evenly. Perfectly cromulent name.
-      constexpr inline Rect& emtallen(T amt) {return *this += Rect<T>(0, -amt, 0, 2*amt);}//embiggen tallness evenly
-      constexpr inline Rect& emwiden(T amt) {return *this += Rect<T>(-amt, 0, 2*amt, 0);}//embiggen wideness evenly
+      constexpr inline Rect& stretchVertical(T amt) {return *this += Rect<T>(0, -amt, 0, 2*amt);} //embiggen tallness evenly
+      constexpr inline Rect& stretchHorizontal(T amt) {return *this += Rect<T>(-amt, 0, 2*amt, 0);} //embiggen wideness evenly
       constexpr inline Rect& chopTop(T amt) {y+= amt; height-=amt; return *this;} //remove the topmost amt of the rectangle and return the remainder (moves y, cuts height)
       constexpr inline Rect& chopBottom(T amt) {height-=amt; return *this;} //remove the bottommost amt of the rectangle and return the remainder (cuts height)
       constexpr inline Rect& chopRight(T amt) {width-=amt; return *this;} //remove the rightmost amt of the rectangle and return the remainder (cuts width)
@@ -1274,10 +1275,10 @@ namespace ReyEngine {
       static constexpr double SECOND_QUADRANT_ANGLE = 90;
       static constexpr double THIRD_QUADRANT_ANGLE = 180;
       static constexpr double FOURTH_QUADRANT_ANGLE = 270;
-      static CircleSector firstQuadrant(Pos<R_FLOAT> center, double radius){return CircleSector(center, radius, FIRST_QUADRANT_ANGLE, FIRST_QUADRANT_ANGLE+90);}
-      static CircleSector secondQuadrant(Pos<R_FLOAT> center, double radius){return CircleSector(center, radius, SECOND_QUADRANT_ANGLE, SECOND_QUADRANT_ANGLE+90);}
-      static CircleSector thirdQuadrant(Pos<R_FLOAT> center, double radius){return CircleSector(center, radius, THIRD_QUADRANT_ANGLE, THIRD_QUADRANT_ANGLE+90);}
-      static CircleSector fourthQuadrant(Pos<R_FLOAT> center, double radius){return CircleSector(center, radius, FOURTH_QUADRANT_ANGLE, FOURTH_QUADRANT_ANGLE+90);}
+      static CircleSector firstQuadrant(const Pos<R_FLOAT>& center, double radius){return {center, radius, FIRST_QUADRANT_ANGLE, FIRST_QUADRANT_ANGLE+90};}
+      static CircleSector secondQuadrant(const Pos<R_FLOAT>& center, double radius){return {center, radius, SECOND_QUADRANT_ANGLE, SECOND_QUADRANT_ANGLE+90};}
+      static CircleSector thirdQuadrant(const Pos<R_FLOAT>& center, double radius){return {center, radius, THIRD_QUADRANT_ANGLE, THIRD_QUADRANT_ANGLE+90};}
+      static CircleSector fourthQuadrant(const Pos<R_FLOAT>& center, double radius){return {center, radius, FOURTH_QUADRANT_ANGLE, FOURTH_QUADRANT_ANGLE+90};}
       constexpr inline CircleSector(): Circle({},0), startAngle(0), endAngle(0){}
       constexpr inline CircleSector(const Pos<R_FLOAT>& center, double radius, double startAngle, double endAngle): Circle(center, radius), startAngle(startAngle), endAngle(endAngle){}
       constexpr inline CircleSector(const Circle& c, double startAngle, double endAngle): Circle(c), startAngle(startAngle), endAngle(endAngle){}
