@@ -7,6 +7,12 @@ using namespace ReyEngine;
 TilePalette::TilePalette()
 : Layout(LayoutDir::GRID)
 {
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void TilePalette::_init() {
+   Layout::_init();
    setSize(THUMBNAIL_SIZE.x * 5, THUMBNAIL_SIZE.y * 15);
 }
 

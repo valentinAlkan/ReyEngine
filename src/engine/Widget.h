@@ -59,6 +59,9 @@ namespace ReyEngine {
       void setInputFiltering(InputFilter newFilter){ _inputFilter = newFilter;}
       [[nodiscard]] InputFilter getInputFiltering() const {return _inputFilter;}
       void setAcceptsHover(bool accepts);
+      //convenience
+      void moveToForeground();
+      void moveToBackground();
    protected:
       //input
       virtual Widget* __process_unhandled_input(const InputEvent& event){ return _unhandled_input(event);}

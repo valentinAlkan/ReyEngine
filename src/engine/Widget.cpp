@@ -242,3 +242,21 @@ void Widget::setAcceptsHover(bool accepts) {
       setHovered(false);
    }
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void Widget::moveToForeground() {
+   if (auto canvas = getCanvas()){
+      getCanvas().value()->moveToForeground(this);
+   } else {
+      throw std::runtime_error("Widget " + getName() + " has no canvas!");
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void Widget::moveToBackground() {
+   if (auto canvas = getCanvas()){
+      getCanvas().value()->moveToBackground(this);
+   } else {
+      throw std::runtime_error("Widget " + getName() + " has no canvas!");
+   }
+}

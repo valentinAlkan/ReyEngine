@@ -29,7 +29,6 @@ namespace ReyEngine{
       std::shared_ptr<T> make_child_built_in(InstanceName&& instanceName, Args&&... args){
          return Internal::Tree::_make_child<T>(getNode(), instanceName, std::forward<Args>(args)...);
       }
-      void addChild(Widget*) = delete;
       void render2DBegin() override;
       void render2DEnd() override;
       void render2D() const override;
@@ -64,7 +63,7 @@ namespace ReyEngine{
       bool _isResizable = true;
       bool _isMinimized = false;
       bool _isMaximized = false;
-      std::shared_ptr<ReyEngine::Control> _placementWidget; //any child added to the window will be moved to the placement widget
+      std::shared_ptr<ReyEngine::Control> _viewArea; //any child added to the window will be moved to the placement widget
 
       InputFilter _filterCache;
 

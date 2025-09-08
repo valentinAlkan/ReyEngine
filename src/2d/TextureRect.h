@@ -1,4 +1,5 @@
 #pragma once
+#include <variant>
 #include "Widget.h"
 
 namespace ReyEngine {

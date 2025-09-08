@@ -92,15 +92,11 @@ namespace ReyEngine {
 
    /// This struct aids in remembering values. Using it like type T should always use the 'first' value,
    /// but you can swap between two values, or march the values down the line to 'remember' the x most recent values
-   /// values[1] is most recent value, values.back() is least recent value
+   /// values[0] is most recent value, values.back() is least recent value
    template <typename T, unsigned int COUNT=2>
    struct MemoryValue{
-      MemoryValue(){
-         if constexpr (std::is_trivially_constructible_v<T>) {
-            values.fill(T{});
-         } else {
-            static_assert(false);
-         }
+      MemoryValue() requires std::is_trivially_constructible_v<T> {
+         values.fill(T{});
       };
       MemoryValue(const T& value) : values{} {
          values.fill(T{});
@@ -606,6 +602,8 @@ namespace ReyEngine {
       template <typename R>
       constexpr inline Pos operator/(R amt) const {return {Vec2<T>::x/amt, Vec2<T>::y/amt};}
       constexpr inline Pos transform(const Matrix& m){return Pos<T>(Vec2<T>::transform(*this, m));}
+      constexpr inline Pos xOnly(){return {Pos::x, 0};}
+      constexpr inline Pos yOnly(){return {0, Pos::y};}
       inline operator std::string() const {return Vec2<T>::toString();}
       constexpr inline void operator=(const Size<T>&) = delete;
       [[nodiscard]] Rect<T> toRect() const;

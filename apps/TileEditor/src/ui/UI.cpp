@@ -13,17 +13,10 @@ UI::UI(std::shared_ptr<TileEditor>& editor)
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void UI::_init() {
-   {
-      auto [label, node] = make_node<Label>("UILabel", "Hello from UI");
-      addChild(std::move(node));
-   }
-
-   {
-      auto [palette, node] = make_node<TilePalette>("TilePalette");
-      addChild(std::move(node));
-      _palette = palette;
-   }
+   auto label = make_child<Label>(getNode(), "UILabel", "Hello from UI");
+   _palette = make_child<TilePalette>(getNode(), "TilePalette");
    _editor->setAnchoring(ReyEngine::Anchor::FILL);
+   _panel->addChildToPanel()
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

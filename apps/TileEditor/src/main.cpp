@@ -13,19 +13,12 @@ int main() {
 
       //create editor
       std::shared_ptr<TileEditor> editor;
-      {
-         auto [_editor, node] = make_node<TileEditor>("Editor");
-         root->addChild(std::move(node));
-         editor = _editor;
-      }
+      editor = make_child<TileEditor>(root->getNode(), "Editor");
 
       //create UI
-      {
-         auto [ui, node] = make_node<UI>("UI", editor);
-         root->addChild(std::move(node));
-         ui->setAnchoring(Anchor::FILL);
-         root->moveToForeground(ui.get());
-      }
+      auto ui = make_child<UI>(root->getNode(), "UI", editor);
+      ui->setAnchoring(Anchor::FILL);
+      ui->moveToForeground();
 
       window.exec();
       return 0;

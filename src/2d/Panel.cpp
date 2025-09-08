@@ -66,8 +66,7 @@ void Panel::render2DEnd() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::_init() {
-   _placementWidget = make_child<Control>("__placementWidget");
-   _placementWidget->setRect(window);
+   _viewArea = make_child<Control>("__placementWidget");
    setAcceptsHover(true);
    //create subwidgets
 //   vlayout = make_child<Layout>(getNode(), VLAYOUT_NAME, Layout::LayoutDir::VERTICAL);
@@ -102,9 +101,9 @@ void Panel::_init() {
    menuBar.btnCluster->setMinHeight(menuBar.bar.height);
 
    //add some buttons
-   auto btnMin = ReyEngine::make_child<PushButton>(btnClusterRight->getNode(), BTN_MIN_NAME, "_");
-   auto btnMax = ReyEngine::make_child<PushButton>(btnClusterRight->getNode(), BTN_MAX_NAME, "o");
-   auto btnClose = ReyEngine::make_child<PushButton>(btnClusterRight->getNode(), BTN_CLOSE_NAME, "x");
+   auto btnMin = ReyEngine::make_child<PushButton>(menuBar.btnCluster->getNode(), BTN_MIN_NAME, "_");
+   auto btnMax = ReyEngine::make_child<PushButton>(menuBar.btnCluster->getNode(), BTN_MAX_NAME, "o");
+   auto btnClose = ReyEngine::make_child<PushButton>(menuBar.btnCluster->getNode(), BTN_CLOSE_NAME, "x");
 //   btnClusterRight->getTheme().layoutMargins.setAll(2);
 //   btnClusterRight->setMaxSize({100, 999999});
 //
@@ -169,14 +168,16 @@ void Panel::_on_rect_changed(){
    stretchRegion.at(3)= getSizeRect().chopRight(getWidth() - STRETCH_REGION_SIZE);
    _scissorArea = getScissorArea();
 
+   //update viewable area
+   _viewArea->setRect(window);
+
    //create rects
    static constexpr float MENU_BAR_HEIGHT = 35;
    static constexpr float BUTTON_SIZE = MENU_BAR_HEIGHT - 4;
    menuBar.bar = Rect<float>(0,0,getWidth(), MENU_BAR_HEIGHT);
-   menuBar.btnClose = Rect<float>(getWidth() - BUTTON_SIZE,0, BUTTON_SIZE, BUTTON_SIZE);
-//   menuBar.btnExpand = Rect<float>(getWidth() - BUTTON_SIZE,0, BUTTON_SIZE, BUTTON_SIZE)
-//   menuBar.btnMinimize = Rect<float>(getWidth() - BUTTON_SIZE,0, BUTTON_SIZE, BUTTON_SIZE)
-   btnClusterRight->setPosition(getSizeRect().bottomLeft());
+   auto newClusterPos = getSizeRect().topRight();
+   newClusterPos.x -= menuBar.btnCluster->getWidth();
+   menuBar.btnCluster->setPosition(newClusterPos);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -239,15 +240,16 @@ Widget *Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
          if (_isMaximized) break;
          auto delta = mmEvent.mouse.getLocalPos() - dragStart;
          //stretching overrides dragging
-         auto stretchN = [&](Rect<float> newRect){newRect.y+=delta.y; newRect.height -= delta.y; return newRect;};
-         auto stretchE = [&](Rect<float> newRect){newRect.width += delta.x; return newRect;};
-         auto stretchW = [&](Rect<float> newRect){newRect.x+=delta.x; newRect.width -= delta.x; return newRect;};
-         auto stretchS = [&](Rect<float> newRect){newRect.height += delta.y; return newRect;};
+         Logger::info() << "Delta = " << delta << endl;
+         auto stretchN = [&](){setRec.y+=delta.y; newRect.height -= delta.y; return newRect;};
+         auto stretchE = [&](){newRect.width += delta.x; return newRect;};
+         auto stretchW = [&](){newRect.x+=delta.x; newRect.width -= delta.x; return newRect;};
+         auto stretchS = [&](){newRect.height += delta.y; return newRect;};
 
          if (_resizeDir != ResizeDir::NONE) {
 //            Logger::info() << "Old rect size = " << getRect() << endl;
             switch (_resizeDir){
-               case ResizeDir::N: setRect(stretchN(resizeStartRect));break;
+               case ResizeDir::N: stretchN();
                case ResizeDir::E: setRect(stretchE(resizeStartRect)); break;
                case ResizeDir::W: setRect(stretchW(resizeStartRect)); break;
                case ResizeDir::S: setRect(stretchS(resizeStartRect)); break;
