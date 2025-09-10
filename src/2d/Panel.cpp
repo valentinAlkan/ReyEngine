@@ -240,16 +240,15 @@ Widget *Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
          if (_isMaximized) break;
          auto delta = mmEvent.mouse.getLocalPos() - dragStart;
          //stretching overrides dragging
-         Logger::info() << "Delta = " << delta << endl;
-         auto stretchN = [&](){setRec.y+=delta.y; newRect.height -= delta.y; return newRect;};
-         auto stretchE = [&](){newRect.width += delta.x; return newRect;};
-         auto stretchW = [&](){newRect.x+=delta.x; newRect.width -= delta.x; return newRect;};
-         auto stretchS = [&](){newRect.height += delta.y; return newRect;};
+         auto stretchN = [&](Rect<float> newRect){newRect.y+=delta.y; newRect.height -= delta.y; return newRect;};
+         auto stretchE = [&](Rect<float> newRect){newRect.width += delta.x; return newRect;};
+         auto stretchW = [&](Rect<float> newRect){newRect.x+=delta.x; newRect.width -= delta.x; return newRect;};
+         auto stretchS = [&](Rect<float> newRect){newRect.height += delta.y; return newRect;};
 
          if (_resizeDir != ResizeDir::NONE) {
 //            Logger::info() << "Old rect size = " << getRect() << endl;
             switch (_resizeDir){
-               case ResizeDir::N: stretchN();
+               case ResizeDir::N: setRect(stretchN(resizeStartRect));break;
                case ResizeDir::E: setRect(stretchE(resizeStartRect)); break;
                case ResizeDir::W: setRect(stretchW(resizeStartRect)); break;
                case ResizeDir::S: setRect(stretchS(resizeStartRect)); break;

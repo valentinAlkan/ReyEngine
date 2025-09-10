@@ -78,16 +78,16 @@ namespace ReyEngine::Internal {
       }
       inline Size<R_FLOAT> getMinSize() const {return minSize;}
       inline Size<R_FLOAT> getMaxSize() const {return maxSize;}
-      inline void setMinSize(const Size<float>& newMin){minSize = newMin; setSize(getSize());}
-      inline void setMaxSize(const Size<float>& newMax){maxSize = newMax; setSize(getSize());}
+      template <typename... Args> inline void setMinSize(Args... args){minSize = Size<float>(std::forward<Args>(args)...); setSize(getSize());}
+      template <typename... Args> inline void setMaxSize(Args... args){maxSize = Size<float>(std::forward<Args>(args)...); setSize(getSize());}
       inline void setMaxHeight(float newMax){maxSize = {maxSize.x, newMax}; setSize(getSize());}
       inline void setMaxWidth(float newMax){maxSize = {newMax, maxSize.y}; setSize(getSize());}
       inline void setMinWidth(float newMin){minSize = {newMin, minSize.y}; setSize(getSize());}
       inline void setMinHeight(float newMin){minSize = {minSize.x, newMin}; setSize(getSize());}
-      inline R_FLOAT getWidth() const {return size.x;}
-      inline R_FLOAT getHeight() const {return size.y;}
-      inline Pos<float> getCenter() const {return getRect().center();}
-      inline Size<R_FLOAT> clampedSize(const Size<R_FLOAT>& rhs) const {
+      [[nodiscard]] inline R_FLOAT getWidth() const {return size.x;}
+      [[nodiscard]] inline R_FLOAT getHeight() const {return size.y;}
+      [[nodiscard]] inline Pos<float> getCenter() const {return getRect().center();}
+      [[nodiscard]] inline Size<R_FLOAT> clampedSize(const Size<R_FLOAT>& rhs) const {
          auto newX = ReyEngine::Vec2<R_FLOAT>(minSize.x, maxSize.x).clamp(size.x);
          auto newY = ReyEngine::Vec2<R_FLOAT>(minSize.y, maxSize.y).clamp(size.y);
          return {newX, newY};

@@ -24,7 +24,7 @@ namespace ReyEngine {
       LineEdit(const std::string& defaultText = "Default")
       : _defaultText(defaultText)
       {
-         setMaxSize({std::numeric_limits<float>::max(), measureText(defaultText, theme->font).y});
+         setMaxSize(std::numeric_limits<float>::max(), measureText(defaultText, theme->font).y);
       }
 
       inline void clear(){ setText("");}

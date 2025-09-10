@@ -2,17 +2,62 @@
 #include "StringTools.h"
 #include <iostream>
 #include <cstring>
+#include "Logger.h"
 
 using namespace std;
-using namespace ReyEngine::FileSystem;
+using namespace ReyEngine;
+using namespace FileSystem;
 
 ///////////////////////////////////////////////////////////////////////////////////////
-Path::Path(const File &file): _path(file.str()){}
+Path::Path(const File &file): _path(file.str()){
+   setType();
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<FileHandle> File::open() const {
    return std::shared_ptr<FileHandle>(new FileHandle(*this));
 }
 
+///////////////////////////////////////////////////////////////////////////////////////
+void Path::setType() {
+   try {
+      if (!std::filesystem::exists(_path)) {
+         pathType = EMPTY;
+         return;
+      }
+
+      auto status = std::filesystem::status(_path);
+      switch (status.type()) {
+         case std::filesystem::file_type::regular:
+            pathType = REGULAR_FILE;
+            break;
+         case std::filesystem::file_type::directory:
+            pathType = DIRECTORY;
+            break;
+         case std::filesystem::file_type::symlink:
+            pathType = SYMLINK;
+            break;
+         case std::filesystem::file_type::block:
+            pathType = BLOCK_FILE;
+            break;
+         case std::filesystem::file_type::character:
+            pathType = CHAR_FILE;
+            break;
+         case std::filesystem::file_type::fifo:
+            pathType = FIFO;
+            break;
+         case std::filesystem::file_type::socket:
+            pathType = SOCKET;
+            break;
+         default:
+            pathType = OTHER;
+            break;
+      }
+   } catch (const std::filesystem::filesystem_error& ex) {
+      Logger::warn() << "Filesystem error setting type for " << _path << ": " << ex.what() << std::endl;
+      pathType = OTHER;
+   }
+}
 ///////////////////////////////////////////////////////////////////////////////////////
 File::File(const char *path): Path(path){}
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -30,7 +75,7 @@ std::vector<char> FileHandle::readFile(){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::FileSystem::FileHandle::open() {
+void FileSystem::FileHandle::open() {
    _ifs = std::ifstream(_file.str(), std::ios::binary | std::ios::ate);
    if (!_ifs) {
       throw std::runtime_error(_file.abs() + ": " + std::strerror(errno));
@@ -41,14 +86,14 @@ void ReyEngine::FileSystem::FileHandle::open() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::vector<char> ReyEngine::FileSystem::FileHandle::readBytes(long long count) {
+std::vector<char> FileSystem::FileHandle::readBytes(long long count) {
    std::vector<char> retval(count);
    readBytesInPlace(count, retval);
    return retval;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-size_t ReyEngine::FileSystem::FileHandle::readBytesInPlace(long long count, std::vector<char> &buffer) {
+size_t FileSystem::FileHandle::readBytesInPlace(long long count, std::vector<char> &buffer) {
    if (count < 0) {throw std::invalid_argument("Count cannot be negative");}
    auto remaining = _end - _ptr;
    if (remaining == 0) return 0;
@@ -69,7 +114,7 @@ size_t ReyEngine::FileSystem::FileHandle::readBytesInPlace(long long count, std:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-string ReyEngine::FileSystem::FileHandle::readLine() {
+string FileSystem::FileHandle::readLine() {
    if (_end - _ptr == 0) return {};  // empty file
    string retval;
    retval.reserve(128);  // Reserve reasonable initial capacity
@@ -100,6 +145,47 @@ string ReyEngine::FileSystem::FileHandle::readLine() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-//void ReyEngine::FileSystem::writeFile(const std::string& filePath, const std::vector<char>&){
+//void FileSystem::writeFile(const std::string& filePath, const std::vector<char>&){
 //   //todo: write file
 //}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+FileSystem::DirectoryContents::DirectoryContents(ReyEngine::FileSystem::Directory &) {
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::vector<Path> FileSystem::DirectoryContents::files() const {
+   return filter([](const Path& path) {
+      return std::filesystem::is_regular_file(path._path);
+   });
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::vector<Path> FileSystem::DirectoryContents::directories() const {
+   return filter([](const Path& path) {
+      return std::filesystem::is_directory(path._path);
+   });
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::set<Path> FileSystem::Directory::listContents() {
+   std::set<Path> contents;
+   if (!exists()) {
+      throw std::runtime_error("Directory does not exist: " + str());
+   }
+
+   if (!std::filesystem::is_directory(_path)) {
+      throw std::runtime_error("Path is not a directory: " + str());
+   }
+
+   std::error_code ec;
+   for (const auto& entry : std::filesystem::directory_iterator(_path, ec)) {
+      if (ec) {
+         throw std::runtime_error("Error reading directory: " + ec.message());
+      }
+      contents.emplace(entry.path().string());
+   }
+
+   return contents;
+}

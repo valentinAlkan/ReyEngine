@@ -6,6 +6,9 @@
 #include <iostream>
 #include <filesystem>
 #include <functional>
+#include <set>
+#include <ranges>
+#include <algorithm>
 
 namespace ReyEngine::FileSystem {
    static constexpr char SCENE_PATH_SEP = '/';
@@ -20,17 +23,20 @@ namespace ReyEngine::FileSystem {
    struct FileHandle;
    struct Directory;
    struct File;
+   struct DirectoryContents;
    struct Path {
-      Path() = default;
+      enum PathType {EMPTY, REGULAR_FILE, DIRECTORY, SYMLINK, BLOCK_FILE, CHAR_FILE, FIFO, SOCKET, OTHER};
+//      Path();
       Path(const File& file);
-      Path(const char* path): _path(path){}
-      Path(const std::string& path): _path(path){}
+      Path(const char* path): _path(path){setType();}
+      Path(const std::string& path): _path(path){setType();}
       [[nodiscard]] bool exists() const {return std::filesystem::exists(_path);};
       [[nodiscard]] Path head() const {return _path.filename().string();}
       [[nodiscard]] std::optional<Path> tail() const {if (_path.has_parent_path())return _path.parent_path().string(); return std::nullopt;}
       [[nodiscard]] std::optional<FileHandle> toFile() const;
       [[nodiscard]] std::string abs() const {return std::filesystem::absolute(_path).string();}
       [[nodiscard]] std::string str() const {return abs();}
+      PathType pathType;
       inline Path& operator+=(const Path& rhs) {_path /= rhs._path; return *this;}
       inline Path operator+(const Path& rhs) const {return (_path / rhs._path).string();}
       inline Path operator+(const char* rhs) const {return {*this + std::string(rhs)};}
@@ -41,20 +47,29 @@ namespace ReyEngine::FileSystem {
       inline Path& operator=(const std::string& rhs){_path = rhs; return *this;}
       inline bool operator==(const std::string& rhs) const {return _path == rhs;}
       inline bool operator==(const Path& rhs) const {return _path == rhs._path;}
-      inline operator std::string() const {return str();}
+      [[nodiscard]] inline operator std::string() const {return str();}
+
+      inline bool operator<(const Path& rhs) const {return _path < rhs._path;}
+      inline bool operator>(const Path& rhs) const {return _path > rhs._path;}
+      inline bool operator<=(const Path& rhs) const {return _path <= rhs._path;}
+      inline bool operator>=(const Path& rhs) const {return _path >= rhs._path;}
+      inline bool operator!=(const Path& rhs) const {return _path != rhs._path;}
 
 //      inline Path& operator=(const char* rhs){path = rhs; return *this;}
 //      explicit inline operator const char*() {return path.c_str();}
 //      inline Path& operator+=(const char* rhs) {path += std::string(rhs); return *this;}
+      inline auto operator<=>(const Path& rhs) const {return _path <=> rhs._path;}
       friend std::ostream& operator<<(std::ostream& os, const Path& _path) {os << _path.str(); return os;}
    protected:
+      void setType();
       std::filesystem::path _path;
+      friend struct DirectoryContents;
    };
 
    struct File : public Path {
       using Path::operator=;
       // A path to a disk. Cannot read from.
-      File(){}
+//      File(){}
       File(const std::string& path): Path(path){}
       File(std::string_view path): File(std::string(path)){}
       File(const char* path);
@@ -130,10 +145,36 @@ namespace ReyEngine::FileSystem {
       friend class File;
    };
 
+   struct DirectoryContents{
+      DirectoryContents(Directory& dir);
+      [[nodiscard]] std::vector<Path> sort(std::function<std::vector<Path>(std::set<Path>&)> sortFunc){return sortFunc(_contents);}
+      [[nodiscard]] auto begin() const { return _contents.begin(); }
+      [[nodiscard]] auto end() const { return _contents.end(); }
+      [[nodiscard]] size_t size() const { return _contents.size(); }
+      [[nodiscard]] bool empty() const { return _contents.empty(); }
+      [[nodiscard]] bool contains(const Path& path) const { return _contents.contains(path); }
+
+      template<typename Predicate>
+      [[nodiscard]] std::vector<Path> filter(Predicate pred) const{
+         std::vector<Path> result;
+         auto filtered = _contents | std::views::filter(pred);
+         std::ranges::copy(filtered, std::back_inserter(result));
+         return result;
+      }
+
+      [[nodiscard]] std::vector<Path> files() const;
+      [[nodiscard]] std::vector<Path> directories() const;
+   private:
+      std::set<Path> _contents;
+   };
+
    struct Directory : public Path {
-      Directory(){}
+//      Directory(){}
       Directory(const std::string& path): Path(path){}
       Directory(const char* path): Path(path){}
+      Directory(Directory& other) = default;
+      Directory& operator=(const Directory& other){_path = other._path; return *this;}
       operator FileHandle() = delete;
+      std::set<Path> listContents();
    };
 }
