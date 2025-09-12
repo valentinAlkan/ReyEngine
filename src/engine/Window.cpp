@@ -18,8 +18,6 @@ using sc = chrono::steady_clock;
 /////////////////////////////////////////////////////////////////////////////////////////
 Window::Window(const std::string &title, int width, int height, const std::vector<WindowFlags> &flags, int targetFPS)
 : targetFPS(targetFPS)
-, startingWidth(width)
-, startingHeight(height)
 {
 
 }
@@ -48,77 +46,76 @@ void Window::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
 void Window::exec(){
    InputInterface::setExitKey(InputInterface::KeyCode::KEY_ESCAPE);
    auto canvas = _root->ref<Canvas>();
-//   applyProcess(canvas);
    Size<float> size = getSize();
    Pos<float> position;
-//   canvas->setSize(size);
    SetTargetFPS(targetFPS);
+   auto inputEventMouseButtonTimeStampUp = sc::now();
+   auto inputEventMouseButtonTimeStampDown = sc::now();
+   auto lastMouseButtonInput = InputInterface::MouseButton::NONE;
    while (!WindowShouldClose()){
-//
-//         unique_lock<mutex> sl(Application::instance()._busy);
-//
-         //see if the window size has changed
-         Size<float> newSize = getSize();
-         if (newSize != size) {
-            EventSubscriber subscriber;
-            WindowResizeEvent event(this, getSize());
-            size = newSize;
-            publish(event);
-            //root canvas always same size as window
-            canvas->setSize(size);
-         }
+      //see if the window size has changed
+      Size<float> newSize = getSize();
+      if (newSize != size) {
+         EventSubscriber subscriber;
+         WindowResizeEvent event(this, getSize());
+         size = newSize;
+         publish(event);
+         //root canvas always same size as window
+         canvas->setSize(size);
+      }
 
-         // see if the window has moved
-         Pos<R_FLOAT> newPos = Pos<R_FLOAT>(getPosition());
-         if (newPos != position) {
-            WindowMoveEvent event(this, Pos<R_FLOAT>(getPosition()));
-            position = newPos;
-            event.position = newPos;
-            publish(event);
-         }
+      // see if the window has moved
+      Pos<R_FLOAT> newPos = Pos<R_FLOAT>(getPosition());
+      if (newPos != position) {
+         WindowMoveEvent event(this, Pos<R_FLOAT>(getPosition()));
+         position = newPos;
+         event.position = newPos;
+         publish(event);
+      }
 
-         // programatically generated inputs
-         while(!_inputQueueKey.empty()){
-            auto event = std::move(_inputQueueKey.front());
-            _inputQueueKey.pop();
-            canvas->__process_unhandled_input(*event);
-         }
+      // programatically generated inputs
+      while(!_inputQueueKey.empty()){
+         auto event = std::move(_inputQueueKey.front());
+         _inputQueueKey.pop();
+         canvas->__process_unhandled_input(*event);
+      }
 
-         while(!_inputQueueMouse.empty()){
-            auto event = std::move(_inputQueueMouse.front());
-            _inputQueueMouse.pop();
-            canvas->__process_unhandled_input(*event);
-         }
+      while(!_inputQueueMouse.empty()){
+         auto event = std::move(_inputQueueMouse.front());
+         _inputQueueMouse.pop();
+         canvas->__process_unhandled_input(*event);
+      }
 
-         // collect char input (up to limit)
-         // only downs for chars - no ups. Use keys for uppies.
-         for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
-            auto charDown = InputManager::instance().getCharPressed();
-            if (charDown) {
-               InputEventChar event(this);
-               event.ch = charDown;
-               canvas->__process_unhandled_input(InputEvent(event));
-            } else {
-               break;
-            }
+      // collect char input (up to limit)
+      // only downs for chars - no ups. Use keys for uppies.
+      for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
+         auto charDown = InputManager::instance().getCharPressed();
+         if (charDown) {
+            InputEventChar event(this);
+            event.ch = charDown;
+            canvas->__process_unhandled_input(InputEvent(event));
+         } else {
+            break;
          }
+      }
 
-         //collect key input (up to limit)
-         //do ups first so we don't process up and down on same frame
-         for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
-            auto keyUp = InputManager::instance().getKeyReleased();
-            if (keyUp != InputInterface::KeyCode::KEY_NULL) {
-               InputEventKey event(this);
-               event.key = keyUp;
-               event.isDown = false;
-               event.isRepeat = false;
-               canvas->__process_unhandled_input(InputEvent(event));
-            } else {
-               break;
-            }
+      //collect key input (up to limit)
+      //do ups first so we don't process up and down on same frame
+      for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
+         auto keyUp = InputManager::instance().getKeyReleased();
+         if (keyUp != InputInterface::KeyCode::KEY_NULL) {
+            InputEventKey event(this);
+            event.key = keyUp;
+            event.isDown = false;
+            event.isRepeat = false;
+            canvas->__process_unhandled_input(InputEvent(event));
+         } else {
+            break;
          }
+      }
 
-         //REPEATS
+      //REPEATS
+      {
          auto now = sc::now();
          static auto keyDownTimestamp = now;
          auto lastKey = InputManager::getLastKeyPressed();
@@ -137,7 +134,6 @@ void Window::exec(){
             }
          }
 
-
          //DOWNS
          for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
             auto keyDown = InputManager::instance().getKeyPressed();
@@ -152,87 +148,69 @@ void Window::exec(){
                break;
             }
          }
+      }
 
-         //now do mouse input
-         //UPS
-         for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
-            auto btnUp = InputManager::instance().getMouseButtonReleased();
-            if (btnUp != InputInterface::MouseButton::NONE) {
-               auto pos = InputManager::getMousePos();
-               if (btnUp == InputInterface::MouseButton::LEFT) {
-                  //check for drag n drop
-//                  if (_dragNDrop.has_value() && _isDragging) {
-//                     //we have a widget being dragged, lets try to drop it
-//                     bool handled = false;
-//                     auto widgetAt = canvas->getWidgetAt(pos);
-//                     if (widgetAt) {
-//                        handled = widgetAt.value()->_on_drag_drop(_dragNDrop.value());
-//                     }
-//                     _dragNDrop.reset();
-//                     _isDragging = false;
-//                     if (handled) continue; //otherwise continue on to publishing an event
-//                  }
-               }
-
-               InputEventMouseButton event(this, pos.get(), btnUp, false);
-               canvas->__process_unhandled_input(event);
-            } else {
-               break;
-            }
+      //now do mouse input
+      //UPS
+      for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
+         auto btnUp = InputManager::instance().getMouseButtonReleased();
+         if (btnUp != InputInterface::MouseButton::NONE) {
+            auto now = sc::now();
+            bool isDouble = (now - inputEventMouseButtonTimeStampUp) < _doubleClickThreshold && lastMouseButtonInput == btnUp;
+            inputEventMouseButtonTimeStampUp = now;
+            lastMouseButtonInput = btnUp;
+            auto pos = InputManager::getMousePos();
+            InputEventMouseButton event(this, pos.get(), btnUp, false, isDouble);
+            if (isDouble) inputEventMouseButtonTimeStampUp = sc::time_point{};
+            canvas->__process_unhandled_input(event);
+         } else {
+            break;
          }
+      }
 
-         //DOWNS
-         for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
-            auto btnDown = InputManager::instance().getMouseButtonPressed();
-            if (btnDown != InputInterface::MouseButton::NONE) {
-               auto pos = InputManager::getMousePos();
-               //check for dragndrops
-//               if (btnDown == InputInterface::MouseButton::LEFT) {
-//                  auto widgetAt = canvas->getWidgetAt(pos);
-//                  if (widgetAt) {
-//                     auto willDrag = widgetAt.value()->_on_drag_start(pos);
-//                     if (willDrag) {
-//                        _dragNDrop = willDrag.value();
-//                        _dragNDrop.value()->startPos = pos;
-//                     } else {
-//                        _dragNDrop = nullopt;
-//                     }
-//                     _isDragging = false;
-//                  }
-//               }
-               InputEventMouseButton event(this, pos.get(), btnDown, true);
-               canvas->__process_unhandled_input(event);
-            } else {
-               break;
-            }
+      //DOWNS
+      for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
+         auto btnDown = InputManager::instance().getMouseButtonPressed();
+         if (btnDown != InputInterface::MouseButton::NONE) {
+            auto now = sc::now();
+            bool isDouble = (now - inputEventMouseButtonTimeStampDown) < _doubleClickThreshold && lastMouseButtonInput == btnDown;
+            inputEventMouseButtonTimeStampDown = now;
+            lastMouseButtonInput = btnDown;
+            auto pos = InputManager::getMousePos();
+            InputEventMouseButton event(this, pos.get(), btnDown, true, isDouble);
+            canvas->__process_unhandled_input(event);
+            if (isDouble) inputEventMouseButtonTimeStampDown = sc::time_point{};
+         } else {
+            break;
          }
+      }
 
-         {
-            auto wheel = InputManager::getMouseWheel();
-            if (wheel) {
-               InputEventMouseWheel event(this, InputManager::getMousePos().get(), wheel);
-               canvas->__process_unhandled_input(event);
-            }
+      {
+         auto wheel = InputManager::getMouseWheel();
+         if (wheel) {
+            InputEventMouseWheel event(this, InputManager::getMousePos().get(), wheel);
+            canvas->__process_unhandled_input(event);
          }
+      }
 
 
 //         //check the mouse delta compared to last frame
-         auto mouseDelta = InputManager::getMouseDelta();
-         if (mouseDelta) {
-            auto pos = InputManager::getMousePos().get();
-            InputEventMouseHover hoverEvent(this, pos);
-            InputEventMouseMotion motionEvent(this, pos, mouseDelta);
+      auto mouseDelta = InputManager::getMouseDelta();
+      if (mouseDelta) {
+         auto pos = InputManager::getMousePos().get();
+         InputEventMouseHover hoverEvent(this, pos);
+         InputEventMouseMotion motionEvent(this, pos, mouseDelta);
 
-            //don't do hovering or mouse input if we're dragging and dropping
+         //don't do hovering or mouse input if we're dragging and dropping
 //            static constexpr unsigned int DRAG_THRESHOLD = 20;
 //            if (_dragNDrop) {
-            //only drag if we've moved the mouse above a certain threshold
+         //only drag if we've moved the mouse above a certain threshold
 //               auto dragDelta = _dragNDrop.value()->startPos - getMousePos();
 //               if (abs(dragDelta.x) > DRAG_THRESHOLD || abs(dragDelta.y) > DRAG_THRESHOLD) {
 //                  _isDragging = true;
 //               }
 //            } else {
-            //find out which widget will accept the mouse motion as focus
+         //find out which widget will accept the mouse motion as focus
 //               auto hovered = canvas->askHover(canvas->screenToWorld(event.canvasPos));
 //               if (hovered) {
 //                  setHover(hovered.value());
@@ -240,33 +218,33 @@ void Window::exec(){
 //                  clearHover();
 //               }
 //            if (_isEditor) continue;
-            if (!canvas->__process_unhandled_input(motionEvent)) {
-               canvas->__process_hover(hoverEvent);
-            }
-//            }
+         if (!canvas->__process_unhandled_input(motionEvent)) {
+            canvas->__process_hover(hoverEvent);
          }
+//            }
+      }
 
-         //process timers and call their callbacks
+      //process timers and call their callbacks
 //         SystemTime::processTimers();
 
-         //process logic
-         float dt = getFrameDelta();
-         _processList.processAll(dt);
+      //process logic
+      float dt = getFrameDelta();
+      _processList.processAll(dt);
 
-         //draw the canvas to our render texture
+      //draw the canvas to our render texture
 //         Application::getWindow(0).pushRenderTarget(_renderTarget);
 //         _renderTarget.clear();
 //         rlLoadIdentity();
 //         rlPushMatrix();
-         canvas->renderProcess(canvas->_renderTarget);
-         //after invoking the normal render process, we have to draw foreground objects
+      canvas->renderProcess(canvas->_renderTarget);
+      //after invoking the normal render process, we have to draw foreground objects
 //         for (auto& foregroudChild : canvas->_foreground.getValues()){
 //            canvas->processNode<Canvas::RenderProcess>(foregroudChild, false);
 //         }
 //         rlPopMatrix();
 //         Application::getWindow(0).popRenderTarget(); //debug
 
-         //do physics synchronously for now
+      //do physics synchronously for now
 //         rlLoadIdentity();
 //         Application::getWindow(0).pushRenderTarget(_renderTarget); //debug
 //         Physics::PhysicsSystem::process();
@@ -278,7 +256,7 @@ void Window::exec(){
 ////            _dragNDrop.value()->preview.value()->setPos(InputManager2::getMousePos().get());
 ////            _dragNDrop.value()->preview.value()->render2DChain();
 ////         }
-         //render the canvas to the window
+      //render the canvas to the window
 
          BeginDrawing();
          auto& _renderTarget = canvas->getRenderTarget();

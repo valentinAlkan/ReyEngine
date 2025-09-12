@@ -14,52 +14,167 @@ Path::Path(const File &file): _path(file.str()){
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<FileHandle> File::open() const {
-   return std::shared_ptr<FileHandle>(new FileHandle(*this));
+void Path::erase(EraseType eraseType) {
+   if (eraseType == MUST_EXIST && !exists()){
+      throw std::runtime_error("Failed to erase file " + str() + ": File did not exist and was required to");
+   }
+
+   try {
+      std::error_code ec;
+
+      switch (_pathType) {
+         case REGULAR_FILE:
+         case SYMLINK:
+         case BLOCK_FILE:
+         case CHAR_FILE:
+         case FIFO:
+         case SOCKET:
+            if (!std::filesystem::remove(_path, ec)) {
+               if (ec) {
+                  throw std::runtime_error("Failed to erase file " + str() + ": " + ec.message());
+               }
+            }
+            break;
+
+         case DIRECTORY:{
+            auto removedCount = std::filesystem::remove_all(_path, ec);
+            if (ec) {
+               throw std::runtime_error("Failed to erase directory " + str() + ": " + ec.message());
+            }
+            Logger::debug() << "Removed " << removedCount << " items from directory " << _path << std::endl;
+            break;}
+
+         case EMPTY:
+            // Path doesn't exist, nothing to do
+            Logger::warn() << "Path does not exist: " << _path << std::endl;
+            return;
+
+         case OTHER:
+         default:
+            // Try to remove anyway, let filesystem decide
+            if (!std::filesystem::remove(_path, ec)) {
+               if (ec) {
+                  throw std::runtime_error("Failed to erase path " + str() + ": " + ec.message());
+               }
+            }
+            break;
+      }
+
+      _pathType = EMPTY;
+
+   } catch (const std::filesystem::filesystem_error& ex) {
+      throw std::runtime_error("Filesystem error erasing " + str() + ": " + ex.what());
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+void Path::create(bool createParent) {
+   if (exists()){
+      // just in case the type is different, do not let us create files if there is already
+      // an object at the location
+      throw std::runtime_error("Cannot create: path exists");
+   }
+
+   try {
+      // Check if parent directory exists, create it if it doesn't
+      if (createParent) {
+         auto parentPath = _path.parent_path();
+         if (!parentPath.empty() && !std::filesystem::exists(parentPath)) {
+            std::error_code ec;
+            if (!std::filesystem::create_directories(parentPath, ec) && ec) {
+               throw std::runtime_error("Failed to create parent directories for " + str() + ": " + ec.message());
+            }
+         }
+      }
+
+      switch (_pathType){
+         case DIRECTORY:{
+         // Create directory
+         std::error_code ec;
+         if (!std::filesystem::create_directories(_path, ec)) {
+            if (ec) {
+               throw std::runtime_error("Failed to create directory " + str() + ": " + ec.message());
+            }
+         }
+        break;}
+      case REGULAR_FILE:{
+         std::ofstream file(_path);
+         if (!file) throw std::runtime_error("Failed to create file " + str() + ": " + std::strerror(errno));
+         file.close();}
+      default:
+         throw std::runtime_error("Creation not supported for this path type!");
+      }
+
+   } catch (const std::filesystem::filesystem_error& ex) {
+      throw std::runtime_error("Filesystem error creating " + str() + ": " + ex.what());
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+bool Path::createIfNotExist(bool createParent) {
+   if (!exists()){
+      create(createParent);
+      return true;
+   }
+   return false;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+void Path::overwrite(bool createParent) {
+   auto pathType = _pathType;
+   erase(CAN_EXIST);
+   _pathType = pathType;
+   create(createParent);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void Path::setType() {
    try {
       if (!std::filesystem::exists(_path)) {
-         pathType = EMPTY;
+         _pathType = EMPTY;
          return;
       }
 
       auto status = std::filesystem::status(_path);
       switch (status.type()) {
          case std::filesystem::file_type::regular:
-            pathType = REGULAR_FILE;
+            _pathType = REGULAR_FILE;
             break;
          case std::filesystem::file_type::directory:
-            pathType = DIRECTORY;
+            _pathType = DIRECTORY;
             break;
          case std::filesystem::file_type::symlink:
-            pathType = SYMLINK;
+            _pathType = SYMLINK;
             break;
          case std::filesystem::file_type::block:
-            pathType = BLOCK_FILE;
+            _pathType = BLOCK_FILE;
             break;
          case std::filesystem::file_type::character:
-            pathType = CHAR_FILE;
+            _pathType = CHAR_FILE;
             break;
          case std::filesystem::file_type::fifo:
-            pathType = FIFO;
+            _pathType = FIFO;
             break;
          case std::filesystem::file_type::socket:
-            pathType = SOCKET;
+            _pathType = SOCKET;
             break;
          default:
-            pathType = OTHER;
+            _pathType = OTHER;
             break;
       }
    } catch (const std::filesystem::filesystem_error& ex) {
       Logger::warn() << "Filesystem error setting type for " << _path << ": " << ex.what() << std::endl;
-      pathType = OTHER;
+      _pathType = OTHER;
    }
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////
-File::File(const char *path): Path(path){}
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<FileHandle> File::open() const {
+   return std::shared_ptr<FileHandle>(new FileHandle(*this));
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////
 std::vector<char> FileHandle::readFile(){
    auto end = _ifs.tellg();
@@ -149,6 +264,8 @@ string FileSystem::FileHandle::readLine() {
 //   //todo: write file
 //}
 
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 FileSystem::DirectoryContents::DirectoryContents(ReyEngine::FileSystem::Directory &) {
 
@@ -168,6 +285,8 @@ std::vector<Path> FileSystem::DirectoryContents::directories() const {
    });
 }
 
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 std::set<Path> FileSystem::Directory::listContents() {
    std::set<Path> contents;

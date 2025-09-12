@@ -6,13 +6,7 @@ namespace ReyEngine{
    template <typename T>
    class BaseSprite : public Widget {
    public:
-      BaseSprite& operator=(const BaseSprite& other){
-         region = other.region;
-         _texture = other._texture;
-         texPath = other.texPath;
-         _fitNextTexture = other._fitNextTexture;
-         _drawDebugRect = other._drawDebugRect;
-      }
+      BaseSprite& operator=(const BaseSprite& other) = default;
       void setRegion(const T& newRegion){region = newRegion;}
       T getRegion(){return region;}
       bool setTexture(const char* filePath){
@@ -53,7 +47,7 @@ namespace ReyEngine{
          }
       }
    protected:
-      BaseSprite(const std::string& texPath, const T& region)
+      BaseSprite(const FileSystem::File& texPath, const T& region)
       : texPath(texPath)
       , region(region)
       {}

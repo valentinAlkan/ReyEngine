@@ -60,19 +60,21 @@ namespace ReyEngine{
          Pos<float> _localPos_cached; //for recall on dtor
       };
    private:
-      CanvasSpace<Pos<float>> _canvasPos;
+      const CanvasSpace<Pos<float>> _canvasPos;
       Pos<float> _localPos;
       bool _isInside = false;
    };
 
-   EVENT_ARGS(InputEventMouseButton, 111111, const Pos<float>& pos, InputInterface::MouseButton button, bool isDown)
+   EVENT_ARGS(InputEventMouseButton, 111111, const Pos<float>& pos, InputInterface::MouseButton button, bool isDown, bool isDoubleClick)
       , mouse(pos)
       , button(button)
       , isDown(isDown)
+      , isDoubleClick(isDoubleClick)
       {}
       MouseEvent mouse;
-      InputInterface::MouseButton button;
-      bool isDown;
+      const InputInterface::MouseButton button;
+      const bool isDown;
+      const bool isDoubleClick;
    };
 
    EVENT_ARGS(InputEventMouseWheel, 22222222, const Pos<float>& pos, const Vec2<float>& wheelMove)
@@ -80,7 +82,7 @@ namespace ReyEngine{
       , wheelMove(wheelMove)
       {}
       MouseEvent mouse;
-      Vec2<float> wheelMove;
+      const Vec2<float> wheelMove;
    };
 
    EVENT_ARGS(InputEventMouseMotion, 333333333, const Pos<float>& pos, const Vec2<float>& mouseDelta)
@@ -88,7 +90,7 @@ namespace ReyEngine{
       , mouseDelta(mouseDelta)
       {}
       MouseEvent mouse;
-      Vec2<float> mouseDelta;
+      const Vec2<float> mouseDelta;
    };
 
    EVENT_ARGS(InputEventMouseHover, 3434343434, const Pos<float>& pos)
@@ -121,7 +123,7 @@ namespace ReyEngine{
    private:
       template <typename T>
       void assign(T*& unionMember, T& event) {
-         //assign the even to the correct union member
+         //assign the event to the correct union member
          unionMember = &const_cast<T&>(event);
          eventId = T::ID;
          if constexpr (T::ID == InputEventMouseMotion::ID){

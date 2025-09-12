@@ -39,6 +39,7 @@ namespace ReyEngine {
       }
       REYENGINE_OBJECT(Widget)
       Theme& getTheme(){return *theme;}
+      const Theme& getTheme() const {return *theme;}
       void setTheme(std::shared_ptr<Theme>& newTheme){theme = newTheme;}
       [[nodiscard]] std::optional<Widget*> getParentWidget() const;
       void setAnchoring(Anchor newAnchor);

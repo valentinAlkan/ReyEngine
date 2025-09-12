@@ -58,8 +58,7 @@ namespace ReyEngine{
       int targetFPS;
       std::chrono::milliseconds _keyDownRepeatDelay = std::chrono::milliseconds(500); //how long a key must be held down before it counts as a repeat
       std::chrono::milliseconds _keyDownRepeatRate = std::chrono::milliseconds(25); //how long must pass before each key repeat event is sent
-      const int startingWidth;
-      const int startingHeight;
+      std::chrono::milliseconds _doubleClickThreshold = std::chrono::milliseconds(500); //time threshold for a mouse input to be considered double click
 //      std::stack<RenderTarget*> renderStack;
       std::queue<std::unique_ptr<InputEvent>> _inputQueueMouse; //a place to hold programatically generated input
       std::queue<std::unique_ptr<InputEvent>> _inputQueueKey; //a place to hold programatically generated input

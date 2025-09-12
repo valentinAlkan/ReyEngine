@@ -45,7 +45,7 @@ namespace ReyEngine {
       REYENGINE_OBJECT(ComboBox)
       ComboBox() {
          acceptsHover = true;
-         setMaxSize({std::numeric_limits<float>::max(), theme->font.size});
+         setMaxSize(std::numeric_limits<float>::max(), theme->font.size);
       }
       constexpr ComboBox(const auto& items)
       : ComboBox()

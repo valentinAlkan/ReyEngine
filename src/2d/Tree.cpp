@@ -3,26 +3,37 @@
 using namespace std;
 using namespace ReyEngine;
 
+///////////////////////////////////////////////////////////////////////////////////////////
+void TreeItemContainer::clear() {
+   _children.clear();
+   if (_tree) _tree->determineOrdering();
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////
-TreeItem* TreeItem::push_back(std::unique_ptr<TreeItem>&& newChildItem) {
-   children.push_back(std::move(newChildItem));
-   auto item = children.back().get();
-   item->parent = this;
-   //find the root and recalculate the reference vector
-   if (_tree) item->_tree = _tree;
+TreeItem* TreeItemContainer::push_back(std::unique_ptr<TreeItem>&& newChildItem) {
+   _children.push_back(std::move(newChildItem));
+   auto item = _children.back().get();
+   item->_parent = this;
+   item->_tree = _tree;
    item->setGeneration(_generation+1);
    if (_tree) _tree->determineOrdering();
    return item;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+TreeItem *TreeItemContainer::insertItem(int atIndex, std::unique_ptr<TreeItem> item) {
+   _children.insert(_children.begin()+atIndex, std::move(item));
+   return _children.at(atIndex).get();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 std::unique_ptr<TreeItem> TreeItem::removeItem(size_t index){
-   auto it = getChildren().begin() + index;
+   auto it = _children.begin() + index;
    auto ptr = std::move(*it);
-   getChildren().erase(it);
+   _children.erase(it);
 
    //item no longer is in the tree so has no parent
-   ptr->parent = nullptr;
+   ptr->_parent = nullptr;
 
    //let the tree know to recalculate
    if (_tree) _tree->determineOrdering();
@@ -37,7 +48,7 @@ void Tree::determineOrdering(){
    order.clear();
    std::function<void(TreeItem*)> pushToVector = [&](TreeItem* item){
       order.push_back(item);
-      for (auto& child : item->children){
+      for (auto& child : item->_children){
          pushToVector(child.get());
       }
    };
@@ -45,6 +56,8 @@ void Tree::determineOrdering(){
    determineVisible();
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 void Tree::determineVisible() {
    //count how many rows are visible/expanded
@@ -58,7 +71,7 @@ void Tree::determineVisible() {
       Pos<float> startPos = {0, (float)(visible.size() - 1) * ROW_HEIGHT};
       visible.back()->expansionIconClickRegion = {startPos, {getWidth(), ROW_HEIGHT}};
       if (item->expanded) {
-         for (auto &child: item->children) {
+         for (auto &child: item->_children) {
             pushVisible(child.get());
          }
       }
@@ -68,7 +81,6 @@ void Tree::determineVisible() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Tree::render2D() const{
-   drawRectangle(getRect().toSizeRect(), theme->background.colorPrimary);
    // draw the items
    auto& font = theme->font;
    auto pos = Pos<float>(0,-ROW_HEIGHT);
@@ -80,12 +92,16 @@ void Tree::render2D() const{
       pos += Pos<float>(0, theme->font.size);
 
       //highlight the hovered row
-      if (_hoveredMeta && _hoveredMeta.value()->visibleRowIndex == currentRow){
-         drawRectangle({pos, {getWidth(), theme->font.size}}, COLORS::gray);
+      std::optional<ColorRGBA> highlight;
+      if (_selectedItem && _selectedItem.value() == item){
+         //highlight the selected row
+         highlight = Colors::blue;
+      } else if (_hoveredImplDetails && _hoveredImplDetails.value()->visibleRowIndex == currentRow){
+         highlight = Colors::gray;
       }
+      if (highlight) drawRectangle({pos, {getWidth(), theme->font.size}}, highlight.value());
 
       char c = item->expanded ? '-' : '+';
-
       std::string expansionRegionText = c + std::string(generationOffset + item->_generation, c);
       auto enabledColor = font.color;
       ReyEngine::ColorRGBA disabledColor = {127, 127, 127, 255};
@@ -110,40 +126,63 @@ Widget* Tree::_unhandled_input(const InputEvent& event) {
           auto localPos = mouseEvent->getLocalPos();
 
           //figure out which row the cursor is in
-          auto meta = getMetaAt(localPos);
-          if (meta){
-             bool newHovered = _hoveredMeta != meta;
-             _hoveredMeta = meta;
+          auto implDetailsAt = getImplDetailsAt(localPos);
+          if (implDetailsAt){
+             bool newImplDetails = _hoveredImplDetails != implDetailsAt;
+             _hoveredImplDetails = implDetailsAt;
              //item hover event
-             if (newHovered) {
-                EventItemHovered itemHoverEvent(this, meta.value()->item);
+             if (newImplDetails) {
+                EventItemHovered itemHoverEvent(this, implDetailsAt.value()->item);
                 publish(itemHoverEvent);
              }
           } else {
-             _hoveredMeta.reset();
+             _hoveredImplDetails.reset();
           }
 
           //mouse click
-          if (event.isEvent<InputEventMouseButton>() && meta){
-             auto itemAt = meta.value()->item;
-             //expand/shrink branch
+          if (event.isEvent<InputEventMouseButton>()){
              auto btnEvent = event.toEvent<InputEventMouseButton>();
-             if (!btnEvent.isDown) {
-                Logger::debug() << "click at = " << itemAt->_text << endl;
-                if (!itemAt->children.empty() && itemAt->getExpandable()){
-                   if (meta.value()->expansionIconClickRegion.contains(localPos)) {
-                      itemAt->setExpanded(!itemAt->getExpanded());
-                      determineVisible();
-                      return this;
-                   }
+             if (btnEvent.button != InputInterface::MouseButton::LEFT) return nullptr;
+             if (!implDetailsAt){
+                if (_selectedItem) {
+                   EventItemDeselected itemDeSelectedEvent(this, _selectedItem.value());
+                   _selectedItem.reset();
+                   publish(itemDeSelectedEvent);
                 }
+                return nullptr;
+             }
+             auto itemAtClick = implDetailsAt.value()->item;
+             //expand/shrink branch
+             if (!btnEvent.isDown) {
+                Logger::debug() << "click at = " << itemAtClick->_text << endl;
                 //publish on item click
-                EventItemClicked itemClickedEvent(this, itemAt);
+                EventItemClicked itemClickedEvent(this, itemAtClick);
                 publish(itemClickedEvent);
+                if (_allowSelect){
+                   if (_selectedItem != itemAtClick){
+                      EventItemSelected itemSelectedEvent(this, itemAtClick);
+                      publish(itemSelectedEvent);
+                   }
+                   _selectedItem = itemAtClick;
+                }
+
+                if (btnEvent.isDoubleClick && _lastClicked == itemAtClick){
+                   if (!itemAtClick->_children.empty() && itemAtClick->getExpandable()){
+                      if (implDetailsAt.value()->expansionIconClickRegion.contains(localPos)) {
+                         itemAtClick->setExpanded(!itemAtClick->getExpanded());
+                         determineVisible();
+                      }
+                   }
+
+                   EventItemDoubleClicked itemDoubleClickedEvent(this, itemAtClick);
+                   publish(itemClickedEvent);
+                   Logger::debug() << "double click at = " << itemAtClick->_text << endl;
+                }
 
              }
+             _lastClicked = itemAtClick;
+             return this;
           }
-          return this;
        }
        return nullptr;
 }
@@ -159,7 +198,13 @@ TreeItem* Tree::setRoot(std::unique_ptr<TreeItem>&& item) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::optional<Tree::TreeItemImplDetails*> Tree::getMetaAt(const Pos<float>& localPos) {
+std::unique_ptr<TreeItem> Tree::createItem(std::unique_ptr<TreeItem>&& other) {
+   other->_tree = this;
+   return other;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<Tree::TreeItemImplDetails*> Tree::getImplDetailsAt(const Pos<float>& localPos) {
    auto rowHeight = theme->font.size;
    int rowAt = localPos.y / rowHeight;
    if (rowAt < visible.size()) {
@@ -173,29 +218,10 @@ std::optional<Tree::TreeItemImplDetails*> Tree::getMetaAt(const Pos<float>& loca
 ///////////////////////////////////////////////////////////////////////////////////////////
 void TreeItem::setGeneration(size_t generation){
    _generation = generation;
-   for (auto& child : getChildren()){
+   for (auto& child : _children){
       child->_tree = _tree;
       child->setGeneration(generation + 1);
    }
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
-void TreeItem::clear() {
-   children.clear();
-   if (_tree) _tree->determineOrdering();
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
-void TreeItem::setMetaData(const std::string &key, std::unique_ptr<TreeItemMeta> meta) {
-   metaData[key] = std::move(meta);
-}
-///////////////////////////////////////////////////////////////////////////////////////////
-std::optional<std::reference_wrapper<std::unique_ptr<TreeItemMeta>>> TreeItem::getMetaData(const std::string &key) {
-    auto found = metaData.find(key);
-    if (found != metaData.end()){
-        return found->second;
-    }
-    return nullopt;
 }
 
 //

@@ -160,7 +160,7 @@ namespace ReyEngine::Internal::Tree {
 
          //set the root
          childptr->_root = _root;
-         childptr->_scenePath = _scenePath + "\\" + name;
+         childptr->_scenePath = _scenePath + "\\" + childName;
 
          //////callbacks
          // this order is really important, particularly for layouts.

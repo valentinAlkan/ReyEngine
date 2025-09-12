@@ -5,63 +5,65 @@ namespace ReyEngine{
    class Tree;
    class TreeItem;
    //todo: this doesn't need to be an interface since tree doesn't do it anymore. move all this to tree item
-   class TreeItemContainerInterface {
+   class TreeItemContainer {
    public:
-      virtual TreeItem* push_back(std::unique_ptr<TreeItem>&& item) = 0;
-      /////////////////////////////////////////////////////////////////////////////////////////
-   //   void insertItem(int index, TreeItem*& item){getChildren().insert(getChildren().begin()+index, item);}
+      static constexpr size_t GENERATION_NULL = -1;
+      TreeItemContainer() = default;
+      TreeItem* push_back(std::unique_ptr<TreeItem>&& item);
+      TreeItem* insertItem(int atIndex, std::unique_ptr<TreeItem> item);
       /////////////////////////////////////////////////////////////////////////////////////////
       virtual std::unique_ptr<TreeItem> removeItem(size_t index) = 0;
       void sort(std::function<bool(const std::unique_ptr<TreeItem>& a, const std::unique_ptr<TreeItem>& b)>& fxLessthan){
          std::sort(getChildren().begin(), getChildren().end(), fxLessthan);
       }
+      void clear(); //remove all children
       /////////////////////////////////////////////////////////////////////////////////////////
+      std::vector<std::unique_ptr<TreeItem>>& getChildren(){return _children;}
    protected:
-      virtual std::vector<std::unique_ptr<TreeItem>>& getChildren() = 0;
+      std::vector<std::unique_ptr<TreeItem>> _children;
+      Tree* _tree = nullptr;
+      TreeItemContainer* _parent;
+      //the "level" of the branch on which this leaf appears.
+      // For example, the root is always generation 0, its children are generation 1,
+      // those children's children are generation 2, and so on.
+      // Orphaned/null items have generation -1;
+      size_t _generation = GENERATION_NULL;
    };
 
-   //A struct to hold extra data for us
-   struct TreeItemMeta {};
-   class TreeItem: public TreeItemContainerInterface {
+   class TreeItem: public TreeItemContainer, public MetaDataInterface {
    public:
-      static constexpr size_t GENERATION_NULL = -1;
-      TreeItem(const std::string& text=""): _text(text){}
       void setText(const std::string& text){_text = text;}
       [[nodiscard]] std::string getText() const {return _text;}
-      TreeItem* push_back(std::unique_ptr<TreeItem>&& newChildItem) override;
       std::unique_ptr<TreeItem> removeItem(size_t index) override;
-      std::vector<std::unique_ptr<TreeItem>>& getChildren() override {return children;}
       [[nodiscard]] bool getExpanded(){return expanded;}
       void setExpanded(bool _expanded){expanded = _expanded;}
       [[nodiscard]] bool getExpandable(){return expandable;}
       void setExpandable(bool _expandable){expandable = _expandable;}
       [[nodiscard]] bool getEnabled(){return _enabled;}
       void setEnabled(bool enabled){_enabled = enabled;}
-      void clear(); //remove all children
-      std::optional<std::reference_wrapper<std::unique_ptr<TreeItemMeta>>> getMetaData(const std::string& key);
-      void setMetaData(const std::string& key, std::unique_ptr<TreeItemMeta> meta);
+      friend std::ostream& operator<<(std::ostream& os, const TreeItem& item) {os << item._text; return os;}
    protected:
-      std::map<std::string, std::unique_ptr<TreeItemMeta>> metaData;
+      TreeItem(const std::string& text=""): _text(text){}
+      template <typename T>
+      TreeItem(const std::string& text="", std::optional<std::pair<std::string, T>> metaData=std::nullopt)
+      : _text(text)
+      {
+         if (metaData) {
+            auto& [key, value] = metaData.value();
+            setMetaData(key, value);
+         }
+      }
       void setGeneration(size_t generation);
       std::string _text;
       bool _enabled = true; //used to limit interaction and gray it out.
-      TreeItem* parent;
       bool isRoot = false;
       bool expanded = true; //unexpanded tree items are visible, it's their children that are not;
       bool visible = true;
       bool expandable = true;
-      Tree* _tree;
-      std::vector<std::unique_ptr<TreeItem>> children;
 
    private:
-      //the "level" of the branch on which this leaf appears.
-      // For example, the root is always generation 0, its children are generation 1,
-      // those children's children are generation 2, and so on.
-      // Orphaned/null items have generation -1;
-      size_t _generation = GENERATION_NULL;
-
       friend class Tree;
-      friend class TreeItemContainerInterface;
+      friend class TreeItemContainer;
    };
 
    class Tree : public Layout {
@@ -86,14 +88,30 @@ namespace ReyEngine{
       EVENT_ARGS(EventItemClicked, 654987984656, TreeItem*& item), item(item){}
          TreeItem*& item;
       };
+      EVENT_ARGS(EventItemDoubleClicked, 654987984657, TreeItem*& item), item(item){}
+         TreeItem*& item;
+      };
       EVENT_ARGS(EventItemHovered, 654987984657, TreeItem*& item), item(item){}
+         TreeItem*& item;
+      };
+      EVENT_ARGS(EventItemSelected, 654987984658, TreeItem*& item), item(item){}
+         TreeItem*& item;
+      };
+      EVENT_ARGS(EventItemDeselected, 654987984659, TreeItem*& item), item(item){}
          TreeItem*& item;
       };
 
       [[nodiscard]] std::optional<TreeItem*> getRoot() const {if (root) return root.get(); return {};}
       void setHideRoot(bool hide){_hideRoot = hide; determineVisible();}
       TreeItem* setRoot(std::unique_ptr<TreeItem>&& item);
-   //   std::vector<TreeItem*> getItem(const TreePath&) const;
+      std::unique_ptr<TreeItem> createItem(std::unique_ptr<TreeItem>&&); //takes ownership of another tree item
+      template <typename... Args>
+      inline std::unique_ptr<TreeItem> createItem(const std::string& text={}, Args... args){
+         return std::unique_ptr<TreeItem>(new TreeItem(text, std::forward<Args>(args)...));
+      }
+      void setAllowSelect(bool allowSelect){_allowSelect = allowSelect;}
+      [[nodiscard]] bool getAllowSelect(){return _allowSelect;}
+      std::optional<TreeItem*> getSelected(){return _selectedItem;}
 
       struct Iterator {
          using iterator_category = std::forward_iterator_tag;
@@ -142,16 +160,19 @@ namespace ReyEngine{
       void render2D() const override;
       Widget* _unhandled_input(const InputEvent&) override;
       void _on_mouse_enter() override {};
-      void _on_mouse_exit() override { _hoveredMeta.reset();/*_hoveredRowNum = -1;*/}
-      std::optional<TreeItemImplDetails*> getMetaAt(const Pos<float>& localPos);
+      void _on_mouse_exit() override { _hoveredImplDetails.reset();}
+      std::optional<TreeItemImplDetails*> getImplDetailsAt(const Pos<float>& localPos);
    private:
-
+      bool _allowSelect = false;
       std::unique_ptr<TreeItem> root;
       std::vector<TreeItem*> order; //a full accounting of the tree's contents, used by the iterator.
       std::vector<TreeItemImplDetails*> visible; //a
       bool _hideRoot = false; //if true, the root is hidden and we can appear as a "flat" tree.
-      std::optional<TreeItemImplDetails*>_hoveredMeta;
+      std::optional<TreeItemImplDetails*> _hoveredImplDetails;
+      std::optional<TreeItem*> _lastClicked;
+      std::optional<TreeItem*> _selectedItem;
 
       friend class TreeItem;
+      friend class TreeItemContainer;
    };
 }

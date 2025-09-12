@@ -26,7 +26,7 @@ namespace ReyEngine{
       void render2DEnd() override;
       virtual void arrangeChildren();
       void render2D() const override {drawRectangleLines(getRect().toSizeRect(), 1.0, Colors::black);}
-      const LayoutDir dir;
+      const LayoutDir layoutDir;
 
    };
 }

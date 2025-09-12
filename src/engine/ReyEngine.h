@@ -746,8 +746,8 @@ namespace ReyEngine {
       [[nodiscard]] constexpr inline Line<T> centerLineH() const { auto c = center(); return {0, c.y, width, c.y}; }
       [[nodiscard]] constexpr inline Line<T> centerLineV() const { auto c = center(); return {c.x, 0, c.x, height}; }
       [[nodiscard]] constexpr inline Rect embiggen(T amt) const {return *this + Rect<T>(-amt, -amt, 2*amt, 2*amt);}
-      [[nodiscard]] constexpr inline Rect emtallen(T amt) const {return  *this + Rect<T>(0, -amt, 0, 2*amt);}
-      [[nodiscard]] constexpr inline Rect emwiden(T amt) const {return  *this + Rect<T>(-amt, 0, 2*amt, 0);}
+      [[nodiscard]] constexpr inline Rect stretchVertical(T amt) const {return  *this + Rect<T>(0, -amt, 0, 2*amt);}
+      [[nodiscard]] constexpr inline Rect stretchHorizontal(T amt) const {return  *this + Rect<T>(-amt, 0, 2*amt, 0);}
       [[nodiscard]] constexpr inline Rect chopTop(T amt) const {auto retval = *this; retval.y+= amt; retval.height-=amt; return retval;}
       [[nodiscard]] constexpr inline Rect chopBottom(T amt) const {auto retval = *this; retval.height-=amt; return retval;}
       [[nodiscard]] constexpr inline Rect chopRight(T amt) const {auto retval = *this; retval.width-=amt; return retval;}

@@ -230,6 +230,7 @@ namespace ReyEngine{
             typedEventHandler(s);
          };
          std::type_index tid = typeid(T);
+         if (!publisher) throw std::runtime_error("Cannot subscribe to null publisher!");
          auto it = _subscriptions.try_emplace(publisher);
          it.first->second.push_back(tid);
 

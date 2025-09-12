@@ -72,7 +72,7 @@ private:
 /////////////////////////////////////////////////////////////////////////////////////////
 Layout::Layout(LayoutDir layoutDir)
 : alignment(Alignment::EVEN)
-, dir(layoutDir)
+, layoutDir(layoutDir)
 {
    isLayout = true;
 }
@@ -123,7 +123,7 @@ void Layout::layoutApplyRect(Widget* widget, Rect<float>& r){
 /////////////////////////////////////////////////////////////////////////////////////////
 void Layout::arrangeChildren() {
    if (getChildren().empty()) return;
-   if (dir == LayoutDir::GRID){
+   if (layoutDir == LayoutDir::GRID){
       //divide the space into boxes, each box being large enough to exactly contain the largest child (in either dimension)
       // Center each child inside it's respective box.
 
@@ -148,7 +148,7 @@ void Layout::arrangeChildren() {
          }
       }
    } else {
-      const auto expandingDimension = dir == LayoutDir::HORIZONTAL ? getWidth() : getHeight();
+      const auto expandingDimension = layoutDir == LayoutDir::HORIZONTAL ? getWidth() : getHeight();
       if (expandingDimension <= 0) return; //do not try to allocate for 0 sizes
       // For front and back alignment, set all widgets to their minimum/maximum size, then allocate the leftover space to nothing.
       switch (alignment){
@@ -159,9 +159,9 @@ void Layout::arrangeChildren() {
                auto child = getChildren().at(i);
                auto isWidget = child->as<Widget>();
                if (!isWidget) continue;
-               LayoutHelper helper(dir, i, this, isWidget.value());
+               LayoutHelper helper(layoutDir, i, this, isWidget.value());
                helper.setReleventPosition(pos);
-               auto pendingRect = dir == LayoutDir::HORIZONTAL ? Rect<R_FLOAT>(pos,0,0,getHeight()) : Rect<R_FLOAT>(0,pos,getWidth(),0);
+               auto pendingRect = layoutDir == LayoutDir::HORIZONTAL ? Rect<R_FLOAT>(pos, 0, 0, getHeight()) : Rect<R_FLOAT>(0, pos, getWidth(), 0);
                auto minSizeOpt = helper.setPendingRect(pendingRect);
                //will either be constrained, or be 0, so we don't need to check other conditions
                if (minSizeOpt && minSizeOpt.value()){
@@ -170,14 +170,14 @@ void Layout::arrangeChildren() {
             }
             break;}
          case Alignment::BACK:{
-            R_FLOAT pos = dir == LayoutDir::HORIZONTAL ? getWidth() : getHeight();
+            R_FLOAT pos = layoutDir == LayoutDir::HORIZONTAL ? getWidth() : getHeight();
             for (int i=0; i<getChildren().size(); i++){
                //just make the thing as small as possible - setpendingrect will spit back its minimum size
                auto child = getChildren().at(i);
                auto isWidget = child->as<Widget>();
                if (!isWidget) continue;
-               LayoutHelper helper(dir, i, this, isWidget.value());
-               auto pendingRect = dir == LayoutDir::HORIZONTAL ? Rect<R_FLOAT>(0,0,0,getHeight()) : Rect<R_FLOAT>(0,0,getWidth(),0);
+               LayoutHelper helper(layoutDir, i, this, isWidget.value());
+               auto pendingRect = layoutDir == LayoutDir::HORIZONTAL ? Rect<R_FLOAT>(0, 0, 0, getHeight()) : Rect<R_FLOAT>(0, 0, getWidth(), 0);
                auto minSizeOpt = helper.setPendingRect(pendingRect);
                //will either be constrained, or be 0, so we don't need to check other conditions
                if (minSizeOpt){
@@ -200,7 +200,7 @@ void Layout::arrangeChildren() {
                auto child = getChildren().at(i);
                auto isWidget = child->as<Widget>();
                if (!isWidget) continue;
-               childLayoutsAll.emplace_back(make_unique<LayoutHelper>(dir, i, this, isWidget.value()));
+               childLayoutsAll.emplace_back(make_unique<LayoutHelper>(layoutDir, i, this, isWidget.value()));
                childLayoutsAvailable.push_back(childLayoutsAll.back().get());
             }
             auto removeLayoutFromConsideration = [&](LayoutHelper* layout){
@@ -229,7 +229,7 @@ void Layout::arrangeChildren() {
                      if constexpr (VERBOSE) Logger::debug() << "Child " << layout->child->getName() << " with scale of " << numerator << "/" << denominator << " can potentially be allocated " << allocatedSpace << " pixels" << endl;
                   }
                   std::optional<int> isConstrained;
-                  if (dir == LayoutDir::HORIZONTAL) {
+                  if (layoutDir == LayoutDir::HORIZONTAL) {
                      isConstrained = layout->setPendingRect({{0, 0},{allocatedSpace, getHeight()}});
                   } else {
                      isConstrained = layout->setPendingRect({{0, 0}, {getWidth(), allocatedSpace}});
@@ -257,7 +257,7 @@ void Layout::arrangeChildren() {
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::Size<int> Layout::calculateIdealBoundingBox() {
    Size<R_FLOAT> idealBoundingBox;
-   if (dir == LayoutDir::GRID){
+   if (layoutDir == LayoutDir::GRID){
       throw std::runtime_error("not implemented!");
 //      //divide the space into boxes, each box being large enough to exactly contain the largest child (in either dimension)
 //      // Center each child inside it's respective box.
@@ -276,7 +276,7 @@ ReyEngine::Size<int> Layout::calculateIdealBoundingBox() {
 //         }
 //      }
    } else {
-      if (dir == LayoutDir::VERTICAL){
+      if (layoutDir == LayoutDir::VERTICAL){
          for (auto& child : getChildren()){
             auto isWidget = child->as<Widget>();
             if (!isWidget) continue;
