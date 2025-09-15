@@ -69,7 +69,7 @@ void Tree::determineVisible() {
       }
       //set the rect that contains this item
       Pos<float> startPos = {0, (float)(visible.size() - 1) * ROW_HEIGHT};
-      visible.back()->expansionIconClickRegion = {startPos, {getWidth(), ROW_HEIGHT}};
+      if (!visible.empty()) visible.back()->expansionIconClickRegion = {startPos, {getWidth(), ROW_HEIGHT}};
       if (item->expanded) {
          for (auto &child: item->_children) {
             pushVisible(child.get());

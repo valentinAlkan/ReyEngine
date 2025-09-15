@@ -12,8 +12,7 @@ namespace ReyEngine{
       Label(const std::string& text)
       : text(text)
       {
-         auto expandOpt = needsExpand();
-         if (expandOpt){
+         if (auto expandOpt = needsExpand()){
             applyRect({getPos(), expandOpt.value()});
             minSize = expandOpt.value();
          }
@@ -76,11 +75,8 @@ namespace ReyEngine{
    protected:
       inline ReyEngine::Rect<double> calculateBoundingRect(){
          auto textSize = measureText();
-         auto newSize = clampedSize(textSize);
-         if (newSize.x > getSize().x || newSize.y > getSize().y){
-            return {{0, 0}, newSize};
-         }
-         return getRect().toSizeRect();
+         auto newSize = textSize.clamp(minSize, maxSize);
+         return {{0, 0}, newSize};
       }
 
       inline std::optional<ReyEngine::Size<double>> needsExpand(){

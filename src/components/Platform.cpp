@@ -279,15 +279,9 @@ string CrossPlatform::getUserLocalConfigDirRestrictedSecurity() {
 #endif
 
 #ifdef PLATFORM_LINUX_BASED
-   // On Linux, we can use a subdirectory with restricted permissions
-    string configDir = getUserLocalConfigDir();
-    return configDir + "/restricted";
 #endif
 
 #ifdef PLATFORM_MACOS
-   // On macOS, use the regular config dir but in a restricted subdirectory
-    string configDir = getUserLocalConfigDir();
-    return configDir + "/Restricted";
 #endif
 
    throw std::runtime_error("Platform: Unsupported platform for getUserLocalConfigDirRestrictedSecurity");
@@ -297,4 +291,44 @@ string CrossPlatform::getUserLocalConfigDirRestrictedSecurity() {
 /////////////////////////////////////////////////////////////////////////////////////////
 string CrossPlatform::getUserLocalConfigDirApp(){
    return getUserLocalConfigDir() + getExeName();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+vector<string> CrossPlatform::getRootFolders() {
+   std::vector<std::string> roots;
+
+#ifdef PLATFORM_WINDOWS
+   // Windows: Get drive letters
+   DWORD drives = GetLogicalDrives();
+   for (char drive = 'A'; drive <= 'Z'; ++drive) {
+      if (drives & (1 << (drive - 'A'))) {
+         std::string driveStr = std::string(1, drive) + ":\\";
+         roots.push_back(driveStr);
+      }
+   }
+
+#elif IS_LINUX()
+   // Linux: Parse /proc/mounts
+    std::ifstream mounts("/proc/mounts");
+    std::string line;
+
+    while (std::getline(mounts, line)) {
+        std::istringstream iss(line);
+        std::string device, mountPoint, fsType;
+
+        if (iss >> device >> mountPoint >> fsType) {
+            // Basic filtering - you might want more sophisticated logic
+            if (fsType == "ext4" || fsType == "ext3" || fsType == "ext2" ||
+                fsType == "xfs" || fsType == "btrfs" || fsType == "ntfs") {
+                roots.push_back(mountPoint);
+            }
+        }
+    }
+
+#elif IS_MACOS()
+    // Other Unix-like systems might need different approaches
+    roots.push_back("/"); // At minimum, root exists
+#endif
+
+   return roots;
 }

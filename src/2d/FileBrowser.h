@@ -1,8 +1,9 @@
 #include "Tree.h"
 #include "FileSystem.h"
 #include "Button.h"
-#include "LineEdit.h"
+#include "LineEdit.h"  
 #include "ComboBox.h"
+#include "ScrollArea.h"
 
 namespace ReyEngine {
    class FileBrowser : public Widget {
@@ -23,9 +24,12 @@ namespace ReyEngine {
       void _on_rect_changed() override;
       void _on_item_selected(const Tree::EventItemSelected&);
       void _on_item_deselected(const Tree::EventItemDeselected&);
-      std::shared_ptr<Tree> _tree;
       FileSystem::Directory _dir;
+      std::shared_ptr<Tree> _directoryTree;
+      std::shared_ptr<Tree> _systemTree;
       std::shared_ptr<Layout> _layout;
+      std::shared_ptr<ScrollArea> _systemBrowserScrollArea;
+      std::shared_ptr<Tree> _systemBrowserTree;
       std::shared_ptr<PushButton> _btnOk;
       std::shared_ptr<PushButton> _btnCancel;
       std::shared_ptr<PushButton> _btnBack;

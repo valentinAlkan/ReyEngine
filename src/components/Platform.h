@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <vector>
 
 #if defined(_WIN32) || defined(_WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || defined(__WINDOWS__)
 #define PLATFORM_WINDOWS
@@ -88,4 +89,5 @@ namespace CrossPlatform{
    std::string getUserLocalConfigDir(); //returns a location suitable for storing per-app data
    std::string getUserLocalConfigDirApp(); //returns a directory string in the local config dir with the same name as this application
    std::string getUserLocalConfigDirRestrictedSecurity(); //something like %APPDATA%/LocalLow in windows
+   std::vector<std::string> getRootFolders(); //returns / for unix-like systems, a vector of drive letters in windows
 }

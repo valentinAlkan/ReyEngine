@@ -223,18 +223,18 @@ namespace ReyEngine {
 
       inline void operator=(Pos<T>&) = delete;
       inline constexpr operator Vector2() const {return {(float)x,(float)y};}
-      constexpr inline T magnitude() const {return std::sqrt(x * x + y * y);}
+      [[nodiscard]] constexpr inline T magnitude() const {return std::sqrt(x * x + y * y);}
       static constexpr inline T magnitude(T x, T y) {return std::sqrt(x * x + y * y);}
-      UnitVector2 direction(const Vec2<T>& dest) const; //get the unit vector that points at dest from this point's perspective
+      [[nodiscard]] UnitVector2 direction(const Vec2<T>& dest) const; //get the unit vector that points at dest from this point's perspective
 //      constexpr inline Vec2 midpoint() const {return {x/2, y / 2};} does this make sense?
-      constexpr inline Vec2 min(const Vec2& other) const {Vec2 r; r.x = Math::min(Vec2::x, other.x); r.y = Math::min(Vec2::y, other.y); return r;}
-      constexpr inline Vec2 max(const Vec2& other) const {Vec2 r; r.x = Math::max(Vec2::x, other.x); r.y = Math::max(Vec2::y, other.y); return r;}
-      constexpr inline Fraction pct(R_FLOAT input) const {return (input - x) / (y - x);} //given an input value, what percentage of the range is it from 0 to 1?
-      constexpr inline R_FLOAT lerp(Fraction lerpVal) const {return lerpVal.get() * (y - x) + x;} //given a value from 0 to 1, what is the value of the range that corresponds to it?
-      constexpr inline Vec2 lerp(Vec2 otherPoint, R_FLOAT xprm) const {return {xprm, y + (((xprm - x) * (otherPoint.y - y)) / (otherPoint.x - x))};}
-      constexpr inline Vec2 extend(R_FLOAT distance) const {Vec2<T> normalized = normalize();return normalized * distance;}
-      constexpr inline T clamp(T value) const {if (value < x) return x; if (value > y) return y; return value;}
-      constexpr inline Vec2 clamp(Vec2 clampA, Vec2 clampB) const {
+      [[nodiscard]] constexpr inline Vec2 min(const Vec2& other) const {Vec2 r; r.x = Math::min(Vec2::x, other.x); r.y = Math::min(Vec2::y, other.y); return r;}
+      [[nodiscard]] constexpr inline Vec2 max(const Vec2& other) const {Vec2 r; r.x = Math::max(Vec2::x, other.x); r.y = Math::max(Vec2::y, other.y); return r;}
+      [[nodiscard]] constexpr inline Fraction pct(R_FLOAT input) const {return (input - x) / (y - x);} //given an input value, what percentage of the range is it from 0 to 1?
+      [[nodiscard]] constexpr inline R_FLOAT lerp(Fraction lerpVal) const {return lerpVal.get() * (y - x) + x;} //given a value from 0 to 1, what is the value of the range that corresponds to it?
+      [[nodiscard]] constexpr inline Vec2 lerp(Vec2 otherPoint, R_FLOAT xprm) const {return {xprm, y + (((xprm - x) * (otherPoint.y - y)) / (otherPoint.x - x))};}
+      [[nodiscard]] constexpr inline Vec2 extend(R_FLOAT distance) const {Vec2<T> normalized = normalize();return normalized * distance;}
+      [[nodiscard]] constexpr inline T clamp(T value) const {if (value < x) return x; if (value > y) return y; return value;}
+      [[nodiscard]] constexpr inline Vec2 clamp(Vec2 clampA, Vec2 clampB) const {
          Vec2 retval = {x, y};
          if (x < clampA.x) retval.x = clampA.x;
          if (x > clampB.x) retval.x = clampB.x;

@@ -1,6 +1,6 @@
 #include "FileBrowser.h"
 #include "MiscTools.h"
-
+#include "Label.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -14,6 +14,8 @@ void FileBrowser::render2D() const {
 /////////////////////////////////////////////////////////////////////////////////////////
 void FileBrowser::_on_rect_changed(){
    _layout->setRect(getSizeRect().embiggen(-20));
+   _systemBrowserTree->setWidth(_systemBrowserScrollArea->getWidth());
+   Logger::info() << "_systemBrowserScrollArea : " << _systemBrowserScrollArea->getRect() << endl;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -21,8 +23,9 @@ void FileBrowser::_init() {
    _layout = make_child<Layout>(getNode(), "layout", Layout::LayoutDir::VERTICAL);
    auto navBar = make_child<Layout>(_layout->getNode(), "navBar", Layout::LayoutDir::HORIZONTAL);
    auto browser = make_child<Layout>(_layout->getNode(), "browser", Layout::LayoutDir::HORIZONTAL);
-   auto systemBrowser = make_child<Layout>(browser->getNode(), "systemBrowser", Layout::LayoutDir::VERTICAL);
-   auto dirTreeBrowser = make_child<Layout>(browser->getNode(), "fileBrowserLayout", Layout::LayoutDir::VERTICAL);
+   _systemBrowserScrollArea = make_child<ScrollArea>(browser->getNode(), "scrollArea");
+   _systemBrowserTree = make_child<Tree>(_systemBrowserScrollArea->getNode(), "systemBrowserTree");
+   auto dirBrowserTree = make_child<Layout>(browser->getNode(), "fileBrowserLayout", Layout::LayoutDir::VERTICAL);
    auto footer = make_child<Layout>(_layout->getNode(), "footer", Layout::LayoutDir::HORIZONTAL);
 
    navBar->setMaxHeight(30);
@@ -30,9 +33,9 @@ void FileBrowser::_init() {
 
    _layout->layoutRatios = {1, 4, 1};
    browser->layoutRatios = {1, 4};
-   _tree = make_child<Tree>(dirTreeBrowser->getNode(), "tree");
-   _tree->setAllowSelect(true);
-   _tree->setHideRoot(true);
+   _directoryTree = make_child<Tree>(dirBrowserTree->getNode(), "tree");
+   _directoryTree->setAllowSelect(true);
+   _directoryTree->setHideRoot(true);
 
    auto footerL = make_child<Layout>(footer->getNode(), "footerL", Layout::LayoutDir::HORIZONTAL);
    auto footerR = make_child<Layout>(footer->getNode(), "footerR", Layout::LayoutDir::HORIZONTAL);
@@ -42,8 +45,8 @@ void FileBrowser::_init() {
 
    _btnOk = make_child<PushButton>(footerR->getNode(), "btnOk", "Ok");
    _btnCancel = make_child<PushButton>(footerR->getNode(), "btnCancel", "Cancel");
-   _btnOk->subscribe<Tree::EventItemSelected>(_tree, [this](const Tree::EventItemSelected& e){_on_item_selected(e);});
-   _btnOk->subscribe<Tree::EventItemDeselected>(_tree, [this](const Tree::EventItemDeselected& e){_on_item_deselected(e);});
+   _btnOk->subscribe<Tree::EventItemSelected>(_directoryTree, [this](const Tree::EventItemSelected& e){_on_item_selected(e);});
+   _btnOk->subscribe<Tree::EventItemDeselected>(_directoryTree, [this](const Tree::EventItemDeselected& e){_on_item_deselected(e);});
    _btnOk->setEnabled(false);
 
    _btnBack = make_child<PushButton>(navBar->getNode(), "btnBack", "<-");
@@ -51,6 +54,10 @@ void FileBrowser::_init() {
    _btnUp = make_child<PushButton>(navBar->getNode(), "btnUp", "^");
    _addrBar = make_child<LineEdit>(navBar->getNode(), "addrBar");
    navBar->layoutRatios = {1,1,1,20};
+
+   auto label = make_child<Label>(_systemBrowserScrollArea->getNode(), "label", "this right here is some text yall");
+   Logger::info() << "label : " << label->getRect() << endl;
+
 
    setMinSize(200,200);
 }
@@ -67,14 +74,14 @@ void FileBrowser::refreshDirectoryContents() {
          auto p = std::make_optional(std::pair<std::string, Path>(VAR_PATH, entry));
          auto text = entry.tail();
          if (entry.isDirectory()) text += FILESYSTEM_PATH_SEP;
-         auto child = parentItem->push_back(_tree->createItem(text, p));
+         auto child = parentItem->push_back(_directoryTree->createItem(text, p));
          child->setExpandable(entry.isDirectory());
          populate(child);
       }
    };
 
-   _tree->setRoot(_tree->createItem(_dir.str(), std::make_optional(std::pair<std::string, Path>(VAR_PATH, _dir))));
-   populate(_tree->getRoot().value());
+   _directoryTree->setRoot(_directoryTree->createItem(_dir.str(), std::make_optional(std::pair<std::string, Path>(VAR_PATH, _dir))));
+   populate(_directoryTree->getRoot().value());
 
 
 //      stringstream ss;
