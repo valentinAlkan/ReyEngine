@@ -118,7 +118,7 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct SliderReactWidget : public Widget {
    REYENGINE_OBJECT(SliderReactWidget)
-   SliderReactWidget() {setMaxSize({ReyEngine::Size<R_FLOAT>::Max().x, 30});}
+   SliderReactWidget() {setMaxSize(ReyEngine::Size<R_FLOAT>::Max().x, 30);}
    void render2D() const override {
       auto [rectL, rectR] = getSizeRect().splitH<true>(_pct);
       drawRectangleGradientH(rectL, Colors::blue, Colors::black);
@@ -155,43 +155,20 @@ int main() {
 
       //create a layout
       {
-         TypeNode* layoutl;
-         TypeNode* layoutr;
-         {
-            auto [layout, node] = make_node<Layout>("Layout", Layout::LayoutDir::VERTICAL);
-            root->getNode()->addChild(std::move(node));
-            layout->setAnchoring(Anchor::FILL);
-
-            auto [_layoutl, nodel] = make_node<Layout>("Layoutl", Layout::LayoutDir::HORIZONTAL);
-            layoutl = layout->getNode()->addChild(std::move(nodel));
-
-            auto [_layoutr, noder] = make_node<Layout>("Layoutr", Layout::LayoutDir::HORIZONTAL);
-            layoutr = layout->getNode()->addChild(std::move(noder));
-         }
-         TypeNode* widgetsHolder = nullptr;
-         TypeNode* buttonHolder = nullptr;
-         TypeNode* tabHolder = nullptr;
-         TypeNode* subCanvasHolder = nullptr;
-         TypeNode* scrollAreaHolder = nullptr;
+         auto mainLayout = make_child<Layout>(root, "mainLayout", Layout::LayoutDir::VERTICAL);
+         mainLayout->setAnchoring(Anchor::FILL);
+         auto layoutl = make_child<Layout>(mainLayout, "Layoutl", Layout::LayoutDir::HORIZONTAL);
+         auto layoutr = make_child<Layout>(mainLayout, "Layoutr", Layout::LayoutDir::HORIZONTAL);
          TypeNode* popupNode = nullptr;
          TypeNode* dialogHNode = nullptr;
          TypeNode* dialogVNode = nullptr;
 
          // add some children to the layout
-         {
-//            auto [widget1, n1] = make_node<TestWidget>("TestWidget1", "firstchild");
-            auto [widget2, n2] = make_node<Layout>("ScrollArea Holder", Layout::LayoutDir::VERTICAL);
-            auto [widget3, n3] = make_node<Layout>("SubCanvasHolder", Layout::LayoutDir::VERTICAL);
-            auto [widget4, n4] = make_node<Layout>("TabLayout", Layout::LayoutDir::VERTICAL);
-            auto [widget5, n5] = make_node<Layout>("WidgetsLayout", Layout::LayoutDir::VERTICAL);
-            auto [widget6, n6] = make_node<Layout>("ButtonLayout", Layout::LayoutDir::VERTICAL);
-//            layoutl->addChild(std::move(n1));
-            scrollAreaHolder = layoutl->addChild(std::move(n2));
-            subCanvasHolder = layoutl->addChild(std::move(n3));
-            tabHolder = layoutr->addChild(std::move(n4));
-            widgetsHolder = layoutr->addChild(std::move(n5));
-            buttonHolder = layoutr->addChild(std::move(n6));
-         }
+         auto scrollAreaHolder = make_child<Layout>(layoutl, "ScrollArea Holder", Layout::LayoutDir::VERTICAL);
+         auto subCanvasHolder = make_child<Layout>(layoutl, "SubCanvasHolder", Layout::LayoutDir::VERTICAL);
+         auto tabHolder = make_child<Layout>(layoutr, "TabLayout", Layout::LayoutDir::VERTICAL);
+         auto widgetsHolder = make_child<Layout>(layoutr, "WidgetsLayout", Layout::LayoutDir::VERTICAL);
+         auto buttonHolder = make_child<Layout>(layoutr, "ButtonLayout", Layout::LayoutDir::VERTICAL);
          //add some other widgets
          {
             auto [slider1, n1] = make_node<Slider>("slider1", Slider::SliderType::HORIZONTAL);
@@ -286,7 +263,7 @@ int main() {
                         {"None",      TextureRect::FitType::NONE}
                   };
                   auto [textureTestComboBox, n2] = make_node<ComboBox<TextureRect::FitType>>("TextureTestComboBox", fitTypes);
-                  auto [textureRect, n3] = make_node<TextureRect>("TextureTest", "test/spritesheet.png", TextureRect::FitType::FIT_RECT);
+                  auto [textureRect, n3] = make_node<TextureRect>("TextureTest", FileSystem::File("test/spritesheet.png"), TextureRect::FitType::FIT_RECT);
                   n1->addChild(std::move(n2));
                   n1->addChild(std::move(n3));
                   p2 = std::move(n1);
@@ -306,7 +283,7 @@ int main() {
                      p3 = std::move(ctlnode);
                   }
                   {
-                     auto [sprite, spriteNode] = make_node<Sprite>("Sprite", "test/characters.png", Rect<R_FLOAT>(3, 4, 16, 16));
+                     auto [sprite, spriteNode] = make_node<Sprite>("Sprite", FileSystem::File("test/characters.png"), Rect<R_FLOAT>(3, 4, 16, 16));
                      p3->addChild(std::move(spriteNode));
                      sprite->setRect(20,20,64,64);
                   }
@@ -316,7 +293,7 @@ int main() {
                         _r,
                         _r + Pos<R_FLOAT>(16, 0),
                      };
-                     auto [animatedSprite, spriteNode] = make_node<AnimatedSprite>("AnimatedSprite", "test/characters.png", regions);
+                     auto [animatedSprite, spriteNode] = make_node<AnimatedSprite>("AnimatedSprite", FileSystem::File("test/characters.png"), regions);
                      p3->addChild(std::move(spriteNode));
                      animatedSprite->setRect(100,20,64,64);
                   }
@@ -342,7 +319,7 @@ int main() {
                      auto [texRect, node] = make_node<TextureRect>("ZoomTextureRect");
                      zoomCanvas->addChild(std::move(node));
                      zoomCanvas->setAnchoring(ReyEngine::Anchor::FILL);
-                     texRect->setTexture("test/spritesheet.png");
+                     texRect->setTexture(FileSystem::File("test/spritesheet.png"));
                      texRect->setAnchoring(ReyEngine::Anchor::FILL);
                      texRect->setFitType(ReyEngine::TextureRect::FitType::NONE);
                   }
@@ -418,10 +395,6 @@ int main() {
             //add a panel to the scroll area
             auto panel = make_child<Panel>(scrollAreaNode, "Panel");
             panel->setRect(100, 300, 200, 200);
-
-            //create a mouse event and test it
-            InputEventMouseButton eventMouseButton(&window, scrollArea->getGloablRect().get().pos(), InputInterface::MouseButton::LEFT, true);
-            window.processInput(eventMouseButton);
          }
 
          //create popup control
