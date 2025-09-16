@@ -159,9 +159,9 @@ int main() {
          mainLayout->setAnchoring(Anchor::FILL);
          auto layoutl = make_child<Layout>(mainLayout, "Layoutl", Layout::LayoutDir::HORIZONTAL);
          auto layoutr = make_child<Layout>(mainLayout, "Layoutr", Layout::LayoutDir::HORIZONTAL);
-         TypeNode* popupNode = nullptr;
-         TypeNode* dialogHNode = nullptr;
-         TypeNode* dialogVNode = nullptr;
+//         TypeNode* popupNode = nullptr;
+//         TypeNode* dialogHNode = nullptr;
+//         TypeNode* dialogVNode = nullptr;
 
          // add some children to the layout
          auto scrollAreaHolder = make_child<Layout>(layoutl, "ScrollArea Holder", Layout::LayoutDir::VERTICAL);
@@ -171,102 +171,83 @@ int main() {
          auto buttonHolder = make_child<Layout>(layoutr, "ButtonLayout", Layout::LayoutDir::VERTICAL);
          //add some other widgets
          {
-            auto [slider1, n1] = make_node<Slider>("slider1", Slider::SliderType::HORIZONTAL);
-            widgetsHolder->addChild(std::move(n1));
-            auto [sliderReact, sr1] = make_node<SliderReactWidget>("sliderReact1");
-            widgetsHolder->addChild(std::move(sr1));
+            auto slider = make_child<Slider>(widgetsHolder, "slider1", Slider::SliderType::HORIZONTAL);
+            auto sliderReact = make_child<SliderReactWidget>(widgetsHolder, "sliderReact1");
 
             //add slider reaction callback
             auto srCallback = [sliderReact](const Slider::EventSliderValueChanged& event) {
                sliderReact->setValue(event.pct);
             };
-            sliderReact->subscribe<Slider::EventSliderValueChanged>(slider1.get(), srCallback);
+            sliderReact->subscribe<Slider::EventSliderValueChanged>(slider, srCallback);
 
-            auto [lineedit1, n2] = make_node<LineEdit>("LineEdit", "Try clicking on this line edit");
-            widgetsHolder->addChild(std::move(n2));
-            auto [combobox1, n3] = make_node<ComboBox<int>>("ComboBox");
-            combobox1->addItems({"this", "are", "some", "items"});
-            widgetsHolder->addChild(std::move(n3));
+            auto lineedit = make_child<LineEdit>(widgetsHolder, "LineEdit", "Try clicking on this line edit");
+            auto combobox = make_child<ComboBox<int>>(widgetsHolder, "ComboBox");
+            combobox->addItems({"this", "are", "some", "items"});
 
             auto lineEditCB = [&](const LineEdit::EventLineEditTextChanged& event) {
                cout << "New Line Edit Text Old = " << event.oldText << endl;
                cout << "New Line Edit Text New = " << event.newText << endl;
             };
-            lineedit1->subscribe<LineEdit::EventLineEditTextChanged>(lineedit1.get(), lineEditCB);
+            lineedit->subscribe<LineEdit::EventLineEditTextChanged>(lineedit, lineEditCB);
          }
 
          //add some buttons
          {
-            auto [summonButton, n1] = make_node<PushButton>("btnPopup", "Summon Popup");
-            auto [dialogHButton, n2] = make_node<PushButton>("btnDialogH", "Summon Horizontal Dialog");
-            auto [dialogVButton, n3] = make_node<PushButton>("btnDialogV", "Summon Vertical Dialog");
-            auto [button4, n4] = make_node<PushButton>("button4");
-            buttonHolder->addChild(std::move(n1));
-            buttonHolder->addChild(std::move(n2));
-            buttonHolder->addChild(std::move(n3));
-            buttonHolder->addChild(std::move(n4));
+            auto summonButton = make_child<PushButton>(buttonHolder, "btnPopup", "Summon Popup");
+            auto dialogHButton = make_child<PushButton>(buttonHolder, "btnDialogH", "Summon Horizontal Dialog");
+            auto dialogVButton = make_child<PushButton>(buttonHolder, "btnDialogV", "Summon Vertical Dialog");
+            auto button4 = make_child<PushButton>(buttonHolder, "button4");
 
-            auto cbPopup = [&](const PushButton::ButtonPressEvent& event) {
-               auto isWidget = popupNode->as<Widget>();
-               if (isWidget) {
-                  auto& popup = isWidget.value();
-                  popup->setVisible(true);
-                  popup->setModal(true);
-               }
-            };
-            summonButton->subscribe<PushButton::ButtonPressEvent>(summonButton.get(), cbPopup);
+//            auto cbPopup = [&](const PushButton::ButtonPressEvent& event) {
+//               auto isWidget = popup->as<Widget>();
+//               if (isWidget) {
+//                  auto& popup = isWidget.value();
+//                  popup->setVisible(true);
+//                  popup->setModal(true);
+//               }
+//            };
+//            summonButton->subscribe<PushButton::ButtonPressEvent>(summonButton.get(), cbPopup);
 
             //create dialog test
-            auto cbDialogH = [&](const PushButton::ButtonPressEvent& event) {
-               auto isWidget = dialogHNode->as<Widget>();
-               if (isWidget) {
-                  auto& dialog = isWidget.value();
-                  dialog->setVisible(true);
-                  dialog->setModal(true);
-               }
-            };
-            dialogHButton->subscribe<PushButton::ButtonPressEvent>(dialogHButton.get(), cbDialogH);
-
-            auto cbDialogV = [&](const PushButton::ButtonPressEvent& event) {
-               auto isWidget = dialogVNode->as<Widget>();
-               if (isWidget) {
-                  auto& dialog = isWidget.value();
-                  dialog->setVisible(true);
-                  dialog->setModal(true);
-               }
-            };
-            dialogVButton->subscribe<PushButton::ButtonPressEvent>(dialogVButton.get(), cbDialogV);
+//            auto cbDialogH = [&](const PushButton::ButtonPressEvent& event) {
+//               auto isWidget = dialogHNode->as<Widget>();
+//               if (isWidget) {
+//                  auto& dialog = isWidget.value();
+//                  dialog->setVisible(true);
+//                  dialog->setModal(true);
+//               }
+//            };
+//            dialogHButton->subscribe<PushButton::ButtonPressEvent>(dialogHButton.get(), cbDialogH);
+//
+//            auto cbDialogV = [&](const PushButton::ButtonPressEvent& event) {
+//               auto isWidget = dialogVNode->as<Widget>();
+//               if (isWidget) {
+//                  auto& dialog = isWidget.value();
+//                  dialog->setVisible(true);
+//                  dialog->setModal(true);
+//               }
+//            };
+//            dialogVButton->subscribe<PushButton::ButtonPressEvent>(dialogVButton.get(), cbDialogV);
 
          }
 
          //make a tab widget
          {
-            TypeNode* tabContainer;
-            {
-               auto [container, n] = make_node<TabContainer>("tabContainer");
-               tabContainer = tabHolder->addChild(std::move(n));
-            }
+            auto tabContainer = make_child<TabContainer>(tabHolder, "tabContainer");
 
             //make tabs
             {
                //add some stuff ot differentiate the pages
-               std::unique_ptr<TypeNode> p2;
-               std::unique_ptr<TypeNode> p3;
-               std::unique_ptr<TypeNode> p4;
-               std::unique_ptr<TypeNode> p5;
                {
-                  auto [textureTestLayout, n1] = make_node<Layout>("TextureTestLayout", Layout::LayoutDir::VERTICAL);
+                  auto textureTestLayout = make_child<Layout>(tabContainer, "TextureTestLayout", Layout::LayoutDir::VERTICAL);
                   std::vector<std::pair<std::string, TextureRect::FitType>> fitTypes = {
                         {"FitRect",   TextureRect::FitType::FIT_RECT},
                         {"FitWidth",  TextureRect::FitType::FIT_WIDTH},
                         {"FitHeight", TextureRect::FitType::FIT_HEIGHT},
                         {"None",      TextureRect::FitType::NONE}
                   };
-                  auto [textureTestComboBox, n2] = make_node<ComboBox<TextureRect::FitType>>("TextureTestComboBox", fitTypes);
-                  auto [textureRect, n3] = make_node<TextureRect>("TextureTest", FileSystem::File("test/spritesheet.png"), TextureRect::FitType::FIT_RECT);
-                  n1->addChild(std::move(n2));
-                  n1->addChild(std::move(n3));
-                  p2 = std::move(n1);
+                  auto textureTestComboBox = make_child<ComboBox<TextureRect::FitType>>(textureTestLayout, "TextureTestComboBox", fitTypes);
+                  auto textureRect = make_child<TextureRect>(textureTestLayout, "TextureTest", FileSystem::File("test/spritesheet.png"), TextureRect::FitType::FIT_RECT);
 
                   auto fitMenuCB = [textureRect](const ComboBox<TextureRect::FitType>::EventComboBoxItemSelected& event) {
                      cout << event.field->text << " at index " << event.itemIndex << " = " << (int) event.field->data << endl;
@@ -276,15 +257,11 @@ int main() {
                         textureTestComboBox, fitMenuCB);
                }
 
-               auto [drawTest, p1] = make_node<DrawTestWidget>("DrawTest");
+               auto drawTest = make_child<DrawTestWidget>(tabContainer, "DrawTest");
                {
+                  auto spritesTab = make_child<Control>(tabContainer, "SpritesTest");
                   {
-                     auto [spriteContainer, ctlnode] = make_node<Control>("SpritesTest");
-                     p3 = std::move(ctlnode);
-                  }
-                  {
-                     auto [sprite, spriteNode] = make_node<Sprite>("Sprite", FileSystem::File("test/characters.png"), Rect<R_FLOAT>(3, 4, 16, 16));
-                     p3->addChild(std::move(spriteNode));
+                     auto sprite = make_child<Sprite>(spritesTab, "Sprite", FileSystem::File("test/characters.png"), Rect<R_FLOAT>(3, 4, 16, 16));
                      sprite->setRect(20,20,64,64);
                   }
                   {
@@ -293,13 +270,12 @@ int main() {
                         _r,
                         _r + Pos<R_FLOAT>(16, 0),
                      };
-                     auto [animatedSprite, spriteNode] = make_node<AnimatedSprite>("AnimatedSprite", FileSystem::File("test/characters.png"), regions);
-                     p3->addChild(std::move(spriteNode));
+                     auto animatedSprite = make_child<AnimatedSprite>(spritesTab, "AnimatedSprite", FileSystem::File("test/characters.png"), regions);
                      animatedSprite->setRect(100,20,64,64);
                   }
                }
                {
-                  auto [zoomCanvas, _p4] = make_node<Canvas>("ZoomTest");
+                  auto zoomCanvas = make_child<Canvas>(tabContainer, "ZoomTest");
                   zoomCanvas->setInputFiltering(InputFilter::PUBLISH_ONLY);
                   // connect to unhandled input signal
 
@@ -315,96 +291,64 @@ int main() {
                   zoomCanvas->subscribeMutable<Widget::WidgetUnhandledInputEvent&>(zoomCanvas, cbUnhandledInput);
 
                   //add a texture rect to the canvas' background
-                  {
-                     auto [texRect, node] = make_node<TextureRect>("ZoomTextureRect");
-                     zoomCanvas->addChild(std::move(node));
-                     zoomCanvas->setAnchoring(ReyEngine::Anchor::FILL);
-                     texRect->setTexture(FileSystem::File("test/spritesheet.png"));
-                     texRect->setAnchoring(ReyEngine::Anchor::FILL);
-                     texRect->setFitType(ReyEngine::TextureRect::FitType::NONE);
-                  }
-                  {
-//                      add some ui to the canvas
-                     auto [label, node] = make_node<Label>("UILabel", "This should be on the foreground");
-                     label->setPosition({5,50});
-                     zoomCanvas->addChild(std::move(node));
-                     zoomCanvas->moveToForeground(label.get());
-                  }
-
-
-                  p4 = std::move(_p4);
+                  auto texRect = make_child<TextureRect>(zoomCanvas, "ZoomTextureRect");
+                  zoomCanvas->setAnchoring(ReyEngine::Anchor::FILL);
+                  texRect->setTexture(FileSystem::File("test/spritesheet.png"));
+                  texRect->setAnchoring(ReyEngine::Anchor::FILL);
+                  texRect->setFitType(ReyEngine::TextureRect::FitType::NONE);
+                  // add some ui to the canvas
+                  auto label = make_child<Label>(zoomCanvas, "UILabel", "This should be on the foreground");
+                  label->setPosition({5,50});
+                  zoomCanvas->moveToForeground(label.get());
                }
 
                {
-                  auto [scissorTest, _p5] = make_node<ScissorWidget>("ScissorTest");
+                  auto scissorTest = make_child<ScissorWidget>(tabContainer, "ScissorTest");
                   scissorTest->setScissorArea({20,20,50,50});
-                  p5 = std::move(_p5);
                }
-
-
-               tabContainer->addChild(std::move(p1));
-               tabContainer->addChild(std::move(p2));
-               tabContainer->addChild(std::move(p3));
-               tabContainer->addChild(std::move(p4));
-               tabContainer->addChild(std::move(p5));
                drawTest->setAnchoring(ReyEngine::Anchor::FILL);
             }
          }
 
          // add a subcanvas
          {
-            auto [subcanvas, n1] = make_node<Canvas>("SubCanvas");
-            auto subcanvasNode = subCanvasHolder->addChild(std::move(n1));
+            auto subcanvas = make_child<Canvas>(subCanvasHolder, "SubCanvas");
             subcanvas->setAnchoring(ReyEngine::Anchor::FILL);
 
             //add a label to the subcanvas
-            auto [label, n2] = make_node<TestWidget>("SubCanvasTestWidget", "test");
-            subcanvasNode->addChild(std::move(n2));
+            auto label = make_child<TestWidget>(subcanvas, "SubCanvasTestWidget", "test");
             label->setPosition({100, 100});
          }
 
          // add a scroll area
          {
-            TypeNode* scrollAreaNode;
-            auto [scrollArea, _n1] = make_node<ScrollArea>("ScrollArea");
-            {
-               scrollAreaNode = scrollAreaHolder->addChild(std::move(_n1));
-            }
+            auto scrollArea = make_child<ScrollArea>(scrollAreaHolder, "ScrollArea");
 
-            {
                //add a layout to the scroll area
-               auto [_scrollAreaBackground, nscrolllayout] = make_node<Control>("ScrollAreaControl");
+               auto _scrollAreaBackground = make_child<Control>(scrollArea, "ScrollAreaControl");
                _scrollAreaBackground->setSize({1000, 1000});
-               scrollAreaNode->addChild(std::move(nscrolllayout));
-            }
 
             //add a widget to the scrollArea
             {
-               auto [testWidget, n2] = make_node<TestWidget>("ScrollAreaTestWidget", "scrollTest");
-               scrollAreaNode->addChild(std::move(n2));
+               auto testWidget= make_child<TestWidget>(scrollArea, "ScrollAreaTestWidget", "scrollTest");
                testWidget->setPosition({100, 100});
             }
 
             //add a button to the scrollArea
             {
-               auto [scrollButton, n3] = make_node<PushButton>("ScrollAreaTestBtn", "Scroll Button");
-               scrollAreaNode->addChild(std::move(n3));
+               auto scrollButton = make_child<PushButton>(scrollArea, "ScrollAreaTestBtn", "Scroll Button");
                scrollButton->setPosition(200, 350);
             }
 
             //add a panel to the scroll area
-            auto panel = make_child<Panel>(scrollAreaNode, "Panel");
+            auto panel = make_child<Panel>(scrollArea, "Panel");
             panel->setRect(100, 300, 200, 200);
          }
 
          //create popup control
          {
-            Control* popupCtl = nullptr;
-            {
-               auto [_popup, n1] = make_node<Control>("Popup");
-               popupNode = root->getNode()->addChild(std::move(n1));
-               popupCtl = _popup.get();
-            }
+            auto popupCtl = make_child<Control>(root, "Popup");
+
             popupCtl->setSize(300, 100);
             popupCtl->setPosition(popupCtl->getRect().centerOnPoint(root->getRect().center()).pos());
             auto cbRender = [](const Control& ctrl) {
@@ -422,10 +366,8 @@ int main() {
                   }
                };
 
-               auto [btnOk, nOk] = make_node<PushButton>("btnOk", "ok");
-               auto [btnCancel, nCancel] = make_node<PushButton>("btnCancel", "cancel");
-               popupCtl->getNode()->addChild(std::move(nOk));
-               popupCtl->getNode()->addChild(std::move(nCancel));
+               auto btnOk = make_child<PushButton>(popupCtl, "btnOk", "ok");
+               auto btnCancel = make_child<PushButton>(popupCtl, "btnCancel", "cancel");
                auto [L, R] = popupCtl->getSizeRect().splitH<true>();
                btnOk->setRect(L.embiggen(-20));
                btnCancel->setRect(R.embiggen(-20));
@@ -446,36 +388,26 @@ int main() {
                std::pair{std::string("dialog4"), testEnum::test4}
          };
          using TestDialog = Dialog<testEnum, 4>;
-         TestDialog* dialogHCtl = nullptr;
-         TestDialog* dialogVCtl = nullptr;
          //add a callback
          auto dialogCB = [](const TestDialog::DialogCloseEvent& e){
             Logger::info() << "Dialog box " << e.publisher->as<TestDialog>().value()->getNode()->name << " selected option " << e.option << " which corresponds to an int value of " << (int)e.value << endl;
          };
          //create dialog H control
-         {
-            {
-               auto [_dialog, n1] = make_node<TestDialog>("dialogH", options, "Test Text");
-               dialogHNode = root->getNode()->addChild(std::move(n1));
-               dialogHCtl = _dialog.get();
-            }
-            dialogHCtl->setPosition(dialogHCtl->getRect().centerOnPoint(root->getRect().center()).pos());
-            dialogHCtl->setVisible(false);
-         }
-
-         //create dialog V control
-         {
-            {
-               auto [_dialog, n1] = make_node<TestDialog>("dialogV", options, "Test Text", Layout::LayoutDir::VERTICAL);
-               dialogVNode = root->getNode()->addChild(std::move(n1));
-               dialogVCtl = _dialog.get();
-            }
-            dialogVCtl->setPosition(dialogVCtl->getRect().centerOnPoint(root->getRect().center()).pos());
-            dialogVCtl->setVisible(false);
-         }
-
-         dialogHCtl->subscribe<TestDialog::DialogCloseEvent>(dialogHCtl, dialogCB);
-         dialogVCtl->subscribe<TestDialog::DialogCloseEvent>(dialogVCtl, dialogCB);
+//         {
+//            auto dialog = make_child<TestDialog>(root, "dialogH", options, "Test Text");
+//            dialogHCtl->setPosition(dialogHCtl->getRect().centerOnPoint(root->getRect().center()).pos());
+//            dialogHCtl->setVisible(false);
+//         }
+//
+//         //create dialog V control
+//         {
+//            auto dialog = make_child<TestDialog>(root, "dialogV", options, "Test Text", Layout::LayoutDir::VERTICAL);
+//            dialogVCtl->setPosition(dialogVCtl->getRect().centerOnPoint(root->getRect().center()).pos());
+//            dialogVCtl->setVisible(false);
+//         }
+//
+//         dialogHCtl->subscribe<TestDialog::DialogCloseEvent>(dialogHCtl, dialogCB);
+//         dialogVCtl->subscribe<TestDialog::DialogCloseEvent>(dialogVCtl, dialogCB);
       }
       window.exec();
       return 0;
