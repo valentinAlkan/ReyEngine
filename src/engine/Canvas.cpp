@@ -86,6 +86,8 @@ void Canvas::renderProcess(RenderTarget& parentTarget) {
    if (!_retained) {
       ClearBackground(Colors::none);
       drawRectangle(getSizeRect(), Colors::lightGray);
+      drawRectangleGradientH(getSizeRect(), Colors::yellow, Colors::green);
+      drawText("subcanvas", {}, getDefaultFont());
    }
 
    BeginMode2D(camera);

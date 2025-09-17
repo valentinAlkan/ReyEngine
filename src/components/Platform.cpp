@@ -1,5 +1,6 @@
 #include "Platform.h"
 #include <stdexcept>
+#include <filesystem>
 
 #ifdef PLATFORM_WINDOWS
 #include "windows.h"
@@ -290,7 +291,7 @@ string CrossPlatform::getUserLocalConfigDirRestrictedSecurity() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 string CrossPlatform::getUserLocalConfigDirApp(){
-   return getUserLocalConfigDir() + getExeName();
+   return getUserLocalConfigDir() + REYENGINE_FILESYSTEM_PATH_SEP + getExeName();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -308,23 +309,15 @@ vector<string> CrossPlatform::getRootFolders() {
    }
 
 #elif IS_LINUX()
-   // Linux: Parse /proc/mounts
-    std::ifstream mounts("/proc/mounts");
-    std::string line;
-
-    while (std::getline(mounts, line)) {
-        std::istringstream iss(line);
-        std::string device, mountPoint, fsType;
-
-        if (iss >> device >> mountPoint >> fsType) {
-            // Basic filtering - you might want more sophisticated logic
-            if (fsType == "ext4" || fsType == "ext3" || fsType == "ext2" ||
-                fsType == "xfs" || fsType == "btrfs" || fsType == "ntfs") {
-                roots.push_back(mountPoint);
-            }
-        }
-    }
-
+   try {
+      for (const auto& entry : std::filesystem::directory_iterator("/")) {
+         if (entry.is_directory()) {
+            roots.push_back(entry.path().filename());
+         }
+      }
+   } catch (const std::filesystem::filesystem_error& ex) {
+      /**/
+   }
 #elif IS_MACOS()
     // Other Unix-like systems might need different approaches
     roots.push_back("/"); // At minimum, root exists

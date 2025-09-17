@@ -12,9 +12,9 @@
 #include "Platform.h"
 
 namespace ReyEngine::FileSystem {
-   static constexpr char SCENE_PATH_SEP = '/';
-   static constexpr char _PATH_SEP_WIN = '\\';
-   static constexpr char _PATH_SEP_OTHER = '/';
+   static constexpr char SCENE_PATH_SEP = REYENGINE_SCENE_PATH_SEP;
+   static constexpr char _PATH_SEP_WIN = REYENGINE_PATH_SEP_WIN;
+   static constexpr char _PATH_SEP_OTHER = REYENGINE_PATH_SEP_OTHER;
    static constexpr char FILESYSTEM_PATH_SEP =
       #ifdef _WIN32
          _PATH_SEP_WIN;

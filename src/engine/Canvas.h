@@ -166,14 +166,19 @@ namespace ReyEngine {
 
          Widget* subcanvasProcess(){
             rlPopMatrix();
+            //cause the subcanvas to render itself and its children
             subCanvas->renderProcess(thisCanvas->_renderTarget);
-            rlPushMatrix();
-            rlMultMatrixf(MatrixToFloat(thisCanvas->transformStack.getGlobalTransform().matrix));
+//            rlPushMatrix();
+//            rlMultMatrixf(MatrixToFloat(thisCanvas->transformStack.getGlobalTransform().matrix));
             drawRenderTargetRect(subCanvas->getRenderTarget(), subCanvas->getSizeRect(), subCanvas->getRect(), Colors::none);
+            rlPushMatrix();
+//            rlMultMatrixf(MatrixToFloat(thisCanvas->transformStack.getGlobalTransform().matrix));
             //render foreground
             for (auto& foregroundChild : subCanvas->_foreground.getValues()){
                subCanvas->processNode<RenderProcess>(foregroundChild, false);
             }
+            rlMultMatrixf(MatrixToFloat(thisCanvas->transformStack.getGlobalTransform().matrix));
+//            rlPopMatrix();
             return nullptr;
          }
 
@@ -200,6 +205,8 @@ namespace ReyEngine {
          }
 
          Widget* subcanvasProcess(){
+            rlPopMatrix();
+            rlMultMatrixf(MatrixToFloat(thisCanvas->transformStack.getGlobalTransform().matrix));
             return subCanvas->__process_unhandled_input(event);
          }
 
@@ -312,6 +319,7 @@ namespace ReyEngine {
          // Call the lambda to trigger template deduction
          auto processTransformer = createProcessTransformer(isGlobal ? widget->getGlobalTransform().get() : widget->getLocalTransform());
 
+         //subcanvases do some funky stuff so they need special handling
          if (processTransformer.subCanvas && processTransformer.subCanvas != this){
                handled = processTransformer.subcanvasProcess();
                //does not dispatch to children as this is handled explicitly by canvas

@@ -35,7 +35,7 @@ void ScrollArea::_init() {
       _on_rect_changed();
    };
 
-   //make sure we capture outside input only when the sliders are being used
+   //make sure we only capture outside input when the sliders are being used
    auto cbSliderPress = [this](const Slider::EventSliderPressed& event){_rejectOutsideInput = false;};
    auto cbSliderRelease = [this](const Slider::EventSliderReleased& event){_rejectOutsideInput = true;};
 

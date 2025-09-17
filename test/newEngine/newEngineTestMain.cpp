@@ -159,13 +159,10 @@ int main() {
          mainLayout->setAnchoring(Anchor::FILL);
          auto layoutl = make_child<Layout>(mainLayout, "Layoutl", Layout::LayoutDir::HORIZONTAL);
          auto layoutr = make_child<Layout>(mainLayout, "Layoutr", Layout::LayoutDir::HORIZONTAL);
-//         TypeNode* popupNode = nullptr;
-//         TypeNode* dialogHNode = nullptr;
-//         TypeNode* dialogVNode = nullptr;
 
          // add some children to the layout
-         auto scrollAreaHolder = make_child<Layout>(layoutl, "ScrollArea Holder", Layout::LayoutDir::VERTICAL);
          auto subCanvasHolder = make_child<Layout>(layoutl, "SubCanvasHolder", Layout::LayoutDir::VERTICAL);
+         auto scrollAreaHolder = make_child<Layout>(layoutl, "ScrollArea Holder", Layout::LayoutDir::VERTICAL);
          auto tabHolder = make_child<Layout>(layoutr, "TabLayout", Layout::LayoutDir::VERTICAL);
          auto widgetsHolder = make_child<Layout>(layoutr, "WidgetsLayout", Layout::LayoutDir::VERTICAL);
          auto buttonHolder = make_child<Layout>(layoutr, "ButtonLayout", Layout::LayoutDir::VERTICAL);
@@ -258,22 +255,16 @@ int main() {
                }
 
                auto drawTest = make_child<DrawTestWidget>(tabContainer, "DrawTest");
-               {
-                  auto spritesTab = make_child<Control>(tabContainer, "SpritesTest");
-                  {
-                     auto sprite = make_child<Sprite>(spritesTab, "Sprite", FileSystem::File("test/characters.png"), Rect<R_FLOAT>(3, 4, 16, 16));
-                     sprite->setRect(20,20,64,64);
-                  }
-                  {
-                     constexpr Rect<R_FLOAT> _r = {3, 4, 16, 16};
-                     std::vector<Rect<R_FLOAT>> regions = {
-                        _r,
-                        _r + Pos<R_FLOAT>(16, 0),
-                     };
-                     auto animatedSprite = make_child<AnimatedSprite>(spritesTab, "AnimatedSprite", FileSystem::File("test/characters.png"), regions);
-                     animatedSprite->setRect(100,20,64,64);
-                  }
-               }
+               auto spritesTab = make_child<Control>(tabContainer, "SpritesTest");
+               auto sprite = make_child<Sprite>(spritesTab, "Sprite", FileSystem::File("test/characters.png"), Rect<R_FLOAT>(3, 4, 16, 16));
+               sprite->setRect(20,20,64,64);
+               constexpr Rect<R_FLOAT> _r = {3, 4, 16, 16};
+               std::vector<Rect<R_FLOAT>> regions = {
+                  _r,
+                  _r + Pos<R_FLOAT>(16, 0),
+               };
+               auto animatedSprite = make_child<AnimatedSprite>(spritesTab, "AnimatedSprite", FileSystem::File("test/characters.png"), regions);
+               animatedSprite->setRect(100,20,64,64);
                {
                   auto zoomCanvas = make_child<Canvas>(tabContainer, "ZoomTest");
                   zoomCanvas->setInputFiltering(InputFilter::PUBLISH_ONLY);

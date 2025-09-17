@@ -80,6 +80,16 @@ static_assert(false, "ReyEngine does not support MINGW")
 #define IS_IOS() defined(PLATFORM_IOS)
 #define IS_UNIX_LIKE() defined(PLATFORM_UNIX_LIKE)
 
+static constexpr char REYENGINE_SCENE_PATH_SEP = '/';
+static constexpr char REYENGINE_PATH_SEP_WIN = '\\';
+static constexpr char REYENGINE_PATH_SEP_OTHER = '/';
+static constexpr char REYENGINE_FILESYSTEM_PATH_SEP =
+#ifdef _WIN32
+      REYENGINE_PATH_SEP_WIN;
+#else
+      REYENGINE_PATH_SEP_OTHER;
+#endif
+
 namespace CrossPlatform{
    std::string getExePath();
    std::string getExeDir();

@@ -10,10 +10,17 @@ namespace ReyEngine{
    Internal::Tree::MakeNodeReturnType<T> make_node(InstanceName&& instanceName, Args&&... args){
       return Internal::Tree::_make_node<T>(instanceName, std::forward<Args>(args)...);
    }
-   template<typename T, typename InstanceName, typename... Args>
-   std::shared_ptr<T> make_child(Internal::Tree::TypeNode* parent, InstanceName&& instanceName, Args&&... args){
-      return Internal::Tree::_make_child<T>(parent, instanceName, std::forward<Args>(args)...);
+
+   //accept either TypeNode* directly, or assume it has a getNode() function that returns same
+   template<typename T, typename N, typename InstanceName, typename... Args>
+   std::shared_ptr<T> make_child(N parent, InstanceName&& instanceName, Args&&... args){
+      if constexpr (std::is_same_v<Internal::Tree::TypeNode*, N>) {
+         return Internal::Tree::_make_child<T>(parent, instanceName, std::forward<Args>(args)...);
+      } else {
+         return Internal::Tree::_make_child<T>(parent->getNode(), instanceName, std::forward<Args>(args)...);
+      }
    }
+
    template<typename T, typename InstanceName>
    Internal::Tree::MakeNodeReturnType<T> make_node(InstanceName&& instanceName, std::unique_ptr<T>&& ptr){
       return Internal::Tree::_make_node(instanceName, std::move(ptr));

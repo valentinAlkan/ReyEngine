@@ -4,6 +4,7 @@
 namespace ReyEngine {
    class LineEdit : public Widget {
    public:
+      REYENGINE_OBJECT(LineEdit)
       EVENT_ARGS(EventLineEditDefaultTextChanged, 754321525, const std::string& oldText, const std::string& newText)
       , oldText(oldText)
       , newText(newText)
@@ -18,8 +19,6 @@ namespace ReyEngine {
          const std::string oldText;
          const std::string newText;
       };
-
-      REYENGINE_OBJECT(LineEdit)
 
       LineEdit(const std::string& defaultText = "Default")
       : _defaultText(defaultText)
