@@ -4,7 +4,6 @@
 #include "Widget.h"
 #include "CacheVectorMap.h"
 #include "rlgl.h"
-
 namespace ReyEngine {
    namespace WidgetStatus{
       //give special status to widgets - define new status here and add to tuple
@@ -166,19 +165,21 @@ namespace ReyEngine {
 
          Widget* subcanvasProcess(){
             rlPopMatrix();
-            //cause the subcanvas to render itself and its children
+            //pop the global matrix and render the subvancas from origin
             subCanvas->renderProcess(thisCanvas->_renderTarget);
-//            rlPushMatrix();
-//            rlMultMatrixf(MatrixToFloat(thisCanvas->transformStack.getGlobalTransform().matrix));
-            drawRenderTargetRect(subCanvas->getRenderTarget(), subCanvas->getSizeRect(), subCanvas->getRect(), Colors::none);
+            //restore the global matrix
             rlPushMatrix();
-//            rlMultMatrixf(MatrixToFloat(thisCanvas->transformStack.getGlobalTransform().matrix));
+            rlMultMatrixf(MatrixToFloat(thisCanvas->transformStack.getGlobalTransform().matrix));
+            //draw the render target at its local origin
+            drawRenderTargetRect(subCanvas->getRenderTarget(), subCanvas->getSizeRect(), subCanvas->getSizeRect(), Colors::none);
+            //subtract off the subcanvas' transform and render its foreground
+            rlPushMatrix();
+            rlMultMatrixf(MatrixToFloat(subCanvas->transform2D.inverse().matrix));
             //render foreground
-            for (auto& foregroundChild : subCanvas->_foreground.getValues()){
+            for (auto& foregroundChild : subCanvas->_foreground.getValues()) {
                subCanvas->processNode<RenderProcess>(foregroundChild, false);
             }
-            rlMultMatrixf(MatrixToFloat(thisCanvas->transformStack.getGlobalTransform().matrix));
-//            rlPopMatrix();
+            rlPopMatrix();
             return nullptr;
          }
 
@@ -200,13 +201,16 @@ namespace ReyEngine {
          , event(event)
          {
             if (auto mouseData = event.isMouse()) {
-               mouseTransformer = std::make_unique<MouseEvent::ScopeTransformer>(*mouseData.value(), inputTransform, processedWidget->getSize());
+               if (subCanvas){
+                  //zero-out subcanvas' transform - subcanvas's perceive themselves as having a global transform of {0,0}
+                  mouseTransformer = std::make_unique<MouseEvent::ScopeTransformer>(*mouseData.value(), thisCanvas->getGlobalTransform().get(), processedWidget->getSize());
+               } else {
+                  mouseTransformer = std::make_unique<MouseEvent::ScopeTransformer>(*mouseData.value(), inputTransform, processedWidget->getSize());
+               }
             }
          }
 
          Widget* subcanvasProcess(){
-            rlPopMatrix();
-            rlMultMatrixf(MatrixToFloat(thisCanvas->transformStack.getGlobalTransform().matrix));
             return subCanvas->__process_unhandled_input(event);
          }
 
@@ -350,15 +354,15 @@ namespace ReyEngine {
                      case InputFilter::PROCESS_AND_STOP: handled = process(); RETURN; break;
                      case InputFilter::IGNORE_AND_PASS: handled = pass(); RETURN; break;
                      case InputFilter::IGNORE_AND_STOP: break;
-                     case InputFilter::PUBLISH_AND_PASS: publish(); RETURN; pass(); RETURN; break;
-                     case InputFilter::PASS_AND_PUBLISH: pass(); RETURN; publish(); RETURN; break;
-                     case InputFilter::PUBLISH_AND_STOP: publish(); RETURN; break;
-                     case InputFilter::PASS_PUBLISH_PROCESS: pass(); RETURN; publish(); RETURN; process(); RETURN; break;
-                     case InputFilter::PASS_PROCESS_PUBLISH: pass();  RETURN; process(); RETURN; publish(); RETURN; break;
-                     case InputFilter::PROCESS_PUBLISH_PASS: process(); RETURN; publish(); RETURN; pass(); RETURN; break;
-                     case InputFilter::PROCESS_PASS_PUBLISH: process(); RETURN; pass(); RETURN; publish(); RETURN; break;
-                     case InputFilter::PUBLISH_PASS_PROCESS: publish(); RETURN; pass(); RETURN; process(); RETURN; break;
-                     case InputFilter::PUBLISH_PROCESS_PASS: publish(); RETURN; process(); RETURN; pass(); RETURN; break;
+                     case InputFilter::PUBLISH_AND_PASS: handled = publish(); RETURN; handled = pass(); RETURN; break;
+                     case InputFilter::PASS_AND_PUBLISH: handled = pass(); RETURN; handled = publish(); RETURN; break;
+                     case InputFilter::PUBLISH_AND_STOP: handled = publish(); RETURN; break;
+                     case InputFilter::PASS_PUBLISH_PROCESS: handled = pass(); RETURN; handled = publish(); RETURN; handled = process(); RETURN; break;
+                     case InputFilter::PASS_PROCESS_PUBLISH: handled = pass();  RETURN; handled = process(); RETURN; handled = publish(); RETURN; break;
+                     case InputFilter::PROCESS_PUBLISH_PASS: handled = process(); RETURN; handled = publish(); RETURN; handled = pass(); RETURN; break;
+                     case InputFilter::PROCESS_PASS_PUBLISH: handled = process(); RETURN; handled = pass(); RETURN; handled = publish(); RETURN; break;
+                     case InputFilter::PUBLISH_PASS_PROCESS: handled = publish(); RETURN; handled = pass(); RETURN; handled = process(); RETURN; break;
+                     case InputFilter::PUBLISH_PROCESS_PASS: handled = publish(); RETURN; handled = process(); RETURN; handled = pass(); RETURN; break;
                   }
                   return nullptr;
                }

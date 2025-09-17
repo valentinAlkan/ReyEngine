@@ -12,6 +12,7 @@ ScrollArea::ScrollArea() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::_init() {
    //create scrollbars
+   setInputFiltering(InputFilter::PASS_PROCESS_PUBLISH);
    {
       auto [_vslider, vsnode] = make_node<Slider>(std::string(VSLIDER_NAME), Slider::SliderType::VERTICAL);
       auto [_hslider, hsnode] = make_node<Slider>(std::string(HSLIDER_NAME), Slider::SliderType::HORIZONTAL);

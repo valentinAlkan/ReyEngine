@@ -145,7 +145,7 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
    auto isMouse = event.isMouse();
    //determine what type of input this is
 
-   auto createProcessNodeForEvent = [&](TypeNode *thisNode, bool isModal, const InputEvent& event, auto&&... args){
+   auto createProcessNodeForEvent = [&](TypeNode *thisNode, bool isModal, const InputEvent& event, auto&&... args) -> Widget* {
       if (event.isEvent<InputEventMouseHover>()){
          return processNode<HoverProcess>(thisNode, isModal, event, std::forward<decltype(args)>(args)...);
       }

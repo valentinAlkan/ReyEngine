@@ -89,13 +89,15 @@ protected:
             case InputEventMouseMotion::ID: {
                globalMousePos = isMouse.value()->getCanvasPos().get();
                localMousePos = isMouse.value()->getLocalPos();
+               static size_t inputNo = 0;
                auto& mmEvent = event.toEvent<InputEventMouseMotion>();
                if (isDown) {
-//                 cout << "----------------------" << endl;
-//                 cout << getName() << endl;
-//                 cout << "Mouse delta = " << mmEvent.mouseDelta << endl;
-//                 cout << "current position = " << getPos() << endl;
-//                 cout << "new position = " << mmEvent.mouseDelta + getPos() << endl;
+                  cout << "----------------------" << endl;
+                  cout << "no. : " << inputNo++ << endl;
+                  cout << getName() << endl;
+                  cout << "Mouse delta = " << mmEvent.mouseDelta << endl;
+                  cout << "current position = " << getPos() << endl;
+                  cout << "new position = " << mmEvent.mouseDelta + getPos() << endl;
                   setPosition(getPos() + mmEvent.mouseDelta.toPos());
                   return this;
                }
@@ -162,7 +164,8 @@ int main() {
 
          // add some children to the layout
          auto subCanvasHolder = make_child<Layout>(layoutl, "SubCanvasHolder", Layout::LayoutDir::VERTICAL);
-         auto scrollAreaHolder = make_child<Layout>(layoutl, "ScrollArea Holder", Layout::LayoutDir::VERTICAL);
+//         auto scrollAreaHolder = make_child<Layout>(layoutl, "ScrollArea Holder", Layout::LayoutDir::VERTICAL);
+         auto scrollArea = make_child<ScrollArea>(layoutl, "ScrollArea");
          auto tabHolder = make_child<Layout>(layoutr, "TabLayout", Layout::LayoutDir::VERTICAL);
          auto widgetsHolder = make_child<Layout>(layoutr, "WidgetsLayout", Layout::LayoutDir::VERTICAL);
          auto buttonHolder = make_child<Layout>(layoutr, "ButtonLayout", Layout::LayoutDir::VERTICAL);
@@ -313,7 +316,6 @@ int main() {
 
          // add a scroll area
          {
-            auto scrollArea = make_child<ScrollArea>(scrollAreaHolder, "ScrollArea");
 
                //add a layout to the scroll area
                auto _scrollAreaBackground = make_child<Control>(scrollArea, "ScrollAreaControl");
