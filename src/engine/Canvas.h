@@ -202,7 +202,7 @@ namespace ReyEngine {
          {
             if (auto mouseData = event.isMouse()) {
                if (subCanvas){
-                  //zero-out subcanvas' transform - subcanvas's perceive themselves as having a global transform of {0,0}
+                  //zero-out subcanvas' transform - subcanvas's perceive themselves as having a null global transform
                   mouseTransformer = std::make_unique<MouseEvent::ScopeTransformer>(*mouseData.value(), thisCanvas->getGlobalTransform().get(), processedWidget->getSize());
                } else {
                   mouseTransformer = std::make_unique<MouseEvent::ScopeTransformer>(*mouseData.value(), inputTransform, processedWidget->getSize());
@@ -280,8 +280,8 @@ namespace ReyEngine {
                   if (handled) return handled;
                }
             }
-            auto handled = processNode<ProcessType>(child, false, std::forward<Args>(args)...);
-            if (handled) return handled;
+//            auto handled = processNode<ProcessType>(thisNode, false, std::forward<Args>(args)...);
+//            if (handled) return handled;
          }
          return nullptr;
       };
@@ -376,6 +376,8 @@ namespace ReyEngine {
    private:
       void __on_child_added_to_tree(TypeNode* child) override;
       void __on_child_removed_from_tree(TypeNode* child) override;
+
+      size_t hoverCount = 0;
 
    public:
       void setHover(Widget* w){setStatus<WidgetStatus::Hover>(w);}

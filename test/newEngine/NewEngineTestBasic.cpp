@@ -21,16 +21,18 @@ int main(){
    fileBrowser->setAnchoring(ReyEngine::Anchor::CENTER);
    fileBrowser->setSize(800,600);
 #else
-   auto scrollArea = make_child<ScrollArea>(root, "scrollArea");
+   auto scrollArea = make_child<ScrollArea>(root, "rootscrollArea");
+   //broadcast input events
+   scrollArea->setInputFiltering(ReyEngine::InputFilter::PASS_PROCESS_PUBLISH);
    scrollArea->setPosition(100,100);
-   auto label = make_child<Label>(root, "label", "This is where the scroll area should be");
+   auto label = make_child<Label>(root, "rootlabel", "This is where the scroll area should be");
    label->setPosition(100,100);
    scrollArea->setSize(300,300);
-   make_child<Label>(scrollArea, "label1", "this here is some text my friend")->setPosition(123, 201);
-   make_child<Label>(scrollArea, "label2", "this here is some text my friend part 2")->setPosition(0, 100);
+   make_child<Label>(scrollArea, "label1", "this here is some text my friend this part is super long for reasons")->setPosition(123, 201);
+   make_child<Label>(scrollArea, "label2", "this here is someasdkljhalksjdf text my friend part 2")->setPosition(0, 100);
    make_child<PushButton>(scrollArea, "btn", "im a computer")->setPosition(30, 300);
 
-   auto control = make_child<Control>(root, "control");
+   auto control = make_child<Control>(root, "rootcontrol");
    auto processCallback = [&](Control& ctl, float dt){
 //      auto pos = InputManager::getMousePos();
 //      Logger::info() << pos << endl;
@@ -43,9 +45,9 @@ int main(){
       if (auto event = e.fwdEvent.isEvent<const InputEventMouseMotion>()){
          auto localpos = event.value()->mouse.getLocalPos();
          Logger::info() << event.value()->mouse.getLocalPos() << endl;
-         e.handler = scrollArea.get();
          inputPosScrollAreaLocal = localpos;
          scrollArea->getChild("label1").value()->as<Label>().value()->setText(localpos.toString());
+//         e.handler = scrollArea.get();
       }
    };
 

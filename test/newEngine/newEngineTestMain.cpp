@@ -49,22 +49,24 @@ struct DrawTestWidget : public Widget {
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct TestWidget : public Widget {
-   REYENGINE_OBJECT(TestWidget)
+struct PosTestWidget : public Widget {
+   REYENGINE_OBJECT(PosTestWidget)
 
-   TestWidget(const std::string& text)
+   PosTestWidget(const std::string& text)
    : text(text), color(Colors::randColor()) {
       setSize({200, 200});
    }
 
    void render2D() const override {
+      float ypos = 0;
       bool _isInsideAtRenderTime = getLocalMousePos().isInside(getSizeRect());
       drawRectangle(getSizeRect(), _isInsideAtRenderTime ? color : Colors::lightGray);
-      drawText(text, {0, 0}, getDefaultFont());
-      drawText("Pos = " + Pos<int>(getPos()).toString(), {0, 20}, getDefaultFont());
-      drawText("Siz = " + Size<int>(getSize()).toString(), {0, 40}, getDefaultFont());
-      drawText("G" + globalMousePos.toString(), {0, 60}, getDefaultFont());
-      drawText("L" + localMousePos.toString(), {0, 80}, getDefaultFont());
+      drawText(text, {0, ypos+=20}, getDefaultFont());
+      drawText("Pos = " + Pos<int>(getPos()).toString(), {0, ypos+=20}, getDefaultFont());
+      drawText("Siz = " + Size<int>(getSize()).toString(), {0, ypos+=20}, getDefaultFont());
+      drawText("G" + globalMousePos.toString(), {0, ypos+=20}, getDefaultFont());
+      drawText("L" + localMousePos.toString(), {0, ypos+=20}, getDefaultFont());
+      drawText(to_string(Application::getWindow(0).getFrameCount()), {0, ypos+=20}, getDefaultFont());
    }
 
 protected:
@@ -164,8 +166,7 @@ int main() {
 
          // add some children to the layout
          auto subCanvasHolder = make_child<Layout>(layoutl, "SubCanvasHolder", Layout::LayoutDir::VERTICAL);
-//         auto scrollAreaHolder = make_child<Layout>(layoutl, "ScrollArea Holder", Layout::LayoutDir::VERTICAL);
-         auto scrollArea = make_child<ScrollArea>(layoutl, "ScrollArea");
+         auto scrollArea = make_child<ScrollArea>(layoutl, "MainScrollArea");
          auto tabHolder = make_child<Layout>(layoutr, "TabLayout", Layout::LayoutDir::VERTICAL);
          auto widgetsHolder = make_child<Layout>(layoutr, "WidgetsLayout", Layout::LayoutDir::VERTICAL);
          auto buttonHolder = make_child<Layout>(layoutr, "ButtonLayout", Layout::LayoutDir::VERTICAL);
@@ -308,34 +309,19 @@ int main() {
          {
             auto subcanvas = make_child<Canvas>(subCanvasHolder, "SubCanvas");
             subcanvas->setAnchoring(ReyEngine::Anchor::FILL);
-
             //add a label to the subcanvas
-            auto label = make_child<TestWidget>(subcanvas, "SubCanvasTestWidget", "test");
-            label->setPosition({100, 100});
+            make_child<PosTestWidget>(subcanvas, "SubCanvasTestWidget", "test")->setPosition({100, 100});
          }
 
          // add a scroll area
          {
-
-               //add a layout to the scroll area
-               auto _scrollAreaBackground = make_child<Control>(scrollArea, "ScrollAreaControl");
-               _scrollAreaBackground->setSize({1000, 1000});
-
-            //add a widget to the scrollArea
-            {
-               auto testWidget= make_child<TestWidget>(scrollArea, "ScrollAreaTestWidget", "scrollTest");
-               testWidget->setPosition({100, 100});
-            }
-
+            //add a layout to the scroll area
+            make_child<Control>(scrollArea, "ScrollAreaControl")->setSize({1000, 1000});
+            make_child<PosTestWidget>(scrollArea, "ScrollAreaTestWidget", "scrollTest")->setPosition({100, 100});
             //add a button to the scrollArea
-            {
-               auto scrollButton = make_child<PushButton>(scrollArea, "ScrollAreaTestBtn", "Scroll Button");
-               scrollButton->setPosition(200, 350);
-            }
-
+            make_child<PushButton>(scrollArea, "ScrollAreaTestBtn", "Scroll Button")->setPosition(200, 350);
             //add a panel to the scroll area
-            auto panel = make_child<Panel>(scrollArea, "Panel");
-            panel->setRect(100, 300, 200, 200);
+            make_child<Panel>(scrollArea, "Panel")->setRect(100, 300, 200, 200);
          }
 
          //create popup control

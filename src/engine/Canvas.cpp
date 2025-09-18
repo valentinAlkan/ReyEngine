@@ -84,10 +84,7 @@ void Canvas::renderProcess(RenderTarget& parentTarget) {
    render2DBegin();
 
    if (!_retained) {
-      ClearBackground(Colors::none);
-      drawRectangle(getSizeRect(), Colors::lightGray);
-      drawRectangleGradientH(getSizeRect(), Colors::yellow, Colors::green);
-      drawText("subcanvas", {}, getDefaultFont());
+      ClearBackground(Colors::lightGray);
    }
 
    BeginMode2D(camera);
@@ -107,6 +104,7 @@ void Canvas::renderProcess(RenderTarget& parentTarget) {
 
       processNode<RenderProcess>(modal->_node, true);
       transformStack.popTransform();
+      //there might need to be an extra pop here
    }
 
    rlPopMatrix();
@@ -163,7 +161,7 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
    }
 
    Widget* handled = nullptr;
-   //query modal widgets first. A modal widget consumes input even if unhandled.
+   //query modal widgets first. A modal widget consumes input even if unhandled and prevents anyone else from getting it.
    if (auto modal = getModal()){
       return createProcessNodeForEvent(modal->_node, true, event);
    }
@@ -174,13 +172,13 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
       if (handled) return handled;
    }
 
-   //then foreground
+   //then foreground (which is unaffected by camera transform)
    for (auto& child : _foreground.getValues()) {
       handled = createProcessNodeForEvent(child, false, event);
       if (handled) return handled;
    }
 
-   //then background (which is affected by camera)
+   //then background (which is affected by camera transorm)
    // this here is "normal" input
    if (isMouse) {
       auto cameraTransformer = MouseEvent::ScopeTransformer(*event.isMouse().value(), Transform2D(), getSize(), getCameraTransform());
