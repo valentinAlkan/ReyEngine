@@ -291,7 +291,13 @@ string CrossPlatform::getUserLocalConfigDirRestrictedSecurity() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 string CrossPlatform::getUserLocalConfigDirApp(){
-   return getUserLocalConfigDir() + REYENGINE_FILESYSTEM_PATH_SEP + getExeName();
+   auto exeName = getExeName();
+   constexpr string_view DEFAULT_EXE_NAME = ".exe";
+   if (exeName.find(string(DEFAULT_EXE_NAME)) != string::npos){
+      //remove .exe if it exists
+      exeName = exeName.substr(0, exeName.size() - 4);
+   }
+   return getUserLocalConfigDir() + REYENGINE_FILESYSTEM_PATH_SEP + exeName;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

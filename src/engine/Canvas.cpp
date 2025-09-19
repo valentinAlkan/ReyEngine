@@ -118,6 +118,9 @@ void Canvas::renderProcess(RenderTarget& parentTarget) {
    }
    rlPopMatrix();
 
+   auto msg = rejectingInput ? "Rejecting Input" : "Accepting input";
+   auto sizeRect = getSizeRect();
+   drawText(msg, sizeRect.bottomLeft() - Pos<float>(0, 40), getDefaultFont());
    render2DEnd();
    _renderTarget.endRenderMode();
    if (&parentTarget != &_renderTarget) {
@@ -140,6 +143,9 @@ Widget* Canvas::__process_hover(const InputEventMouseHover& event){
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
+   rejectingInput = false;
+   //local coordinates have not been transformed at this point. so they are wrt parent object, window or otherwise
+   // isInside will not work yet
    auto isMouse = event.isMouse();
    //determine what type of input this is
 
@@ -153,8 +159,10 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
    //reject mouse input from outside the canvas
    if (_rejectOutsideInput) {
       if (isMouse) {
-         auto mouseTransformer = MouseEvent::ScopeTransformer(*event.isMouse().value(), getLocalTransform(), getSize());
-         if (!event.isMouse().value()->isInside()) {
+         if (!getSizeRect().contains(isMouse.value()->getLocalPos() - getLocalTransform().extractTranslation().toPos())){
+//         auto mouseTransformer = MouseEvent::ScopeTransformer(*event.isMouse().value(), getLocalTransform(), getSize());
+//         if (!event.isMouse().value()->isInside()) {
+            rejectingInput = true;
             return nullptr;
          }
       }

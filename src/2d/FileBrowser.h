@@ -16,6 +16,8 @@ namespace ReyEngine {
          _dir = FileSystem::Directory(std::forward<Args>(args)...);
          refreshDirectoryContents();
          _addrBar->setDir(_dir);
+         _directoryTree->setSize(_directoryTree->measureContents());
+         _systemBrowserTree->setSize(_systemBrowserTree->measureContents());
       }
    protected:
       class AddrBar;

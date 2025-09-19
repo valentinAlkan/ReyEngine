@@ -10,6 +10,7 @@ namespace ReyEngine{
       static constexpr size_t GENERATION_NULL = -1;
       TreeItemContainer() = default;
       TreeItem* push_back(std::unique_ptr<TreeItem>&& item);
+      TreeItem* push_back(const std::string& item);
       TreeItem* insertItem(int atIndex, std::unique_ptr<TreeItem> item);
       /////////////////////////////////////////////////////////////////////////////////////////
       virtual std::unique_ptr<TreeItem> removeItem(size_t index) = 0;
@@ -104,15 +105,16 @@ namespace ReyEngine{
       [[nodiscard]] std::optional<TreeItem*> getRoot() const {if (root) return root.get(); return {};}
       void setHideRoot(bool hide){_hideRoot = hide; determineVisible();}
       TreeItem* setRoot(std::unique_ptr<TreeItem>&& item);
-      std::unique_ptr<TreeItem> createItem(std::unique_ptr<TreeItem>&&); //takes ownership of another tree item
+      TreeItem* setRoot(const std::string& rootName);
+      std::unique_ptr<TreeItem> takeItem(std::unique_ptr<TreeItem>&&); //takes ownership of another tree item
       template <typename... Args>
-      inline std::unique_ptr<TreeItem> createItem(const std::string& text={}, Args... args){
+      static inline std::unique_ptr<TreeItem> createItem(const std::string& text={}, Args... args){
          return std::unique_ptr<TreeItem>(new TreeItem(text, std::forward<Args>(args)...));
       }
       void setAllowSelect(bool allowSelect){_allowSelect = allowSelect;}
       [[nodiscard]] bool getAllowSelect(){return _allowSelect;}
       std::optional<TreeItem*> getSelected(){return _selectedItem;}
-
+      Size<float> measureContents(); // Measures how big the contents of the tree are, not how big the tree itself is. Used for sizing.
       struct Iterator {
          using iterator_category = std::forward_iterator_tag;
          using difference_type   = std::ptrdiff_t;
@@ -166,11 +168,15 @@ namespace ReyEngine{
       bool _allowSelect = false;
       std::unique_ptr<TreeItem> root;
       std::vector<TreeItem*> order; //a full accounting of the tree's contents, used by the iterator.
-      std::vector<TreeItemImplDetails*> visible; //a
+      std::vector<TreeItemImplDetails*> _visibleItems; //a
       bool _hideRoot = false; //if true, the root is hidden and we can appear as a "flat" tree.
       std::optional<TreeItemImplDetails*> _hoveredImplDetails;
       std::optional<TreeItem*> _lastClicked;
       std::optional<TreeItem*> _selectedItem;
+
+      struct Debug {
+         Pos<float> mousePos;
+      } debug;
 
       friend class TreeItem;
       friend class TreeItemContainer;

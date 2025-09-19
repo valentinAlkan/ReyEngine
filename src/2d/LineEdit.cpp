@@ -121,13 +121,23 @@ Widget* LineEdit::_unhandled_input(const InputEvent& event) {
          }
          case InputEventKey::getUniqueEventId(): {
             const auto& keyEvent = event.toEvent<InputEventKey>();
-            if (keyEvent.isDown && keyEvent.key == InputInterface::KeyCode::KEY_BACKSPACE) {
-               if (!_text.empty()) {
-                  auto oldText = _text;
-                  _text.pop_back();
-                  publishText(oldText);
-               }
-               return this;
+            switch (keyEvent.key) {
+               case InputInterface::KeyCode::KEY_BACKSPACE:
+                  if (keyEvent.isDown) {
+                     if (!_text.empty()) {
+                        auto oldText = _text;
+                        _text.pop_back();
+                        publishText(oldText);
+                     }
+                     return this;
+                  }
+               break;
+               case InputInterface::KeyCode::KEY_ENTER:
+                  if (keyEvent.isDown){
+                     publish(EventLineEditTextEntered(this));
+                     return this;
+                  }
+                  break;
             }
          }
       }

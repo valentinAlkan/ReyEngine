@@ -255,7 +255,7 @@ namespace ReyEngine {
          return Vec2<T>(x / magnitude, y / magnitude);
       }
       inline Vec2<T> normalize() const {return normalize(x, y);}
-      inline static std::vector<T> fromString(const std::string& s){return Vec<T, 4>::fromString(s);};
+      inline static std::optional<Vec2<T>> fromString(const std::string& s){return Vec<T, 2>::template fromString<Vec2<T>>(s);}
       friend std::ostream& operator<<(std::ostream& os, Vec2<T> v) {os << v.toString(); return os;}
       friend Vector2& operator+=(Vector2& in, Vec2<T> add) {in.x += add.x; in.y += add.y; return in;}
       static inline Vec2 transform(const Vec2& v, const Matrix& m) {
@@ -604,6 +604,10 @@ namespace ReyEngine {
       constexpr inline Pos transform(const Matrix& m){return Pos<T>(Vec2<T>::transform(*this, m));}
       constexpr inline Pos xOnly(){return {Pos::x, 0};}
       constexpr inline Pos yOnly(){return {0, Pos::y};}
+      inline static std::optional<Pos<T>> fromString(const std::string& s){
+         if (auto optVec2 = Vec2<T>::fromString(s)) return Pos<T>(optVec2.value().x, optVec2.value().y);
+         return {};
+      }
       inline operator std::string() const {return Vec2<T>::toString();}
       constexpr inline void operator=(const Size<T>&) = delete;
       [[nodiscard]] Rect<T> toRect() const;

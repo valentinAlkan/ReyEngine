@@ -157,7 +157,7 @@ namespace ReyEngine {
       /////////////////////////////////////////////////////////////////////////////////////////
       ////////// RENDERING
       //return value = not meaningful
-   struct RenderProcess : public TreeProcess<Internal::ProcessOrdering::OrderingRenderingOldestFirst> {
+      struct RenderProcess : public TreeProcess<Internal::ProcessOrdering::OrderingRenderingOldestFirst> {
          RenderProcess(Canvas* thisCanvas, Widget* processedWidget)
          : TreeProcess(thisCanvas, processedWidget)
          {
@@ -201,8 +201,9 @@ namespace ReyEngine {
          , event(event)
          {
             if (auto mouseData = event.isMouse()) {
+               Logger::debug() << processedWidget->getName() << " @ " << processedWidget->getPos() << " : " << std::endl;
                if (subCanvas){
-                  //zero-out subcanvas' transform - subcanvas's perceive themselves as having a null global transform
+                  // zero-out subcanvas' transform - subcanvas's perceive themselves as having a null global transform
                   mouseTransformer = std::make_unique<MouseEvent::ScopeTransformer>(*mouseData.value(), thisCanvas->getGlobalTransform().get(), processedWidget->getSize());
                } else {
                   mouseTransformer = std::make_unique<MouseEvent::ScopeTransformer>(*mouseData.value(), inputTransform, processedWidget->getSize());
@@ -280,8 +281,6 @@ namespace ReyEngine {
                   if (handled) return handled;
                }
             }
-//            auto handled = processNode<ProcessType>(thisNode, false, std::forward<Args>(args)...);
-//            if (handled) return handled;
          }
          return nullptr;
       };
@@ -322,6 +321,11 @@ namespace ReyEngine {
 
          // Call the lambda to trigger template deduction
          auto processTransformer = createProcessTransformer(isGlobal ? widget->getGlobalTransform().get() : widget->getLocalTransform());
+   //
+   //         if constexpr (std::is_same_v<ProcessType, InputProcess>) {
+   //            auto& xformer = static_cast<InputProcess&>(processTransformer);
+   //            Logger::info() << "Input Event offset by " << xformer.mouseTransformer->_applicableXform.extractTranslation() << " to " << xformer.event.isMouse().value()->getLocalPos() << std::endl;
+   //         }
 
          //subcanvases do some funky stuff so they need special handling
          if (processTransformer.subCanvas && processTransformer.subCanvas != this){
@@ -377,7 +381,7 @@ namespace ReyEngine {
       void __on_child_added_to_tree(TypeNode* child) override;
       void __on_child_removed_from_tree(TypeNode* child) override;
 
-      size_t hoverCount = 0;
+      bool rejectingInput = false;
 
    public:
       void setHover(Widget* w){setStatus<WidgetStatus::Hover>(w);}

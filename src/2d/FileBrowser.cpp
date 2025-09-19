@@ -33,7 +33,7 @@ void FileBrowser::_init() {
 
    _layout->layoutRatios = {1, 4, 1};
    browser->layoutRatios = {1, 4};
-   _directoryTree = make_child<Tree>(_directoryScrollArea->getNode(), "tree");
+   _directoryTree = make_child<Tree>(_directoryScrollArea->getNode(), "directoryTree");
    _directoryTree->setAllowSelect(true);
    _directoryTree->setHideRoot(true);
 //   _directoryTree
@@ -66,6 +66,8 @@ void FileBrowser::_init() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void FileBrowser::refreshDirectoryContents() {
+   vector<Directory> dirs;
+   vector<File> files;
    _directoryTree->setRoot(_directoryTree->createItem(_dir.str(), std::make_optional(std::pair<std::string, Path>(VAR_PATH, _dir))));
    auto parentItem = _directoryTree->getRoot().value();
    auto itemPath = parentItem->getMetaData<Path>(VAR_PATH);
@@ -76,7 +78,6 @@ void FileBrowser::refreshDirectoryContents() {
       if (entry.isDirectory()) text += FILESYSTEM_PATH_SEP;
       parentItem->push_back(_directoryTree->createItem(text, p));
    }
-
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -19,6 +19,8 @@ namespace ReyEngine {
          const std::string oldText;
          const std::string newText;
       };
+      EVENT(EventLineEditTextEntered, 754321527){}};
+//      EVENT(EventLineEditClicked, 754321528){}};
 
       LineEdit(const std::string& defaultText = "Default")
       : _defaultText(defaultText)

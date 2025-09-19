@@ -21,6 +21,12 @@ TreeItem* TreeItemContainer::push_back(std::unique_ptr<TreeItem>&& newChildItem)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+TreeItem *TreeItemContainer::push_back(const std::string& name) {
+   auto item = Tree::createItem(name);
+   return push_back(std::move(item));
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 TreeItem *TreeItemContainer::insertItem(int atIndex, std::unique_ptr<TreeItem> item) {
    _children.insert(_children.begin()+atIndex, std::move(item));
    return _children.at(atIndex).get();
@@ -61,15 +67,15 @@ void Tree::determineOrdering(){
 /////////////////////////////////////////////////////////////////////////////////////////
 void Tree::determineVisible() {
    //count how many rows are visible/expanded
-   visible.clear();
+   _visibleItems.clear();
    std::function<void(TreeItem*)> pushVisible = [&](TreeItem* item){
       //root item must not be hidden, otherwise if this item isn't root, then it's parent must be expanded
       if ((item->isRoot && !_hideRoot) || (!item->isRoot)){
-         visible.push_back(new TreeItemImplDetails(item, visible.size()));
+         _visibleItems.push_back(new TreeItemImplDetails(item, _visibleItems.size()));
       }
       //set the rect that contains this item
-      Pos<float> startPos = {0, (float)(visible.size() - 1) * ROW_HEIGHT};
-      if (!visible.empty()) visible.back()->expansionIconClickRegion = {startPos, {getWidth(), ROW_HEIGHT}};
+      Pos<float> startPos = {0, (float)(_visibleItems.size() - 1) * ROW_HEIGHT};
+      if (!_visibleItems.empty()) _visibleItems.back()->expansionIconClickRegion = {startPos, {getWidth(), ROW_HEIGHT}};
       if (item->expanded) {
          for (auto &child: item->_children) {
             pushVisible(child.get());
@@ -86,7 +92,7 @@ void Tree::render2D() const{
    auto pos = Pos<float>(0,-ROW_HEIGHT);
    long long generationOffset = _hideRoot ? -1 : 0;
    size_t currentRow = 0;
-   for (auto it = visible.begin(); it!=visible.end(); it++) {
+   for (auto it = _visibleItems.begin(); it != _visibleItems.end(); it++) {
       auto& itemMeta = *it;
       auto& item = itemMeta->item;
       pos += Pos<float>(0, theme->font.size);
@@ -114,12 +120,16 @@ void Tree::render2D() const{
       }
       currentRow++;
    }
+
+   drawCircle(Circle(debug.mousePos, 3), Colors::red);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Widget* Tree::_unhandled_input(const InputEvent& event) {
    switch (event.eventId){
        case InputEventMouseMotion::getUniqueEventId():
+          debug.mousePos = event.isMouse().value()->getLocalPos();
+          [[fallthrough]]
        case InputEventMouseButton::getUniqueEventId():
           auto mouseEvent = event.isMouse().value();
           if (!mouseEvent->isInside()) return nullptr;
@@ -196,9 +206,13 @@ TreeItem* Tree::setRoot(std::unique_ptr<TreeItem>&& item) {
     determineOrdering();
     return root.get();
 }
+/////////////////////////////////////////////////////////////////////////////////////////
+TreeItem* Tree::setRoot(const std::string& rootName) {
+   return setRoot(unique_ptr<TreeItem>(new TreeItem(rootName)));
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::unique_ptr<TreeItem> Tree::createItem(std::unique_ptr<TreeItem>&& other) {
+std::unique_ptr<TreeItem> Tree::takeItem(std::unique_ptr<TreeItem>&& other) {
    other->_tree = this;
    return other;
 }
@@ -207,8 +221,8 @@ std::unique_ptr<TreeItem> Tree::createItem(std::unique_ptr<TreeItem>&& other) {
 std::optional<Tree::TreeItemImplDetails*> Tree::getImplDetailsAt(const Pos<float>& localPos) {
    auto rowHeight = theme->font.size;
    int rowAt = localPos.y / rowHeight;
-   if (rowAt < visible.size()) {
-      return visible.at(rowAt);
+   if (rowAt < _visibleItems.size()) {
+      return _visibleItems.at(rowAt);
    }
    return nullopt;
 }
@@ -226,50 +240,14 @@ void TreeItem::setGeneration(size_t generation){
 
 //
 ///////////////////////////////////////////////////////////////////////////////////////////
-//std::vector<std::shared_ptr<TreeItem>> Tree::getItem(const Tree::TreePath& path) const {
-//   //traverse the tree and try to find the item in question
-//   std::vector<std::shared_ptr<TreeItem>> retval;
-//   if (!getRoot()) return retval;
-//   auto currentBranch = getRoot().value();
-//   for (const auto& element : path.elements()){
-//      if (currentBranch->getText() == element){
-//         continue;
-//      }
-//      return retval;
-//   }
-//}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-//Tree::TreePath::TreePath(const std::string &path) {
-//   if (path.empty()) return;
-//   _tail_elements = string_tools::split(path, TreePath::separator);
-//   if (_tail_elements.empty()) return;
-//   _head = _tail_elements.back();
-//   _tail_elements.pop_back();
-//   empty = false;
-//}
-//
-///////////////////////////////////////////////////////////////////////////////////////////
-//std::string Tree::TreePath::tail() const {
-//   return string_tools::join(string(separator, 1), _tail_elements);
-//}
-//
-///////////////////////////////////////////////////////////////////////////////////////////
-//std::string Tree::TreePath::head() const {
-//   return _head;
-//}
-//
-///////////////////////////////////////////////////////////////////////////////////////////
-//std::string Tree::TreePath::path() const {
-//   auto tail = string_tools::join(string(separator, 1), elements());
-//   return tail + separator + head();
-//}
-//
-///////////////////////////////////////////////////////////////////////////////////////////
-//std::vector<std::string> Tree::TreePath::elements() const {
-//   vector<string> retval = _tail_elements;
-//   retval.push_back(_head);
-//   return retval;
-//}
+Size<float> Tree::measureContents() {
+   Size<float> retval;
+   for (const auto& item : _visibleItems){
+      auto itemSize = measureText(item->item->_text, getDefaultFont());
+      if (itemSize.x > retval.x){
+         retval.x = itemSize.x;
+      }
+      retval.y += itemSize.y;
+   }
+   return retval;
+}

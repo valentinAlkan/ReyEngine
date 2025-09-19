@@ -12,10 +12,10 @@
 #include "Dialog.h"
 #include "Sprite.h"
 #include "Panel.h"
+#include "Tree.h"
 
 using namespace std;
 using namespace ReyEngine;
-using namespace ReyEngine::Internal::Tree;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct DrawTestWidget : public Widget {
@@ -174,6 +174,12 @@ int main() {
          {
             auto slider = make_child<Slider>(widgetsHolder, "slider1", Slider::SliderType::HORIZONTAL);
             auto sliderReact = make_child<SliderReactWidget>(widgetsHolder, "sliderReact1");
+            auto tree = make_child<Tree>(widgetsHolder, "tree");
+            auto item = tree->setRoot("root");
+            item->push_back("item1");
+            item->push_back("item2");
+            item->push_back("item3");
+
 
             //add slider reaction callback
             auto srCallback = [sliderReact](const Slider::EventSliderValueChanged& event) {
