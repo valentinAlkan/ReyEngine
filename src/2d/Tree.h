@@ -174,10 +174,6 @@ namespace ReyEngine{
       std::optional<TreeItem*> _lastClicked;
       std::optional<TreeItem*> _selectedItem;
 
-      struct Debug {
-         Pos<float> mousePos;
-      } debug;
-
       friend class TreeItem;
       friend class TreeItemContainer;
    };

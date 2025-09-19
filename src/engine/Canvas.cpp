@@ -118,9 +118,7 @@ void Canvas::renderProcess(RenderTarget& parentTarget) {
    }
    rlPopMatrix();
 
-   auto msg = rejectingInput ? "Rejecting Input" : "Accepting input";
    auto sizeRect = getSizeRect();
-   drawText(msg, sizeRect.bottomLeft() - Pos<float>(0, 40), getDefaultFont());
    render2DEnd();
    _renderTarget.endRenderMode();
    if (&parentTarget != &_renderTarget) {
@@ -143,7 +141,6 @@ Widget* Canvas::__process_hover(const InputEventMouseHover& event){
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
-   rejectingInput = false;
    //local coordinates have not been transformed at this point. so they are wrt parent object, window or otherwise
    // isInside will not work yet
    auto isMouse = event.isMouse();
@@ -158,13 +155,8 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
 
    //reject mouse input from outside the canvas
    if (_rejectOutsideInput) {
-      if (isMouse) {
-         if (!getSizeRect().contains(isMouse.value()->getLocalPos() - getPos())){
-//         auto mouseTransformer = MouseEvent::ScopeTransformer(*event.isMouse().value(), getLocalTransform(), getSize());
-//         if (!event.isMouse().value()->isInside()) {
-            rejectingInput = true;
-            return nullptr;
-         }
+      if (isMouse && !getSizeRect().contains(isMouse.value()->getLocalPos() - getPos())){
+         return nullptr;
       }
    }
 
@@ -189,7 +181,10 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
    //then background (which is affected by camera transorm)
    // this here is "normal" input
    for (auto& child : _background.getValues()) {
-      auto xformer = MouseEvent::ScopeTransformer(*event.isMouse().value(), getLocalTransform(), child->as<Widget>().value()->size, getCameraTransform());
+      std::unique_ptr<MouseEvent::ScopeTransformer> xformer;
+      if (isMouse){
+         xformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), getLocalTransform(), child->as<Widget>().value()->size, getCameraTransform());
+      }
       handled = createProcessNodeForEvent(child, false, event);
       if (handled) return handled;
    }

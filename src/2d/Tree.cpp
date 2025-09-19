@@ -120,16 +120,12 @@ void Tree::render2D() const{
       }
       currentRow++;
    }
-
-   drawCircle(Circle(debug.mousePos, 3), Colors::red);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Widget* Tree::_unhandled_input(const InputEvent& event) {
    switch (event.eventId){
        case InputEventMouseMotion::getUniqueEventId():
-          debug.mousePos = event.isMouse().value()->getLocalPos();
-          [[fallthrough]]
        case InputEventMouseButton::getUniqueEventId():
           auto mouseEvent = event.isMouse().value();
           if (!mouseEvent->isInside()) return nullptr;

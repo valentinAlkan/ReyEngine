@@ -4,8 +4,6 @@
 #include "ReyEngine.h"
 #include <algorithm>
 
-static std::string offset;
-
 namespace ReyEngine{
    EVENT(InputEventKey, 13234646664){}
       InputInterface::KeyCode key;
@@ -36,7 +34,6 @@ namespace ReyEngine{
       void transformLocalPos(const Pos<float>& newPos){_localPos = newPos;}
    public:
       //friend access
-      static constexpr std::string_view INDENT = "    ";
       struct ScopeTransformer {
          ScopeTransformer(MouseEvent& mouseEvent, const Transform2D& xform, const Size<float>& localSize, std::optional<Transform2D> cameraTransform = {})
          : mouseEvent(mouseEvent)
@@ -47,20 +44,15 @@ namespace ReyEngine{
          {
 
             std::stringstream msg;
-            msg << offset << mouseEvent._localPos << "-" << xform.extractTranslation() << "=";
             if (cameraTransform) {
                mouseEvent.transformLocalPos(cameraTransform.value());
             }
             mouseEvent.transformLocalPos(xform);
             mouseEvent._isInside = localSize.toRect().contains(getLocalPos());
-            msg << mouseEvent._localPos;
-            Logger::debug() << msg.str() << " : " << (mouseEvent._isInside ? "inside" : "") << std::endl;
-            offset += INDENT;
          }
          ~ScopeTransformer(){
             mouseEvent.transformLocalPos(_localPos_cached);
             mouseEvent._isInside = _isinside_cached;
-            offset = offset.substr(0, offset.size() - INDENT.size());
          }
          [[nodiscard]] Pos<float> getLocalPos() const {return mouseEvent._localPos;}
          [[nodiscard]] CanvasSpace<Pos<float>> getCanvasPos() const {return mouseEvent._canvasPos;}
