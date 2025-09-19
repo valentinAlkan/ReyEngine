@@ -159,7 +159,7 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
    //reject mouse input from outside the canvas
    if (_rejectOutsideInput) {
       if (isMouse) {
-         if (!getSizeRect().contains(isMouse.value()->getLocalPos() - getLocalTransform().extractTranslation().toPos())){
+         if (!getSizeRect().contains(isMouse.value()->getLocalPos() - getPos())){
 //         auto mouseTransformer = MouseEvent::ScopeTransformer(*event.isMouse().value(), getLocalTransform(), getSize());
 //         if (!event.isMouse().value()->isInside()) {
             rejectingInput = true;
@@ -188,15 +188,14 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
 
    //then background (which is affected by camera transorm)
    // this here is "normal" input
-   if (isMouse) {
-      auto cameraTransformer = MouseEvent::ScopeTransformer(*event.isMouse().value(), Transform2D(), getSize(), getCameraTransform());
-      handled = createProcessNodeForEvent(_node, false, event);
-   } else {
-      //propagate to children
-       handled = createProcessNodeForEvent(_node, false, event);
+   for (auto& child : _background.getValues()) {
+      auto xformer = MouseEvent::ScopeTransformer(*event.isMouse().value(), getLocalTransform(), child->as<Widget>().value()->size, getCameraTransform());
+      handled = createProcessNodeForEvent(child, false, event);
+      if (handled) return handled;
    }
 
-   return handled;
+   //then we attempt to handle it ourselves
+   return _unhandled_input(event);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -17,6 +17,9 @@ namespace ReyEngine {
         void _on_rect_changed() override;
         void _on_child_rect_changed(Widget*) override;
         void _on_child_added_to_tree(TypeNode*) override;
+        Widget* _unhandled_input(const InputEvent&) override {
+           return nullptr;
+        }
         void _init() override;
 
         Percent scrollOffsetX;

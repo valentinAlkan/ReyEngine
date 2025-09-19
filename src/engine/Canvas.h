@@ -201,7 +201,6 @@ namespace ReyEngine {
          , event(event)
          {
             if (auto mouseData = event.isMouse()) {
-               Logger::debug() << processedWidget->getName() << " @ " << processedWidget->getPos() << " : " << std::endl;
                if (subCanvas){
                   // zero-out subcanvas' transform - subcanvas's perceive themselves as having a null global transform
                   mouseTransformer = std::make_unique<MouseEvent::ScopeTransformer>(*mouseData.value(), thisCanvas->getGlobalTransform().get(), processedWidget->getSize());
@@ -295,8 +294,8 @@ namespace ReyEngine {
          if (!isWidget) {
             //non-widget node with children - widgets should never reach this
             return processChildren<ProcessType>(thisNode, std::forward<Args>(args)...);
-
          }
+
          Widget* handled = nullptr;
          auto& widget = isWidget.value();
          //ignore invisible
@@ -312,6 +311,7 @@ namespace ReyEngine {
          auto createProcessTransformer = [this, &widget, &args...](const Transform2D& inputTransform) {
             if constexpr (std::is_same_v<ProcessType, InputProcess> || std::is_same_v<ProcessType, HoverProcess>) {
                const auto& event = std::get<0>(std::forward_as_tuple(std::forward<Args>(args)...));
+               Logger::debug() << widget->getName() << " @ " << widget->getPos() << " : " << std::endl;
                return ProcessType(this, widget, event, inputTransform);
             } else {
                // For other types like RenderProcess, don't pass the extra args
