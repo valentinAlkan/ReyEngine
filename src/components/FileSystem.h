@@ -182,7 +182,8 @@ namespace ReyEngine::FileSystem {
       Directory(Directory& other) = default;
       Directory(Directory&& other):Path(other){_pathType = DIRECTORY;}
       Directory& operator=(const Directory& other){_path = other._path; return *this;}
+      std::optional<Directory> getParent() const;
       operator FileHandle() = delete;
-      std::set<Path> listContents();
+      std::set<Path> listContents() const;
    };
 }

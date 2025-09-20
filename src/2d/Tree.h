@@ -12,6 +12,8 @@ namespace ReyEngine{
       TreeItem* push_back(std::unique_ptr<TreeItem>&& item);
       TreeItem* push_back(const std::string& item);
       TreeItem* insertItem(int atIndex, std::unique_ptr<TreeItem> item);
+      TreeItem* front(){return _children.front().get();}
+      TreeItem* back(){return _children.back().get();}
       /////////////////////////////////////////////////////////////////////////////////////////
       virtual std::unique_ptr<TreeItem> removeItem(size_t index) = 0;
       void sort(std::function<bool(const std::unique_ptr<TreeItem>& a, const std::unique_ptr<TreeItem>& b)>& fxLessthan){
@@ -92,13 +94,13 @@ namespace ReyEngine{
       EVENT_ARGS(EventItemDoubleClicked, 654987984657, TreeItem*& item), item(item){}
          TreeItem*& item;
       };
-      EVENT_ARGS(EventItemHovered, 654987984657, TreeItem*& item), item(item){}
+      EVENT_ARGS(EventItemHovered, 654987984658, TreeItem*& item), item(item){}
          TreeItem*& item;
       };
-      EVENT_ARGS(EventItemSelected, 654987984658, TreeItem*& item), item(item){}
+      EVENT_ARGS(EventItemSelected, 654987984659, TreeItem*& item), item(item){}
          TreeItem*& item;
       };
-      EVENT_ARGS(EventItemDeselected, 654987984659, TreeItem*& item), item(item){}
+      EVENT_ARGS(EventItemDeselected, 654987984660, TreeItem*& item), item(item){}
          TreeItem*& item;
       };
 
@@ -115,6 +117,7 @@ namespace ReyEngine{
       [[nodiscard]] bool getAllowSelect(){return _allowSelect;}
       std::optional<TreeItem*> getSelected(){return _selectedItem;}
       Size<float> measureContents(); // Measures how big the contents of the tree are, not how big the tree itself is. Used for sizing.
+      void fit(){setSize(measureContents());}
       struct Iterator {
          using iterator_category = std::forward_iterator_tag;
          using difference_type   = std::ptrdiff_t;

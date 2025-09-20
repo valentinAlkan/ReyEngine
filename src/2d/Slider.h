@@ -64,6 +64,7 @@ namespace ReyEngine{
          if (e.isEvent<InputEventMouseMotion>()){
             _localPos = e.isMouse().value()->getLocalPos();
             if (_is_dragging) {
+               setFocused(true);
                //set new slider value based on input
                double newValue;
                switch (sliderType) {

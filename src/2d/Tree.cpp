@@ -180,13 +180,18 @@ Widget* Tree::_unhandled_input(const InputEvent& event) {
                       }
                    }
 
-                   EventItemDoubleClicked itemDoubleClickedEvent(this, itemAtClick);
-                   publish(itemClickedEvent);
                    Logger::debug() << "double click at = " << itemAtClick->_text << endl;
+                   EventItemDoubleClicked itemDoubleClickedEvent(this, itemAtClick);
+                   publish(itemDoubleClickedEvent);
                 }
 
              }
-             _lastClicked = itemAtClick;
+             if (auto stillThere = getImplDetailsAt(localPos)) {
+                _lastClicked = stillThere.value()->item;
+             } else {
+
+             }
+
              return this;
           }
        }

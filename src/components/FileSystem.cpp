@@ -288,7 +288,7 @@ std::vector<Path> FileSystem::DirectoryContents::directories() const {
 ///////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
-std::set<Path> FileSystem::Directory::listContents() {
+std::set<Path> FileSystem::Directory::listContents() const {
    std::set<Path> contents;
    if (!exists()) {
       throw std::runtime_error("Directory does not exist: " + str());
@@ -307,4 +307,13 @@ std::set<Path> FileSystem::Directory::listContents() {
    }
 
    return contents;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<Directory> FileSystem::Directory::getParent() const {
+   auto parent = Directory(head());
+   if (parent.exists()){
+      return parent;
+   }
+   return {};
 }
