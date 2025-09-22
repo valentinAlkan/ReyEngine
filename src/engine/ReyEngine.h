@@ -770,7 +770,15 @@ namespace ReyEngine {
       [[nodiscard]] constexpr inline bool containsY(const Vec2<T>& point) const {return (point.y >= y && point.y < y + height);}
       [[nodiscard]] constexpr inline bool contains(const Rect<T>& other) const {return other.x >= x && other.y >= y && other.width <= width && other.height <= height;}
       [[nodiscard]] constexpr inline bool contains(const Vec2<T>& point) const {return containsX(point) && containsY(point);}
-      [[nodiscard]] constexpr inline Rect createEnclosingRect(const Pos<T>& origin={0,0}) const {return {origin, {pos() + size() - origin}};} //returns a rectangle, starting at origin, that exactly encloses the point
+      [[nodiscard]] constexpr inline Rect enclose(const Pos<T>& p) {
+         if (!containsX(p)){
+            if (x > p.x) {
+               width += x - p.x;
+            } else {
+               
+            }
+         }
+      }
       constexpr inline void clampWidth(const Vec2<T>& widthRange){if (width < widthRange.x) width = widthRange.x; if (width > widthRange.y) width = widthRange.y;}
       constexpr inline void clampHeight(const Vec2<T>& heightRange){if (height < heightRange.x) height = heightRange.x; if (height > heightRange.y) height = heightRange.y;}
 

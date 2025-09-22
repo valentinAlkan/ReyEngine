@@ -17,15 +17,13 @@ namespace ReyEngine {
         void _on_rect_changed() override;
         void _on_child_rect_changed(Widget*) override;
         void _on_child_added_to_tree(TypeNode*) override;
-        Widget* _unhandled_input(const InputEvent&) override {
-           return nullptr;
-        }
+        Widget* _unhandled_input(const InputEvent&) override;
         void _init() override;
 
         Percent scrollOffsetX;
         Percent scrollOffsetY;
-        Slider* vslider = nullptr;
-        Slider* hslider = nullptr;
+        std::shared_ptr<Slider> _vslider = nullptr;
+       std::shared_ptr<Slider> _hslider = nullptr;
         Rect<R_FLOAT> boundingBox; //contains all children, is at least as big as scrollArea. RenderTarget takes its size
         Rect<R_FLOAT> _viewport;
         bool _hideVSlider = false;

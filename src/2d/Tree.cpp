@@ -97,20 +97,22 @@ void Tree::render2D() const{
       auto& item = itemMeta->item;
       pos += Pos<float>(0, theme->font.size);
 
-      //highlight the hovered row
-      std::optional<ColorRGBA> highlight;
-      if (_selectedItem && _selectedItem.value() == item){
-         //highlight the selected row
-         highlight = Colors::blue;
-      } else if (_hoveredImplDetails && _hoveredImplDetails.value()->visibleRowIndex == currentRow){
-         highlight = Colors::gray;
+      if (_allowHighlight) {
+         //highlight the hovered row
+         std::optional<ColorRGBA> highlight;
+         if (_selectedItem && _selectedItem.value() == item) {
+            //highlight the selected row
+            highlight = Colors::blue;
+         } else if (_hoveredImplDetails && _hoveredImplDetails.value()->visibleRowIndex == currentRow) {
+            highlight = Colors::gray;
+         }
+         if (highlight) drawRectangle({pos, {getWidth(), theme->font.size}}, highlight.value());
       }
-      if (highlight) drawRectangle({pos, {getWidth(), theme->font.size}}, highlight.value());
 
-      char c = item->expanded ? '-' : '+';
+      char c = item->expandable && !item->_children.empty() ? (item->expanded ? '-' : '+') : ' ';
       std::string expansionRegionText = c + std::string(generationOffset + item->_generation, c);
       auto enabledColor = font.color;
-      ReyEngine::ColorRGBA disabledColor = {127, 127, 127, 255};
+      constexpr ReyEngine::ColorRGBA disabledColor = {127, 127, 127, 255};
       if (!item->_enabled) {
          font.color = disabledColor;
       }
@@ -239,7 +241,6 @@ void TreeItem::setGeneration(size_t generation){
    }
 }
 
-//
 ///////////////////////////////////////////////////////////////////////////////////////////
 Size<float> Tree::measureContents() {
    Size<float> retval;

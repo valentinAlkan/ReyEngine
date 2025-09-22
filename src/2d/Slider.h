@@ -1,5 +1,6 @@
 #pragma once
 #include "Widget.h"
+#include "MathUtils.h"
 
 namespace ReyEngine{
    class Slider : public Widget {
@@ -30,9 +31,9 @@ namespace ReyEngine{
          maxSlidervalue = newRange.y;
          _range = {minSliderValue, maxSlidervalue};
       }
-      inline double getSliderValue() const {return sliderValue;}
+      inline float getSliderValue() const {return sliderValue;}
       inline void setSliderValue(float value, bool publish=true){
-         sliderValue = value;
+         sliderValue = Math::clamp(minSliderValue, maxSlidervalue, value);
          if (publish) _publish_slider_val<EventSliderValueChanged>();
          _compute_appearance();
       }

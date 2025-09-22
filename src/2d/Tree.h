@@ -44,6 +44,9 @@ namespace ReyEngine{
       void setExpandable(bool _expandable){expandable = _expandable;}
       [[nodiscard]] bool getEnabled(){return _enabled;}
       void setEnabled(bool enabled){_enabled = enabled;}
+      void setIcon(std::unique_ptr<ReyTexture>&& icon){_icon = std::move(icon);}
+      std::optional<ReyTexture*> getIcon(){return _icon.get();}
+      std::unique_ptr<ReyTexture> takeIcon(){return std::move(_icon);}
       friend std::ostream& operator<<(std::ostream& os, const TreeItem& item) {os << item._text; return os;}
    protected:
       TreeItem(const std::string& text=""): _text(text){}
@@ -63,6 +66,7 @@ namespace ReyEngine{
       bool expanded = true; //unexpanded tree items are visible, it's their children that are not;
       bool visible = true;
       bool expandable = true;
+      std::unique_ptr<ReyTexture> _icon;
 
    private:
       friend class Tree;
@@ -113,8 +117,10 @@ namespace ReyEngine{
       static inline std::unique_ptr<TreeItem> createItem(const std::string& text={}, Args... args){
          return std::unique_ptr<TreeItem>(new TreeItem(text, std::forward<Args>(args)...));
       }
+      void setAllowHighlight(bool allowHighlight){_allowHighlight = allowHighlight;}
       void setAllowSelect(bool allowSelect){_allowSelect = allowSelect;}
       [[nodiscard]] bool getAllowSelect(){return _allowSelect;}
+      [[nodiscard]] bool getAllowHighlight(){return _allowHighlight;}
       std::optional<TreeItem*> getSelected(){return _selectedItem;}
       Size<float> measureContents(); // Measures how big the contents of the tree are, not how big the tree itself is. Used for sizing.
       void fit(){setSize(measureContents());}
@@ -169,6 +175,7 @@ namespace ReyEngine{
       std::optional<TreeItemImplDetails*> getImplDetailsAt(const Pos<float>& localPos);
    private:
       bool _allowSelect = false;
+      bool _allowHighlight = true;
       std::unique_ptr<TreeItem> root;
       std::vector<TreeItem*> order; //a full accounting of the tree's contents, used by the iterator.
       std::vector<TreeItemImplDetails*> _visibleItems; //a

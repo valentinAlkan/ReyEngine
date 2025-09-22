@@ -13,18 +13,14 @@ ScrollArea::ScrollArea() {
 void ScrollArea::_init() {
    //create scrollbars
    {
-      auto [_vslider, vsnode] = make_node<Slider>(std::string(VSLIDER_NAME), Slider::SliderType::VERTICAL);
-      auto [_hslider, hsnode] = make_node<Slider>(std::string(HSLIDER_NAME), Slider::SliderType::HORIZONTAL);
-      addChild(std::move(vsnode));
-      addChild(std::move(hsnode));
+      _vslider = make_child<Slider>(getNode(), std::string(VSLIDER_NAME), Slider::SliderType::VERTICAL);
+      _hslider = make_child<Slider>(getNode(), std::string(HSLIDER_NAME), Slider::SliderType::HORIZONTAL);
       moveToForeground(_vslider.get());
       moveToForeground(_hslider.get());
-      vslider = _vslider.get();
-      hslider = _hslider.get();
    }
 
-   vslider->setVisible(true);
-   hslider->setVisible(true);
+   _vslider->setVisible(true);
+   _hslider->setVisible(true);
 
    auto setOffsetX = [this](const Slider::EventSliderValueChanged& event) {
       scrollOffsetX = event.pct;
@@ -39,24 +35,24 @@ void ScrollArea::_init() {
    auto cbSliderPress = [this](const Slider::EventSliderPressed& event){_rejectOutsideInput = false;};
    auto cbSliderRelease = [this](const Slider::EventSliderReleased& event){_rejectOutsideInput = true;};
 
-   subscribe<Slider::EventSliderValueChanged>(hslider, setOffsetX);
-   subscribe<Slider::EventSliderValueChanged>(vslider, setOffsetY);
-   subscribe<Slider::EventSliderPressed>(vslider, cbSliderPress);
-   subscribe<Slider::EventSliderPressed>(hslider, cbSliderPress);
-   subscribe<Slider::EventSliderReleased>(vslider, cbSliderRelease);
-   subscribe<Slider::EventSliderReleased>(hslider, cbSliderRelease);
+   subscribe<Slider::EventSliderValueChanged>(_hslider, setOffsetX);
+   subscribe<Slider::EventSliderValueChanged>(_vslider, setOffsetY);
+   subscribe<Slider::EventSliderPressed>(_vslider, cbSliderPress);
+   subscribe<Slider::EventSliderPressed>(_hslider, cbSliderPress);
+   subscribe<Slider::EventSliderReleased>(_vslider, cbSliderRelease);
+   subscribe<Slider::EventSliderReleased>(_hslider, cbSliderRelease);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::hideVSlider(bool hidden) {
     _hideVSlider = hidden;
-    if (vslider) vslider->setVisible(!hidden);
+    if (_vslider) _vslider->setVisible(!hidden);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::hideHSlider(bool hidden) {
     _hideHSlider = hidden;
-    if (hslider) hslider->setVisible(!hidden);
+    if (_hslider) _hslider->setVisible(!hidden);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -88,21 +84,21 @@ void ScrollArea::_on_rect_changed(){
    if (needShowVSlider) _viewport.width -= sliderSize;
    _viewport.x = (boundingBox.width - areaSize.x) * (float)Fraction(scrollOffsetX).get();
    _viewport.y = (boundingBox.height - areaSize.y) * (float)Fraction(scrollOffsetY).get();
-   if (hslider) {
-      hslider->setRect(hsliderNewRect);
-      hslider->setVisible(!_hideHSlider && needShowHSlider);
+   if (_hslider) {
+      _hslider->setRect(hsliderNewRect);
+      _hslider->setVisible(!_hideHSlider && needShowHSlider);
    }
 
-   if (vslider) {
-      vslider->setRect(vsliderNewRect);
-      vslider->setVisible(!_hideVSlider && needShowVSlider);
+   if (_vslider) {
+      _vslider->setRect(vsliderNewRect);
+      _vslider->setVisible(!_hideVSlider && needShowVSlider);
    }
    camera.offset = {-_viewport.pos().x, -_viewport.pos().y};
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::_on_child_rect_changed(Widget* child){
-   if (child != vslider && child != hslider) {
+   if (child != _vslider.get() && child != _hslider.get()) {
       //recalculate
       _on_rect_changed();
    }
@@ -115,15 +111,22 @@ void ScrollArea::_on_child_added_to_tree(TypeNode* typeNode) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-//std::optional<Widget*> ScrollArea::askHover(const ReyEngine::Pos<R_FLOAT>& globalPos) {
-//    //pass to childwidgets
-//    if (vslider && vslider->askHover(globalPos)) return vslider;
-//    if (hslider && hslider->askHover(globalPos)) return hslider;
-//    for (auto &child: getChildren()) {
-//        if (child != vslider && child != hslider) {
-//            auto handled = child->askHover(globalPos);
-//            if (handled) return handled;
-//        }
-//    }
-//    return nullopt;
-//}
+Widget* ScrollArea::_unhandled_input(const InputEvent& e) {
+   switch (e.eventId){
+      case InputEventMouseWheel::ID:{
+         constexpr float SPEED_FACTOR = 2.0;
+         auto& mwEvent = e.toEvent<InputEventMouseWheel>();
+         bool handle = false;
+         if (_hslider && _hslider->_visible){
+            _hslider->setSliderValue(_hslider->getSliderValue() - mwEvent.wheelMove.x * SPEED_FACTOR);
+            handle = true;
+         }
+         if (_vslider && _vslider->_visible){
+            _vslider->setSliderValue(_vslider->getSliderValue() - mwEvent.wheelMove.y * SPEED_FACTOR);
+            handle = true;
+         }
+         if (handle) return this;
+      }
+   }
+   return nullptr;
+}

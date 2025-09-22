@@ -25,6 +25,7 @@ void FileBrowser::_init() {
    auto browser = make_child<Layout>(_layout->getNode(), "browser", Layout::LayoutDir::HORIZONTAL);
    _systemBrowserScrollArea = make_child<ScrollArea>(browser->getNode(), "systemBrowserScrollArea");
    _directoryScrollArea = make_child<ScrollArea>(browser->getNode(), "directoryScrollArea");
+   _systemBrowserTree = make_child<Tree>(_systemBrowserScrollArea->getNode(), "systemBrowserTree");
 
    auto footer = make_child<Layout>(_layout->getNode(), "footer", Layout::LayoutDir::HORIZONTAL);
 
@@ -36,7 +37,6 @@ void FileBrowser::_init() {
    _directoryTree = make_child<Tree>(_directoryScrollArea->getNode(), "directoryTree");
    _directoryTree->setAllowSelect(true);
    _directoryTree->setHideRoot(true);
-//   _directoryTree
 
    auto footerL = make_child<Layout>(footer->getNode(), "footerL", Layout::LayoutDir::HORIZONTAL);
    auto footerR = make_child<Layout>(footer->getNode(), "footerR", Layout::LayoutDir::HORIZONTAL);
@@ -46,9 +46,12 @@ void FileBrowser::_init() {
 
    _btnOk = make_child<PushButton>(footerR->getNode(), "btnOk", "Ok");
    _btnCancel = make_child<PushButton>(footerR->getNode(), "btnCancel", "Cancel");
-   _btnOk->subscribe<Tree::EventItemSelected>(_directoryTree, [this](const Tree::EventItemSelected& e){_on_item_selected(e);});
-   _btnOk->subscribe<Tree::EventItemDeselected>(_directoryTree, [this](const Tree::EventItemDeselected& e){_on_item_deselected(e);});
-   _directoryTree->subscribe<Tree::EventItemDoubleClicked>(_directoryTree, [this](const Tree::EventItemDoubleClicked& e){_on_item_doubleClicked(e);});
+   _directoryTree->subscribe<Tree::EventItemSelected>(_directoryTree, [this](const Tree::EventItemSelected& e){_on_directory_item_selected(e);});
+   _directoryTree->subscribe<Tree::EventItemDeselected>(_directoryTree, [this](const Tree::EventItemDeselected& e){_on_directory_item_deselected(e);});
+   _directoryTree->subscribe<Tree::EventItemDoubleClicked>(_directoryTree, [this](const Tree::EventItemDoubleClicked& e){_on_directory_item_doubleClicked(e);});
+   _systemBrowserTree->subscribe<Tree::EventItemSelected>(_systemBrowserTree, [this](const Tree::EventItemSelected& e){_on_system_item_selected(e);});
+   _systemBrowserTree->subscribe<Tree::EventItemDeselected>(_systemBrowserTree, [this](const Tree::EventItemDeselected& e){_on_system_item_deselected(e);});
+   _systemBrowserTree->subscribe<Tree::EventItemDoubleClicked>(_systemBrowserTree, [this](const Tree::EventItemDoubleClicked& e){_on_system_item_doubleClicked(e);});
    _btnOk->setEnabled(false);
 
    _btnBack = make_child<PushButton>(navBar->getNode(), "btnBack", "<-");
@@ -57,13 +60,28 @@ void FileBrowser::_init() {
    _addrBar = make_child<AddrBar>(navBar->getNode(), "addrBar", _dir);
    navBar->layoutRatios = {1,1,1,20};
 
-   _systemBrowserTree = make_child<Tree>(_systemBrowserScrollArea->getNode(), "systemBrowserTree");
-   auto label = make_child<Label>(_systemBrowserScrollArea->getNode(), "label", "this right here is some text yall");
-
    _addrBar->subscribe<AddrBar::EventAddrEntered>(_addrBar, [&](const AddrBar::EventAddrEntered& e){_on_addr_entered(e);});
    _btnUp->subscribe<PushButton::ButtonPressEvent>(_btnUp, [&](const PushButton::ButtonPressEvent& e){ _on_up(e);});
    _btnFwd->subscribe<PushButton::ButtonPressEvent>(_btnFwd, [&](const PushButton::ButtonPressEvent& e){ _on_fwd(e);});
    _btnBack->subscribe<PushButton::ButtonPressEvent>(_btnBack, [&](const PushButton::ButtonPressEvent& e){ _on_back(e);});
+
+   //populate the system browser tree
+   {
+      _systemBrowserTree->setHideRoot(true);
+      _systemBrowserTree->setAllowSelect(true);
+      auto treeRoot = _systemBrowserTree->setRoot("...");
+      auto vipDirs = CrossPlatform::getRootFolders();
+      vipDirs.push_back(CrossPlatform::getUserDir());
+      vipDirs.push_back(CrossPlatform::getUserLocalConfigDir());
+      vipDirs.push_back(CrossPlatform::getUserLocalConfigDirApp());
+      vipDirs.push_back(CrossPlatform::getExeDir());
+      for (const auto& dir : vipDirs){
+         auto text = dir;
+         if (dir.size() > 18) text = Directory(dir).tail();
+         auto item = treeRoot->push_back(text);
+         item->setMetaData<Path>(VAR_PATH, dir);
+      }
+   }
 
    setMinSize(200,200);
 }
@@ -92,23 +110,24 @@ void FileBrowser::refreshDirectoryContents() {
       parentItem->push_back(_directoryTree->createItem(file.tail()));
       parentItem->back()->setMetaData<Path>(VAR_PATH, file);
    }
-   _directoryTree->setSize(_directoryTree->measureContents());
+   auto size = _directoryTree->measureContents();
+   _directoryTree->setSize(size);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void FileBrowser::_on_item_selected(const Tree::EventItemSelected& event) {
+void FileBrowser::_on_directory_item_selected(const Tree::EventItemSelected& event) {
    Logger::info() << "Selected item " << *event.item << endl;
    _btnOk->setEnabled(true);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void FileBrowser::_on_item_deselected(const Tree::EventItemDeselected& event) {
+void FileBrowser::_on_directory_item_deselected(const Tree::EventItemDeselected& event) {
    Logger::info() << "Deselected item " << *event.item << endl;
    _btnOk->setEnabled(false);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void FileBrowser::_on_item_doubleClicked(const Tree::EventItemDoubleClicked& e) {
+void FileBrowser::_on_directory_item_doubleClicked(const Tree::EventItemDoubleClicked& e) {
    if (auto metaData = e.item->getMetaData<Path>(VAR_PATH)){
       auto dir = metaData.value();
       if (dir.isDirectory()){
@@ -117,6 +136,27 @@ void FileBrowser::_on_item_doubleClicked(const Tree::EventItemDoubleClicked& e) 
    }
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
+void FileBrowser::_on_system_item_selected(const Tree::EventItemSelected& event) {
+//   Logger::info() << "Selected item " << *event.item << endl;
+//   _btnOk->setEnabled(true);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void FileBrowser::_on_system_item_deselected(const Tree::EventItemDeselected& event) {
+//   Logger::info() << "Deselected item " << *event.item << endl;
+//   _btnOk->setEnabled(false);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void FileBrowser::_on_system_item_doubleClicked(const Tree::EventItemDoubleClicked& e) {
+   if (auto metaData = e.item->getMetaData<Path>(VAR_PATH)){
+      auto dir = metaData.value();
+      if (dir.isDirectory()){
+         setCurrentDirectory(dir);
+      }
+   }
+}
 /////////////////////////////////////////////////////////////////////////////////////////
 void FileBrowser::_on_addr_entered(const AddrBar::EventAddrEntered& e) {
    Logger::info() << "Addr entered : " << e.addr << endl;

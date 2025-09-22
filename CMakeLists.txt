@@ -268,7 +268,8 @@ add_executable( cppTest
 
 ##########################################
 
-
+install_file(assets/document.png engine/assets)
+install_file(assets/folder.png engine/assets)
 #install_file(test/test.scn "")
 #install_file(test/posTest.scn test/)
 #install_file(test/posTest.scn test/)

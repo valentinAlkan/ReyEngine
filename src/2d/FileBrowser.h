@@ -55,8 +55,6 @@ namespace ReyEngine {
       void render2D() const override;
       void _init() override;
       void _on_rect_changed() override;
-      void _on_item_selected(const Tree::EventItemSelected&);
-      void _on_item_deselected(const Tree::EventItemDeselected&);
       FileSystem::Directory _dir;
       std::shared_ptr<Layout> _layout;
       std::shared_ptr<ScrollArea> _systemBrowserScrollArea;
@@ -113,6 +111,11 @@ namespace ReyEngine {
       void _on_up(const PushButton::ButtonPressEvent&);
       void _on_back(const PushButton::ButtonPressEvent&);
       void _on_fwd(const PushButton::ButtonPressEvent&);
-      void _on_item_doubleClicked(const Tree::EventItemDoubleClicked&);
+      void _on_directory_item_doubleClicked(const Tree::EventItemDoubleClicked&);
+      void _on_directory_item_selected(const Tree::EventItemSelected&);
+      void _on_directory_item_deselected(const Tree::EventItemDeselected&);
+      void _on_system_item_doubleClicked(const Tree::EventItemDoubleClicked&);
+      void _on_system_item_selected(const Tree::EventItemSelected&);
+      void _on_system_item_deselected(const Tree::EventItemDeselected&);
    };
 }
