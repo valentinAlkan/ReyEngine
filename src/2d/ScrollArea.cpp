@@ -60,7 +60,19 @@ void ScrollArea::_on_rect_changed(){
     //get the box that contains all our children, except for the sliders.
     // Make sure it's at least as big as the scrollArea
    _viewport = getSizeRect();
-    boundingBox = getChildBoundingBox();
+
+   auto getBackgroundChildBoundingBox = [&](){
+      Rect<R_FLOAT> retval = getSizeRect();
+      for (const auto& child : _background.getValues()){
+         if (auto isWidget = child->as<Widget>()) {
+            auto& _child = isWidget.value();
+            retval = retval.combine(_child->getRect());
+         }
+      }
+      return retval;
+   };
+
+   boundingBox = getBackgroundChildBoundingBox();
    auto ourSize = getSize();
    if (boundingBox.width < ourSize.x){
       boundingBox.width = ourSize.x;

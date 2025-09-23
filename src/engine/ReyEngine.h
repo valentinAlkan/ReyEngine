@@ -770,14 +770,13 @@ namespace ReyEngine {
       [[nodiscard]] constexpr inline bool containsY(const Vec2<T>& point) const {return (point.y >= y && point.y < y + height);}
       [[nodiscard]] constexpr inline bool contains(const Rect<T>& other) const {return other.x >= x && other.y >= y && other.width <= width && other.height <= height;}
       [[nodiscard]] constexpr inline bool contains(const Vec2<T>& point) const {return containsX(point) && containsY(point);}
-      [[nodiscard]] constexpr inline Rect enclose(const Pos<T>& p) {
-         if (!containsX(p)){
-            if (x > p.x) {
-               width += x - p.x;
-            } else {
-               
-            }
-         }
+      ///Combines two rectangles into one large rectangle, top left corner of top left rectangle and bottom right corner of bottom right rectangle
+      [[nodiscard]] constexpr inline Rect combine(const Rect<T>& other) const {
+         T minX = Math::min(x, other.x);
+         T minY = Math::min(y, other.y);
+         T maxX = Math::max(x + width, other.x + other.width);
+         T maxY = Math::max(y + height, other.y + other.height);
+         return Rect<T>(minX, minY, maxX - minX, maxY - minY);
       }
       constexpr inline void clampWidth(const Vec2<T>& widthRange){if (width < widthRange.x) width = widthRange.x; if (width > widthRange.y) width = widthRange.y;}
       constexpr inline void clampHeight(const Vec2<T>& heightRange){if (height < heightRange.x) height = heightRange.x; if (height > heightRange.y) height = heightRange.y;}
@@ -1592,6 +1591,7 @@ namespace ReyEngine {
 
    struct ReyEngineFont{
       ReyEngineFont(const std::string& fontFile="");
+      ~ReyEngineFont();
       Font font;
       R_FLOAT size = 20;
       R_FLOAT spacing = 1;
@@ -1599,7 +1599,7 @@ namespace ReyEngine {
       FontAlignment fontAlignment;
       ReyEngine::ColorRGBA color = COLORS::black;
       std::string fileName;
-      Size<R_FLOAT> measure(const std::string& text) const;
+      [[nodiscard]] Size<R_FLOAT> measure(const std::string& text) const;
       ReyEngineFont& operator=(const ReyEngineFont& rhs);
 //      inline ReyEngineFont& operator=(const ReyEngineFont& rhs){font = rhs.font; size = rhs.size; spacing = rhs.spacing; color = rhs.color; fileName = rhs.fileName; isDefault = rhs.isDefault; return *this;}
 //      std::string toString();

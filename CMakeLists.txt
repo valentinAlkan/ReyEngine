@@ -149,6 +149,7 @@ add_library(ReyEngine2D STATIC
         src/2d/Tree.cpp
         src/2d/Panel.cpp
         src/2d/FileBrowser.cpp
+        src/2d/MenuBar.cpp
 )
 
 target_include_directories(ReyEngine2D PUBLIC
@@ -244,6 +245,8 @@ add_executable( NewEngineMain test/newEngine/newEngineTestMain.cpp)
 target_link_libraries(NewEngineMain ReyEngine2D)
 add_executable( NewEngineBasic test/newEngine/NewEngineTestBasic.cpp)
 target_link_libraries(NewEngineBasic ReyEngine2D)
+add_executable( NewEngineFonts test/newEngine/NewEngineFonts.cpp)
+target_link_libraries(NewEngineFonts ReyEngine2D)
 
 
 # Test Project
@@ -270,6 +273,10 @@ add_executable( cppTest
 
 install_file(assets/document.png engine/assets)
 install_file(assets/folder.png engine/assets)
+install_file(assets/fonts/cardiff/Cardiff.ttf engine/assets)
+install_file(assets/fonts/cardiff/CardiffBold.ttf engine/assets)
+install_file(assets/fonts/cardiff/CardiffItalic.ttf engine/assets)
+install_file(assets/fonts/cardiff/CardiffBoldItalic.ttf engine/assets)
 #install_file(test/test.scn "")
 #install_file(test/posTest.scn test/)
 #install_file(test/posTest.scn test/)

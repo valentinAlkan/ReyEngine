@@ -1,0 +1,19 @@
+#include "MenuBar.h"
+
+using namespace std;
+using namespace ReyEngine;
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Internal::MenuInterface::push_back(const std::string& text) {
+   _entries.push_back({nullptr, text});
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Internal::MenuInterface::push_back(const ReyEngine::MenuEntry& entry) {
+   _entries.push_back(entry);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void DropDownMenu::render2D() const {
+      Layout::render2D();
+}

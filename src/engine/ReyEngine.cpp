@@ -284,7 +284,23 @@ ReyEngine::ReyEngineFont::ReyEngineFont(const std::string& fontFile){
    if (fontFile.empty()) {
       font = GetFontDefault();
    } else {
-      font = LoadFont(fontFile.c_str());
+      auto p = FileSystem::Path(fontFile);
+      if (!p.exists()) {
+         Logger::error() << "Invalid font file : " << p.abs() << endl;
+         font = GetFontDefault();
+      } else {
+         fileName = fontFile;
+         font = LoadFontEx(p.abs().c_str(), 48, 0, 0);
+         SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);
+         GenTextureMipmaps(&font.texture);
+      }
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+ReyEngineFont::~ReyEngineFont() {
+   if (!isDefault) {
+      UnloadFont(font);
    }
 }
 

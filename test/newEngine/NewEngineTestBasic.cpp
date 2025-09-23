@@ -36,7 +36,9 @@ int main(){
    scrollArea1->setInputFiltering(ReyEngine::InputFilter::PASS_PROCESS_PUBLISH);
    scrollArea1->setPosition(100, 100);
    scrollArea1->setSize(300, 300);
-   make_child<Label>(scrollArea1, "label1", "this here is some text my friend this part is super long for reasons")->setPosition(123, 201);
+   auto label1 = make_child<Label>(scrollArea1, "label1", "this here is some text my friend this part is super long for reasons");
+   label1->setPosition(123, 201);
+   label1->getTheme().font = ReyEngineFont("/root/casper/ReyEngine/assets/fonts/VollkornRegular.ttf");
    make_child<Label>(scrollArea1, "label2", "this here is someasdkljhalksjdf text my friend part 2")->setPosition(0, 100);
    make_child<PushButton>(scrollArea1, "btn", "im a computer")->setPosition(30, 300);
 

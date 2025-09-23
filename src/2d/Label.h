@@ -38,6 +38,7 @@ namespace ReyEngine{
             default:
                break;
          }
+
           drawText(text, {0, 0}, theme->font);
       };
 

@@ -27,14 +27,14 @@ void Widget::__on_added_to_tree() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Rect<R_FLOAT> Widget::getChildBoundingBox() const {
-   Rect<R_FLOAT> childRect;
+   Rect<R_FLOAT> retval = getSizeRect();
    for (const auto& child : getChildren()){
       if (auto isWidget = child->as<Widget>()) {
-         auto& child = isWidget.value();
-         childRect = childRect.createEnclosingRect(child->getRect().bottomRight());
+         auto& _child = isWidget.value();
+         retval = retval.combine(_child->getRect());
       }
    }
-   return {{0, 0}, {childRect}};
+   return retval;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

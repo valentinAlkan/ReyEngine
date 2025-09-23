@@ -61,6 +61,8 @@ void FileBrowser::_init() {
    navBar->layoutRatios = {1,1,1,20};
 
    _addrBar->subscribe<AddrBar::EventAddrEntered>(_addrBar, [&](const AddrBar::EventAddrEntered& e){_on_addr_entered(e);});
+   _btnOk->subscribe<PushButton::ButtonPressEvent>(_btnOk, [&](const PushButton::ButtonPressEvent& e){ _on_ok(e);});
+   _btnCancel->subscribe<PushButton::ButtonPressEvent>(_btnCancel, [&](const PushButton::ButtonPressEvent& e){ _on_cancel(e);});
    _btnUp->subscribe<PushButton::ButtonPressEvent>(_btnUp, [&](const PushButton::ButtonPressEvent& e){ _on_up(e);});
    _btnFwd->subscribe<PushButton::ButtonPressEvent>(_btnFwd, [&](const PushButton::ButtonPressEvent& e){ _on_fwd(e);});
    _btnBack->subscribe<PushButton::ButtonPressEvent>(_btnBack, [&](const PushButton::ButtonPressEvent& e){ _on_back(e);});
@@ -188,6 +190,16 @@ void FileBrowser::_on_fwd(const PushButton::ButtonPressEvent&) {
    if (auto fwd = _history.fwd()){
       _setCurrentDirectory(fwd.value());
    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void FileBrowser::_on_ok(const PushButton::ButtonPressEvent &) {
+   publish(EventOk(this, _directoryTree->getSelected().value()));
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void FileBrowser::_on_cancel(const PushButton::ButtonPressEvent &) {
+   publish(EventCancelled(this));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -8,6 +8,7 @@
 namespace ReyEngine {
    class FileBrowser : public Widget {
    public:
+      enum class SelectMode {SINGLE_FILE, SINGLE_DIR, MULTIPLE_DIR, MULTIPLE_FILE, ANY_SINGLE, ANY_MULTIPLE, NONE};
       FileBrowser()
       : _dir(CrossPlatform::getUserLocalConfigDirApp())
       {
@@ -39,18 +40,9 @@ namespace ReyEngine {
          _btnBack->setEnabled(_history.hasBack());
          auto parentDir = _dir.getParent();
          _btnUp->setEnabled(parentDir.has_value() && parentDir != _dir);
-//         Logger::info() << "Setting new dir to " << newDir.str() << std::endl;
-//         Logger::info() << "--------------" << std::endl;
-//         int i = 0;
-//         for (const auto& dir: _history._dirs) {
-//            std::stringstream msg;
-//            if (_history._ptr == i++) {
-//               msg << " * ";
-//            }
-//            msg << dir.str();
-//            Logger::info() << msg.str() << std::endl;
-//         }
       }
+      bool _modMultiSelectRange = false;
+      bool _modMultiSelect = false;
       void refreshDirectoryContents();
       void render2D() const override;
       void _init() override;
@@ -69,7 +61,11 @@ namespace ReyEngine {
       std::shared_ptr<AddrBar> _addrBar;
       std::shared_ptr<LineEdit> _filterText;
       std::shared_ptr<ComboBox<std::string>> _filterType;
-
+      EVENT(EventCancelled, 287346538943581){}};
+      EVENT_ARGS(EventOk, 287346538943582, TreeItem* selectedItem), _selectedItem(selectedItem)
+      {}
+         TreeItem* _selectedItem;
+      };
       class History {
       public:
          void add(const FileSystem::Directory&); //overwrites next item after current pointer (if any)
@@ -111,6 +107,8 @@ namespace ReyEngine {
       void _on_up(const PushButton::ButtonPressEvent&);
       void _on_back(const PushButton::ButtonPressEvent&);
       void _on_fwd(const PushButton::ButtonPressEvent&);
+      void _on_ok(const PushButton::ButtonPressEvent&);
+      void _on_cancel(const PushButton::ButtonPressEvent&);
       void _on_directory_item_doubleClicked(const Tree::EventItemDoubleClicked&);
       void _on_directory_item_selected(const Tree::EventItemSelected&);
       void _on_directory_item_deselected(const Tree::EventItemDeselected&);
