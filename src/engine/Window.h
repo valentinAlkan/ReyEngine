@@ -14,6 +14,7 @@ namespace ReyEngine{
    class Window : public EventPublisher {
    public:
 
+      EVENT(WindowExecEvent, 6565546464){}};
       EVENT_ARGS(WindowResizeEvent, 6565546465, Size<float> newSize)
       , size(newSize)
       {}
@@ -34,10 +35,10 @@ namespace ReyEngine{
       static WindowSpace<Pos<float>> getMousePos(); //returns global mouse position
       static Vec2<double> getMousePct(); //returns global mouse position as a percentage of the window size from 0 to 1
       std::shared_ptr<Canvas> getCanvas();
-      Size<int> getSize(){return getWindowSize();}
-      void setSize(Size<int> newSize);
-      Pos<int> getPosition(){return getWindowPosition();}
-      void setPosition(Pos<int> newPos){setWindowPosition(newPos);}
+      Size<float> getSize(){return getWindowSize();}
+      void setSize(Size<float> newSize);
+      Pos<float> getPosition(){return getWindowPosition();}
+      void setPosition(Pos<float> newPos){setWindowPosition(newPos);}
       void maximize(){maximizeWindow();}
       void minimize(){minimizeWindow();}
       inline FrameCount getFrameCount() const {return _frameCounter;}

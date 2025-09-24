@@ -7,7 +7,7 @@
 #include "MetaData.h"
 
 namespace ReyEngine {
-   enum class Anchor{NONE, LEFT, RIGHT, TOP, BOTTOM, FILL, TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, CENTER};
+   enum class Anchor{NONE, LEFT, RIGHT, TOP, TOP_WIDTH, BOTTOM, FILL, TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, CENTER, CUSTOM};
    class Widget
    : public Internal::Drawable2D
    , public Internal::Processable
@@ -20,6 +20,16 @@ namespace ReyEngine {
       , rect(r)
       {}
          Rect<float> rect;
+      };
+
+      EVENT_ARGS(EventAnchoring, 982347093, const Rect<float>& oldRect, Rect<float>& newRect, Widget* parentWidget)
+      , newRect(newRect)
+      , oldRect(oldRect)
+      , parentWidget(parentWidget)
+         {}
+         Rect<float>& newRect;
+         const Rect<float>& oldRect;
+         Widget* parentWidget;
       };
 
       EVENT_ARGS(WidgetUnhandledInputEvent, 329875, const InputEvent& fwdEvent)

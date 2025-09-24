@@ -1714,10 +1714,10 @@ namespace ReyEngine {
 
    CanvasSpace<Pos<R_FLOAT>> getScreenCenter();
    Size<int> getScreenSize();
-   ReyEngine::Size<int> getWindowSize();
-   void setWindowSize(ReyEngine::Size<int>);
-   ReyEngine::Pos<int> getWindowPosition();
-   void setWindowPosition(ReyEngine::Pos<int>);
+   ReyEngine::Size<float> getWindowSize();
+   void setWindowSize(ReyEngine::Size<float>);
+   ReyEngine::Pos<float> getWindowPosition();
+   void setWindowPosition(ReyEngine::Pos<float>);
    void maximizeWindow();
    void minimizeWindow();
    void drawText(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font);

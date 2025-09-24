@@ -40,7 +40,8 @@ namespace ReyEngine::Internal {
       inline void setSize(const Size<R_FLOAT>& newSize ){
          if (isLocked) return;
          auto r = getRect();
-         size = newSize;
+         size = newSize.max(minSize);
+         size = size.min(maxSize);
          __on_rect_changed(r);
       }
       inline void setSize(R_FLOAT x, R_FLOAT y){setSize({x, y});}

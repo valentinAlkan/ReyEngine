@@ -46,17 +46,17 @@ void Window::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
 void Window::exec(){
    InputInterface::setExitKey(InputInterface::KeyCode::KEY_ESCAPE);
    auto canvas = _root->ref<Canvas>();
-   Size<float> size = getSize();
+   Size<float> size;
    Pos<float> position;
    SetTargetFPS(targetFPS);
    auto inputEventMouseButtonTimeStampUp = sc::now();
    auto inputEventMouseButtonTimeStampDown = sc::now();
    auto lastMouseButtonInput = InputInterface::MouseButton::NONE;
+   publish(WindowExecEvent(this));
    while (!WindowShouldClose()){
       //see if the window size has changed
       Size<float> newSize = getSize();
       if (newSize != size) {
-         EventSubscriber subscriber;
          WindowResizeEvent event(this, getSize());
          size = newSize;
          publish(event);

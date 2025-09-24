@@ -100,6 +100,11 @@ void Widget::calculateAnchoring(const Rect<R_FLOAT>& r){
          newRect = {{parentWidth - getWidth(), 0}, getSize()};
          break;
       }
+      case Anchor::TOP_WIDTH: {
+         //Place at the top and match the width of the parent
+         newRect = {{0, 0}, {parentWidth, getHeight()}};
+         break;
+      }
       case Anchor::BOTTOM_RIGHT: {
          //Place at the bottom right of the parent
          newRect = {{parentWidth - getWidth(), parentHeight - getHeight()}, getSize()};
@@ -113,6 +118,13 @@ void Widget::calculateAnchoring(const Rect<R_FLOAT>& r){
       case Anchor::CENTER: {
          //Place at the center of the parent
          newRect = {{parentWidth / 2 - getWidth() / 2, parentHeight / 2 - getHeight() / 2}, getSize()};
+         break;
+      }
+
+      case Anchor::CUSTOM: {
+         //delegate anchoring to someone else
+         EventAnchoring event(this, getRect(), newRect, _parentWidget);
+         publish(event);
          break;
       }
 
