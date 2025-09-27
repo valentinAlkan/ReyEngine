@@ -446,6 +446,44 @@ bool string_tools::contains(const std::string &s, const std::string& substr) {
     return s.find(substr) != string::npos;
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
+std::pair<std::string, std::string> string_tools::nFront(const std::string &s, size_t n) {
+   auto _1 = s.substr(0, n);
+   auto _2 = n >= s.size() ? "" : s.substr(n, string::npos);
+   return {_1, _2};
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::pair<std::string, std::string> string_tools::nBack(const std::string &s, size_t n) {
+   if (n == 0) {
+      return {s, ""};
+   }
+   if (n >= s.size()) {
+      return {"", s};
+   }
+   auto _1 = s.substr(0, s.size() - n);
+   auto _2 = s.substr(s.size() - n, n);
+   return {_1, _2};
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<std::tuple<std::string, std::string, std::string>> string_tools::nAt(const std::string &s, size_t pos, size_t n) {
+   using rettype = std::tuple<std::string, std::string, std::string>;
+   if (n == 0 && n >= s.size()) return rettype("", s, "");
+   if (pos > s.size()) return {};
+   auto _1 = s.substr(0, pos);
+   auto _2 = s.substr(pos, n);
+   auto tailPos = pos + n;
+   std::string _3;
+   if (tailPos > s.size()){
+      _3 = "";
+   } else {
+      _3 = s.substr(tailPos);
+   }
+   return rettype(_1, _2, std::move(_3));
+}
+
+
 std::string AnsiColor::Foreground::EscapeBlack(std::string_view str){return std::string(EscapeCodes::Black) + std::string(str) + std::string(EscapeCodes::Reset);}
 std::string AnsiColor::Foreground::EscapeRed(std::string_view str){return std::string(EscapeCodes::Red) + std::string(str) + std::string(EscapeCodes::Reset);}
 std::string AnsiColor::Foreground::EscapeGreen(std::string_view str){return std::string(EscapeCodes::Green) + std::string(str) + std::string(EscapeCodes::Reset);}

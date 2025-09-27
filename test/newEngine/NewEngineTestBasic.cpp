@@ -20,6 +20,7 @@ int main(){
    fileBrowser->getTheme().background.colorPrimary = Colors::blue;
    fileBrowser->setAnchoring(ReyEngine::Anchor::CENTER);
    fileBrowser->setSize(800,600);
+   fileBrowser->setVisible(true);
 
    //send some input to 20,50
    InputEventMouseMotion e(root.get(), {20,50}, {0,0});

@@ -62,7 +62,7 @@ namespace ReyEngine{
       void _on_down() override;
       void render2D() const override{_render2D();}
    };
-   class PushButton : public Button{
+   class PushButton : public Button {
    public:
       REYENGINE_OBJECT(PushButton)
       //an up that was inside the button

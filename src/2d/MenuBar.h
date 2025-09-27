@@ -5,6 +5,8 @@ namespace ReyEngine{
    class MenuBar;
    class DropDownMenu;
    namespace Internal{
+      template<typename T>
+      concept StringLike = std::convertible_to<T, std::string>;
       struct MenuInterface{
          struct MenuEntry {
             MenuEntry(MenuInterface* interface, std::shared_ptr<ReyTexture> icon, const std::string& text)
@@ -28,7 +30,20 @@ namespace ReyEngine{
          MenuInterface(std::vector<std::unique_ptr<MenuEntry>>&& entries): _entries(std::move(entries)){}
          MenuInterface(){};
          MenuEntry* push_back(std::unique_ptr<MenuEntry>&&);
-         void push_back(const std::vector<std::string>&);
+         /// Push back multiple strings at once and get back an array of the menu entries they converted to.
+         template <StringLike... Args>
+         const auto push_back(Args... args){
+            constexpr size_t N = sizeof...(Args);
+            std::array<MenuEntry*, N> retval;
+            std::array<std::string, N> entryNames{args...};
+            for (int i = 0; i < N; ++i) {
+               auto& text = entryNames[i];
+               _entries.emplace_back(std::make_unique<MenuEntry>(this, nullptr, text));
+               retval[i] = _entries.back().get();
+            }
+            _on_change();
+            return retval;
+         }
          MenuEntry* at(size_t index){return _entries.at(index).get();};
          std::optional<MenuEntry*> at(Pos<float>&);
          std::optional<MenuEntry*> at(Pos<float>&& p){return at(p);}
@@ -66,6 +81,8 @@ namespace ReyEngine{
       void render2D() const override;
       void _init() override;
       void _on_change() override;
+      void _on_rect_changed() override{_calculateSize();}
+      Size<float> _calculateSize();
    private:
       static constexpr ColorRGBA GRADIENT_1 = {220,205,216,255};
       static constexpr ColorRGBA GRADIENT_2 = {200,200,200,255};
@@ -81,6 +98,7 @@ namespace ReyEngine{
       void render2D() const override;
       void _init() override;
       void _on_change() override;
+      void _on_rect_changed() override{_on_change();}
       Widget* _unhandled_input(const InputEvent&) override;
       std::optional<DropDownMenu*> getDropDown(const std::string& menu);
       void showDropDown(const std::string& menu, const Pos<float>&);

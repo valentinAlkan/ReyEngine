@@ -43,6 +43,9 @@ namespace string_tools{
    std::string toUpper(const std::string& s);
    std::string toLower(const std::string& s);
    bool contains(const std::string& s, const std::string& substr);
+   std::pair<std::string, std::string> nFront(const std::string& s, size_t n); //returns first n characters of string, in order
+   std::pair<std::string, std::string> nBack(const std::string& s, size_t n); //returns last n characters of string, in order
+   std::optional<std::tuple<std::string, std::string, std::string>> nAt(const std::string& s, size_t n, size_t pos); //returns n characters of string, in order, starting at pos. Nullopt on bad params
 
     namespace AnsiColor{
         namespace Foreground {

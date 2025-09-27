@@ -39,6 +39,7 @@ namespace ReyEngine::FileSystem {
       [[nodiscard]] std::optional<FileHandle> toFile() const;
       [[nodiscard]] std::string abs() const {return std::filesystem::absolute(_path).string();}
       [[nodiscard]] std::string str() const {return abs();}
+      [[nodiscard]] std::string canonical() const {return std::filesystem::canonical(_path).string();}
       void erase(EraseType eraseType);
       void create(bool createParent=false);
       bool createIfNotExist(bool createParent=false); //returns true if the folder was created, false if it already existed

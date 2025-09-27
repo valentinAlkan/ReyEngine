@@ -6,25 +6,25 @@ using namespace ReyEngine;
 Widget* Button::_unhandled_input(const InputEvent& event) {
    bool wasDown = down;
    if (!enabled) return nullptr;
-    if (event.isEvent<InputEventMouseButton>()) {
-       auto& mbEvent = event.toEvent<InputEventMouseButton>();
-       if (mbEvent.button == InputInterface::MouseButton::LEFT) {
-          bool isInside = event.isMouse().value()->isInside();
-          if (isFocused() && wasDown && !mbEvent.isDown) {
-            //button is down and it was just released *somewhere*
-             down = false;
-             setFocused(false);
-             _on_up(isInside);
-             return this;
-          } else if (mbEvent.isDown && isInside) {
-            //normal inside-click
-             down = true;
-             setFocused(true);
-             _on_down();
-             return this;
-          }
-       }
-    }
+   if (event.isEvent<InputEventMouseButton>()) {
+      auto& mbEvent = event.toEvent<InputEventMouseButton>();
+      if (mbEvent.button == InputInterface::MouseButton::LEFT) {
+         bool isInside = event.isMouse().value()->isInside();
+         if (isFocused() && wasDown && !mbEvent.isDown) {
+           //button is down and it was just released *somewhere*
+            down = false;
+            setFocused(false);
+            _on_up(isInside);
+            return this;
+         } else if (mbEvent.isDown && isInside) {
+           //normal inside-click
+            down = true;
+            setFocused(true);
+            _on_down();
+            return this;
+         }
+      }
+   }
     return nullptr;
 }
 

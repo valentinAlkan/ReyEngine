@@ -187,6 +187,7 @@ bool Widget::isModal() const {
 ///////////////////////////////////////////////////////////////////////////////////////////
 void Widget::setHovered(bool newValue) {
    if (auto hasCanvas = getCanvas()){
+      if (!newValue && !isHovered()) return;
       hasCanvas.value()->setStatus<WidgetStatus::Hover>(newValue ? this : nullptr);
    } else {
       Logger::error() << "Unable to set status on widget that is not associated with any Canvas" << endl;
@@ -194,21 +195,9 @@ void Widget::setHovered(bool newValue) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-std::optional<Widget*> Widget::getParentWidget() const {
-   auto parent = _node->getParent();
-   while (parent) {
-      if (auto isWidget = parent->as<Widget>()) {
-         return isWidget.value();
-      } else {
-         parent = parent->getParent();
-      }
-   }
-   return {};
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
 void Widget::setFocused(bool newValue) {
    if (auto hasCanvas = getCanvas()){
+      if (!newValue && !isFocused()) return;
       hasCanvas.value()->setStatus<WidgetStatus::Focus>(newValue ? this : nullptr);
    } else {
       Logger::error() << "Unable to set status on widget that is not associated with any Canvas" << endl;
@@ -218,6 +207,7 @@ void Widget::setFocused(bool newValue) {
 ///////////////////////////////////////////////////////////////////////////////////////////
 void Widget::setModal(bool newValue) {
    if (auto hasCanvas = getCanvas()){
+      if (!newValue && !isModal()) return;
       hasCanvas.value()->setStatus<WidgetStatus::Modal>(newValue ? this : nullptr);
    } else {
       Logger::error() << "Unable to set status on widget that is not associated with any Canvas" << endl;
@@ -270,4 +260,17 @@ void Widget::moveToBackground() {
    } else {
       throw std::runtime_error("Widget " + getName() + " has no canvas!");
    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+std::optional<Widget*> Widget::getParentWidget() const {
+   auto parent = _node->getParent();
+   while (parent) {
+      if (auto isWidget = parent->as<Widget>()) {
+         return isWidget.value();
+      } else {
+         parent = parent->getParent();
+      }
+   }
+   return {};
 }

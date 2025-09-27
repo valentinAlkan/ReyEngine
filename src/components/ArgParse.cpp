@@ -1,6 +1,7 @@
 #include "ArgParse.h"
-#include "Application.h"
+#include "Logger.h"
 #include "StringTools.h"
+#include "Platform.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -57,7 +58,6 @@ std::string RuntimeArg::sanitizeName(const std::string& arg){
    if (arg.empty()) return "";
     if (::isdigit(arg.front())){
       Logger::error() << "Invalid argument name: " << arg << endl;
-      Application::exitError("Arg names cannot start with numbers!", Application::ExitReason::INVALID_ARGS);
    }
 
    string t = string_tools::lstrip(arg, '-');
@@ -107,7 +107,7 @@ void ArgParse::parseArgs(int argc, char **argv) {
 
    RuntimeArg* openArg = nullptr;
    size_t openParamCount = 0;
-   for (auto rawArg: _rawArgs){
+   for (const auto& rawArg: _rawArgs){
       if (rawArg == _arg0){
          continue;
       }
@@ -172,7 +172,7 @@ void ArgParse::parseArgs(int argc, char **argv) {
    if (openArg->_consume == RuntimeArg::ConsumeType::CONSUME_COUNT && openParamCount != openArg->_paramCount) throw std::runtime_error("Arg count mismatch!");
 }
 /////////////////////////////////////////////////////////////////////////////////////////
-std::optional<std::string> RuntimeArg::flagParse(std::string rawArg) {
+std::optional<std::string> RuntimeArg::flagParse(const std::string& rawArg) {
    string tArg = rawArg;
    //make sure the length requirements are met
    if (
@@ -185,17 +185,17 @@ std::optional<std::string> RuntimeArg::flagParse(std::string rawArg) {
       }
       return tArg;
    }
-   return nullopt;
+   return {};
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 optional<RuntimeArg*> ArgParse::getArg(const std::string& name) {
    auto it = _definedArgs.find(RuntimeArg::sanitizeName(name));
    if (it == _definedArgs.end())
    {
-      return nullopt;
+      return {};
    }
    if (!it->second._invoked){
-      return nullopt;
+      return {};
    }
    return &it->second;
 }
@@ -203,9 +203,13 @@ optional<RuntimeArg*> ArgParse::getArg(const std::string& name) {
 /////////////////////////////////////////////////////////////////////////////////////////
 std::string ArgParse::getDocString() {
    std::string retval;
-   retval += "Try one of the following parameters:\n";
+   retval += CrossPlatform::getExeName() + " : try one of the following parameters:\n";
    for (const auto& definedArg : _definedArgs){
       retval += "    --" + definedArg.first + " : " + definedArg.second._docString + "\n";
+   }
+   auto [head, tail] = string_tools::nBack(retval, 2);
+   if (tail == "\n\n"){
+      retval = head + '\n';
    }
    return retval;
 }

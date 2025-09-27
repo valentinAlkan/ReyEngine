@@ -90,16 +90,20 @@ set(CUSTOM_SOURCES
     test/RootWidget.hpp
 )
 
-add_library(ComponentLogger STATIC src/components/Logger.cpp)
-target_include_directories(ComponentLogger PUBLIC src/components)
+add_library(ReyEngineComponentLogger STATIC src/components/Logger.cpp)
+target_include_directories(ReyEngineComponentLogger PUBLIC src/components)
 
-add_library(ComponentStringTools STATIC src/components/StringTools.cpp)
-target_include_directories(ComponentStringTools PUBLIC src/components)
+add_library(ReyEngineComponentStringTools STATIC src/components/StringTools.cpp)
+target_include_directories(ReyEngineComponentStringTools PUBLIC src/components)
 
-add_library(ComponentFilesystem STATIC src/components/FileSystem.cpp)
-target_include_directories(ComponentFilesystem PUBLIC src/components)
+add_library(ReyEngineComponentFilesystem STATIC src/components/FileSystem.cpp)
+target_include_directories(ReyEngineComponentFilesystem PUBLIC src/components)
 
-add_library(ComponentNetwork STATIC
+add_library(ReyEngineComponentArgParse STATIC src/components/ArgParse.cpp)
+target_include_directories(ReyEngineComponentArgParse PUBLIC src/components)
+target_link_libraries(ReyEngineComponentArgParse PUBLIC ReyEngineComponentStringTools ReyEngineComponentLogger)
+
+add_library(ReyEngineComponentNetwork STATIC
     src/components/network/Network.cpp
     src/components/network/UDP.cpp
     src/components/network/TCP.cpp
@@ -107,15 +111,15 @@ add_library(ComponentNetwork STATIC
     src/components/CircBuf.cpp
     src/components/SystemTime.cpp
 )
-target_link_libraries(ComponentNetwork PUBLIC ComponentLogger)
-target_include_directories(ComponentNetwork PUBLIC
+target_link_libraries(ReyEngineComponentNetwork PUBLIC ComponentLogger)
+target_include_directories(ReyEngineComponentNetwork PUBLIC
     src/components/network
     src/components
 )
 
 #link platform specific libraries
 if(WIN32)
-    target_link_libraries(ComponentNetwork PUBLIC ws2_32)
+    target_link_libraries(ReyEngineComponentNetwork PUBLIC ws2_32)
 ELSE()
 #    target_link_libraries(core PUBLIC dl)
 ENDIF()
@@ -177,8 +181,7 @@ if(REY_ENABLE_YAML)
 endif()
 
 #default compilations
-target_link_libraries(ReyEngine2D raylib Threads::Threads ComponentStringTools ComponentFilesystem ComponentLogger)
-
+target_link_libraries(ReyEngine2D raylib Threads::Threads ReyEngineComponentStringTools ReyEngineComponentFilesystem ReyEngineComponentLogger)
 
 if (UNIX)
     target_link_libraries(ReyEngine2D stdc++fs)

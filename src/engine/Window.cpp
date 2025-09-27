@@ -1,18 +1,19 @@
 #include "Window.h"
 #include <iostream>
 #include "Application.h"
-//#include "Scene.h"
 #include "InputManager.h"
 #include "Canvas.h"
-//#include "SystemTime.h"
-//#include "TypeContainer.h"
-//#include "Physics.h"
 #include "rlgl.h"
 
 using namespace std;
 using namespace ReyEngine;
 using namespace Internal;
 using sc = chrono::steady_clock;
+
+constexpr bool PRINT_MOUSEUP = false;
+constexpr bool PRINT_MOUSEDOWN = false;
+constexpr bool PRINT_HOVER= false;
+constexpr bool PRINT_MOTION = false;
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -162,7 +163,8 @@ void Window::exec(){
             auto pos = InputManager::getMousePos();
             InputEventMouseButton event(this, pos.get(), btnUp, false, isDouble);
             if (isDouble) inputEventMouseButtonTimeStampUp = sc::time_point{};
-            canvas->__process_unhandled_input(event);
+            auto handledBy = canvas->__process_unhandled_input(event);
+            if constexpr (PRINT_MOUSEUP) if (handledBy) Logger::info() << "MouseUp handled by " << handledBy->getName() << endl;
          } else {
             break;
          }
@@ -178,7 +180,8 @@ void Window::exec(){
             lastMouseButtonInput = btnDown;
             auto pos = InputManager::getMousePos();
             InputEventMouseButton event(this, pos.get(), btnDown, true, isDouble);
-            canvas->__process_unhandled_input(event);
+            auto handledBy = canvas->__process_unhandled_input(event);
+            if constexpr (PRINT_MOUSEDOWN) if (handledBy) Logger::info() << "MouseDown handled by " << handledBy->getName() << endl;
             if (isDouble) inputEventMouseButtonTimeStampDown = sc::time_point{};
          } else {
             break;
@@ -218,8 +221,11 @@ void Window::exec(){
 //                  clearHover();
 //               }
 //            if (_isEditor) continue;
-         if (!canvas->__process_unhandled_input(motionEvent)) {
-            canvas->__process_hover(hoverEvent);
+         auto handledBy = canvas->__process_unhandled_input(motionEvent);
+         if constexpr (PRINT_MOTION) if (handledBy) Logger::info() << "Motion handled by " << handledBy->getName() << endl;
+         if (!handledBy) {
+            handledBy = canvas->__process_hover(hoverEvent);
+            if constexpr (PRINT_HOVER) if (handledBy) Logger::info() << "Hover handled by " << handledBy->getName() << endl;
          }
 //            }
       }

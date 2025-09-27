@@ -9,22 +9,31 @@ namespace ReyEngine {
    class FileBrowser : public Widget {
    public:
       enum class SelectMode {SINGLE_FILE, SINGLE_DIR, MULTIPLE_DIR, MULTIPLE_FILE, ANY_SINGLE, ANY_MULTIPLE, NONE};
+      EVENT(EventCancelled, 287346538943581){}};
+      EVENT_ARGS(EventOk, 287346538943582, TreeItem* selectedItem), _selectedItem(selectedItem)
+         {}
+         TreeItem* _selectedItem;
+      };
       FileBrowser()
-      : _dir(CrossPlatform::getUserLocalConfigDirApp())
+      : _dir("/")
       {
-         _history.add(_dir);
       }
       //updates history
-      template <typename... Args>
-      inline void setCurrentDirectory(Args... args){
-         auto newDir = FileSystem::Directory(std::forward<Args>(args)...);
-         Logger::debug() << newDir << std::endl;
-         Logger::debug() << _dir << std::endl;
+      inline void setCurrentDirectory(auto arg){
+         auto newDir = FileSystem::Directory(arg);
+         if (!newDir.exists()) return;
          if (newDir != _dir) {
             _history.add(newDir);
          }
          _setCurrentDirectory(newDir);
       }
+      inline void setDirectoryAndClearHistory(auto arg) {
+         _setCurrentDirectory(FileSystem::Directory(arg));
+         _history.clear();
+      }
+      void open();
+      void close();
+      std::vector<FileSystem::Directory> getSystemDirs();
    protected:
       class AddrBar;
       static constexpr char VAR_PATH[] = "PATH";
@@ -40,6 +49,15 @@ namespace ReyEngine {
          _btnBack->setEnabled(_history.hasBack());
          auto parentDir = _dir.getParent();
          _btnUp->setEnabled(parentDir.has_value() && parentDir != _dir);
+         //highlight system dir when we are in that directory
+         for (const auto& item : _systemBrowserTree->getRoot().value()->getChildren()) {
+            if (auto path = item->getMetaData<FileSystem::Path>(VAR_PATH)) {
+               if (path->isDirectory() && path == _dir) {
+                  _systemBrowserTree->setSelected(item.get());
+                  break;
+               }
+            }
+         }
       }
       bool _modMultiSelectRange = false;
       bool _modMultiSelect = false;
@@ -61,11 +79,7 @@ namespace ReyEngine {
       std::shared_ptr<AddrBar> _addrBar;
       std::shared_ptr<LineEdit> _filterText;
       std::shared_ptr<ComboBox<std::string>> _filterType;
-      EVENT(EventCancelled, 287346538943581){}};
-      EVENT_ARGS(EventOk, 287346538943582, TreeItem* selectedItem), _selectedItem(selectedItem)
-      {}
-         TreeItem* _selectedItem;
-      };
+
       class History {
       public:
          void add(const FileSystem::Directory&); //overwrites next item after current pointer (if any)
@@ -73,6 +87,7 @@ namespace ReyEngine {
          std::optional<FileSystem::Directory> fwd();
          bool hasFwd();
          bool hasBack();
+         void clear();
          std::vector<FileSystem::Directory> _dirs;
          size_t _ptr = 0;
       } _history;

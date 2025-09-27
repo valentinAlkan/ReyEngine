@@ -25,14 +25,6 @@ Internal::MenuInterface::MenuEntry* Internal::MenuInterface::push_back(std::uniq
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Internal::MenuInterface::push_back(const std::vector<std::string>& entries) {
-   for (const auto& entry : entries) {
-      _entries.emplace_back(std::make_unique<MenuEntry>(this, nullptr, entry));
-   }
-   _on_change();
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
 std::optional<Internal::MenuInterface::MenuEntry*> Internal::MenuInterface::at(Pos<float>& p) {
    for (const auto& entry : _entries){
       if (entry->_area.contains(p)){return entry.get();}
@@ -49,6 +41,7 @@ void DropDownMenu::_init() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void DropDownMenu::render2D() const {
+   drawRectangleGradientV(getSizeRect(), GRADIENT_1, GRADIENT_2);
    if (_activeEntry){
       drawRectangleGradientH(_activeEntry.value()->_area, GRADIENT_1, GRADIENT_2);
    }
@@ -60,6 +53,11 @@ void DropDownMenu::render2D() const {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void DropDownMenu::_on_change() {
+   setMinSize(_calculateSize());
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Size<float> DropDownMenu::_calculateSize() {
    static constexpr float SPACING = 4;
    Rect<float> r;
    float maxWidth = 0;
@@ -72,7 +70,7 @@ void DropDownMenu::_on_change() {
       r.y = yPos += r.height;
       maxWidth = std::max(maxWidth, r.width);
    }
-   setMinSize(maxWidth, r.y);
+   return {maxWidth, r.y};
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -127,7 +125,13 @@ Widget* MenuBar::_unhandled_input(const ReyEngine::InputEvent& e) {
    switch (e.eventId){
       case InputEventMouseMotion::ID:{
          auto& mhEvent = e.toEvent<InputEventMouseMotion>();
-         _activeEntry = at(mhEvent.mouse.getLocalPos());
+         if (isFocused() || mhEvent.mouse.isInside()) {
+            _activeEntry = at(mhEvent.mouse.getLocalPos());
+            setFocused(_activeEntry.has_value());
+         } else {
+            _activeEntry.reset();
+            return nullptr;
+         }
          return this;}
       case InputEventMouseButton::ID:{
          auto& mbEvent = e.toEvent<InputEventMouseButton>();

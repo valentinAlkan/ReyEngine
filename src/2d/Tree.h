@@ -122,6 +122,7 @@ namespace ReyEngine{
       [[nodiscard]] bool getAllowSelect(){return _allowSelect;}
       [[nodiscard]] bool getAllowHighlight(){return _allowHighlight;}
       std::optional<TreeItem*> getSelected(){return _selectedItem;}
+      void setSelected(TreeItem* selectedItem){_selectedItem = selectedItem;}
       Size<float> measureContents(); // Measures how big the contents of the tree are, not how big the tree itself is. Used for sizing.
       void fit(){setSize(measureContents());}
       struct Iterator {

@@ -315,15 +315,7 @@ vector<string> CrossPlatform::getRootFolders() {
    }
 
 #elif IS_LINUX()
-   try {
-      for (const auto& entry : std::filesystem::directory_iterator("/")) {
-         if (entry.is_directory()) {
-            roots.push_back(entry.path().filename());
-         }
-      }
-   } catch (const std::filesystem::filesystem_error& ex) {
-      /**/
-   }
+   roots.emplace_back("/");
 #elif IS_MACOS()
     // Other Unix-like systems might need different approaches
     roots.push_back("/"); // At minimum, root exists

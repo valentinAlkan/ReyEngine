@@ -7,7 +7,33 @@ using namespace ReyEngine;
 using namespace FileSystem;
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void FileBrowser::open() {
+   setVisible(true);
+   setModal(true);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void FileBrowser::close() {
+   setVisible(false);
+   setModal(false);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::vector<FileSystem::Directory> FileBrowser::getSystemDirs() {
+   vector<Directory> retval;
+   for (const auto& item : _systemBrowserTree->getRoot().value()->getChildren()){
+      if (auto path = item->getMetaData<Path>(VAR_PATH)){
+         if (path->isDirectory()){
+            retval.push_back(path.value());
+         }
+      }
+   }
+   return retval;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void FileBrowser::render2D() const {
+   drawRectangle(getSizeRect(), theme->background.colorPrimary);
    drawRectangleLines(getSizeRect(), 2.0, Colors::black);
 }
 
@@ -73,10 +99,18 @@ void FileBrowser::_init() {
       _systemBrowserTree->setAllowSelect(true);
       auto treeRoot = _systemBrowserTree->setRoot("...");
       auto vipDirs = CrossPlatform::getRootFolders();
-      vipDirs.push_back(CrossPlatform::getUserDir());
-      vipDirs.push_back(CrossPlatform::getUserLocalConfigDir());
-      vipDirs.push_back(CrossPlatform::getUserLocalConfigDirApp());
-      vipDirs.push_back(CrossPlatform::getExeDir());
+      std::vector<string> mightExist;
+      mightExist.push_back(CrossPlatform::getUserDir());
+      mightExist.push_back(CrossPlatform::getUserLocalConfigDir());
+      mightExist.push_back(CrossPlatform::getUserLocalConfigDirApp());
+      mightExist.push_back(CrossPlatform::getExeDir());
+      while (!mightExist.empty()){
+         Directory d(mightExist.back());
+         if (d.exists()){
+            vipDirs.push_back(mightExist.back());
+         }
+         mightExist.pop_back();
+      }
       for (const auto& dir : vipDirs){
          auto text = dir;
          if (dir.size() > 18) text = Directory(dir).tail();
@@ -85,7 +119,16 @@ void FileBrowser::_init() {
       }
    }
 
-   setMinSize(200,200);
+   //try to set a default directory
+   auto defaultDir = Directory(CrossPlatform::getUserLocalConfigDirApp());
+   if (defaultDir.exists()) {
+      _setCurrentDirectory(defaultDir);
+   } else {
+      _setCurrentDirectory(Directory(CrossPlatform::getUserDir()));
+   }
+
+   setMinSize(800,600);
+   setVisible(false);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -97,7 +140,6 @@ void FileBrowser::refreshDirectoryContents() {
    auto itemPath = parentItem->getMetaData<Path>(VAR_PATH);
    if (!itemPath) throw std::runtime_error("Directory entry " + parentItem->getText() + " did not have a directory associated with it");
    for (const auto& entry : Directory(itemPath.value()).listContents()) {
-      auto p = std::make_optional(std::pair<std::string, Path>(VAR_PATH, entry));
       if (entry.isDirectory()){
          dirs.emplace_back(entry);
       } else if (entry.isRegularFile()){
@@ -194,11 +236,13 @@ void FileBrowser::_on_fwd(const PushButton::ButtonPressEvent&) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void FileBrowser::_on_ok(const PushButton::ButtonPressEvent &) {
+   close();
    publish(EventOk(this, _directoryTree->getSelected().value()));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void FileBrowser::_on_cancel(const PushButton::ButtonPressEvent &) {
+   close();
    publish(EventCancelled(this));
 }
 
@@ -215,7 +259,7 @@ void FileBrowser::AddrBar::_init() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void FileBrowser::AddrBar::setDir(FileSystem::Directory& dir) {
    _currentDir = dir;
-   setText(_currentDir.str());
+   setText(_currentDir.canonical());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -290,4 +334,9 @@ bool FileBrowser::History::hasBack() {
 /////////////////////////////////////////////////////////////////////////////////////////
 bool FileBrowser::History::hasFwd() {
    return !_dirs.empty() && _ptr < _dirs.size() - 1; // never test size_t against -1
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void FileBrowser::History::clear() {
+   _dirs.clear();
 }
