@@ -13,10 +13,11 @@ UI::UI(std::shared_ptr<TileEditor>& editor)
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void UI::_init() {
-   auto label = make_child<Label>(getNode(), "UILabel", "Hello from UI");
-   _palette = make_child<TilePalette>(getNode(), "TilePalette");
+   auto label = make_child<Label>(this, "UILabel", "Hello from UI");
+   _panel = make_child<Panel>(this, "_panel");
+//   _palette = _panel->make_child<TilePalette>("TilePalette");
    _editor->setAnchoring(ReyEngine::Anchor::FILL);
-   _panel->addChildToPanel()
+   _panel->addChildToPanel(_palette);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -36,5 +37,5 @@ Widget* UI::_unhandled_input(const InputEvent& event){
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void UI::_on_rect_changed() {
-   _palette->setPosition(getSizeRect().topRight() + Pos<float>(-_palette->getWidth() - 30, 30));
+   if (_palette) _palette->setPosition(getSizeRect().topRight() + Pos<float>(-_palette->getWidth() - 30, 30));
 }

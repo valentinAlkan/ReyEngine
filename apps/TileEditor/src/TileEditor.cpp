@@ -13,7 +13,7 @@ TileEditor::TileEditor()
    constexpr Pos<int> offset = {2,1};
    constexpr Size<int> padding = {1,1};
 
-   auto atlas = addAtlas("terrain", ATLAS_TERRAIN_FILE, srcTileSize, offset, padding);
+   auto atlas = addAtlas("terrain", FileSystem::File(ATLAS_TERRAIN_FILE), srcTileSize, offset, padding);
    if (!atlas) throw std::runtime_error("Sprite atlas file " + std::string(ATLAS_TERRAIN_FILE) + " not found!");
    auto layer = addLayer(atlas.value());
 

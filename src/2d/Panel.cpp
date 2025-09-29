@@ -301,6 +301,7 @@ Widget *Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::addChildToPanel(std::shared_ptr<Widget> child){
 //   if (!window) window = make_child<Control>(child->getNode(), WINDOW_NAME);
+
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 //void Panel::registerProperties(){
