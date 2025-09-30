@@ -1596,7 +1596,7 @@ namespace ReyEngine {
       ReyEngineFont& operator=(ReyEngineFont&& rhs) noexcept ;
       ~ReyEngineFont();
       Font font;
-      int size = 20;
+      float size = 20;
       R_FLOAT spacing = 1;
       bool isDefault = true;
       FontAlignment fontAlignment;

@@ -132,8 +132,9 @@ namespace ReyEngine::Internal::Tree {
       inline const TypeNode* getRoot() const {return _root;}
       inline std::string getName() const {return name;}
       inline std::string getScenePath() const {return _scenePath;}
+      inline size_t getIndex(){return _index;}
       // Add child with a name for lookup
-      TypeNode* addChild(std::unique_ptr<TypeNode>&& child) {
+      TypeNode* addChild(std::unique_ptr<TypeNode>&& child, std::optional<size_t> index={}) {
          if (!child){
             Logger::error() << "Null child cannot be added to " << name << std::endl;
             return nullptr;
@@ -152,8 +153,14 @@ namespace ReyEngine::Internal::Tree {
          }
          auto childptr = it->second.get();
          auto addedStorable = childptr->as<TreeStorable>().value();
-         // update child order vector
-         _childOrder.push_back(childptr);
+         // update child order vector to correct index (if applicable)
+         if (index){
+            _childOrder.insert(_childOrder.begin() + index.value(), childptr);
+            childptr->_index = index.value();
+         } else {
+            _childOrder.push_back(childptr);
+            childptr->_index = _childOrder.size()-1;
+         }
 
          // Set parent
          childptr->_parent = this;
@@ -215,7 +222,7 @@ namespace ReyEngine::Internal::Tree {
        * @param name : name of the wanted node
        * @return : the unique_ptr of the node if it existed, nullptr if it did not;
        */
-      std::optional<std::unique_ptr<TypeNode>> removeChild (const std::string& _name){
+      std::optional<std::unique_ptr<TypeNode>> removeChild (const std::string& _name, bool silent=false){
          //remove first from child order
          //remove also from the order vector
          for (auto it = _childOrder.begin(); it != _childOrder.end(); ++it){
@@ -233,7 +240,7 @@ namespace ReyEngine::Internal::Tree {
             removedNode->cleanupOnRemoval();
             return removedNode;
          }
-         Logger::error() << "Unable to remove child " << _name << " from node " << getScenePath() << std::endl;
+         if (!silent) Logger::error() << "Unable to remove child " << _name << " from node " << getScenePath() << std::endl;
          return {};
       };
 
@@ -326,6 +333,7 @@ namespace ReyEngine::Internal::Tree {
       std::shared_ptr<TypeBase> _data;
       std::map<NameHash, std::unique_ptr<TypeNode>> _childMap; //parents own children
       std::vector<TypeNode*> _childOrder;         // Points to map entries
+      size_t _index; //which numbered child this is - only valid if child has a parent (or was just removed)
 
 
       // Make make_node a friend so it can access the protected constructor

@@ -137,7 +137,7 @@ void Widget::calculateAnchoring(const Rect<R_FLOAT>& r){
 ///////////////////////////////////////////////////////////////////////////////////////////
 void Widget::setAnchoring(Anchor newAnchor) {
    if (!_node){
-      throwEx(this, "setAnchoring");
+      throwEx("setAnchoring");
    }
    auto parent = _node->getParent();
    if (!parent){

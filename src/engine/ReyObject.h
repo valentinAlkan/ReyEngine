@@ -21,6 +21,15 @@ namespace ReyEngine{
       }
    }
 
+   template<typename T, typename N, typename InstanceName, typename... Args>
+   std::shared_ptr<T> replace_child(N parent, InstanceName&& instanceName, Args&&... args){
+      auto oldChild = parent->removeChild(instanceName);
+      auto [_newChildPtr, _newChildNode] = Internal::Tree::_make_node<T>(instanceName, std::forward<Args>(args)...);
+      std::optional<size_t> index = oldChild.has_value() ? oldChild.value()->getIndex() : std::optional<size_t>();
+      (void)parent->addChild(std::move(_newChildNode), index)->getData();
+      return _newChildPtr;
+   }
+
    template<typename T, typename InstanceName>
    Internal::Tree::MakeNodeReturnType<T> make_node(InstanceName&& instanceName, std::unique_ptr<T>&& ptr){
       return Internal::Tree::_make_node(instanceName, std::move(ptr));

@@ -148,8 +148,8 @@ namespace ReyEngine {
       friend class Layout;
       friend class Canvas;
 
-      [[noreturn]] void throwEx(auto widget, auto operation) {
-         throw std::runtime_error(std::string("Widget failed operation \"") + operation + "\" on " + widget->getName() + " : " + std::string(INVALID_NODE_ERR_MSG));
+      [[noreturn]] void throwEx(const std::string& operation) {
+         throw std::runtime_error(std::string("Widget failed operation \"") + operation + "\" on " + getName() + " : " + std::string(INVALID_NODE_ERR_MSG));
       }
 
    public:
@@ -159,21 +159,28 @@ namespace ReyEngine {
          if (auto hasNode = getNode()) {
             return getNode()->addChild(std::forward<Args>(args)...);
          }
-         throwEx(std::get<0>(std::forward_as_tuple(std::forward<Args>(args)...)), "addChild");
+         throwEx("addChild");
       }
+//      template <typename... Args>
+//      auto replaceChild(Args&& ...args){
+//         if (auto hasNode = getNode()) {
+//            return getNode()->replaceChild(std::forward<Args>(args)...);
+//         }
+//         throwEx(std::get<0>(std::forward_as_tuple(std::forward<Args>(args)...)), "addChild");
+//      }
       template <typename... Args>
       auto removeChild(Args&& ...args){
          if (auto hasNode = getNode()) {
             return getNode()->removeChild(std::forward<Args>(args)...);
          }
-         throwEx(std::get<0>(std::forward_as_tuple(std::forward<Args>(args)...)), "removeChild");
+         throwEx("removeChild");
       }
 
       auto removeAllChildren(){
          if (auto hasNode = getNode()) {
             return hasNode->removeAllChildren();
          }
-         throwEx(this, "removeAllChildren");
+         throwEx("removeAllChildren");
       }
    private:
       static constexpr std::string_view INVALID_NODE_ERR_MSG = "Invalid Node for operation. \n"
