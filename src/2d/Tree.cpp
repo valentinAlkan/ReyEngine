@@ -99,14 +99,14 @@ void Tree::render2D() const{
 
       if (_allowHighlight) {
          //highlight the hovered row
-         std::optional<ColorRGBA> highlight;
+         std::optional<ColorRGBA> highlightColor;
          if (_selectedItem && _selectedItem.value() == item) {
             //highlight the selected row
-            highlight = Colors::blue;
+            highlightColor = Colors::blue;
          } else if (_hoveredImplDetails && _hoveredImplDetails.value()->visibleRowIndex == currentRow) {
-            highlight = Colors::gray;
+            highlightColor = Colors::gray;
          }
-         if (highlight) drawRectangle({pos, {getWidth(), (float)theme->font->size}}, highlight.value());
+         if (highlightColor) drawRectangle({pos, {getWidth(), theme->font->size}}, highlightColor.value());
       }
 
       char c = item->expandable && !item->_children.empty() ? (item->expanded ? '-' : '+') : ' ';

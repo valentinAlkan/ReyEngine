@@ -31,6 +31,7 @@ namespace ReyEngine {
          _setCurrentDirectory(FileSystem::Directory(arg));
          _history.clear();
       }
+      auto getCurrentDirectory() const {return _dir;}
       void open();
       void close();
       std::vector<FileSystem::Directory> getSystemDirs();
@@ -47,7 +48,7 @@ namespace ReyEngine {
          _systemBrowserTree->setSize(_systemBrowserTree->measureContents());
          _btnFwd->setEnabled(_history.hasFwd());
          _btnBack->setEnabled(_history.hasBack());
-         auto parentDir = _dir.getParent();
+         auto parentDir = _dir.getParentDirectory();
          _btnUp->setEnabled(parentDir.has_value() && parentDir != _dir);
          //highlight system dir when we are in that directory
          for (const auto& item : _systemBrowserTree->getRoot().value()->getChildren()) {

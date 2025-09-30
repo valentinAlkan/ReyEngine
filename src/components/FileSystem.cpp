@@ -10,7 +10,7 @@ using namespace FileSystem;
 
 ///////////////////////////////////////////////////////////////////////////////////////
 Path::Path(const File &file): _path(file.str()){
-   setType();
+   parsePath();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -133,7 +133,34 @@ void Path::overwrite(bool createParent) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void Path::setType() {
+void Path::parsePath() {
+   //expand tilde's by exploding path and examining each element
+   using PathParsePair = std::pair<bool, std::vector<std::filesystem::path>>;
+   auto components = PathParsePair(false, {_path.begin(), _path.end()});
+   auto& doneParsingPath = components.first;
+   auto strip_tilde = [](PathParsePair& pair){
+      auto& components = pair.second;
+      for (size_t i = 0; i < components.size(); i++) {
+         std::string comp_str = components.at(i).string();
+         if (comp_str == "~" || comp_str.starts_with("~")) {
+            components = {components.begin()+i, components.end()};
+            components.front() = CrossPlatform::getUserDir();
+            return;
+         }
+      }
+      //done
+      pair.first = true;
+   };
+   while (!doneParsingPath){
+      strip_tilde(components);
+   }
+
+   //rebuild path
+   _path.clear();
+   for (const auto& component : components.second){
+      _path /= component;
+   }
+
    try {
       if (!std::filesystem::exists(_path)) {
          _pathType = EMPTY;
@@ -171,6 +198,15 @@ void Path::setType() {
       Logger::warn() << "Filesystem error setting type for " << _path << ": " << ex.what() << std::endl;
       _pathType = OTHER;
    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<Directory> FileSystem::Path::getParentDirectory() const {
+   auto parent = Directory(head());
+   if (parent.exists()){
+      return parent;
+   }
+   return {};
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -312,13 +348,4 @@ std::set<Path> FileSystem::Directory::listContents() const {
    }
 
    return contents;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-std::optional<Directory> FileSystem::Directory::getParent() const {
-   auto parent = Directory(head());
-   if (parent.exists()){
-      return parent;
-   }
-   return {};
 }

@@ -215,7 +215,7 @@ void FileBrowser::_on_addr_entered(const AddrBar::EventAddrEntered& e) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void FileBrowser::_on_up(const PushButton::ButtonPressEvent&) {
-   if (auto parent = _dir.getParent()){
+   if (auto parent = _dir.getParentDirectory()){
       setCurrentDirectory(parent.value());
    }
 }
