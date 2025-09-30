@@ -14,7 +14,44 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 
-function(install_file SOURCE_PATH DESTINATION_PATH)
+#function(copy_file SOURCE_PATH DESTINATION_PATH)
+#    # Determine the absolute source path
+#    if(IS_ABSOLUTE "${SOURCE_PATH}")
+#        set(ABS_SOURCE_PATH "${SOURCE_PATH}")
+#    else()
+#        set(ABS_SOURCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_PATH}")
+#    endif()
+#
+#    # Get just the filename for the final path
+#    get_filename_component(FILENAME "${SOURCE_PATH}" NAME)
+#
+#    # Set destination in build directory
+#    if(DESTINATION_PATH AND NOT DESTINATION_PATH STREQUAL "")
+#        string(REGEX REPLACE "^/+" "" CLEAN_DEST "${DESTINATION_PATH}")
+#        string(REGEX REPLACE "/+$" "" CLEAN_DEST "${CLEAN_DEST}")
+#        set(DEST_DIR "${CMAKE_BINARY_DIR}/${CLEAN_DEST}")
+#    else()
+#        set(DEST_DIR "${CMAKE_BINARY_DIR}")
+#    endif()
+#
+#    set(FINAL_PATH "${DEST_DIR}/${FILENAME}")
+#
+#    message(STATUS "Will copy '${ABS_SOURCE_PATH}' to '${FINAL_PATH}'")
+#
+#    # Create a custom command to copy the file
+#    add_custom_command(
+#            OUTPUT "${FINAL_PATH}"
+#            COMMAND ${CMAKE_COMMAND} -E make_directory "${DEST_DIR}"
+#            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${ABS_SOURCE_PATH}" "${FINAL_PATH}"
+#            DEPENDS "${ABS_SOURCE_PATH}"
+#            COMMENT "Copying ${FILENAME} to build directory"
+#    )
+#
+#    # Add to a list to create a target later
+#    set_property(GLOBAL APPEND PROPERTY RESOURCE_FILES "${FINAL_PATH}")
+#endfunction()
+
+function(copy_file SOURCE_PATH DESTINATION_PATH)
     # Determine the absolute source path
     if(IS_ABSOLUTE "${SOURCE_PATH}")
         set(ABS_SOURCE_PATH "${SOURCE_PATH}")
@@ -25,24 +62,21 @@ function(install_file SOURCE_PATH DESTINATION_PATH)
     # Get just the filename for the final path
     get_filename_component(FILENAME "${SOURCE_PATH}" NAME)
 
-    # Install to bin directory, preserving subdirectory structure
+    # Set destination in build directory
     if(DESTINATION_PATH AND NOT DESTINATION_PATH STREQUAL "")
-        # Remove leading/trailing slashes and clean up the path
         string(REGEX REPLACE "^/+" "" CLEAN_DEST "${DESTINATION_PATH}")
         string(REGEX REPLACE "/+$" "" CLEAN_DEST "${CLEAN_DEST}")
-        set(INSTALL_DESTINATION "bin/${CLEAN_DEST}")
+        set(DEST_DIR "${CMAKE_BINARY_DIR}/${CLEAN_DEST}")
     else()
-        set(INSTALL_DESTINATION "bin")
+        set(DEST_DIR "${CMAKE_BINARY_DIR}")
     endif()
 
-    # Calculate final path
-    set(FINAL_INSTALL_PATH "${CMAKE_INSTALL_PREFIX}/${INSTALL_DESTINATION}/${FILENAME}")
+    set(FINAL_PATH "${DEST_DIR}/${FILENAME}")
 
-    # Print the absolute paths
-    message(STATUS "Will install '${ABS_SOURCE_PATH}' to '${FINAL_INSTALL_PATH}'")
+    message(STATUS "Copying '${ABS_SOURCE_PATH}' to '${FINAL_PATH}'")
 
-    # Install the file
-    install(FILES "${ABS_SOURCE_PATH}" DESTINATION "${INSTALL_DESTINATION}")
+    # Use configure_file which tracks changes
+    configure_file("${ABS_SOURCE_PATH}" "${FINAL_PATH}" COPYONLY)
 endfunction()
 
 
@@ -274,20 +308,28 @@ add_executable( cppTest
 
 ##########################################
 
-install_file(assets/document.png engine/assets)
-install_file(assets/folder.png engine/assets)
-install_file(assets/fonts/cardiff/Cardiff.ttf engine/assets)
-install_file(assets/fonts/cardiff/CardiffBold.ttf engine/assets)
-install_file(assets/fonts/cardiff/CardiffItalic.ttf engine/assets)
-install_file(assets/fonts/cardiff/CardiffBoldItalic.ttf engine/assets)
-#install_file(test/test.scn "")
-#install_file(test/posTest.scn test/)
-#install_file(test/posTest.scn test/)
-#install_file(test/characters.png test/)
-#install_file(test/test.lua test/)
-#install_file(test/xmltest.xml test/)
-#install_file(test/spritesheet.png test/)
-#install_file(test/csvTest.csv test/)
-#install_file(test/3d/suzanne.obj test/)
-#install_file(test/10x10_checkered_board.png test/)
-#install_file(test/tiles.png test/)
+#font resources
+copy_file(resources/icons/document.png engine/resources)
+copy_file(resources/icons/folder.png engine/resources)
+copy_file(resources/fonts/FiraCode-Bold.ttf engine/resources)
+copy_file(resources/fonts/FiraCode-Light.ttf engine/resources)
+copy_file(resources/fonts/FiraCode-Medium.ttf engine/resources)
+copy_file(resources/fonts/FiraCode-Regular.ttf engine/resources)
+copy_file(resources/fonts/FiraCode-Retina.ttf engine/resources)
+copy_file(resources/fonts/FiraCode-SemiBold.ttf engine/resources)
+
+# test resources
+#copy_file(test/test.scn "")
+#copy_file(test/posTest.scn test/)
+#copy_file(test/posTest.scn test/)
+copy_file(test/characters.png test/)
+copy_file(test/test.lua test/)
+copy_file(test/xmltest.xml test/)
+copy_file(test/spritesheet.png test/)
+copy_file(test/csvTest.csv test/)
+copy_file(test/3d/suzanne.obj test/)
+copy_file(test/10x10_checkered_board.png test/)
+copy_file(test/tiles.png test/)
+
+get_property(ALL_RESOURCE_FILES GLOBAL PROPERTY RESOURCE_FILES)
+add_custom_target(CopyResources ALL DEPENDS ${ALL_RESOURCE_FILES})

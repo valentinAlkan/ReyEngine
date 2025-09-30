@@ -118,7 +118,6 @@ void Canvas::renderProcess(RenderTarget& parentTarget) {
    }
    rlPopMatrix();
 
-   auto sizeRect = getSizeRect();
    render2DEnd();
    _renderTarget.endRenderMode();
    if (&parentTarget != &_renderTarget) {
@@ -190,7 +189,7 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
    }
 
    //then we attempt to handle it ourselves
-   return _unhandled_input(event);
+   return createProcessNodeForEvent(getNode(), false, event);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

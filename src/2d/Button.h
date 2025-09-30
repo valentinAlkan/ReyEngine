@@ -21,7 +21,6 @@ namespace ReyEngine{
       [[nodiscard]] std::string getText() const {return text;}
       void setText(const std::string& newText){
          text = newText;
-         setMinSize(measureText(newText, getTheme().font) + Size<float>(10,10));
       }
       void setDown(bool newDown, PublishType pubTybe=PublishType::DO_PUBLISH);
       [[nodiscard]] bool getDown(){return down;}
@@ -33,6 +32,9 @@ namespace ReyEngine{
       Button(const std::string& text) {
          setText(text);
          acceptsHover = true;
+      }
+      void _init() override {
+         setMinSize(measureText(text, getTheme().font) + Size<float>(10, 10));
       }
       void _applyTheme(const ColorPack& colorPack) {
          theme->background.colorPrimary = std::get<0>(colorPack);
@@ -70,9 +72,12 @@ namespace ReyEngine{
       PushButton(const std::string& text="Push Button")
       : Button(text)
       {
-         _applyTheme(PUSHBUTTON_COLORS);
       }
    protected:
+      void _init() override {
+         Button::_init();
+         _applyTheme(PUSHBUTTON_COLORS);
+      }
       void _on_up(bool mouseEscaped) override;
       void render2D() const override{_render2D();}
    };

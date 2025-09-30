@@ -55,7 +55,7 @@ void Button::_render2D() const {
     ColorRGBA textColor;
     if (enabled) {
        backgroundColor = theme->background.colorPrimary;
-       textColor = theme->font.color;
+       textColor = theme->font->color;
        if (down) {
           backgroundColor = theme->background.colorTertiary;
        } else if (isHovered()){
@@ -67,7 +67,7 @@ void Button::_render2D() const {
     }
     drawRectangleRounded(getRect().toSizeRect(), theme->outline.roundness, SEGMENTS, backgroundColor);
     drawRectangleRoundedLines(getRect().toSizeRect().embiggen(-THICKNESS), theme->outline.roundness, SEGMENTS, THICKNESS, COLORS::black);
-    drawTextCentered(text, getSizeRect().center(), theme->font, textColor, theme->font.size, theme->font.spacing);
+    drawTextCentered(text, getSizeRect().center(), *theme->font, textColor, theme->font->size, theme->font->spacing);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

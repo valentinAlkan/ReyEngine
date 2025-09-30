@@ -36,7 +36,8 @@ namespace ReyEngine::FileSystem {
       [[nodiscard]] bool exists() const {return std::filesystem::exists(_path);};
       [[nodiscard]] std::string tail() const {return _path.filename().string();}
       [[nodiscard]] std::string head() const {if (_path.has_parent_path())return _path.parent_path().string(); return {FILESYSTEM_PATH_SEP, 1};}
-      [[nodiscard]] std::optional<FileHandle> toFile() const;
+      [[nodiscard]] File toFile() const;
+      [[nodiscard]] Directory toDir() const;
       [[nodiscard]] std::string abs() const {return std::filesystem::absolute(_path).string();}
       [[nodiscard]] std::string str() const {return abs();}
       [[nodiscard]] std::string canonical() const {return std::filesystem::canonical(_path).string();}
@@ -48,8 +49,12 @@ namespace ReyEngine::FileSystem {
       [[nodiscard]] bool isDirectory() const {return _pathType == DIRECTORY;}
 //      static void overwrite(Path& existingObject, Path& newObject);
 
-      inline Path& operator+=(const Path& rhs) {_path /= rhs._path; return *this;}
-      inline Path operator+(const Path& rhs) const {return (_path / rhs._path).string();}
+      inline Path& operator/=(const Path& rhs) {_path /= rhs._path; return *this;}
+      inline Path& operator/=(const char* rhs) {_path /= rhs; return *this;}
+      inline Path& operator/=(const std::string& rhs) {_path /= rhs; return *this;}
+      inline Path operator/(const Path& rhs) const {return (_path / rhs._path).string();}
+      inline Path operator/(const char* rhs) const {return (_path / rhs).string();}
+      inline Path operator/(const std::string& rhs) const {return (_path / rhs).string();}
 //      inline Path operator+(const char* rhs) const {return {*this + std::string(rhs)};}
 //      inline Path operator+(const std::string& rhs) const {return {_path.string() + rhs};}
       explicit inline operator bool() const {return !_path.empty();}

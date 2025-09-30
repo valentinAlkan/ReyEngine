@@ -127,20 +127,21 @@ namespace ReyEngine {
          background.colorHighlight = Colors::blue;
          foreground.colorPrimary = Colors::black;
          foreground.colorDisabled = Colors::white;
+         font = getDefaultFont();
       }
 
       Style::StyleRole background;
       Style::StyleRole foreground;
       Style::StyleRole highlight;
       Style::StyleRole outline;
-      ReyEngine::ReyEngineFont font;
+      std::shared_ptr<ReyEngine::ReyEngineFont> font;
       Style::Margins<float> layoutMargins;
       InputInterface::MouseCursor cursor;
       float segments = 5; //used for roundness
 
       //Set the size of the font
       void setFontSize(float size){
-         font.size = size;
+         font->size = size;
       }
    };
 }

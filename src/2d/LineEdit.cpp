@@ -9,7 +9,7 @@ void LineEdit::render2D() const {
    drawRectangle(getRect().toSizeRect(), theme->background.colorTertiary);
 
    auto& font = theme->font;
-   auto textheight = font.size;
+   auto textheight = font->size;
    //available vertical height
    float availableHeight= getRect().height;
    float textPosV = ((availableHeight - textheight) / 2);
@@ -51,7 +51,7 @@ void LineEdit::render2D() const {
                caretHPos = getWidth() - 2;
             }
          }
-         drawLine({{caretHPos, 2}, {caretHPos, getHeight() - 2}}, 2, theme->font.color);
+         drawLine({{caretHPos, 2}, {caretHPos, getHeight() - 2}}, 2, theme->font->color);
       }
    }
 //   if (_isModal && getFrameCounter() % 60 == 0){
@@ -144,6 +144,12 @@ Widget* LineEdit::_unhandled_input(const InputEvent& event) {
    }
    return nullptr;
 }
+
+///////////////////////////////////////////////////////////////////////////////////////
+void LineEdit::_init() {
+   setMaxSize(std::numeric_limits<float>::max(), measureText(_defaultText, theme->font).y);
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////
 void LineEdit::_on_focus_gained() {
    _isEditing = true;

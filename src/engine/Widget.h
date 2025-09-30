@@ -40,8 +40,7 @@ namespace ReyEngine {
          Widget* handler = nullptr;
       };
 
-      Widget(): theme(new Theme){
-      }
+      Widget()= default;
       ~Widget() override{
          if constexpr (isDebugBuild) {
             std::cout << "Goodbye from " << getName() << "!!" << std::endl;

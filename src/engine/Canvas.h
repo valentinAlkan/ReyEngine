@@ -50,6 +50,11 @@ namespace ReyEngine {
          _isCanvas = true;
          camera.zoom = 1.0f;
          camera.target = (Vector2)(size / 2);
+         _inputFilter = InputFilter::PROCESS_AND_PUBLISH;
+                                                   //canvas's are process publish by default because they explicitly
+                                                   //dispatch to children as part of their functionality. So
+                                                   //this setting is only used after they have alreadey dispatched to
+                                                   //children.
       }
       ~Canvas() override = default;
       enum class Viewport{FOREGRUOND, BACKGROUND};
@@ -327,9 +332,9 @@ namespace ReyEngine {
    //         }
 
          //subcanvases do some funky stuff so they need special handling
-         if (processTransformer.subCanvas && processTransformer.subCanvas != this){
-               handled = processTransformer.subcanvasProcess();
-               //does not dispatch to children as this is handled explicitly by canvas
+         if (processTransformer.subCanvas && processTransformer.subCanvas != this) {
+            handled = processTransformer.subcanvasProcess();
+            //does not dispatch to children as this is handled explicitly by canvas
          } else {
             //render process (self-first) with child dispatch
             if constexpr (std::is_same_v<ProcessType, RenderProcess>) {
@@ -354,12 +359,13 @@ namespace ReyEngine {
                      case InputFilter::PUBLISH_ONLY: handled = publish(); RETURN; break;
                      case InputFilter::PASS_AND_PROCESS: handled = pass(); RETURN; handled = process(); RETURN; break;
                      case InputFilter::PROCESS_AND_PASS: handled = process(); RETURN; handled = pass(); RETURN; break;
-                     case InputFilter::PROCESS_AND_STOP: handled = process(); RETURN; break;
+                     case InputFilter::PROCESS_AND_STOP: handled = process(); RETURN; return this;
+                     case InputFilter::PROCESS_AND_PUBLISH: handled = process(); RETURN; handled = publish(); RETURN; break;
                      case InputFilter::IGNORE_AND_PASS: handled = pass(); RETURN; break;
-                     case InputFilter::IGNORE_AND_STOP: break;
+                     case InputFilter::IGNORE_AND_STOP: return this;
                      case InputFilter::PUBLISH_AND_PASS: handled = publish(); RETURN; handled = pass(); RETURN; break;
                      case InputFilter::PASS_AND_PUBLISH: handled = pass(); RETURN; handled = publish(); RETURN; break;
-                     case InputFilter::PUBLISH_AND_STOP: handled = publish(); RETURN; break;
+                     case InputFilter::PUBLISH_AND_STOP: handled = publish(); RETURN; return this;
                      case InputFilter::PASS_PUBLISH_PROCESS: handled = pass(); RETURN; handled = publish(); RETURN; handled = process(); RETURN; break;
                      case InputFilter::PASS_PROCESS_PUBLISH: handled = pass();  RETURN; handled = process(); RETURN; handled = publish(); RETURN; break;
                      case InputFilter::PROCESS_PUBLISH_PASS: handled = process(); RETURN; handled = publish(); RETURN; handled = pass(); RETURN; break;

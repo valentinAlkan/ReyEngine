@@ -165,7 +165,8 @@ int main() {
          auto layoutr = make_child<Layout>(mainLayout, "Layoutr", Layout::LayoutDir::HORIZONTAL);
 
          // add some children to the layout
-         auto subCanvasHolder = make_child<Layout>(layoutl, "SubCanvasHolder", Layout::LayoutDir::VERTICAL);
+         auto subcanvas = make_child<Canvas>(layoutl, "SubCanvas");
+         make_child<PosTestWidget>(subcanvas, "SubCanvasTestWidget", "test")->setPosition({100, 100});
          auto scrollArea = make_child<ScrollArea>(layoutl, "MainScrollArea");
          auto tabHolder = make_child<Layout>(layoutr, "TabLayout", Layout::LayoutDir::VERTICAL);
          auto widgetsHolder = make_child<Layout>(layoutr, "WidgetsLayout", Layout::LayoutDir::VERTICAL);
@@ -313,10 +314,10 @@ int main() {
 
          // add a subcanvas
          {
-            auto subcanvas = make_child<Canvas>(subCanvasHolder, "SubCanvas");
-            subcanvas->setAnchoring(ReyEngine::Anchor::FILL);
-            //add a label to the subcanvas
-            make_child<PosTestWidget>(subcanvas, "SubCanvasTestWidget", "test")->setPosition({100, 100});
+//            auto subcanvas = make_child<Canvas>(subCanvasHolder, "SubCanvas");
+//            subcanvas->setAnchoring(ReyEngine::Anchor::FILL);
+//            //add a label to the subcanvas
+//            make_child<PosTestWidget>(subcanvas, "SubCanvasTestWidget", "test")->setPosition({100, 100});
          }
 
          // add a scroll area

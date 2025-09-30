@@ -11,13 +11,7 @@ namespace ReyEngine{
       REYENGINE_OBJECT(Label)
       Label(const std::string& text)
       : text(text)
-      {
-         if (auto expandOpt = needsExpand()){
-            applyRect({getPos(), expandOpt.value()});
-            minSize = expandOpt.value();
-         }
-         theme->background.fill = Style::Fill::NONE;
-      }
+      {}
       void render2D() const override{
          //todo: scissor text
          auto& outline = theme->background.outline;
@@ -74,6 +68,13 @@ namespace ReyEngine{
       std::string getText(){return text;}
 
    protected:
+      void _init() override {
+         if (auto expandOpt = needsExpand()){
+            applyRect({getPos(), expandOpt.value()});
+            minSize = expandOpt.value();
+         }
+         theme->background.fill = Style::Fill::NONE;
+      }
       inline ReyEngine::Rect<double> calculateBoundingRect(){
          auto textSize = measureText();
          auto newSize = textSize.clamp(minSize, maxSize);
@@ -88,7 +89,7 @@ namespace ReyEngine{
          }
          return std::nullopt;
       };
-      inline ReyEngine::Size<double> measureText() const {return theme->font.measure(text);}
+      inline ReyEngine::Size<R_FLOAT> measureText() const {return theme->font->measure(text);}
       std::string text;
    };
 }

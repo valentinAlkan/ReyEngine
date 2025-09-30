@@ -22,6 +22,7 @@ void Widget::__on_added_to_tree() {
       }
       parent = parent->getParent();
    }
+   theme = _parentWidget && _parentWidget->theme ? _parentWidget->theme : make_shared<Theme>();
    Internal::ReyObject::__on_added_to_tree();
 }
 

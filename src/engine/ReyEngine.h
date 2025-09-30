@@ -887,7 +887,7 @@ namespace ReyEngine {
       }
 
       [[nodiscard]] inline std::string toString() const {return Vec4(x,y,width,height).toString();}
-      inline static ReyEngine::Rect<T> fromString(const std::string& s){Vec4<T>::fromString(s);}
+      inline static Rect<T> fromString(const std::string& s){Vec4<T>::fromString(s);}
       friend std::ostream& operator<<(std::ostream& os, const Rect<T>& r){
          os << r.toString();
          return os;
@@ -897,10 +897,10 @@ namespace ReyEngine {
       [[nodiscard]] constexpr inline Pos<T> pos() const {return {x, y};}
       [[nodiscard]] constexpr inline Size<T> size() const {return {width, height};}
       [[nodiscard]] constexpr inline Rect<T> toSizeRect() const {return {0,0,width, height};}
-      constexpr inline Rect& setSize(const ReyEngine::Size<T>& size){width = size.x; height = size.y; return *this;}
+      constexpr inline Rect& setSize(const Size<T>& size){width = size.x; height = size.y; return *this;}
       constexpr inline Rect& setHeight(T size){height = size; return *this;}
       constexpr inline Rect& setWidth(T size){width = size; return *this;}
-      constexpr inline Rect& setPos(const ReyEngine::Pos<T>& pos){x = pos.x; y = pos.y; return *this;}
+      constexpr inline Rect& setPos(const Pos<T>& pos){x = pos.x; y = pos.y; return *this;}
 
       //return the smallest rect that contains both rects a and b
       [[nodiscard]] constexpr inline Rect getBoundingRect(const Rect& other) const {
@@ -1264,16 +1264,16 @@ namespace ReyEngine {
    };
 
 //   struct CircleProperty : public Property<Circle>{
-//      using Property<ReyEngine::Circle>::operator=;
-//      CircleProperty(const std::string& instanceName,  ReyEngine::Circle&& defaultvalue=Circle({},0))
-//      : Property<ReyEngine::Circle>(instanceName, PropertyTypes::Color, std::move(defaultvalue))
+//      using Property<Circle>::operator=;
+//      CircleProperty(const std::string& instanceName,  Circle&& defaultvalue=Circle({},0))
+//      : Property<Circle>(instanceName, PropertyTypes::Color, std::move(defaultvalue))
 //      {}
 //      std::string toString() const override {
 //         auto fvec = value.center.getElements();
 //         fvec.push_back(value.radius);
 //         return string_tools::listJoin(fvec);
 //      }
-//      ReyEngine::Circle fromString(const std::string& str) override {
+//      Circle fromString(const std::string& str) override {
 //         auto split = string_tools::fromList(str);
 //         return {Pos<R_FLOAT>(STOF(split.at(0)), STOF(split.at(1))), STOF(split.at(2))};
 //      }
@@ -1548,20 +1548,20 @@ namespace ReyEngine {
       unsigned char a;
    };
 
-//   struct ColorProperty : public Property<ReyEngine::ColorRGBA>{
-//      using Property<ReyEngine::ColorRGBA>::operator=;
-//      ColorProperty(const std::string& instanceName,  ReyEngine::ColorRGBA defaultvalue)//pass color by copy
-//      : Property<ReyEngine::ColorRGBA>(instanceName, PropertyTypes::Color, std::move(defaultvalue))
+//   struct ColorProperty : public Property<ColorRGBA>{
+//      using Property<ColorRGBA>::operator=;
+//      ColorProperty(const std::string& instanceName,  ColorRGBA defaultvalue)//pass color by copy
+//      : Property<ColorRGBA>(instanceName, PropertyTypes::Color, std::move(defaultvalue))
 //      {}
 //      std::string toString() const override {return "{" + std::to_string(value.r) + ", " + std::to_string(value.g) + ", " + std::to_string(value.b) + ", "  + std::to_string(value.a) + "}";}
-//      ReyEngine::ColorRGBA fromString(const std::string& str) override {
+//      ColorRGBA fromString(const std::string& str) override {
 //         auto split = string_tools::fromList(str);
 //         return {std::stoi(split[0]), std::stoi(split[1]), std::stoi(split[2]), std::stoi(split[3])};
 //      }
 //   };
 
 
-#define COLORS ReyEngine::Colors
+#define COLORS Colors
    namespace Colors{
       static constexpr ColorRGBA gray = {130, 130, 130, 255};
       static constexpr ColorRGBA disabledGray = {230, 230, 230, 255};
@@ -1590,23 +1590,25 @@ namespace ReyEngine {
    };
 
    struct ReyEngineFont{
-      ReyEngineFont(const std::string& fontFile="");
+      ReyEngineFont(const std::string& fontFile="res://engine/resources/FireCode-Regular.ttf", int fontSize=20);
+      ReyEngineFont(const ReyEngineFont&) = delete;
+      ReyEngineFont& operator=(const ReyEngineFont&) = delete;
+      ReyEngineFont& operator=(ReyEngineFont&& rhs) noexcept ;
       ~ReyEngineFont();
       Font font;
-      R_FLOAT size = 20;
+      int size = 20;
       R_FLOAT spacing = 1;
-      bool isDefault = false;
+      bool isDefault = true;
       FontAlignment fontAlignment;
-      ReyEngine::ColorRGBA color = COLORS::black;
+      ColorRGBA color = COLORS::black;
       std::string fileName;
       [[nodiscard]] Size<R_FLOAT> measure(const std::string& text) const;
-      ReyEngineFont& operator=(const ReyEngineFont& rhs);
 //      inline ReyEngineFont& operator=(const ReyEngineFont& rhs){font = rhs.font; size = rhs.size; spacing = rhs.spacing; color = rhs.color; fileName = rhs.fileName; isDefault = rhs.isDefault; return *this;}
 //      std::string toString();
 //      static ReyEngineFont fromString(const std::string& str);
    };
-   ReyEngineFont getDefaultFont(std::optional<R_FLOAT> fontSize = std::nullopt);
-   ReyEngineFont getFont(const std::string& fileName);
+   std::shared_ptr<ReyEngineFont> getDefaultFont(std::optional<R_FLOAT> fontSize = std::nullopt);
+//   std::shared_ptr<ReyEngineFont> getFont(const std::string& fileName);
 
    struct ReyTexture;
    struct ReyImage{
@@ -1714,35 +1716,41 @@ namespace ReyEngine {
 
    CanvasSpace<Pos<R_FLOAT>> getScreenCenter();
    Size<int> getScreenSize();
-   ReyEngine::Size<float> getWindowSize();
-   void setWindowSize(ReyEngine::Size<float>);
-   ReyEngine::Pos<float> getWindowPosition();
-   void setWindowPosition(ReyEngine::Pos<float>);
+   Size<float> getWindowSize();
+   void setWindowSize(Size<float>);
+   Pos<float> getWindowPosition();
+   void setWindowPosition(Pos<float>);
    void maximizeWindow();
    void minimizeWindow();
    void drawText(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font);
-   void drawText(const std::string& text, const ReyEngine::Pos<R_FLOAT>& pos, const ReyEngine::ReyEngineFont& font, const ReyEngine::ColorRGBA& color, R_FLOAT size, R_FLOAT spacing);
+   void drawText(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font, const ColorRGBA& color, R_FLOAT size, R_FLOAT spacing);
    void drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font);
-   void drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font, const ReyEngine::ColorRGBA& color, R_FLOAT size, R_FLOAT spacing);
+   void drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font, const ColorRGBA& color, R_FLOAT size, R_FLOAT spacing);
    void drawTextRelative(const std::string& text, const Pos<R_FLOAT>& relPos, const ReyEngineFont& font);
-   void drawRectangle(const Rect<R_FLOAT>&, const ReyEngine::ColorRGBA& color);
-   void drawRectangleRounded(const Rect<float>&, float roundness, int segments, const ReyEngine::ColorRGBA& color);
-   void drawRectangleLines(const Rect<float>&, float lineThick, const ReyEngine::ColorRGBA& color);
-   void drawRectangleRoundedLines(const Rect<float>&, float roundness, int segments, float lineThick, const ReyEngine::ColorRGBA& color);
-   void drawRectangleGradientV(const Rect<R_FLOAT>&, const ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2);
-   void drawRectangleGradientH(const Rect<R_FLOAT>&, const ReyEngine::ColorRGBA& color1, const ReyEngine::ColorRGBA& color2);
-   void drawCircle(const Circle&, const ReyEngine::ColorRGBA&  color);
-   void drawCircleLines(const Circle&, const ReyEngine::ColorRGBA&  color);
-   void drawCircleSector(const CircleSector&, const ReyEngine::ColorRGBA&  color, int segments);
-   void drawCircleSectorLines(const CircleSector&, const ReyEngine::ColorRGBA&  color, int segments);
-   void drawLine(const Line<R_FLOAT>&, float lineThick, const ReyEngine::ColorRGBA& color);
-   void drawArrow(const Line<R_FLOAT>&, float lineThick, const ReyEngine::ColorRGBA& color, float headSize=20); //Head drawn at A
-   void drawArrowHead(const Line<R_FLOAT>&, float lineThick, const ReyEngine::ColorRGBA& color, float headSize=20); //Head drawn at A
-   void drawTexture(const ReyTexture& texture, const Rect<R_FLOAT>& source, const Rect<R_FLOAT>& dest, const ReyEngine::ColorRGBA& tint);
+   void drawText(const std::string& text, const Pos<R_FLOAT>& pos, const std::shared_ptr<ReyEngineFont>& font);
+   void drawText(const std::string& text, const Pos<R_FLOAT>& pos, const std::shared_ptr<ReyEngineFont>& font, const ColorRGBA& color, R_FLOAT size, R_FLOAT spacing);
+   void drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos, const std::shared_ptr<ReyEngineFont>& font);
+   void drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos, const std::shared_ptr<ReyEngineFont>& font, const ColorRGBA& color, R_FLOAT size, R_FLOAT spacing);
+   void drawTextRelative(const std::string& text, const Pos<R_FLOAT>& relPos, const std::shared_ptr<ReyEngineFont>& font);
+   void drawRectangle(const Rect<R_FLOAT>&, const ColorRGBA& color);
+   void drawRectangleRounded(const Rect<float>&, float roundness, int segments, const ColorRGBA& color);
+   void drawRectangleLines(const Rect<float>&, float lineThick, const ColorRGBA& color);
+   void drawRectangleRoundedLines(const Rect<float>&, float roundness, int segments, float lineThick, const ColorRGBA& color);
+   void drawRectangleGradientV(const Rect<R_FLOAT>&, const ColorRGBA& color1, const ColorRGBA& color2);
+   void drawRectangleGradientH(const Rect<R_FLOAT>&, const ColorRGBA& color1, const ColorRGBA& color2);
+   void drawCircle(const Circle&, const ColorRGBA&  color);
+   void drawCircleLines(const Circle&, const ColorRGBA&  color);
+   void drawCircleSector(const CircleSector&, const ColorRGBA&  color, int segments);
+   void drawCircleSectorLines(const CircleSector&, const ColorRGBA&  color, int segments);
+   void drawLine(const Line<R_FLOAT>&, float lineThick, const ColorRGBA& color);
+   void drawArrow(const Line<R_FLOAT>&, float lineThick, const ColorRGBA& color, float headSize=20); //Head drawn at A
+   void drawArrowHead(const Line<R_FLOAT>&, float lineThick, const ColorRGBA& color, float headSize=20); //Head drawn at A
+   void drawTexture(const ReyTexture& texture, const Rect<R_FLOAT>& source, const Rect<R_FLOAT>& dest, const ColorRGBA& tint);
    void drawRenderTarget(const RenderTarget&, const Pos<R_FLOAT>&, const ColorRGBA&);
    void drawRenderTargetRect(const RenderTarget&, const Rect<R_FLOAT>&, const Rect<R_FLOAT>&, const ColorRGBA&);
    inline float getFrameDelta() {return GetFrameTime();}
    inline Size<R_FLOAT> measureText(const std::string& text, const ReyEngineFont& font){return MeasureTextEx(font.font, text.c_str(), font.size, font.spacing);}
+   inline Size<R_FLOAT> measureText(const std::string& text, const std::shared_ptr<ReyEngineFont>& font){return MeasureTextEx(font->font, text.c_str(), font->size, font->spacing);}
    inline void printMatrix(const Transform2D& t) { printMatrix(t.matrix);}
 
 
@@ -1953,7 +1961,7 @@ namespace InputInterface{
    constexpr inline std::optional<char> toChar(KeyCode keyCode){ return (static_cast<int>(keyCode) <= 127) ? std::optional<char>{static_cast<char>(static_cast<int>(keyCode))} : std::nullopt;}
 
 //   // Define the friend function
-//   ReyEngine::Logger::Stream& operator<<(const InputInterface::KeyCode& keyCode, ReyEngine::Logger& logger) {
+//   Logger::Stream& operator<<(const InputInterface::KeyCode& keyCode, Logger& logger) {
 //      auto optKey = toChar(keyCode);
 //      logger << (optKey ? std::string(optKey.value(), 1) : std::string("Unsupported Char")) << std::endl;
 //   }

@@ -81,13 +81,72 @@ void ReyEngine::drawText(const std::string& text, const Pos<R_FLOAT>& pos, const
    DrawTextPro(font.font, text.c_str(), {(float)pos.x, (float)pos.y}, {0, 0}, 0, size, spacing, color);
 }
 
+
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawRectangle(const Rect<R_FLOAT>& r, const ReyEngine::ColorRGBA& color) {
+void ReyEngine::drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font){
+   drawTextCentered(text, pos, font, font.color, font.size, font.spacing);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawTextCentered(const std::string &text, const Pos<float> &pos, const ReyEngineFont &font, const ReyEngine::ColorRGBA &color, float size, float spacing) {
+   auto textWidth = MeasureText(text.c_str(), size);
+   float newX = (float)pos.x - (float)textWidth / 2;
+   float newY = (float)pos.y - (float)size / 2;
+   drawText(text, {newX, newY}, font, color, size, spacing);
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawTextRelative(const std::string& text, const Pos<R_FLOAT>& relPos, const ReyEngineFont& font){
+   //draw text relative as a percentage of the screen
+   Vec2<R_FLOAT> screenSize = {(float)GetScreenWidth(), (float)GetScreenHeight()};
+   auto newX = (float)(screenSize.x * relPos.x / 100.0);
+   auto newY = (float)(screenSize.y * relPos.y / 100.0);
+   drawText(text, {newX, newY}, font);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawText(const std::string &text, const Pos<R_FLOAT>& pos, const std::shared_ptr<ReyEngineFont>& font) {
+   drawText(text, pos, font, font->color, font->size, font->spacing);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawText(const std::string& text, const Pos<R_FLOAT>& pos, const std::shared_ptr<ReyEngineFont>& font, const ColorRGBA& color, R_FLOAT size, R_FLOAT spacing) {
+   DrawTextPro(font->font, text.c_str(), {(float)pos.x, (float)pos.y}, {0, 0}, 0, size, spacing, color);
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos, const std::shared_ptr<ReyEngineFont>& font){
+   drawTextCentered(text, pos, font, font->color, font->size, font->spacing);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawTextCentered(const std::string &text, const Pos<float> &pos, const std::shared_ptr<ReyEngineFont>& font, const ColorRGBA &color, float size, float spacing) {
+   auto textWidth = MeasureText(text.c_str(), size);
+   float newX = (float)pos.x - (float)textWidth / 2;
+   float newY = (float)pos.y - (float)size / 2;
+   drawText(text, {newX, newY}, font, color, size, spacing);
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawTextRelative(const std::string& text, const Pos<R_FLOAT>& relPos, const std::shared_ptr<ReyEngineFont>& font){
+   //draw text relative as a percentage of the screen
+   Vec2<R_FLOAT> screenSize = {(float)GetScreenWidth(), (float)GetScreenHeight()};
+   auto newX = (float)(screenSize.x * relPos.x / 100.0);
+   auto newY = (float)(screenSize.y * relPos.y / 100.0);
+   drawText(text, {newX, newY}, font);
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawRectangle(const Rect<R_FLOAT>& r, const ColorRGBA& color) {
    DrawRectangle((int)r.x, (int)r.y, (int)r.width, (int)r.height, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawRectangleRounded(const Rect<R_FLOAT>& r, float roundness, int segments, const ReyEngine::ColorRGBA& color) {
+void ReyEngine::drawRectangleRounded(const Rect<R_FLOAT>& r, float roundness, int segments, const ColorRGBA& color) {
    DrawRectangleRounded({r.x, r.y, r.width, r.height}, roundness, segments, color);
 }
 
@@ -157,29 +216,6 @@ void ReyEngine::drawArrowHead(const Line<R_FLOAT>& line, float lineThick, const 
 //   DrawLineEx((Vector2)headline.a, (Vector2)headline.b, lineThick, color);
 //   headline = pctLine.rotate(pctLine.a, -rotation);
 //   DrawLineEx((Vector2)headline.a, (Vector2)headline.b, lineThick, color);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font){
-   drawTextCentered(text, pos, font, font.color, font.size, font.spacing);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawTextCentered(const std::string &text, const Pos<float> &pos, const ReyEngineFont &font, const ReyEngine::ColorRGBA &color, float size, float spacing) {
-   auto textWidth = MeasureText(text.c_str(), size);
-   float newX = (float)pos.x - (float)textWidth / 2;
-   float newY = (float)pos.y - (float)size / 2;
-   drawText(text, {newX, newY}, font, color, size, spacing);
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawTextRelative(const std::string& text, const Pos<R_FLOAT>& relPos, const ReyEngineFont& font){
-   //draw text relative as a percentage of the screen
-   Vec2<R_FLOAT> screenSize = {(float)GetScreenWidth(), (float)GetScreenHeight()};
-   auto newX = (float)(screenSize.x * relPos.x / 100.0);
-   auto newY = (float)(screenSize.y * relPos.y / 100.0);
-   drawText(text, {newX, newY}, font);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -280,7 +316,8 @@ template<> Circle Rect<float>::inscribe() const {return {{(R_FLOAT)(x + width / 
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyEngine::ReyEngineFont::ReyEngineFont(const std::string& fontFile){
+ReyEngine::ReyEngineFont::ReyEngineFont(const std::string& fontFile, int fontSize){
+   fileName = fontFile;
    if (fontFile.empty()) {
       font = GetFontDefault();
    } else {
@@ -290,11 +327,11 @@ ReyEngine::ReyEngineFont::ReyEngineFont(const std::string& fontFile){
          font = GetFontDefault();
       } else {
          fileName = fontFile;
-         font = LoadFontEx(p.abs().c_str(), 48, 0, 0);
-         SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);
-         GenTextureMipmaps(&font.texture);
+         font = LoadFontEx(p.abs().c_str(), fontSize, 0, 0);
+       isDefault = false;
       }
    }
+   size = fontSize;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -305,22 +342,23 @@ ReyEngineFont::~ReyEngineFont() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyEngineFont ReyEngine::getDefaultFont(std::optional<R_FLOAT> fontSize) {
-   auto retval = ReyEngineFont();
+std::shared_ptr<ReyEngineFont> ReyEngine::getDefaultFont(std::optional<R_FLOAT> fontSize) {
+   static auto retval = make_shared<ReyEngineFont>();
    if (fontSize){
-      retval.size = fontSize.value();
+      retval->size = fontSize.value();
    }
    return retval;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyEngineFont &ReyEngineFont::operator=(const ReyEngineFont &rhs)
-{
+ReyEngineFont &ReyEngineFont::operator=(ReyEngineFont&& rhs) noexcept {
    size = rhs.size;
    spacing = rhs.spacing;
    isDefault = rhs.isDefault;
    fileName = rhs.fileName;
-   font = LoadFont(fileName.c_str());
+   font = rhs.font;
+   rhs.font.glyphs = nullptr;
+   rhs.font.recs = nullptr;
    return *this;
 }
 

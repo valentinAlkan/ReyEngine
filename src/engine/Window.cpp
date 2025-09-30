@@ -14,6 +14,7 @@ constexpr bool PRINT_MOUSEUP = false;
 constexpr bool PRINT_MOUSEDOWN = false;
 constexpr bool PRINT_HOVER= false;
 constexpr bool PRINT_MOTION = false;
+constexpr bool PRINT_WHEEL = true;
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -192,7 +193,8 @@ void Window::exec(){
          auto wheel = InputManager::getMouseWheel();
          if (wheel) {
             InputEventMouseWheel event(this, InputManager::getMousePos().get(), wheel);
-            canvas->__process_unhandled_input(event);
+            auto handledBy = canvas->__process_unhandled_input(event);
+            if constexpr (PRINT_WHEEL) if (handledBy) Logger::info() << "Mouse wheel handled by " << handledBy->getName() << endl;
          }
       }
 

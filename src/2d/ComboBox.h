@@ -45,7 +45,6 @@ namespace ReyEngine {
       REYENGINE_OBJECT(ComboBox)
       ComboBox() {
          acceptsHover = true;
-         setMaxSize(std::numeric_limits<float>::max(), theme->font.size);
       }
       constexpr ComboBox(const auto& items)
       : ComboBox()
@@ -61,7 +60,7 @@ namespace ReyEngine {
       }
       void clear() {
          fields.clear();
-         _selectionMenuRect = Rect<float>(0, theme->font.size, getWidth(), 5);
+         _selectionMenuRect = Rect<float>(0, theme->font->size, getWidth(), 5);
          _selectionMenuItemRects.clear();
       }
       void eraseItem(size_t index) {
@@ -144,7 +143,7 @@ namespace ReyEngine {
 
          auto& font = theme->font;
 
-         auto textheight = font.size;
+         auto textheight = font->size;
          //available vertical height
          auto availableHeight= getRect().height;
          auto textPosV = (availableHeight - textheight) / 2;
@@ -169,6 +168,9 @@ namespace ReyEngine {
       }
 
    protected:
+      void _init() override {
+         setMaxSize(std::numeric_limits<float>::max(), theme->font->size);
+      }
       Widget* _unhandled_input(const InputEvent& event) override {
          auto closeMenu = [this]() {
             setModal(false);
@@ -178,13 +180,13 @@ namespace ReyEngine {
 
          auto openMenu = [this]() {
             setModal(true);
-            auto textSize = theme->font.size;
+            auto textSize = theme->font->size;
             //build the menu rect
             _selectionMenuRect = Rect<float>(0, getHeight(), getWidth(), textSize * fields.size());
             //build the item rects
             _selectionMenuItemRects.clear();
             for (int i = 0; i < fields.size(); i++) {
-               fieldSelectionRectHeight = theme->font.size;
+               fieldSelectionRectHeight = theme->font->size;
                auto itemWidth = getRect().width;
                auto itemY = getRect().height + (i * fieldSelectionRectHeight);
                _selectionMenuItemRects.emplace_back(0, itemY, itemWidth, fieldSelectionRectHeight);

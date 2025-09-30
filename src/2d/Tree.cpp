@@ -95,7 +95,7 @@ void Tree::render2D() const{
    for (auto it = _visibleItems.begin(); it != _visibleItems.end(); it++) {
       auto& itemMeta = *it;
       auto& item = itemMeta->item;
-      pos += Pos<float>(0, theme->font.size);
+      pos += Pos<float>(0, theme->font->size);
 
       if (_allowHighlight) {
          //highlight the hovered row
@@ -106,19 +106,19 @@ void Tree::render2D() const{
          } else if (_hoveredImplDetails && _hoveredImplDetails.value()->visibleRowIndex == currentRow) {
             highlight = Colors::gray;
          }
-         if (highlight) drawRectangle({pos, {getWidth(), theme->font.size}}, highlight.value());
+         if (highlight) drawRectangle({pos, {getWidth(), (float)theme->font->size}}, highlight.value());
       }
 
       char c = item->expandable && !item->_children.empty() ? (item->expanded ? '-' : '+') : ' ';
       std::string expansionRegionText = c + std::string(generationOffset + item->_generation, c);
-      auto enabledColor = font.color;
+      auto enabledColor = font->color;
       constexpr ReyEngine::ColorRGBA disabledColor = {127, 127, 127, 255};
       if (!item->_enabled) {
-         font.color = disabledColor;
+         font->color = disabledColor;
       }
       drawText(expansionRegionText + item->getText(), pos, font);
       if (!item->_enabled) {
-         font.color = enabledColor;
+         font->color = enabledColor;
       }
       currentRow++;
    }
@@ -222,7 +222,7 @@ std::unique_ptr<TreeItem> Tree::takeItem(std::unique_ptr<TreeItem>&& other) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 std::optional<Tree::TreeItemImplDetails*> Tree::getImplDetailsAt(const Pos<float>& localPos) {
-   auto rowHeight = theme->font.size;
+   auto rowHeight = theme->font->size;
    int rowAt = localPos.y / rowHeight;
    if (rowAt < _visibleItems.size()) {
       return _visibleItems.at(rowAt);
@@ -245,7 +245,7 @@ void TreeItem::setGeneration(size_t generation){
 Size<float> Tree::measureContents() {
    Size<float> retval;
    for (const auto& item : _visibleItems){
-      auto itemSize = measureText(item->item->_text, getDefaultFont());
+      auto itemSize = measureText(item->item->_text, theme->font);
       if (itemSize.x > retval.x){
          retval.x = itemSize.x;
       }

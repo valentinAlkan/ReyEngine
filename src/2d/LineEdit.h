@@ -24,9 +24,7 @@ namespace ReyEngine {
 
       LineEdit(const std::string& defaultText = "Default")
       : _defaultText(defaultText)
-      {
-         setMaxSize(std::numeric_limits<float>::max(), measureText(defaultText, theme->font).y);
-      }
+      {}
 
       inline void clear(){ setText("");}
       void setText(const std::string&, bool noPublish=false);
@@ -34,6 +32,7 @@ namespace ReyEngine {
       void render2D() const override;
       std::string getText(){return _text;}
    protected:
+      void _init() override;
       void _on_focus_gained() override;
       void _on_focus_lost() override;
       void _on_rect_changed() override;

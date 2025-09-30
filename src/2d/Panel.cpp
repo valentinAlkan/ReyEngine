@@ -12,8 +12,6 @@ Panel::Panel()
 , REGION_SOUTH(stretchRegion[2])
 , REGION_WEST(stretchRegion[3])
 {
-   theme->background.fill = Style::Fill::SOLID;
-   theme->background.colorPrimary = ReyEngine::ColorRGBA(94, 142, 181, 255);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -66,6 +64,8 @@ void Panel::render2DEnd() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::_init() {
+   theme->background.fill = Style::Fill::SOLID;
+   theme->background.colorPrimary = ReyEngine::ColorRGBA(94, 142, 181, 255);
    _viewArea = make_child<Control>("__placementWidget");
    setAcceptsHover(true);
    //create subwidgets
@@ -80,7 +80,7 @@ void Panel::_init() {
 //   vlayout->setAnchoring(Anchor::FILL);
 //
 //   //cap menu bar size
-//   menuBar->setMaxSize({ReyEngine::MaxFloat, theme->font.size+4});
+//   menuBar->setMaxSize({ReyEngine::MaxFloat, theme->font->size+4});
 //   menuBar->getTheme().background.fill = Style::Fill::SOLID;
 //
 //   //add a spacer

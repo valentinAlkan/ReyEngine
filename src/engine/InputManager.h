@@ -210,6 +210,7 @@ namespace ReyEngine{
       PASS_AND_PUBLISH, //passes input to children and then publishes input to subscribers instead of handling it locally
       PROCESS_AND_PASS, //processes input locally first, and passes it to children if we can't use it locally
       PROCESS_AND_STOP, //processes input locally but does not pass it to children
+      PROCESS_AND_PUBLISH,
       IGNORE_AND_PASS, //passes input to children without handling it
       IGNORE_AND_STOP, //ignores input and does not pass or handle it
       PUBLISH_AND_PASS, //publishes input to subscribers instead of handling it locally

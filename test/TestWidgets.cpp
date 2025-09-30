@@ -14,7 +14,7 @@ void PosTestWidget::render2D() const {
 //   text << getRect().toString() << "\n";
 //   text << "someString = " << someString.value << "\n";
 //   text << "subProp = " << someString.subProp.value << "\n";
-//   drawText(text.str(), {0,0}, theme->font.value);
+//   drawText(text.str(), {0,0}, theme->font->value);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
