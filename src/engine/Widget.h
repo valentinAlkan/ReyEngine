@@ -140,7 +140,7 @@ namespace ReyEngine {
    #ifndef NDEBUG
       // Debug build
       static constexpr bool isDebugBuild = true;
-      std::string _name = "nobody";
+//      std::string _name = "nobody";
    #else
       static constexpr bool isDebugBuild = false;
    #endif

@@ -127,7 +127,7 @@ namespace ReyEngine {
          background.colorHighlight = Colors::blue;
          foreground.colorPrimary = Colors::black;
          foreground.colorDisabled = Colors::white;
-         font = getDefaultFont();
+         font = std::make_shared<ReyEngineFont>();
       }
 
       Style::StyleRole background;

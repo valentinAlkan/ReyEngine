@@ -1590,7 +1590,7 @@ namespace ReyEngine {
    };
 
    struct ReyEngineFont{
-      ReyEngineFont(const std::string& fontFile="res://engine/resources/FireCode-Regular.ttf", int fontSize=20);
+      ReyEngineFont(const std::string& fontFile="", int fontSize=20);
       ReyEngineFont(const ReyEngineFont&) = delete;
       ReyEngineFont& operator=(const ReyEngineFont&) = delete;
       ReyEngineFont& operator=(ReyEngineFont&& rhs) noexcept ;
@@ -1603,12 +1603,8 @@ namespace ReyEngine {
       ColorRGBA color = COLORS::black;
       std::string fileName;
       [[nodiscard]] Size<R_FLOAT> measure(const std::string& text) const;
-//      inline ReyEngineFont& operator=(const ReyEngineFont& rhs){font = rhs.font; size = rhs.size; spacing = rhs.spacing; color = rhs.color; fileName = rhs.fileName; isDefault = rhs.isDefault; return *this;}
-//      std::string toString();
-//      static ReyEngineFont fromString(const std::string& str);
+      static constexpr std::string_view DEFAULT_FONT_FILE = "FiraCode-Regular.ttf";
    };
-   std::shared_ptr<ReyEngineFont> getDefaultFont(std::optional<R_FLOAT> fontSize = std::nullopt);
-//   std::shared_ptr<ReyEngineFont> getFont(const std::string& fileName);
 
    struct ReyTexture;
    struct ReyImage{

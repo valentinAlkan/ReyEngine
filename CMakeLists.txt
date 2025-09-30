@@ -309,14 +309,14 @@ add_executable( cppTest
 ##########################################
 
 #font resources
-copy_file(resources/icons/document.png engine/resources)
-copy_file(resources/icons/folder.png engine/resources)
-copy_file(resources/fonts/FiraCode-Bold.ttf engine/resources)
-copy_file(resources/fonts/FiraCode-Light.ttf engine/resources)
-copy_file(resources/fonts/FiraCode-Medium.ttf engine/resources)
-copy_file(resources/fonts/FiraCode-Regular.ttf engine/resources)
-copy_file(resources/fonts/FiraCode-Retina.ttf engine/resources)
-copy_file(resources/fonts/FiraCode-SemiBold.ttf engine/resources)
+copy_file(resources/icons/document.png engine/resources/icons)
+copy_file(resources/icons/folder.png engine/resources/icons)
+copy_file(resources/fonts/FiraCode-Bold.ttf engine/resources/fonts)
+copy_file(resources/fonts/FiraCode-Light.ttf engine/resources/fonts)
+copy_file(resources/fonts/FiraCode-Medium.ttf engine/resources/fonts)
+copy_file(resources/fonts/FiraCode-Regular.ttf engine/resources/fonts)
+copy_file(resources/fonts/FiraCode-Retina.ttf engine/resources/fonts)
+copy_file(resources/fonts/FiraCode-SemiBold.ttf engine/resources/fonts)
 
 # test resources
 #copy_file(test/test.scn "")

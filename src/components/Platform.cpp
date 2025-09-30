@@ -109,6 +109,21 @@ string CrossPlatform::getExeDir() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+string CrossPlatform::getResourceDir() {
+   return getExeDir() + REYENGINE_FILESYSTEM_PATH_SEP + "engine" + REYENGINE_FILESYSTEM_PATH_SEP + "resources";
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+string CrossPlatform::getFontsDir() {
+   return getResourceDir() + REYENGINE_FILESYSTEM_PATH_SEP + "fonts";
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+string CrossPlatform::getIconsDir() {
+   return getResourceDir() + REYENGINE_FILESYSTEM_PATH_SEP + "icons";
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 string CrossPlatform::getExeName() {
    string exePath = getExePath();
 

@@ -61,12 +61,12 @@ struct PosTestWidget : public Widget {
       float ypos = 0;
       bool _isInsideAtRenderTime = getLocalMousePos().isInside(getSizeRect());
       drawRectangle(getSizeRect(), _isInsideAtRenderTime ? color : Colors::lightGray);
-      drawText(text, {0, ypos+=20}, getDefaultFont());
-      drawText("Pos = " + Pos<int>(getPos()).toString(), {0, ypos+=20}, getDefaultFont());
-      drawText("Siz = " + Size<int>(getSize()).toString(), {0, ypos+=20}, getDefaultFont());
-      drawText("G" + globalMousePos.toString(), {0, ypos+=20}, getDefaultFont());
-      drawText("L" + localMousePos.toString(), {0, ypos+=20}, getDefaultFont());
-      drawText(to_string(Application::getWindow(0).getFrameCount()), {0, ypos+=20}, getDefaultFont());
+      drawText(text, {0, ypos+=20}, theme->font);
+      drawText("Pos = " + Pos<int>(getPos()).toString(), {0, ypos+=20}, theme->font);
+      drawText("Siz = " + Size<int>(getSize()).toString(), {0, ypos+=20}, theme->font);
+      drawText("G" + globalMousePos.toString(), {0, ypos+=20}, theme->font);
+      drawText("L" + localMousePos.toString(), {0, ypos+=20}, theme->font);
+      drawText(to_string(Application::getWindow(0).getFrameCount()), {0, ypos+=20}, theme->font);
    }
 
 protected:
@@ -173,6 +173,16 @@ int main() {
          auto buttonHolder = make_child<Layout>(layoutr, "ButtonLayout", Layout::LayoutDir::VERTICAL);
          //add some other widgets
          {
+            auto lineedit = make_child<LineEdit>(widgetsHolder, "LineEdit", "Try clicking on this line edit");
+            auto combobox = make_child<ComboBox<int>>(widgetsHolder, "ComboBox");
+            combobox->addItems({"this", "are", "some", "items"});
+
+            auto lineEditCB = [&](const LineEdit::EventLineEditTextChanged& event) {
+               cout << "New Line Edit Text Old = " << event.oldText << endl;
+               cout << "New Line Edit Text New = " << event.newText << endl;
+            };
+            lineedit->subscribe<LineEdit::EventLineEditTextChanged>(lineedit, lineEditCB);
+
             auto slider = make_child<Slider>(widgetsHolder, "slider1", Slider::SliderType::HORIZONTAL);
             auto sliderReact = make_child<SliderReactWidget>(widgetsHolder, "sliderReact1");
             auto tree = make_child<Tree>(widgetsHolder, "tree");
@@ -188,15 +198,6 @@ int main() {
             };
             sliderReact->subscribe<Slider::EventSliderValueChanged>(slider, srCallback);
 
-            auto lineedit = make_child<LineEdit>(widgetsHolder, "LineEdit", "Try clicking on this line edit");
-            auto combobox = make_child<ComboBox<int>>(widgetsHolder, "ComboBox");
-            combobox->addItems({"this", "are", "some", "items"});
-
-            auto lineEditCB = [&](const LineEdit::EventLineEditTextChanged& event) {
-               cout << "New Line Edit Text Old = " << event.oldText << endl;
-               cout << "New Line Edit Text New = " << event.newText << endl;
-            };
-            lineedit->subscribe<LineEdit::EventLineEditTextChanged>(lineedit, lineEditCB);
          }
 
          //add some buttons

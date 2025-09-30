@@ -317,20 +317,20 @@ template<> Circle Rect<float>::inscribe() const {return {{(R_FLOAT)(x + width / 
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::ReyEngineFont::ReyEngineFont(const std::string& fontFile, int fontSize){
-   fileName = fontFile;
-   if (fontFile.empty()) {
-      font = GetFontDefault();
-   } else {
-      auto p = FileSystem::Path(fontFile);
-      if (!p.exists()) {
-         Logger::error() << "Invalid font file : " << p.abs() << endl;
-         font = GetFontDefault();
-      } else {
-         fileName = fontFile;
-         font = LoadFontEx(p.abs().c_str(), fontSize, 0, 0);
-       isDefault = false;
-      }
+   FileSystem::Path fontPath(fontFile);
+   if (fontFile.empty()){
+      fontPath = FileSystem::Path(CrossPlatform::getFontsDir()) / string(DEFAULT_FONT_FILE);
    }
+   if (!fontPath.exists()) {
+      Logger::error() << "Invalid font file : " << fontPath.abs() << endl;
+      font = GetFontDefault();
+      size = fontSize;
+      return;
+   }
+
+   fileName = fontFile;
+   font = LoadFontEx(fontPath.canonical().c_str(), fontSize, 0, 0);
+   isDefault = false;
    size = fontSize;
 }
 
@@ -339,15 +339,6 @@ ReyEngineFont::~ReyEngineFont() {
    if (!isDefault) {
       UnloadFont(font);
    }
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<ReyEngineFont> ReyEngine::getDefaultFont(std::optional<R_FLOAT> fontSize) {
-   static auto retval = make_shared<ReyEngineFont>();
-   if (fontSize){
-      retval->size = fontSize.value();
-   }
-   return retval;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
