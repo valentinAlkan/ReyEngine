@@ -35,6 +35,10 @@ namespace ReyEngine {
       void open();
       void close();
       std::vector<FileSystem::Directory> getSystemDirs();
+      std::optional<FileSystem::Path> extractPathFromItem(const TreeItem*) const;
+      auto getFileTypesFilter(){return _fileTypesFilter;}
+      void addFileTypesFilter(const std::string& ext){_fileTypesFilter.push_back(ext);}
+      void clearFileTypesFilter(){_fileTypesFilter.clear();}
    protected:
       class AddrBar;
       static constexpr char VAR_PATH[] = "PATH";
@@ -79,7 +83,8 @@ namespace ReyEngine {
       std::shared_ptr<PushButton> _btnUp;
       std::shared_ptr<AddrBar> _addrBar;
       std::shared_ptr<LineEdit> _filterText;
-      std::shared_ptr<ComboBox<std::string>> _filterType;
+//      std::shared_ptr<ComboBox<std::string>> _filterType;
+      std::vector<std::string> _fileTypesFilter;
 
       class History {
       public:

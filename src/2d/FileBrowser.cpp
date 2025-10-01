@@ -68,7 +68,7 @@ void FileBrowser::_init() {
    auto footerR = make_child<Layout>(footer->getNode(), "footerR", Layout::LayoutDir::HORIZONTAL);
 
    _filterText = make_child<LineEdit>(footerL->getNode(), "_filterText");
-   _filterType = make_child<ComboBox<string>>(footerL->getNode(), "_filterType");
+//   _filterType = make_child<ComboBox<string>>(footerL->getNode(), "_filterType");
 
    _btnOk = make_child<PushButton>(footerR->getNode(), "btnOk", "Ok");
    _btnCancel = make_child<PushButton>(footerR->getNode(), "btnCancel", "Cancel");
@@ -151,11 +151,23 @@ void FileBrowser::refreshDirectoryContents() {
       parentItem->back()->setMetaData<Path>(VAR_PATH, dir);
    }
    for (const auto& file : files){
+      //apply type filter
+      if (!_fileTypesFilter.empty()) {
+         bool showFile = false;
+         for (const auto& ext: _fileTypesFilter) {
+            if (file.tail().ends_with(ext)) {
+               showFile = true;
+               break;
+            }
+         }
+         if (!showFile) continue;
+      }
       parentItem->push_back(_directoryTree->createItem(file.tail()));
       parentItem->back()->setMetaData<Path>(VAR_PATH, file);
    }
    auto size = _directoryTree->measureContents();
    _directoryTree->setSize(size);
+   _filterText->setText(string_tools::join(',', _fileTypesFilter));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -339,4 +351,10 @@ bool FileBrowser::History::hasFwd() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void FileBrowser::History::clear() {
    _dirs.clear();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<FileSystem::Path> FileBrowser::extractPathFromItem(const ReyEngine::TreeItem* item) const {
+   if (!item) return {};
+   return item->getMetaData<Path>(VAR_PATH);
 }
