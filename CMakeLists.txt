@@ -211,6 +211,7 @@ if(REY_ENABLE_LUA)
     target_link_libraries(ReyEngine2D lua)
 endif()
 if(REY_ENABLE_YAML)
+    message(STATUS "Linking YAML!")
     target_link_libraries(ReyEngine2D yaml-cpp::yaml-cpp)
 endif()
 

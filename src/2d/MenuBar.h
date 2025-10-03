@@ -16,8 +16,8 @@ namespace ReyEngine{
             {}
             void setText(const std::string&);
             void setIcon(std::shared_ptr<ReyTexture>&);
-            const std::string& getText() const {return _text;}
-            const std::shared_ptr<ReyTexture>&  getIcon() const {return _icon;}
+            [[nodiscard]] const std::string& getText() const {return _text;}
+            [[nodiscard]] const std::shared_ptr<ReyTexture>&  getIcon() const {return _icon;}
          protected:
             std::string _text;
             std::shared_ptr<ReyTexture> _icon;

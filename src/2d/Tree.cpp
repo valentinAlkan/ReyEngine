@@ -52,8 +52,10 @@ std::unique_ptr<TreeItem> TreeItem::removeItem(size_t index){
 /////////////////////////////////////////////////////////////////////////////////////////
 void Tree::determineOrdering(){
    order.clear();
+   int i=0;
    std::function<void(TreeItem*)> pushToVector = [&](TreeItem* item){
       order.push_back(item);
+      item->index = i++;
       for (auto& child : item->_children){
          pushToVector(child.get());
       }
@@ -127,6 +129,28 @@ void Tree::render2D() const{
 /////////////////////////////////////////////////////////////////////////////////////////
 Widget* Tree::_unhandled_input(const InputEvent& event) {
    switch (event.eventId){
+      case InputEventKey::getUniqueEventId():{
+         //up and down selection navigation
+         auto& kbEvent = event.toEvent<InputEventKey>();
+         if (!kbEvent.isDown || !_selectedItem) break;
+         int increment;
+         if (kbEvent.key == InputInterface::KeyCode::KEY_DOWN){
+            increment = 1;
+         } else if (kbEvent.key == InputInterface::KeyCode::KEY_UP){
+            increment = -1;
+         } else {
+            break;
+         }
+         auto value = getSelectedIndex().value();
+         //bounds check
+         if ( increment < 0 && value > 0 || //incr up
+              increment > 0 && value < std::numeric_limits<size_t>::max() && value < _visibleItems.size() - 1) //incr down
+         {
+            //do incr
+            setSelectedIndex(value+increment);
+            return this;
+         }
+         break;}
        case InputEventMouseMotion::getUniqueEventId():
        case InputEventMouseButton::getUniqueEventId():
           auto mouseEvent = event.isMouse().value();
@@ -162,7 +186,7 @@ Widget* Tree::_unhandled_input(const InputEvent& event) {
              auto itemAtClick = implDetailsAt.value()->item;
              //expand/shrink branch
              if (!btnEvent.isDown) {
-                Logger::debug() << "click at = " << itemAtClick->_text << endl;
+//                Logger::debug() << "click at = " << itemAtClick->_text << endl;
                 //publish on item click
                 EventItemClicked itemClickedEvent(this, itemAtClick);
                 publish(itemClickedEvent);
@@ -182,7 +206,7 @@ Widget* Tree::_unhandled_input(const InputEvent& event) {
                       }
                    }
 
-                   Logger::debug() << "double click at = " << itemAtClick->_text << endl;
+//                   Logger::debug() << "double click at = " << itemAtClick->_text << endl;
                    EventItemDoubleClicked itemDoubleClickedEvent(this, itemAtClick);
                    publish(itemDoubleClickedEvent);
                 }
@@ -223,7 +247,7 @@ std::unique_ptr<TreeItem> Tree::takeItem(std::unique_ptr<TreeItem>&& other) {
 /////////////////////////////////////////////////////////////////////////////////////////
 std::optional<Tree::TreeItemImplDetails*> Tree::getImplDetailsAt(const Pos<float>& localPos) {
    auto rowHeight = theme->font->size;
-   int rowAt = localPos.y / rowHeight;
+   int rowAt = (int)(localPos.y / rowHeight);
    if (rowAt < _visibleItems.size()) {
       return _visibleItems.at(rowAt);
    }
@@ -242,6 +266,56 @@ void TreeItem::setGeneration(size_t generation){
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
+void Tree::setHighlighted(ReyEngine::TreeItem* highlighted, bool _publish) {
+   decltype(_hoveredImplDetails) oldHovered;
+   for (auto& visible : _visibleItems){
+      if (visible->item == highlighted){
+         oldHovered = _hoveredImplDetails;
+         _hoveredImplDetails = visible;
+      }
+   }
+
+   if (_publish){
+      if (_hoveredImplDetails) {
+         publish(EventItemHovered(this, _hoveredImplDetails.value()->item));
+      } else if (oldHovered){
+         publish(EventItemDeselected(this, oldHovered.value()->item));
+      }
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void Tree::setHighlightedIndex(size_t visibleItemIndex, bool _publish) {
+   if (visibleItemIndex >= _visibleItems.size()){
+      Logger::error() << getNode()->getScenePath() << " : Unable to set selected item at index " << visibleItemIndex << endl;
+   } else {
+      setHighlighted(_visibleItems.at(visibleItemIndex)->item, _publish);
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void Tree::setSelected(ReyEngine::TreeItem* selectedItem, bool _publish) {
+   auto oldSelected = _selectedItem;
+   _selectedItem = selectedItem;
+   if (_publish){
+      if (_selectedItem) {
+         publish(EventItemSelected(this, _selectedItem.value()));
+      } else if (oldSelected){
+         publish(EventItemDeselected(this, oldSelected.value()));
+      }
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void Tree::setSelectedIndex(size_t visibleItemIndex, bool publish){
+   if (visibleItemIndex >= _visibleItems.size()){
+      Logger::error() << getNode()->getScenePath() << " : Unable to set selected item at index " << visibleItemIndex << endl;
+   } else {
+      setSelected(_visibleItems.at(visibleItemIndex)->item, publish);
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
 Size<float> Tree::measureContents() {
    Size<float> retval;
    for (const auto& item : _visibleItems){
@@ -252,4 +326,18 @@ Size<float> Tree::measureContents() {
       retval.y += itemSize.y;
    }
    return retval;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<size_t> Tree::getSelectedIndex() {
+   if (auto item = getSelected()){
+      int i=0;
+      for (const auto& visibleItem : _visibleItems){
+         if (visibleItem->item == item.value()){
+            return i;
+         }
+         i++;
+      }
+   }
+   return {};
 }

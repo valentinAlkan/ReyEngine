@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Tree.h"
 #include "FileSystem.h"
 #include "Button.h"

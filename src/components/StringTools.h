@@ -10,12 +10,12 @@ namespace string_tools{
    std::vector<std::string> split(const std::string& s, const std::string& delimString);
    std::vector<std::string> split(const std::string& s, char delimChar);
    std::vector<std::string> split(const std::string& s); //split all whitespace
-   std::string lstrip(const std::string& s, char c);
-   std::string lstrip(const std::string& s);
-   std::string rstrip(const std::string& s, char c);
-   std::string rstrip(const std::string& s);
+   std::string lstrip(const std::string& s, char c); //strips char(s) c from the left
+   std::string lstrip(const std::string& s); //strips whitespace from the left
+   std::string rstrip(const std::string& s, char c); //strips char(s) c from the right
+   std::string rstrip(const std::string& s); //strips whitespace from the right
    std::string strip(const std::string& s, const std::function<bool(char c)>& charMatch, bool rtol = false);
-   std::string lrstrip(const std::string& s);
+   std::string lrstrip(const std::string& s); //strips whitespace from the right and left
    std::string extractNumeric(const std::string& s); //pull out all numeric chars and return them, in order
    std::string extractNumericl(const std::string& s); //pull out all numeric chars on the left side of the string, and return them, in order. stop when encountering a non-numeric char.
    std::string extractNumericr(const std::string& s); //pull out all numeric chars on the right side of the string, and return them, in order. stop when encountering anon- numeric char.

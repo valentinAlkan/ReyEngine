@@ -60,6 +60,7 @@ namespace ReyEngine::FileSystem {
 //      inline Path operator+(const std::string& rhs) const {return {_path.string() + rhs};}
       explicit inline operator bool() const {return !_path.empty();}
       inline Path& operator=(const std::string& rhs){_path.clear(); _path = rhs; parsePath(); return *this;}
+      inline Path& operator=(const Path& rhs){_path.clear(); _path = rhs._path; parsePath(); return *this;}
       inline bool operator==(const std::string& rhs) const {return _path == rhs;}
       inline bool operator==(const Path& rhs) const {return _path == rhs._path;}
 
@@ -94,6 +95,7 @@ namespace ReyEngine::FileSystem {
       void clear(){_path.clear();}
       operator Directory() = delete;
       [[nodiscard]] std::shared_ptr<FileHandle> open() const;
+      File changeExtension(const std::string& newExtension) const;
    };
 
    struct FileHandle {
@@ -184,11 +186,10 @@ namespace ReyEngine::FileSystem {
    };
 
    struct Directory : public Path {
+      using Path::operator=;
       Directory(){}
       Directory(const Path& other): Path(other){_pathType = DIRECTORY;}
       Directory(Directory& other) = default;
-      Directory(Directory&& other):Path(other){_pathType = DIRECTORY;}
-      Directory& operator=(const Directory& other){_path = other._path; return *this;}
       operator FileHandle() = delete;
       std::set<Path> listContents() const;
    };

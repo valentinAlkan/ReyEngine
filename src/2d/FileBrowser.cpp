@@ -167,7 +167,7 @@ void FileBrowser::refreshDirectoryContents() {
    }
    auto size = _directoryTree->measureContents();
    _directoryTree->setSize(size);
-   _filterText->setText(string_tools::join(',', _fileTypesFilter));
+   if (!_fileTypesFilter.empty()) _filterText->setText("*"+string_tools::join(",*", _fileTypesFilter));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
