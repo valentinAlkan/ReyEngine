@@ -306,54 +306,6 @@ Widget* FileBrowser::AddrBar::_unhandled_input(const ReyEngine::InputEvent& even
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-void FileBrowser::History::add(const FileSystem::Directory& dir) {
-   if (_ptr != _dirs.size()) {
-      //overwrite at ptr+1;
-      auto iter = _dirs.begin() + (long long)_ptr + 1;
-      //erase everything after that point
-      _dirs.erase(iter, _dirs.end());
-   }
-   _dirs.push_back(dir);
-   _ptr=_dirs.size()-1;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-std::optional<FileSystem::Directory> FileBrowser::History::back() {
-   if (!_dirs.empty() && _ptr <= _dirs.size()){
-      if (_ptr >= 1){
-         _ptr--;
-      }
-      return _dirs.at(_ptr);
-   }
-   return {};
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-std::optional<FileSystem::Directory> FileBrowser::History::fwd() {
-   if (hasFwd()){
-      return _dirs.at(++_ptr);
-   }
-   return {};
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-bool FileBrowser::History::hasBack() {
-   return !_dirs.empty() && _ptr < _dirs.size() && _ptr > 0;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-bool FileBrowser::History::hasFwd() {
-   return !_dirs.empty() && _ptr < _dirs.size() - 1; // never test size_t against -1
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void FileBrowser::History::clear() {
-   _dirs.clear();
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
 std::optional<FileSystem::Path> FileBrowser::extractPathFromItem(const ReyEngine::TreeItem* item) const {
    if (!item) return {};
    return item->getMetaData<Path>(VAR_PATH);

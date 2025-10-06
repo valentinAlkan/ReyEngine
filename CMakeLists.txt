@@ -145,6 +145,7 @@ add_library(ReyEngineComponentNetwork STATIC
     src/components/CircBuf.cpp
     src/components/SystemTime.cpp
 )
+
 target_link_libraries(ReyEngineComponentNetwork PUBLIC ComponentLogger)
 target_include_directories(ReyEngineComponentNetwork PUBLIC
     src/components/network

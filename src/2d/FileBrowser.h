@@ -6,6 +6,7 @@
 #include "LineEdit.h"  
 #include "ComboBox.h"
 #include "ScrollArea.h"
+#include "History.h"
 
 namespace ReyEngine {
    class FileBrowser : public Widget {
@@ -88,17 +89,18 @@ namespace ReyEngine {
 //      std::shared_ptr<ComboBox<std::string>> _filterType;
       std::vector<std::string> _fileTypesFilter;
 
-      class History {
-      public:
-         void add(const FileSystem::Directory&); //overwrites next item after current pointer (if any)
-         std::optional<FileSystem::Directory> back();
-         std::optional<FileSystem::Directory> fwd();
-         bool hasFwd();
-         bool hasBack();
-         void clear();
-         std::vector<FileSystem::Directory> _dirs;
-         size_t _ptr = 0;
-      } _history;
+//      class History {
+//      public:
+//         void add(const FileSystem::Directory&); //overwrites next item after current pointer (if any)
+//         std::optional<FileSystem::Directory> back();
+//         std::optional<FileSystem::Directory> fwd();
+//         bool hasFwd();
+//         bool hasBack();
+//         void clear();
+//         std::vector<FileSystem::Directory> _dirs;
+//         size_t _ptr = 0;
+//      } _history;
+      History<FileSystem::Directory> _history;
       class AddrBar : public LineEdit {
       protected:
          struct DirectoryToken;

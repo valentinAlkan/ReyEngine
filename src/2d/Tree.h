@@ -115,6 +115,7 @@ namespace ReyEngine{
       }
       [[nodiscard]] std::optional<TreeItem*> getRoot() const {if (root) return root.get(); return {};}
       void setHideRoot(bool hide){_hideRoot = hide; determineVisible();}
+      bool getHideRoot() const {return _hideRoot;}
       TreeItem* setRoot(std::unique_ptr<TreeItem>&& item);
       TreeItem* setRoot(const std::string& rootName);
       std::unique_ptr<TreeItem> takeItem(std::unique_ptr<TreeItem>&&); //takes ownership of another tree item
