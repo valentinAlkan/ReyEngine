@@ -5,7 +5,6 @@ namespace ReyEngine {
    
    template<typename T>
    struct History {
-   
       void add(const T &dir) {
          if (_ptr != _history.size()) {
             //overwrite at ptr+1;
@@ -16,8 +15,8 @@ namespace ReyEngine {
          _history.push_back(dir);
          _ptr = _history.size() - 1;
       }
-      
-      std::optional<FileSystem::Directory> back() {
+
+      std::optional<T> back() {
          if (!_history.empty() && _ptr <= _history.size()) {
             if (_ptr >= 1) {
                _ptr--;
@@ -27,18 +26,18 @@ namespace ReyEngine {
          return {};
       }
 
-      std::optional<FileSystem::Directory> fwd() {
+      std::optional<T> fwd() {
          if (hasFwd()) {
             return _history.at(++_ptr);
          }
          return {};
       }
 
-      bool hasBack() {
+      bool hasBack() const {
          return !_history.empty() && _ptr < _history.size() && _ptr > 0;
       }
 
-      bool hasFwd() {
+      bool hasFwd() const {
          return !_history.empty() && _ptr < _history.size() - 1; // never test size_t against -1
       }
 

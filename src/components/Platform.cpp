@@ -316,6 +316,11 @@ string CrossPlatform::getUserLocalConfigDirApp(){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+std::string CrossPlatform::getUserLocalConfigDirAppFile() {
+   return getUserLocalConfigDirApp() + REYENGINE_FILESYSTEM_PATH_SEP + ".config";
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 vector<string> CrossPlatform::getRootFolders() {
    std::vector<std::string> roots;
 

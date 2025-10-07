@@ -41,10 +41,6 @@ namespace ReyEngine::FileSystem {
       [[nodiscard]] std::string abs() const {return std::filesystem::absolute(_path).string();}
       [[nodiscard]] std::string str() const {return abs();}
       [[nodiscard]] std::string canonical() const {return std::filesystem::canonical(_path).string();}
-      void erase(EraseType eraseType);
-      void create(bool createParent=false);
-      bool createIfNotExist(bool createParent=false); //returns true if the folder was created, false if it already existed
-      void overwrite(bool createParent=false);
       [[nodiscard]] bool isRegularFile() const {return _pathType == REGULAR_FILE;}
       [[nodiscard]] bool isDirectory() const {return _pathType == DIRECTORY;}
       [[nodiscard]] PathType getPathType() const {return _pathType;}
@@ -77,14 +73,22 @@ namespace ReyEngine::FileSystem {
          return os;
       }
    protected:
+      void create(bool createParent=false);
+      bool createIfNotExist(bool createParent=false); //returns true if the folder was created, false if it already existed
+      void erase(EraseType eraseType);
+      void overwrite(bool createParent=false);
       void parsePath();
       PathType _pathType = EMPTY;
       std::filesystem::path _path;
+   private:
       friend struct DirectoryContents;
    };
 
    struct File : public Path {
       using Path::operator=;
+      using Path::createIfNotExist;
+      using Path::overwrite;
+      using Path::create;
       // A path to a disk. Cannot read from.
       File() = default;
       File(const File& other) = default;
@@ -187,6 +191,9 @@ namespace ReyEngine::FileSystem {
 
    struct Directory : public Path {
       using Path::operator=;
+      using Path::createIfNotExist;
+      using Path::overwrite;
+      using Path::create;
       Directory(){}
       Directory(const Path& other): Path(other){_pathType = DIRECTORY;}
       Directory(Directory& other) = default;

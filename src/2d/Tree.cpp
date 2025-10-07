@@ -27,13 +27,13 @@ TreeItem *TreeItemContainer::push_back(const std::string& name) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-TreeItem *TreeItemContainer::insertItem(int atIndex, std::unique_ptr<TreeItem> item) {
+TreeItem *TreeItemContainer::insertItem(size_t atIndex, std::unique_ptr<TreeItem> item) {
    _children.insert(_children.begin()+atIndex, std::move(item));
    return _children.at(atIndex).get();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::unique_ptr<TreeItem> TreeItem::removeItem(size_t index){
+std::unique_ptr<TreeItem> TreeItem::takeItem(size_t index){
    auto it = _children.begin() + index;
    auto ptr = std::move(*it);
    _children.erase(it);
@@ -141,14 +141,17 @@ Widget* Tree::_unhandled_input(const InputEvent& event) {
          } else {
             break;
          }
-         auto value = getSelectedIndex().value();
-         //bounds check
-         if ( increment < 0 && value > 0 || //incr up
-              increment > 0 && value < std::numeric_limits<size_t>::max() && value < _visibleItems.size() - 1) //incr down
-         {
-            //do incr
-            setSelectedIndex(value+increment);
-            return this;
+         if (auto optIndex = getSelectedIndex()) {
+            auto& value = optIndex.value();
+            //bounds check
+            if (increment < 0 && value > 0 || //incr up
+                increment > 0 && value < std::numeric_limits<size_t>::max() &&
+                value < _visibleItems.size() - 1) //incr down
+            {
+               //do incr
+               setSelectedIndex(value + increment);
+               return this;
+            }
          }
          break;}
        case InputEventMouseMotion::getUniqueEventId():
@@ -238,11 +241,11 @@ TreeItem* Tree::setRoot(const std::string& rootName) {
    return setRoot(unique_ptr<TreeItem>(new TreeItem(rootName)));
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
-std::unique_ptr<TreeItem> Tree::takeItem(std::unique_ptr<TreeItem>&& other) {
-   other->_tree = this;
-   return other;
-}
+///////////////////////////////////////////////////////////////////////////////////////////
+//TreeItem* Tree::addItem(std::unique_ptr<TreeItem>&& other) {
+//   other->_tree = this;
+//   return other;
+//}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 std::optional<Tree::TreeItemImplDetails*> Tree::getImplDetailsAt(const Pos<float>& localPos) {
@@ -287,7 +290,7 @@ void Tree::setHighlighted(ReyEngine::TreeItem* highlighted, bool _publish) {
 ///////////////////////////////////////////////////////////////////////////////////////////
 void Tree::setHighlightedIndex(size_t visibleItemIndex, bool _publish) {
    if (visibleItemIndex >= _visibleItems.size()){
-      Logger::error() << getNode()->getScenePath() << " : Unable to set selected item at index " << visibleItemIndex << endl;
+      Logger::error() << getNode()->getScenePath() << " : Unable to set highlighted item at index " << visibleItemIndex << endl;
    } else {
       setHighlighted(_visibleItems.at(visibleItemIndex)->item, _publish);
    }
@@ -297,6 +300,7 @@ void Tree::setHighlightedIndex(size_t visibleItemIndex, bool _publish) {
 void Tree::setSelected(ReyEngine::TreeItem* selectedItem, bool _publish) {
    auto oldSelected = _selectedItem;
    _selectedItem = selectedItem;
+   if (_selectedItem == nullptr) _selectedItem.reset();
    if (_publish){
       if (_selectedItem) {
          publish(EventItemSelected(this, _selectedItem.value()));

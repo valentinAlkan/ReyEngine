@@ -11,16 +11,14 @@ namespace ReyEngine{
       TreeItemContainer() = default;
       TreeItem* push_back(std::unique_ptr<TreeItem>&& item);
       TreeItem* push_back(const std::string& item);
-      TreeItem* insertItem(int atIndex, std::unique_ptr<TreeItem> item);
+      TreeItem* insertItem(size_t atIndex, std::unique_ptr<TreeItem> item);
       TreeItem* front(){return _children.front().get();}
       TreeItem* back(){return _children.back().get();}
-      /////////////////////////////////////////////////////////////////////////////////////////
-      virtual std::unique_ptr<TreeItem> removeItem(size_t index) = 0;
+      virtual std::unique_ptr<TreeItem> takeItem(size_t index) = 0;
       void sort(std::function<bool(const std::unique_ptr<TreeItem>& a, const std::unique_ptr<TreeItem>& b)>& fxLessthan){
          std::sort(getChildren().begin(), getChildren().end(), fxLessthan);
       }
       void clear(); //remove all children
-      /////////////////////////////////////////////////////////////////////////////////////////
       std::vector<std::unique_ptr<TreeItem>>& getChildren(){return _children;}
    protected:
       std::vector<std::unique_ptr<TreeItem>> _children;
@@ -37,7 +35,7 @@ namespace ReyEngine{
    public:
       void setText(const std::string& text){_text = text;}
       [[nodiscard]] std::string getText() const {return _text;}
-      std::unique_ptr<TreeItem> removeItem(size_t index) override;
+      std::unique_ptr<TreeItem> takeItem(size_t index) override;
       [[nodiscard]] bool getExpanded(){return expanded;}
       void setExpanded(bool _expanded){expanded = _expanded;}
       [[nodiscard]] bool getExpandable(){return expandable;}
@@ -118,7 +116,7 @@ namespace ReyEngine{
       bool getHideRoot() const {return _hideRoot;}
       TreeItem* setRoot(std::unique_ptr<TreeItem>&& item);
       TreeItem* setRoot(const std::string& rootName);
-      std::unique_ptr<TreeItem> takeItem(std::unique_ptr<TreeItem>&&); //takes ownership of another tree item
+//      TreeItem* addItem(std::unique_ptr<TreeItem>&&); //takes ownership of another tree item
       void setAllowHighlight(bool allowHighlight){_allowHighlight = allowHighlight;}
       void setAllowSelect(bool allowSelect){_allowSelect = allowSelect;}
       [[nodiscard]] bool getAllowSelect(){return _allowSelect;}

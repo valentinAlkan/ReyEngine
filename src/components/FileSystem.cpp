@@ -107,7 +107,7 @@ void Path::create(bool createParent) {
          if (!file) throw std::runtime_error("Failed to create file " + str() + ": " + std::strerror(errno));
          file.close();}
       default:
-         throw std::runtime_error("Creation not supported for this path type!");
+         throw std::runtime_error(str() + " : Creation not supported for this path type!");
       }
 
    } catch (const std::filesystem::filesystem_error& ex) {
