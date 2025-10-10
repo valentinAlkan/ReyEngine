@@ -203,6 +203,7 @@ target_include_directories(ReyEngine2D PUBLIC
     src/thirdParty/uuid
     src/pathfinding
     src/physics
+    src/components/easings
 )
 target_compile_features(ReyEngine2D PUBLIC cxx_std_20)
 target_compile_options(ReyEngine2D PUBLIC -pthread)
