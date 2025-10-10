@@ -132,6 +132,7 @@ target_include_directories(ReyEngineComponentStringTools PUBLIC src/components)
 
 add_library(ReyEngineComponentFilesystem STATIC src/components/FileSystem.cpp)
 target_include_directories(ReyEngineComponentFilesystem PUBLIC src/components)
+target_link_libraries(ReyEngineComponentFilesystem PUBLIC ReyEngineComponentStringTools)
 
 add_library(ReyEngineComponentArgParse STATIC src/components/ArgParse.cpp)
 target_include_directories(ReyEngineComponentArgParse PUBLIC src/components)
@@ -170,7 +171,7 @@ add_library(ReyEngine2D STATIC
         src/engine/InputManager.cpp
         src/engine/Application.cpp
         src/engine/ReyEngine.cpp
-        src/engine/Processable.cpp
+        src/engine/TypeTree.cpp
 
         src/components/SystemTime.cpp
         src/components/MetaData.cpp

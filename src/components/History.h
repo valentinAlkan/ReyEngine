@@ -45,6 +45,10 @@ namespace ReyEngine {
          _history.clear();
       }
 
+      History& operator=(const std::vector<T>& vec){
+         _history = vec;
+         _ptr = 0;
+      }
    protected:
       std::vector<T> _history = {};
       size_t _ptr = 0;

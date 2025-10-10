@@ -238,7 +238,7 @@ void Window::exec(){
 
       //process logic
       float dt = getFrameDelta();
-      _processList.processAll(dt);
+      Internal::Tree::ProcessList::processAll(dt);
 
       //draw the canvas to our render texture
 //         Application::getWindow(0).pushRenderTarget(_renderTarget);
@@ -275,7 +275,7 @@ void Window::exec(){
          _frameCounter++;
 //      } // release scoped lock here
    }
-   _processList.clear();
+   Tree::ProcessList::clear();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -283,55 +283,6 @@ Window::~Window(){
    Logger::debug() << "Deleting Window" << endl;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
-bool Window::setProcess(bool process, ReyEngine::Internal::Processable* processable) {
-   //return if the operation was successful
-   return process ? _processList.add(processable) != nullopt : _processList.remove(processable) != nullopt;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
-bool Window::isProcessed(const ReyEngine::Internal::Processable* processable) const {
-   return _processList.find(processable).has_value();
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
-std::optional<ReyEngine::Internal::Processable*> Window::ProcessList::add(ReyEngine::Internal::Processable* processable) {
-   unique_lock<mutex> lock(_mtx);
-   auto retval = _list.insert(processable);
-   if (retval.second){
-      return processable;
-   }
-   return nullopt;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
-std::optional<ReyEngine::Internal::Processable*> Window::ProcessList::remove(ReyEngine::Internal::Processable* processable) {
-   unique_lock<mutex> lock(_mtx);
-   auto it = _list.find(processable);
-   if (it != _list.end()){
-      //only remove if found;
-      _list.erase(it);
-      return processable;
-   }
-   return nullopt;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
-void Window::ProcessList::processAll(R_FLOAT dt) {
-   unique_lock<mutex> lock(_mtx);
-   for (auto& processable : _list) {
-      processable->_process(dt);
-   }
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
-std::optional<ReyEngine::Internal::Processable*> Window::ProcessList::find(const ReyEngine::Internal::Processable* processable) const {
-   auto it = std::find(_list.begin(), _list.end(), processable);
-   if (it != _list.end()){
-      return *it;
-   }
-   return nullopt;
-}
 /////////////////////////////////////////////////////////////////////////////////////////////
 ////void Window::setCanvas(std::shared_ptr<Canvas>& newRoot) {
 ////   makeRoot(newRoot, getSize());

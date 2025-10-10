@@ -2,7 +2,7 @@
 #include "ReyObject.h"
 
 namespace ReyEngine::Internal {
-   class Positionable2D : public TypeTag {
+   class Positionable2D : public virtual TypeTag {
    public:
       Positionable2D()
       : maxSize({std::numeric_limits<R_FLOAT>::max()})

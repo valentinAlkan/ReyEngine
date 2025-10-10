@@ -1,7 +1,6 @@
 #pragma once
 #include "Drawable2D.h"
 #include "InputHandler.h"
-#include "Processable.h"
 #include "Theme.h"
 #include "WeakUnits.h"
 #include "MetaData.h"
@@ -10,7 +9,7 @@ namespace ReyEngine {
    enum class Anchor{NONE, LEFT, RIGHT, TOP, TOP_WIDTH, BOTTOM, FILL, TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, CENTER, CUSTOM};
    class Widget
    : public Internal::Drawable2D
-   , public Internal::Processable
+   , public Internal::Tree::Processable
    , public EventPublisher
    , public EventSubscriber
    , public MetaDataInterface
@@ -43,7 +42,7 @@ namespace ReyEngine {
       Widget()= default;
       ~Widget() override{
          if constexpr (isDebugBuild) {
-            std::cout << "Goodbye from " << getName() << "!!" << std::endl;
+//            std::cout << "Goodbye from " << getName() << "!!" << std::endl;
          }
       }
       REYENGINE_OBJECT(Widget)

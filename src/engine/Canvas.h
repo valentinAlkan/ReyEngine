@@ -274,7 +274,8 @@ namespace ReyEngine {
             }
          };
 
-         for (auto& child : createProcessVector(thisNode)) {
+         auto v = createProcessVector(thisNode);
+         for (auto& child : v) {
             if (auto childWidget = child->template as<Widget>()){
                auto& _childWidget = childWidget.value();
                if (_childWidget->_modal) {

@@ -62,6 +62,7 @@ void Tree::determineOrdering(){
    };
    pushToVector(root.get());
    determineVisible();
+
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -85,6 +86,9 @@ void Tree::determineVisible() {
       }
    };
    if (root) pushVisible(root.get());
+
+   //make ourselves larger if we need to
+   fit();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -240,12 +244,6 @@ TreeItem* Tree::setRoot(std::unique_ptr<TreeItem>&& item) {
 TreeItem* Tree::setRoot(const std::string& rootName) {
    return setRoot(unique_ptr<TreeItem>(new TreeItem(rootName)));
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////
-//TreeItem* Tree::addItem(std::unique_ptr<TreeItem>&& other) {
-//   other->_tree = this;
-//   return other;
-//}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 std::optional<Tree::TreeItemImplDetails*> Tree::getImplDetailsAt(const Pos<float>& localPos) {
