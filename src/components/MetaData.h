@@ -6,7 +6,12 @@
 #include "Logger.h"
 
 namespace ReyEngine {
+   /// All metadata is stored in a global map, organized by the base address of the object that created it.
+   /// For this reason, it is NOT POSSIBLE to use this interface with objects whose memory addresses are
+   /// subject to change as it will lead to memory leaks and orphaned data
+
    struct MetaData {
+      using MetaDataStoredType = std::map<std::string, std::any>;
       MetaData& operator=(const MetaData&) = delete;
       MetaData(const MetaData&) = delete;
 
@@ -68,6 +73,13 @@ namespace ReyEngine {
          if (ptrFound == metaData.end()) return;
          metaData.erase(ptrFound);
       }
+
+      MetaDataStoredType getAllMetaData(void* addr) {
+         auto ptrFound = metaData.find(addr);
+         if (ptrFound == metaData.end()) return {};
+         return ptrFound->second;
+      }
+
       static MetaData& instance();
    private:      
       MetaData() = default;
@@ -77,6 +89,28 @@ namespace ReyEngine {
 
    struct MetaDataInterface{
       virtual ~MetaDataInterface(){removeAllMetaData();}
+      MetaDataInterface() = default;
+      MetaDataInterface(const MetaDataInterface& other){
+         *this = other;
+      }
+      MetaDataInterface(MetaDataInterface&& other){
+         *this = std::move(other);
+      }
+      MetaDataInterface& operator=(const MetaDataInterface& other){
+         for (const auto& [key, value] : other.getAllMetaData()){
+            setMetaData(key, value);
+         }
+         return *this;
+      }
+
+      MetaDataInterface& operator=(MetaDataInterface&& other) noexcept {
+         for (const auto& [key, value] : other.getAllMetaData()){
+            setMetaData(key, value);
+            other.removeMetaData(key);
+         }
+         return *this;
+      }
+
       template <typename T>
       void setMetaData(const std::string& name, const T& newData){
          MetaData::instance().setMetaData(base_addr(), name, newData);
@@ -89,12 +123,9 @@ namespace ReyEngine {
       std::optional<T> getMetaData(const std::string& name) const {
          return MetaData::instance().getMetaData<T>(base_addr(), name);
       }
-      void removeMetaData(const std::string& name) {
-         MetaData::instance().removeMetaData(base_addr(), name);
-      }
-      void removeAllMetaData() {
-         MetaData::instance().removeAllMetaData(base_addr());
-      }
+      void removeMetaData(const std::string& name) {MetaData::instance().removeMetaData(base_addr(), name);}
+      void removeAllMetaData() {MetaData::instance().removeAllMetaData(base_addr());}
+      MetaData::MetaDataStoredType getAllMetaData() const {return MetaData::instance().getAllMetaData(base_addr());}
    private:
       void* base_addr() const {return dynamic_cast<void*>(const_cast<MetaDataInterface*>(this));}
    };

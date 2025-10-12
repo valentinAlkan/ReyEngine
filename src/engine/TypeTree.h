@@ -9,6 +9,7 @@
 #include <set>
 #include "MapValueRefView.h"
 #include "Logger.h"
+#include <unordered_set>
 
 namespace ReyEngine::Internal::Tree {
    using HashId = size_t;
@@ -65,9 +66,10 @@ namespace ReyEngine::Internal::Tree {
    // so one single object type can serve as the base for being stored in the tree,
    // with all additional functionality resulting from typetags.
    // Node data can be cast to base storables OR applicable typetags
+   // Always use virtual inheritence when inheriting from typetag, or the tag() cast will silently fail
    struct TypeTag{
    protected:
-      TypeNode* selfNode; //allows TypeTag system to communicate with underlying TypeNode system. Typetags MUST inherit
+      TypeNode* selfNode; //allows TypeTag system to communicate with underlying TypeNode system. TypeNodes MUST inherit
                            // from TreeStorable, so this should always be valid. It is assigned in make_node.
       template<typename T, typename InstanceName, typename... Args>
       friend MakeNodeReturnType<T> _make_node(InstanceName&&, Args&&...);
@@ -76,6 +78,40 @@ namespace ReyEngine::Internal::Tree {
    };
    template<typename T>
    concept TypeTagged = std::is_base_of_v<TypeTag, T> && !std::is_base_of_v<T, TreeStorable>;
+
+   class ProcessList;
+   struct Processable : public virtual TypeTag {
+      virtual ~Processable();
+      virtual void _process(float dt){};
+      void setProcess(bool);
+      [[nodiscard]] bool isProcessed() const {return _isProcessed;}
+   protected:
+      bool _wantsProcess = false;
+      bool _isProcessed = false;
+      friend class ProcessList;
+   };
+
+   class ProcessList {
+   public:
+      ~ProcessList(){clear();}
+      static std::optional<Processable*> add(Processable*);
+      static std::optional<Processable*> remove(Processable*);
+      static std::optional<Processable*> find(const Processable*);
+      static void processAll(float dt);
+      static void clear(){
+         std::unique_lock<std::mutex> sl(instance()._mtx);
+         instance()._list.clear();
+      }
+   protected:
+      static ProcessList& instance();
+   private:
+      static std::unique_ptr<ProcessList> _processList;
+      std::unordered_set<Processable*> _list; //list of widgets that require processing. No specific order.
+      std::mutex _mtx;
+      friend class Processable;
+   };
+
+
 
    // Type erase wrapper. T must inherit from TreeCallable
    template<NamedType T>
@@ -132,8 +168,9 @@ namespace ReyEngine::Internal::Tree {
       inline const TypeNode* getRoot() const {return _root;}
       inline std::string getName() const {return name;}
       inline std::string getScenePath() const {return _scenePath;}
+      inline size_t getIndex(){return _index;}
       // Add child with a name for lookup
-      TypeNode* addChild(std::unique_ptr<TypeNode>&& child) {
+      TypeNode* addChild(std::unique_ptr<TypeNode>&& child, std::optional<size_t> index={}) {
          if (!child){
             Logger::error() << "Null child cannot be added to " << name << std::endl;
             return nullptr;
@@ -152,8 +189,14 @@ namespace ReyEngine::Internal::Tree {
          }
          auto childptr = it->second.get();
          auto addedStorable = childptr->as<TreeStorable>().value();
-         // update child order vector
-         _childOrder.push_back(childptr);
+         // update child order vector to correct index (if applicable)
+         if (index){
+            _childOrder.insert(_childOrder.begin() + index.value(), childptr);
+            childptr->_index = index.value();
+         } else {
+            _childOrder.push_back(childptr);
+            childptr->_index = _childOrder.size()-1;
+         }
 
          // Set parent
          childptr->_parent = this;
@@ -164,30 +207,35 @@ namespace ReyEngine::Internal::Tree {
 
          //////callbacks
          // this order is really important, particularly for layouts.
-         // it means that
-         as<TreeStorable>().value()->__on_child_added_to_tree(childptr);
-         addedStorable->__on_added_to_tree();
-         auto ancestor = this;
-         while (ancestor){
-            //call on all that child's descendents
-            std::function<void(TypeNode*)> callOnDesc = [&](TypeNode* currentNode){
-               ancestor->as<TreeStorable>().value()->__on_descendant_added_to_tree(currentNode);
-               for (auto& child : currentNode->getChildren()){
-                  callOnDesc(child);
-               }
-            };
-            callOnDesc(childptr);
-            ancestor = ancestor->_parent;
+         if (auto thisStorable = as<TreeStorable>()) {
+//            std::cout << thisStorable.value()->getNode()->name << std::endl;
+            thisStorable.value()->__on_child_added_to_tree(childptr);
+            addedStorable->__on_added_to_tree();
+            auto ancestor = this;
+            while (ancestor) {
+               //call on all that child's descendents
+               std::function<void(TypeNode *)> callOnDesc = [&](TypeNode *currentNode) {
+                  ancestor->as<TreeStorable>().value()->__on_descendant_added_to_tree(currentNode);
+                  for (auto &child: currentNode->getChildren()) {
+                     callOnDesc(child);
+                  }
+               };
+               callOnDesc(childptr);
+               ancestor = ancestor->_parent;
+            }
          }
          //init, if needed
-         if (!addedStorable->_has_inited) addedStorable->__init();
+         if (!addedStorable->_has_inited) {
+            addedStorable->__init();
+            addedStorable->_has_inited = true;
+         }
          return childptr;
       }
 
-      //call necessary callbacks
-      void cleanupOnRemoval(){
+      // Only call callbacks that get called when a node leaves the tree. Do not call
+      // callbacks specific to a child or parent being removed, or anything of that nature.
+      void cleanupRemoveFromTree(){
          //when a node is removed from the tree, we have to call a bunch of callbacks
-
          //notify ancestors that we were removed
          {
             auto ancestor = getParent();
@@ -201,9 +249,15 @@ namespace ReyEngine::Internal::Tree {
             std::function<void(TypeNode *)> callOnDescendent = [&](TypeNode* removedNode) {
                descendent->as<TreeStorable>().value()->__on_ancestor_removed_from_tree(removedNode);
                //descendent must do its own cleanup too at this point too since it is also being removed from the tree
-               descendent->cleanupOnRemoval();
+               descendent->_root = nullptr;
+               descendent->cleanupRemoveFromTree();
             };
             callOnDescendent(this);
+         }
+
+         //stop processing
+         if (auto processable = tag<Processable>()){
+            processable.value()->setProcess(false);
          }
 
          //call our own cleanup
@@ -215,25 +269,35 @@ namespace ReyEngine::Internal::Tree {
        * @param name : name of the wanted node
        * @return : the unique_ptr of the node if it existed, nullptr if it did not;
        */
-      std::optional<std::unique_ptr<TypeNode>> removeChild (const std::string& _name){
+      std::optional<std::unique_ptr<TypeNode>> removeChild (const std::string& _name, bool silent=false){
          //remove first from child order
-         //remove also from the order vector
+         TypeNode* childNode = nullptr;
+         auto thisStorable = as<TreeStorable>();
          for (auto it = _childOrder.begin(); it != _childOrder.end(); ++it){
             auto& ptr = *it;
             if (ptr->name == _name){
+               childNode = *it;
+               thisStorable.value()->__on_child_removed_from_tree(childNode);
+               childNode->cleanupRemoveFromTree();
                _childOrder.erase(it);
                break;
             }
+         }
+
+         if (childNode) {
+            //remove references
+            childNode->_parent = nullptr;
+            childNode->_scenePath.clear();
+            childNode->_root = nullptr;
          }
 
          auto it = _childMap.find(std::hash<std::string>{}(_name));
          if(it != _childMap.end()){
             auto removedNode = std::move(it->second);
             _childMap.erase(it);
-            removedNode->cleanupOnRemoval();
             return removedNode;
          }
-         Logger::error() << "Unable to remove child " << _name << " from node " << getScenePath() << std::endl;
+         if (!silent) Logger::error() << "Unable to remove child " << _name << " from node " << getScenePath() << std::endl;
          return {};
       };
 
@@ -322,10 +386,11 @@ namespace ReyEngine::Internal::Tree {
    private:
       std::string _scenePath;
       TypeNode* _parent = nullptr;
-      TypeNode* _root = this;
+      TypeNode* _root = nullptr;
       std::shared_ptr<TypeBase> _data;
       std::map<NameHash, std::unique_ptr<TypeNode>> _childMap; //parents own children
       std::vector<TypeNode*> _childOrder;         // Points to map entries
+      size_t _index; //which numbered child this is - only valid if child has a parent (or was just removed)
 
 
       // Make make_node a friend so it can access the protected constructor
@@ -376,6 +441,7 @@ namespace ReyEngine::Internal::Tree {
    template<typename T, typename InstanceName, typename... Args>
    std::shared_ptr<T> _make_child(TypeNode* parent, InstanceName&& instanceName, Args&&... args) {
       auto [obj, node] = _make_node<T>(instanceName, std::forward<Args>(args)...);
+      if (!node) throw std::runtime_error("Invalid node: " + std::string(instanceName));
       parent->addChild(std::move(node));
       return obj;
    }

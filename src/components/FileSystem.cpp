@@ -10,7 +10,7 @@ using namespace FileSystem;
 
 ///////////////////////////////////////////////////////////////////////////////////////
 Path::Path(const File &file): _path(file.str()){
-   setType();
+   parsePath();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -107,7 +107,7 @@ void Path::create(bool createParent) {
          if (!file) throw std::runtime_error("Failed to create file " + str() + ": " + std::strerror(errno));
          file.close();}
       default:
-         throw std::runtime_error("Creation not supported for this path type!");
+         throw std::runtime_error(str() + " : Creation not supported for this path type!");
       }
 
    } catch (const std::filesystem::filesystem_error& ex) {
@@ -133,7 +133,34 @@ void Path::overwrite(bool createParent) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void Path::setType() {
+void Path::parsePath() {
+   //expand tilde's by exploding path and examining each element
+   using PathParsePair = std::pair<bool, std::vector<std::filesystem::path>>;
+   auto components = PathParsePair(false, {_path.begin(), _path.end()});
+   auto& doneParsingPath = components.first;
+   auto strip_tilde = [](PathParsePair& pair){
+      auto& components = pair.second;
+      for (size_t i = 0; i < components.size(); i++) {
+         std::string comp_str = components.at(i).string();
+         if (comp_str == "~" || comp_str.starts_with("~")) {
+            components = {components.begin()+i, components.end()};
+            components.front() = CrossPlatform::getUserDir();
+            return;
+         }
+      }
+      //done
+      pair.first = true;
+   };
+   while (!doneParsingPath){
+      strip_tilde(components);
+   }
+
+   //rebuild path
+   _path.clear();
+   for (const auto& component : components.second){
+      _path /= component;
+   }
+
    try {
       if (!std::filesystem::exists(_path)) {
          _pathType = EMPTY;
@@ -173,11 +200,28 @@ void Path::setType() {
    }
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<Directory> FileSystem::Path::getParentDirectory() const {
+   auto parent = Directory(head());
+   if (parent.exists()){
+      return parent;
+   }
+   return {};
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<FileHandle> File::open() const {
    return std::shared_ptr<FileHandle>(new FileHandle(*this));
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+File File::changeExtension(const std::string &newExtension) const {
+   auto dir = getParentDirectory().value();
+   auto split = string_tools::split(tail(), '.');
+   auto swapped = string_tools::join("", vector<string>(split.begin(), split.end()-1)) + newExtension;
+   return dir / swapped;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -312,13 +356,4 @@ std::set<Path> FileSystem::Directory::listContents() const {
    }
 
    return contents;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-std::optional<Directory> FileSystem::Directory::getParent() const {
-   auto parent = Directory(head());
-   if (parent.exists()){
-      return parent;
-   }
-   return {};
 }

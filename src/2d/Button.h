@@ -44,7 +44,7 @@ namespace ReyEngine{
       void _render2D() const;
       virtual void _on_down() {publish<ButtonDownEvent>(ButtonDownEvent(this));}
       virtual void _on_up(bool mouseEscaped) {publish<ButtonUpEvent>(ButtonUpEvent(this, mouseEscaped));}
-      Widget* _unhandled_input(const InputEvent& event);
+      Widget* _unhandled_input(const InputEvent& event) override;
       std::string text;
       bool _toggle = false;
        ColorPack PUSHBUTTON_COLORS = {Colors::gray, Colors::lightGray, Colors::blue};
@@ -56,10 +56,9 @@ namespace ReyEngine{
       REYENGINE_OBJECT(ToggleButton)
       EVENT(ButtonToggleEvent, 11111113){}};
       ToggleButton(const std::string& text): Button(text)
-      {
-         _applyTheme(PUSHBUTTON_COLORS);
-      }
+      {}
    protected:
+      void _init() override {_applyTheme(PUSHBUTTON_COLORS);}
       void _on_up(bool mouseEscaped) override;
       void _on_down() override;
       void render2D() const override{_render2D();}

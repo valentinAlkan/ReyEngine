@@ -96,8 +96,9 @@ namespace CrossPlatform{
    std::string getExeName();
    std::string getSystemTempDir(); //returns the global system temp directory - not necessarily user writeable
    std::string getUserDir(); //returns the current user's home directory - necessarily user writable
-   std::string getUserLocalConfigDir(); //returns a location suitable for storing per-app data
-   std::string getUserLocalConfigDirApp(); //returns a directory string in the local config dir with the same name as this application
+   std::string getUserLocalConfigDir(); //returns a location suitable for storing per-app data. Is not specific to this app.
+   std::string getUserLocalConfigDirApp(); //returns a directory string, with the same name as this application, inside the local config dir
+   std::string getUserLocalConfigDirAppFile(); //returns a file string in the application config directory with the name '.config'
    std::string getUserLocalConfigDirRestrictedSecurity(); //something like %APPDATA%/LocalLow in windows
    std::string getExeResourceDir(); //get the resources directory - sits next to the exe and is named 'engine/resources'
    std::string getReyEngineResourceDir(); //get the global engine resources directory - can be in many places, or passed in with REYENGINE_RESOURCE_DIR env

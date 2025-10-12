@@ -13,9 +13,10 @@ void Canvas::__on_child_added_to_tree(TypeNode *child) {
 
 ////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::__on_child_removed_from_tree(TypeNode *n) {
+   cout << "REMOVING FORM TREE!" << endl;
    _foreground.remove(n);
    _background.remove(n);
-   ReyObject::__on_child_added_to_tree(n);
+   ReyObject::__on_child_removed_from_tree(n);
 }
 
 

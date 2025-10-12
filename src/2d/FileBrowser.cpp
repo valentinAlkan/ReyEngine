@@ -68,7 +68,7 @@ void FileBrowser::_init() {
    auto footerR = make_child<Layout>(footer->getNode(), "footerR", Layout::LayoutDir::HORIZONTAL);
 
    _filterText = make_child<LineEdit>(footerL->getNode(), "_filterText");
-   _filterType = make_child<ComboBox<string>>(footerL->getNode(), "_filterType");
+//   _filterType = make_child<ComboBox<string>>(footerL->getNode(), "_filterType");
 
    _btnOk = make_child<PushButton>(footerR->getNode(), "btnOk", "Ok");
    _btnCancel = make_child<PushButton>(footerR->getNode(), "btnCancel", "Cancel");
@@ -151,11 +151,23 @@ void FileBrowser::refreshDirectoryContents() {
       parentItem->back()->setMetaData<Path>(VAR_PATH, dir);
    }
    for (const auto& file : files){
+      //apply type filter
+      if (!_fileTypesFilter.empty()) {
+         bool showFile = false;
+         for (const auto& ext: _fileTypesFilter) {
+            if (file.tail().ends_with(ext)) {
+               showFile = true;
+               break;
+            }
+         }
+         if (!showFile) continue;
+      }
       parentItem->push_back(_directoryTree->createItem(file.tail()));
       parentItem->back()->setMetaData<Path>(VAR_PATH, file);
    }
    auto size = _directoryTree->measureContents();
    _directoryTree->setSize(size);
+   if (!_fileTypesFilter.empty()) _filterText->setText("*"+string_tools::join(",*", _fileTypesFilter));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -215,7 +227,7 @@ void FileBrowser::_on_addr_entered(const AddrBar::EventAddrEntered& e) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void FileBrowser::_on_up(const PushButton::ButtonPressEvent&) {
-   if (auto parent = _dir.getParent()){
+   if (auto parent = _dir.getParentDirectory()){
       setCurrentDirectory(parent.value());
    }
 }
@@ -294,49 +306,7 @@ Widget* FileBrowser::AddrBar::_unhandled_input(const ReyEngine::InputEvent& even
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-void FileBrowser::History::add(const FileSystem::Directory& dir) {
-   if (_ptr != _dirs.size()) {
-      //overwrite at ptr+1;
-      auto iter = _dirs.begin() + (long long)_ptr + 1;
-      //erase everything after that point
-      _dirs.erase(iter, _dirs.end());
-   }
-   _dirs.push_back(dir);
-   _ptr=_dirs.size()-1;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-std::optional<FileSystem::Directory> FileBrowser::History::back() {
-   if (!_dirs.empty() && _ptr <= _dirs.size()){
-      if (_ptr >= 1){
-         _ptr--;
-      }
-      return _dirs.at(_ptr);
-   }
-   return {};
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-std::optional<FileSystem::Directory> FileBrowser::History::fwd() {
-   if (hasFwd()){
-      return _dirs.at(++_ptr);
-   }
-   return {};
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-bool FileBrowser::History::hasBack() {
-   return !_dirs.empty() && _ptr < _dirs.size() && _ptr > 0;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-bool FileBrowser::History::hasFwd() {
-   return !_dirs.empty() && _ptr < _dirs.size() - 1; // never test size_t against -1
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void FileBrowser::History::clear() {
-   _dirs.clear();
+std::optional<FileSystem::Path> FileBrowser::extractPathFromItem(const ReyEngine::TreeItem* item) const {
+   if (!item) return {};
+   return item->getMetaData<Path>(VAR_PATH);
 }

@@ -12,7 +12,7 @@ int main(){
    auto& window = Application::createWindowPrototype("window", 800, 600, {WindowFlags::RESIZE}, 60)->createWindow();
    auto root = window.getCanvas();
 
-#if 1
+#if 0
    FileSystem::Directory folder = FileSystem::Directory(CrossPlatform::getUserLocalConfigDirApp());
    if (folder.createIfNotExist()) Logger::info() << "Created folder " << folder.abs() << endl;
    auto fileBrowser = make_child<FileBrowser>(root, "FileBrowser");
@@ -39,7 +39,7 @@ int main(){
    scrollArea1->setSize(300, 300);
    auto label1 = make_child<Label>(scrollArea1, "label1", "this here is some text my friend this part is super long for reasons");
    label1->setPosition(123, 201);
-   label1->getTheme().font = ReyEngineFont("/root/casper/ReyEngine/assets/fonts/VollkornRegular.ttf");
+   label1->getTheme().font = std::make_shared<ReyEngineFont>("/root/casper/ReyEngine/assets/fonts/VollkornRegular.ttf");
    make_child<Label>(scrollArea1, "label2", "this here is someasdkljhalksjdf text my friend part 2")->setPosition(0, 100);
    make_child<PushButton>(scrollArea1, "btn", "im a computer")->setPosition(30, 300);
 
@@ -80,6 +80,10 @@ int main(){
       }
    };
    lineEdit->subscribe<LineEdit::EventLineEditTextEntered>(lineEdit, lineEditTextChange);
+
+   while(1) {
+      replace_child<ScrollArea>(root, "rootScrollArea1");
+   }
 
 #endif
 

@@ -132,6 +132,7 @@ target_include_directories(ReyEngineComponentStringTools PUBLIC src/components)
 
 add_library(ReyEngineComponentFilesystem STATIC src/components/FileSystem.cpp)
 target_include_directories(ReyEngineComponentFilesystem PUBLIC src/components)
+target_link_libraries(ReyEngineComponentFilesystem PUBLIC ReyEngineComponentStringTools)
 
 add_library(ReyEngineComponentArgParse STATIC src/components/ArgParse.cpp)
 target_include_directories(ReyEngineComponentArgParse PUBLIC src/components)
@@ -145,6 +146,7 @@ add_library(ReyEngineComponentNetwork STATIC
     src/components/CircBuf.cpp
     src/components/SystemTime.cpp
 )
+
 target_link_libraries(ReyEngineComponentNetwork PUBLIC ComponentLogger)
 target_include_directories(ReyEngineComponentNetwork PUBLIC
     src/components/network
@@ -169,7 +171,7 @@ add_library(ReyEngine2D STATIC
         src/engine/InputManager.cpp
         src/engine/Application.cpp
         src/engine/ReyEngine.cpp
-        src/engine/Processable.cpp
+        src/engine/TypeTree.cpp
 
         src/components/SystemTime.cpp
         src/components/MetaData.cpp
@@ -201,6 +203,7 @@ target_include_directories(ReyEngine2D PUBLIC
     src/thirdParty/uuid
     src/pathfinding
     src/physics
+    src/components/easings
 )
 target_compile_features(ReyEngine2D PUBLIC cxx_std_20)
 target_compile_options(ReyEngine2D PUBLIC -pthread)
@@ -211,6 +214,7 @@ if(REY_ENABLE_LUA)
     target_link_libraries(ReyEngine2D lua)
 endif()
 if(REY_ENABLE_YAML)
+    message(STATUS "Linking YAML!")
     target_link_libraries(ReyEngine2D yaml-cpp::yaml-cpp)
 endif()
 

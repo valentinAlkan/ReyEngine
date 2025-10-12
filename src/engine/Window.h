@@ -4,7 +4,6 @@
 #include "InputHandler.h"
 #include <unordered_set>
 #include "WeakUnits.h"
-#include "Processable.h"
 #include "WindowPrototype.h"
 #include "Canvas.h"
 
@@ -29,9 +28,6 @@ namespace ReyEngine{
       ~Window();
 
       bool isEditor(){return _isEditor;}
-      bool isProcessed(const ReyEngine::Internal::Processable*) const;
-      bool setProcess(bool, ReyEngine::Internal::Processable*); //returns whether operation was successful. Returns false if widget already being processed or is not found.
-//      void setCanvas(std::shared_ptr<Canvas>&);
       static WindowSpace<Pos<float>> getMousePos(); //returns global mouse position
       static Vec2<double> getMousePct(); //returns global mouse position as a percentage of the window size from 0 to 1
       std::shared_ptr<Canvas> getCanvas();
@@ -60,28 +56,10 @@ namespace ReyEngine{
       std::chrono::milliseconds _keyDownRepeatDelay = std::chrono::milliseconds(500); //how long a key must be held down before it counts as a repeat
       std::chrono::milliseconds _keyDownRepeatRate = std::chrono::milliseconds(25); //how long must pass before each key repeat event is sent
       std::chrono::milliseconds _doubleClickThreshold = std::chrono::milliseconds(500); //time threshold for a mouse input to be considered double click
-//      std::stack<RenderTarget*> renderStack;
       std::queue<std::unique_ptr<InputEvent>> _inputQueueMouse; //a place to hold programatically generated input
       std::queue<std::unique_ptr<InputEvent>> _inputQueueKey; //a place to hold programatically generated input
-//      std::mutex _inputMtx;
       std::unique_ptr<TypeNode> _root;
-      /////////////////////
-      /////////////////////
-      class ProcessList {
-      public:
-         ~ProcessList(){clear();}
-         std::optional<ReyEngine::Internal::Processable*> add(ReyEngine::Internal::Processable*);
-         std::optional<ReyEngine::Internal::Processable*> remove(ReyEngine::Internal::Processable*);
-         std::optional<ReyEngine::Internal::Processable*> find(const ReyEngine::Internal::Processable*) const;
-         void processAll(R_FLOAT dt);
-         void clear(){
-            std::unique_lock<std::mutex> sl(_mtx);
-            _list.clear();
-         }
-      private:
-         std::unordered_set<ReyEngine::Internal::Processable*> _list; //list of widgets that require processing. No specific order.
-         std::mutex _mtx;
-      } _processList;
+//      Internal::ProcessList _processList;
       /////////////////////
       /////////////////////
       friend class Application;

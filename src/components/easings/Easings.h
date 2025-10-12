@@ -2,7 +2,10 @@
 #include <StrongUnits.h>
 #include <cmath>
 #ifndef EASINGS_FLOAT_TYPE
-#define EASINGS_FLOAT_TYPE float 
+#define EASINGS_FLOAT_TYPE double
+//the reason this is a double is that we would lose integer precision after about 3 and some change days
+// running at 60 frames per second if it were a float. With a double, that time frame becomes a little
+// over 4 million years. It is somewhat unlikely that anyone would leave a system running for that long.
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -205,3 +208,16 @@ static constexpr inline Fraction easeInOutBounce(EASINGS_FLOAT_TYPE x) {
           ? (1 - easeOutBounce(1 - 2 * x)) / 2
           : (1 + easeOutBounce(2 * x - 1)) / 2;
 }
+
+template <typename T>
+struct Easing {
+   Fraction operator()(EASINGS_FLOAT_TYPE engineFrameNo){
+      return functor(engineFrameNo);
+   }
+   void start(EASINGS_FLOAT_TYPE engineFrameNo){
+      startFrame = engineFrameNo;
+   };
+private:
+   EASINGS_FLOAT_TYPE startFrame;
+   T& functor;
+};

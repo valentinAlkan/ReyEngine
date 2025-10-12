@@ -11,16 +11,14 @@ namespace ReyEngine{
       TreeItemContainer() = default;
       TreeItem* push_back(std::unique_ptr<TreeItem>&& item);
       TreeItem* push_back(const std::string& item);
-      TreeItem* insertItem(int atIndex, std::unique_ptr<TreeItem> item);
+      TreeItem* insertItem(size_t atIndex, std::unique_ptr<TreeItem> item);
       TreeItem* front(){return _children.front().get();}
       TreeItem* back(){return _children.back().get();}
-      /////////////////////////////////////////////////////////////////////////////////////////
-      virtual std::unique_ptr<TreeItem> removeItem(size_t index) = 0;
+      virtual std::unique_ptr<TreeItem> takeItem(size_t index) = 0;
       void sort(std::function<bool(const std::unique_ptr<TreeItem>& a, const std::unique_ptr<TreeItem>& b)>& fxLessthan){
          std::sort(getChildren().begin(), getChildren().end(), fxLessthan);
       }
       void clear(); //remove all children
-      /////////////////////////////////////////////////////////////////////////////////////////
       std::vector<std::unique_ptr<TreeItem>>& getChildren(){return _children;}
    protected:
       std::vector<std::unique_ptr<TreeItem>> _children;
@@ -37,7 +35,7 @@ namespace ReyEngine{
    public:
       void setText(const std::string& text){_text = text;}
       [[nodiscard]] std::string getText() const {return _text;}
-      std::unique_ptr<TreeItem> removeItem(size_t index) override;
+      std::unique_ptr<TreeItem> takeItem(size_t index) override;
       [[nodiscard]] bool getExpanded(){return expanded;}
       void setExpanded(bool _expanded){expanded = _expanded;}
       [[nodiscard]] bool getExpandable(){return expandable;}
@@ -66,6 +64,7 @@ namespace ReyEngine{
       bool expanded = true; //unexpanded tree items are visible, it's their children that are not;
       bool visible = true;
       bool expandable = true;
+      size_t index; //only valid if in a tree
       std::unique_ptr<ReyTexture> _icon;
 
    private:
@@ -108,21 +107,26 @@ namespace ReyEngine{
          TreeItem*& item;
       };
 
-      [[nodiscard]] std::optional<TreeItem*> getRoot() const {if (root) return root.get(); return {};}
-      void setHideRoot(bool hide){_hideRoot = hide; determineVisible();}
-      TreeItem* setRoot(std::unique_ptr<TreeItem>&& item);
-      TreeItem* setRoot(const std::string& rootName);
-      std::unique_ptr<TreeItem> takeItem(std::unique_ptr<TreeItem>&&); //takes ownership of another tree item
       template <typename... Args>
       static inline std::unique_ptr<TreeItem> createItem(const std::string& text={}, Args... args){
          return std::unique_ptr<TreeItem>(new TreeItem(text, std::forward<Args>(args)...));
       }
+      [[nodiscard]] std::optional<TreeItem*> getRoot() const {if (root) return root.get(); return {};}
+      void setHideRoot(bool hide){_hideRoot = hide; determineVisible();}
+      bool getHideRoot() const {return _hideRoot;}
+      TreeItem* setRoot(std::unique_ptr<TreeItem>&& item);
+      TreeItem* setRoot(const std::string& rootName);
+//      TreeItem* addItem(std::unique_ptr<TreeItem>&&); //takes ownership of another tree item
       void setAllowHighlight(bool allowHighlight){_allowHighlight = allowHighlight;}
       void setAllowSelect(bool allowSelect){_allowSelect = allowSelect;}
       [[nodiscard]] bool getAllowSelect(){return _allowSelect;}
       [[nodiscard]] bool getAllowHighlight(){return _allowHighlight;}
       std::optional<TreeItem*> getSelected(){return _selectedItem;}
-      void setSelected(TreeItem* selectedItem){_selectedItem = selectedItem;}
+      std::optional<size_t> getSelectedIndex();
+      void setHighlighted(TreeItem*, bool publish=true);
+      void setHighlightedIndex(size_t visibleItemIndex, bool publish=true); //sets highlighted by its CURRENTLY VISIBLE index (not internal raw index)
+      void setSelected(TreeItem* selectedItem, bool publish=true);
+      void setSelectedIndex(size_t visibleItemIndex, bool publish=true); //sets selected by its CURRENTLY VISIBLE index (not internal raw index)
       Size<float> measureContents(); // Measures how big the contents of the tree are, not how big the tree itself is. Used for sizing.
       void fit(){setSize(measureContents());}
       struct Iterator {

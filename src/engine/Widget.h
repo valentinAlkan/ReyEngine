@@ -1,7 +1,6 @@
 #pragma once
 #include "Drawable2D.h"
 #include "InputHandler.h"
-#include "Processable.h"
 #include "Theme.h"
 #include "WeakUnits.h"
 #include "MetaData.h"
@@ -10,7 +9,7 @@ namespace ReyEngine {
    enum class Anchor{NONE, LEFT, RIGHT, TOP, TOP_WIDTH, BOTTOM, FILL, TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, CENTER, CUSTOM};
    class Widget
    : public Internal::Drawable2D
-   , public Internal::Processable
+   , public Internal::Tree::Processable
    , public EventPublisher
    , public EventSubscriber
    , public MetaDataInterface
@@ -43,7 +42,7 @@ namespace ReyEngine {
       Widget()= default;
       ~Widget() override{
          if constexpr (isDebugBuild) {
-            std::cout << "Goodbye from " << getName() << "!!" << std::endl;
+//            std::cout << "Goodbye from " << getName() << "!!" << std::endl;
          }
       }
       REYENGINE_OBJECT(Widget)
@@ -149,8 +148,8 @@ namespace ReyEngine {
       friend class Layout;
       friend class Canvas;
 
-      [[noreturn]] void throwEx(auto widget, auto operation) {
-         throw std::runtime_error(std::string("Widget failed operation \"") + operation + "\" on " + widget->getName() + " : " + std::string(INVALID_NODE_ERR_MSG));
+      [[noreturn]] void throwEx(const std::string& operation) {
+         throw std::runtime_error(std::string("Widget failed operation \"") + operation + "\" on " + getName() + " : " + std::string(INVALID_NODE_ERR_MSG));
       }
 
    public:
@@ -160,21 +159,28 @@ namespace ReyEngine {
          if (auto hasNode = getNode()) {
             return getNode()->addChild(std::forward<Args>(args)...);
          }
-         throwEx(std::get<0>(std::forward_as_tuple(std::forward<Args>(args)...)), "addChild");
+         throwEx("addChild");
       }
+//      template <typename... Args>
+//      auto replaceChild(Args&& ...args){
+//         if (auto hasNode = getNode()) {
+//            return getNode()->replaceChild(std::forward<Args>(args)...);
+//         }
+//         throwEx(std::get<0>(std::forward_as_tuple(std::forward<Args>(args)...)), "addChild");
+//      }
       template <typename... Args>
       auto removeChild(Args&& ...args){
          if (auto hasNode = getNode()) {
             return getNode()->removeChild(std::forward<Args>(args)...);
          }
-         throwEx(std::get<0>(std::forward_as_tuple(std::forward<Args>(args)...)), "removeChild");
+         throwEx("removeChild");
       }
 
       auto removeAllChildren(){
          if (auto hasNode = getNode()) {
             return hasNode->removeAllChildren();
          }
-         throwEx(this, "removeAllChildren");
+         throwEx("removeAllChildren");
       }
    private:
       static constexpr std::string_view INVALID_NODE_ERR_MSG = "Invalid Node for operation. \n"
