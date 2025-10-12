@@ -50,6 +50,7 @@ namespace ReyEngine {
       Theme& getTheme(){return *theme;}
       const Theme& getTheme() const {return *theme;}
       void setTheme(std::shared_ptr<Theme>& newTheme){theme = newTheme;}
+      void setTheme(std::shared_ptr<Theme>&& newTheme){theme = std::move(newTheme);}
       [[nodiscard]] std::optional<Widget*> getParentWidget() const;
       void setAnchoring(Anchor newAnchor);
       [[nodiscard]] Rect<R_FLOAT> getChildBoundingBox() const;

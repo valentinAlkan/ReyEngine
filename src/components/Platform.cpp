@@ -1,6 +1,6 @@
 #include "Platform.h"
 #include <stdexcept>
-#include <filesystem>
+#include "FileSystem.h"
 
 #ifdef PLATFORM_WINDOWS
 #include "windows.h"
@@ -30,6 +30,7 @@
 
 //resist the urge to import std namespace BEFORE windows.h it will cause weird errors
 using namespace std;
+using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 string CrossPlatform::getExePath() {
@@ -109,18 +110,36 @@ string CrossPlatform::getExeDir() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-string CrossPlatform::getResourceDir() {
+string CrossPlatform::getExeResourceDir() {
    return getExeDir() + REYENGINE_FILESYSTEM_PATH_SEP + "engine" + REYENGINE_FILESYSTEM_PATH_SEP + "resources";
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+string CrossPlatform::getReyEngineResourceDir() {
+#define RESOURCE_PATH REYENGINE_FILESYSTEM_PATH_SEP + "reyengine" + REYENGINE_FILESYSTEM_PATH_SEP + "resources"
+   auto dirs = {
+         getEnvironmentVariable("REYENGINE_RESOURCE_DIR"),
+         getUserLocalConfigDir() + RESOURCE_PATH,
+         getUserDir() + RESOURCE_PATH,
+   };
+
+   for (const auto& dir : dirs){
+      if (FileSystem::Directory(dir).exists()) {
+         return dir;
+      }
+   }
+   return getExeDir() + RESOURCE_PATH;
+#undef RESOURCE_PATH
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 string CrossPlatform::getFontsDir() {
-   return getResourceDir() + REYENGINE_FILESYSTEM_PATH_SEP + "fonts";
+   return getReyEngineResourceDir() + REYENGINE_FILESYSTEM_PATH_SEP + "fonts";
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 string CrossPlatform::getIconsDir() {
-   return getResourceDir() + REYENGINE_FILESYSTEM_PATH_SEP + "icons";
+   return getReyEngineResourceDir() + REYENGINE_FILESYSTEM_PATH_SEP + "icons";
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -337,4 +356,14 @@ vector<string> CrossPlatform::getRootFolders() {
 #endif
 
    return roots;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::string CrossPlatform::getEnvironmentVariable(const std::string& varName) {
+   const char* value = std::getenv(varName.c_str());
+   if (value == nullptr) {
+      return "";
+   } else {
+      return value;
+   }
 }

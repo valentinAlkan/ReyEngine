@@ -283,7 +283,7 @@ target_link_libraries(NewEngineMain ReyEngine2D)
 add_executable( NewEngineBasic test/newEngine/NewEngineTestBasic.cpp)
 target_link_libraries(NewEngineBasic ReyEngine2D)
 add_executable( NewEngineFonts test/newEngine/NewEngineFonts.cpp)
-target_link_libraries(NewEngineFonts ReyEngine2D)
+target_link_libraries(NewEngineFonts ReyEngine2D ReyEngineComponentArgParse)
 
 
 # Test Project
@@ -309,14 +309,15 @@ add_executable( cppTest
 ##########################################
 
 #font resources
-copy_file(resources/icons/document.png engine/resources/icons)
-copy_file(resources/icons/folder.png engine/resources/icons)
-copy_file(resources/fonts/FiraCode-Bold.ttf engine/resources/fonts)
-copy_file(resources/fonts/FiraCode-Light.ttf engine/resources/fonts)
-copy_file(resources/fonts/FiraCode-Medium.ttf engine/resources/fonts)
-copy_file(resources/fonts/FiraCode-Regular.ttf engine/resources/fonts)
-copy_file(resources/fonts/FiraCode-Retina.ttf engine/resources/fonts)
-copy_file(resources/fonts/FiraCode-SemiBold.ttf engine/resources/fonts)
+copy_file(reyengine/resources/icons/document.png reyengine/resources/icons)
+copy_file(reyengine/resources/icons/folder.png reyengine/resources/icons)
+copy_file(reyengine/resources/fonts/FiraCode-Bold.ttf reyengine/resources/fonts)
+copy_file(reyengine/resources/fonts/FiraCode-Light.ttf reyengine/resources/fonts)
+copy_file(reyengine/resources/fonts/FiraCode-Medium.ttf reyengine/resources/fonts)
+copy_file(reyengine/resources/fonts/FiraCode-Regular.ttf reyengine/resources/fonts)
+copy_file(reyengine/resources/fonts/FiraCode-Retina.ttf reyengine/resources/fonts)
+copy_file(reyengine/resources/fonts/FiraCode-SemiBold.ttf reyengine/resources/fonts)
+copy_file(reyengine/resources/fonts/RobotoFlex.ttf reyengine/resources/fonts)
 
 # test resources
 #copy_file(test/test.scn "")

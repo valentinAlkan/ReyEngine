@@ -1603,7 +1603,7 @@ namespace ReyEngine {
       ColorRGBA color = COLORS::black;
       std::string fileName;
       [[nodiscard]] Size<R_FLOAT> measure(const std::string& text) const;
-      static constexpr std::string_view DEFAULT_FONT_FILE = "FiraCode-Regular.ttf";
+      static constexpr std::string_view DEFAULT_FONT_FILE = "RobotoFlex.ttf";
    };
 
    struct ReyTexture;

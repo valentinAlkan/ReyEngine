@@ -61,7 +61,7 @@ namespace ReyEngine{
 
    class ArgParse {
    public:
-      ArgParse(){};
+      ArgParse() = default;
       void parseArgs(int argc, char** argv);
       std::string getDocString();
       std::optional<RuntimeArg*> getArg(const std::string& name);

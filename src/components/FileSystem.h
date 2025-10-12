@@ -183,7 +183,6 @@ namespace ReyEngine::FileSystem {
    };
 
    struct Directory : public Path {
-//      Directory(){}
       Directory(const Path& other): Path(other){_pathType = DIRECTORY;}
       Directory(Directory& other) = default;
       Directory(Directory&& other):Path(other){_pathType = DIRECTORY;}

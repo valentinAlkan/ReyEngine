@@ -328,8 +328,8 @@ ReyEngine::ReyEngineFont::ReyEngineFont(const std::string& fontFile, int fontSiz
       return;
    }
 
-   fileName = fontFile;
-   font = LoadFontEx(fontPath.canonical().c_str(), fontSize, 0, 0);
+   fileName = fontPath.exists() ? fontPath.canonical() : fontFile;
+   font = LoadFontEx(fontPath.canonical().c_str(), fontSize, nullptr, 0);
    isDefault = false;
    size = fontSize;
 }
