@@ -217,6 +217,7 @@ namespace ReyEngine{
       PUBLISH_AND_STOP, //publishes input to subscribers instead of handling it locally or passing it to children
       PASS_PUBLISH_PROCESS, //pass to children, publish, then try to handle locally
       PASS_PROCESS_PUBLISH, //pass to children, process locally, then publish if unhandled (default)
+      PASS_PROCESS_STOP,
       PROCESS_PUBLISH_PASS,
       PROCESS_PASS_PUBLISH,
       PUBLISH_PASS_PROCESS,

@@ -5,21 +5,20 @@ using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 TilePalette::TilePalette()
-: Layout(LayoutDir::GRID)
 {
 
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void TilePalette::_init() {
-   Layout::_init();
-   setSize(THUMBNAIL_SIZE.x * 5, THUMBNAIL_SIZE.y * 15);
+   setAnchoring(ReyEngine::Anchor::FILL);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void TilePalette::render2D() const {
    //draw a tile palette grid
-   drawRectangle(getSizeRect(), Colors::blue);
+   auto sizeRect = getSizeRect();
+   drawRectangle(sizeRect, Colors::blue);
    for (int x=0; (float)x<=getWidth(); /**/){
       for (int y=0; (float)y<=getHeight(); /**/){
          Pos<float> a = {0, (float)y};
@@ -32,8 +31,6 @@ void TilePalette::render2D() const {
       drawLine({a,b}, 1.0, Colors::black);
       x += THUMBNAIL_SIZE.x;
    }
-
-
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -43,4 +40,9 @@ Widget *TilePalette::_unhandled_input(const ReyEngine::InputEvent& event) {
       return this;
    }
    return nullptr;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void TilePalette::_on_rect_changed() {
+
 }

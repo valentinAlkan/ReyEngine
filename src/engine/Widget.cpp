@@ -54,13 +54,22 @@ void Widget::calculateAnchoring(const Rect<R_FLOAT>& r){
    if (!_node) return; //not in tree (yet) - allowes resizing in ctor
    auto hasParent = _node->getParent();
    if (!hasParent) return;
-   auto isWidget = hasParent->as<Widget>();
-   float parentHeight;
-   float parentWidth;
-   if(isWidget && getAnchoring() != Anchor::NONE) {
-      parentHeight = isWidget.value()->getHeight();
-      parentWidth = isWidget.value()->getWidth();
-      newRect = {{0, 0}, {parentWidth, parentHeight}};
+   auto parentWidget = hasParent->as<Widget>();
+   float anchorX = 0;
+   float anchorY = 0;
+   float anchorHeight = 0;
+   float anchorWidth = 0;
+   if(parentWidget && getAnchoring() != Anchor::NONE) {
+      if (_anchorArea) {
+         anchorX = _anchorArea->x;
+         anchorY = _anchorArea->y;
+         anchorHeight = parentWidget.value()->_anchorArea->height;
+         anchorWidth = parentWidget.value()->_anchorArea->width;
+      } else {
+         anchorHeight = parentWidget.value()->getHeight();
+         anchorWidth = parentWidget.value()->getWidth();
+      }
+      newRect = {{anchorX, anchorY}, {anchorWidth, anchorHeight}};
    }
    // enum class Anchor{NONE, LEFT, RIGHT, TOP, BOTTOM, FILL, TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, CENTER};
    switch (_anchor) {
@@ -73,52 +82,52 @@ void Widget::calculateAnchoring(const Rect<R_FLOAT>& r){
       }
       case Anchor::LEFT: {
          //Place on the center left of the parent
-         newRect = {{0, parentHeight / 2 - getHeight() / 2}, getSize()};
+         newRect = {{anchorX, anchorHeight / 2 - getHeight() / 2}, getSize()};
          break;
       }
       case Anchor::RIGHT: {
          //Place on the center right of the parent
-         newRect = {{parentWidth - getWidth(), parentHeight / 2 - getHeight() / 2}, getSize()};
+         newRect = {{anchorWidth - getWidth(), anchorHeight / 2 - getHeight() / 2}, getSize()};
          break;
       }
       case Anchor::TOP: {
          //Place at the center top of the parent
-         newRect = {{parentWidth / 2 - getWidth() / 2, 0}, getSize()};
+         newRect = {{anchorWidth / 2 - getWidth() / 2, anchorY}, getSize()};
          break;
       }
       case Anchor::BOTTOM: {
          //Place at the center bottom of the parent
-         newRect = {{parentWidth / 2 - getWidth() / 2, parentHeight - getHeight()}, getSize()};
+         newRect = {{anchorWidth / 2 - getWidth() / 2, anchorHeight - getHeight()}, getSize()};
          break;
       }
       case Anchor::TOP_LEFT: {
          //Place at the top left of the parent
-         newRect = {{0, 0}, getSize()};
+         newRect = {{anchorWidth, anchorHeight}, getSize()};
          break;
       }
       case Anchor::TOP_RIGHT: {
          //Place at the top right of the parent
-         newRect = {{parentWidth - getWidth(), 0}, getSize()};
+         newRect = {{anchorWidth - getWidth(), anchorY}, getSize()};
          break;
       }
       case Anchor::TOP_WIDTH: {
          //Place at the top and match the width of the parent
-         newRect = {{0, 0}, {parentWidth, getHeight()}};
+         newRect = {{anchorX, anchorY}, {anchorWidth, getHeight()}};
          break;
       }
       case Anchor::BOTTOM_RIGHT: {
          //Place at the bottom right of the parent
-         newRect = {{parentWidth - getWidth(), parentHeight - getHeight()}, getSize()};
+         newRect = {{anchorWidth - getWidth(), anchorHeight - getHeight()}, getSize()};
          break;
       }
       case Anchor::BOTTOM_LEFT: {
          //Place at the bottom left of the parent
-         newRect = {{0, parentHeight - getHeight()}, getSize()};
+         newRect = {{anchorX, anchorHeight - getHeight()}, getSize()};
          break;
       }
       case Anchor::CENTER: {
          //Place at the center of the parent
-         newRect = {{parentWidth / 2 - getWidth() / 2, parentHeight / 2 - getHeight() / 2}, getSize()};
+         newRect = {{anchorWidth / 2 - getWidth() / 2, anchorHeight / 2 - getHeight() / 2}, getSize()};
          break;
       }
 

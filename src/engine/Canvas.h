@@ -57,11 +57,9 @@ namespace ReyEngine {
                                                    //children.
       }
       ~Canvas() override = default;
-      enum class Viewport{FOREGRUOND, BACKGROUND};
       CanvasSpace<Pos<float>> getMousePos();
       inline const Transform2D getCameraTransform() const {return GetCameraMatrix2D(camera);}
       inline Transform2D getCameraTransform() {return GetCameraMatrix2D(camera);}
-      void setCaptureOutsideInput(bool newValue){_rejectOutsideInput = newValue;}
       Camera2D& getCamera(){return camera;}
       void moveToForeground(Widget*);
       void moveToBackground(Widget*);
@@ -78,7 +76,6 @@ namespace ReyEngine {
 
       RenderTarget _renderTarget;
       Camera2D camera;
-      bool _rejectOutsideInput = false; //rejects input that is outside the canvas
       bool _retained = false; //set to true if you want to retain the image between draw calls. Requires manually clearing the render target.
 
       std::map<size_t, std::vector<Widget*>> _processLayers; //different layers of widgets that can be processed differently
@@ -354,6 +351,18 @@ namespace ReyEngine {
                auto process = [&](){ return processTransformer.process();};
                #define RETURN if (handled) return handled
                if (!widget->_modal || isGlobal) {
+//                  //ignore outside input if applicable
+//                  if (auto mouse = processTransformer.event.isMouse()) {
+//                     auto isPositionable = thisNode->tag<Internal::Positionable2D>();
+//                     if (_ignoreOutsideInput && isPositionable) {
+//                        std::cout << mouse.value()->getLocalPos() << std::endl;
+//                        auto pos = mouse.value()->getLocalPos();
+//                        if (isPositionable.value()->getSizeRect().contains(pos)) {
+//                           return nullptr;
+//                        }
+//                     }
+//                  }
+
                   switch(widget->_inputFilter) {
                      case InputFilter::PASS_ONLY: handled = pass(); RETURN; break;
                      case InputFilter::PROCESS_ONLY: handled = process(); RETURN; break;
@@ -369,6 +378,7 @@ namespace ReyEngine {
                      case InputFilter::PUBLISH_AND_STOP: handled = publish(); RETURN; return this;
                      case InputFilter::PASS_PUBLISH_PROCESS: handled = pass(); RETURN; handled = publish(); RETURN; handled = process(); RETURN; break;
                      case InputFilter::PASS_PROCESS_PUBLISH: handled = pass();  RETURN; handled = process(); RETURN; handled = publish(); RETURN; break;
+                     case InputFilter::PASS_PROCESS_STOP: handled = pass();  RETURN; handled = process(); RETURN; return this;
                      case InputFilter::PROCESS_PUBLISH_PASS: handled = process(); RETURN; handled = publish(); RETURN; handled = pass(); RETURN; break;
                      case InputFilter::PROCESS_PASS_PUBLISH: handled = process(); RETURN; handled = pass(); RETURN; handled = publish(); RETURN; break;
                      case InputFilter::PUBLISH_PASS_PROCESS: handled = publish(); RETURN; handled = pass(); RETURN; handled = process(); RETURN; break;

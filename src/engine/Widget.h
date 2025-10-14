@@ -52,6 +52,8 @@ namespace ReyEngine {
       void setTheme(std::shared_ptr<Theme>&& newTheme){theme = std::move(newTheme);}
       [[nodiscard]] std::optional<Widget*> getParentWidget() const;
       void setAnchoring(Anchor newAnchor);
+      void setAnchorArea(const Rect<float>& r){_anchorArea = r;}
+      [[nodiscard]] std::optional<Rect<float>> getAnchorArea() const {return _anchorArea;}
       [[nodiscard]] Rect<R_FLOAT> getChildBoundingBox() const;
       [[nodiscard]] Anchor getAnchoring() const {return _anchor;}
       [[nodiscard]] FrameCount getEngineFrameCount() const;
@@ -69,6 +71,8 @@ namespace ReyEngine {
       void setInputFiltering(InputFilter newFilter){ _inputFilter = newFilter;}
       [[nodiscard]] InputFilter getInputFiltering() const {return _inputFilter;}
       void setAcceptsHover(bool accepts);
+      [[nodiscard]] bool getIgnoreOutsideInput() const {return _ignoreOutsideInput;}
+      void setIgnoreOutsideInput(bool newValue){ _ignoreOutsideInput = newValue;}
       //convenience
       void moveToForeground();
       void moveToBackground();
@@ -91,7 +95,9 @@ namespace ReyEngine {
       bool isLayout = false;
       bool enabled = true; //changes visuals and (typically) ingores input
       InputFilter _inputFilter = InputFilter::PASS_AND_PROCESS;
+      std::optional<Rect<float>> _anchorArea; //optional area to anchor to, if not our size rect
       Anchor _anchor = Anchor::NONE;
+      bool _ignoreOutsideInput = false;
 
       std::shared_ptr<Theme> theme;
    private:

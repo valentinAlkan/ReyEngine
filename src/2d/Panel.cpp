@@ -12,38 +12,28 @@ Panel::Panel()
 , REGION_SOUTH(stretchRegion[2])
 , REGION_WEST(stretchRegion[3])
 {
+
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::render2D() const {
-   auto color = theme->background.colorPrimary;
-   //draw the menu bar top half that peeks out
-   auto menuBarHeight = menuBar.bar.height;
-   drawRectangleLines(menuBar.bar, 1.0, theme->background.colorSecondary);
-   drawRectangleLines(getSizeRect(), 1.0, theme->background.colorSecondary);
+   if (!_isMinimized) {
+      //dont need to draw these if we're minimized
 
-//
-//   if (!_isMinimized) {
-//      //dont need to draw these if we're minimized
-//
-//      static constexpr float roundness = 2.0;
-//
-//      //draw the rounded bottom portion
-//      drawRectangle(getSizeRect().chopTop(menuBarHeight), theme->background.colorPrimary);
-//      drawRectangleLines(getSizeRect().chopTop(menuBarHeight), 1.0, theme->background.colorSecondary);
-//      drawRectangleRounded(getSizeRect().chopTop(menuBarHeight), roundness, 1, theme->background.colorPrimary);
-//      drawRectangleRoundedLines(getSizeRect().chopBottom(menuBarHeight), roundness, 1, 1.0, Colors::black);
-//
-//      //draw the non-rounded band
-//      drawRectangle(getSizeRect().chopBottom(50) + Pos<int>(0, menuBarHeight), theme->background.colorPrimary);
-//      drawRectangleRoundedLines(getSizeRect().chopBottom(menuBarHeight), roundness, 1, 1.0, Colors::black);
-//
-//      //debug:
-////      draw the stretch regions
+      static constexpr float roundness = 2.0;
+
+      //draw the rounded bottom portion
+      drawRectangle(getSizeRect(), theme->background.colorPrimary);
+
+      drawRectangleLines(menuBar.bar, 1.0, theme->background.colorSecondary);
+      drawRectangleLines(getSizeRect(), 1.0, theme->background.colorSecondary);
+
+      //debug:
+//      draw the stretch regions
       for (const auto &region: stretchRegion) {
          drawRectangle(region, ColorRGBA(0, 0, 255, 128));
       }
-//   }
+   }
 
 }
 
@@ -59,15 +49,15 @@ void Panel::render2DBegin() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::render2DEnd() {
-//   stopScissor();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::_init() {
    theme->background.fill = Style::Fill::SOLID;
    theme->background.colorPrimary = ReyEngine::ColorRGBA(94, 142, 181, 255);
-   _viewArea = make_child<Control>("__placementWidget");
+   _viewArea = make_child<Control>("_viewArea");
    setAcceptsHover(true);
+   _inputFilter = InputFilter::PROCESS_AND_PASS;
    //create subwidgets
 //   vlayout = make_child<Layout>(getNode(), VLAYOUT_NAME, Layout::LayoutDir::VERTICAL);
 //   if (!window) window = make_child<Control>(vlayout->getNode(), WINDOW_NAME);
@@ -169,7 +159,7 @@ void Panel::_on_rect_changed(){
    _scissorArea = getScissorArea();
 
    //update viewable area
-   _viewArea->setRect(window);
+   _viewArea->setRect(getSizeRect().chopTop(menuBar.bar.height));
 
    //create rects
    static constexpr float MENU_BAR_HEIGHT = 35;
@@ -181,10 +171,8 @@ void Panel::_on_rect_changed(){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-TypeNode *Panel::addChild(std::unique_ptr<TypeNode> &&child) {
-   auto thiz = dynamic_cast<TypeNode*>(this);
-   if (!thiz) throw std::runtime_error("Not sure how you managed to do this");
-   return thiz->addChild(std::move(child));
+TypeNode* Panel::addChild(std::unique_ptr<TypeNode>&& child) {
+   return _viewArea->addChild(std::move(child));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -289,20 +277,22 @@ Widget *Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
                   break;
                default:
                   InputInterface::setCursor(InputInterface::MouseCursor::DEFAULT);
-                  return nullptr;
+                  break;
             }
             return this;
          }
-         break;
+   }
+
+   //consume all mouse input that is inside the panel so it doesn't fall through to the area behind
+   if (auto mouse = event.isMouse()){
+      if (getSizeRect().contains(mouse.value()->getLocalPos())) {
+         Logger::info() << "Panel consuming event!" << endl;
+         return this;
+      }
    }
    return nullptr;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
-void Panel::addChildToPanel(std::shared_ptr<Widget> child){
-//   if (!window) window = make_child<Control>(child->getNode(), WINDOW_NAME);
-
-}
 /////////////////////////////////////////////////////////////////////////////////////////
 //void Panel::registerProperties(){
    //register properties specific to your type here.

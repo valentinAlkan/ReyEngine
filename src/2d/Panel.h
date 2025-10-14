@@ -33,7 +33,7 @@ namespace ReyEngine{
       void render2DEnd() override;
       void render2D() const override;
       void setTitle(const std::string& newtitle);
-      void addChildToPanel(std::shared_ptr<Widget> child);
+//      void addChildToPanel(std::shared_ptr<Widget> child);
       inline void setResizable(bool resizeable){_isResizable = resizeable;}
       inline bool getResizable(){return _isResizable;}
 
@@ -53,7 +53,6 @@ namespace ReyEngine{
       };
 
       MenuBar menuBar;
-      Rect<float> window;
       Rect<float> titleLabel;
       ReyEngine::Pos<R_FLOAT> offset;
       ReyEngine::Pos<R_FLOAT> dragStart;

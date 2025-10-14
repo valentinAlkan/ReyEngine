@@ -79,21 +79,25 @@ namespace ReyEngine::Internal {
       }
       inline Size<R_FLOAT> getMinSize() const {return minSize;}
       inline Size<R_FLOAT> getMaxSize() const {return maxSize;}
-      template <typename... Args> inline void setMinSize(Args... args){minSize = Size<float>(std::forward<Args>(args)...); setSize(getSize());}
-      template <typename... Args> inline void setMaxSize(Args... args){maxSize = Size<float>(std::forward<Args>(args)...); setSize(getSize());}
-      inline void setMaxHeight(float newMax){maxSize = {maxSize.x, newMax}; setSize(getSize());}
-      inline void setMaxWidth(float newMax){maxSize = {newMax, maxSize.y}; setSize(getSize());}
-      inline void setMinWidth(float newMin){minSize = {newMin, minSize.y}; setSize(getSize());}
-      inline void setMinHeight(float newMin){minSize = {minSize.x, newMin}; setSize(getSize());}
+      template <typename... Args> inline void setMinSize(Args... args){minSize = Size<R_FLOAT>(std::forward<Args>(args)...); setSize(getSize());}
+      template <typename... Args> inline void setMaxSize(Args... args){maxSize = Size<R_FLOAT>(std::forward<Args>(args)...); setSize(getSize());}
+      inline void setMaxHeight(R_FLOAT newMax){maxSize = {maxSize.x, newMax}; setSize(getSize());}
+      inline void setMaxWidth(R_FLOAT newMax){maxSize = {newMax, maxSize.y}; setSize(getSize());}
+      inline void setMinWidth(R_FLOAT newMin){minSize = {newMin, minSize.y}; setSize(getSize());}
+      inline void setMinHeight(R_FLOAT newMin){minSize = {minSize.x, newMin}; setSize(getSize());}
       [[nodiscard]] inline R_FLOAT getWidth() const {return size.x;}
       [[nodiscard]] inline R_FLOAT getHeight() const {return size.y;}
-      [[nodiscard]] inline Pos<float> getCenter() const {return getRect().center();}
+      [[nodiscard]] inline Pos<R_FLOAT> getCenter() const {return getRect().center();}
       [[nodiscard]] inline Size<R_FLOAT> clampedSize(const Size<R_FLOAT>& rhs) const {
          auto newX = ReyEngine::Vec2<R_FLOAT>(minSize.x, maxSize.x).clamp(size.x);
          auto newY = ReyEngine::Vec2<R_FLOAT>(minSize.y, maxSize.y).clamp(size.y);
          return {newX, newY};
       }
       bool isInside(const Pos<R_FLOAT>& pos) const { return getSizeRect().contains(pos);}
+      void alignTop(const Pos<R_FLOAT>& p){setPosition(getPos().x, p.y);}
+      void alignRight(const Pos<R_FLOAT>& p){setPosition(p.x - getWidth(), getPos().y);}
+      void alignBottom(const Pos<R_FLOAT>& p){setPosition(getPos().x, p.y - getHeight());}
+      void alignLeft(const Pos<R_FLOAT>& p){setPosition(p.x, getPos().y);}
 
    protected:
       /// Bypasses normal mechanisms and just directly sets a rect without calling callbacks

@@ -154,7 +154,7 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
    };
 
    //reject mouse input from outside the canvas
-   if (_rejectOutsideInput) {
+   if (_ignoreOutsideInput) {
       if (isMouse && !getSizeRect().contains(isMouse.value()->getLocalPos() - getPos())){
          return nullptr;
       }
@@ -173,14 +173,14 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
    }
 
    //then foreground (which is unaffected by camera transform)
-   for (auto& child : _foreground.getValues()) {
+   for (auto& child : _foreground.getValues() | std::views::reverse) {
       handled = createProcessNodeForEvent(child, false, event);
       if (handled) return handled;
    }
 
    //then background (which is affected by camera transorm)
    // this here is "normal" input
-   for (auto& child : _background.getValues()) {
+   for (auto& child : _background.getValues() | std::views::reverse) {
       std::unique_ptr<MouseEvent::ScopeTransformer> xformer;
       if (isMouse){
          xformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), getLocalTransform(), child->as<Widget>().value()->size, getCameraTransform());

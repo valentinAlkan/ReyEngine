@@ -6,7 +6,7 @@ using namespace std;
 using namespace ReyEngine;
 
 ScrollArea::ScrollArea() {
-   _rejectOutsideInput = true;
+   _ignoreOutsideInput = true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -32,8 +32,8 @@ void ScrollArea::_init() {
    };
 
    //make sure we only capture outside input when the sliders are being used
-   auto cbSliderPress = [this](const Slider::EventSliderPressed& event){_rejectOutsideInput = false;};
-   auto cbSliderRelease = [this](const Slider::EventSliderReleased& event){_rejectOutsideInput = true;};
+   auto cbSliderPress = [this](const Slider::EventSliderPressed& event){ _ignoreOutsideInput = false;};
+   auto cbSliderRelease = [this](const Slider::EventSliderReleased& event){ _ignoreOutsideInput = true;};
 
    subscribe<Slider::EventSliderValueChanged>(_hslider, setOffsetX);
    subscribe<Slider::EventSliderValueChanged>(_vslider, setOffsetY);
