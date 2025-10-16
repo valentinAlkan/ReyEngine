@@ -25,7 +25,7 @@ namespace ReyEngine{
       void _on_child_rect_changed(Widget*) override {arrangeChildren();}
       void render2DEnd() override;
       virtual void arrangeChildren();
-      void render2D() const override {drawRectangleLines(getRect().toSizeRect(), 1.0, Colors::black);}
+      void render2D() const override {/*drawRectangleLines(getRect().toSizeRect(), 1.0, Colors::black);*/}
       const LayoutDir layoutDir;
 
    };

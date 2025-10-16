@@ -15,7 +15,7 @@ void Control::render2D() const {
    if (renderCallback) {
       renderCallback(*this);
    } else {
-      drawRectangle(Internal::Drawable2D::getRect().toSizeRect(), Colors::red);
+//      drawRectangle(Internal::Drawable2D::getRect().toSizeRect(), Colors::red);
 //      switch(theme->background.value){
 //         case Style::Fill::SOLID:
 //            drawRectangle(getRect().toSizeRect(), theme->background.colorPrimary.value);
