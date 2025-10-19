@@ -793,8 +793,8 @@ namespace ReyEngine {
       [[nodiscard]] constexpr inline Pos<T> topRight() const {return {x+width, y};}
       [[nodiscard]] constexpr inline Pos<T> bottomRight() const {return {x+width, y+height};}
       [[nodiscard]] constexpr inline Pos<T> bottomLeft() const {return {x, y+height};}
-      [[nodiscard]] constexpr inline Line<T> leftSide() const {return {topLeft(), bottomLeft()};}
-      [[nodiscard]] constexpr inline Line<T> rightSide() const {return {topRight(), bottomRight()};}
+      [[nodiscard]] constexpr inline Line<T> left() const {return {topLeft(), bottomLeft()};}
+      [[nodiscard]] constexpr inline Line<T> right() const {return {topRight(), bottomRight()};}
       [[nodiscard]] constexpr inline Line<T> top() const {return {topLeft(), topRight()};}
       [[nodiscard]] constexpr inline Line<T> bottom() const {return {bottomLeft(), bottomRight()};}
       // return a rectangle that would render the same but has positive width and height
@@ -1150,6 +1150,30 @@ namespace ReyEngine {
          }
       }
       [[nodiscard]] std::vector<Rect<T>> splitV(const std::vector<Percent>& percentages) const {return splitImpl<true>(percentages);}
+
+      /// Takes a point p relative to this rect and returns an array that tells us what fraction
+      /// of the rectangles size that point represents. ie the dead center fo the rectangle would represent
+      /// {0.5, 0.5}. Not quite the same as UV because it uses the typical bottom-right convention and not the
+      /// top-right convention that UV uses.
+      /// To avoid making things ugly, returns 0,0 if x or y is 0;
+      [[nodiscard]] Vec2<Fraction> ratio(const Pos<float>& p) const {
+         if (width == 0 || height == 0) return {0,0};
+         return {p.x / width, p.y/height};
+      }
+
+
+      [[nodiscard]] Pos<T> scalePoint(const Vec2<Fraction>& p_f, const Rect& r) const {
+         auto retval = Pos<T>(p_f.x.get() * r.width, p_f.y.get() * r.height) + r.pos();
+         return retval;
+      }
+
+      /// Takes point p relative to this rect and returns the same point relative to rect r
+      /// ie if point p is in the dead center of this rectangle then the return value will
+      /// be the point that is the dead center of rect r
+      [[nodiscard]] Pos<T> scalePoint(const Pos<T>& p, const Rect& r) const {
+         return scalePoint(ratio(p), r);
+      }
+
       template <bool AsTuple = false, typename... Args, typename = std::enable_if_t<(sizeof...(Args) > 1)>>
       [[nodiscard]] auto splitV(const Args&... args) const {
          std::vector<Percent> percentages;

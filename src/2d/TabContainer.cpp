@@ -24,9 +24,9 @@ void TabContainer::render2D() const {
       auto& rect = tab.tabRect;
       drawRectangle(rect, currentTab.value() == tab.widget ? backgroundTertiary : backgroundPrimary);
       //drawLines
-      drawLine(rect.leftSide(), 1.0, backgroundSecondary);
+      drawLine(rect.left(), 1.0, backgroundSecondary);
       drawLine(rect.top(), 1.0, backgroundSecondary);
-      drawLine(rect.rightSide(), 1.0, backgroundSecondary);
+      drawLine(rect.right(), 1.0, backgroundSecondary);
 //      drawRectangleLines(rect, 1.0, backgroundSecondary);
       //draw the tab child names
       drawText(tab.widget->getName(), rect.pos() + Pos<R_FLOAT>(1,1), theme->font);
