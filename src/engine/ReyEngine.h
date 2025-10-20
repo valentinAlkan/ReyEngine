@@ -696,80 +696,376 @@ namespace ReyEngine {
    template <typename T>
    struct Rect {
       using SubRectCoords = Vec2<int>;
-      enum class Corner{TOP_LEFT=1, TOP_RIGHT=2, BOTTOM_RIGHT=4, BOTTOM_LEFT=8};
-      constexpr inline Rect(): x(0), y(0), width(0), height(0){}
-      constexpr inline Rect(const T x, const T y, const T width, const T height) : x(x), y(y), width(width), height(height){}
-      constexpr inline explicit Rect(const Rectangle& r): x((T)r.x), y((T)r.y), width((T)r.width), height((T)r.height){}
-      template <typename R>
-      constexpr inline Rect(const Rect<R>& r): x((T)r.x), y((T)r.y), width((T)r.width), height((T)r.height){}
+      enum class Corner {
+         TOP_LEFT = 1, TOP_RIGHT = 2, BOTTOM_RIGHT = 4, BOTTOM_LEFT = 8
+      };
+
+      constexpr inline Rect() : x(0), y(0), width(0), height(0) {}
+
+      constexpr inline Rect(const T x, const T y, const T width, const T height) : x(x), y(y), width(width),
+                                                                                   height(height) {}
+
+      constexpr inline explicit Rect(const Rectangle& r) : x((T) r.x), y((T) r.y), width((T) r.width),
+                                                           height((T) r.height) {}
+
+      template<typename R>
+      constexpr inline Rect(const Rect<R>& r): x((T) r.x), y((T) r.y), width((T) r.width), height((T) r.height) {}
+
       inline explicit Rect(const Vec2<T>&) = delete;
-      [[nodiscard]] constexpr inline Rect copy() const {return *this;}
-      constexpr inline explicit Rect(const Pos<T>& v): x((T)v.x), y((T)v.y), width(0), height(0){}
-      constexpr inline explicit Rect(const Size<T>& v): x(0), y(0), width((T)v.x), height((T)v.y){}
-      constexpr inline operator bool(){return x || y || width || height;}
-      constexpr inline Rect(const Pos<T>& pos, const Size<T>& size): x((T)pos.x), y((T)pos.y), width((T)size.x), height((T)size.y){}
-      constexpr inline operator Rectangle() const {return {x,y,width,height};}
-      constexpr inline bool operator== (const Rect<T>& rhs) const {return rhs.x == x && rhs.y == y && rhs.width == width && rhs.height == height;}
-      constexpr inline bool operator!= (const Rect<T>& rhs) const {return !(*this == rhs);}
-      constexpr inline Rect operator+  (const Pos<T>& rhs) const {Rect<T> val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
-      constexpr inline Rect operator-  (const Pos<T>& rhs) const {Rect<T> val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
-      constexpr inline Rect& operator+=(const Pos<T>& rhs){x += rhs.x; y += rhs.y; return *this;}
-      constexpr inline Rect& operator-=(const Pos<T>& rhs){x -= rhs.x; y -= rhs.y; return *this;}
-      constexpr inline Rect& operator*=(const Pos<T>& rhs){x *= rhs.x; y *= rhs.y; return *this;}
-      constexpr inline Rect& operator/=(const Pos<T>& rhs){x /= rhs.x; y /= rhs.y; return *this;}
-      constexpr inline Rect  operator+  (const Size<T>& rhs) const {Rect<T> val = *this; val.width += rhs.x; val.height += rhs.y; return val;}
-      constexpr inline Rect  operator-  (const Size<T>& rhs) const {Rect<T> val = *this; val.width -= rhs.x; val.height -= rhs.y; return val;}
-      constexpr inline Rect& operator+=(const Size<T>& rhs){width += rhs.width; height += rhs.height; return *this;}
-      constexpr inline Rect& operator-=(const Size<T>& rhs){width -= rhs.width; height -= rhs.height; return *this;}
-      constexpr inline Rect& operator*=(const Size<T>& rhs){width *= rhs.width; height *= rhs.height; return *this;}
-      constexpr inline Rect& operator/=(const Size<T>& rhs){width /= rhs.width; height /= rhs.height; return *this;}
-      constexpr inline Rect  operator+  (const Rect<T>& rhs) const {Rect<T> val = *this; val.x += rhs.x; val.y += rhs.y; val.width += rhs.width; val.height += rhs.height; return val;}
-      constexpr inline Rect  operator-  (const Rect<T>& rhs) const {Rect<T> val = *this; val.x -= rhs.x; val.y -= rhs.y; val.width -= rhs.width; val.height -= rhs.height; return val;}
-      constexpr inline Rect& operator+=(const Rect<T>& rhs){x += rhs.x; y += rhs.y; width += rhs.width; height += rhs.height; return *this;}
-      constexpr inline Rect& operator-=(const Rect<T>& rhs){x -= rhs.x; y -= rhs.y; width -= rhs.width; height -= rhs.height; return *this;}
-      constexpr inline Rect& operator*=(const Rect<T>& rhs){x *= rhs.x; y *= rhs.y; width *= rhs.width; height *= rhs.height; return *this;}
-      constexpr inline Rect& operator/=(const Rect<T>& rhs){x /= rhs.x; y /= rhs.y; width /= rhs.width; height /= rhs.height; return *this;}
-      constexpr inline Rect& centerOnPoint(const Pos<R_FLOAT>& p) {return setPos(p - Pos<R_FLOAT>(size().toPos() / 2));} /// Return the rect such that it would be centered on point p
-      constexpr inline Rect& embiggen(T amt) {return *this += Rect<T>(-amt, -amt, 2*amt, 2*amt);} //shrink/expand borders evenly. Perfectly cromulent name.
-      constexpr inline Rect& stretchVertical(T amt) {return *this += Rect<T>(0, -amt, 0, 2*amt);} //embiggen tallness evenly
-      constexpr inline Rect& stretchHorizontal(T amt) {return *this += Rect<T>(-amt, 0, 2*amt, 0);} //embiggen wideness evenly
-      constexpr inline Rect& chopTop(T amt) {y+= amt; height-=amt; return *this;} //remove the topmost amt of the rectangle and return the remainder (moves y, cuts height)
-      constexpr inline Rect& chopBottom(T amt) {height-=amt; return *this;} //remove the bottommost amt of the rectangle and return the remainder (cuts height)
-      constexpr inline Rect& chopRight(T amt) {width-=amt; return *this;} //remove the rightmost amt of the rectangle and return the remainder (cuts width)
-      constexpr inline Rect& chopLeft(T amt) {x+=amt; width-=amt; return *this;} //remove the leftmost amt of the rectangle and return the remainder (moves x, cuts width)
-      constexpr inline Rect& pushX(T amt){x += amt; return *this;}
-      constexpr inline Rect& pushY(T amt){y += amt; return *this;}
-      constexpr inline Rect& stretchLeft(T amt){x-= amt; width += amt; return *this;}
-      constexpr inline Rect& stretchRight(T amt){width += amt; return *this;}
-      constexpr inline Rect& stretchDown(T amt){height += amt; return *this;}
-      constexpr inline Rect& stretchUp(T amt){y-= amt; height += amt; return *this;}
-      constexpr inline Rect& mirrorRight(){x+= width; return *this;}
-      constexpr inline Rect& mirrorLeft(){x-= width; return *this;}
-      constexpr inline Rect& mirrorUp(){y-= height; return *this;}
-      constexpr inline Rect& mirrorDown(){y+= height; return *this;}
-      [[nodiscard]] constexpr inline Line<T> centerLineH() const { auto c = center(); return {0, c.y, width, c.y}; }
-      [[nodiscard]] constexpr inline Line<T> centerLineV() const { auto c = center(); return {c.x, 0, c.x, height}; }
-      [[nodiscard]] constexpr inline Rect embiggen(T amt) const {return *this + Rect<T>(-amt, -amt, 2*amt, 2*amt);}
-      [[nodiscard]] constexpr inline Rect stretchVertical(T amt) const {return  *this + Rect<T>(0, -amt, 0, 2*amt);}
-      [[nodiscard]] constexpr inline Rect stretchHorizontal(T amt) const {return  *this + Rect<T>(-amt, 0, 2*amt, 0);}
-      [[nodiscard]] constexpr inline Rect chopTop(T amt) const {auto retval = *this; retval.y+= amt; retval.height-=amt; return retval;}
-      [[nodiscard]] constexpr inline Rect chopBottom(T amt) const {auto retval = *this; retval.height-=amt; return retval;}
-      [[nodiscard]] constexpr inline Rect chopRight(T amt) const {auto retval = *this; retval.width-=amt; return retval;}
-      [[nodiscard]] constexpr inline Rect chopLeft(T amt) const {auto retval = *this; retval.x+=amt; retval.width-=amt; return retval;}
-      [[nodiscard]] constexpr inline Rect pushX(T amt) const {auto retval = *this; retval.x += amt; return retval;}
-      [[nodiscard]] constexpr inline Rect pushY(T amt) const {auto retval = *this; retval.y += amt; return retval;}
-      [[nodiscard]] constexpr inline Rect stretchLeft(T amt) const {auto retval = *this; retval.x-= amt; retval.width += amt; return retval;}
-      [[nodiscard]] constexpr inline Rect stretchRight(T amt) const {auto retval = *this; retval.width += amt; return retval;}
-      [[nodiscard]] constexpr inline Rect stretchDown(T amt) const {auto retval = *this; retval.height += amt; return retval;}
-      [[nodiscard]] constexpr inline Rect stretchUp(T amt) const {auto retval = *this; retval.y-= amt; retval.height += amt; return retval;}
-      [[nodiscard]] constexpr inline Rect mirrorRight() const {auto retval = *this; retval.x+= width; return retval;}
-      [[nodiscard]] constexpr inline Rect mirrorLeft() const {auto retval = *this; retval.x-= width; return retval;}
-      [[nodiscard]] constexpr inline Rect mirrorUp() const {auto retval = *this; retval.y-= height; return retval;}
-      [[nodiscard]] constexpr inline Rect mirrorDown() const {auto retval = *this; retval.y+= height; return retval;}
-      [[nodiscard]] constexpr inline bool containsX(const Vec2<T>& point) const {return (point.x >= x && point.x < x + width);}
-      [[nodiscard]] constexpr inline bool containsY(const Vec2<T>& point) const {return (point.y >= y && point.y < y + height);}
-      [[nodiscard]] constexpr inline bool contains(const Rect<T>& other) const {return other.x >= x && other.y >= y && other.width <= width && other.height <= height;}
-      [[nodiscard]] constexpr inline bool contains(const Vec2<T>& point) const {return containsX(point) && containsY(point);}
+
+      [[nodiscard]] constexpr inline Rect copy() const { return *this; }
+
+      constexpr inline explicit Rect(const Pos<T>& v) : x((T) v.x), y((T) v.y), width(0), height(0) {}
+
+      constexpr inline explicit Rect(const Size<T>& v) : x(0), y(0), width((T) v.x), height((T) v.y) {}
+
+      constexpr inline operator bool() { return x || y || width || height; }
+
+      constexpr inline Rect(const Pos<T>& pos, const Size<T>& size) : x((T) pos.x), y((T) pos.y), width((T) size.x),
+                                                                      height((T) size.y) {}
+
+      constexpr inline operator Rectangle() const { return {x, y, width, height}; }
+
+      constexpr inline bool operator==(const Rect<T>& rhs) const {
+         return rhs.x == x && rhs.y == y && rhs.width == width && rhs.height == height;
+      }
+
+      constexpr inline bool operator!=(const Rect<T>& rhs) const { return !(*this == rhs); }
+
+      constexpr inline Rect operator+(const Pos<T>& rhs) const {
+         Rect<T> val = *this;
+         val.x += rhs.x;
+         val.y += rhs.y;
+         return val;
+      }
+
+      constexpr inline Rect operator-(const Pos<T>& rhs) const {
+         Rect<T> val = *this;
+         val.x -= rhs.x;
+         val.y -= rhs.y;
+         return val;
+      }
+
+      constexpr inline Rect& operator+=(const Pos<T>& rhs) {
+         x += rhs.x;
+         y += rhs.y;
+         return *this;
+      }
+
+      constexpr inline Rect& operator-=(const Pos<T>& rhs) {
+         x -= rhs.x;
+         y -= rhs.y;
+         return *this;
+      }
+
+      constexpr inline Rect& operator*=(const Pos<T>& rhs) {
+         x *= rhs.x;
+         y *= rhs.y;
+         return *this;
+      }
+
+      constexpr inline Rect& operator/=(const Pos<T>& rhs) {
+         x /= rhs.x;
+         y /= rhs.y;
+         return *this;
+      }
+
+      constexpr inline Rect operator+(const Size<T>& rhs) const {
+         Rect<T> val = *this;
+         val.width += rhs.x;
+         val.height += rhs.y;
+         return val;
+      }
+
+      constexpr inline Rect operator-(const Size<T>& rhs) const {
+         Rect<T> val = *this;
+         val.width -= rhs.x;
+         val.height -= rhs.y;
+         return val;
+      }
+
+      constexpr inline Rect& operator+=(const Size<T>& rhs) {
+         width += rhs.width;
+         height += rhs.height;
+         return *this;
+      }
+
+      constexpr inline Rect& operator-=(const Size<T>& rhs) {
+         width -= rhs.width;
+         height -= rhs.height;
+         return *this;
+      }
+
+      constexpr inline Rect& operator*=(const Size<T>& rhs) {
+         width *= rhs.width;
+         height *= rhs.height;
+         return *this;
+      }
+
+      constexpr inline Rect& operator/=(const Size<T>& rhs) {
+         width /= rhs.width;
+         height /= rhs.height;
+         return *this;
+      }
+
+      constexpr inline Rect operator+(const Rect<T>& rhs) const {
+         Rect<T> val = *this;
+         val.x += rhs.x;
+         val.y += rhs.y;
+         val.width += rhs.width;
+         val.height += rhs.height;
+         return val;
+      }
+
+      constexpr inline Rect operator-(const Rect<T>& rhs) const {
+         Rect<T> val = *this;
+         val.x -= rhs.x;
+         val.y -= rhs.y;
+         val.width -= rhs.width;
+         val.height -= rhs.height;
+         return val;
+      }
+
+      constexpr inline Rect& operator+=(const Rect<T>& rhs) {
+         x += rhs.x;
+         y += rhs.y;
+         width += rhs.width;
+         height += rhs.height;
+         return *this;
+      }
+
+      constexpr inline Rect& operator-=(const Rect<T>& rhs) {
+         x -= rhs.x;
+         y -= rhs.y;
+         width -= rhs.width;
+         height -= rhs.height;
+         return *this;
+      }
+
+      constexpr inline Rect& operator*=(const Rect<T>& rhs) {
+         x *= rhs.x;
+         y *= rhs.y;
+         width *= rhs.width;
+         height *= rhs.height;
+         return *this;
+      }
+
+      constexpr inline Rect& operator/=(const Rect<T>& rhs) {
+         x /= rhs.x;
+         y /= rhs.y;
+         width /= rhs.width;
+         height /= rhs.height;
+         return *this;
+      }
+
+      constexpr inline Rect& centerOnPoint(const Pos<R_FLOAT>& p) {
+         return setPos(p - Pos<R_FLOAT>(size().toPos() / 2));
+      } /// Return the rect such that it would be centered on point p
+      constexpr inline Rect& embiggen(T amt) {
+         return *this += Rect<T>(-amt, -amt, 2 * amt, 2 * amt);
+      } //shrink/expand borders evenly. Perfectly cromulent name.
+      constexpr inline Rect& stretchVertical(T amt) {
+         return *this += Rect<T>(0, -amt, 0, 2 * amt);
+      } //embiggen tallness evenly
+      constexpr inline Rect& stretchHorizontal(T amt) {
+         return *this += Rect<T>(-amt, 0, 2 * amt, 0);
+      } //embiggen wideness evenly
+      constexpr inline Rect& chopTop(T amt) {
+         y += amt;
+         height -= amt;
+         return *this;
+      } //remove the topmost amt of the rectangle and return the remainder (moves y, cuts height)
+      constexpr inline Rect& chopBottom(T amt) {
+         height -= amt;
+         return *this;
+      } //remove the bottommost amt of the rectangle and return the remainder (cuts height)
+      constexpr inline Rect& chopRight(T amt) {
+         width -= amt;
+         return *this;
+      } //remove the rightmost amt of the rectangle and return the remainder (cuts width)
+      constexpr inline Rect& chopLeft(T amt) {
+         x += amt;
+         width -= amt;
+         return *this;
+      } //remove the leftmost amt of the rectangle and return the remainder (moves x, cuts width)
+      constexpr inline Rect& pushX(T amt) {
+         x += amt;
+         return *this;
+      }
+
+      constexpr inline Rect& pushY(T amt) {
+         y += amt;
+         return *this;
+      }
+
+      constexpr inline Rect& stretchLeft(T amt) {
+         x -= amt;
+         width += amt;
+         return *this;
+      }
+
+      constexpr inline Rect& stretchRight(T amt) {
+         width += amt;
+         return *this;
+      }
+
+      constexpr inline Rect& stretchDown(T amt) {
+         height += amt;
+         return *this;
+      }
+
+      constexpr inline Rect& stretchUp(T amt) {
+         y -= amt;
+         height += amt;
+         return *this;
+      }
+
+      constexpr inline Rect& mirrorRight() {
+         x += width;
+         return *this;
+      }
+
+      constexpr inline Rect& mirrorLeft() {
+         x -= width;
+         return *this;
+      }
+
+      constexpr inline Rect& mirrorUp() {
+         y -= height;
+         return *this;
+      }
+
+      constexpr inline Rect& mirrorDown() {
+         y += height;
+         return *this;
+      }
+
+      //return the horizontal centerline of the rectangle
+      [[nodiscard]] constexpr inline Line<T> centerLineH() const {
+         auto c = center();
+         return {0, c.y, width, c.y};
+      }
+
+      //return the vertical centerline of the rectangle
+      [[nodiscard]] constexpr inline Line<T> centerLineV() const {
+         auto c = center();
+         return {c.x, 0, c.x, height};
+      }
+
+      [[nodiscard]] constexpr inline Rect embiggen(T amt) const {
+         return *this + Rect<T>(-amt, -amt, 2 * amt, 2 * amt);
+      }
+
+      [[nodiscard]] constexpr inline Rect stretchVertical(T amt) const { return *this + Rect<T>(0, -amt, 0, 2 * amt); }
+
+      [[nodiscard]] constexpr inline Rect stretchHorizontal(T amt) const {
+         return *this + Rect<T>(-amt, 0, 2 * amt, 0);
+      }
+
+      [[nodiscard]] constexpr inline Rect chopTop(T amt) const {
+         auto retval = *this;
+         retval.y += amt;
+         retval.height -= amt;
+         return retval;
+      }
+
+      [[nodiscard]] constexpr inline Rect chopBottom(T amt) const {
+         auto retval = *this;
+         retval.height -= amt;
+         return retval;
+      }
+
+      [[nodiscard]] constexpr inline Rect chopRight(T amt) const {
+         auto retval = *this;
+         retval.width -= amt;
+         return retval;
+      }
+
+      [[nodiscard]] constexpr inline Rect chopLeft(T amt) const {
+         auto retval = *this;
+         retval.x += amt;
+         retval.width -= amt;
+         return retval;
+      }
+
+      [[nodiscard]] constexpr inline Rect pushX(T amt) const {
+         auto retval = *this;
+         retval.x += amt;
+         return retval;
+      }
+
+      [[nodiscard]] constexpr inline Rect pushY(T amt) const {
+         auto retval = *this;
+         retval.y += amt;
+         return retval;
+      }
+
+      [[nodiscard]] constexpr inline Rect stretchLeft(T amt) const {
+         auto retval = *this;
+         retval.x -= amt;
+         retval.width += amt;
+         return retval;
+      }
+
+      [[nodiscard]] constexpr inline Rect stretchRight(T amt) const {
+         auto retval = *this;
+         retval.width += amt;
+         return retval;
+      }
+
+      [[nodiscard]] constexpr inline Rect stretchDown(T amt) const {
+         auto retval = *this;
+         retval.height += amt;
+         return retval;
+      }
+
+      [[nodiscard]] constexpr inline Rect stretchUp(T amt) const {
+         auto retval = *this;
+         retval.y -= amt;
+         retval.height += amt;
+         return retval;
+      }
+
+      [[nodiscard]] constexpr inline Rect mirrorRight() const {
+         auto retval = *this;
+         retval.x += width;
+         return retval;
+      }
+
+      [[nodiscard]] constexpr inline Rect mirrorLeft() const {
+         auto retval = *this;
+         retval.x -= width;
+         return retval;
+      }
+
+      [[nodiscard]] constexpr inline Rect mirrorUp() const {
+         auto retval = *this;
+         retval.y -= height;
+         return retval;
+      }
+
+      [[nodiscard]] constexpr inline Rect mirrorDown() const {
+         auto retval = *this;
+         retval.y += height;
+         return retval;
+      }
+
+      [[nodiscard]] constexpr inline bool containsX(const Vec2<T>& point) const {
+         return (point.x >= x && point.x < x + width);
+      }
+
+      [[nodiscard]] constexpr inline bool containsY(const Vec2<T>& point) const {
+         return (point.y >= y && point.y < y + height);
+      }
+
+      [[nodiscard]] constexpr inline bool contains(const Rect<T>& other) const {
+         return other.x >= x && other.y >= y && other.width <= width && other.height <= height;
+      }
+
+      [[nodiscard]] constexpr inline bool contains(const Vec2<T>& point) const {
+         return containsX(point) && containsY(point);
+      }
+
       ///Combines two rectangles into one large rectangle, top left corner of top left rectangle and bottom right corner of bottom right rectangle
       [[nodiscard]] constexpr inline Rect combine(const Rect<T>& other) const {
          T minX = Math::min(x, other.x);
@@ -778,41 +1074,61 @@ namespace ReyEngine {
          T maxY = Math::max(y + height, other.y + other.height);
          return Rect<T>(minX, minY, maxX - minX, maxY - minY);
       }
-      constexpr inline void clampWidth(const Vec2<T>& widthRange){if (width < widthRange.x) width = widthRange.x; if (width > widthRange.y) width = widthRange.y;}
-      constexpr inline void clampHeight(const Vec2<T>& heightRange){if (height < heightRange.x) height = heightRange.x; if (height > heightRange.y) height = heightRange.y;}
+
+      constexpr inline void clampWidth(const Vec2<T>& widthRange) {
+         if (width < widthRange.x) width = widthRange.x;
+         if (width > widthRange.y) width = widthRange.y;
+      }
+
+      constexpr inline void clampHeight(const Vec2<T>& heightRange) {
+         if (height < heightRange.x)
+            height = heightRange.x;
+         if (height > heightRange.y) height = heightRange.y;
+      }
 
       // constrains this rectangle's position so that it is INSIDE the larger rectangle, otherwise does nothing
-      constexpr inline Rect& restrictTo(const Rect& larger){
-         if (x+width > larger.x+larger.width) x = larger.x+larger.width - width;
+      constexpr inline Rect& restrictTo(const Rect& larger) {
+         if (x + width > larger.x + larger.width) x = larger.x + larger.width - width;
          if (x < larger.x) x += larger.x - x;
-         if (y+height > larger.y+larger.height) y = larger.y+larger.height - height;
+         if (y + height > larger.y + larger.height) y = larger.y + larger.height - height;
          if (y < larger.y) y += larger.y - y;
          return *this;
       }
-      [[nodiscard]] constexpr inline Pos<T> topLeft() const {return {x, y};}
-      [[nodiscard]] constexpr inline Pos<T> topRight() const {return {x+width, y};}
-      [[nodiscard]] constexpr inline Pos<T> bottomRight() const {return {x+width, y+height};}
-      [[nodiscard]] constexpr inline Pos<T> bottomLeft() const {return {x, y+height};}
-      [[nodiscard]] constexpr inline Line<T> left() const {return {topLeft(), bottomLeft()};}
-      [[nodiscard]] constexpr inline Line<T> right() const {return {topRight(), bottomRight()};}
-      [[nodiscard]] constexpr inline Line<T> top() const {return {topLeft(), topRight()};}
-      [[nodiscard]] constexpr inline Line<T> bottom() const {return {bottomLeft(), bottomRight()};}
+
+      [[nodiscard]] constexpr inline Pos<T> topLeft() const { return {x, y}; }
+
+      [[nodiscard]] constexpr inline Pos<T> topRight() const { return {x + width, y}; }
+
+      [[nodiscard]] constexpr inline Pos<T> bottomRight() const { return {x + width, y + height}; }
+
+      [[nodiscard]] constexpr inline Pos<T> bottomLeft() const { return {x, y + height}; }
+
+      [[nodiscard]] constexpr inline Line<T> left() const { return {topLeft(), bottomLeft()}; }
+
+      [[nodiscard]] constexpr inline Line<T> right() const { return {topRight(), bottomRight()}; }
+
+      [[nodiscard]] constexpr inline Line<T> top() const { return {topLeft(), topRight()}; }
+
+      [[nodiscard]] constexpr inline Line<T> bottom() const { return {bottomLeft(), bottomRight()}; }
+
       // return a rectangle that would render the same but has positive width and height
       constexpr inline void normalize() {
-         if (width < 0){
+         if (width < 0) {
             x += width;
             width = -width;
          }
-         if (height < 0){
+         if (height < 0) {
             y += height;
             height = -height;
          }
       }
+
       [[nodiscard]] constexpr inline Rect normalized() const {
          auto retval = Rect(*this);
          retval.normalize();
          return retval;
       }
+
       [[nodiscard]] constexpr inline bool collides(const Rect& other) const {
          return ((x < (other.x + other.width) && (x + width) > other.x) &&
                  (y < (other.y + other.height) && (y + height) > other.y));
@@ -828,6 +1144,7 @@ namespace ReyEngine {
          if (contains(other.bottomLeft())) pointCount++;
          return pointCount;
       }
+
       [[nodiscard]] constexpr inline Rect getOverlap(const Rect& other) const {
          //this is pretty naive, but whatever
          //tag the coordinates
@@ -843,16 +1160,16 @@ namespace ReyEngine {
          //a primary collision is when other bisects us (in a 2 point collision)
          int collisionType = getCollisionType(other);
          bool isSecondaryCollision = false;
-         if (!collisionType){
+         if (!collisionType) {
             collisionType = other.getCollisionType(*this);
             isSecondaryCollision = true;
          }
          auto& primaryRect = isSecondaryCollision ? other : *this;
          auto& secondaryRect = isSecondaryCollision ? *this : other;
-         switch (collisionType){
+         switch (collisionType) {
             case 0:
                //potentially a collision or not
-               if (xr > xl+xlw || yb > yt+yth) return {}; //no collision
+               if (xr > xl + xlw || yb > yt + yth) return {}; //no collision
                //cross collision
                return {xr, yb, xrw, ybh};
             case 2:
@@ -863,44 +1180,67 @@ namespace ReyEngine {
                   auto xprime = secondaryRect.x > primaryRect.x;
                   auto yprime = secondaryRect.y > primaryRect.y;
                   bool horizontalForm = true;
-                  if (xprime && yprime){
+                  if (xprime && yprime) {
                      //need to distinguish between forms 1 and 2 which both have the top left prime point inside the rect
-                     if (contains(secondaryRect.bottomLeft())){
+                     if (contains(secondaryRect.bottomLeft())) {
                         //form 2
                         horizontalForm = false;
                      }
-                  } else if ((!xprime && yprime) || (!xprime && !yprime)){
+                  } else if ((!xprime && yprime) || (!xprime && !yprime)) {
                      horizontalForm = false;
                   }
-                  if (horizontalForm) return {xr, yb, xrw, yt+yth-yb};
-                  return {xr, yb, xl+xlw-xr, ybh};
+                  if (horizontalForm) return {xr, yb, xrw, yt + yth - yb};
+                  return {xr, yb, xl + xlw - xr, ybh};
                }
                //otherwise fall through to 1 point form
                [[fallthrough]];
             case 1:
                //corner collision, full width/height 2 point collisions
-               return {xr, yb, xl+xlw-xr, yt+yth-yb};
+               return {xr, yb, xl + xlw - xr, yt + yth - yb};
             default:
                //fully inside, 3 or 4 point collisions (we won't actually get 4 point but its handled here just in case
                return secondaryRect;
          }
       }
 
-      [[nodiscard]] inline std::string toString() const {return Vec4(x,y,width,height).toString();}
-      inline static Rect<T> fromString(const std::string& s){Vec4<T>::fromString(s);}
-      friend std::ostream& operator<<(std::ostream& os, const Rect<T>& r){
+      [[nodiscard]] inline std::string toString() const { return Vec4(x, y, width, height).toString(); }
+
+      inline static Rect<T> fromString(const std::string& s) { Vec4<T>::fromString(s); }
+
+      friend std::ostream& operator<<(std::ostream& os, const Rect<T>& r) {
          os << r.toString();
          return os;
       }
 
-      [[nodiscard]] constexpr inline Pos<T> center() const {return {x+width/2, y+height/2};}
-      [[nodiscard]] constexpr inline Pos<T> pos() const {return {x, y};}
-      [[nodiscard]] constexpr inline Size<T> size() const {return {width, height};}
-      [[nodiscard]] constexpr inline Rect<T> toSizeRect() const {return {0,0,width, height};}
-      constexpr inline Rect& setSize(const Size<T>& size){width = size.x; height = size.y; return *this;}
-      constexpr inline Rect& setHeight(T size){height = size; return *this;}
-      constexpr inline Rect& setWidth(T size){width = size; return *this;}
-      constexpr inline Rect& setPos(const Pos<T>& pos){x = pos.x; y = pos.y; return *this;}
+      [[nodiscard]] constexpr inline Pos<T> center() const { return {x + width / 2, y + height / 2}; }
+
+      [[nodiscard]] constexpr inline Pos<T> pos() const { return {x, y}; }
+
+      [[nodiscard]] constexpr inline Size<T> size() const { return {width, height}; }
+
+      [[nodiscard]] constexpr inline Rect<T> toSizeRect() const { return {0, 0, width, height}; }
+
+      constexpr inline Rect& setSize(const Size<T>& size) {
+         width = size.x;
+         height = size.y;
+         return *this;
+      }
+
+      constexpr inline Rect& setHeight(T size) {
+         height = size;
+         return *this;
+      }
+
+      constexpr inline Rect& setWidth(T size) {
+         width = size;
+         return *this;
+      }
+
+      constexpr inline Rect& setPos(const Pos<T>& pos) {
+         x = pos.x;
+         y = pos.y;
+         return *this;
+      }
 
       //return the smallest rect that contains both rects a and b
       [[nodiscard]] constexpr inline Rect getBoundingRect(const Rect& other) const {
@@ -921,6 +1261,7 @@ namespace ReyEngine {
          // Return a new Rect with top-left corner and dimensions
          return Rect(_left, _top, _width, _height);
       }
+
       static constexpr inline Rect getBoundingRect(const Rect& a, const Rect& b) {
          return a.getBoundingRect(b);
       }
@@ -945,20 +1286,22 @@ namespace ReyEngine {
       [[nodiscard]] constexpr inline Rect getSubRectAtPos(const Size<R_FLOAT>& size, const Pos<R_FLOAT>& pos) const {
          auto subx = pos.x / size.x;
          auto suby = pos.y / size.y;
-         return Rect(subx * size.x, suby*size.y, size.x, size.y);
+         return Rect(subx * size.x, suby * size.y, size.x, size.y);
       }
 
       //Get the sub-rectangle (of size Size) at SubRectCoords coords.
-      [[nodiscard]] constexpr inline Rect getSubRectAtCoords(const Size<R_FLOAT>& size, const SubRectCoords& coords) const {
-         return Rect(coords.x * size.x, coords.y*size.y, size.x, size.y);
+      [[nodiscard]] constexpr inline Rect
+      getSubRectAtCoords(const Size<R_FLOAT>& size, const SubRectCoords& coords) const {
+         return Rect(coords.x * size.x, coords.y * size.y, size.x, size.y);
       }
 
       //returns the coordinates of the above subrect in grid-form (ie the 3rd subrect from the left would be {3,0}
-      [[nodiscard]] constexpr inline SubRectCoords getSubRectCoord(const Size<R_FLOAT>& size, const Pos<R_FLOAT>& pos) const {
+      [[nodiscard]] constexpr inline SubRectCoords
+      getSubRectCoord(const Size<R_FLOAT>& size, const Pos<R_FLOAT>& pos) const {
          //divide by 0?
          auto subx = pos.x / size.x;
          auto suby = pos.y / size.y;
-         return {(int)subx, (int)suby};
+         return {(int) subx, (int) suby};
       }
 
       //get an actual subrect given a subrect size and an index
@@ -966,8 +1309,8 @@ namespace ReyEngine {
          int columnCount = width / size.x;
          int coordY = index / columnCount;
          int coordX = index % columnCount;
-         R_FLOAT posX = (float)coordX * size.x;
-         R_FLOAT posY = (float)coordY * size.y;
+         R_FLOAT posX = (float) coordX * size.x;
+         R_FLOAT posY = (float) coordY * size.y;
          return Rect(posX, posY, size.x, size.y);
       }
 
@@ -975,12 +1318,18 @@ namespace ReyEngine {
       [[nodiscard]] constexpr inline Rect getSubRect(const Size<R_FLOAT>& size, int indexStart, int indexStop) const {
          auto a = getSubRect(size, indexStart);
          auto b = getSubRect(size, indexStop);
-         return getBoundingRect(a,b);
+         return getBoundingRect(a, b);
       }
 
       [[nodiscard]] Circle circumscribe() const;
+
       [[nodiscard]] Circle inscribe() const;
-      constexpr inline void clear(){x=0,y=0,width=0;height=0;}
+
+      constexpr inline void clear() {
+         x = 0, y = 0, width = 0;
+         height = 0;
+      }
+
       constexpr inline std::array<Vec2<R_FLOAT>, 4> transform(const Matrix& m) const {
          std::array<Vec2<R_FLOAT>, 4> corners;
          corners[0] = topLeft().transform(m);
@@ -993,7 +1342,7 @@ namespace ReyEngine {
 
    private:
       // Private implementation function with a templated bool parameter
-      template <bool isVertical>
+      template<bool isVertical>
       [[nodiscard]] std::vector<Rect<T>> splitImpl(const std::vector<Percent>& percentages) const {
          std::vector<Rect<T>> result;
 
@@ -1027,7 +1376,7 @@ namespace ReyEngine {
 
          // Calculate the total percentage from the input vector
          double totalPercentage = 0.0;
-         for (const auto& percent : percentages) {
+         for (const auto& percent: percentages) {
             totalPercentage += percent.get();
          }
 
@@ -1048,7 +1397,7 @@ namespace ReyEngine {
          T currentPos = isVertical ? y : x;
 
          // Create rectangles for each percentage in the vector
-         for (const auto& percent : percentages) {
+         for (const auto& percent: percentages) {
             Rect<T> newRect = *this;
 
             // Calculate the new dimension based on the percentage
@@ -1083,15 +1432,16 @@ namespace ReyEngine {
 
          return result;
       }
+
       // Helper function to create a tuple from a vector
-      template <std::size_t... I>
+      template<std::size_t... I>
       auto make_tuple_from_vector(const std::vector<Rect<T>>& vec, std::index_sequence<I...>) const {
          return std::make_tuple(vec[I]...);
       }
 
    public:
       // Unified splitH function that handles all cases correctly
-      template <bool AsTuple = false>
+      template<bool AsTuple = false>
       [[nodiscard]] auto splitH() const {
          std::vector<Rect<T>> resultVec = splitImpl<false>(std::vector<Percent>{});
 
@@ -1103,7 +1453,7 @@ namespace ReyEngine {
       }
 
       // Overload for a single Percent value
-      template <bool AsTuple = false>
+      template<bool AsTuple = false>
       [[nodiscard]] auto splitH(const Percent& percent) const {
          std::vector<Percent> percentages{percent};
          std::vector<Rect<T>> resultVec = splitImpl<false>(percentages);
@@ -1115,9 +1465,11 @@ namespace ReyEngine {
          }
       }
 
-      [[nodiscard]] std::vector<Rect<T>> splitH(const std::vector<Percent>& percentages) const {return splitImpl<false>(percentages);}
-      template <bool AsTuple = false, typename... Args, typename = std::enable_if_t<(sizeof...(Args) > 1)>>
-      [[nodiscard]] auto splitH(const Args&... args) const {
+      [[nodiscard]] std::vector<Rect<T>>
+      splitH(const std::vector<Percent>& percentages) const { return splitImpl<false>(percentages); }
+
+      template<bool AsTuple = false, typename... Args, typename = std::enable_if_t<(sizeof...(Args) > 1)>>
+      [[nodiscard]] auto splitH(const Args& ... args) const {
          std::vector<Percent> percentages;
          percentages.reserve(sizeof...(args));
          (percentages.push_back(Percent(static_cast<double>(args))), ...);
@@ -1129,7 +1481,7 @@ namespace ReyEngine {
          }
       }
 
-      template <bool AsTuple = false>
+      template<bool AsTuple = false>
       [[nodiscard]] auto splitV() const {
          std::vector<Rect<T>> resultVec = splitImpl<true>(std::vector<Percent>{});
          if constexpr (AsTuple) {
@@ -1139,7 +1491,7 @@ namespace ReyEngine {
          }
       }
 
-      template <bool AsTuple = false>
+      template<bool AsTuple = false>
       [[nodiscard]] auto splitV(const Percent& percent) const {
          std::vector<Percent> percentages{percent};
          std::vector<Rect<T>> resultVec = splitImpl<true>(percentages);
@@ -1149,7 +1501,10 @@ namespace ReyEngine {
             return resultVec;
          }
       }
-      [[nodiscard]] std::vector<Rect<T>> splitV(const std::vector<Percent>& percentages) const {return splitImpl<true>(percentages);}
+
+      [[nodiscard]] std::vector<Rect<T>> splitV(const std::vector<Percent>& percentages) const {
+         return splitImpl<true>(percentages);
+      }
 
       /// Takes a point p relative to this rect and returns an array that tells us what fraction
       /// of the rectangles size that point represents. ie the dead center fo the rectangle would represent
@@ -1157,8 +1512,8 @@ namespace ReyEngine {
       /// top-right convention that UV uses.
       /// To avoid making things ugly, returns 0,0 if x or y is 0;
       [[nodiscard]] Vec2<Fraction> ratio(const Pos<float>& p) const {
-         if (width == 0 || height == 0) return {0,0};
-         return {p.x / width, p.y/height};
+         if (width == 0 || height == 0) return {0, 0};
+         return {p.x / width, p.y / height};
       }
 
 
@@ -1174,8 +1529,8 @@ namespace ReyEngine {
          return scalePoint(ratio(p), r);
       }
 
-      template <bool AsTuple = false, typename... Args, typename = std::enable_if_t<(sizeof...(Args) > 1)>>
-      [[nodiscard]] auto splitV(const Args&... args) const {
+      template<bool AsTuple = false, typename... Args, typename = std::enable_if_t<(sizeof...(Args) > 1)>>
+      [[nodiscard]] auto splitV(const Args& ... args) const {
          std::vector<Percent> percentages;
          percentages.reserve(sizeof...(args));
          (percentages.push_back(Percent(static_cast<double>(args))), ...);
@@ -1186,6 +1541,13 @@ namespace ReyEngine {
             return resultVec;
          }
       }
+
+      [[nodiscard]] constexpr Rect alignRight(const Pos<T>& p){ return {p.x - width, y, width, height}; }
+      [[nodiscard]] constexpr Rect alignLeft(const Pos<T>& p){ return {p.x, y, width, height}; }
+      [[nodiscard]] constexpr Rect alignTop(const Pos<T>& p){ return {x, p.y, width, height}; }
+      [[nodiscard]] constexpr Rect alignBottom(const Pos<T>& p){ return {x, p.y - height, width, height}; }
+      [[nodiscard]] constexpr Rect centerH(const Pos<T>& p){ return {p.x - width / 2, y, width, height}; }
+      [[nodiscard]] constexpr Rect centerV(const Pos<T>& p){ return {x, p.y - height / 2, width, height}; }
 
       T x;
       T y;

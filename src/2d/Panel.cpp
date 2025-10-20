@@ -17,23 +17,24 @@ Panel::Panel()
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::render2D() const {
-   if (!_isMinimized) {
-      //dont need to draw these if we're minimized
 
-      static constexpr float roundness = 2.0;
-
-      //draw the rounded bottom portion
-      drawRectangle(getSizeRect(), theme->background.colorPrimary);
-
-      drawRectangleLines(menuBar.bar, 1.0, theme->background.colorSecondary);
-      drawRectangleLines(getSizeRect(), 1.0, theme->background.colorSecondary);
-
-      //debug:
-//      draw the stretch regions
-      for (const auto &region: stretchRegion) {
-         drawRectangle(region, ColorRGBA(0, 0, 255, 128));
-      }
-   }
+   //draw the header
+   drawRectangleLines(_header.rect, 1.0, theme->background.colorSecondary);
+//   if (!_isMinimized) {
+//      //dont need to draw these if we're minimized
+//      static constexpr float roundness = 2.0;
+//
+//      //draw the rounded bottom portion
+//      drawRectangle(getSizeRect(), theme->background.colorPrimary);
+//
+//      drawRectangleLines(getSizeRect(), 1.0, theme->background.colorSecondary);
+//
+//      //debug:
+////      draw the stretch regions
+//      for (const auto &region: stretchRegion) {
+//         drawRectangle(region, ColorRGBA(0, 0, 255, 128));
+//      }
+//   }
 
 }
 
@@ -86,14 +87,14 @@ void Panel::_init() {
 //   rspacer->setVisible(false);
 //
    //add a button cluster on the right side of the menu bar
-   menuBar.btnCluster = make_child_built_in<Layout>("__btnClusterRight", Layout::LayoutDir::HORIZONTAL);
-   menuBar.btnCluster->setMinWidth(20 * 3);
-   menuBar.btnCluster->setMinHeight(menuBar.bar.height);
+//   menuBar.btnCluster = make_child_built_in<Layout>("__btnClusterRight", Layout::LayoutDir::HORIZONTAL);
+//   menuBar.btnCluster->setMinWidth(20 * 3);
+//   menuBar.btnCluster->setMinHeight(menuBar.bar.height);
 
    //add some buttons
-   auto btnMin = ReyEngine::make_child<PushButton>(menuBar.btnCluster->getNode(), BTN_MIN_NAME, "_");
-   auto btnMax = ReyEngine::make_child<PushButton>(menuBar.btnCluster->getNode(), BTN_MAX_NAME, "o");
-   auto btnClose = ReyEngine::make_child<PushButton>(menuBar.btnCluster->getNode(), BTN_CLOSE_NAME, "x");
+//   auto btnMin = ReyEngine::make_child<PushButton>(menuBar.btnCluster->getNode(), BTN_MIN_NAME, "_");
+//   auto btnMax = ReyEngine::make_child<PushButton>(menuBar.btnCluster->getNode(), BTN_MAX_NAME, "o");
+//   auto btnClose = ReyEngine::make_child<PushButton>(menuBar.btnCluster->getNode(), BTN_CLOSE_NAME, "x");
 //   btnClusterRight->getTheme().layoutMargins.setAll(2);
 //   btnClusterRight->setMaxSize({100, 999999});
 //
@@ -156,18 +157,17 @@ void Panel::_on_rect_changed(){
    stretchRegion.at(1)= getSizeRect().chopLeft(getWidth() - STRETCH_REGION_SIZE);
    stretchRegion.at(2)= getSizeRect().chopTop(getHeight() - STRETCH_REGION_SIZE);
    stretchRegion.at(3)= getSizeRect().chopRight(getWidth() - STRETCH_REGION_SIZE);
-   _scissorArea = getScissorArea();
 
    //update viewable area
-   _viewArea->setRect(getSizeRect().chopTop(menuBar.bar.height));
+   _viewArea->setRect(getSizeRect().chopTop(_header.rect.height));
 
-   //create rects
+   //header bar
    static constexpr float MENU_BAR_HEIGHT = 35;
    static constexpr float BUTTON_SIZE = MENU_BAR_HEIGHT - 4;
-   menuBar.bar = Rect<float>(0,0,getWidth(), MENU_BAR_HEIGHT);
-   auto newClusterPos = getSizeRect().topRight();
-   newClusterPos.x -= menuBar.btnCluster->getWidth();
-   menuBar.btnCluster->setPosition(newClusterPos);
+   _header.rect = {0, 0, getWidth(), MENU_BAR_HEIGHT};
+   _header.btnClose = {{0,0}, Size<float>(BUTTON_SIZE)};
+   _header.btnClose = _header.btnClose.alignRight(getSizeRect().right().midpoint() - Pos<float>(4, 0));
+   _header.btnClose = _header.btnClose.centerV(_header.rect.right().midpoint());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -211,7 +211,7 @@ Widget *Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
          }
 
          //start dragging
-         if (!_isMaximized && _resizeDir == ResizeDir::NONE && menuBar.bar.contains(mbEvent.mouse.getLocalPos()) && mbEvent.isDown) {
+         if (!_isMaximized && _resizeDir == ResizeDir::NONE && _header.rect.contains(mbEvent.mouse.getLocalPos()) && mbEvent.isDown) {
             _isDragging = true;
             return this;
          } else if ((_isDragging || _resizeDir != ResizeDir::NONE) && !mbEvent.isDown){
@@ -299,12 +299,12 @@ Widget *Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
 //}
 
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyEngine::Rect<R_FLOAT> Panel::getScissorArea() {
-   if (_isMinimized){
-      return menuBar.bar;
-   }
-   return getSizeRect();
-}
+//ReyEngine::Rect<R_FLOAT> Panel::getScissorArea() {
+//   if (_isMinimized){
+//      return _menuBar;
+//   }
+//   return getSizeRect();
+//}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::_on_mouse_exit() {

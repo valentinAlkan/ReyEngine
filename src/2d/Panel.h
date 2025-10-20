@@ -42,17 +42,17 @@ namespace ReyEngine{
       void _on_mouse_exit() override;
       void _init() override;
       void _on_rect_changed() override;
-      ReyEngine::Rect<R_FLOAT> getScissorArea();
+//      ReyEngine::Rect<R_FLOAT> getScissorArea();
       enum class ResizeDir{NONE, N, E, S, W, NE, SE, SW, NW};
 
       std::string panelTitle;
+      struct Header {
+         Rect<float> rect;
+         Rect<float> btnClose;
+         Rect<float> btnMinimize;
+      } _header;
       bool showHeader;
-      struct MenuBar {
-         Rect<float> bar;
-         std::shared_ptr<Layout> btnCluster;
-      };
 
-      MenuBar menuBar;
       Rect<float> titleLabel;
       ReyEngine::Pos<R_FLOAT> offset;
       ReyEngine::Pos<R_FLOAT> dragStart;
@@ -72,6 +72,6 @@ namespace ReyEngine{
       ReyEngine::Rect<R_FLOAT>& REGION_EAST;
       ReyEngine::Rect<R_FLOAT>& REGION_WEST;
       ReyEngine::Rect<R_FLOAT>& REGION_SOUTH;
-      ReyEngine::Rect<R_FLOAT> _scissorArea;
+//      ReyEngine::Rect<R_FLOAT> _scissorArea;
    };
 }
