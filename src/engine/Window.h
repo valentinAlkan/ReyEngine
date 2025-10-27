@@ -37,7 +37,7 @@ namespace ReyEngine{
       void setPosition(Pos<float> newPos){setWindowPosition(newPos);}
       void maximize(){maximizeWindow();}
       void minimize(){minimizeWindow();}
-      inline FrameCount getFrameCount() const {return _frameCounter;}
+      inline EngineFrameCount getFrameCount() const {return _frameCounter;}
 //      std::optional<std::shared_ptr<Draggable>>getDragNDrop(){if (_dragNDrop) return _dragNDrop; return std::nullopt;}
       inline void keyInput(InputInterface::KeyCode){};
       int getFPS() const {return GetFPS();}

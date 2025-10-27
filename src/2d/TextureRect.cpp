@@ -28,7 +28,7 @@ void TextureRect::setTexture(const shared_ptr<ReyTexture>& newTexture){
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void TextureRect::setTexture(ReyTexture&& newTexture){
-   if (Application::isReady()) {
+   if (Application::isReady() && newTexture) {
       *_texture = std::move(newTexture);
    }
 }

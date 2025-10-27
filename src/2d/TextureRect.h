@@ -62,7 +62,7 @@ namespace ReyEngine {
          }
 
          //only exists for texture rects
-         [[no_unique_address]] std::conditional_t<IsTextureRect<T>, std::shared_ptr<ReyTexture>, std::monostate>  _texture;
+         [[no_unique_address]] std::conditional_t<IsTextureRect<T>, std::shared_ptr<ReyTexture>, std::monostate>  _texture = {};
          //only exists for render targets
          [[no_unique_address]] std::conditional_t<IsTextureRect<T>, std::monostate, std::shared_ptr<RenderTarget>>  _renderTarget;
          FitType _fitType = FitType::FIT_RECT;

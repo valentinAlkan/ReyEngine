@@ -56,7 +56,7 @@ namespace ReyEngine {
       [[nodiscard]] std::optional<Rect<float>> getAnchorArea() const {return _anchorArea;}
       [[nodiscard]] Rect<R_FLOAT> getChildBoundingBox() const;
       [[nodiscard]] Anchor getAnchoring() const {return _anchor;}
-      [[nodiscard]] FrameCount getEngineFrameCount() const;
+      [[nodiscard]] EngineFrameCount getEngineFrameCount() const;
       [[nodiscard]] bool isHovered() const;
       [[nodiscard]] bool isFocused() const;
       [[nodiscard]] bool isModal() const;

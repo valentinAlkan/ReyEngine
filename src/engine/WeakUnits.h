@@ -1,4 +1,6 @@
 #pragma once
 #include <ctype.h>
 
-using FrameCount = uint64_t;
+namespace ReyEngine {
+   using EngineFrameCount = uint64_t;
+}

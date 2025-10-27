@@ -47,7 +47,7 @@ void DropDownMenu::render2D() const {
    }
    drawRectangleLines(getSizeRect(), 1.0, Colors::black);
    for (const auto& entry : _entries){
-      drawText(entry->_text, entry->_area.copy().pushY(2).pos(), theme->font);
+      drawText(entry->_text, entry->_area.copy().pushX(2).pushY(2).pos(), theme->font);
    }
 }
 

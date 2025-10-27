@@ -50,47 +50,39 @@ namespace ReyEngine {
          float linethick = 1;
       };
 
-   //   enum class
-
-   //   /////////////////////////////////////////////////////////////////////////////////////////
-   //   struct FillProperty : public EnumProperty<Fill, 3>{
-   //      using Property<Fill>::operator=;
-   //      FillProperty(const std::string& instanceName,  Fill&& defaultvalue)
-   //      : EnumProperty<Fill, 3>(instanceName, std::move(defaultvalue))
-   //      , PROPERTY_DECLARE(colorPrimary, ReyEngine::Colors::none)
-   //      , PROPERTY_DECLARE(colorSecondary, ReyEngine::Colors::none)
-   //      , PROPERTY_DECLARE(colorTertiary, ReyEngine::Colors::none)
-   //      , PROPERTY_DECLARE(colorDisabled, ReyEngine::Colors::lightGray)
-   //      {}
-   //      const EnumPair<Fill, 3>& getDict() const override {return dict;}
-   //      static constexpr EnumPair<Fill, 3> dict = {
-   //         ENUM_PAIR_DECLARE(Fill, NONE),
-   //         ENUM_PAIR_DECLARE(Fill, SOLID),
-   //         ENUM_PAIR_DECLARE(Fill, GRADIENT),
-   //      };
-   //      void registerProperties() override {
-   //         registerProperty(colorPrimary);
-   //         registerProperty(colorSecondary);
-   //         registerProperty(colorTertiary);
-   //         registerProperty(colorDisabled);
-   //      }
-   //      ReyEngine::ColorProperty colorPrimary;
-   //      ReyEngine::ColorProperty colorSecondary; //for gradient
-   //      ReyEngine::ColorProperty colorTertiary; //for whatever
-   //      ReyEngine::ColorProperty colorDisabled; //for whatever
-   //   };
-
       template <typename T>
       struct Margins {
-          int left(){return value.w;}
-          int right(){return value.x;}
-          int top(){return value.y;}
-          int bottom(){return value.z;}
-          void setLeft(T l){value.w = l;}
-          void setRight(T r){value.x = r;}
-          void setTop(T t){value.y = t;}
-          void setBottom(T b){value.z = b;}
-          void setAll(T a){value.w=a;value.x=a;value.y=a;value.z=a;}
+         Margins() = default;
+         Margins(const auto& iterable){*this = iterable;}
+         Margins(const std::initializer_list<T>& init) {
+             auto it = init.begin();
+             if (init.size() >= 4) {
+                value.w = *it++;  // left
+                value.x = *it++;  // right
+                value.y = *it++;  // top
+                value.z = *it++;  // bottom
+             }
+         }
+         Margins& operator=(std::initializer_list<T> init) {
+            auto it = init.begin();
+            if (init.size() >= 4) {
+               value.w = *it++;
+               value.x = *it++;
+               value.y = *it++;
+               value.z = *it++;
+            }
+            return *this;
+         }
+         int left(){return value.w;}
+         int right(){return value.x;}
+         int top(){return value.y;}
+         int bottom(){return value.z;}
+         void setLeft(T l){value.w = l;}
+         void setRight(T r){value.x = r;}
+         void setTop(T t){value.y = t;}
+         void setBottom(T b){value.z = b;}
+         void setAll(T a){value.w=a;value.x=a;value.y=a;value.z=a;}
+         void operator=(const auto& iterable){value = iterable;}
       private:
           ReyEngine::Vec4<T> value;
       };
