@@ -1992,6 +1992,14 @@ namespace ReyEngine {
    struct LazyTexture;
    struct ReyImage{
       ReyImage() = default;
+      ReyImage(const ReyImage&) = delete;
+      ReyImage(ReyImage&& other) noexcept {*this = std::move(other);};
+      ReyImage& operator=(ReyImage& other) = delete;
+      ReyImage& operator=(ReyImage&& other){
+         std::swap(_image, other._image);
+         std::swap(_imageLoaded, other._imageLoaded);
+         return *this;
+      }
       inline ReyImage(const Image& im){
          _image = im;
          _imageLoaded = _image.data != nullptr;
@@ -2003,18 +2011,18 @@ namespace ReyEngine {
       ~ReyImage(){
          release();
       }
-      inline ReyImage& operator=(const Image& other){
-         release();
-         _image = other;
-         _imageLoaded = true;
-         return *this;
-      }
       [[nodiscard]] void* getData() const {return _image.data;}
       operator bool() const {return _imageLoaded;}
-      void release(){ if (_imageLoaded) UnloadImage(_image); _imageLoaded = false;}
+      void release(){
+         if (_imageLoaded) {
+            UnloadImage(_image);
+            _imageLoaded = false;
+         }
+      }
    protected:
-      Image _image;
       bool _imageLoaded = false;
+   private:
+      Image _image;
       friend class ReyTexture;
       friend class LazyTexture;
    };
@@ -2022,7 +2030,6 @@ namespace ReyEngine {
    struct ReyTexture{
       ReyTexture(){}
       ReyTexture(const ReyImage&);
-      ReyTexture(ReyImage&&);
       ReyTexture(const FileSystem::File&);
       ReyTexture(ReyTexture&& other) noexcept
       :  size(other.size)
@@ -2064,12 +2071,21 @@ namespace ReyEngine {
       f(args...);
    };
    struct LazyTexture {
+      LazyTexture() = default;
+      LazyTexture(const LazyTexture&) = delete;
+      LazyTexture(LazyTexture&& other){*this = std::move(other);}
+      LazyTexture& operator=(const LazyTexture&) = delete;
+      LazyTexture& operator=(LazyTexture&& other) noexcept {
+         std::swap(_img, other._img);
+         std::swap(_tex, other._tex);
+         return *this;
+      }
       void loadImage(const FileSystem::File& file){_img = LoadImage(file.canonical().c_str());}
       [[nodiscard]] bool texReady() const {return _tex && *_tex;}
       [[nodiscard]] bool imageReady() const {return _img;}
       [[nodiscard]] std::shared_ptr<ReyTexture>& getTexture() {return _tex;}
       [[nodiscard]] bool needsConvert() const {return imageReady() && !texReady();}
-      void tryMakeTexture(){if (imageReady()) _tex = std::make_shared<ReyTexture>(_img._image);}
+      void tryMakeTexture(){if (imageReady()) _tex = std::make_shared<ReyTexture>(_img);}
       void releaseImage(){_img.release();}
       template<typename... Args>
       void load(Args&&... args) {
