@@ -52,7 +52,6 @@ namespace ReyEngine {
                   drawRectangle(getSizeRect(), Colors::white);
                   if (_renderTarget) drawRenderTargetRect(*_renderTarget, srcRect, dstRect, Colors::none);
                }
-
             } else {
                auto sizeRect = getSizeRect();
                drawRectangleLines(sizeRect, 2.0, Colors::red);
@@ -62,7 +61,7 @@ namespace ReyEngine {
          }
 
          //only exists for texture rects
-         [[no_unique_address]] std::conditional_t<IsTextureRect<T>, std::shared_ptr<ReyTexture>, std::monostate>  _texture = {};
+         [[no_unique_address]] std::conditional_t<IsTextureRect<T>, std::shared_ptr<ReyTexture>, std::monostate>  _texture;
          //only exists for render targets
          [[no_unique_address]] std::conditional_t<IsTextureRect<T>, std::monostate, std::shared_ptr<RenderTarget>>  _renderTarget;
          FitType _fitType = FitType::FIT_RECT;
@@ -83,6 +82,7 @@ namespace ReyEngine {
       TextureRect(const std::shared_ptr<ReyTexture>& t, FitType fit=DEFAULT_FIT): Internal::DrawArea<TextureRect>(fit){setTexture(t);}
       void setTexture(const FileSystem::File&);
       void setTexture(const std::shared_ptr<ReyTexture>&);
+      void setTexture(const ReyTexture&);
       void setTexture(ReyTexture&&);
       void _init() override;
    };

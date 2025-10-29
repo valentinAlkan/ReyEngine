@@ -16,6 +16,7 @@ ReyTexture::ReyTexture(const FileSystem::File& file)
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyTexture::ReyTexture(const ReyImage& image)
 {
+   Logger::info() << "Tex id = " << _tex.id << std::endl;
    _tex = LoadTextureFromImage(image._image);
    size = {image._image.width, image._image.height};
    _texLoaded = true;

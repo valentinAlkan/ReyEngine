@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Component options
-option(REY_ENABLE_NETWORK "Enable the Network component" ON)
+#option(REY_ENABLE_NETWORK "Enable the Network component" ON)
 option(REY_ENABLE_YAML "Enable YAML support" ON)
 option(REY_ENABLE_LUA "Enable LUA support" ON)
 
@@ -130,7 +130,7 @@ target_include_directories(ReyEngineComponentLogger PUBLIC src/components)
 add_library(ReyEngineComponentStringTools STATIC src/components/StringTools.cpp)
 target_include_directories(ReyEngineComponentStringTools PUBLIC src/components)
 
-add_library(ReyEngineComponentFilesystem STATIC src/components/FileSystem.cpp)
+add_library(ReyEngineComponentFilesystem STATIC src/components/FileSystem.cpp src/components/Platform.cpp)
 target_include_directories(ReyEngineComponentFilesystem PUBLIC src/components)
 target_link_libraries(ReyEngineComponentFilesystem PUBLIC ReyEngineComponentStringTools)
 
@@ -138,27 +138,27 @@ add_library(ReyEngineComponentArgParse STATIC src/components/ArgParse.cpp)
 target_include_directories(ReyEngineComponentArgParse PUBLIC src/components)
 target_link_libraries(ReyEngineComponentArgParse PUBLIC ReyEngineComponentStringTools ReyEngineComponentLogger)
 
-add_library(ReyEngineComponentNetwork STATIC
-    src/components/network/Network.cpp
-    src/components/network/UDP.cpp
-    src/components/network/TCP.cpp
-    src/components/Platform.cpp
-    src/components/CircBuf.cpp
-    src/components/SystemTime.cpp
-)
+#add_library(ReyEngineComponentNetwork STATIC
+#    src/components/network/Network.cpp
+#    src/components/network/UDP.cpp
+#    src/components/network/TCP.cpp
+#    src/components/Platform.cpp
+#    src/components/CircBuf.cpp
+#    src/components/SystemTime.cpp
+#)
 
-target_link_libraries(ReyEngineComponentNetwork PUBLIC ComponentLogger)
-target_include_directories(ReyEngineComponentNetwork PUBLIC
-    src/components/network
-    src/components
-)
+#target_link_libraries(ReyEngineComponentNetwork PUBLIC ComponentLogger)
+#target_include_directories(ReyEngineComponentNetwork PUBLIC
+#    src/components/network
+#    src/components
+#)
 
 #link platform specific libraries
-if(WIN32)
-    target_link_libraries(ReyEngineComponentNetwork PUBLIC ws2_32)
-ELSE()
-#    target_link_libraries(core PUBLIC dl)
-ENDIF()
+#if(WIN32)
+#    target_link_libraries(ReyEngineComponentNetwork PUBLIC ws2_32)
+#ELSE()
+##    target_link_libraries(core PUBLIC dl)
+#ENDIF()
 
 ##### ReyEngine2D
 add_library(ReyEngine2D STATIC
@@ -291,8 +291,8 @@ target_link_libraries(NewEngineFonts ReyEngine2D ReyEngineComponentArgParse)
 
 
 # Test Project
-add_executable( NewEngineNetwork test/newEngine/newEngineTestNetwork.cpp)
-target_link_libraries(NewEngineNetwork ReyEngine2D ComponentNetwork)
+#add_executable( NewEngineNetwork test/newEngine/newEngineTestNetwork.cpp)
+#target_link_libraries(NewEngineNetwork ReyEngine2D ComponentNetwork)
 
 # Project for testing the build system
 #add_executable( ReyEngineBuildTest test/buildTest.cpp)

@@ -44,7 +44,7 @@ namespace ReyEngine::FileSystem {
       [[nodiscard]] bool isRegularFile() const {return _pathType == REGULAR_FILE;}
       [[nodiscard]] bool isDirectory() const {return _pathType == DIRECTORY;}
       [[nodiscard]] PathType getPathType() const {return _pathType;}
-      std::optional<Directory> getParentDirectory() const;
+      [[nodiscard]] std::optional<Directory> getParentDirectory() const;
 
       inline Path& operator/=(const Path& rhs) {_path /= rhs._path; parsePath(); return *this;}
       inline Path& operator/=(const char* rhs) {_path /= rhs; parsePath(); return *this;}
@@ -55,8 +55,9 @@ namespace ReyEngine::FileSystem {
 //      inline Path operator+(const char* rhs) const {return {*this + std::string(rhs)};}
 //      inline Path operator+(const std::string& rhs) const {return {_path.string() + rhs};}
       explicit inline operator bool() const {return !_path.empty();}
-      inline Path& operator=(const std::string& rhs){_path.clear(); _path = rhs; parsePath(); return *this;}
-      inline Path& operator=(const Path& rhs){_path.clear(); _path = rhs._path; parsePath(); return *this;}
+      inline Path& operator=(const Path& rhs){*this = rhs._path.c_str(); return *this;}
+      inline Path& operator=(const std::string& rhs){*this = rhs.c_str(); return *this;}
+      inline Path& operator=(const char* rhs){_path.clear(); _path = rhs; parsePath(); return *this;}
       inline bool operator==(const std::string& rhs) const {return _path == rhs;}
       inline bool operator==(const Path& rhs) const {return _path == rhs._path;}
 
@@ -93,13 +94,14 @@ namespace ReyEngine::FileSystem {
       File() = default;
       File(const File& other) = default;
       File(File&& other) = default;
+      File(const char* other): Path(other){_pathType = REGULAR_FILE;}
       File(const Path& other): Path(other){_pathType = REGULAR_FILE;}
       File(Path&& other): Path(other){_pathType = REGULAR_FILE;}
       File& operator=(const File& other) = default;
       void clear(){_path.clear();}
       operator Directory() = delete;
       [[nodiscard]] std::shared_ptr<FileHandle> open() const;
-      File changeExtension(const std::string& newExtension) const;
+      [[nodiscard]] File changeExtension(const std::string& newExtension) const;
    };
 
    struct FileHandle {
@@ -196,6 +198,8 @@ namespace ReyEngine::FileSystem {
       using Path::create;
       Directory(){}
       Directory(const Path& other): Path(other){_pathType = DIRECTORY;}
+      Directory(const std::string& other): Path(other){_pathType = DIRECTORY;}
+      Directory(const char* other): Path(other){_pathType = DIRECTORY;}
       Directory(Directory& other) = default;
       operator FileHandle() = delete;
       std::set<Path> listContents() const;

@@ -220,7 +220,7 @@ std::shared_ptr<FileHandle> File::open() const {
 File File::changeExtension(const std::string &newExtension) const {
    auto dir = getParentDirectory().value();
    auto split = string_tools::split(tail(), '.');
-   auto swapped = string_tools::join("", vector<string>(split.begin(), split.end()-1)) + newExtension;
+   auto swapped = string_tools::join("", vector<string>(split.begin(), split.end() - 1)) + newExtension;
    return dir / swapped;
 }
 

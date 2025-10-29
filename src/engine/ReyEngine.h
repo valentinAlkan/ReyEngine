@@ -1989,6 +1989,7 @@ namespace ReyEngine {
    };
 
    struct ReyTexture;
+   struct LazyTexture;
    struct ReyImage{
       ReyImage() = default;
       inline ReyImage(const Image& im){
@@ -2000,23 +2001,22 @@ namespace ReyEngine {
          _imageLoaded = _image.data != nullptr;
       }
       ~ReyImage(){
-         if (_imageLoaded) UnloadImage(_image);
+         release();
       }
       inline ReyImage& operator=(const Image& other){
-         if (_imageLoaded){
-            UnloadImage(_image);
-         }
+         release();
          _image = other;
          _imageLoaded = true;
-//         other.data = nullptr;
          return *this;
       }
       [[nodiscard]] void* getData() const {return _image.data;}
       operator bool() const {return _imageLoaded;}
+      void release(){ if (_imageLoaded) UnloadImage(_image); _imageLoaded = false;}
    protected:
       Image _image;
       bool _imageLoaded = false;
       friend class ReyTexture;
+      friend class LazyTexture;
    };
 
    struct ReyTexture{
@@ -2037,19 +2037,62 @@ namespace ReyEngine {
          std::swap(_texLoaded, other._texLoaded);
          return *this;
       }
+      ReyTexture& operator=(const Image& other) {
+         _release();
+         _tex = LoadTextureFromImage(other);
+         _texLoaded = true;
+         return *this;
+      }
       void loadTexture(const FileSystem::File& file);
       ~ReyTexture(){
-         if (_texLoaded) {
-            UnloadTexture(_tex);
-         }
+         _release();
       }
       [[nodiscard]] const Texture2D& getTexture() const {return _tex;}
       ReyTexture& operator=(ReyImage&&);
-      operator bool() const {return _texLoaded;}
+      [[nodiscard]] operator bool() const {return _texLoaded;}
       Size<int> size;
    protected:
-      Texture2D _tex;
+      void _release(){if (_texLoaded) UnloadTexture(_tex);}
+      Texture2D _tex = {0};
       bool _texLoaded = false;
+   };
+
+   /// Since loading textures in alternate threads is not allowed, a lazy texture stores data
+   /// as an image and then can be made to load it later from the main thread
+   template<typename F, typename... Args>
+   concept Callable = requires(F f, Args... args) {
+      f(args...);
+   };
+   struct LazyTexture {
+      void loadImage(const FileSystem::File& file){_img = LoadImage(file.canonical().c_str());}
+      [[nodiscard]] bool texReady() const {return _tex && *_tex;}
+      [[nodiscard]] bool imageReady() const {return _img;}
+      [[nodiscard]] std::shared_ptr<ReyTexture>& getTexture() {return _tex;}
+      [[nodiscard]] bool needsConvert() const {return imageReady() && !texReady();}
+      void tryMakeTexture(){if (imageReady()) _tex = std::make_shared<ReyTexture>(_img._image);}
+      void releaseImage(){_img.release();}
+      template<typename... Args>
+      void load(Args&&... args) {
+         _tex.reset();
+         if constexpr (Callable<decltype(LoadImage), Args...>) {
+            _img = LoadImage(std::forward<Args>(args)...);
+         } else if constexpr (Callable<decltype(LoadImageRaw), Args...>) {
+            _img = LoadImageRaw(std::forward<Args>(args)...);
+         } else if constexpr (Callable<decltype(LoadImageAnim), Args...>) {
+            _img = LoadImageAnim(std::forward<Args>(args)...);
+         } else if constexpr (Callable<decltype(LoadImageFromMemory), Args...>) {
+            _img = LoadImageFromMemory(std::forward<Args>(args)...);
+         } else if constexpr (Callable<decltype(LoadImageFromTexture), Args...>) {
+            _img = LoadImageFromTexture(std::forward<Args>(args)...);
+         } else if constexpr (Callable<decltype(LoadImageFromScreen), Args...>) {
+            _img = LoadImageFromScreen(std::forward<Args>(args)...);
+         } else {
+            static_assert(sizeof...(Args) == -1, "No matching load function found");
+         }
+      }
+   private:
+      ReyImage _img;
+      std::shared_ptr<ReyTexture> _tex;
    };
 
    //Underlying RenderTexture2D is different from ReyTexture's underlying Texture2D. So these are not interchangeable.

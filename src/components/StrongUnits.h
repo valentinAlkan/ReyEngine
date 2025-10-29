@@ -64,8 +64,6 @@ public:
       return std::is_constant_evaluated();
    }
 
-
-
    constexpr NamedTypeImpl(){
       //initialize to zero, if possible
       if constexpr (requires { T(0); }) {
@@ -74,7 +72,6 @@ public:
    }
    constexpr NamedTypeImpl(T const& value) : _value(value) {}
    constexpr NamedTypeImpl(const NamedTypeImpl& other): _value(other._value){}
-//   template<typename T_ = T> constexpr NamedTypeImpl(T&& value, typename std::enable_if<!std::is_reference<T_>{}, std::nullptr_t>::type = nullptr) : _value(std::move(value)) {}
 
    // get
    constexpr T& get() { return _value; }
@@ -113,15 +110,18 @@ public:
    friend constexpr NamedTypeImpl operator-(double d, NamedTypeImpl const& other) {return d - other._value;}
 
    //scalar arithmetic
-   constexpr NamedTypeImpl operator+(double d) const {return _value + d;}
-   constexpr NamedTypeImpl& operator+=(double d)     {_value += d; return *this;}
-   constexpr NamedTypeImpl operator-(double d) const {return _value - d;}
-   constexpr NamedTypeImpl& operator-=(double d)     {_value -= d; return *this;}
-   constexpr NamedTypeImpl operator/(double d) const {return _value / d;}
-   constexpr NamedTypeImpl& operator/=(double d)     {_value /= d; return *this;}
-   constexpr NamedTypeImpl operator*(double d) const {return _value * d;}
-   constexpr NamedTypeImpl& operator*=(double d)     {_value -= d; return *this;}
-   constexpr NamedTypeImpl operator%(int i)       {return (int)_value % i;}
+   constexpr NamedTypeImpl  operator+ (double d) const {return _value + d;}
+   constexpr NamedTypeImpl& operator+=(double d)       {_value += d; return *this;}
+   constexpr NamedTypeImpl  operator- (double d) const {return _value - d;}
+   constexpr NamedTypeImpl& operator-=(double d)       {_value -= d; return *this;}
+   constexpr NamedTypeImpl  operator/ (double d) const {return _value / d;}
+   constexpr NamedTypeImpl& operator/=(double d)       {_value /= d; return *this;}
+   constexpr NamedTypeImpl  operator* (double d) const {return _value * d;}
+   constexpr NamedTypeImpl& operator*=(double d)       {_value -= d; return *this;}
+   constexpr NamedTypeImpl  operator% (int i)          {return (int)_value % i;}
+   constexpr NamedTypeImpl& operator%=(int i)          {_value %= i; return *this;}
+   constexpr NamedTypeImpl  operator% (double d)       {return fmod(_value, d);}
+   constexpr NamedTypeImpl& operator%=(double d)       {_value = fmod(_value, d); return *this;}
 
    friend constexpr NamedTypeImpl operator/(double d, NamedTypeImpl const& other) {return other._value / d;}
    friend constexpr NamedTypeImpl operator*(double d, NamedTypeImpl const& other) {return other._value * d;}
@@ -140,6 +140,7 @@ public:
    friend constexpr bool operator <(double lhs, NamedTypeImpl const& rhs) {return lhs < rhs._value;}
    friend constexpr bool operator>=(double lhs, NamedTypeImpl const& rhs) {return lhs >= rhs._value;}
    friend constexpr bool operator<=(double lhs, NamedTypeImpl const& rhs) {return lhs <= rhs._value;}
+   explicit constexpr operator bool() const {return (bool)_value;}
 
    //unary operators
    constexpr NamedTypeImpl operator-() const {return -_value;}
@@ -153,18 +154,14 @@ public:
    [[nodiscard]] static constexpr inline NamedTypeImpl fromType(const SourceType& source);
 
    constexpr bool isNan(){return std::isnan(_value);}
-
-
-
-
 protected:
    T _value;
 };
 
 //add std::namespace junk here
 namespace std {
-   template<typename NamedType> constexpr auto isfinite(const NamedType &v) -> decltype(v.get(), bool{}) {return std::isfinite(v.get());}
-   template<typename NamedType> constexpr auto abs(const NamedType &v) -> decltype(v.get(), NamedType{}) {return std::abs(v.get());}
+   template<typename NamedType> constexpr bool isfinite(const NamedType &v) {return std::isfinite(v.get());}
+   template<typename NamedType> constexpr NamedType abs(const NamedType &v) {return std::abs(v.get());}
 };
 
 template <typename T, typename Parameter, template<typename> class... Skills>
@@ -187,6 +184,7 @@ namespace StrongUnitParameters{
    struct MetersPerSecondParameter{};
    struct Fraction{};
    struct FrequencyParameter{};
+   struct RadiansPerSecondParameter{};
 }
 
 //our implementations
@@ -194,33 +192,50 @@ using Meters = NamedType<double, StrongUnitParameters::MeterParameter, ToDouble>
 using Kilometers = MultipleOf<Meters, std::kilo>;
 using Feet = MultipleOf<Meters, std::ratio<3048, 10000>>;
 using Inches = MultipleOf<Feet, std::ratio<1, 12>>;
+using NauticalMiles = MultipleOf<Meters, std::ratio<1852, 1>>;
 constexpr Meters operator"" _m(unsigned long long value){return {(double)value};}
-constexpr Kilometers operator"" _km(unsigned long long value){return {(double)value};}
-constexpr Feet operator"" _ft(unsigned long long value){return {(double)value};}
-constexpr Inches operator"" _in(unsigned long long value){return {(double)value};}
 constexpr Meters operator"" _m(long double value){return {(double)value};}
+constexpr Kilometers operator"" _km(unsigned long long value){return {(double)value};}
 constexpr Kilometers operator"" _km(long double value){return {(double)value};}
+constexpr Feet operator"" _ft(unsigned long long value){return {(double)value};}
 constexpr Feet operator"" _ft(long double value){return {(double)value};}
 constexpr Inches operator"" _in(long double value){return {(double)value};}
+constexpr Inches operator"" _in(unsigned long long value){return {(double)value};}
 
 using Radians = NamedType<double, StrongUnitParameters::RadiansParameter, ToDouble>;
 using Degrees = MultipleOf<Radians, std::ratio<31415926535897932, 1800000000000000000>>;
 using Milliradians = MultipleOf<Radians, std::milli>;
-
-constexpr Radians       operator"" _rad(unsigned long long value){return {(double)value};}
-constexpr Degrees       operator"" _deg(unsigned long long value){return {(double)value};}
-constexpr Milliradians  operator"" _mrad(unsigned long long value){return {(double)value};}
-constexpr Radians       operator"" _rad(long double value){return {(double)value};}
-constexpr Degrees       operator"" _deg(long double value){return {(double)value};}
-constexpr Milliradians  operator"" _mrad(long double value){return {(double)value};}
-
 using MetersMSL = NamedType<double, StrongUnitParameters::MetersMSLParameter, ToDouble>; //does not implicitly convert to meters
 using KilometersMSL = MultipleOf<MetersMSL, std::kilo>;
+using FeetMSL = MultipleOf<MetersMSL, std::ratio<3048, 10000>>;
 using MetersHAE = NamedType<double, StrongUnitParameters::MetersHAEParameter, ToDouble>; //does not implicitly convert to meters
+using FeetHAE = MultipleOf<MetersHAE, std::ratio<3048, 10000>>;
+using MetersPerSecond = NamedType<double, StrongUnitParameters::MetersPerSecondParameter, ToDouble>;
+using FeetPerSecond = MultipleOf<MetersPerSecond, std::ratio<3048, 10000>>;
+using KilometersPerHour = MultipleOf<MetersPerSecond, std::ratio<10, 36>>;
+using MilesPerHour = MultipleOf<MetersPerSecond, std::ratio<10000000000, 22369362921>>;
+using RadiansPerSecond = NamedType<double, StrongUnitParameters::RadiansPerSecondParameter, ToDouble>;
+using DegreesPerSecond = MultipleOf<RadiansPerSecond , std::ratio<31415926535897932, 1800000000000000000>>;
+using Knots = MultipleOf<MetersPerSecond, std::ratio<100000000000, 194384449244>>;
+
 constexpr MetersMSL  operator"" _m_msl(unsigned long long value){return {(double)value};}
+constexpr MetersMSL  operator"" _m_msl(long double value){return {(double)value};}
 constexpr MetersHAE  operator"" _m_hae(unsigned long long value){return {(double)value};}
 constexpr MetersHAE  operator"" _m_hae(long double value){return {(double)value};}
-constexpr MetersMSL  operator"" _m_msl(long double value){return {(double)value};}
+constexpr Radians       operator"" _rad(unsigned long long value){return {(double)value};}
+constexpr Radians       operator"" _rad(long double value){return {(double)value};}
+constexpr Degrees       operator"" _deg(unsigned long long value){return {(double)value};}
+constexpr Degrees       operator"" _deg(long double value){return {(double)value};}
+constexpr Milliradians  operator"" _mrad(unsigned long long value){return {(double)value};}
+constexpr Milliradians  operator"" _mrad(long double value){return {(double)value};}
+constexpr RadiansPerSecond operator"" _rps(unsigned long long value){return {(double)value};}
+constexpr RadiansPerSecond operator"" _rps(long double value){return {(double)value};}
+constexpr MetersPerSecond  operator"" _mps(unsigned long long value){return {(double)value};}
+constexpr MetersPerSecond  operator"" _mps(long double value){return {(double)value};}
+constexpr Knots  operator"" _knt(unsigned long long value){return {(double)value};}
+constexpr Knots  operator"" _knt(long double value){return {(double)value};}
+constexpr NauticalMiles  operator"" _ntmi(unsigned long long value){return {(double)value};}
+constexpr NauticalMiles operator"" _nmti(long double value){return {(double)value};}
 
 using MetersPerSecond = NamedType<double, StrongUnitParameters::MetersPerSecondParameter, ToDouble>;
 using Knots = MultipleOf<MetersPerSecond, std::ratio<100000000000, 194384449244>>;
@@ -251,7 +266,7 @@ template<> template<> constexpr inline std::chrono::milliseconds Hertz::toType<s
 template<> template<> constexpr inline std::chrono::microseconds Hertz::toType<std::chrono::microseconds>() const {return std::chrono::milliseconds(static_cast<long long>(1000000.0 / get()));}
 template<> template<> constexpr inline std::chrono::nanoseconds Hertz::toType<std::chrono::nanoseconds>() const {return std::chrono::nanoseconds(static_cast<long long>(1000000000.0 / get()));}
 
-//constrain types only to std::chrono durations so that we don't overly broad linker errors for overloaded operators
+//constrain types only to std::chrono durations so that we don't get overly broad linker errors for overloaded operators
 template <typename T>
 concept ChronoDuration = requires {typename T::rep; typename T::period;} && std::is_base_of_v<std::chrono::duration<typename T::rep, typename T::period>, T>;
 template<> template<> constexpr inline Hertz Hertz::fromType<std::chrono::milliseconds>(const std::chrono::milliseconds& source) {return Hertz(1000.0 / source.count());}
@@ -277,80 +292,82 @@ template <ChronoDuration CHRONO_TYPE> constexpr bool operator<=(const CHRONO_TYP
 
 
 //check our work
-#define ft Feet(3048_m)
-#define pi2Rad (M_PI * 2_rad)
-#define three_sixty_deg 360_deg
-static_assert(ft == 10000);
-static_assert(ft != 3);
-static_assert(ft != 2);
-static_assert(ft != 1);
-static_assert(ft != 0);
-static_assert(ft != -1);
-static_assert(ft != -2);
-static_assert(ft != -3);
-static_assert(ft == Feet(10000));
-static_assert(Feet(1000) == 1000_ft);
-static_assert(Feet(1000) + 1_ft == 1001_ft);
-static_assert(1_km - 1000_m == 0);
-static_assert(1_km + 1000_m == 2_km);
-static_assert((1 + ft) == 10001);
-static_assert((ft + 2) == 10002);
-static_assert((2 + ft) == 10002);
-static_assert((ft - 1) == 9999);
-static_assert((1 - ft) == -9999);
-static_assert((ft - 2) == 9998);
-static_assert((2 - ft) == -9998);
-static_assert((ft / 2) == 5000);
-static_assert((2 / ft) == 5000);
-static_assert((ft * 2) == 20000);
-static_assert((2 * ft) == 20000);
-static_assert(1000_m == 1000_m);
-static_assert((1000_m).get() == 1000);
-static_assert((1_km).get() != 1000);
-static_assert((0.445_km).get() == 0.445);
-static_assert(1000_m == 1_km);
-static_assert(999_m < 1_km);
-static_assert(1001_m > 1_km);
-static_assert(9999_ft < 3048_m);
-static_assert(10001_ft > 3048_m);
-static_assert(three_sixty_deg > Degrees(359.9999999));
-static_assert(pi2Rad < Degrees(360.0000001));
-static_assert(three_sixty_deg/2 >= Degrees(180));
-static_assert(pi2Rad/2 <= Degrees(180));
-static_assert(three_sixty_deg/2 == Degrees(180));
-static_assert(pi2Rad == Degrees(360));
-static_assert((three_sixty_deg + 2) % 360 < 2.000000001);
-static_assert(pi2Rad + 2 % 360 > 1.999999999);
-static_assert(three_sixty_deg + 1 == 361);
-static_assert(three_sixty_deg % 360 == 0);
-static_assert(Degrees(pi2Rad) == 360);
-static_assert(three_sixty_deg == 360);
-static_assert(1_rad > Degrees(57.2957));
-static_assert(1_rad < Degrees(57.2958));
-static_assert(Meters(NAN).isNan());
-static_assert(Meters(NAN) != 0);
-static_assert(Milliradians(M_PI*2000) == Degrees(360));
-//static_assert(MetersHAE(1) == MetersMSL(1)); // this shouldn't compile. Could use SFINAE to make it check.
-static_assert(MetersHAE(1).toType<Meters>() == Meters(1));
-static_assert(MetersMSL(1).toType<Meters>() == Meters(1));
-static_assert(Meters(MetersHAE(3048).get()) == Feet(10000));
-static_assert(KilometersMSL(1) == MetersMSL(1000));
-static_assert(Knots(1.94384449244) == MetersPerSecond(1));
-static_assert(std::abs(Meters(-4)) == 4);
-static_assert(std::abs(Knots(4)) == 4);
-static_assert(Feet(1) == Inches(12));
-static_assert(Hertz(1).toType<std::chrono::milliseconds>() == 1000ms);
-static_assert(Hertz(2).toType<std::chrono::milliseconds>() == 500ms);
-static_assert(Hertz(3).toType<std::chrono::milliseconds>() == 333ms);
-static_assert(Hertz(0.5).toType<std::chrono::milliseconds>() == 2000ms);
-static_assert(Hertz::fromType(std::chrono::milliseconds(1000)) == 1_hz);
-static_assert(Hertz::fromType(std::chrono::milliseconds(100)) == 10_hz);
-static_assert(Hertz::fromType(std::chrono::milliseconds(10)) == 100_hz);
-static_assert(Hertz::fromType(std::chrono::milliseconds(1)) == 1000_hz);
-static_assert(Hertz(10) == std::chrono::milliseconds (100));
-static_assert(Hertz(10) >= std::chrono::milliseconds (100));
-static_assert(Hertz(9) >= std::chrono::milliseconds (100));
-static_assert(Hertz(10) <= std::chrono::milliseconds (100));
-#undef ft
-#undef pi2Rad
-#undef three_sixty_deg
+//#define ft Feet(3048_m)
+//#define pi2Rad (M_PI * 2_rad)
+//#define three_sixty_deg 360_deg
+//template<typename T, typename U> concept CanCompare = requires(T t, U u) {{ t == u } -> std::convertible_to<bool>;};
+//static_assert(ft == 10000);
+//static_assert(ft != 3);
+//static_assert(ft != 2);
+//static_assert(ft != 1);
+//static_assert(ft != 0);
+//static_assert(ft != -1);
+//static_assert(ft != -2);
+//static_assert(ft != -3);
+//static_assert(ft == Feet(10000));
+//static_assert(Feet(1000) == 1000_ft);
+//static_assert(Feet(1000) + 1_ft == 1001_ft);
+//static_assert(1_km - 1000_m == 0);
+//static_assert(1_km + 1000_m == 2_km);
+//static_assert((1 + ft) == 10001);
+//static_assert((ft + 2) == 10002);
+//static_assert((2 + ft) == 10002);
+//static_assert((ft - 1) == 9999);
+//static_assert((1 - ft) == -9999);
+//static_assert((ft - 2) == 9998);
+//static_assert((2 - ft) == -9998);
+//static_assert((ft / 2) == 5000);
+//static_assert((2 / ft) == 5000);
+//static_assert((ft * 2) == 20000);
+//static_assert((2 * ft) == 20000);
+//static_assert(1000_m == 1000_m);
+//static_assert((1000_m).get() == 1000);
+//static_assert((1_km).get() != 1000);
+//static_assert((0.445_km).get() == 0.445);
+//static_assert(1000_m == 1_km);
+//static_assert(999_m < 1_km);
+//static_assert(1001_m > 1_km);
+//static_assert(9999_ft < 3048_m);
+//static_assert(10001_ft > 3048_m);
+//static_assert(three_sixty_deg > Degrees(359.9999999));
+//static_assert(pi2Rad < Degrees(360.0000001));
+//static_assert(three_sixty_deg/2 >= Degrees(180));
+//static_assert(pi2Rad/2 <= Degrees(180));
+//static_assert(three_sixty_deg/2 == Degrees(180));
+//static_assert(pi2Rad == Degrees(360));
+//static_assert((three_sixty_deg + 2) % 360 < 2.000000001);
+//static_assert(pi2Rad + 2 % 360 > 1.999999999);
+//static_assert(three_sixty_deg + 1 == 361);
+//static_assert(three_sixty_deg % 360 == 0);
+//static_assert(Degrees(pi2Rad) == 360);
+//static_assert(three_sixty_deg == 360);
+//static_assert(1_rad > Degrees(57.2957));
+//static_assert(1_rad < Degrees(57.2958));
+//static_assert(Meters(NAN).isNan());
+//static_assert(Meters(NAN) != 0);
+//static_assert(Milliradians(M_PI*2000) == Degrees(360));
+//static_assert(!CanCompare<MetersHAE, MetersMSL>, "MetersHAE and MetersMSL should not be comparable");
+//static_assert(MetersHAE(1).toType<Meters>() == Meters(1));
+//static_assert(MetersMSL(1).toType<Meters>() == Meters(1));
+//static_assert(Meters(MetersHAE(3048).get()) == Feet(10000));
+//static_assert(KilometersMSL(1) == MetersMSL(1000));
+//static_assert(Knots(1.94384449244) == MetersPerSecond(1));
+//static_assert(std::abs(Meters(-4)) == 4);
+//static_assert(std::abs(Knots(4)) == 4);
+//static_assert(Feet(1) == Inches(12));
+//static_assert(Hertz(1).toType<std::chrono::milliseconds>() == 1000ms);
+//static_assert(Hertz(2).toType<std::chrono::milliseconds>() == 500ms);
+//static_assert(Hertz(3).toType<std::chrono::milliseconds>() == 333ms);
+//static_assert(Hertz(0.5).toType<std::chrono::milliseconds>() == 2000ms);
+//static_assert(Hertz::fromType(std::chrono::milliseconds(1000)) == 1_hz);
+//static_assert(Hertz::fromType(std::chrono::milliseconds(100)) == 10_hz);
+//static_assert(Hertz::fromType(std::chrono::milliseconds(10)) == 100_hz);
+//static_assert(Hertz::fromType(std::chrono::milliseconds(1)) == 1000_hz);
+//static_assert(Hertz(10) == std::chrono::milliseconds (100));
+//static_assert(Hertz(10) >= std::chrono::milliseconds (100));
+//static_assert(Hertz(9) >= std::chrono::milliseconds (100));
+//static_assert(Hertz(10) <= std::chrono::milliseconds (100));
+//static_assert(NauticalMiles(1) == Meters(1852));
+//#undef ft
+//#undef pi2Rad
+//#undef three_sixty_deg
