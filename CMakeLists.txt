@@ -13,44 +13,6 @@ option(REY_ENABLE_LUA "Enable LUA support" ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-
-#function(copy_file SOURCE_PATH DESTINATION_PATH)
-#    # Determine the absolute source path
-#    if(IS_ABSOLUTE "${SOURCE_PATH}")
-#        set(ABS_SOURCE_PATH "${SOURCE_PATH}")
-#    else()
-#        set(ABS_SOURCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_PATH}")
-#    endif()
-#
-#    # Get just the filename for the final path
-#    get_filename_component(FILENAME "${SOURCE_PATH}" NAME)
-#
-#    # Set destination in build directory
-#    if(DESTINATION_PATH AND NOT DESTINATION_PATH STREQUAL "")
-#        string(REGEX REPLACE "^/+" "" CLEAN_DEST "${DESTINATION_PATH}")
-#        string(REGEX REPLACE "/+$" "" CLEAN_DEST "${CLEAN_DEST}")
-#        set(DEST_DIR "${CMAKE_BINARY_DIR}/${CLEAN_DEST}")
-#    else()
-#        set(DEST_DIR "${CMAKE_BINARY_DIR}")
-#    endif()
-#
-#    set(FINAL_PATH "${DEST_DIR}/${FILENAME}")
-#
-#    message(STATUS "Will copy '${ABS_SOURCE_PATH}' to '${FINAL_PATH}'")
-#
-#    # Create a custom command to copy the file
-#    add_custom_command(
-#            OUTPUT "${FINAL_PATH}"
-#            COMMAND ${CMAKE_COMMAND} -E make_directory "${DEST_DIR}"
-#            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${ABS_SOURCE_PATH}" "${FINAL_PATH}"
-#            DEPENDS "${ABS_SOURCE_PATH}"
-#            COMMENT "Copying ${FILENAME} to build directory"
-#    )
-#
-#    # Add to a list to create a target later
-#    set_property(GLOBAL APPEND PROPERTY RESOURCE_FILES "${FINAL_PATH}")
-#endfunction()
-
 function(copy_file SOURCE_PATH DESTINATION_PATH)
     # Determine the absolute source path
     if(IS_ABSOLUTE "${SOURCE_PATH}")
@@ -176,6 +138,7 @@ add_library(ReyEngine2D STATIC
         src/components/SystemTime.cpp
         src/components/MetaData.cpp
         src/components/Platform.cpp
+        src/components/Shader.cpp
 
         src/2d/Control.cpp
         src/2d/Layout.cpp

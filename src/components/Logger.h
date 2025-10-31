@@ -42,18 +42,23 @@ namespace ReyEngine{
       static Stream warn();
       static Stream error();
       static Stream debug();
+      Stream log(const std::string& logLevel);
       static std::string getFront();
       static bool hasHistory();
       static Logger& getInstance();
       ~Logger();
       Logger(const Logger&) = delete;
       Logger& operator=(const Logger&) = delete;
+      static std::unique_ptr<Logger> customLogger(std::ostream&);
+   protected:
+      std::ostream& _out;
    private:
-      Logger() = default;
+      Logger(std::ostream&);
       static std::unique_ptr<Logger> _self;
 
       std::queue<std::string> _history;
       std::mutex _mutex;
+      friend class Stream;
    };
 
 }

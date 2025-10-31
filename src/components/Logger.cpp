@@ -5,23 +5,24 @@ using namespace ReyEngine;
 
 unique_ptr<Logger> ReyEngine::Logger::_self;
 /////////////////////////////////////////////////////////////////////////////////////////
+Logger::Logger(std::ostream& outdevice): _out(outdevice){}
+/////////////////////////////////////////////////////////////////////////////////////////
 Logger &Logger::Logger::getInstance() {
    if (!_self){
-      _self = unique_ptr<Logger>(new Logger);
+      _self = unique_ptr<Logger>(new Logger(cout));
    }
    return *_self;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Logger::~Logger(){
-   std::cout << "Shutting down logger" << endl;
+   Stream(*this, "INFO") << "Shutting down logger" << endl;
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 Logger::Stream::Stream(Logger& logger, const std::string& level)
-: _logger(logger)
-, _level(level)
+      : _logger(logger)
+      , _level(level)
 {}
-
 
 /////////////////////////////////////////////////////////////////////////////////////////
 bool Logger::hasHistory(){
@@ -41,8 +42,7 @@ Logger::Stream::~Stream() {
 
    string timestamp = timestamp_ss.str();
    string log_message = "[" + timestamp + "] [" + _level + "] " + _ss.str();
-   cout << log_message;
-   fflush(stdout);
+   _logger._out << log_message << std::flush;
    _logger._history.push(log_message);
    if (_logger._history.size() > HISTORY_SIZE){
       _logger._history.pop();
@@ -70,9 +70,19 @@ Logger::Stream Logger::debug() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+Logger::Stream Logger::log(const std::string& logLevel) {
+   return {*this, logLevel};
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 string Logger::getFront() {
    scoped_lock<mutex> lock(getInstance()._mutex);
    string retval = getInstance()._history.front();
    getInstance()._history.pop();
    return retval;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::unique_ptr<Logger> Logger::customLogger(std::ostream& outdevice) {
+   return std::unique_ptr<Logger>(new Logger(outdevice));
 }

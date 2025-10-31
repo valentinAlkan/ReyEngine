@@ -1,15 +1,19 @@
 #pragma once
 #include <variant>
 #include "Widget.h"
+#include "Shader.h"
 
 namespace ReyEngine {
    class TextureRect;
    class RenderTargetRect;
+   class ShaderRect;
    namespace Internal{
       template<typename T> concept IsTextureRect = std::is_same_v<T, TextureRect>;
-      // Genericized type that displays either a texture rect or a render target. The functionality is nearly identical
-      // in either case, so we use a concept to determine which one we are at compile time, which is more performant and
-      // easier to maintain compared with having two large blocks of almost-the-same code in two different places
+      template<typename T> concept IsShaderRect = std::is_same_v<T, ShaderRect>;
+      template<typename T> concept IsRenderTargetRect = std::is_same_v<T, RenderTargetRect>;
+      // Genericized type. The functionality is nearly identical
+      // in any case, so we use a concept to determine which thing we are at compile time, which is more performant and
+      // easier to maintain compared with having multiple large blocks of almost-the-same code in different places
       template <typename T>
       class DrawArea : public Widget{
       public:
@@ -25,9 +29,13 @@ namespace ReyEngine {
             if constexpr (IsTextureRect<T>){
                canFit = (bool)_texture;
                if (canFit) texSize = _texture->size;
-            } else if (_renderTarget && _renderTarget->ready()){
-               canFit = true;
-               texSize = _renderTarget->getSize();
+            } else if constexpr (IsRenderTargetRect<T>) {
+               if (_renderTarget && _renderTarget->ready()) {
+                  canFit = true;
+                  texSize = _renderTarget->getSize();
+               }
+            } else if constexpr (IsShaderRect<T>){
+
             }
 
             if (canFit) {
@@ -48,9 +56,11 @@ namespace ReyEngine {
                ScopeScissor scopeScissor(getGlobalTransform(), getSizeRect());
                if constexpr (IsTextureRect<T>){
                   if (_texture) drawTexture(*_texture, srcRect, dstRect, Colors::none);
-               } else {
+               } else if constexpr (IsRenderTargetRect<T>){
                   drawRectangle(getSizeRect(), Colors::white);
                   if (_renderTarget) drawRenderTargetRect(*_renderTarget, srcRect, dstRect, Colors::none);
+               } else if constexpr (IsShaderRect<T>){
+
                }
             } else {
                auto sizeRect = getSizeRect();
@@ -59,11 +69,10 @@ namespace ReyEngine {
                drawLine({sizeRect.bottomLeft(), sizeRect.topRight()}, 2.0, Colors::red);
             }
          }
-
-         //only exists for texture rects
+         //these members only exist for the given types
          [[no_unique_address]] std::conditional_t<IsTextureRect<T>, std::shared_ptr<ReyTexture>, std::monostate>  _texture;
-         //only exists for render targets
-         [[no_unique_address]] std::conditional_t<IsTextureRect<T>, std::monostate, std::shared_ptr<RenderTarget>>  _renderTarget;
+         [[no_unique_address]] std::conditional_t<IsRenderTargetRect<T>, std::shared_ptr<RenderTarget>, std::monostate>  _renderTarget;
+         [[no_unique_address]] std::conditional_t<IsShaderRect<T>, std::shared_ptr<ReyShader>, std::monostate>  _shader;
          FitType _fitType = FitType::FIT_RECT;
          bool _fitScheduled = false; //if we're not inited yet
       protected:
@@ -92,5 +101,16 @@ namespace ReyEngine {
    public:
       REYENGINE_OBJECT(RenderTargetRect)
       RenderTargetRect(std::shared_ptr<RenderTarget>& tgt){_renderTarget = tgt;};
+   };
+
+   class ShaderRect : public Internal::DrawArea<ShaderRect> {
+   public:
+      REYENGINE_OBJECT(ShaderRect)
+      ShaderRect(std::shared_ptr<ReyShader>& shader){
+         _shader = shader;
+      };
+      ShaderRect(std::shared_ptr<ReyShader>& s, FitType fit=DEFAULT_FIT): Internal::DrawArea<ShaderRect>(fit) { setShader(s);}
+      void setShader(std::shared_ptr<ReyShader>& shader){_shader = shader;}
+      [[nodiscard]] std::shared_ptr<ReyShader> getShader() const {return _shader;}
    };
 }

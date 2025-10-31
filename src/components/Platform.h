@@ -100,8 +100,9 @@ namespace CrossPlatform{
    std::string getUserLocalConfigDirApp(); //returns a directory string, with the same name as this application, inside the local config dir
    std::string getUserLocalConfigDirAppFile(); //returns a file string in the application config directory with the name '.config'
    std::string getUserLocalConfigDirRestrictedSecurity(); //something like %APPDATA%/LocalLow in windows
-   std::string getExeResourceDir(); //get the resources directory - sits next to the exe and is named 'engine/resources'
-   std::string getReyEngineResourceDir(); //get the global engine resources directory - can be in many places, or passed in with REYENGINE_RESOURCE_DIR env
+   std::string getExeEngineResourceDir(); //get the ENGINE resources directory - sits next to the exe and is named 'engine/resources' - typical when distributed on a per-app basis
+   std::string getProjectResourceDir(); //get the PROJECT resources directory - sits next to the exe and is named 'resources' - this is where assets for your APPLICATION should go.
+   std::string getReyEngineResourceDir(); //get the global engine resources directory - can be in many places, or passed in with REYENGINE_RESOURCE_DIR env - checks for system-wide installation
    std::string getFontsDir(); //get the resources/fonts directory
    std::string getIconsDir(); //get the resources/fonts directory
    std::vector<std::string> getRootFolders(); //returns / for unix-like systems, a vector of drive letters in windows

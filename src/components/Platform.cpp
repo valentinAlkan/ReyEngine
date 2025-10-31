@@ -110,8 +110,13 @@ string CrossPlatform::getExeDir() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-string CrossPlatform::getExeResourceDir() {
-   return getExeDir() + REYENGINE_FILESYSTEM_PATH_SEP + "engine" + REYENGINE_FILESYSTEM_PATH_SEP + "resources";
+string CrossPlatform::getExeEngineResourceDir() {
+   return getExeDir() + REYENGINE_FILESYSTEM_PATH_SEP + "reyengine" + REYENGINE_FILESYSTEM_PATH_SEP + "resources";
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+string CrossPlatform::getProjectResourceDir() {
+   return getExeDir() + REYENGINE_FILESYSTEM_PATH_SEP + "resources";
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
