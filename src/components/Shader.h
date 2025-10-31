@@ -88,7 +88,7 @@ namespace ReyEngine {
                SetShaderValueTexture(T::_shader, T::_location, rhs.getTexture());
             } else if constexpr (std::is_same_v<V, ColorRGBA>){
                Vec4<float> color = {rhs.r / (float)255.0, rhs.g / (float)255.0, rhs.b / (float)255.0, rhs.a / (float)255.0};
-               SetShaderValue(T::_shader, T::_location, &color, (int)T::_type);
+               SetShaderValue(T::_shader, T::_location, static_cast<void*>(&color), (int)T::_type);
             } else if constexpr (is_supported_shader_type<V>){
                SetShaderValue(T::_shader, T::_location, static_cast<const void*>(&rhs), (int)T::_type);
             } else {

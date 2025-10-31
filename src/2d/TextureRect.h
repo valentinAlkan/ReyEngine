@@ -33,9 +33,14 @@ namespace ReyEngine {
                if (_renderTarget && _renderTarget->ready()) {
                   canFit = true;
                   texSize = _renderTarget->getSize();
+               } else {
+                  canFit = false;
                }
             } else if constexpr (IsShaderRect<T>){
-
+               if (_shader){
+                  canFit = _shader->valid();
+                  texSize = getSize();
+               }
             }
 
             if (canFit) {
@@ -60,7 +65,11 @@ namespace ReyEngine {
                   drawRectangle(getSizeRect(), Colors::white);
                   if (_renderTarget) drawRenderTargetRect(*_renderTarget, srcRect, dstRect, Colors::none);
                } else if constexpr (IsShaderRect<T>){
-
+                  if (_shader) {
+                     BeginShaderMode(_shader->getShader());
+                     drawRectangle(dstRect, Colors::white);
+                     EndShaderMode();
+                  }
                }
             } else {
                auto sizeRect = getSizeRect();
@@ -106,10 +115,11 @@ namespace ReyEngine {
    class ShaderRect : public Internal::DrawArea<ShaderRect> {
    public:
       REYENGINE_OBJECT(ShaderRect)
-      ShaderRect(std::shared_ptr<ReyShader>& shader){
-         _shader = shader;
-      };
-      ShaderRect(std::shared_ptr<ReyShader>& s, FitType fit=DEFAULT_FIT): Internal::DrawArea<ShaderRect>(fit) { setShader(s);}
+      ShaderRect(std::shared_ptr<ReyShader>& s, FitType fit=DEFAULT_FIT)
+      : Internal::DrawArea<ShaderRect>(fit)
+      {
+          setShader(s);
+      }
       void setShader(std::shared_ptr<ReyShader>& shader){_shader = shader;}
       [[nodiscard]] std::shared_ptr<ReyShader> getShader() const {return _shader;}
    };
