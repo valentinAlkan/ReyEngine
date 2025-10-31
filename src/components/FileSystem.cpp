@@ -225,6 +225,20 @@ File File::changeExtension(const std::string &newExtension) const {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
+std::optional<std::string> File::getExtension() const {
+   auto ext = _path.extension();
+   if (!ext.empty()) return ext.string();
+   return {};
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+std::optional<std::string> File::stripExtension() const {
+   auto stem = _path.stem();
+   if (!stem.empty()) return stem.string();
+   return {};
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
 std::vector<char> FileHandle::readFile(){
    auto end = _ifs.tellg();
    _ifs.seekg(0, std::ios::beg);

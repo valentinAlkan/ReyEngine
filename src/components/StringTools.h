@@ -18,7 +18,7 @@ namespace string_tools{
    std::string lrstrip(const std::string& s); //strips whitespace from the right and left
    std::string extractNumeric(const std::string& s); //pull out all numeric chars and return them, in order
    std::string extractNumericl(const std::string& s); //pull out all numeric chars on the left side of the string, and return them, in order. stop when encountering a non-numeric char.
-   std::string extractNumericr(const std::string& s); //pull out all numeric chars on the right side of the string, and return them, in order. stop when encountering anon- numeric char.
+   std::string extractNumericr(const std::string& s); //pull out all numeric chars on the right side of the string, and return them, in order. stop when encountering a non-numeric char.
    std::string extractNonNumeric(const std::string& s); //pull out all non-numeric chars and return them, in order
    std::string extractNonNumericl(const std::string& s); //pull out all non-numeric chars on the left side of the string, and return them, in order. stop when encountering a numeric char.
    std::string extractNonNumericr(const std::string& s); //pull out all non-numeric chars on the right side of the string, and return them, in order. stop when encountering a numeric char.
