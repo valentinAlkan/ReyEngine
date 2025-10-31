@@ -56,8 +56,8 @@ namespace ReyEngine::Internal {
       inline void setHeight(R_FLOAT y){setSize({getWidth(), y});}
       inline void setRect(R_FLOAT x, R_FLOAT y, R_FLOAT width, R_FLOAT height){setRect({x,y,width,height});}
       inline Transform2D& getLocalTransform(){return transform2D;}
-      inline const Transform2D& getLocalTransform() const {return transform2D;}
-      inline CanvasSpace<Transform2D> getGlobalTransform(bool respectGlobalTransformBoundary=true) const {
+      [[nodiscard]] inline const Transform2D& getLocalTransform() const {return transform2D;}
+      [[nodiscard]] inline CanvasSpace<Transform2D> getGlobalTransform(bool respectGlobalTransformBoundary=true) const {
          auto retval = getLocalTransform();
          auto parent = selfNode->getParent();
          while (parent){

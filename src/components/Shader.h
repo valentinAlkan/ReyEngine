@@ -37,23 +37,27 @@ namespace ReyEngine {
 
       struct ShaderData {
       protected:
-         ShaderData(ReyShader& reyShader, const std::string& name): _shader(reyShader._shader){}
-         const std::string name;
+         ShaderData() = default;
+         ShaderData(const ReyShader& reyShader, const std::string& name): _shader(reyShader._shader){}
+         std::string name;
          int _location;
-         Shader& _shader;
+         Shader _shader = {0}; //doesnt' do memory cleanup so stack-o-lee it is
          UniformType _type;
       };
       struct Uniform : public ShaderData {
       protected:
-         Uniform(ReyShader& reyShader, const std::string& name);
+         Uniform() = default;
+         Uniform(const ReyShader& reyShader, const std::string& name);
       };
       struct Attribute : public ShaderData {
       protected:
-         Attribute(ReyShader& reyShader, const std::string& name);
+         Attribute() = default;
+         Attribute(const ReyShader& reyShader, const std::string& name);
       };
 
       template <std::derived_from<ShaderData> T, typename V>
       struct ShaderValue : public T {
+         ShaderValue() = default; //null shader
          ShaderValue(ReyShader& shader, const std::string& name)
          : T(shader, name)
          {

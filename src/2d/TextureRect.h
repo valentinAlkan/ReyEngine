@@ -115,6 +115,7 @@ namespace ReyEngine {
    class ShaderRect : public Internal::DrawArea<ShaderRect> {
    public:
       REYENGINE_OBJECT(ShaderRect)
+      ShaderRect(FitType fit=DEFAULT_FIT): Internal::DrawArea<ShaderRect>(fit){}
       ShaderRect(std::shared_ptr<ReyShader>& s, FitType fit=DEFAULT_FIT)
       : Internal::DrawArea<ShaderRect>(fit)
       {

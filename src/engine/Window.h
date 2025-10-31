@@ -42,6 +42,7 @@ namespace ReyEngine{
       inline void keyInput(InputInterface::KeyCode){};
       int getFPS() const {return GetFPS();}
       std::optional<Widget*> processInput(const InputEvent&);
+      void setInternalLogLevel(int logLevel){SetTraceLogLevel(logLevel);}
    protected:
       Window(const std::string& title, int width, int height, const std::vector<WindowFlags>& flags, int targetFPS);
       void initialize(std::optional<std::shared_ptr<Canvas>> root);

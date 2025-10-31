@@ -39,14 +39,14 @@ ReyEngine::ReyShader::~ReyShader(){
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyEngine::ReyShader::Uniform::Uniform(ReyShader& reyShader, const std::string& name)
+ReyEngine::ReyShader::Uniform::Uniform(const ReyShader& reyShader, const std::string& name)
 : ShaderData(reyShader, name)
 {
    _location = GetShaderLocation(_shader, name.c_str());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyEngine::ReyShader::Attribute::Attribute(ReyShader& reyShader, const std::string& name)
+ReyEngine::ReyShader::Attribute::Attribute(const ReyShader& reyShader, const std::string& name)
 : ShaderData(reyShader, name)
 {
    _location = GetShaderLocationAttrib(_shader, name.c_str());

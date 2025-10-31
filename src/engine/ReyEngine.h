@@ -260,6 +260,12 @@ namespace ReyEngine {
       inline static std::optional<Vec2<T>> fromString(const std::string& s){return Vec<T, 2>::template fromString<Vec2<T>>(s);}
       friend std::ostream& operator<<(std::ostream& os, Vec2<T> v) {os << v.toString(); return os;}
       friend Vector2& operator+=(Vector2& in, Vec2<T> add) {in.x += add.x; in.y += add.y; return in;}
+      inline Vec2& transform(const Matrix& m) {
+         auto retval = Vector3Transform({x, y, 0}, m);
+         x = retval.x;
+         y = retval.y;
+         return *this;
+      }
       static inline Vec2 transform(const Vec2& v, const Matrix& m) {
          auto retval = Vector3Transform({v.x, v.y, 0}, m);
          return Vec2(retval.x, retval.y);
