@@ -56,13 +56,13 @@ namespace ReyEngine{
       bool isValidRegion(){
          if constexpr (std::is_same_v<T, Rect<R_FLOAT>>){
             if (!region.size()) return false; //has no width or height
-            return _texture->size.toRect().contains(region);
+            return _texture->size().toRect().contains(region);
          }
          if constexpr (std::is_same_v<T, std::vector<Rect<R_FLOAT>>>){
             if (region.empty()) return false;
             for (const auto& rect : region){
                if (!rect.size()) return false; //has no width or height
-               if (!_texture->size.toRect().contains(rect)) return false;
+               if (!_texture->size().toRect().contains(rect)) return false;
             }
          }
          return true;

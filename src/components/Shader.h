@@ -17,8 +17,118 @@ namespace ReyEngine {
       std::is_same_v<T, Vec3<int>> ||
       std::is_same_v<T, Vec4<int>>;
 
+   namespace Internal {
+      enum class ShaderType {VERTEX, FRAGMENT, BOTH};
+      template <ShaderType type, typename... Args>
+      static inline std::optional<Shader> loadShaderfromFile(Args... args) {
+         Shader shader;
+         if constexpr (type == ShaderType::BOTH) {
+            auto arg_tuple = std::make_tuple(args...);
+            static_assert(sizeof...(Args) >= 2, "ShaderType::BOTH requires at least two arguments.");
+            FileSystem::File fvs(std::get<0>(arg_tuple));
+            FileSystem::File ffs(std::get<1>(arg_tuple));
+            if (!fvs.exists() || !ffs.exists() || !fvs.isRegularFile() || !ffs.isRegularFile()) return {};
+            shader = LoadShader(fvs.canonical().c_str(), ffs.canonical().c_str());
+         } else {
+            static_assert(sizeof...(Args) == 1, "ShaderType::VERTEX/FRAGMENT requires exactly one argument.");
+            FileSystem::File f(args...);
+            if (!f.exists() || !f.isRegularFile()) return {};
+            if constexpr (type == ShaderType::FRAGMENT) {
+               shader = LoadShader(nullptr, f.canonical().c_str());
+            } else if constexpr (type == ShaderType::VERTEX) {
+               shader = LoadShader(f.canonical().c_str(), nullptr);
+            }
+         }
+         if (IsShaderReady(shader)) return shader;
+         return {};
+      }
+
+      template <ShaderType type, typename... Args>
+      static inline std::optional<Shader> loadShaderfromString(Args&&... args) {
+         Shader shader;
+         if constexpr (type == ShaderType::BOTH) {
+            auto arg_tuple = std::make_tuple(std::forward<Args>(args)...);
+            static_assert(sizeof...(Args) == 2, "ShaderType::BOTH requires exactly two string arguments (VS source, FS source).");
+            const char* vs_source = std::get<0>(arg_tuple).c_str();
+            const char* fs_source = std::get<1>(arg_tuple).c_str();
+            shader = LoadShaderFromMemory(vs_source, fs_source);
+         } else {
+            static_assert(sizeof...(Args) == 1, "ShaderType::VERTEX or FRAGMENT requires exactly one string argument (source code).");
+            auto arg_tuple = std::make_tuple(std::forward<Args>(args)...);
+            const char* source = std::get<0>(arg_tuple).c_str();
+            if constexpr (type == ShaderType::FRAGMENT) {
+               shader = LoadShaderFromMemory(nullptr, source);
+            } else if constexpr (type == ShaderType::VERTEX) {
+               shader = LoadShaderFromMemory(source, nullptr);
+            }
+         }
+         if (IsShaderReady(shader)) return shader;
+         return {};
+      }
+      struct ShaderPrototype{Shader shader;};
+   }
+
+   inline void _throw(){throw std::runtime_error("Invalid shader!");}
+   struct FragmentOnlyShaderPrototype : Internal::ShaderPrototype {
+      static FragmentOnlyShaderPrototype fromFile(const ReyEngine::FileSystem::File& file){
+         if (auto proto = Internal::loadShaderfromFile<Internal::ShaderType::FRAGMENT>(file)){
+            FragmentOnlyShaderPrototype s;
+            s.shader = proto.value();
+            return s;
+         }
+         _throw();
+      }
+      static FragmentOnlyShaderPrototype fromMemory(const std::string& data){
+         if (auto proto = Internal::loadShaderfromString<Internal::ShaderType::FRAGMENT>(data)){
+            FragmentOnlyShaderPrototype s;
+            s.shader = proto.value();
+            return s;
+         }
+         _throw();
+      }
+   };
+
+   struct VertexOnlyShaderPrototype : public ReyEngine::Internal::ShaderPrototype {
+      static VertexOnlyShaderPrototype fromFile(const ReyEngine::FileSystem::File& file){
+         if (auto proto = Internal::loadShaderfromFile<Internal::ShaderType::FRAGMENT>(file)){
+            VertexOnlyShaderPrototype s;
+            s.shader = proto.value();
+            return s;
+         }
+         _throw();
+      }
+      static VertexOnlyShaderPrototype fromMemory(const std::string& data){
+         if (auto proto = Internal::loadShaderfromString<Internal::ShaderType::FRAGMENT>(data)){
+            VertexOnlyShaderPrototype s;
+            s.shader = proto.value();
+            return s;
+         }
+         _throw();
+      }
+   };
+
+   struct ShaderPrototype : public ReyEngine::Internal::ShaderPrototype {
+      static ShaderPrototype fromFile(const ReyEngine::FileSystem::File& vs, const ReyEngine::FileSystem::File& fs){
+         if (auto proto = Internal::loadShaderfromFile<Internal::ShaderType::BOTH>(vs, fs)){
+            ShaderPrototype s;
+            s.shader = proto.value();
+            return s;
+         }
+         _throw();
+      }
+      static ShaderPrototype fromMemory(const std::string& vsData, const std::string& fsData){
+         if (auto proto = Internal::loadShaderfromString<Internal::ShaderType::BOTH>(vsData, fsData)){
+            ShaderPrototype s;
+            s.shader = proto.value();
+            return s;
+         }
+         _throw();
+      }
+   };
+
    class ReyShader {
    public:
+      enum class SourceType {FROM_FILE, FROM_STRING};
       // Shader uniform data type
       enum class UniformType{
          UNIFORM_FLOAT = SHADER_UNIFORM_FLOAT,       // Shader uniform type: float
@@ -32,14 +142,14 @@ namespace ReyEngine {
          UNIFORM_SAMPLER2D = SHADER_UNIFORM_SAMPLER2D        // Shader uniform type: sampler2d
       };
 
-      struct FragShader : public FileSystem::File {template <typename... Args> FragShader(Args... args): FileSystem::File(args...){}};
-      struct VertShader : public FileSystem::File {template <typename... Args> VertShader(Args... args): FileSystem::File(args...){}};
-
       struct ShaderData {
       protected:
          ShaderData() = default;
-         ShaderData(const ReyShader& reyShader, const std::string& name): _shader(reyShader._shader){}
-         std::string name;
+         ShaderData(const ReyShader& reyShader, const std::string& name)
+         : _shader(reyShader._shader)
+         , _name(name)
+         {}
+         std::string _name;
          int _location;
          Shader _shader = {0}; //doesnt' do memory cleanup so stack-o-lee it is
          UniformType _type;
@@ -101,9 +211,6 @@ namespace ReyEngine {
             return *this;
          }
       };
-      ReyShader(const VertShader&);
-      ReyShader(const FragShader&);
-      ReyShader(const VertShader&, const FragShader&);
       ~ReyShader();
       [[nodiscard]] bool valid(){return IsShaderReady(_shader);}
       template <typename T>
@@ -115,9 +222,13 @@ namespace ReyEngine {
          return ShaderValue<Uniform, T>(*this, name);
       }
       [[nodiscard]] const Shader& getShader() const {return _shader;}
+      static std::shared_ptr<ReyShader> makeFragment(const FragmentOnlyShaderPrototype& p){return std::shared_ptr<ReyShader>(new ReyShader(p));}
+      static std::shared_ptr<ReyShader> makeVertex(const VertexOnlyShaderPrototype& p){return std::shared_ptr<ReyShader>(new ReyShader(p));}
+      static std::shared_ptr<ReyShader> makeShader(const ShaderPrototype& p){return std::shared_ptr<ReyShader>(new ReyShader(p));}
    protected:
+      ReyShader(const FragmentOnlyShaderPrototype& s): _shader(s.shader){}
+      ReyShader(const VertexOnlyShaderPrototype& s): _shader(s.shader){}
+      ReyShader(const ShaderPrototype& s): _shader(s.shader){}
       Shader _shader = {0};
-      VertShader _vs;
-      FragShader _fs;
    };
 }

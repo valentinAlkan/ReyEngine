@@ -16,14 +16,12 @@ ReyTexture::ReyTexture(const FileSystem::File& file){
 ReyTexture::ReyTexture(const ReyImage& image)
 {
    _tex = LoadTextureFromImage(image._image);
-   size = {image._image.width, image._image.height};
    _texLoaded = true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyTexture& ReyTexture::operator=(ReyEngine::ReyImage&& image){
    _tex = LoadTextureFromImage(image._image);
-   size = {image._image.width, image._image.height};
    _texLoaded = true;
    return *this;
 }
@@ -36,8 +34,9 @@ void ReyTexture::loadTexture(const FileSystem::File &file) {
    }
    _tex = LoadTexture(path.c_str());
    _texLoaded = true;
-   size = {_tex.width, _tex.height};
 }
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 template<> Rect<float> Pos<float>::toRect() const {return {x,y,0,0};}
 template<> Rect<double> Pos<double>::toRect() const {return {x,y,0,0};}

@@ -28,7 +28,7 @@ namespace ReyEngine {
             Size<R_FLOAT> texSize;
             if constexpr (IsTextureRect<T>){
                canFit = (bool)_texture;
-               if (canFit) texSize = _texture->size;
+               if (canFit) texSize = _texture->size();
             } else if constexpr (IsRenderTargetRect<T>) {
                if (_renderTarget && _renderTarget->ready()) {
                   canFit = true;

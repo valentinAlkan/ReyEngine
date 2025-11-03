@@ -50,8 +50,8 @@ namespace ReyEngine {
       public:
          inline void setTileSize(const Size<R_FLOAT>& size){
             _tileSize = size;
-            _rowCount = texture.size.x / _tileSize.x;
-            _columnCount = texture.size.y / _tileSize.y;
+            _rowCount = texture.size().x / _tileSize.x;
+            _columnCount = texture.size().y / _tileSize.y;
             _needsUpdate = true;
          }
 //         [[nodiscard]] inline TileIndex getTileIndex(const Pos<int>& pos) const {
@@ -64,7 +64,7 @@ namespace ReyEngine {
             return {src, _tileSize};
          }
          [[nodiscard]] inline Size<int> getTileSize() const {return _tileSize;}
-         [[nodiscard]] inline Size<int> getSheetSize() const {return {texture.size.x, texture.size.y};}
+         [[nodiscard]] inline Size<int> getSheetSize() const {return {texture.size().x, texture.size().y};}
 //         inline const FileSystem::File getFile() const {return texture.getPath();}
 //         std::string getPath() {return texture.getPath();}
       protected:

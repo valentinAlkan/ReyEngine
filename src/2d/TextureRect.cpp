@@ -7,7 +7,7 @@ using namespace ReyEngine;
 ///////////////////////////////////////////////////////////////////////////////////////
 void TextureRect::_init() {
    if (_fitScheduled && _texture){
-      setRect({getPos(), _texture->size});
+      setRect({getPos(), _texture->size()});
       _fitScheduled = false;
    }
 }
@@ -38,7 +38,7 @@ template <>
 void Internal::DrawArea<TextureRect>::fitTexture() {
    if (_has_inited) {
       if (_texture) {
-         setRect({getPos(), _texture->size});
+         setRect({getPos(), _texture->size()});
       }
    } else{
       _fitScheduled = true;
