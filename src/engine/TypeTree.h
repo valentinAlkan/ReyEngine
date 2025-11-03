@@ -12,8 +12,6 @@
 #include <unordered_set>
 
 namespace ReyEngine::Internal::Tree {
-   using HashId = size_t;
-   using NameHash = HashId;
    class TypeNode;
    template <typename T>
    using MakeNodeReturnType = std::pair<std::shared_ptr<T>, std::unique_ptr<TypeNode>>;
@@ -180,8 +178,7 @@ namespace ReyEngine::Internal::Tree {
             return nullptr; //child still valid at this point
          }
          const auto childName = child->name;
-         HashId nameHash = std::hash<std::string>{}(childName);
-         auto[it, success] = _childMap.try_emplace(nameHash, std::move(child));
+         auto[it, success] = _childMap.try_emplace(childName, std::move(child));
          if (!success) {
              // Handle duplicate name case if needed
             Logger::error() << "Child " << childName << " already exists for parent " << name << std::endl;
@@ -291,7 +288,7 @@ namespace ReyEngine::Internal::Tree {
             childNode->_root = nullptr;
          }
 
-         auto it = _childMap.find(std::hash<std::string>{}(_name));
+         auto it = _childMap.find(_name);
          if(it != _childMap.end()){
             auto removedNode = std::move(it->second);
             _childMap.erase(it);
@@ -312,9 +309,24 @@ namespace ReyEngine::Internal::Tree {
       };
 
       inline std::optional<TypeNode*> getChild(const std::string& _name) {
-         auto it = _childMap.find(std::hash<std::string>{}(_name));
+         auto it = _childMap.find(_name);
          if (it != _childMap.end()) return {it->second.get()};
          return std::nullopt;
+      }
+
+      //veeeeeery slow
+      inline std::optional<std::vector<TypeNode*>> findChild(const std::string& searchTerm){
+         std::vector<TypeNode*> retval;
+         for (const auto& child : _childOrder){
+            if (string_tools::contains(child->name, searchTerm)){
+               retval.push_back(child);
+            }
+            if (auto found = child->findChild(searchTerm)){
+               retval.insert(retval.begin(), found.value().begin(), found.value().end());
+            }
+         }
+         if (retval.empty()) return {};
+         return retval;
       }
 
       TypeNode& getChildByIndex(size_t index) {
@@ -388,7 +400,7 @@ namespace ReyEngine::Internal::Tree {
       TypeNode* _parent = nullptr;
       TypeNode* _root = nullptr;
       std::shared_ptr<TypeBase> _data;
-      std::map<NameHash, std::unique_ptr<TypeNode>> _childMap; //parents own children
+      std::map<std::string, std::unique_ptr<TypeNode>> _childMap; //parents own children
       std::vector<TypeNode*> _childOrder;         // Points to map entries
       size_t _index; //which numbered child this is - only valid if child has a parent (or was just removed)
 

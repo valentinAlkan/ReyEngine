@@ -55,9 +55,10 @@ namespace ReyEngine{
          TYPENAME(ReyObject)
          [[nodiscard]] virtual std::string getTypeName() const {return TYPE_NAME;}
          [[nodiscard]] std::string getName() const {return _node ? _node->name : "";}
-         std::vector<TypeNode*> getChildren(){return _node ? _node->getChildren() : std::vector<TypeNode*>();}
-         [[nodiscard]] const std::vector<TypeNode*> getChildren() const {return const_cast<ReyObject*>(this)->getChildren();}
-         std::optional<TypeNode*> getChild(const std::string& name){return _node ? _node->getChild(name) : std::nullopt;}
+         [[nodiscard]] auto getChildren(){return _node ? _node->getChildren() : std::vector<TypeNode*>();}
+         [[nodiscard]] auto getChildren() const {return const_cast<ReyObject*>(this)->getChildren();}
+         [[nodiscard]] auto getChild(const std::string& name){return _node ? _node->getChild(name) : std::nullopt;}
+         [[nodiscard]] auto findChild(const std::string& searchTerm){return _node ? _node->findChild(searchTerm) : std::nullopt;}
 
          template <typename T>
          std::vector<T*> getChildrenAs(){

@@ -29,7 +29,7 @@ struct Layout::LayoutHelper {
    }
    /// Accounts for min/max
    std::optional<R_FLOAT> setPendingRect(const Rect<R_FLOAT>& newRect){
-      Tools::scope_exit exit([&](){if constexpr (VERBOSE) Logger::debug() << "Child " << child->getNode()->getName() << " will be allowed " << pendingRect.size() << " space" << endl;});
+      Tools::ScopeExit exit([&](){if constexpr (VERBOSE) Logger::debug() << "Child " << child->getNode()->getName() << " will be allowed " << pendingRect.size() << " space" << endl;});
       pendingRect = newRect;
       auto maxSize = layoutDir == LayoutDir::HORIZONTAL ? child->getMaxSize().x : child->getMaxSize().y;
       auto minSize = layoutDir == LayoutDir::HORIZONTAL ? child->getMinSize().x : child->getMinSize().y;

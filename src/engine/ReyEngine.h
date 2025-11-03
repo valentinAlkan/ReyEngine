@@ -1931,15 +1931,13 @@ namespace ReyEngine {
          auto retval = ColorRGBA(std::rand() % 255, std::rand() % 256, std::rand() % 256, alpha >= 0 ? alpha % 256 : std::rand() % 256);
          return retval;
       }
-      Vec3<int> toVec3() const {return {r,g,b};}
-      Vec4<int> toVec4() const {return {r,g,b,a};}
-      Vec3<Fraction> toVec3Fraction() const {
-         return {r / (float)255.0, g / (float)255.0, b / (float)255.0};
-      }
-      Vec4<Fraction> toVec4Fraction() const {
-         return {r / (float)255.0, g / (float)255.0, b / (float)255.0, a / (float)255.0};
-      }
-      friend std::ostream& operator<<(std::ostream& os, const ColorRGBA& c) {os << c.toVec4().toString(); return os;}
+      Vec3<int> toVec3i() const {return {r,g,b};} //0-255
+      Vec4<int> toVec4i() const {return {r,g,b,a};}//0-255
+      Vec3<float> toVec3f() const {return {r / (float)255.0, g / (float)255.0, b / (float)255.0};} //0.0-1.0
+      Vec4<float> toVec4f() const {return {r / (float)255.0, g / (float)255.0, b / (float)255.0, a / (float)255.0};} //0.0-1.0
+      Vec3<Fraction> toVec3Fraction() const {return {r / (float)255.0, g / (float)255.0, b / (float)255.0};}
+      Vec4<Fraction> toVec4Fraction() const {return {r / (float)255.0, g / (float)255.0, b / (float)255.0, a / (float)255.0};}
+      friend std::ostream& operator<<(std::ostream& os, const ColorRGBA& c) {os << c.toVec4i().toString(); return os;}
       unsigned char r;
       unsigned char g;
       unsigned char b;

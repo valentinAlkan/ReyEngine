@@ -351,17 +351,16 @@ namespace ReyEngine {
                auto process = [&](){ return processTransformer.process();};
                #define RETURN if (handled) return handled
                if (!widget->_modal || isGlobal) {
-//                  //ignore outside input if applicable
-//                  if (auto mouse = processTransformer.event.isMouse()) {
-//                     auto isPositionable = thisNode->tag<Internal::Positionable2D>();
-//                     if (_ignoreOutsideInput && isPositionable) {
-//                        std::cout << mouse.value()->getLocalPos() << std::endl;
-//                        auto pos = mouse.value()->getLocalPos();
-//                        if (isPositionable.value()->getSizeRect().contains(pos)) {
-//                           return nullptr;
-//                        }
-//                     }
-//                  }
+                  //ignore outside input if applicable
+                  auto shouldIgnore = [](const Widget& widget, const Pos<float>& pos){
+                     return widget._ignoreOutsideInput && !widget.getSizeRect().contains(pos);
+                  };
+                  if (auto mouse = processTransformer.event.isMouse()) {
+                     if (auto isWidget = thisNode->as<Widget>()) {
+                        auto localPos = mouse.value()->getLocalPos();
+                        if (shouldIgnore(*isWidget.value(), localPos)) return nullptr;
+                     }
+                  }
 
                   switch(widget->_inputFilter) {
                      case InputFilter::PASS_ONLY: handled = pass(); RETURN; break;

@@ -87,6 +87,7 @@ namespace ReyEngine{
       static constexpr ColorRGBA GRADIENT_1 = {220,205,216,255};
       static constexpr ColorRGBA GRADIENT_2 = {200,200,200,255};
    };
+
    class MenuBar : public ReyEngine::Widget, public Internal::MenuInterface {
    public:
       REYENGINE_OBJECT(MenuBar);

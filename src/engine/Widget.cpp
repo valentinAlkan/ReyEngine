@@ -42,7 +42,7 @@ Rect<R_FLOAT> Widget::getChildBoundingBox() const {
 void Widget::calculateAnchoring(const Rect<R_FLOAT>& r){
 
    ReyEngine::Rect<R_FLOAT> newRect = r;
-   Tools::scope_exit exit([&](){
+   Tools::ScopeExit exit([&](){
       //enforce min/max sizes and apply rectangle (bypassing callbacks and such)
       newRect.setSize(newRect.size().max(minSize));
       newRect.setSize(newRect.size().min(maxSize));
