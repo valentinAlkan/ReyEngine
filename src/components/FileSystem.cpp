@@ -232,7 +232,7 @@ std::optional<std::string> File::getExtension() const {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-std::optional<std::string> File::stripExtension() const {
+std::optional<std::string> File::stem() const {
    auto stem = _path.stem();
    if (!stem.empty()) return stem.string();
    return {};
