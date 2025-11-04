@@ -103,7 +103,7 @@ namespace ReyEngine::FileSystem {
       [[nodiscard]] std::shared_ptr<FileHandle> open() const;
       [[nodiscard]] File changeExtension(const std::string& newExtension) const;
       [[nodiscard]] std::optional<std::string> getExtension() const;
-      [[nodiscard]] std::optional<std::string> stripExtension() const;
+      [[nodiscard]] std::optional<std::string> stem() const;
    };
 
    struct FileHandle {
