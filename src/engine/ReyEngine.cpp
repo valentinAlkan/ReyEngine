@@ -8,6 +8,12 @@ using namespace std;
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
+ReyTexture::ReyTexture(const Size<int>& size, const ColorRGBA& color) {
+   Image blankImage = GenImageColor(size.x, size.y, color);
+   *this = blankImage; //load the image as a texture
+   UnloadImage(blankImage);
+}
+/////////////////////////////////////////////////////////////////////////////////////////
 ReyTexture::ReyTexture(const FileSystem::File& file){
    loadTexture(file);
 }
@@ -16,24 +22,26 @@ ReyTexture::ReyTexture(const FileSystem::File& file){
 ReyTexture::ReyTexture(const ReyImage& image)
 {
    _tex = LoadTextureFromImage(image._image);
-   _texLoaded = true;
+   _texLoaded = _tex.id != 0;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyTexture& ReyTexture::operator=(ReyEngine::ReyImage&& image){
+   _release();
    _tex = LoadTextureFromImage(image._image);
-   _texLoaded = true;
+   _texLoaded = _tex.id != 0;
    return *this;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyTexture::loadTexture(const FileSystem::File &file) {
+   _release();
    auto path = file.abs();
    if (!file.exists()){
       Logger::error() << "LoadTexture failure: Texture file " << file.abs() << " does not exist!" << endl;
    }
    _tex = LoadTexture(path.c_str());
-   _texLoaded = true;
+   _texLoaded = _tex.id != 0;
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////

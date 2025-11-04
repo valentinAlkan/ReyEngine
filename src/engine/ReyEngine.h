@@ -2041,44 +2041,45 @@ namespace ReyEngine {
       friend class LazyTexture;
    };
 
-   template <typename T>
-   requires std::integral<T> || std::floating_point<T>
-   struct TextureBuffer{
-      TextureBuffer(const Size<unsigned int>& size)
-      : _data(new Vec4<T>[size.x * size.y])
-      , _size(size)
-      {}
-      TextureBuffer(const TextureBuffer& other)
-      : _data(new Vec4<T>[other._size.x * other._size.y])
-      , _size(other._size)
-      {
-         memcpy(_data, other._data, other._size.x * other._size.y * sizeof(Vec4<T>));
-      }
-      TextureBuffer(TextureBuffer&& other) = delete;
-      TextureBuffer& operator=(const TextureBuffer&) = delete;
-      TextureBuffer& operator=(TextureBuffer&& other){
-         std::swap(_data, other._data);
-         std::swap(_size, other._size);
-         return *this;
-      }
-      ~TextureBuffer(){delete[] _data;}
-      void setValue(const Pos<unsigned int>& p, const Vec4<T>& v){
-         if (p.x >= _size.x || p.y >= _size.y) throw std::runtime_error("Bad pixel address!");
-         _data[p.y * _size.x + p.x] = v;
-      }
-      TextureBuffer makeCopy(){return *this;} //more explicit
-      void copy(const TextureBuffer& other) const {
-         if (_size != other._size) throw std::runtime_error("TextureBuffer copy size mismatch!");
-         memcpy(_data, other._data, _size.x * _size.y * sizeof(Vec4<T>));
-      }
-   protected:
-      Vec4<T>* _data;
-      Size<unsigned int> _size;
-      friend class ReyTexture;
-   };
+//   template <typename T>
+//   requires std::integral<T> || std::floating_point<T>
+//   struct TextureBuffer{
+//      TextureBuffer(const Size<unsigned int>& size)
+//      : _data(new Vec4<T>[size.x * size.y])
+//      , _size(size)
+//      {}
+//      TextureBuffer(const TextureBuffer& other)
+//      : _data(new Vec4<T>[other._size.x * other._size.y])
+//      , _size(other._size)
+//      {
+//         memcpy(_data, other._data, other._size.x * other._size.y * sizeof(Vec4<T>));
+//      }
+//      TextureBuffer(TextureBuffer&& other) = delete;
+//      TextureBuffer& operator=(const TextureBuffer&) = delete;
+//      TextureBuffer& operator=(TextureBuffer&& other){
+//         std::swap(_data, other._data);
+//         std::swap(_size, other._size);
+//         return *this;
+//      }
+//      ~TextureBuffer(){delete[] _data;}
+//      void setValue(const Pos<unsigned int>& p, const Vec4<T>& v){
+//         if (p.x >= _size.x || p.y >= _size.y) throw std::runtime_error("Bad pixel address!");
+//         _data[p.y * _size.x + p.x] = v;
+//      }
+//      TextureBuffer makeCopy(){return *this;} //more explicit
+//      void copy(const TextureBuffer& other) const {
+//         if (_size != other._size) throw std::runtime_error("TextureBuffer copy size mismatch!");
+//         memcpy(_data, other._data, _size.x * _size.y * sizeof(Vec4<T>));
+//      }
+//   protected:
+//      Vec4<T>* _data;
+//      Size<unsigned int> _size;
+//      friend class ReyTexture;
+//   };
 
    struct ReyTexture{
       ReyTexture(){}
+      ReyTexture(const Size<int>& size, const ColorRGBA&);
       ReyTexture(const ReyImage&);
       ReyTexture(const FileSystem::File&);
       ReyTexture(ReyTexture&& other) noexcept
@@ -2098,24 +2099,24 @@ namespace ReyEngine {
          _texLoaded = true;
          return *this;
       }
+      ReyTexture& operator=(ReyImage&&); // this is ok because ReyImage is managed
       void loadTexture(const FileSystem::File& file);
       ~ReyTexture(){
          _release();
       }
       [[nodiscard]] const Texture2D& getTexture() const {return _tex;}
-      ReyTexture& operator=(ReyImage&&);
       [[nodiscard]] operator bool() const {return _texLoaded;}
-      template<typename T>
-      void updateTexture(const TextureBuffer<T>& buffer){
-         if (_texLoaded) UpdateTexture(_tex, buffer._data);
-      }
-      template <typename T>
-      void updateTexture(const Rect<int>& r, const TextureBuffer<T>& buffer){
-         if (_texLoaded) UpdateTextureRec(_tex, r, buffer._data);
-      }
-      template <typename T>
-      requires std::integral<T> || std::floating_point<T>
-      TextureBuffer<T> makeBuffer() const {return {size()};}
+//      template<typename T>
+//      void updateTexture(const ReyImage<T>& buffer){
+//         if (_texLoaded) UpdateTexture(_tex, buffer._data);
+//      }
+//      template <typename T>
+//      void updateTexture(const Rect<int>& r, const TextureBuffer<T>& buffer){
+//         if (_texLoaded) UpdateTextureRec(_tex, r, buffer._data);
+//      }
+//      template <typename T>
+//      requires std::integral<T> || std::floating_point<T>
+//      TextureBuffer<T> makeBuffer() const {return {size()};}
       Size<int> size() const {return {_tex.width, _tex.height};}
    protected:
       void _release(){if (_texLoaded) UnloadTexture(_tex);}

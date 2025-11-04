@@ -68,7 +68,7 @@ namespace ReyEngine {
       struct ShaderPrototype{Shader shader;};
    }
 
-   inline void _throw(){throw std::runtime_error("Invalid shader!");}
+   #define _throw throw std::runtime_error("Invalid shader!");
    struct FragmentOnlyShaderPrototype : Internal::ShaderPrototype {
       static FragmentOnlyShaderPrototype fromFile(const ReyEngine::FileSystem::File& file){
          if (auto proto = Internal::loadShaderfromFile<Internal::ShaderType::FRAGMENT>(file)){
@@ -76,7 +76,7 @@ namespace ReyEngine {
             s.shader = proto.value();
             return s;
          }
-         _throw();
+         _throw;
       }
       static FragmentOnlyShaderPrototype fromMemory(const std::string& data){
          if (auto proto = Internal::loadShaderfromString<Internal::ShaderType::FRAGMENT>(data)){
@@ -84,7 +84,7 @@ namespace ReyEngine {
             s.shader = proto.value();
             return s;
          }
-         _throw();
+         _throw;
       }
    };
 
@@ -95,7 +95,7 @@ namespace ReyEngine {
             s.shader = proto.value();
             return s;
          }
-         _throw();
+         _throw;
       }
       static VertexOnlyShaderPrototype fromMemory(const std::string& data){
          if (auto proto = Internal::loadShaderfromString<Internal::ShaderType::FRAGMENT>(data)){
@@ -103,7 +103,7 @@ namespace ReyEngine {
             s.shader = proto.value();
             return s;
          }
-         _throw();
+         _throw;
       }
    };
 
@@ -114,7 +114,7 @@ namespace ReyEngine {
             s.shader = proto.value();
             return s;
          }
-         _throw();
+         _throw;
       }
       static ShaderPrototype fromMemory(const std::string& vsData, const std::string& fsData){
          if (auto proto = Internal::loadShaderfromString<Internal::ShaderType::BOTH>(vsData, fsData)){
@@ -122,9 +122,10 @@ namespace ReyEngine {
             s.shader = proto.value();
             return s;
          }
-         _throw();
+         _throw;
       }
    };
+   #undef _throw
 
    class ReyShader {
    public:
