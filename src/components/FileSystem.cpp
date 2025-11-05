@@ -240,12 +240,8 @@ std::optional<std::string> File::stem() const {
 
 ///////////////////////////////////////////////////////////////////////////////////////
 std::vector<char> FileHandle::readFile(){
-   auto end = _ifs.tellg();
-   _ifs.seekg(0, std::ios::beg);
-   auto size = std::size_t(end - _ifs.tellg());
-   if (size == 0) return {};
-
-   std::vector<char> buffer(size);
+   if (!_ifs) throw std::runtime_error("File not opened!");
+   std::vector<char> buffer(_end);
 
    if (!_ifs.read((char *) buffer.data(), buffer.size()))
       throw std::runtime_error(_file.str() + ": " + std::strerror(errno));

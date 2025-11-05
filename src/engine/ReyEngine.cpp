@@ -26,12 +26,12 @@ ReyTexture::ReyTexture(const ReyImage& image)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyTexture& ReyTexture::operator=(ReyEngine::ReyImage&& image){
-   _release();
-   _tex = LoadTextureFromImage(image._image);
-   _texLoaded = _tex.id != 0;
-   return *this;
-}
+//ReyTexture& ReyTexture::operator=(ReyEngine::ReyImage&& image){
+//   _release();
+//   _tex = LoadTextureFromImage(image._image);
+//   _texLoaded = _tex.id != 0;
+//   return *this;
+//}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyTexture::loadTexture(const FileSystem::File &file) {

@@ -55,11 +55,12 @@ namespace ReyEngine {
          } else {
             static_assert(sizeof...(Args) == 1, "ShaderType::VERTEX or FRAGMENT requires exactly one string argument (source code).");
             auto arg_tuple = std::make_tuple(std::forward<Args>(args)...);
-            const char* source = std::get<0>(arg_tuple).c_str();
+            auto& source = std::get<0>(arg_tuple);
+            Logger::info() << "Loading Shader:\n" << source << std::endl;
             if constexpr (type == ShaderType::FRAGMENT) {
-               shader = LoadShaderFromMemory(nullptr, source);
+               shader = LoadShaderFromMemory(nullptr, source.c_str());
             } else if constexpr (type == ShaderType::VERTEX) {
-               shader = LoadShaderFromMemory(source, nullptr);
+               shader = LoadShaderFromMemory(source.c_str(), nullptr);
             }
          }
          if (IsShaderReady(shader)) return shader;
@@ -144,6 +145,8 @@ namespace ReyEngine {
       };
 
       struct ShaderData {
+         int getLocation(){return _location;}
+         int getType(){return (int)_type;}
       protected:
          ShaderData() = default;
          ShaderData(const ReyShader& reyShader, const std::string& name)
@@ -196,7 +199,7 @@ namespace ReyEngine {
                static_assert(always_false_v<V>, "Unsupported shader dataType!");
             }
          }
-         ShaderValue& operator=(const V& rhs){
+         void setValue(const V& rhs){
             if constexpr (std::is_same_v<V, Matrix>){
                SetShaderValueMatrix(T::_shader, T::_location, rhs);
             } else if constexpr (std::is_same_v<V, ReyTexture>){
@@ -209,7 +212,6 @@ namespace ReyEngine {
             } else {
                static_assert(always_false_v<V>, "Unsupported shader type in operator=!");
             }
-            return *this;
          }
       };
       ~ReyShader();
