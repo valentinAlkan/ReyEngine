@@ -2007,8 +2007,8 @@ namespace ReyEngine {
    struct ReyImage{
       ReyImage() = default;
       ReyImage(const ReyImage&) = delete;
-      ReyImage(ReyImage&& other) noexcept {*this = std::move(other);};
       ReyImage& operator=(ReyImage& other) = delete;
+      ReyImage(ReyImage&& other) noexcept {*this = std::move(other);};
       ReyImage& operator=(ReyImage&& other){
          std::swap(_image, other._image);
          std::swap(_imageLoaded, other._imageLoaded);
@@ -2040,6 +2040,7 @@ namespace ReyEngine {
          }
       }
       Size<float> size(){return {(float)_image.width, (float)_image.height};}
+      [[nodiscard]] ReyImage copy() const {return {ImageCopy(_image)};}
    protected:
       bool _imageLoaded = false;
    private:

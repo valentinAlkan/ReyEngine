@@ -3,6 +3,22 @@
 using namespace std;
 using namespace ReyEngine;
 
+std::shared_ptr<ReyShader> ReyShader::_global_default_fragment_shader;
+std::shared_ptr<ReyShader> ReyShader::getDefaultFragmentShader() {
+   if (!_global_default_fragment_shader){
+      static constexpr char SHADER_TEXT[] =R"(
+         #version 330 core
+         uniform sampler2D inputTexture;
+         in vec2 v_uv;
+         out vec4 fragColor;
+         void main(){
+         fragColor = texture(inputTexture, v_uv);
+         };)";
+      _global_default_fragment_shader = ReyShader::makeFragment(FragmentOnlyShaderPrototype::fromMemory(SHADER_TEXT));
+   }
+   return _global_default_fragment_shader;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::ReyShader::~ReyShader(){
    if (valid()){

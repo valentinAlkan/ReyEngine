@@ -56,7 +56,7 @@ namespace ReyEngine {
             static_assert(sizeof...(Args) == 1, "ShaderType::VERTEX or FRAGMENT requires exactly one string argument (source code).");
             auto arg_tuple = std::make_tuple(std::forward<Args>(args)...);
             auto& source = std::get<0>(arg_tuple);
-            Logger::info() << "Loading Shader:\n" << source << std::endl;
+            Logger::debug() << "Loading Shader:\n" << source << std::endl;
             if constexpr (type == ShaderType::FRAGMENT) {
                shader = LoadShaderFromMemory(nullptr, source.c_str());
             } else if constexpr (type == ShaderType::VERTEX) {
@@ -228,10 +228,13 @@ namespace ReyEngine {
       static std::shared_ptr<ReyShader> makeFragment(const FragmentOnlyShaderPrototype& p){return std::shared_ptr<ReyShader>(new ReyShader(p));}
       static std::shared_ptr<ReyShader> makeVertex(const VertexOnlyShaderPrototype& p){return std::shared_ptr<ReyShader>(new ReyShader(p));}
       static std::shared_ptr<ReyShader> makeShader(const ShaderPrototype& p){return std::shared_ptr<ReyShader>(new ReyShader(p));}
+      static std::shared_ptr<ReyShader> getDefaultFragmentShader();
    protected:
       ReyShader(const FragmentOnlyShaderPrototype& s): _shader(s.shader){}
       ReyShader(const VertexOnlyShaderPrototype& s): _shader(s.shader){}
       ReyShader(const ShaderPrototype& s): _shader(s.shader){}
       Shader _shader = {0};
+   private:
+      static std::shared_ptr<ReyShader> _global_default_fragment_shader;
    };
 }
