@@ -12,8 +12,8 @@ namespace ReyEngine {
       // Genericized type. The functionality is nearly identical
       // in any case, so we use a concept to determine which thing we are at compile time, which is more performant and
       // easier to maintain compared with having multiple large blocks of almost-the-same code in different places
-      template <typename T, size_t N=0, typename UNIFORM_ARRAY=std::array<ReyShader::ShaderValue<ReyShader::Uniform, ReyTexture>*, N>>
-      class DrawArea : public Widget{
+      template <typename T>
+      class DrawArea : public Widget {
       public:
          enum class FitType{FIT_RECT, FIT_HEIGHT, FIT_WIDTH, NONE};
          REYENGINE_OBJECT(TextureRect)
@@ -59,7 +59,7 @@ namespace ReyEngine {
                ScopeScissor scopeScissor(getGlobalTransform(), getSizeRect());
                BeginShaderMode(_shader->getShader());
                if constexpr (IsTextureRect<T>){
-//                  SetShaderValueTexture(_shader->getShader(), 0, _texture->getTexture());
+                  _shader->_rebindTextures();
                   if (_texture) drawTexture(*_texture, srcRect, dstRect, Colors::none);
                } else if constexpr (IsRenderTargetRect<T>){
                   drawRectangle(getSizeRect(), Colors::white);
@@ -96,6 +96,8 @@ namespace ReyEngine {
       void setTexture(const FileSystem::File&);
       void setTexture(const std::shared_ptr<ReyTexture>&);
       void _init() override;
+      template <typename... Args>
+      void bindTextureToShader(Args&&... args) {_shader->bindTexture(std::forward<Args>(args)...);}
    };
 
    /// Draws a render target

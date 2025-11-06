@@ -1,6 +1,7 @@
 #pragma once
 #include "ReyEngine.h"
 #include "FileSystem.h"
+#include <map>
 #include <concepts>
 
 namespace ReyEngine {
@@ -130,7 +131,6 @@ namespace ReyEngine {
 
    class ReyShader {
    public:
-      enum class SourceType {FROM_FILE, FROM_STRING};
       // Shader uniform data type
       enum class UniformType{
          UNIFORM_FLOAT = SHADER_UNIFORM_FLOAT,       // Shader uniform type: float
@@ -145,8 +145,9 @@ namespace ReyEngine {
       };
 
       struct ShaderData {
-         int getLocation(){return _location;}
-         int getType(){return (int)_type;}
+         int getLocation() const {return _location;}
+         int getType() const {return (int)_type;}
+         std::string getName() const {return _name;}
       protected:
          ShaderData() = default;
          ShaderData(const ReyShader& reyShader, const std::string& name)
@@ -157,6 +158,7 @@ namespace ReyEngine {
          int _location;
          Shader _shader = {0}; //doesnt' do memory cleanup so stack-o-lee it is
          UniformType _type;
+         friend class ReyShader;
       };
       struct Uniform : public ShaderData {
       protected:
@@ -229,11 +231,23 @@ namespace ReyEngine {
       static std::shared_ptr<ReyShader> makeVertex(const VertexOnlyShaderPrototype& p){return std::shared_ptr<ReyShader>(new ReyShader(p));}
       static std::shared_ptr<ReyShader> makeShader(const ShaderPrototype& p){return std::shared_ptr<ReyShader>(new ReyShader(p));}
       static std::shared_ptr<ReyShader> getDefaultFragmentShader();
+      void bindTexture(const ReyShader::ShaderValue<ReyShader::Uniform, ReyTexture>& uniform, const std::shared_ptr<ReyTexture>& tex){
+         _textureBinds[uniform.getName()] = {&uniform, tex};
+      };
+      void _rebindTextures(){
+         for (const auto& [name, pair] : _textureBinds){
+            const auto& [uniform, texture] = pair;
+            SetShaderValueTexture(_shader, uniform->getLocation(), texture->getTexture());
+         }
+      }
+   protected:
+      std::map<std::string, std::pair<const ReyShader::ShaderValue<ReyShader::Uniform, ReyTexture>*, std::shared_ptr<ReyTexture>>> _textureBinds;
    protected:
       ReyShader(const FragmentOnlyShaderPrototype& s): _shader(s.shader){}
       ReyShader(const VertexOnlyShaderPrototype& s): _shader(s.shader){}
       ReyShader(const ShaderPrototype& s): _shader(s.shader){}
       Shader _shader = {0};
+
    private:
       static std::shared_ptr<ReyShader> _global_default_fragment_shader;
    };
