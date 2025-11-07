@@ -240,11 +240,24 @@ namespace ReyEngine {
          UniformPair& operator=(const T& v){_value = v; _uniform.setValue(v); return *this;}
          operator T&() {return _value;}
          operator T() const {return _value;}
-         T* operator->(){return &_value;}
-         T& operator*(){return _value;}
       protected:
          ShaderValue<Uniform, T> _uniform;
          T _value;
+      private:
+         struct Setter {
+            Setter(UniformPair& pair)
+            : _pair(pair)
+            , _value(pair._value)
+            {}
+            ~Setter(){_pair = _value;}
+            T* operator->(){return &_value;}
+            T& operator*(){return _value;}
+         private:
+            UniformPair& _pair;
+            T _value;
+         };
+      public:
+         Setter operator*(){return Setter(*this);}
       };
 
       [[nodiscard]] const Shader& getShader() const {return _shader;}
