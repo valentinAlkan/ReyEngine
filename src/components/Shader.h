@@ -29,14 +29,18 @@ namespace ReyEngine {
             FileSystem::File fvs(std::get<0>(arg_tuple));
             FileSystem::File ffs(std::get<1>(arg_tuple));
             if (!fvs.exists() || !ffs.exists() || !fvs.isRegularFile() || !ffs.isRegularFile()) return {};
+            Logger::debug() << "Loading fragment shader:\n" << ffs.open()->readFile().data() << std::endl;
+            Logger::debug() << "Loading vertex shader:\n" << fvs.open()->readFile().data() << std::endl;
             shader = LoadShader(fvs.canonical().c_str(), ffs.canonical().c_str());
          } else {
             static_assert(sizeof...(Args) == 1, "ShaderType::VERTEX/FRAGMENT requires exactly one argument.");
             FileSystem::File f(args...);
             if (!f.exists() || !f.isRegularFile()) return {};
             if constexpr (type == ShaderType::FRAGMENT) {
+               Logger::debug() << "Loading fragment shader:\n" << f.open()->readFile().data() << std::endl;
                shader = LoadShader(nullptr, f.canonical().c_str());
             } else if constexpr (type == ShaderType::VERTEX) {
+               Logger::debug() << "Loading vertex shader:\n" << f.open()->readFile().data() << std::endl;
                shader = LoadShader(f.canonical().c_str(), nullptr);
             }
          }
@@ -52,6 +56,8 @@ namespace ReyEngine {
             static_assert(sizeof...(Args) == 2, "ShaderType::BOTH requires exactly two string arguments (VS source, FS source).");
             const char* vs_source = std::get<0>(arg_tuple).c_str();
             const char* fs_source = std::get<1>(arg_tuple).c_str();
+            Logger::debug() << "Loading vertex shader:\n" << vs_source << std::endl;
+            Logger::debug() << "Loading fragment shader:\n" << fs_source << std::endl;
             shader = LoadShaderFromMemory(vs_source, fs_source);
          } else {
             static_assert(sizeof...(Args) == 1, "ShaderType::VERTEX or FRAGMENT requires exactly one string argument (source code).");
@@ -232,16 +238,16 @@ namespace ReyEngine {
       static std::shared_ptr<ReyShader> makeShader(const ShaderPrototype& p){return std::shared_ptr<ReyShader>(new ReyShader(p));}
       static std::shared_ptr<ReyShader> getDefaultFragmentShader();
       void bindTexture(const ReyShader::ShaderValue<ReyShader::Uniform, ReyTexture>& uniform, const std::shared_ptr<ReyTexture>& tex){
-         _textureBinds[uniform.getName()] = {&uniform, tex};
+         _textureBinds[uniform.getName()] = std::make_pair(uniform, tex);
       };
       void _rebindTextures(){
          for (const auto& [name, pair] : _textureBinds){
             const auto& [uniform, texture] = pair;
-            SetShaderValueTexture(_shader, uniform->getLocation(), texture->getTexture());
+            SetShaderValueTexture(_shader, uniform.getLocation(), texture->getTexture());
          }
       }
    protected:
-      std::map<std::string, std::pair<const ReyShader::ShaderValue<ReyShader::Uniform, ReyTexture>*, std::shared_ptr<ReyTexture>>> _textureBinds;
+      std::map<std::string, std::pair<ReyShader::ShaderValue<ReyShader::Uniform, ReyTexture>, std::shared_ptr<ReyTexture>>> _textureBinds;
    protected:
       ReyShader(const FragmentOnlyShaderPrototype& s): _shader(s.shader){}
       ReyShader(const VertexOnlyShaderPrototype& s): _shader(s.shader){}

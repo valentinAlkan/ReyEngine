@@ -12,7 +12,7 @@ namespace ReyEngine{
 //       void _on_rect_changed() override;
 //       void registerProperties() override {};
        void setRenderCallback(std::function<void(const Control&)> fx){renderCallback = fx;}
-       void setProcessCallback(std::function<void(Control&, float)> fx, bool enableProcess=false){
+       void setProcessCallback(std::function<void(Control&, float)> fx, bool enableProcess=true){
           processCallback = fx;
           if (enableProcess){
              setProcess(true);

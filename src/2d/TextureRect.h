@@ -60,7 +60,11 @@ namespace ReyEngine {
                BeginShaderMode(_shader->getShader());
                if constexpr (IsTextureRect<T>){
                   _shader->_rebindTextures();
-                  if (_texture) drawTexture(*_texture, srcRect, dstRect, Colors::none);
+                  if (_texture && *_texture) {
+                     drawTexture(*_texture, srcRect, dstRect, Colors::none);
+                  } else {
+                     drawRectangle(dstRect, Colors::black);
+                  }
                } else if constexpr (IsRenderTargetRect<T>){
                   drawRectangle(getSizeRect(), Colors::white);
                   if (_renderTarget) drawRenderTargetRect(*_renderTarget, srcRect, dstRect, Colors::none);
