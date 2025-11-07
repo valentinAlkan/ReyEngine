@@ -232,6 +232,21 @@ namespace ReyEngine {
       [[nodiscard]] ShaderValue<Uniform, T> getUniform(const std::string& name){
          return ShaderValue<Uniform, T>(*this, name);
       }
+
+      //owns a value and transparently handles storing it in the shader. Makes things a bit more convenient
+      template <typename T>
+      struct UniformPair {
+         UniformPair& bind(const ShaderValue<Uniform, T>& u){_uniform = u; return *this;}
+         UniformPair& operator=(const T& v){_value = v; _uniform.setValue(v); return *this;}
+         operator T&() {return _value;}
+         operator T() const {return _value;}
+         T* operator->(){return &_value;}
+         T& operator*(){return _value;}
+      protected:
+         ShaderValue<Uniform, T> _uniform;
+         T _value;
+      };
+
       [[nodiscard]] const Shader& getShader() const {return _shader;}
       static std::shared_ptr<ReyShader> makeFragment(const FragmentOnlyShaderPrototype& p){return std::shared_ptr<ReyShader>(new ReyShader(p));}
       static std::shared_ptr<ReyShader> makeVertex(const VertexOnlyShaderPrototype& p){return std::shared_ptr<ReyShader>(new ReyShader(p));}
@@ -248,6 +263,7 @@ namespace ReyEngine {
       }
    protected:
       std::map<std::string, std::pair<ReyShader::ShaderValue<ReyShader::Uniform, ReyTexture>, std::shared_ptr<ReyTexture>>> _textureBinds;
+//      std::map<std::string, std::shared_ptr<UniformPairBase>> _uniformBinds;
    protected:
       ReyShader(const FragmentOnlyShaderPrototype& s): _shader(s.shader){}
       ReyShader(const VertexOnlyShaderPrototype& s): _shader(s.shader){}
