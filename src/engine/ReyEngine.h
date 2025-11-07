@@ -2041,6 +2041,8 @@ namespace ReyEngine {
       }
       Size<float> size(){return {(float)_image.width, (float)_image.height};}
       [[nodiscard]] ReyImage copy() const {return {ImageCopy(_image)};}
+      [[nodiscard]] Image& getImage(){return _image;}
+      [[nodiscard]] const Image& getImage() const {return _image;}
    protected:
       bool _imageLoaded = false;
    private:
@@ -2058,7 +2060,7 @@ namespace ReyEngine {
       : _tex(other._tex)
       , _texLoaded(other._texLoaded)
       {
-         other._texLoaded = false;
+         _texLoaded = _tex.id != 0;
       }
       ReyTexture& operator=(ReyTexture&& other) noexcept {
          std::swap(_tex, other._tex);
@@ -2068,7 +2070,13 @@ namespace ReyEngine {
       ReyTexture& operator=(const Image& other) {
          _release();
          _tex = LoadTextureFromImage(other);
-         _texLoaded = true;
+         _texLoaded = _tex.id != 0;
+         return *this;
+      }
+      ReyTexture& operator=(const ReyImage& other) {
+         _release();
+         _tex = LoadTextureFromImage(other._image);
+         _texLoaded = _tex.id != 0;
          return *this;
       }
 //      ReyTexture& operator=(ReyImage&&); // this is ok because ReyImage is managed
