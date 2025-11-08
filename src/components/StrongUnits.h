@@ -4,6 +4,7 @@
 #include <type_traits>
 #include <cmath>
 #include <chrono>
+#include <ostream>
 using namespace std::chrono_literals;
 
 namespace Units {
