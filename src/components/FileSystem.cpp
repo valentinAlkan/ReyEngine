@@ -245,6 +245,10 @@ std::vector<char> FileHandle::readFile(){
 
    if (!_ifs.read((char *) buffer.data(), buffer.size()))
       throw std::runtime_error(_file.str() + ": " + std::strerror(errno));
+
+   // Strip carriage returns to handle Windows line endings
+   buffer.erase(std::remove(buffer.begin(), buffer.end(), '\r'), buffer.end());
+
    return buffer;
 }
 
@@ -292,7 +296,6 @@ string FileSystem::FileHandle::readLine() {
    if (_end - _ptr == 0) return {};  // empty file
    string retval;
    retval.reserve(128);  // Reserve reasonable initial capacity
-   bool carriageReturn = false;
    char c;
    while (std::size_t(_end - _ptr) > 0) {
       if (!_ifs.get(c)) {
@@ -306,11 +309,10 @@ string FileSystem::FileHandle::readLine() {
       if (c == '\r') {
          // Peek at next character without consuming it
          if (_ptr < _end && _ifs.peek() == '\n') {
-            carriageReturn = false;
-            continue;  // Skip '\r' when it's part of '\r\n'
+            continue;  // Skip '\r' when it's part of '\r\n', \n will be consumed and break on next iteration
          }
-         // Single '\r' should be preserved
-         retval += c;
+         // Single '\r' should be treated as line ending
+         break;
       } else {
          retval += c;
       }

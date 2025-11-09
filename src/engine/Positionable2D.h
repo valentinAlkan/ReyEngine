@@ -55,6 +55,7 @@ namespace ReyEngine::Internal {
       inline void setWidth(R_FLOAT x){setSize({x, getHeight()});}
       inline void setHeight(R_FLOAT y){setSize({getWidth(), y});}
       inline void setRect(R_FLOAT x, R_FLOAT y, R_FLOAT width, R_FLOAT height){setRect({x,y,width,height});}
+      [[nodiscard]] Pos<R_FLOAT> windowToLocalPos(const WindowSpace<Pos<float>>& p){ return (Pos<float>)getGlobalTransform(false).get().transform(p.get());}
       inline Transform2D& getLocalTransform(){return transform2D;}
       [[nodiscard]] inline const Transform2D& getLocalTransform() const {return transform2D;}
       [[nodiscard]] inline CanvasSpace<Transform2D> getGlobalTransform(bool respectGlobalTransformBoundary=true) const {
