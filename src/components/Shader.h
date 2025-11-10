@@ -251,13 +251,16 @@ namespace ReyEngine {
             {}
             ~Setter(){_pair = _value;}
             T* operator->(){return &_value;}
+            const T* operator->() const {return &_value;}
             T& operator*(){return _value;}
+            const T& operator*() const {return _value;}
          private:
             UniformPair& _pair;
             T _value;
          };
       public:
          Setter operator*(){return Setter(*this);}
+         Setter operator*() const {return Setter(*this);}
       };
 
       [[nodiscard]] const Shader& getShader() const {return _shader;}

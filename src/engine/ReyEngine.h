@@ -2180,7 +2180,7 @@ namespace ReyEngine {
 //      void
 //   };
 
-   CanvasSpace<Pos<R_FLOAT>> getScreenCenter();
+   WindowSpace<Pos<R_FLOAT>> getScreenCenter();
    Size<int> getScreenSize();
    Size<float> getWindowSize();
    void setWindowSize(Size<float>);
