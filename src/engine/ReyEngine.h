@@ -601,6 +601,8 @@ namespace ReyEngine {
       constexpr inline Pos& operator=(const Pos<R>& other){Vec2<T>::x = other.x; Vec2<T>::y=other.y; return *this;}
       constexpr inline Pos operator+(const Pos& rhs) const {auto val = *this; val.x += rhs.x; val.y += rhs.y; return val;}
       constexpr inline Pos operator-(const Pos& rhs) const {auto val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
+      template <typename R>
+      constexpr inline Pos operator-(const Vec2<R>& rhs) const {return *this - Pos<T>(rhs);}
       constexpr inline Pos operator-() const {return {-Vec2<T>::x, -Vec2<T>::y};}
       constexpr inline Pos& operator+=(const Pos& rhs){this->x += rhs.x; this->y += rhs.y; return *this;}
       constexpr inline Pos& operator-=(const Pos& rhs){this->x -= rhs.x; this->y -= rhs.y; return *this;}
