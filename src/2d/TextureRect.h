@@ -17,10 +17,7 @@ namespace ReyEngine {
       public:
          enum class FitType{FIT_RECT, FIT_HEIGHT, FIT_WIDTH, NONE};
          REYENGINE_OBJECT(TextureRect)
-         DrawArea(FitType fit=DEFAULT_FIT): _fitType(fit){
-            //load default shader
-            _shader = ReyShader::getDefaultFragmentShader();
-         }
+         DrawArea(FitType fit=DEFAULT_FIT): _fitType(fit){}
          void fitTexture();
          void setFitType(FitType fitType){_fitType = fitType;}
          void setShader(const std::shared_ptr<ReyShader>& shader){_shader = shader;}
@@ -57,19 +54,23 @@ namespace ReyEngine {
                      break;
                }
                ScopeScissor scopeScissor(getGlobalTransform(), getSizeRect());
-               BeginShaderMode(_shader->getShader());
                if constexpr (IsTextureRect<T>){
-                  _shader->_rebindTextures();
                   if (_texture && *_texture) {
                      drawTexture(*_texture, srcRect, dstRect, Colors::none);
                   } else {
+                     if (_shader) {
+                        BeginShaderMode(_shader->getShader());
+                        _shader->_rebindTextures();
+                     }
                      drawRectangle(dstRect, Colors::black);
+                     if (_shader) {
+                        EndShaderMode();
+                     }
                   }
                } else if constexpr (IsRenderTargetRect<T>){
                   drawRectangle(getSizeRect(), Colors::white);
                   if (_renderTarget) drawRenderTargetRect(*_renderTarget, srcRect, dstRect, Colors::none);
                }
-               EndShaderMode();
             } else {
                auto sizeRect = getSizeRect();
                drawRectangleLines(sizeRect, 2.0, Colors::red);
