@@ -72,8 +72,8 @@ void Widget::calculateAnchoring(const Rect<R_FLOAT>& r){
       newRect = {{anchorX, anchorY}, {anchorWidth, anchorHeight}};
    }
    // enum class Anchor{NONE, LEFT, RIGHT, TOP, BOTTOM, FILL, TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, CENTER};
-   auto padLeft = [&](){newRect.x += theme->widgetPadding.left();};
-   auto padTop = [&](){newRect.y += theme->widgetPadding.top();};
+   auto padLeft = [&](){newRect.x += theme->widgetPadding.left(); newRect.width -= theme->widgetPadding.left();};
+   auto padTop = [&](){newRect.y += theme->widgetPadding.top(); ; newRect.height -= theme->widgetPadding.top();};
    auto padRight = [&](){newRect.width -= theme->widgetPadding.right();};
    auto padBottom = [&](){newRect.height -= theme->widgetPadding.bottom();};
    auto padAll = [&](){padTop(); padBottom(); padRight(); padLeft();};
