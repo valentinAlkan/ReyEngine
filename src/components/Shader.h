@@ -246,6 +246,7 @@ namespace ReyEngine {
       protected:
          ShaderValue<Uniform, T> _uniform;
          T _value;
+         bool _bound = false;
       private:
          struct Setter {
             Setter(UniformPair& pair)

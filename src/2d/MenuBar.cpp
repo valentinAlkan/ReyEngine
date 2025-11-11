@@ -140,10 +140,11 @@ Widget* MenuBar::_unhandled_input(const ReyEngine::InputEvent& e) {
             for (auto &entry: _entries) {
                if (entry->_area.contains(mbEvent.mouse.getLocalPos())) {
                   showDropDown(entry->_text, entry->_area.bottomLeft());
+                  return this;
                }
             }
          }
-         return this;}
+      }
    }
    return nullptr;
 }
