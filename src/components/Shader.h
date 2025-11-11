@@ -240,6 +240,9 @@ namespace ReyEngine {
          UniformPair& operator=(const T& v){_value = v; _uniform.setValue(v); return *this;}
          operator T&() {return _value;}
          operator T() const {return _value;}
+         T& get() {return _value;}
+         const T& get() const {return _value;}
+         bool operator==(const T& other) const {return _value == other;}
       protected:
          ShaderValue<Uniform, T> _uniform;
          T _value;
