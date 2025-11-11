@@ -312,6 +312,13 @@ template<> Circle Rect<double>::inscribe() const {return {{(R_FLOAT)(x + width /
 template<> Circle Rect<int>::inscribe() const {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/2};}
 template<> Circle Rect<float>::inscribe() const {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/2};}
 /////////////////////////////////////////////////////////////////////////////////////////
+template<> Rect<float> Rect<float>::textRectangleCentered(const std::string& text, const Pos<float>& pos, const ReyEngineFont& font) {
+   auto textWidth = MeasureText(text.c_str(), font.size);
+   float newX = (float) pos.x - (float) textWidth / 2;
+   float newY = (float) pos.y - (float) font.size / 2;
+   return {{newX, newY}, {(float)textWidth, font.size}};
+}
+/////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::ReyEngineFont::ReyEngineFont(const std::string& fontFile, int fontSize){

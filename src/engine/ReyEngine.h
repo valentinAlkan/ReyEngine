@@ -703,6 +703,7 @@ namespace ReyEngine {
 
    struct Circle;
    struct CircleSector;
+   struct ReyEngineFont;
    template <typename T>
    struct Rect {
       using SubRectCoords = Vec2<int>;
@@ -1558,6 +1559,8 @@ namespace ReyEngine {
       [[nodiscard]] constexpr Rect alignBottom(const Pos<T>& p){ return {x, p.y - height, width, height}; }
       [[nodiscard]] constexpr Rect centerH(const Pos<T>& p){ return {p.x - width / 2, y, width, height}; }
       [[nodiscard]] constexpr Rect centerV(const Pos<T>& p){ return {x, p.y - height / 2, width, height}; }
+
+      [[nodiscard]] static Rect<float> textRectangleCentered(const std::string& text, const Pos<float>& pos, const ReyEngineFont& font);
 
       T x;
       T y;
