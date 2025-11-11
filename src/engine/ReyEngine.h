@@ -1992,8 +1992,8 @@ namespace ReyEngine {
 
    struct ReyEngineFont{
       ReyEngineFont(const std::string& fontFile="", int fontSize=20);
-      ReyEngineFont(const ReyEngineFont&) = delete;
-      ReyEngineFont& operator=(const ReyEngineFont&) = delete;
+      ReyEngineFont(const ReyEngineFont&);
+      ReyEngineFont& operator=(const ReyEngineFont&);
       ReyEngineFont& operator=(ReyEngineFont&& rhs) noexcept ;
       ~ReyEngineFont();
       Font font;
@@ -2003,6 +2003,7 @@ namespace ReyEngine {
       FontAlignment fontAlignment;
       ColorRGBA color = COLORS::black;
       std::string fileName;
+      ReyEngineFont copy() const;
       [[nodiscard]] Size<R_FLOAT> measure(const std::string& text) const;
       static constexpr std::string_view DEFAULT_FONT_FILE = "RobotoFlex.ttf";
    };

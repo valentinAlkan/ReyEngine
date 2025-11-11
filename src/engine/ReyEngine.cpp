@@ -340,6 +340,23 @@ ReyEngine::ReyEngineFont::ReyEngineFont(const std::string& fontFile, int fontSiz
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+ReyEngine::ReyEngineFont::ReyEngineFont(const ReyEngineFont& rhs) {
+   *this = rhs;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+ReyEngineFont& ReyEngineFont::operator=(const ReyEngineFont& rhs) {
+   ReyEngineFont f(rhs.fileName);
+   f.size = rhs.size;
+   f.spacing = rhs.spacing;
+   f.isDefault = rhs.isDefault;
+   f.fileName = rhs.fileName;
+   f.font = rhs.font;
+   *this = std::move(f);
+   return *this;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 ReyEngineFont::~ReyEngineFont() {
    if (!isDefault) {
       UnloadFont(font);
@@ -355,6 +372,7 @@ ReyEngineFont &ReyEngineFont::operator=(ReyEngineFont&& rhs) noexcept {
    font = rhs.font;
    rhs.font.glyphs = nullptr;
    rhs.font.recs = nullptr;
+   rhs.font.texture.id = 0;
    return *this;
 }
 
