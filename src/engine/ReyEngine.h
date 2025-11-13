@@ -1926,9 +1926,7 @@ namespace ReyEngine {
    struct ColorRGBA {
       ColorRGBA(): r(0), g(0), b(0), a(255){}
       constexpr ColorRGBA(int r, int g, int b, int a): r(r), g(g), b(b), a(a){}
-      ColorRGBA(Color color): r(color.r), g(color.g), b(color.b), a(color.a){}
-      ColorRGBA(Color& color): r(color.r), g(color.g), b(color.b), a(color.a){}
-      ColorRGBA(Color&& color): r(color.r), g(color.g), b(color.b), a(color.a){}
+      ColorRGBA(const Color& color): r(color.r), g(color.g), b(color.b), a(color.a){}
       inline ColorRGBA& operator=(const Color& rhs){r = rhs.r; g=rhs.g; b=rhs.b; a=rhs.a; return *this;}
       inline operator Color() const {return {r, g, b, a};}
       void dim(Fraction p){a = (float)a * Fraction(p).get();}
