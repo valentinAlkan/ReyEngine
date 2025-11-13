@@ -8,8 +8,7 @@
 class CSVParser {
 public:
    using Row = std::vector<std::string>;
-   static constexpr char CSV_SEP = ',';
-   CSVParser(const std::shared_ptr<ReyEngine::FileSystem::FileHandle>& file, bool hasHeader = false);
+   CSVParser(const std::shared_ptr<ReyEngine::FileSystem::FileHandle>& file, bool hasHeader = false, char csv_sep = ',');
 
    /**
     * Returns a std::vector with all of the rows parsed from the file
