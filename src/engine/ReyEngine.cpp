@@ -65,8 +65,8 @@ WindowSpace<Pos<R_FLOAT>> ReyEngine::getScreenCenter() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Size<int> ReyEngine::getScreenSize() {
-   return {GetScreenWidth(),GetScreenHeight()};
+Size<float> ReyEngine::getScreenSize() {
+   return {(float)GetScreenWidth(),(float)GetScreenHeight()};
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -84,15 +84,6 @@ void ReyEngine::drawText(const std::string& text, const Pos<R_FLOAT>& pos, const
 void ReyEngine::drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font){
    drawTextCentered(text, pos, font, font.color, font.size, font.spacing);
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void ReyEngine::drawTextCentered(const std::string &text, const Pos<float> &pos, const ReyEngineFont &font, const ReyEngine::ColorRGBA &color, float size, float spacing) {
-   auto textWidth = MeasureText(text.c_str(), size);
-   float newX = (float)pos.x - (float)textWidth / 2;
-   float newY = (float)pos.y - (float)size / 2;
-   drawText(text, {newX, newY}, font, color, size, spacing);
-}
-
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::drawTextRelative(const std::string& text, const Pos<R_FLOAT>& relPos, const ReyEngineFont& font){
@@ -121,12 +112,16 @@ void ReyEngine::drawTextCentered(const std::string& text, const Pos<R_FLOAT>& po
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::drawTextCentered(const std::string &text, const Pos<float> &pos, const std::shared_ptr<ReyEngineFont>& font, const ColorRGBA &color, float size, float spacing) {
-   auto textWidth = MeasureText(text.c_str(), size);
-   float newX = (float)pos.x - (float)textWidth / 2;
-   float newY = (float)pos.y - (float)size / 2;
-   drawText(text, {newX, newY}, font, color, size, spacing);
+   drawTextCentered(text, pos, *font, color, size, spacing);
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawTextCentered(const std::string &text, const Pos<float> &pos, const ReyEngineFont &font, const ReyEngine::ColorRGBA &color, float size, float spacing) {
+   auto textSize = MeasureTextEx(font.font, text.c_str(), size, spacing);
+   float newX = (float)pos.x - textSize.x / 2;
+   float newY = (float)pos.y - textSize.y / 2;
+   drawText(text, {newX, newY}, font, color, size, spacing);
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::drawTextRelative(const std::string& text, const Pos<R_FLOAT>& relPos, const std::shared_ptr<ReyEngineFont>& font){
@@ -137,6 +132,22 @@ void ReyEngine::drawTextRelative(const std::string& text, const Pos<R_FLOAT>& re
    drawText(text, {newX, newY}, font);
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawTextRect(const std::string& text, const Pos<R_FLOAT>& p, const std::shared_ptr<ReyEngineFont>& font, const ColorRGBA& rectColor, float rectRoundness){
+   //calculate a rect first
+   auto rect = measureText(text, font).toRect().embiggen(4);
+   drawTextRect(text, rect.setPos(p), font, rectColor, rectRoundness);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawTextRect(const std::string& text, const Rect<float>& r, const std::shared_ptr<ReyEngineFont>& font, const ColorRGBA& rectColor, float rectRoundness) {
+   if (rectRoundness) {
+      drawRectangleRounded(r, rectRoundness, 8, rectColor);
+   } else {
+      drawRectangle(r, rectColor);
+   }
+   drawTextCentered(text, r.center(), font);
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::drawRectangle(const Rect<R_FLOAT>& r, const ColorRGBA& color) {

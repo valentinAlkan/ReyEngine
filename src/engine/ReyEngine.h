@@ -2185,7 +2185,7 @@ namespace ReyEngine {
 //   };
 
    WindowSpace<Pos<R_FLOAT>> getScreenCenter();
-   Size<int> getScreenSize();
+   Size<float> getScreenSize();
    Size<float> getWindowSize();
    void setWindowSize(Size<float>);
    Pos<float> getWindowPosition();
@@ -2202,6 +2202,8 @@ namespace ReyEngine {
    void drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos, const std::shared_ptr<ReyEngineFont>& font);
    void drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos, const std::shared_ptr<ReyEngineFont>& font, const ColorRGBA& color, R_FLOAT size, R_FLOAT spacing);
    void drawTextRelative(const std::string& text, const Pos<R_FLOAT>& relPos, const std::shared_ptr<ReyEngineFont>& font);
+   void drawTextRect(const std::string& text, const Pos<R_FLOAT>& p, const std::shared_ptr<ReyEngineFont>& font, const ColorRGBA& rectColor, float rectRoundness = 0); //draw a rectangle text centered inside it
+   void drawTextRect(const std::string& text, const Rect<R_FLOAT>& r, const std::shared_ptr<ReyEngineFont>& font, const ColorRGBA& rectColor, float rectRoundness = 0); //draw a rectangle text centered inside it
    void drawRectangle(const Rect<R_FLOAT>&, const ColorRGBA& color);
    void drawRectangleRounded(const Rect<float>&, float roundness, int segments, const ColorRGBA& color);
    void drawRectangleLines(const Rect<float>&, float lineThick, const ColorRGBA& color);
