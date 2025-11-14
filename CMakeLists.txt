@@ -57,6 +57,12 @@ if (NOT raylib_FOUND) # If there's none, fetch and build raylib
         set(FETCHCONTENT_QUIET NO)
         FetchContent_Populate(raylib)
         set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE) # don't build the supplied examples
+
+        # Patch raylib's CMakeLists.txt to fix cmake_minimum_required version
+        file(READ "${raylib_SOURCE_DIR}/CMakeLists.txt" RAYLIB_CMAKE_CONTENT)
+        string(REGEX REPLACE "cmake_minimum_required\\(VERSION [0-9.]+\\)" "cmake_minimum_required(VERSION 3.5)" RAYLIB_CMAKE_CONTENT "${RAYLIB_CMAKE_CONTENT}")
+        file(WRITE "${raylib_SOURCE_DIR}/CMakeLists.txt" "${RAYLIB_CMAKE_CONTENT}")
+
         add_subdirectory(${raylib_SOURCE_DIR} ${raylib_BINARY_DIR})
     endif()
 endif()
@@ -74,7 +80,19 @@ if(REY_ENABLE_YAML)
     set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
     set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "" FORCE)
     set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
-    FetchContent_MakeAvailable(yaml-cpp)
+
+    FetchContent_GetProperties(yaml-cpp)
+    if (NOT yaml-cpp_POPULATED)
+        FetchContent_Populate(yaml-cpp)
+
+        # Patch yaml-cpp's CMakeLists.txt to fix cmake_minimum_required version
+        file(READ "${yaml-cpp_SOURCE_DIR}/CMakeLists.txt" YAML_CMAKE_CONTENT)
+        string(REGEX REPLACE "cmake_minimum_required\\(VERSION [0-9.]+\\)" "cmake_minimum_required(VERSION 3.5)" YAML_CMAKE_CONTENT "${YAML_CMAKE_CONTENT}")
+        file(WRITE "${yaml-cpp_SOURCE_DIR}/CMakeLists.txt" "${YAML_CMAKE_CONTENT}")
+
+        add_subdirectory(${yaml-cpp_SOURCE_DIR} ${yaml-cpp_BINARY_DIR})
+    endif()
+
     set(YAML_AVAILABLE TRUE)
 endif()
 
