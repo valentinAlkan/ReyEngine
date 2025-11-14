@@ -6,6 +6,12 @@ using namespace std;
 using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
+CSVParser::CSVParser(const std::string& filePath, bool header, char csv_sep)
+: CSVParser(FileSystem::File(filePath).open(), header, csv_sep)
+{
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 CSVParser::CSVParser(const std::shared_ptr<ReyEngine::FileSystem::FileHandle>& file, bool header, char csv_sep)
 : _file(file)
 {
