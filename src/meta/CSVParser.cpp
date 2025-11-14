@@ -6,14 +6,20 @@ using namespace std;
 using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-CSVParser::CSVParser(const std::shared_ptr<ReyEngine::FileSystem::FileHandle>& file, bool header)
+CSVParser::CSVParser(const std::string& filePath, bool header, char csv_sep)
+: CSVParser(FileSystem::File(filePath).open(), header, csv_sep)
+{
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+CSVParser::CSVParser(const std::shared_ptr<ReyEngine::FileSystem::FileHandle>& file, bool header, char csv_sep)
 : _file(file)
 {
    auto it = _file->begin();
    auto firstLine = *it;
    if (firstLine.empty()) return; //empty
    
-   auto split = string_tools::split(firstLine, CSV_SEP);
+   auto split = string_tools::split(firstLine, csv_sep);
    auto expectedSize = split.size();
    if (header){
       _header = split;
@@ -25,7 +31,7 @@ CSVParser::CSVParser(const std::shared_ptr<ReyEngine::FileSystem::FileHandle>& f
    r.reserve(expectedSize);
 
    for (/**/; it!=_file->end(); ++it) {
-      split = string_tools::split(*it, CSV_SEP);
+      split = string_tools::split(*it, csv_sep);
       auto rowSize = split.size();
       if (rowSize < expectedSize) throw std::runtime_error("CSVParser: Not enough columns for row <" + to_string(it.getCurrentLineNo()) + "> in file " + _file->file().abs());
       r.insert(r.begin(), split.begin(), split.begin() + expectedSize);
