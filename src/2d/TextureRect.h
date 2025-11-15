@@ -18,60 +18,59 @@ namespace ReyEngine {
          enum class FitType{FIT_RECT, FIT_HEIGHT, FIT_WIDTH, NONE};
          REYENGINE_OBJECT(TextureRect)
          DrawArea(FitType fit=DEFAULT_FIT): _fitType(fit){}
-         void fitTexture();
-         void setFitType(FitType fitType){_fitType = fitType;}
+         void setFitType(FitType fitType){_fitType = fitType; _calculateFit();}
          void setShader(const std::shared_ptr<ReyShader>& shader){_shader = shader;}
+         void setRegion(const Rect<float>& newRegion){ _region = newRegion; _calculateFit();}
          [[nodiscard]] std::shared_ptr<ReyShader> getShader() const {return _shader;}
       protected:
-         void render2D() const override{
-            bool canFit = false;
-            Size<R_FLOAT> texSize;
+         void _calculateFit(){
+            _dstRect = getSizeRect();
+            bool ready = false;
             if constexpr (IsTextureRect<T>){
-               canFit = (bool)_texture;
-               if (canFit) texSize = _texture->size();
+               ready = (bool)_texture;
             } else if constexpr (IsRenderTargetRect<T>) {
-               if (_renderTarget && _renderTarget->ready()) {
-                  canFit = true;
-                  texSize = _renderTarget->getSize();
-               } else {
-                  canFit = false;
-               }
+               ready = _renderTarget && _renderTarget->ready();
             }
-
-            if (canFit) {
-               Rect<float> srcRect = {{0, 0}, texSize};
-               Rect<float> dstRect = getSizeRect();
-               switch(_fitType) {
-                  case FitType::FIT_RECT: break;
+            if (ready) {
+               if constexpr (IsTextureRect<T>) _srcRect = _region;
+               else _srcRect = getSizeRect();
+               switch (_fitType) {
+                  case FitType::FIT_RECT: break; //already good to go
                   case FitType::FIT_WIDTH:
-                     dstRect.height = srcRect.height;
+                     _dstRect.height = _region.height;
                      break;
                   case FitType::FIT_HEIGHT:
-                     dstRect.width = srcRect.width;
+                     _dstRect.width = _region.width;
                      break;
                   case FitType::NONE:
-                     srcRect = dstRect;
+                     _dstRect = _region.toSizeRect();
                      break;
                }
+            }
+         }
+
+         void render2D() const override{
+            if (_dstRect.size()) {
                ScopeScissor scopeScissor(getGlobalTransform(), getSizeRect());
                if constexpr (IsTextureRect<T>){
                   if (_texture && *_texture) {
-                     drawTexture(*_texture, srcRect, dstRect, Colors::none);
+                     drawTexture(*_texture, _srcRect, _dstRect, Colors::none);
                   } else {
                      if (_shader) {
                         BeginShaderMode(_shader->getShader());
                         _shader->_rebindTextures();
                      }
-                     drawRectangle(dstRect, Colors::black);
+                     drawRectangle(_dstRect, Colors::black);
                      if (_shader) {
                         EndShaderMode();
                      }
                   }
                } else if constexpr (IsRenderTargetRect<T>){
                   drawRectangle(getSizeRect(), Colors::white);
-                  if (_renderTarget) drawRenderTargetRect(*_renderTarget, srcRect, dstRect, Colors::none);
+                  if (_renderTarget) drawRenderTargetRect(*_renderTarget, _srcRect, _dstRect, Colors::none);
                }
             } else {
+               //draw red x to signify a problem
                auto sizeRect = getSizeRect();
                drawRectangleLines(sizeRect, 2.0, Colors::red);
                drawLine({sizeRect.topLeft(), sizeRect.bottomRight()}, 2.0, Colors::red);
@@ -81,11 +80,15 @@ namespace ReyEngine {
          //these members only exist for the given types
          [[no_unique_address]] std::conditional_t<IsTextureRect<T>, std::shared_ptr<ReyTexture>, std::monostate>  _texture;
          [[no_unique_address]] std::conditional_t<IsRenderTargetRect<T>, std::shared_ptr<RenderTarget>, std::monostate>  _renderTarget;
+         ReyEngine::Rect<float> _region; //user defined. the region of the texture to draw.
+         ReyEngine::Rect<float> _srcRect; //not necessarily user defined.
+         ReyEngine::Rect<float> _dstRect; //where we should draw it
          std::shared_ptr<ReyShader> _shader;
          FitType _fitType = FitType::FIT_RECT;
          bool _fitScheduled = false; //if we're not inited yet
       protected:
          static constexpr FitType DEFAULT_FIT = FitType::FIT_RECT;
+         void _on_rect_changed() override {_calculateFit();}
       };
    }
 
@@ -100,6 +103,8 @@ namespace ReyEngine {
       TextureRect(const std::shared_ptr<ReyTexture>& t, FitType fit=DEFAULT_FIT): Internal::DrawArea<TextureRect>(fit){setTexture(t);}
       void setTexture(const FileSystem::File&);
       void setTexture(const std::shared_ptr<ReyTexture>&);
+      [[nodiscard]] std::shared_ptr<ReyTexture>& getTexture(){return _texture;}
+      [[nodiscard]] const std::shared_ptr<ReyTexture>& getTexture() const {return _texture;}
       void _init() override;
       template <typename... Args>
       void bindTextureToShader(Args&&... args) {_shader->bindTexture(std::forward<Args>(args)...);}
