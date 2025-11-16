@@ -171,6 +171,8 @@ add_library(ReyEngine2D STATIC
         src/2d/Panel.cpp
         src/2d/FileBrowser.cpp
         src/2d/MenuBar.cpp
+
+        src/meta/CSVParser.cpp
 )
 
 target_include_directories(ReyEngine2D PUBLIC
