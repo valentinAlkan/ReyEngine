@@ -63,6 +63,14 @@ if (NOT raylib_FOUND) # If there's none, fetch and build raylib
         string(REGEX REPLACE "cmake_minimum_required\\(VERSION [0-9.]+\\)" "cmake_minimum_required(VERSION 3.5)" RAYLIB_CMAKE_CONTENT "${RAYLIB_CMAKE_CONTENT}")
         file(WRITE "${raylib_SOURCE_DIR}/CMakeLists.txt" "${RAYLIB_CMAKE_CONTENT}")
 
+        # Modify config.h to enable JPG support
+        set(CONFIG_FILE "${raylib_SOURCE_DIR}/src/config.h")
+        file(READ ${CONFIG_FILE} CONFIG_CONTENT)
+        string(REPLACE "//#define SUPPORT_FILEFORMAT_JPG          1" "#define SUPPORT_FILEFORMAT_JPG          1" CONFIG_CONTENT "${CONFIG_CONTENT}")
+        string(REPLACE "//#define SUPPORT_FILEFORMAT_BMP          1" "#define SUPPORT_FILEFORMAT_BMP          1" CONFIG_CONTENT "${CONFIG_CONTENT}")
+        string(REPLACE "//#define SUPPORT_FILEFORMAT_TGA          1" "#define SUPPORT_FILEFORMAT_TGA          1" CONFIG_CONTENT "${CONFIG_CONTENT}")
+        file(WRITE ${CONFIG_FILE} "${CONFIG_CONTENT}")
+
         add_subdirectory(${raylib_SOURCE_DIR} ${raylib_BINARY_DIR})
     endif()
 endif()

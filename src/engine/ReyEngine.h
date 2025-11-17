@@ -2021,16 +2021,19 @@ namespace ReyEngine {
       inline ReyImage(const Image& im){
          _image = im;
          _imageLoaded = _image.data != nullptr;
+         if (!_imageLoaded) Logger::warn() << "Null image was not loaded!" << std::endl;
       }
       inline ReyImage(const char *fileType, const unsigned char *fileData, int dataSize){
          _image = LoadImageFromMemory(fileType, fileData, dataSize);
          _imageLoaded = _image.data != nullptr;
+         if (!_imageLoaded) Logger::warn() << "Null image was not loaded!" << std::endl;
       }
       inline ReyImage(const ReyEngine::FileSystem::File& file){
          if (file.exists() && file.isRegularFile()) {
             _image = LoadImage(file.canonical().c_str());
          }
          _imageLoaded = _image.data != nullptr;
+         if (!_imageLoaded) Logger::warn() << "Null image was not loaded!" << std::endl;
       }
       ~ReyImage(){
          release();
