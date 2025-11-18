@@ -2121,7 +2121,7 @@ namespace ReyEngine {
       [[nodiscard]] bool imageReady() const {return _img;}
       [[nodiscard]] std::shared_ptr<ReyTexture>& getTexture() {return _tex;}
       [[nodiscard]] bool needsConvert() const {return imageReady() && !texReady();}
-      void tryMakeTexture(){if (imageReady()) _tex = std::make_shared<ReyTexture>(_img);}
+      const std::shared_ptr<ReyTexture>& tryMakeTexture(){if (imageReady()) _tex = std::make_shared<ReyTexture>(_img); return _tex;}
       void releaseImage(){_img.release();}
       template<typename... Args>
       void load(Args&&... args) {
