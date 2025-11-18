@@ -273,11 +273,11 @@ target_link_libraries(TileEditor ReyEngine2D)
 #target_link_libraries(AbstractTreeTest raylib)
 
 # Test Project
-add_executable( NewEngineMain test/newEngine/newEngineTestMain.cpp)
+add_executable( NewEngineMain test/newEngineTestMain.cpp)
 target_link_libraries(NewEngineMain ReyEngine2D)
-add_executable( NewEngineBasic test/newEngine/NewEngineTestBasic.cpp)
+add_executable( NewEngineBasic test/NewEngineTestBasic.cpp)
 target_link_libraries(NewEngineBasic ReyEngine2D)
-add_executable( NewEngineFonts test/newEngine/NewEngineFonts.cpp)
+add_executable( NewEngineFonts test/NewEngineFonts.cpp)
 target_link_libraries(NewEngineFonts ReyEngine2D ReyEngineComponentArgParse)
 
 
@@ -296,9 +296,6 @@ add_executable( raylibTest
 )
 target_link_libraries(raylibTest
     ReyEngine2D
-)
-add_executable( cppTest
-    test/cppTest.cpp
 )
 
 ##########################################

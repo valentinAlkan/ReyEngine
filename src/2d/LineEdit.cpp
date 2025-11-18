@@ -6,6 +6,7 @@ using namespace ReyEngine;
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void LineEdit::render2D() const {
+   ScopeScissor scissor(getGlobalTransform(true), getSizeRect());
    drawRectangle(getRect().toSizeRect(), theme->background.colorTertiary);
 
    auto& font = theme->font;
