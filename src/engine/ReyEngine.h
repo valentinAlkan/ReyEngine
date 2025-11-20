@@ -1427,19 +1427,21 @@ namespace ReyEngine {
             result.push_back(newRect);
          }
 
-         // Create the final (N+1)th rectangle with the remaining percentage
-         Rect<T> lastRect = *this;
-         T lastDimension = static_cast<T>(totalDimension * (std::max(0.0, remainingPercentage) / 100.0));
+         // Create the final (N+1)th rectangle with the remaining percentage, if applicable
+         if (remainingPercentage != 0) {
+            Rect<T> lastRect = *this;
+            T lastDimension = static_cast<T>(totalDimension * (std::max(0.0, remainingPercentage) / 100.0));
 
-         if (isVertical) {
-            lastRect.height = lastDimension;
-            lastRect.y = currentPos;
-         } else {
-            lastRect.width = lastDimension;
-            lastRect.x = currentPos;
+            if (isVertical) {
+               lastRect.height = lastDimension;
+               lastRect.y = currentPos;
+            } else {
+               lastRect.width = lastDimension;
+               lastRect.x = currentPos;
+            }
+
+            result.push_back(lastRect);
          }
-
-         result.push_back(lastRect);
 
          return result;
       }
@@ -1989,7 +1991,9 @@ namespace ReyEngine {
    };
 
    struct ReyEngineFont{
-      ReyEngineFont(const std::string& fontFile="", int fontSize=20);
+      ReyEngineFont(): ReyEngineFont("", 20){}
+      ReyEngineFont(int fontSize): ReyEngineFont("", fontSize){}
+      ReyEngineFont(const std::string& fontFile, int fontSize=20);
       ReyEngineFont(const ReyEngineFont&);
       ReyEngineFont& operator=(const ReyEngineFont&);
       ReyEngineFont& operator=(ReyEngineFont&& rhs) noexcept ;
@@ -2046,7 +2050,7 @@ namespace ReyEngine {
             _imageLoaded = false;
          }
       }
-      Size<float> size(){return {(float)_image.width, (float)_image.height};}
+      [[nodiscard]] Size<float> size() const {return {(float)_image.width, (float)_image.height};}
       [[nodiscard]] ReyImage copy() const {return {ImageCopy(_image)};}
       [[nodiscard]] Image& getImage(){return _image;}
       [[nodiscard]] const Image& getImage() const {return _image;}
@@ -2120,6 +2124,7 @@ namespace ReyEngine {
       [[nodiscard]] bool texReady() const {return _tex && *_tex;}
       [[nodiscard]] bool imageReady() const {return _img;}
       [[nodiscard]] std::shared_ptr<ReyTexture>& getTexture() {return _tex;}
+      [[nodiscard]] const ReyImage& getImage() const {return _img;}
       [[nodiscard]] bool needsConvert() const {return imageReady() && !texReady();}
       const std::shared_ptr<ReyTexture>& tryMakeTexture(){if (imageReady()) _tex = std::make_shared<ReyTexture>(_img); return _tex;}
       void releaseImage(){_img.release();}

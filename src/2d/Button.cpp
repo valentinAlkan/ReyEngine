@@ -50,7 +50,7 @@ void Button::click() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void Button::_render2D() const {
     static constexpr int SEGMENTS = 10;
-    static constexpr int THICKNESS = 1;
+    static constexpr int THICKNESS = 2;
     ColorRGBA backgroundColor;
     ColorRGBA textColor;
     if (enabled) {
@@ -65,8 +65,9 @@ void Button::_render2D() const {
        backgroundColor = theme->background.colorDisabled;
        textColor = theme->foreground.colorDisabled;
     }
-    drawRectangleRounded(getRect().toSizeRect(), theme->outline.roundness, SEGMENTS, backgroundColor);
-    drawRectangleRoundedLines(getRect().toSizeRect().embiggen(-THICKNESS), theme->outline.roundness, SEGMENTS, THICKNESS, COLORS::black);
+    auto size = getSizeRect().embiggen(-THICKNESS);
+    drawRectangleRounded(size, theme->outline.roundness, SEGMENTS, backgroundColor);
+    drawRectangleRoundedLines(size, theme->outline.roundness, SEGMENTS, THICKNESS, COLORS::black);
     drawTextCentered(text, getSizeRect().center(), *theme->font, textColor, theme->font->size, theme->font->spacing);
 }
 

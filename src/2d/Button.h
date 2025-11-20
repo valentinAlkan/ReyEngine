@@ -58,7 +58,10 @@ namespace ReyEngine{
       ToggleButton(const std::string& text): Button(text)
       {}
    protected:
-      void _init() override {_applyTheme(PUSHBUTTON_COLORS);}
+      void _init() override {
+         Button::_init();
+         _applyTheme(PUSHBUTTON_COLORS);
+      }
       void _on_up(bool mouseEscaped) override;
       void _on_down() override;
       void render2D() const override{_render2D();}

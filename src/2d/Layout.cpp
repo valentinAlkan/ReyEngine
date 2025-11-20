@@ -6,7 +6,7 @@ using namespace ReyEngine;
 using namespace Internal;
 using namespace Tree;
 
-static constexpr bool VERBOSE = false;
+static constexpr bool VERBOSE = true;
 /// A struct that helps us layout widgets. Applies changes on dtor.
 struct Layout::LayoutHelper {
    LayoutHelper(LayoutDir layoutDir, int index, Layout* parent, Widget* child)
