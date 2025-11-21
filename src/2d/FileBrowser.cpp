@@ -138,8 +138,13 @@ void FileBrowser::refreshDirectoryContents() {
    _directoryTree->setRoot(_directoryTree->createItem(_dir.str(), std::make_optional(std::pair<std::string, Path>(VAR_PATH, _dir))));
    auto parentItem = _directoryTree->getRoot().value();
    auto itemPath = parentItem->getMetaData<Path>(VAR_PATH);
-   if (!itemPath) throw std::runtime_error("Directory entry " + parentItem->getText() + " did not have a directory associated with it");
-   for (const auto& entry : Directory(itemPath.value()).listContents()) {
+   if (!itemPath){
+      Logger::error() << "Directory entry " + parentItem->getText() + " did not have a directory associated with it";
+      return;
+   }
+   auto contents = Directory(itemPath.value()).listContents();
+   Directory::logfsError(Logger::error(), contents.second);
+   for (const auto& entry : contents.first) {
       if (entry.isDirectory()){
          dirs.emplace_back(entry);
       } else if (entry.isRegularFile()){

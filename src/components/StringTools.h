@@ -6,7 +6,6 @@
 #include <optional>
 
 namespace string_tools{
-   std::vector<std::string> pathSplit(const std::string& s);
    std::vector<std::string> split(const std::string& s, const std::string& delimString);
    std::vector<std::string> split(const std::string& s, char delimChar);
    std::vector<std::string> split(const std::string& s); //split all whitespace
@@ -36,7 +35,6 @@ namespace string_tools{
    std::string join(char c, const std::vector<std::string>& v);
    template <typename T>
    std::string listJoin(const std::vector<T>& v); //join into an array-like list
-   std::string pathJoin(const std::vector<std::string>& v); //join into an array-like list
    std::vector<std::string> fromList(const std::string& s); //converts "{ARRAYS, OF, STRINGS} to vec<string>("ARRAYS", "OF", "STRINGS"). Strips leading and trailing whitespace on all elements.
    std::optional<float> isNumeric(const std::string& s); //true if the value can be represented as a float
    std::optional<int> isInteger(const std::string& s); //true if the value can be represented as an int

@@ -1,38 +1,11 @@
 #include "StringTools.h"
-#include "FileSystem.h"
+//#include "FileSystem.h"
 #include <algorithm>
 
 using namespace string_tools;
 using namespace AnsiColor;
 using namespace std;
 
-/////////////////////////////////////////////////////////////////////////////////////////
-vector<string> string_tools::pathSplit(const std::string& s) {
-   vector<string> retval;
-   string token;
-   for (auto c : s){
-      if (c == ReyEngine::FileSystem::_PATH_SEP_WIN || c == ReyEngine::FileSystem::_PATH_SEP_OTHER){
-         retval.push_back(token);
-         token.clear();
-         continue;
-      }
-      token += c;
-   }
-   retval.push_back(token);
-   return retval;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-std::string string_tools::pathJoin(const std::vector<std::string>& v) {
-   std::string retval;
-   for (const auto& token : v){
-      retval += ReyEngine::FileSystem::_PATH_SEP_OTHER + token;
-   }
-   if (retval.empty()){
-      retval += ReyEngine::FileSystem::_PATH_SEP_OTHER;
-   }
-   return retval;
-}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 vector<string> string_tools::split(const std::string& s, const std::string& delimString) {

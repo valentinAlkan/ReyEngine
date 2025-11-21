@@ -10,6 +10,7 @@
 #include <ranges>
 #include <algorithm>
 #include "Platform.h"
+#include "Logger.h"
 
 namespace ReyEngine::FileSystem {
    static constexpr char SCENE_PATH_SEP = REYENGINE_SCENE_PATH_SEP;
@@ -21,7 +22,6 @@ namespace ReyEngine::FileSystem {
       #else
          _PATH_SEP_OTHER;
       #endif
-
    struct FileHandle;
    struct Directory;
    struct File;
@@ -204,6 +204,13 @@ namespace ReyEngine::FileSystem {
       Directory(const char* other): Path(other){_pathType = DIRECTORY;}
       Directory(Directory& other) = default;
       operator FileHandle() = delete;
-      std::set<Path> listContents() const;
+      //returns set of content paths, and a set of pairs of paths and the error codes they generated
+      [[nodiscard]] std::pair<std::set<Path>, std::set<std::pair<Path, std::error_code>>> listContents() const;
+      static void logfsError(Logger::Stream&& log, std::set<std::pair<Path, std::error_code>>& errors);
    };
+}
+
+namespace string_tools{
+   [[nodiscard]] std::vector<std::string> pathSplit(const std::string& s);
+   [[nodiscard]] std::string pathJoin(const std::vector<std::string>& v); //join into an array-like list
 }

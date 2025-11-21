@@ -349,23 +349,59 @@ std::vector<Path> FileSystem::DirectoryContents::directories() const {
 ///////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
-std::set<Path> FileSystem::Directory::listContents() const {
+std::pair<std::set<Path>, std::set<std::pair<Path, std::error_code>>> FileSystem::Directory::listContents() const {
    std::set<Path> contents;
-   if (!exists()) {
-      throw std::runtime_error("Directory does not exist: " + str());
-   }
-
-   if (!std::filesystem::is_directory(_path)) {
-      throw std::runtime_error("Path is not a directory: " + str());
+   std::set<std::pair<Path, std::error_code>> errors;
+   if (!exists() || !std::filesystem::is_directory(_path)) {
+      errors.emplace(_path, make_error_code(std::errc::no_such_file_or_directory));
+      return {contents, errors};
    }
 
    std::error_code ec;
    for (const auto& entry : std::filesystem::directory_iterator(_path, ec)) {
       if (ec) {
-         throw std::runtime_error("Error reading directory: " + ec.message());
+         Logger::error() << "Error reading directory: " + ec.message();
+         errors.emplace(entry.path(), ec);
+         continue;
       }
       contents.emplace(entry.path().string());
    }
 
-   return contents;
+   return {contents, errors};
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void FileSystem::Directory::logfsError(Logger::Stream&& log, std::set<std::pair<Path, std::error_code>> &errors) {
+   for (const auto &error: errors) {
+      log << "Filesystem error: " << error.first << ": (errno. " << error.second.value() << ") : " << error.second.message() << endl;
+   }
+}
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+vector<string> string_tools::pathSplit(const std::string& s) {
+   vector<string> retval;
+   string token;
+   for (auto c : s){
+      if (c == ReyEngine::FileSystem::_PATH_SEP_WIN || c == ReyEngine::FileSystem::_PATH_SEP_OTHER){
+         retval.push_back(token);
+         token.clear();
+         continue;
+      }
+      token += c;
+   }
+   retval.push_back(token);
+   return retval;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::string string_tools::pathJoin(const std::vector<std::string>& v) {
+   std::string retval;
+   for (const auto& token : v){
+      retval += ReyEngine::FileSystem::_PATH_SEP_OTHER + token;
+   }
+   if (retval.empty()){
+      retval += ReyEngine::FileSystem::_PATH_SEP_OTHER;
+   }
+   return retval;
 }
