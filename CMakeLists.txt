@@ -281,22 +281,13 @@ add_executable( NewEngineFonts test/NewEngineFonts.cpp)
 target_link_libraries(NewEngineFonts ReyEngine2D ReyEngineComponentArgParse)
 
 
-# Test Project
-#add_executable( NewEngineNetwork test/newEngine/newEngineTestNetwork.cpp)
-#target_link_libraries(NewEngineNetwork ReyEngine2D ComponentNetwork)
-
-# Project for testing the build system
-#add_executable( ReyEngineBuildTest test/buildTest.cpp)
-#target_link_libraries(ReyEngineBuildTest ReyEngine2D)
-
+# Test Projects
+add_executable( uitest test/uitest.cpp)
+target_link_libraries(uitest ReyEngine2D)
 ##########################################
 # for testing basic raylib stuff
-add_executable( raylibTest
-    test/raylibTest.cpp
-)
-target_link_libraries(raylibTest
-    ReyEngine2D
-)
+add_executable( raylibTest test/raylibTest.cpp)
+target_link_libraries(raylibTest ReyEngine2D)
 
 ##########################################
 

@@ -353,7 +353,7 @@ std::pair<std::set<Path>, std::set<std::pair<Path, std::error_code>>> FileSystem
    std::set<Path> contents;
    std::set<std::pair<Path, std::error_code>> errors;
    if (!exists() || !std::filesystem::is_directory(_path)) {
-      errors.emplace(_path, make_error_code(std::errc::no_such_file_or_directory));
+      errors.insert({Path(_path.string()), make_error_code(std::errc::no_such_file_or_directory)});
       return {contents, errors};
    }
 
@@ -361,7 +361,7 @@ std::pair<std::set<Path>, std::set<std::pair<Path, std::error_code>>> FileSystem
    for (const auto& entry : std::filesystem::directory_iterator(_path, ec)) {
       if (ec) {
          Logger::error() << "Error reading directory: " + ec.message();
-         errors.emplace(entry.path(), ec);
+         errors.insert({Path(entry.path().string()), ec});
          continue;
       }
       contents.emplace(entry.path().string());
