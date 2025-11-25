@@ -9,22 +9,58 @@ using namespace Tree;
 static constexpr bool VERBOSE = true;
 /// A struct that helps us layout widgets. Applies changes on dtor.
 struct Layout::LayoutHelper {
-   LayoutHelper(LayoutDir layoutDir, int index, Layout* parent, Widget* child)
-   : childIndex(index)
+   LayoutHelper(LayoutDir layoutDir, int childIndex, size_t totalChildrenInLayout, Layout* parent, Widget* child)
+   : childIndex(childIndex)
    , layoutDir(layoutDir)
    , child(child)
    , parent(parent)
+   , totalChildrenInLayout(totalChildrenInLayout)
    {}
    ~LayoutHelper(){
       //apply the rect
       if constexpr (VERBOSE) Logger::debug() << "Parent " << parent->getNode()->getName() << " applying rectangle " << pendingRect << " to child " << child->getNode()->getName() << endl;
 
       //apply margins - this should always be the very last thing we do
+      enum class ChildOrder {FIRST, LAST, MIDDLE, ONLY, GRID_MIDDLE, GRID_LEFT, GRID_RIGHT, GRID_TOP, GRID_BOTTOM};
       auto& theme = parent->getTheme();
-      pendingRect.x += theme.layoutMargins.left();
-      pendingRect.y += theme.layoutMargins.top();
-      pendingRect.width -= (theme.layoutMargins.right() + theme.layoutMargins.left());
-      pendingRect.height -= (theme.layoutMargins.bottom() + theme.layoutMargins.top());
+      //figure out where this child is in the layout relative to its siblings
+      ChildOrder childOrder;
+      if (totalChildrenInLayout == 1) childOrder = ChildOrder::ONLY;
+      else if (childIndex == 0 && totalChildrenInLayout > 1) childOrder = ChildOrder::FIRST;
+      else if (childIndex != totalChildrenInLayout - 1) childOrder = ChildOrder::MIDDLE;
+      else if (childIndex == totalChildrenInLayout - 1  && totalChildrenInLayout > 1) childOrder = ChildOrder::LAST;
+      float subtractAmt = theme.layoutMargin / 2; //how many pixels need to be subtracted from each pending rect
+      switch (childOrder){
+         case ChildOrder::FIRST:
+            if (layoutDir == LayoutDir::HORIZONTAL) pendingRect.width -= subtractAmt;
+            else if (layoutDir == LayoutDir::VERTICAL) pendingRect.height -= subtractAmt;
+            break;
+         case ChildOrder::MIDDLE:
+            if (layoutDir == LayoutDir::HORIZONTAL) {
+               pendingRect.x += subtractAmt;
+               pendingRect.width -= subtractAmt;
+            }
+            else if (layoutDir == LayoutDir::VERTICAL){
+               pendingRect.y += subtractAmt;
+               pendingRect.height -= subtractAmt;
+            }
+            break;
+         case ChildOrder::LAST:
+            if (layoutDir == LayoutDir::HORIZONTAL) {
+               pendingRect.x += subtractAmt;
+               pendingRect.width -= subtractAmt;
+            }
+            else if (layoutDir == LayoutDir::VERTICAL) {
+               pendingRect.y += subtractAmt;
+               pendingRect.height -= subtractAmt;
+            }
+            break;
+         case ChildOrder::ONLY:
+            break;
+         default:
+            throw std::runtime_error("Grid layout margins not implemented!");
+      }
+
       parent->layoutApplyRect(child, pendingRect);
    }
    /// Accounts for min/max
@@ -61,7 +97,8 @@ struct Layout::LayoutHelper {
    /// returns height for vertical layouts and width for horizontal layouts
    int getReleventDimension(){return layoutDir == LayoutDir::VERTICAL ? pendingRect.height : pendingRect.width;}
    bool operator==(const LayoutHelper& rhs) const {return child == rhs.child;}
-   const int childIndex;
+   const size_t childIndex;
+   const size_t totalChildrenInLayout;
    const LayoutDir layoutDir;
    Widget* child;
    Layout* parent;
@@ -123,6 +160,7 @@ void Layout::layoutApplyRect(Widget* widget, Rect<float>& r){
 /////////////////////////////////////////////////////////////////////////////////////////
 void Layout::arrangeChildren() {
    if (getChildren().empty()) return;
+   const auto childCount = getChildren().size();
    if (layoutDir == LayoutDir::GRID){
       //divide the space into boxes, each box being large enough to exactly contain the largest child (in either dimension)
       // Center each child inside it's respective box.
@@ -138,7 +176,7 @@ void Layout::arrangeChildren() {
       if (!boundingBox.x || !boundingBox.y) return; //invalid rect
       //create subrects to lay out the children
       if (getWidth()!=0 && getHeight()!=0) {
-         for (int i = 0; i < getChildren().size(); i++) {
+         for (int i = 0; i < childCount; i++) {
             auto child = getChildren().at(i);
             auto isWidget = child->as<Widget>();
             if (!isWidget) continue;
@@ -154,12 +192,12 @@ void Layout::arrangeChildren() {
       switch (alignment){
          case Alignment::FRONT:{
             R_FLOAT pos = 0;
-            for (int i=0; i<getChildren().size(); i++){
+            for (int i=0; i<childCount; i++){
                //just make the thing as small as possible - setpendingrect will spit back its minimum size
                auto child = getChildren().at(i);
                auto isWidget = child->as<Widget>();
                if (!isWidget) continue;
-               LayoutHelper helper(layoutDir, i, this, isWidget.value());
+               LayoutHelper helper(layoutDir, i, childCount, this, isWidget.value());
                helper.setReleventPosition(pos);
                auto pendingRect = layoutDir == LayoutDir::HORIZONTAL ? Rect<R_FLOAT>(pos, 0, 0, getHeight()) : Rect<R_FLOAT>(0, pos, getWidth(), 0);
                auto minSizeOpt = helper.setPendingRect(pendingRect);
@@ -171,12 +209,12 @@ void Layout::arrangeChildren() {
             break;}
          case Alignment::BACK:{
             R_FLOAT pos = layoutDir == LayoutDir::HORIZONTAL ? getWidth() : getHeight();
-            for (int i=0; i<getChildren().size(); i++){
+            for (int i=0; i<childCount; i++){
                //just make the thing as small as possible - setpendingrect will spit back its minimum size
                auto child = getChildren().at(i);
                auto isWidget = child->as<Widget>();
                if (!isWidget) continue;
-               LayoutHelper helper(layoutDir, i, this, isWidget.value());
+               LayoutHelper helper(layoutDir, i, childCount, this, isWidget.value());
                auto pendingRect = layoutDir == LayoutDir::HORIZONTAL ? Rect<R_FLOAT>(0, 0, 0, getHeight()) : Rect<R_FLOAT>(0, 0, getWidth(), 0);
                auto minSizeOpt = helper.setPendingRect(pendingRect);
                //will either be constrained, or be 0, so we don't need to check other conditions
@@ -189,18 +227,18 @@ void Layout::arrangeChildren() {
          case Alignment::EVEN:{
             //how much space we will allocate to each child
             auto totalSizeToAllocate = expandingDimension;
-            if constexpr (VERBOSE) Logger::debug() << "Layout " << getName() << " has " << getChildren().size() << " children" << endl;
+            if constexpr (VERBOSE) Logger::debug() << "Layout " << getName() << " has " << childCount << " children" << endl;
 
             //determine which children we are giving space to. Children which are maxed out will not be considered
             // in this calculation. Start with a vector of all children, and remove them as we need to.
             // use unique ptrs in case things get reallocated
             std::vector<std::unique_ptr<LayoutHelper>> childLayoutsAll;
             std::vector<LayoutHelper*> childLayoutsAvailable;
-            for (int i=0; i<getChildren().size(); i++){
+            for (int i=0; i<childCount; i++){
                auto child = getChildren().at(i);
                auto isWidget = child->as<Widget>();
                if (!isWidget) continue;
-               childLayoutsAll.emplace_back(make_unique<LayoutHelper>(layoutDir, i, this, isWidget.value()));
+               childLayoutsAll.emplace_back(make_unique<LayoutHelper>(layoutDir, i, childCount, this, isWidget.value()));
                childLayoutsAvailable.push_back(childLayoutsAll.back().get());
             }
             auto removeLayoutFromConsideration = [&](LayoutHelper* layout){
@@ -269,7 +307,7 @@ ReyEngine::Size<int> Layout::calculateIdealBoundingBox() {
 //      }
 //      //create subrects to lay out the children
 //      if (_rect.value.size().x && _rect.value.size().y) {
-//         for (int i = 0; i < getChildren().size(); i++) {
+//         for (int i = 0; i < childCount; i++) {
 //            auto &child = getChildren().at(i);
 //            auto subrect= getRect().toSizeRect().getSubRect(boundingBox, i);
 //            child->setRect(subrect);

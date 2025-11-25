@@ -516,6 +516,8 @@ namespace ReyEngine {
       constexpr Line operator+(const Pos<T>& pos) const {Line<T> l(*this); l.a += pos; l.b += pos; return l;}
       constexpr Line& operator-=(const Pos<T>& pos){a -= pos; b -= pos; return *this;}
       constexpr Line operator-(const Pos<T>& pos) const {Line<T> l(*this); l.a -= pos; l.b -= pos; return l;}
+      constexpr Line& pushX(R_FLOAT amt){a.x+= amt; b.x += amt; return *this;}
+      constexpr Line& pushY(R_FLOAT amt){a.y+= amt; b.y += amt; return *this;}
       //Find the angle from horizontal between points and a b
       constexpr inline Radians angle() const {
          auto dx = static_cast<R_FLOAT>(b.x - a.x);
@@ -614,6 +616,8 @@ namespace ReyEngine {
       constexpr inline Pos transform(const Matrix& m){return Pos<T>(Vec2<T>::transform(*this, m));}
       constexpr inline Pos xOnly(){return {Pos::x, 0};}
       constexpr inline Pos yOnly(){return {0, Pos::y};}
+      constexpr inline Pos& pushX(R_FLOAT amt) {this->x += amt; return *this;}
+      constexpr inline Pos& pushY(R_FLOAT amt) {this->y += amt; return *this;}
       inline static std::optional<Pos<T>> fromString(const std::string& s){
          if (auto optVec2 = Vec2<T>::fromString(s)) return Pos<T>(optVec2.value().x, optVec2.value().y);
          return {};
@@ -1010,69 +1014,57 @@ namespace ReyEngine {
          retval.y += amt;
          return retval;
       }
-
       [[nodiscard]] constexpr inline Rect stretchLeft(T amt) const {
          auto retval = *this;
          retval.x -= amt;
          retval.width += amt;
          return retval;
       }
-
       [[nodiscard]] constexpr inline Rect stretchRight(T amt) const {
          auto retval = *this;
          retval.width += amt;
          return retval;
       }
-
       [[nodiscard]] constexpr inline Rect stretchDown(T amt) const {
          auto retval = *this;
          retval.height += amt;
          return retval;
       }
-
       [[nodiscard]] constexpr inline Rect stretchUp(T amt) const {
          auto retval = *this;
          retval.y -= amt;
          retval.height += amt;
          return retval;
       }
-
       [[nodiscard]] constexpr inline Rect mirrorRight() const {
          auto retval = *this;
          retval.x += width;
          return retval;
       }
-
       [[nodiscard]] constexpr inline Rect mirrorLeft() const {
          auto retval = *this;
          retval.x -= width;
          return retval;
       }
-
       [[nodiscard]] constexpr inline Rect mirrorUp() const {
          auto retval = *this;
          retval.y -= height;
          return retval;
       }
-
       [[nodiscard]] constexpr inline Rect mirrorDown() const {
          auto retval = *this;
          retval.y += height;
          return retval;
       }
-
       [[nodiscard]] constexpr inline bool containsX(const Vec2<T>& point) const {
          return (point.x >= x && point.x < x + width);
       }
-
       [[nodiscard]] constexpr inline bool containsY(const Vec2<T>& point) const {
          return (point.y >= y && point.y < y + height);
       }
-
       [[nodiscard]] constexpr inline bool contains(const Rect<T>& other) const {
          return other.x >= x && other.y >= y && other.width <= width && other.height <= height;
       }
-
       [[nodiscard]] constexpr inline bool contains(const Vec2<T>& point) const {
          return containsX(point) && containsY(point);
       }
@@ -1107,21 +1099,15 @@ namespace ReyEngine {
       }
 
       [[nodiscard]] constexpr inline Pos<T> topLeft() const { return {x, y}; }
-
       [[nodiscard]] constexpr inline Pos<T> topRight() const { return {x + width, y}; }
-
       [[nodiscard]] constexpr inline Pos<T> bottomRight() const { return {x + width, y + height}; }
-
       [[nodiscard]] constexpr inline Pos<T> bottomLeft() const { return {x, y + height}; }
-
       [[nodiscard]] constexpr inline Line<T> left() const { return {topLeft(), bottomLeft()}; }
-
       [[nodiscard]] constexpr inline Line<T> right() const { return {topRight(), bottomRight()}; }
-
       [[nodiscard]] constexpr inline Line<T> top() const { return {topLeft(), topRight()}; }
-
       [[nodiscard]] constexpr inline Line<T> bottom() const { return {bottomLeft(), bottomRight()}; }
-
+      [[nodiscard]] constexpr inline Line<T> backSlash() const { return {topLeft(), bottomRight()}; }
+      [[nodiscard]] constexpr inline Line<T> frontSlash() const { return {bottomLeft(), topRight()}; }
       // return a rectangle that would render the same but has positive width and height
       constexpr inline void normalize() {
          if (width < 0) {
@@ -1943,23 +1929,38 @@ namespace ReyEngine {
       Vec3<Fraction> toVec3Fraction() const {return {r / (float)255.0, g / (float)255.0, b / (float)255.0};}
       Vec4<Fraction> toVec4Fraction() const {return {r / (float)255.0, g / (float)255.0, b / (float)255.0, a / (float)255.0};}
       friend std::ostream& operator<<(std::ostream& os, const ColorRGBA& c) {os << c.toVec4i().toString(); return os;}
+      float getRelativeLuminance() const {
+         // Convert to linear RGB first
+         auto toLinear = [](float channel) {
+            float c = channel / 255.0f;
+            return (c <= 0.03928f) ? c / 12.92f : std::pow((c + 0.055f) / 1.055f, 2.4f);
+         };
+         float _r = toLinear(r);
+         float _g = toLinear(g);
+         float _b = toLinear(b);
+         // WCAG formula for relative luminance
+         return 0.2126f * _r + 0.7152f * _g + 0.0722f * _b;
+      }
+      static float getContrastRatio(const ColorRGBA& c1, const ColorRGBA& c2) {
+         float L1 = c1.getRelativeLuminance();
+         float L2 = c2.getRelativeLuminance();
+         float lighter = std::max(L1, L2);
+         float darker = std::min(L1, L2);
+         return (lighter + 0.05f) / (darker + 0.05f);
+      }
+
+      ColorRGBA getReadableTextColor() const {
+         ColorRGBA white(255, 255, 255, 255);
+         ColorRGBA black(0, 0, 0, 255);
+         float whiteContrast = getContrastRatio(*this, white);
+         float blackContrast = getContrastRatio(*this, black);
+         return (whiteContrast > blackContrast) ? white : black;
+      }
       unsigned char r;
       unsigned char g;
       unsigned char b;
       unsigned char a;
    };
-
-//   struct ColorProperty : public Property<ColorRGBA>{
-//      using Property<ColorRGBA>::operator=;
-//      ColorProperty(const std::string& instanceName,  ColorRGBA defaultvalue)//pass color by copy
-//      : Property<ColorRGBA>(instanceName, PropertyTypes::Color, std::move(defaultvalue))
-//      {}
-//      std::string toString() const override {return "{" + std::to_string(value.r) + ", " + std::to_string(value.g) + ", " + std::to_string(value.b) + ", "  + std::to_string(value.a) + "}";}
-//      ColorRGBA fromString(const std::string& str) override {
-//         auto split = string_tools::fromList(str);
-//         return {std::stoi(split[0]), std::stoi(split[1]), std::stoi(split[2]), std::stoi(split[3])};
-//      }
-//   };
 
 
 #define COLORS Colors

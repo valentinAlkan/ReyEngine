@@ -15,6 +15,7 @@ Widget* Button::_unhandled_input(const InputEvent& event) {
             down = false;
             setFocused(false);
             _on_up(isInside);
+            _toggleState = !_toggleState;
             return this;
          } else if (mbEvent.isDown && isInside) {
            //normal inside-click
@@ -57,9 +58,9 @@ void Button::_render2D() const {
        backgroundColor = theme->background.colorPrimary;
        textColor = theme->font->color;
        if (down) {
-          backgroundColor = theme->background.colorTertiary;
+          backgroundColor = theme->background.colorActive;
        } else if (isHovered()){
-          backgroundColor = theme->background.colorSecondary;
+          backgroundColor = theme->background.colorHighlight;
        }
     } else {
        backgroundColor = theme->background.colorDisabled;
@@ -93,3 +94,28 @@ void PushButton::_on_up(bool mouseEscaped) {
    publish(PushButton::ButtonPressEvent(this));
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+void CheckBox::render2D() const {
+//   drawRectangleLines(_outline, 1.0, theme->outline.colorPrimary);
+   drawRectangleLines(_box, 1.0, theme->foreground.colorSecondary);
+//   drawRectangleLines(_textRect, 1.0, theme->foreground.colorTertiary);
+   if (_toggleState) {
+      drawLine(_box.backSlash(), 1.0, theme->foreground.colorPrimary);
+      drawLine(_box.frontSlash(), 1.0, theme->foreground.colorPrimary);
+   }
+   drawText(text, _textRect.pos(), theme->font);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void CheckBox::_on_rect_changed() {
+   _outline = getSizeRect().embiggen(-4);
+   //recalculate box size
+   _box = _outline.copy().embiggen(-14).left().midpoint().toCenterRect({15, 15});
+   auto textRectPosX = _box.topRight().pushX(5).x;
+   auto textRectPosY = _outline.topLeft().pushY(4).y;
+   auto textRectWidth = _outline.right().a.x - textRectPosX - _outline.x;
+   auto textRectHeight = (float)_outline.right().shorten(4).distance() - textRectPosY;
+   _textRect = {{textRectPosX, textRectPosY}, {textRectWidth, textRectHeight}};
+}

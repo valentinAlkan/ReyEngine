@@ -24,9 +24,8 @@ namespace ReyEngine{
       }
       void setDown(bool newDown, PublishType pubTybe=PublishType::DO_PUBLISH);
       [[nodiscard]] bool getDown(){return down;}
-      void setToggle(bool isToggle){_toggle = isToggle;}
-      [[nodiscard]] bool getToggle(){return _toggle;}
    protected:
+      bool _toggleState = false;
       bool down = false;
       using ColorPack = std::tuple<ColorRGBA, ColorRGBA, ColorRGBA>;
       Button(const std::string& text) {
@@ -36,17 +35,12 @@ namespace ReyEngine{
       void _init() override {
          setMinSize(measureText(text, getTheme().font) + Size<float>(10, 10));
       }
-      void _applyTheme(const ColorPack& colorPack) {
-         theme->background.colorPrimary = std::get<0>(colorPack);
-         theme->background.colorSecondary = std::get<1>(colorPack);
-         theme->background.colorTertiary = std::get<2>(colorPack);
-      }
       void _render2D() const;
       virtual void _on_down() {publish<ButtonDownEvent>(ButtonDownEvent(this));}
       virtual void _on_up(bool mouseEscaped) {publish<ButtonUpEvent>(ButtonUpEvent(this, mouseEscaped));}
       Widget* _unhandled_input(const InputEvent& event) override;
       std::string text;
-      bool _toggle = false;
+
        ColorPack PUSHBUTTON_COLORS = {Colors::gray, Colors::lightGray, Colors::blue};
    };
 
@@ -60,28 +54,38 @@ namespace ReyEngine{
    protected:
       void _init() override {
          Button::_init();
-         _applyTheme(PUSHBUTTON_COLORS);
       }
       void _on_up(bool mouseEscaped) override;
       void _on_down() override;
       void render2D() const override{_render2D();}
    };
+
    class PushButton : public Button {
    public:
       REYENGINE_OBJECT(PushButton)
       //an up that was inside the button
       EVENT(ButtonPressEvent, 11111114){}};
-      PushButton(const std::string& text="Push Button")
-      : Button(text)
-      {
-      }
+      PushButton(const std::string& text="Push Button"): Button(text){}
    protected:
       void _init() override {
          Button::_init();
-         _applyTheme(PUSHBUTTON_COLORS);
       }
       void _on_up(bool mouseEscaped) override;
       void render2D() const override{_render2D();}
    };
 
+   class CheckBox : public ToggleButton {
+   public:
+      REYENGINE_OBJECT(CheckBox)
+      CheckBox(const std::string& text): ToggleButton(text){}
+   protected:
+      void render2D() const override;
+      void _init() override {
+         Button::_init();
+      }
+      void _on_rect_changed() override;
+      Rect<float> _box;
+      Rect<float> _outline;
+      Rect<float> _textRect;
+   };
 }

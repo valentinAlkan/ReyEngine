@@ -127,8 +127,8 @@ namespace ReyEngine {
       Style::StyleRole highlight;
       Style::StyleRole outline;
       std::shared_ptr<ReyEngine::ReyEngineFont> font;
-      Style::Margins<float> layoutMargins; //only used for layouts - adds space BETWEEN all children
-      Style::Margins<float> widgetPadding; //used for all widget anchoring - adds pixel buffer around our edges - this is usually the one you want
+      float layoutMargin = 2; //only used by layouts - adds space BETWEEN all children
+      Style::Margins<float> widgetPadding; //only used for anchoring - adds pixel buffer around our edges - this is usually the one you want
       InputInterface::MouseCursor cursor;
       float segments = 5; //used for roundness
 
@@ -138,3 +138,4 @@ namespace ReyEngine {
       }
    };
 }
+
