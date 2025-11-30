@@ -88,13 +88,13 @@ namespace ReyEngine{
       static constexpr ColorRGBA GRADIENT_2 = {200,200,200,255};
    };
 
-   class MenuBar : public ReyEngine::Widget, public Internal::MenuInterface {
+   class MenuBar : public ReyEngine::Widget, private Internal::MenuInterface {
    public:
       REYENGINE_OBJECT(MenuBar);
       MenuBar(std::vector<std::unique_ptr<MenuEntry>>& items): Internal::MenuInterface(std::move(items)){_on_change();}
       MenuBar(): Internal::MenuInterface(){}
-      std::shared_ptr<DropDownMenu> createDropDown(MenuEntry*);
-      void removeDropDownMenu(MenuEntry);
+      std::shared_ptr<DropDownMenu> createDropDown(const std::string& name);
+      void removeDropDownMenu(const std::string& name);
    protected:
       void render2D() const override;
       void _init() override;

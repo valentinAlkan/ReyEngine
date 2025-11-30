@@ -20,7 +20,6 @@ namespace ReyEngine {
          const std::string newText;
       };
       EVENT(EventLineEditTextEntered, 754321527){}};
-//      EVENT(EventLineEditClicked, 754321528){}};
 
       LineEdit(const std::string& defaultText = "Default")
       : _defaultText(defaultText)
@@ -43,7 +42,6 @@ namespace ReyEngine {
       void publishText(const std::string&);
       std::string _defaultText;
       std::string _text;
-      Rect<int> _scissorArea;
       int _highlight_start = 0;
       int _highlight_end = 0;
       bool _isEditing = false; //the user is editing - blink the cursor

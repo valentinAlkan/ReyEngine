@@ -158,13 +158,14 @@ void MenuBar::render2D() const {
    }
    drawRectangleLines(getSizeRect(), 1.0, Colors::black);
    for (const auto& entry : _entries){
-      drawText(entry->_text, entry->_area.copy().pushX(5).pos(), theme->font);
+      drawText(entry->_text, entry->_area.copy().pushX(5).pushY(2).pos(), theme->font);
    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<DropDownMenu> MenuBar::createDropDown(ReyEngine::Internal::MenuInterface::MenuEntry* entry) {
-   auto dropDown = make_child<DropDownMenu>(getNode(), DROP_DOWN_PREFIX + entry->_text);
+std::shared_ptr<DropDownMenu> MenuBar::createDropDown(const std::string& name) {
+   auto menuEntry = push_back(name);
+   auto dropDown = make_child<DropDownMenu>(this, DROP_DOWN_PREFIX + name);
    dropDown->setVisible(false);
    return dropDown;
 }

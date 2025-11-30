@@ -2003,7 +2003,6 @@ namespace ReyEngine {
       float size = 20;
       R_FLOAT spacing = 1;
       bool isDefault = true;
-      FontAlignment fontAlignment;
       ColorRGBA color = COLORS::black;
       std::string fileName;
       ReyEngineFont copy() const;
@@ -2173,26 +2172,7 @@ namespace ReyEngine {
       Size<float> _size;
    };
 
-//   Vector2 offset;         // Camera offset (displacement from target)
-//   Vector2 target;         // Camera target (rotation and zoom origin)
-//   float rotation;         // Camera rotation in degrees
-//   float zoom;             // Camera zoom (scaling), should be 1.0f by default
    class Canvas;
-//   class Camera2D{
-//      operator ::Camera2D() {
-//         ::Camera2D retval;
-//         retval.target = zoomPoint;
-//         retval.offset =
-//         camera.target = (Vector2)(size / 2);
-//      }
-//      const Canvas& canvas;       // The owning canvas.
-//      Pos<float> centerPoint;     // The point the camera is centered on, relative to the canvas it belongs to
-//      Pos<float> zoomPoint;       // The point the camera zooms in/out to/from and rotates about (relative to the camera's centerpoint)
-//      Degrees rotation;           // Rotation degrees, counter-clockwise
-//      float zoom = 1.0;           // Amount of zoom, ie amount by which to scale viewport
-//      void
-//   };
-
    WindowSpace<Pos<R_FLOAT>> getScreenCenter();
    Size<float> getScreenSize();
    Size<float> getWindowSize();
@@ -2233,7 +2213,6 @@ namespace ReyEngine {
    inline Size<R_FLOAT> measureText(const std::string& text, const ReyEngineFont& font){return MeasureTextEx(font.font, text.c_str(), font.size, font.spacing);}
    inline Size<R_FLOAT> measureText(const std::string& text, const std::shared_ptr<ReyEngineFont>& font){return MeasureTextEx(font->font, text.c_str(), font->size, font->spacing);}
    inline void printMatrix(const Transform2D& t) { printMatrix(t.matrix);}
-
 
    /////////////////////////////////////////////////////////////////////////////////////////
    template <typename T>
@@ -2464,6 +2443,10 @@ namespace InputInterface {
       os << static_cast<int>(keyCode);
       return os;
    }
+}
+
+namespace TextMeasure {
+
 }
 
 namespace DisplayInterface {

@@ -3,6 +3,7 @@
 #include "Layout.h"
 #include "Button.h"
 #include "LineEdit.h"
+#include "MenuBar.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -27,7 +28,7 @@ class ThemeExplorer : public Widget {
       setPairs(0, "Background: colorPrimary", theme->background.colorPrimary);
       setPairs(1, "Background: colorSecondary", theme->background.colorSecondary);
       setPairs(2, "Background: colorTertiary", theme->background.colorTertiary);
-      setPairs(3, "Background: colorDisabled", theme->background.colorHighlight);
+      setPairs(3, "Background: colorHighlight", theme->background.colorHighlight);
       setPairs(4, "Background: colorActive", theme->background.colorActive);
       setPairs(5, "Background: colorDisabled", theme->background.colorDisabled);
    }
@@ -60,13 +61,18 @@ int main() {
    auto vlayoutr = make_child<Layout>(mainHLayout, "vlayoutr", Layout::LayoutDir::VERTICAL);
    //add each widget type
    auto pushbutton = make_child<PushButton>(vlayoutl, "pushbutton");
-   pushbutton->setMaxHeight(ROW_HEIGHT);
    auto lineedit = make_child<LineEdit>(vlayoutl, "lineedit", "LineEdit");
    auto checkbox = make_child<CheckBox>(vlayoutl, "checkbox", "This is a checkbox");
-   checkbox->setMaxHeight(ROW_HEIGHT);
+
+   auto menuBar = make_child<MenuBar>(vlayoutl, "menubar");
+   auto menu = menuBar->createDropDown("Menu");
 
    make_child<ThemeExplorer>(vlayoutr, "themeExplorer");
 
+
+   for (auto& child : vlayoutl->getChildren()){
+      child->as<Widget>().value()->setMaxHeight(ROW_HEIGHT);
+   }
 
    window.exec();
 

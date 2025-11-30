@@ -22,15 +22,13 @@ void LineEdit::render2D() const {
       auto ourWidth = getWidth();
       auto textStart = textWidth > ourWidth ? ourWidth - textWidth : 2;
 
-//      startScissor(_scissorArea);
       drawText(text, {textStart, textPosV}, font);
-//      stopScissor();
    };
 
    //draw default text
    if (_text.empty() && !_defaultText.empty()) {
       if (_highlight_start || _highlight_end) {
-         auto highlightRect= getRect() - Size<R_FLOAT>(2, 2) + Pos<R_FLOAT>(1, 1);
+         auto highlightRect = getRect() - Size<R_FLOAT>(2, 2) + Pos<R_FLOAT>(1, 1);
          drawRectangle(highlightRect, theme->highlight.colorPrimary);
       }
       renderText(_defaultText);
@@ -55,9 +53,6 @@ void LineEdit::render2D() const {
          drawLine({{caretHPos, 2}, {caretHPos, getHeight() - 2}}, 2, theme->font->color);
       }
    }
-//   if (_isModal && getFrameCounter() % 60 == 0){
-//      cout << _caretPos << endl;
-//   }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -168,5 +163,5 @@ void LineEdit::publishText(const std::string& oldText) {
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void LineEdit::_on_rect_changed() {
-   _scissorArea = getRect().toSizeRect();
+
 }
