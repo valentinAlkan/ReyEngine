@@ -126,8 +126,10 @@ namespace ReyEngine {
          //otherwise do a swap
          swap();
       }
+      constexpr void setIfNot(const T& other){if (mostRecent() != other) *this = other;}
       constexpr T operator[](unsigned int i){return values[i];}
       constexpr T at(unsigned int i){return values.at(i);}
+      constexpr T mostRecent() const {return values[0];}
       std::array<T, COUNT> values;
    };
 

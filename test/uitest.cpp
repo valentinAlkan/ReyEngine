@@ -29,7 +29,8 @@ class ThemeExplorer : public Widget {
       setPairs(1, "Background: colorSecondary", theme->background.colorSecondary);
       setPairs(2, "Background: colorTertiary", theme->background.colorTertiary);
       setPairs(3, "Background: colorHighlight", theme->background.colorHighlight);
-      setPairs(4, "Background: colorActive", theme->background.colorActive);
+      setPairs(4, "Background: colorActive1", theme->background.colorActive1);
+      setPairs(4, "Background: colorActive2", theme->background.colorActive2);
       setPairs(5, "Background: colorDisabled", theme->background.colorDisabled);
    }
    void render2D() const override {
@@ -61,6 +62,7 @@ int main() {
    auto vlayoutr = make_child<Layout>(mainHLayout, "vlayoutr", Layout::LayoutDir::VERTICAL);
    //add each widget type
    auto pushbutton = make_child<PushButton>(vlayoutl, "pushbutton");
+   auto toggleButton = make_child<ToggleButton>(vlayoutl, "toggleButton");
    auto lineedit = make_child<LineEdit>(vlayoutl, "lineedit", "LineEdit");
    auto checkbox = make_child<CheckBox>(vlayoutl, "checkbox", "This is a checkbox");
 

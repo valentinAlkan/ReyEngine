@@ -129,7 +129,7 @@ namespace ReyEngine {
          auto dropRect = getSizeRect().chopLeft(getWidth()-DROP_HANDLE_WIDTH);
          if (_isOpen) {
             //color in rect if its open
-            drawRectangle(dropRect, theme->background.colorActive);
+            drawRectangle(dropRect, theme->background.colorActive1);
             drawRectangleLines(dropRect, 1.0, theme->background.colorSecondary);
          }
          //draw drop arrow

@@ -42,7 +42,8 @@ namespace ReyEngine {
          ColorRGBA colorSecondary; //for gradient
          ColorRGBA colorTertiary; //for whatever
          ColorRGBA colorDisabled; //for whatever
-         ColorRGBA colorActive;
+         ColorRGBA colorActive1;
+         ColorRGBA colorActive2;
          ColorRGBA colorHighlight;
          Fill fill = Fill::NONE;
          Outline outline = Outline::NONE;
@@ -115,7 +116,9 @@ namespace ReyEngine {
          background.colorSecondary = Colors::black;
          background.colorTertiary = Colors::white;
          background.colorDisabled = Colors::disabledGray;
-         background.colorActive = Colors::activeBlue;
+         background.colorActive1 = Colors::gray;
+         static constexpr unsigned int offset = 20;
+         background.colorActive2 = ColorRGBA(Colors::gray.r - offset, Colors::gray.g - offset, Colors::gray.b - offset, Colors::gray.a);
          background.colorHighlight = Colors::blue;
          foreground.colorPrimary = Colors::black;
          foreground.colorDisabled = Colors::white;
