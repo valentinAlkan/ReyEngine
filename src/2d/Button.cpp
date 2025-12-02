@@ -69,7 +69,8 @@ void Button::_render2D() const {
           backgroundColor = theme->background.colorActive1;
        } else if (_drawState == DrawState::DOWN_PRESS) {
           backgroundColor = theme->background.colorActive2;
-       } else if (isHovered()){
+       }
+       if (isHovered()){
           backgroundColor = theme->background.colorHighlight;
        }
     } else {
@@ -79,6 +80,13 @@ void Button::_render2D() const {
     auto size = getSizeRect().embiggen(-THICKNESS);
     drawRectangleRounded(size, theme->outline.roundness, SEGMENTS, backgroundColor);
     drawRectangleRoundedLines(size, theme->outline.roundness, SEGMENTS, THICKNESS, COLORS::black);
+    if (_drawState == DrawState::DOWN) {
+       drawRectangleRoundedLines(size.embiggen(-1), theme->outline.roundness, SEGMENTS, 1.0, COLORS::lightGray);
+    } else if (_drawState == DrawState::DOWN_PRESS){
+       drawRectangleRoundedLines(size.embiggen(-1), theme->outline.roundness, SEGMENTS, 1.0, COLORS::gray);
+    } else {
+       drawRectangleRoundedLines(size.embiggen(-1), theme->outline.roundness, SEGMENTS, 1.0, COLORS::white);
+    }
     drawTextCentered(text, getSizeRect().center(), *theme->font, textColor, theme->font->size, theme->font->spacing);
 }
 
@@ -114,7 +122,9 @@ void PushButton::_on_up(bool mouseEscaped) {
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 void CheckBox::render2D() const {
-//   drawRectangleLines(_outline, 1.0, theme->outline.colorPrimary);
+   if (isHovered()) {
+      drawRectangleLines(_outline, 2.0, theme->background.colorHighlight);
+   }
    drawRectangleLines(_box, 1.0, theme->foreground.colorSecondary);
 //   drawRectangleLines(_textRect, 1.0, theme->foreground.colorTertiary);
    if (getDown()) {

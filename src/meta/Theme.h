@@ -119,7 +119,7 @@ namespace ReyEngine {
          background.colorActive1 = Colors::gray;
          static constexpr unsigned int offset = 20;
          background.colorActive2 = ColorRGBA(Colors::gray.r - offset, Colors::gray.g - offset, Colors::gray.b - offset, Colors::gray.a);
-         background.colorHighlight = Colors::blue;
+         background.colorHighlight = ColorRGBA(0, 140, 255);
          foreground.colorPrimary = Colors::black;
          foreground.colorDisabled = Colors::white;
          font = std::make_shared<ReyEngineFont>();

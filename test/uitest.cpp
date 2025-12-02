@@ -30,8 +30,8 @@ class ThemeExplorer : public Widget {
       setPairs(2, "Background: colorTertiary", theme->background.colorTertiary);
       setPairs(3, "Background: colorHighlight", theme->background.colorHighlight);
       setPairs(4, "Background: colorActive1", theme->background.colorActive1);
-      setPairs(4, "Background: colorActive2", theme->background.colorActive2);
-      setPairs(5, "Background: colorDisabled", theme->background.colorDisabled);
+      setPairs(5, "Background: colorActive2", theme->background.colorActive2);
+      setPairs(6, "Background: colorDisabled", theme->background.colorDisabled);
    }
    void render2D() const override {
       for (const auto& [rect, text, color] : _rects){
@@ -67,7 +67,8 @@ int main() {
    auto checkbox = make_child<CheckBox>(vlayoutl, "checkbox", "This is a checkbox");
 
    auto menuBar = make_child<MenuBar>(vlayoutl, "menubar");
-   auto menu = menuBar->createDropDown("Menu");
+   auto fileMenu = menuBar->createDropDown("File");
+   fileMenu->push_back("this", "is", "some", "items");
 
    make_child<ThemeExplorer>(vlayoutr, "themeExplorer");
 

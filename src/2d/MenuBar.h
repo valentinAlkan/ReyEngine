@@ -83,9 +83,6 @@ namespace ReyEngine{
       void _on_change() override;
       void _on_rect_changed() override{_calculateSize();}
       Size<float> _calculateSize();
-   private:
-      static constexpr ColorRGBA GRADIENT_1 = {220,205,216,255};
-      static constexpr ColorRGBA GRADIENT_2 = {200,200,200,255};
    };
 
    class MenuBar : public ReyEngine::Widget, private Internal::MenuInterface {
@@ -106,8 +103,8 @@ namespace ReyEngine{
       bool _itemDown = false;
       DropDownMenu* _lastDrop = nullptr;
    private:
-      static constexpr ColorRGBA GRADIENT_1 = {180,180,180,255};
-      static constexpr ColorRGBA GRADIENT_2 = {200,200,200,255};
+      static constexpr ColorRGBA GRADIENT_1 = Colors::activeBlue;
+      static constexpr ColorRGBA GRADIENT_2 = Colors::lightGray;
       static constexpr char DROP_DOWN_PREFIX[] = "DROPDOWN_";
    };
 }

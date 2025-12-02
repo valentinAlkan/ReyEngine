@@ -41,11 +41,11 @@ void DropDownMenu::_init() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void DropDownMenu::render2D() const {
-   drawRectangleGradientV(getSizeRect(), GRADIENT_1, GRADIENT_2);
+   drawRectangle(getSizeRect(), theme->background.colorPrimary);
    if (_activeEntry){
-      drawRectangleGradientH(_activeEntry.value()->_area, GRADIENT_1, GRADIENT_2);
+      drawRectangle(_activeEntry.value()->_area, theme->background.colorHighlight);
    }
-   drawRectangleLines(getSizeRect(), 1.0, Colors::black);
+   drawRectangleLines(getSizeRect(), 1.0, theme->background.colorSecondary);
    for (const auto& entry : _entries){
       drawText(entry->_text, entry->_area.copy().pushX(2).pushY(2).pos(), theme->font);
    }
@@ -152,11 +152,9 @@ Widget* MenuBar::_unhandled_input(const ReyEngine::InputEvent& e) {
 /////////////////////////////////////////////////////////////////////////////////////////
 void MenuBar::render2D() const {
    if (_activeEntry){
-      auto color1 = _itemDown ? GRADIENT_1 : GRADIENT_2;
-      auto color2 = _itemDown ? GRADIENT_2 : GRADIENT_1;
-      drawRectangleGradientH(_activeEntry.value()->_area, color1, color2);
+      drawRectangle(_activeEntry.value()->_area, theme->background.colorHighlight);
    }
-   drawRectangleLines(getSizeRect(), 1.0, Colors::black);
+   drawRectangleLines(getSizeRect(), 1.0, theme->background.colorSecondary);
    for (const auto& entry : _entries){
       drawText(entry->_text, entry->_area.copy().pushX(5).pushY(2).pos(), theme->font);
    }

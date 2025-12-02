@@ -1915,10 +1915,11 @@ namespace ReyEngine {
 
    struct ColorRGBA {
       ColorRGBA(): r(0), g(0), b(0), a(255){}
+      constexpr ColorRGBA(int r, int g, int b): r(r), g(g), b(b), a(255){}
       constexpr ColorRGBA(int r, int g, int b, int a): r(r), g(g), b(b), a(a){}
-      ColorRGBA(const Color& color): r(color.r), g(color.g), b(color.b), a(color.a){}
-      inline ColorRGBA& operator=(const Color& rhs){r = rhs.r; g=rhs.g; b=rhs.b; a=rhs.a; return *this;}
-      inline operator Color() const {return {r, g, b, a};}
+      constexpr ColorRGBA(const Color& color): r(color.r), g(color.g), b(color.b), a(color.a){}
+      constexpr inline ColorRGBA& operator=(const Color& rhs){r = rhs.r; g=rhs.g; b=rhs.b; a=rhs.a; return *this;}
+      constexpr inline operator Color() const {return {r, g, b, a};}
       void dim(Fraction p){a = (float)a * Fraction(p).get();}
       inline static ColorRGBA random(int alpha = -1){
          auto retval = ColorRGBA(std::rand() % 255, std::rand() % 256, std::rand() % 256, alpha >= 0 ? alpha % 256 : std::rand() % 256);
