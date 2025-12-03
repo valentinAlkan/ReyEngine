@@ -22,8 +22,9 @@ template <typename T, typename Parameter, template<typename> class... Skills>
 using NamedType = NamedTypeImpl<T, Parameter, std::ratio<1>, Skills...>;
 
 template <typename T> struct ToDouble : Units::crtp<T, ToDouble> {explicit constexpr operator double() const { return static_cast<double>(this->underlying().get());}};
-template <typename T> struct ToInt : Units::crtp<T, ToInt>       {explicit constexpr operator double() const { return static_cast<int>(this->underlying().get());}};
-template <typename T> struct ToFloat : Units::crtp<T, ToFloat>   {explicit constexpr operator double() const { return static_cast<float>(this->underlying().get());}};
+template <typename T> struct ToInt : Units::crtp<T, ToInt>       {explicit constexpr operator int() const { return static_cast<int>(this->underlying().get());}};
+template <typename T> struct ToFloat : Units::crtp<T, ToFloat>   {explicit constexpr operator float() const { return static_cast<float>(this->underlying().get());}};
+template <typename T> struct ToSizeT : Units::crtp<T, ToSizeT>   {explicit constexpr operator size_t() const { return static_cast<size_t>(this->underlying().get());}};
 
 namespace Units {
    template<typename T, typename Parameter, typename Ratio, template<typename> class... Skills>
