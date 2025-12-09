@@ -21,7 +21,7 @@ Widget* Button::_unhandled_input(const InputEvent& event) {
             if (!_isToggle || _down){
                _down = false;
                _drawState = DrawState::UP;
-               _on_up(isInside);
+               _on_up(!isInside);
             } else if (!_down){
                _down = true;
                _on_down();
@@ -115,7 +115,7 @@ void ToggleButton::_on_up(bool mouseEscaped) {
 /////////////////////////////////////////////////////////////////////////////////////////
 void PushButton::_on_up(bool mouseEscaped) {
    Button::_on_up(mouseEscaped);
-   publish(PushButton::ButtonPressEvent(this));
+   if (!mouseEscaped) publish(PushButton::ButtonPressEvent(this));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

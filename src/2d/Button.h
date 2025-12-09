@@ -45,7 +45,7 @@ namespace ReyEngine{
       }
       void _render2D() const;
       virtual void _on_down() {publish<ButtonDownEvent>(ButtonDownEvent(this));}
-      virtual void _on_up(bool mouseEscaped) {publish<ButtonUpEvent>(ButtonUpEvent(this, mouseEscaped));}
+      virtual void _on_up(bool mouseEscaped) {if (!mouseEscaped) publish<ButtonUpEvent>(ButtonUpEvent(this, mouseEscaped));}
       Widget* _unhandled_input(const InputEvent& event) override;
       std::string text;
       bool _isToggle = false;
