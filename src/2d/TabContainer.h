@@ -6,9 +6,30 @@ namespace ReyEngine{
    class TabContainer : public Layout {
    public:
       REYENGINE_OBJECT(TabContainer)
+      EVENT_ARGS(EventTabShown, 10712812863217, Widget* widget)
+      , widget(widget)
+      {}
+         Widget* widget;
+      };
+      EVENT_ARGS(EventTabHidden, 10712812863218, Widget* widget)
+      , widget(widget)
+         {}
+      Widget* widget;
+      };
+      EVENT_ARGS(EventTabCreated, 10712812863219, Widget* widget)
+      , widget(widget)
+         {}
+         Widget* widget;
+      };
+      EVENT_ARGS(EventTabRemoved, 10712812863220, Widget* widget)
+      , widget(widget)
+         {}
+         Widget* widget;
+      };
       TabContainer(): Layout(LayoutDir::OTHER){}
       void render2D() const override;
       void _on_child_added_to_tree(TypeNode*) override;
+      void _on_child_removed_from_tree(TypeNode*) override;
       void setCurrentTab(Widget*);
       std::optional<Widget*> getCurrentTab(){return currentTab;}
    protected:

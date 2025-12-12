@@ -875,6 +875,7 @@ namespace ReyEngine {
          return *this;
       }
 
+      constexpr inline bool isInverted() const {return (width < 0 || height < 0);}
       constexpr inline Rect& centerOnPoint(const Pos<R_FLOAT>& p) {
          return setPos(p - Pos<R_FLOAT>(size().toPos() / 2));
       } /// Return the rect such that it would be centered on point p
