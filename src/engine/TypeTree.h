@@ -89,19 +89,7 @@ namespace ReyEngine::Internal::Tree {
       bool _isProcessed = false;
    };
 
-   struct Easable : public virtual TypeTag {
-      virtual ~Easable();
-      Easing* addEasing(std::unique_ptr<Easing>&& easing);
-      void removeEasing(Easing*);
-      [[nodiscard]] bool isEased() const {return _isEased;}
-   protected:
-      bool _wantsEase = false;
-      bool _isEased = false;
-      std::vector<std::unique_ptr<Easing>> _easings;
-   };
-
    static std::unique_ptr<ProcessList<Processable>> _processList;
-   static std::unique_ptr<ProcessList<Easing>> _easingList;
 
    // Type erase wrapper. T must inherit from TreeCallable
    template<NamedType T>

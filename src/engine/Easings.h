@@ -1,9 +1,11 @@
 #pragma once
+//carefully swiped from easings.net
+#include <StrongUnits.h>
+#include <cmath>
+#include <chrono>
+#include "ProcessList.h"
+
 namespace ReyEngine {
-   //carefully swiped from easings.net
-   #include <StrongUnits.h>
-   #include <cmath>
-   #include <chrono>
    #ifndef EASINGS_FLOAT_TYPE
    #define EASINGS_FLOAT_TYPE double
    //the reason this is a double is that we would lose integer precision after about 3 and some change days
@@ -12,9 +14,6 @@ namespace ReyEngine {
    #endif
 
    namespace Easings {
-      /////////////////////////////////////////////////////////////////////////////////////////
-      static constexpr inline Fraction easeOutBounce(Fraction x);
-
       /////////////////////////////////////////////////////////////////////////////////////////
       static constexpr inline Fraction easeInSine(Fraction x) {
          return 1 - std::cos((x.get() * M_PI) / 2);
@@ -185,11 +184,6 @@ namespace ReyEngine {
       }
 
       /////////////////////////////////////////////////////////////////////////////////////////
-      static constexpr inline Fraction easeInBounce(Fraction x) {
-         return 1 - easeOutBounce(1 - x);
-      }
-
-      /////////////////////////////////////////////////////////////////////////////////////////
       static constexpr inline Fraction easeOutBounce(Fraction x) {
          const EASINGS_FLOAT_TYPE n1 = 7.5625;
          const EASINGS_FLOAT_TYPE d1 = 2.75;
@@ -209,6 +203,11 @@ namespace ReyEngine {
       }
 
       /////////////////////////////////////////////////////////////////////////////////////////
+      static constexpr inline Fraction easeInBounce(Fraction x) {
+         return 1 - easeOutBounce(1 - x);
+      }
+
+      /////////////////////////////////////////////////////////////////////////////////////////
       static constexpr inline Fraction easeInOutBounce(Fraction x) {
          return x.get() < 0.5
                 ? (1 - easeOutBounce(1 - 2 * x)) / 2
@@ -217,29 +216,69 @@ namespace ReyEngine {
    }
 
    using EasingFunctor = std::function<Fraction(Fraction)>;
+   using EasingCallback = std::function<void(Fraction)>;
+   struct Easable;
    // an easing function is any function that takes an input between 0 and 1 and returns an output that typically
    // represents a value between 0 and 1 (min and max) although the output value is not strictly enforced since
    // overshoot is allowed
    struct Easing {
-      Easing(EasingFunctor easing, std::chrono::milliseconds duration, const std::chrono::steady_clock::time_point& startTime=std::chrono::steady_clock::now())
+      Easing(EasingFunctor&& easing, EasingCallback&& callback, std::chrono::milliseconds duration)
       : _duration(duration)
-      , _startTime(startTime)
-      , functor(easing)
+      , _callback(callback)
+      , _startTime(std::chrono::steady_clock::now())
+      , functor(std::move(easing))
       {}
-      bool _process(float dt){
-         (void)dt;//dt is needed to conform with the process list api
-         const std::chrono::steady_clock::time_point now;
-         input = (double)((now - _startTime) / _duration);
+      bool _process(float _){
+         (void)_;//needed to conform with the process list api
+         auto msDuration = _duration.count();
+         auto dt = std::chrono::duration_cast<std::chrono::milliseconds>((std::chrono::steady_clock::now() - _startTime)).count();
+         input = (double)dt / (double)msDuration;
          output = functor(input);
-         easingCallback(output); //alert the easable that the easing has been processed
+         _callback(output); //alert the easable that the easing has been processed
          return input >= 1;
       }
+      [[nodiscard]] bool done() const {return input >= 1.0;}
+      [[nodiscard]] Easable* easable() const {return _easable;}
+   protected:
+      Easable* _easable;
    private:
       std::chrono::steady_clock::time_point _startTime;
       std::chrono::milliseconds _duration;
+      EasingCallback _callback;
       const EasingFunctor functor;
-      std::function<void(Fraction)> easingCallback;
       Fraction input;
       Fraction output;
+      friend struct Easable;
    };
+
+   struct Easable  {
+      virtual ~Easable(){
+         for (auto& easing : _easings){
+            removeEasing(easing.get());
+         }
+      };
+      Easing* addEasing(std::unique_ptr<Easing>&& easing){
+         _wantsEase = true;
+         _easings.push_back(std::move(easing));
+         auto retval = _easings.back().get();
+         ProcessList<Easing>::add(retval, _isEased);
+         retval->_easable = this;
+         return retval;
+      }
+      void removeEasing(Easing* easing) {
+         ProcessList<Easing>::remove(easing, _isEased);
+         for (auto it = _easings.begin(); it != _easings.end(); ++it){
+            if (easing == it->get()){
+               _easings.erase(it);
+               return;
+            }
+         }
+      }
+      [[nodiscard]] bool isEased() const {return _isEased;}
+   protected:
+      bool _wantsEase = false;
+      bool _isEased = false;
+      std::vector<std::unique_ptr<Easing>> _easings;
+   };
+   static std::unique_ptr<ProcessList<Easing>> _easingList;
 }

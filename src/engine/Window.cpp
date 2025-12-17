@@ -239,7 +239,18 @@ void Window::exec(){
       //process logic
       float dt = getFrameDelta();
       ProcessList<Internal::Tree::Processable>::processAll(dt);
-      ProcessList<Easing>::processNext(dt);
+      //process and reap easings
+      std::vector<Easing*> toReap;
+      if (auto first = ProcessList<Easing>::processfirst(dt)){
+         if (first->done()) toReap.push_back(first);
+      }
+      while(auto easing = ProcessList<Easing>::processNext(dt)){
+         if (easing->done()) toReap.push_back(easing);
+      }
+      for (auto& reap : toReap){
+         reap->easable()->removeEasing(reap);
+      }
+
 
       //draw the canvas to our render texture
 //         Application::getWindow(0).pushRenderTarget(_renderTarget);

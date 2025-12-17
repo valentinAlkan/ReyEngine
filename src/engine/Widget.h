@@ -13,7 +13,7 @@ namespace ReyEngine {
    , public EventPublisher
    , public EventSubscriber
    , public MetaDataInterface
-   , public Internal::Tree::Easable
+   , public Easable
    {
    public:
       EVENT_ARGS(RectChangedEvent, 329874, const Rect<float>& r)

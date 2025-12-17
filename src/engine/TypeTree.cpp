@@ -23,18 +23,12 @@ void Tree::Processable::setProcess(bool value) {
    }
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
-Tree::Easable::~Easable(){
-   if (_isEased){
-      for (auto& easing : _easings){
-         _easingList->remove(easing.get(), _isEased);
-      }
-   }
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-Easing* Tree::Easable::addEasing(std::unique_ptr<Easing>&& easing) {
-   _wantsEase = true;
-   _easings.push_back(std::move(easing));
-   _easingList->add(_easings.back().get(), _isEased);
-}
+///////////////////////////////////////////////////////////////////////////////////////////
+//Tree::Easable::~Easable(){
+//
+//}
+//
+///////////////////////////////////////////////////////////////////////////////////////////
+//Easing* Tree::Easable::addEasing(std::unique_ptr<Easing>&& easing) {
+//
+//}

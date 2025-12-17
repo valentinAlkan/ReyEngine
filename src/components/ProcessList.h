@@ -51,12 +51,24 @@ public:
    }
    //returns whichever T was just processed
    template <typename... Args>
+   static T* processfirst(Args... args){
+      auto& it = instance()._it;
+      auto& list = instance()._list;
+      if (list.empty()) return nullptr;
+      std::unique_lock<std::mutex> lock(instance()._mtx);
+      it = list.begin();
+      (*it)->_process(std::forward<Args>(args)...);
+      auto retval = *it;
+      ++it;
+      return retval;
+   }
+   template <typename... Args>
    static T* processNext(Args... args){
       auto& it = instance()._it;
       auto& list = instance()._list;
-      std::unique_lock<std::mutex> lock(instance()._mtx);
       if (list.empty()) return nullptr;
-      if (it == list.end()) it = list.begin(); //wrap before dereferencing
+      std::unique_lock<std::mutex> lock(instance()._mtx);
+      if (it == list.end()) return nullptr;
       (*it)->_process(std::forward<Args>(args)...);
       auto retval = *it;
       ++it;
@@ -66,6 +78,7 @@ public:
       std::unique_lock<std::mutex> sl(instance()._mtx);
       instance()._list.clear();
    }
+   static size_t size() {return instance()._processList->_list.size();}
 protected:
    static ProcessList& instance(){
       if (!_processList){
