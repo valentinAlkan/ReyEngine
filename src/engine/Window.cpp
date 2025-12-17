@@ -238,7 +238,8 @@ void Window::exec(){
 
       //process logic
       float dt = getFrameDelta();
-      Internal::Tree::ProcessList::processAll(dt);
+      ProcessList<Internal::Tree::Processable>::processAll(dt);
+      ProcessList<Easing>::processNext(dt);
 
       //draw the canvas to our render texture
 //         Application::getWindow(0).pushRenderTarget(_renderTarget);
@@ -275,7 +276,8 @@ void Window::exec(){
          _frameCounter++;
 //      } // release scoped lock here
    }
-   Tree::ProcessList::clear();
+   ProcessList<Internal::Tree::Processable>::clear();
+   ProcessList<Easing>::clear();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

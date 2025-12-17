@@ -66,7 +66,7 @@ namespace ReyEngine{
       void setText(int newText){
          setText(std::to_string(newText));
       }
-      std::string getText(){return _text;}
+      [[nodiscard]] std::string getText() const {return _text;}
 
    protected:
       void _init() override {

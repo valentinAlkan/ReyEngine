@@ -49,13 +49,13 @@ namespace ReyEngine::FileSystem {
       inline Path& operator/=(const Path& rhs) {_path /= rhs._path; parsePath(); return *this;}
       inline Path& operator/=(const char* rhs) {_path /= rhs; parsePath(); return *this;}
       inline Path& operator/=(const std::string& rhs) {_path /= rhs; parsePath(); return *this;}
-      inline Path operator/(const Path& rhs) const {return (_path / rhs._path).string();}
+      inline Path operator/(const Path& rhs) const {return (_path / rhs._path).string(); }
       inline Path operator/(const char* rhs) const {return (_path / rhs).string();}
       inline Path operator/(const std::string& rhs) const {return (_path / rhs).string();}
 //      inline Path operator+(const char* rhs) const {return {*this + std::string(rhs)};}
 //      inline Path operator+(const std::string& rhs) const {return {_path.string() + rhs};}
       explicit inline operator bool() const {return !_path.empty();}
-      inline Path& operator=(const std::string& rhs){*this = rhs.c_str(); return *this;}
+      inline Path& operator=(const std::string& rhs){*this = rhs.c_str(); parsePath(); return *this;}
       inline Path& operator=(const char* rhs){_path.clear(); _path = rhs; parsePath(); return *this;}
       inline Path& operator=(const Path& rhs){_path.clear(); _path = rhs._path; parsePath(); return *this;}
       inline bool operator==(const std::string& rhs) const {return _path == rhs;}

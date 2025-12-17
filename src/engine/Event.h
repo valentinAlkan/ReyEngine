@@ -125,6 +125,14 @@ namespace ReyEngine{
          return {};
       }
       template <typename T>
+      std::optional<T*> asMut() const {
+         auto thiz = dynamic_cast<const T*>(this);
+         if (thiz){
+            return const_cast<T*>(thiz);
+         }
+         return {};
+      }
+      template <typename T>
       std::optional<T*> as() {
          auto thiz = dynamic_cast<T*>(this);
          if (thiz){

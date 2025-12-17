@@ -10,6 +10,8 @@
 #include "MapValueRefView.h"
 #include "Logger.h"
 #include <unordered_set>
+#include "ProcessList.h"
+#include "Easings.h"
 
 namespace ReyEngine::Internal::Tree {
    class TypeNode;
@@ -77,7 +79,6 @@ namespace ReyEngine::Internal::Tree {
    template<typename T>
    concept TypeTagged = std::is_base_of_v<TypeTag, T> && !std::is_base_of_v<T, TreeStorable>;
 
-   class ProcessList;
    struct Processable : public virtual TypeTag {
       virtual ~Processable();
       virtual void _process(float dt){};
@@ -86,30 +87,10 @@ namespace ReyEngine::Internal::Tree {
    protected:
       bool _wantsProcess = false;
       bool _isProcessed = false;
-      friend class ProcessList;
    };
 
-   class ProcessList {
-   public:
-      ~ProcessList(){clear();}
-      static std::optional<Processable*> add(Processable*);
-      static std::optional<Processable*> remove(Processable*);
-      static std::optional<Processable*> find(const Processable*);
-      static void processAll(float dt);
-      static void clear(){
-         std::unique_lock<std::mutex> sl(instance()._mtx);
-         instance()._list.clear();
-      }
-   protected:
-      static ProcessList& instance();
-   private:
-      static std::unique_ptr<ProcessList> _processList;
-      std::unordered_set<Processable*> _list; //list of widgets that require processing. No specific order.
-      std::mutex _mtx;
-      friend class Processable;
-   };
-
-
+   static std::unique_ptr<ProcessList<Processable>> _processList;
+   static std::unique_ptr<ProcessList<Easing>> _easingList;
 
    // Type erase wrapper. T must inherit from TreeCallable
    template<NamedType T>
