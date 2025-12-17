@@ -23,10 +23,12 @@ namespace ReyEngine{
       void _on_child_removed_from_tree(TypeNode*) override;
       void _on_rect_changed() override {arrangeChildren();}
       void _on_child_rect_changed(Widget*) override {arrangeChildren();}
-      void render2DEnd() override;
       virtual void arrangeChildren();
-      void render2D() const override {/*drawRectangleLines(getRect().toSizeRect(), 1.0, Colors::black);*/}
+      void render2D() const override;
       const LayoutDir layoutDir;
+
+   private:
+      ColorRGBA DEBUG_COLOR;
 
    };
 }

@@ -303,3 +303,16 @@ std::optional<Widget*> Widget::getParentWidget() const {
    }
    return {};
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////
+bool Widget::getIsRendering() const {
+   std::optional<Widget*> parent = getParentWidget();
+   bool visible = _visible;
+   if (!visible) return false;
+   while (parent){
+      visible &= parent.value()->_visible;
+      parent = parent.value()->getParentWidget();
+      if (!visible) return false;
+   }
+   return true;
+}

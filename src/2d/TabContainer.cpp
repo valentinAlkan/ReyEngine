@@ -40,6 +40,7 @@ void TabContainer::_on_child_added_to_tree(TypeNode* node) {
 
    // if we already have a tab widget, immediately hide any subsequent children
    auto& child = isWidget.value();
+   publish(EventTabCreated(this, child));
    if (currentTab){
       child->setVisible(false);
    } else {
@@ -49,12 +50,43 @@ void TabContainer::_on_child_added_to_tree(TypeNode* node) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void TabContainer::_on_child_removed_from_tree(ReyEngine::TypeNode* node) {
+   auto isWidget = node->as<Widget>();
+   if (!isWidget) return;
+
+   auto& removedChild = isWidget.value();
+   publish(EventTabRemoved(this, removedChild));
+   if (currentTab == removedChild){
+      //see if we're the only one
+      if (getChildren().size() == 1) {
+         setCurrentTab(nullptr);
+      } else {
+         //try to set another child as current tab
+         bool isAfter = false;
+         Widget *newCurrentCandidate = nullptr;
+         for (const auto &otherChild: getChildrenAs<Widget>()) {
+            if (otherChild != removedChild){
+               newCurrentCandidate = otherChild;
+               if (isAfter) break;
+            } else {
+               isAfter = true;
+            }
+         }
+         if (newCurrentCandidate){
+            setCurrentTab(newCurrentCandidate);
+         }
+      }
+   }
+   arrangeChildren();
+}
+/////////////////////////////////////////////////////////////////////////////////////////
 void TabContainer::setCurrentTab(Widget* w) {
+   if (currentTab) publish(EventTabHidden(this, w));
+
    currentTab = w;
    //if current tab is null
    if (!currentTab){
       currentTab = {};
-      Logger::debug() << "Clearing tab container current widget" << endl;
       return;
    }
 
@@ -62,6 +94,7 @@ void TabContainer::setCurrentTab(Widget* w) {
    for (auto child : children){
       child->setVisible(child == currentTab.value());
    }
+   if (currentTab) publish(EventTabShown(this, w));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

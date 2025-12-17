@@ -76,6 +76,7 @@ namespace ReyEngine {
       //convenience
       void moveToForeground();
       void moveToBackground();
+      [[nodiscard]] bool getIsRendering() const; //determines if this widget and all it's ancestors are visible
    protected:
       //input
       virtual Widget* __process_unhandled_input(const InputEvent& event){ return _unhandled_input(event);}

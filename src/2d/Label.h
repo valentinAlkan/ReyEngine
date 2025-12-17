@@ -10,10 +10,10 @@ namespace ReyEngine{
    public:
       REYENGINE_OBJECT(Label)
       Label(const std::string& text)
-      : text(text)
+      : _text(text)
       {}
       void render2D() const override{
-         //todo: scissor text
+//         ScopeScissor scissor(getSizeRect());
          auto& outline = theme->background.outline;
          auto& background = theme->background;
 //         auto& foreground = theme->foreground;
@@ -32,21 +32,22 @@ namespace ReyEngine{
             default:
                break;
          }
-
-          drawText(text, {0, 0}, theme->font);
+          drawText(_displayText, {0, 0}, theme->font);
       };
 
-      void clear(){text.clear();}
+      void setMaxChars(size_t charCount){_maxCharCount = charCount;  setText(_text);}
+      void clear(){_text.clear();}
       void setText(const std::string_view newText){setText(std::string(newText));}
       void setText(const std::string& newText){
-         text = newText;
+         _text = newText;
+         _displayText = _text.substr(0, _maxCharCount);
          auto expandOpt = needsExpand();
          if (expandOpt) {
             setMinSize(expandOpt.value());
          }
       }
       void appendText(const std::string& newText){
-         text += newText;
+         _text += newText;
          if (!isLocked) {
             auto expandOpt = needsExpand();
             if (expandOpt) {
@@ -65,14 +66,11 @@ namespace ReyEngine{
       void setText(int newText){
          setText(std::to_string(newText));
       }
-      std::string getText(){return text;}
+      std::string getText(){return _text;}
 
    protected:
       void _init() override {
-         if (auto expandOpt = needsExpand()){
-            applyRect({getPos(), expandOpt.value()});
-            minSize = expandOpt.value();
-         }
+         setText(_text);
          theme->background.fill = Style::Fill::NONE;
       }
       inline ReyEngine::Rect<double> calculateBoundingRect(){
@@ -89,7 +87,9 @@ namespace ReyEngine{
          }
          return std::nullopt;
       };
-      inline ReyEngine::Size<R_FLOAT> measureText() const {return theme->font->measure(text);}
-      std::string text;
+      inline ReyEngine::Size<R_FLOAT> measureText() const {return theme->font->measure(_displayText);}
+      std::string _text;
+      std::string _displayText;
+      size_t _maxCharCount = std::numeric_limits<size_t>::max();
    };
 }

@@ -124,6 +124,14 @@ namespace ReyEngine{
          }
          return {};
       }
+      template <typename T>
+      std::optional<T*> as() {
+         auto thiz = dynamic_cast<T*>(this);
+         if (thiz){
+            return thiz;
+         }
+         return {};
+      }
    protected:
       template <typename T>
       requires (std::is_base_of_v<BaseEvent, T>)

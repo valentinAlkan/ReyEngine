@@ -7,6 +7,7 @@ using namespace Internal;
 using namespace Tree;
 
 static constexpr bool VERBOSE = false;
+static constexpr bool DEBUG_DRAW = false;
 /// A struct that helps us layout widgets. Applies changes on dtor.
 struct Layout::LayoutHelper {
    LayoutHelper(LayoutDir layoutDir, int childIndex, size_t totalChildrenInLayout, Layout* parent, Widget* child)
@@ -112,6 +113,7 @@ Layout::Layout(LayoutDir layoutDir)
 , layoutDir(layoutDir)
 {
    isLayout = true;
+   if (DEBUG_DRAW) DEBUG_COLOR = ColorRGBA::random(255);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -140,9 +142,9 @@ void Layout::_on_child_removed_from_tree(TypeNode* child) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Layout::render2DEnd() {
+void Layout::render2D() const {
    //debug
-//   drawRectangleLines({0, 0, getWidth(), getHeight()}, 1.0, COLORS::black);
+   if constexpr (DEBUG_DRAW) drawRectangle(getSizeRect(), DEBUG_COLOR);
 }
 
 //sets rect and makes child widget resize calls are preserved
