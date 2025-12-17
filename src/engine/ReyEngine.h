@@ -2141,7 +2141,7 @@ namespace ReyEngine {
                auto& file = std::get<0>(std::forward_as_tuple(args...));
                _img = ReyImage(LoadImage(file.canonical().c_str()));
             } else {
-               static_assert(false, "No matching load function found");
+               static_assert(sizeof...(Args) != sizeof...(Args), "No matching load function found");
             }
          } else if constexpr (Callable<decltype(LoadImage), Args...>) {
             _img = LoadImage(std::forward<Args>(args)...);
@@ -2156,7 +2156,7 @@ namespace ReyEngine {
          } else if constexpr (Callable<decltype(LoadImageFromScreen), Args...>) {
             _img = LoadImageFromScreen(std::forward<Args>(args)...);
          } else {
-            static_assert(false, "No matching load function found");
+            static_assert(sizeof...(Args) != sizeof...(Args), "No matching load function found");
          }
       }
    private:

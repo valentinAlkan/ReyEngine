@@ -14,6 +14,8 @@ public:
       auto retval = instance()._list.insert(t);
       if (retval.second){
          isProcessed = true;
+         //invalidate iterator
+         instance()._it = instance()._list.begin();
          return t;
       }
       return std::nullopt;
@@ -26,6 +28,8 @@ public:
          //only remove if found;
          instance()._list.erase(it);
          isProcessed = false;
+         //invalidate iterator
+         instance()._it = instance()._list.begin();
          return t;
       }
       return std::nullopt;
@@ -52,9 +56,11 @@ public:
       auto& list = instance()._list;
       std::unique_lock<std::mutex> lock(instance()._mtx);
       if (list.empty()) return nullptr;
-      if (it++ == list.end()) it = list.begin(); //wrap around
+      if (it == list.end()) it = list.begin(); //wrap before dereferencing
       (*it)->_process(std::forward<Args>(args)...);
-      return *it;
+      auto retval = *it;
+      ++it;
+      return retval;
    }
    static void clear(){
       std::unique_lock<std::mutex> sl(instance()._mtx);
