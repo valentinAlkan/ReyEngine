@@ -222,7 +222,7 @@ namespace ReyEngine {
    // represents a value between 0 and 1 (min and max) although the output value is not strictly enforced since
    // overshoot is allowed
    struct Easing {
-      Easing(EasingFunctor&& easing, EasingCallback&& callbackDuring, std::chrono::milliseconds duration, EasingCallback&& callbackAfter = nullptr)
+      Easing(EasingFunctor&& easing, std::chrono::milliseconds duration, const EasingCallback& callbackDuring, const std::function<void()>& callbackAfter=nullptr)
       : _duration(duration)
       , _callbackDuring(callbackDuring)
       , _callbackAfter(callbackAfter)
@@ -230,16 +230,17 @@ namespace ReyEngine {
       , functor(std::move(easing))
       {}
       ~Easing(){
-         if (_callbackAfter) _callbackAfter(output);
+         if (_callbackAfter) _callbackAfter();
       }
       bool _process(float _){
          (void)_;//needed to conform with the process list api
          auto msDuration = _duration.count();
          auto dt = std::chrono::duration_cast<std::chrono::milliseconds>((std::chrono::steady_clock::now() - _startTime)).count();
          input = (double)dt / (double)msDuration;
+         if (input>1) input = 1; //clamp output
          output = functor(input);
          _callbackDuring(output); //alert the easable that the easing has been processed
-         return input >= 1;
+         return input == 1;
       }
       [[nodiscard]] bool done() const {return input >= 1.0;}
       [[nodiscard]] Easable* easable() const {return _easable;}
@@ -249,7 +250,7 @@ namespace ReyEngine {
       std::chrono::steady_clock::time_point _startTime;
       std::chrono::milliseconds _duration;
       EasingCallback _callbackDuring;
-      EasingCallback _callbackAfter;
+      std::function<void()> _callbackAfter;
       const EasingFunctor functor;
       Fraction input;
       Fraction output;
@@ -262,9 +263,10 @@ namespace ReyEngine {
             removeEasing(easing.get());
          }
       };
-      Easing* addEasing(std::unique_ptr<Easing>&& easing){
+      template <typename... Args>
+      Easing* addEasing(Args&&... args){
          _wantsEase = true;
-         _easings.push_back(std::move(easing));
+         _easings.push_back(make_unique<Easing>(std::forward<Args>(args)...));
          auto retval = _easings.back().get();
          ProcessList<Easing>::add(retval, _isEased);
          retval->_easable = this;
@@ -274,6 +276,8 @@ namespace ReyEngine {
          ProcessList<Easing>::remove(easing, _isEased);
          for (auto it = _easings.begin(); it != _easings.end(); ++it){
             if (easing == it->get()){
+               //store the easing, so we can destroy it outside the erase function
+               auto ptr = std::move(*it);
                _easings.erase(it);
                return;
             }

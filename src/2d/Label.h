@@ -9,6 +9,7 @@ namespace ReyEngine{
    class Label : public Widget {
    public:
       REYENGINE_OBJECT(Label)
+      Label(): _text(""){}
       Label(const std::string& text)
       : _text(text)
       {}
@@ -70,6 +71,7 @@ namespace ReyEngine{
 
    protected:
       void _init() override {
+         if (_text.empty()) _text = getName();
          setText(_text);
          theme->background.fill = Style::Fill::NONE;
       }
