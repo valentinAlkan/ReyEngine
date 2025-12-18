@@ -1,5 +1,7 @@
 #include "Logger.h"
 
+#include <memory>
+
 using namespace std;
 using namespace ReyEngine;
 
@@ -80,9 +82,4 @@ string Logger::getFront() {
    string retval = getInstance()._history.front();
    getInstance()._history.pop();
    return retval;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-std::unique_ptr<Logger> Logger::customLogger(std::ostream& outdevice) {
-   return std::unique_ptr<Logger>(new Logger(outdevice));
 }

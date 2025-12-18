@@ -14,6 +14,7 @@
 #include <utility>
 
 namespace ReyEngine{
+   class CustomLogger;
    class Logger {
       static constexpr long long HISTORY_SIZE = 128;
    public:
@@ -54,18 +55,16 @@ namespace ReyEngine{
       ~Logger();
       Logger(const Logger&) = delete;
       Logger& operator=(const Logger&) = delete;
-      static std::unique_ptr<Logger> customLogger(std::ostream&);
    protected:
       std::ostream& _out;
-   private:
       Logger(std::ostream&);
+   private:
       static std::unique_ptr<Logger> _self;
 
       std::queue<std::string> _history;
       std::mutex _mutex;
       friend class Stream;
    };
-
 
    namespace Internal {
       class CallbackStreambuf : public std::streambuf {
@@ -122,4 +121,16 @@ namespace ReyEngine{
    private:
       Internal::CallbackStreambuf streambuf_;
    };
+
+   class CustomLogger : public Logger {
+   public:
+      CustomLogger(std::ostream& os): Logger(os){};
+   private:
+      //disable these static functions
+      static Stream info();
+      static Stream warn();
+      static Stream error();
+      static Stream debug();
+   };
+
 }
