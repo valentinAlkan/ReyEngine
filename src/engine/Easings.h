@@ -222,19 +222,23 @@ namespace ReyEngine {
    // represents a value between 0 and 1 (min and max) although the output value is not strictly enforced since
    // overshoot is allowed
    struct Easing {
-      Easing(EasingFunctor&& easing, EasingCallback&& callback, std::chrono::milliseconds duration)
+      Easing(EasingFunctor&& easing, EasingCallback&& callbackDuring, std::chrono::milliseconds duration, EasingCallback&& callbackAfter = nullptr)
       : _duration(duration)
-      , _callback(callback)
+      , _callbackDuring(callbackDuring)
+      , _callbackAfter(callbackAfter)
       , _startTime(std::chrono::steady_clock::now())
       , functor(std::move(easing))
       {}
+      ~Easing(){
+         if (_callbackAfter) _callbackAfter(output);
+      }
       bool _process(float _){
          (void)_;//needed to conform with the process list api
          auto msDuration = _duration.count();
          auto dt = std::chrono::duration_cast<std::chrono::milliseconds>((std::chrono::steady_clock::now() - _startTime)).count();
          input = (double)dt / (double)msDuration;
          output = functor(input);
-         _callback(output); //alert the easable that the easing has been processed
+         _callbackDuring(output); //alert the easable that the easing has been processed
          return input >= 1;
       }
       [[nodiscard]] bool done() const {return input >= 1.0;}
@@ -244,7 +248,8 @@ namespace ReyEngine {
    private:
       std::chrono::steady_clock::time_point _startTime;
       std::chrono::milliseconds _duration;
-      EasingCallback _callback;
+      EasingCallback _callbackDuring;
+      EasingCallback _callbackAfter;
       const EasingFunctor functor;
       Fraction input;
       Fraction output;
