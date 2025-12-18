@@ -15,6 +15,9 @@ namespace ReyEngine {
 
    namespace Easings {
       /////////////////////////////////////////////////////////////////////////////////////////
+      static constexpr inline Fraction ease1(Fraction x) {return 1;}
+      static constexpr inline Fraction ease0(Fraction x) {return 0;}
+      static constexpr inline Fraction easeLinear(Fraction x) {return x;}
       static constexpr inline Fraction easeInSine(Fraction x) {
          return 1 - std::cos((x.get() * M_PI) / 2);
       }
@@ -234,8 +237,10 @@ namespace ReyEngine {
       }
       bool _process(float _){
          (void)_;//needed to conform with the process list api
+         auto now = std::chrono::steady_clock::now();
+         if (_startTime < now) return false; //only process easings that have a start time in the past
          auto msDuration = _duration.count();
-         auto dt = std::chrono::duration_cast<std::chrono::milliseconds>((std::chrono::steady_clock::now() - _startTime)).count();
+         auto dt = std::chrono::duration_cast<std::chrono::milliseconds>((now - _startTime)).count();
          input = (double)dt / (double)msDuration;
          if (input>1) input = 1; //clamp output
          output = functor(input);
@@ -244,6 +249,7 @@ namespace ReyEngine {
       }
       [[nodiscard]] bool done() const {return input >= 1.0;}
       [[nodiscard]] Easable* easable() const {return _easable;}
+      [[nodiscard]] std::chrono::steady_clock::time_point endTime() const {return _startTime + _duration;}
    protected:
       Easable* _easable;
    private:
@@ -271,6 +277,21 @@ namespace ReyEngine {
          ProcessList<Easing>::add(retval, _isEased);
          retval->_easable = this;
          return retval;
+      }
+
+      void chainEasings(std::vector<std::unique_ptr<Easing>>& easings){
+         _wantsEase = true;
+         Easing* last = _easings.empty() ? nullptr : _easings.back().get();
+         for (auto& easing : easings){
+            _easings.push_back(std::move(easing));
+            auto back = _easings.back().get();
+            ProcessList<Easing>::add(back, _isEased);
+            back->_easable = this;
+            if (last){
+               back->_startTime = last->endTime();
+            }
+            last = back;
+         }
       }
       void removeEasing(Easing* easing) {
          ProcessList<Easing>::remove(easing, _isEased);
