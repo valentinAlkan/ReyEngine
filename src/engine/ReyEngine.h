@@ -235,7 +235,9 @@ namespace ReyEngine {
       [[nodiscard]] constexpr inline Vec2 max(const Vec2& other) const {Vec2 r; r.x = Math::max(Vec2::x, other.x); r.y = Math::max(Vec2::y, other.y); return r;}
       [[nodiscard]] constexpr inline Fraction pct(R_FLOAT input) const {return (input - x) / (y - x);} //given an input value, what percentage of the range is it from 0 to 1?
       [[nodiscard]] constexpr inline R_FLOAT lerp(Fraction lerpVal) const {return lerpVal.get() * (y - x) + x;} //given a value from 0 to 1, what is the value of the range that corresponds to it?
-      [[nodiscard]] constexpr inline Vec2 lerp(Vec2 otherPoint, R_FLOAT xprm) const {return {xprm, y + (((xprm - x) * (otherPoint.y - y)) / (otherPoint.x - x))};}
+      [[nodiscard]] constexpr inline Vec2 lerp(Vec2 otherPoint, R_FLOAT x) const {
+         return {x, y + (((x - x) * (otherPoint.y - y)) / (otherPoint.x - x))};
+      }
       [[nodiscard]] constexpr inline Vec2 extend(R_FLOAT distance) const {Vec2<T> normalized = normalize();return normalized * distance;}
       [[nodiscard]] constexpr inline T clamp(T value) const {if (value < x) return x; if (value > y) return y; return value;}
       [[nodiscard]] constexpr inline Vec2 clamp(Vec2 clampA, Vec2 clampB) const {
@@ -509,19 +511,19 @@ namespace ReyEngine {
       constexpr Line(const Line<_t>& other): Line(other.a, other.b){}
       constexpr Line(const Pos<T>& a, const Pos<T>& b): a(a), b(b){}
       constexpr Line(const T x1, const T y1, const T x2, const T y2): Line({x1, y1}, {x2, y2}){}
-      constexpr Line copy(){return *this;}
-      constexpr Pos<T> midpoint() const {return {a.x/2+b.x/2, a.y/2+b.y/2};}
-      constexpr Pos<T> lerp(double xprm) const {return a.lerp(b, xprm);}
-      constexpr double distance() const {return a.distanceTo(b);}
+      [[nodiscard]] constexpr Line copy(){return *this;}
+      [[nodiscard]] constexpr Pos<T> midpoint() const {return {a.x/2+b.x/2, a.y/2+b.y/2};}
+      [[nodiscard]] constexpr Pos<T> lerp(Fraction x) const {return Pos<T>(a.lerp(b, x.get()));}
+      [[nodiscard]] constexpr double distance() const {return a.distanceTo(b);}
       inline std::string toString() const {return "{" + a.toString() + ", " + b.toString() + "}";}
       constexpr Line& operator+=(const Pos<T>& pos){a += pos; b += pos; return *this;}
-      constexpr Line operator+(const Pos<T>& pos) const {Line<T> l(*this); l.a += pos; l.b += pos; return l;}
+      [[nodiscard]] constexpr Line operator+(const Pos<T>& pos) const {Line<T> l(*this); l.a += pos; l.b += pos; return l;}
       constexpr Line& operator-=(const Pos<T>& pos){a -= pos; b -= pos; return *this;}
-      constexpr Line operator-(const Pos<T>& pos) const {Line<T> l(*this); l.a -= pos; l.b -= pos; return l;}
+      [[nodiscard]] constexpr Line operator-(const Pos<T>& pos) const {Line<T> l(*this); l.a -= pos; l.b -= pos; return l;}
       constexpr Line& pushX(R_FLOAT amt){a.x+= amt; b.x += amt; return *this;}
       constexpr Line& pushY(R_FLOAT amt){a.y+= amt; b.y += amt; return *this;}
       //Find the angle from horizontal between points and a b
-      constexpr inline Radians angle() const {
+      [[nodiscard]] constexpr inline Radians angle() const {
          auto dx = static_cast<R_FLOAT>(b.x - a.x);
          auto dy = static_cast<R_FLOAT>(b.y - a.y);
          return atan2(dy, dx);

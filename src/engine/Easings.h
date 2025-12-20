@@ -238,7 +238,7 @@ namespace ReyEngine {
       bool _process(float _){
          (void)_;//needed to conform with the process list api
          auto now = std::chrono::steady_clock::now();
-         if (_startTime < now) return false; //only process easings that have a start time in the past
+         if (_startTime > now) return false; //only process easings that have a start time in the past
          auto msDuration = _duration.count();
          auto dt = std::chrono::duration_cast<std::chrono::milliseconds>((now - _startTime)).count();
          input = (double)dt / (double)msDuration;
@@ -279,7 +279,7 @@ namespace ReyEngine {
          return retval;
       }
 
-      void chainEasings(std::vector<std::unique_ptr<Easing>>& easings){
+      void chainEasings(std::vector<std::unique_ptr<Easing>>&& easings){
          _wantsEase = true;
          Easing* last = _easings.empty() ? nullptr : _easings.back().get();
          for (auto& easing : easings){
