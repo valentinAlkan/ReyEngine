@@ -42,6 +42,7 @@ namespace ReyEngine{
       void setText(const std::string& newText){
          _text = newText;
          _displayText = _text.substr(0, _maxCharCount);
+         setSize(0,0);
          auto expandOpt = needsExpand();
          if (expandOpt) {
             setMinSize(expandOpt.value());

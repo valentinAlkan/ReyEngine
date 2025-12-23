@@ -234,10 +234,8 @@ namespace ReyEngine {
       [[nodiscard]] constexpr inline Vec2 min(const Vec2& other) const {Vec2 r; r.x = Math::min(Vec2::x, other.x); r.y = Math::min(Vec2::y, other.y); return r;}
       [[nodiscard]] constexpr inline Vec2 max(const Vec2& other) const {Vec2 r; r.x = Math::max(Vec2::x, other.x); r.y = Math::max(Vec2::y, other.y); return r;}
       [[nodiscard]] constexpr inline Fraction pct(R_FLOAT input) const {return (input - x) / (y - x);} //given an input value, what percentage of the range is it from 0 to 1?
-      [[nodiscard]] constexpr inline R_FLOAT lerp(Fraction lerpVal) const {return lerpVal.get() * (y - x) + x;} //given a value from 0 to 1, what is the value of the range that corresponds to it?
-      [[nodiscard]] constexpr inline Vec2 lerp(Vec2 otherPoint, R_FLOAT x) const {
-         return {x, y + (((x - x) * (otherPoint.y - y)) / (otherPoint.x - x))};
-      }
+      [[nodiscard]] constexpr inline R_FLOAT lerp(Fraction f) const {return f.get() * (y - x) + x;} //given a value from 0 to 1, what is the value of the range that corresponds to it?
+      [[nodiscard]] constexpr inline Vec2 lerp(const Vec2& otherPoint, Fraction f) const {return *this + (otherPoint - *this) * f.get();}
       [[nodiscard]] constexpr inline Vec2 extend(R_FLOAT distance) const {Vec2<T> normalized = normalize();return normalized * distance;}
       [[nodiscard]] constexpr inline T clamp(T value) const {if (value < x) return x; if (value > y) return y; return value;}
       [[nodiscard]] constexpr inline Vec2 clamp(Vec2 clampA, Vec2 clampB) const {
@@ -494,7 +492,7 @@ namespace ReyEngine {
          auto range = Vec3<T>::y - Vec3<T>::x;
          if (range <= 0) return Vec3<T>::x;
          auto value = Vec3<T>::z;
-         if (value >= Vec3<T>::x && value <= Vec3<T>::y) return value;
+         if (value >= Vec3<T>::x && value < Vec3<T>::y) return value;
          auto offset = value - Vec3<T>::x;
          auto wrapped = offset % range;
          if (wrapped < 0) wrapped += range;
@@ -522,12 +520,14 @@ namespace ReyEngine {
       [[nodiscard]] constexpr Line operator-(const Pos<T>& pos) const {Line<T> l(*this); l.a -= pos; l.b -= pos; return l;}
       constexpr Line& pushX(R_FLOAT amt){a.x+= amt; b.x += amt; return *this;}
       constexpr Line& pushY(R_FLOAT amt){a.y+= amt; b.y += amt; return *this;}
+      [[nodiscard]] constexpr inline Line reverse() const {return {b,a};}
       //Find the angle from horizontal between points and a b
       [[nodiscard]] constexpr inline Radians angle() const {
          auto dx = static_cast<R_FLOAT>(b.x - a.x);
          auto dy = static_cast<R_FLOAT>(b.y - a.y);
          return atan2(dy, dx);
       }
+      [[nodiscard]]
       //rotate the line around A by r radians
       constexpr inline Line& rotate(Pos<T> basis, Radians r){a.rotatePoint(basis, r); b.rotatePoint(basis, r); return *this;}
       constexpr inline Line& scale(Percent pct) {
@@ -590,9 +590,114 @@ namespace ReyEngine {
          return Pos<T>(numeratorX / denominator, numeratorY / denominator);
       }
 
+      // Default split (two equal halves)
+      template<bool AsTuple = false>
+      [[nodiscard]] auto split() const {
+         std::vector<Line<T>> resultVec = splitImpl({});
+         if constexpr (AsTuple) {
+            return make_tuple_from_vector(resultVec, std::make_index_sequence<2>{});
+         } else {
+            return resultVec;
+         }
+      }
+
+      // Split with a single percentage (results in two parts: the percentage, and the remainder)
+      template<bool AsTuple = false>
+      [[nodiscard]] auto split(const Percent& percent) const {
+         std::vector<Percent> percentages{percent};
+         std::vector<Line<T>> resultVec = splitImpl(percentages);
+         if constexpr (AsTuple) {
+            return make_tuple_from_vector(resultVec, std::make_index_sequence<2>{});
+         } else {
+            return resultVec;
+         }
+      }
+
+      // Split with a vector of percentages (results in N+1 parts)
+      [[nodiscard]] std::vector<Line<T>> split(const std::vector<Percent>& percentages) const {
+         return splitImpl(percentages);
+      }
+
+      template<bool AsTuple = false, typename... Args, typename = std::enable_if_t<(sizeof...(Args) > 1)>>
+      [[nodiscard]] auto split(const Args& ... args) const {
+         std::vector<Percent> percentages;
+         percentages.reserve(sizeof...(args));
+         (percentages.push_back(Percent(static_cast<double>(args))), ...); // Convert args to Percent and add
+         std::vector<Line<T>> resultVec = splitImpl(percentages);
+
+         if constexpr (AsTuple) {
+            // The number of parts is (number of arguments) + 1 (for the remainder)
+            return make_tuple_from_vector(resultVec, std::make_index_sequence<sizeof...(Args) + 1>{});
+         } else {
+            return resultVec;
+         }
+      }
+
       friend std::ostream& operator<<(std::ostream& os, Line r) {os << r.toString(); return os;}
       Pos<T> a;
       Pos<T> b;
+
+   private:
+      [[nodiscard]] std::vector<Line<T>> splitImpl(const std::vector<Percent>& percentages) const {
+         std::vector<Line<T>> result;
+
+         // If no percentages provided, split into two equal parts
+         if (percentages.empty()) {
+            result.reserve(2);
+            Pos<T> m = midpoint();
+            result.push_back({a, m});
+            result.push_back({m, b});
+            return result;
+         }
+
+         // Normal case with percentages provided
+         result.reserve(percentages.size() + 1);
+
+         // Calculate the total percentage from the input vector
+         double totalPercentage = 0.0;
+         for (const auto& percent: percentages) {
+            totalPercentage += percent.get();
+         }
+
+         // Calculate the remaining percentage for the last line segment
+         double remainingPercentage = 100.0 - totalPercentage;
+
+         // Ensure the total doesn't exceed 100% (with a small epsilon for float comparison)
+         if (remainingPercentage < -1e-6) {
+            return splitImpl({}); // Fallback to default split
+         }
+
+         Pos<T> currentStart = a;
+         R_FLOAT totalLength = distance();
+
+         // Create line segments for each percentage in the vector
+         for (const auto& percent: percentages) {
+            R_FLOAT segmentLength = totalLength * (percent.get() / 100.0);
+
+            Pos<T> segmentEnd = currentStart;
+            segmentEnd.project(b, segmentLength);
+
+            result.push_back({currentStart, segmentEnd});
+            currentStart = segmentEnd;
+         }
+
+         // Create the final (N+1)th segment with the remaining percentage, if applicable
+         if (remainingPercentage > 1e-6) {
+            result.push_back({currentStart, b});
+         } else if (remainingPercentage < -1e-6) {
+            result.back().b = b;
+         }
+
+
+         return result;
+      }
+
+      // Helper function to create a tuple from a vector of Lines
+      template<std::size_t... I>
+      auto make_tuple_from_vector(const std::vector<Line<T>>& vec, std::index_sequence<I...>) const {
+         return std::make_tuple(vec[I]...);
+      }
+
    };
 
    template <typename T=R_FLOAT>
@@ -1553,6 +1658,7 @@ namespace ReyEngine {
       [[nodiscard]] constexpr Rect centerH(const Pos<T>& p){ return {p.x - width / 2, y, width, height}; }
       [[nodiscard]] constexpr Rect centerV(const Pos<T>& p){ return {x, p.y - height / 2, width, height}; }
 
+      //centers text in the given rectangle
       [[nodiscard]] static Rect<float> textRectangleCentered(const std::string& text, const Pos<float>& pos, const ReyEngineFont& font);
 
       T x;

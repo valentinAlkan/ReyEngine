@@ -43,7 +43,9 @@ Logger::Stream::~Stream() {
    timestamp_ss << '.' << setfill('0') << setw(3) << now_ms.count();
 
    string timestamp = timestamp_ss.str();
-   string log_message = "[" + timestamp + "] [" + _level + "] " + _ss.str();
+   string log_message = "[" + timestamp + "] ";
+   if (!_level.empty()) log_message += "[" + _level + "] ";
+   log_message += _ss.str();
    _logger._out << log_message << std::flush;
    _logger._history.push(log_message);
    if (_logger._history.size() > HISTORY_SIZE){

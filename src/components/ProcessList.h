@@ -27,12 +27,19 @@ public:
       if (it != instance()._list.end()){
          //only remove if found;
          instance()._list.erase(it);
-         isProcessed = false;
+         isProcessed = !instance()._list.empty();
          //invalidate iterator
          instance()._it = instance()._list.begin();
          return t;
       }
       return std::nullopt;
+   }
+   static void removeAll(bool& isProcessed){
+      std::unique_lock<std::mutex> lock(instance()._mtx);
+      instance()._list.clear();
+      isProcessed = false;
+      //invalidate iterator
+      instance()._it = instance()._list.begin();
    }
    static std::optional<T*> find(const T* t){
       auto it = std::find(instance()._list.begin(), instance()._list.end(), t);
@@ -77,6 +84,7 @@ public:
    static void clear(){
       std::unique_lock<std::mutex> sl(instance()._mtx);
       instance()._list.clear();
+      instance()._it = instance()._list.begin();
    }
    static size_t size() {return instance()._processList->_list.size();}
 protected:

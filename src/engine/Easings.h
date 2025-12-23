@@ -304,6 +304,10 @@ namespace ReyEngine {
             }
          }
       }
+      void removeAllEasings(){
+         ProcessList<Easing>::removeAll(_isEased);
+         _easings.clear();
+      }
       [[nodiscard]] bool isEased() const {return _isEased;}
    protected:
       bool _wantsEase = false;

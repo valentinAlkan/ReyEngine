@@ -17,6 +17,7 @@
 #include <sys/types.h>
 #include <pwd.h>
 #include <stdlib.h>
+#include <sys/wait.h>
 #endif
 
 #ifdef PLATFORM_MACOS
@@ -376,4 +377,76 @@ std::string CrossPlatform::getEnvironmentVariable(const std::string& varName) {
    } else {
       return value;
    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::pair<std::string, std::string> CrossPlatform::execCmd(const char* cmd) {
+#ifdef PLATFORM_LINUX
+      // 1. Create two pipes: one for stdout and one for stderr
+      int stdout_pipe[2];
+      int stderr_pipe[2];
+
+      if (pipe(stdout_pipe) != 0 || pipe(stderr_pipe) != 0) {
+         throw std::runtime_error("pipe() failed!");
+      }
+
+      // 2. Fork the current process
+      pid_t pid = fork();
+
+      if (pid < 0) {
+         throw std::runtime_error("fork() failed!");
+      }
+
+      // 3. Child Process
+      if (pid == 0) {
+         // Redirect stdout to the write-end of the stdout pipe
+         dup2(stdout_pipe[1], STDOUT_FILENO);
+         // Redirect stderr to the write-end of the stderr pipe
+         dup2(stderr_pipe[1], STDERR_FILENO);
+
+         // Close all pipe file descriptors in the child
+         close(stdout_pipe[0]);
+         close(stdout_pipe[1]);
+         close(stderr_pipe[0]);
+         close(stderr_pipe[1]);
+
+         // Execute the command using the shell
+         // "sh -c" allows the shell to interpret the command string
+         execlp("/bin/sh", "sh", "-c", cmd, NULL);
+
+         // If execlp returns, it must have failed
+         _exit(127);
+      }
+
+      // 4. Parent Process
+      // Close the write-ends of the pipes in the parent
+      close(stdout_pipe[1]);
+      close(stderr_pipe[1]);
+
+      std::string stdout_str;
+      std::string stderr_str;
+      std::array<char, 256> buffer;
+
+      // Read from stdout pipe
+      ssize_t bytes_read;
+      while ((bytes_read = read(stdout_pipe[0], buffer.data(), buffer.size())) > 0) {
+         stdout_str.append(buffer.data(), bytes_read);
+      }
+
+      // Read from stderr pipe
+      while ((bytes_read = read(stderr_pipe[0], buffer.data(), buffer.size())) > 0) {
+         stderr_str.append(buffer.data(), bytes_read);
+      }
+
+      // Wait for the child process to finish
+      waitpid(pid, NULL, 0);
+
+      // Close the read-ends of the pipes
+      close(stdout_pipe[0]);
+      close(stderr_pipe[0]);
+
+      return {stdout_str, stderr_str};
+#else
+   throw std::runtime_error("Not implemented on this platform!");
+#endif
 }

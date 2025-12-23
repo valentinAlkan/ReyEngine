@@ -21,7 +21,7 @@ namespace ReyEngine::Internal {
          __on_rect_changed(r);
       }
       inline void setPosition(R_FLOAT x, R_FLOAT y){setPosition({x, y});}
-      inline void centerOnPoint(const Pos<R_FLOAT>&pos){setRect(getSizeRect().centerOnPoint(pos));}
+      inline void centerOnPoint(const Pos<R_FLOAT>&pos){setRect(getRect().centerOnPoint(pos));}
       inline void movePosition(const Pos<R_FLOAT>& pos){setPosition(pos + getPos());}
       inline void movePosition(R_FLOAT x, R_FLOAT y){setPosition(Pos<R_FLOAT>(x, y) + getPos());}
       inline void moveX(R_FLOAT x){movePosition({x, 0});}

@@ -48,7 +48,7 @@ namespace ReyEngine{
       static Stream warn();
       static Stream error();
       static Stream debug();
-      Stream log(const std::string& logLevel);
+      Stream log(const std::string& logLevel="");
       static std::string getFront();
       static bool hasHistory();
       static Logger& getInstance();
@@ -69,11 +69,20 @@ namespace ReyEngine{
    namespace Internal {
       class CallbackStreambuf : public std::streambuf {
       public:
-         CallbackStreambuf(std::function<void(const std::string &)> callback)
+         using Callback = std::function<void(const std::string&, bool)>;
+
+         CallbackStreambuf(Callback callback)
          : callback_(std::move(callback)) {}
-         ~CallbackStreambuf() override { sync(); }
+
+         ~CallbackStreambuf() override {
+            // Ensure any remaining data is flushed on destruction
+            if (!buffer_.empty()) {
+               sync();
+            }
+         }
+
       protected:
-         std::streamsize xsputn(const char *s, std::streamsize n) override {
+         std::streamsize xsputn(const char* s, std::streamsize n) override {
             buffer_.append(s, n);
             process_buffer();
             return n;
@@ -88,38 +97,39 @@ namespace ReyEngine{
          }
 
          int sync() override {
+            // If there is any data left in the buffer, it's a partial line
+            // that needs to be sent because of the flush.
             if (!buffer_.empty()) {
-               callback_(buffer_);
+               callback_(buffer_, true);
                buffer_.clear();
+            } else {
+               callback_("", true);
             }
-            return 0; // Success
+            return 0;
          }
 
       private:
-         // Processes the internal buffer, sending complete lines to the callback.
          void process_buffer() {
             size_t newline_pos;
             while ((newline_pos = buffer_.find('\n')) != std::string::npos) {
-               // Found a newline, send the line (including newline) to the callback.
-               callback_(buffer_.substr(0, newline_pos + 1));
-               // Erase the sent part from the buffer.
+               // Found a complete line.
+               // Send it to the callback, indicating it's a regular line-break.
+               callback_(buffer_.substr(0, newline_pos + 1), false);
                buffer_.erase(0, newline_pos + 1);
             }
          }
 
-         std::function<void(const std::string &)> callback_;
+         Callback callback_;
          std::string buffer_;
       };
    }
 
    class CallbackStream : public std::ostream {
    public:
-      explicit CallbackStream(std::function<void(const std::string&)> callback)
-      // The initializer list constructs the ostream base with a pointer
-      // to our streambuf member, and then constructs the streambuf itself.
-      : std::ostream(&streambuf_), streambuf_(std::move(callback)) {}
+      explicit CallbackStream(std::function<void(const std::string&, bool)> callback)
+      : std::ostream(&_streambuf), _streambuf(std::move(callback)) {}
    private:
-      Internal::CallbackStreambuf streambuf_;
+      Internal::CallbackStreambuf _streambuf;
    };
 
    class CustomLogger : public Logger {
