@@ -186,3 +186,9 @@ void MenuBar::showDropDown(const std::string& menu, const Pos<float>& pos) {
       Logger::warn() << "No menu entry for " << menu << endl;
    }
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void DropDownMenu::addEntry(std::shared_ptr<ReyTexture> icon, const std::string &text) {
+   _entries.emplace_back(make_unique<Internal::MenuInterface::MenuEntry>(this, icon, text));
+   _on_change();
+}

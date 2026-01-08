@@ -1450,6 +1450,19 @@ namespace ReyEngine {
          return corners;
       }
 
+      //Split into two rects, horizontally, at a specific x value
+      constexpr inline std::pair<Rect<float>, Rect<float>> splitAtHPos(float hPos){
+         Rect<float> left(x, y, hPos - x, height);
+         Rect<float> right(hPos, y, (x + width) - hPos, height);
+         return {left, right};
+      }
+
+      //Split into two rects, vertically, at a specific y value
+      constexpr inline std::pair<Rect<float>, Rect<float>> splitAtVPos(float vPos){
+         Rect<float> top(x, y, width, vPos - y);
+         Rect<float> bottom(x, vPos, width, (y + height) - vPos);
+         return {top, bottom};
+      }
 
    private:
       // Private implementation function with a templated bool parameter

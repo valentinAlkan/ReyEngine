@@ -42,7 +42,7 @@ void LineEdit::render2D() const {
       auto caretHigh = frameCounter % 60 > 30;
       if (caretHigh) {
          //measure the position of the text for where it should start
-         float caretHPos;
+         float caretHPos = 80;
          if (_caretPos == -1){
             //set caret to end
             caretHPos = measureText(_text, theme->font).x;

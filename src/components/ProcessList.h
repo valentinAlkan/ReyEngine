@@ -89,13 +89,10 @@ public:
    static size_t size() {return instance()._processList->_list.size();}
 protected:
    static ProcessList& instance(){
-      if (!_processList){
-         _processList = std::make_unique<ProcessList>();
-      }
-      return *_processList;
+      static ProcessList instance;
+      return instance;
    }
 private:
-   inline static std::unique_ptr<ProcessList<T>> _processList;
    std::unordered_set<T*> _list; //list of things that require processing. No specific order.
    std::mutex _mtx;
    std::unordered_set<T*>::iterator _it;

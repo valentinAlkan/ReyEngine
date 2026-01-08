@@ -76,6 +76,8 @@ namespace ReyEngine{
       };
       void open(){setVisible(true);setModal(true);}
       void close(){setVisible(false);setModal(false);}
+      void addEntry(std::shared_ptr<ReyTexture> icon, const std::string& text);
+      void addEntry(const std::string& text) {addEntry(nullptr, text);}
    protected:
       Widget* _unhandled_input(const InputEvent&) override;
       void render2D() const override;

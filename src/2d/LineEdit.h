@@ -29,7 +29,7 @@ namespace ReyEngine {
       void setText(const std::string&, bool noPublish=false);
       void setDefaultText(const std::string&, bool noPublish=false);
       void render2D() const override;
-      std::string getText(){return _text;}
+      std::string getText(){if (_text.empty() && !_defaultText.empty()) return _defaultText; return _text;}
    protected:
       void _init() override;
       void _on_focus_gained() override;

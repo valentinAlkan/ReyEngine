@@ -287,6 +287,7 @@ void Window::exec(){
          _frameCounter++;
 //      } // release scoped lock here
    }
+   _isClosing = true;
    ProcessList<Internal::Tree::Processable>::clear();
    ProcessList<Easing>::clear();
 }
