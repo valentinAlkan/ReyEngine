@@ -28,7 +28,7 @@ namespace ReyEngine{
       Application();
    public:
       ~Application(){
-         Logger::debug() << "Deleting Application2" << std::endl;
+         Logger::exit() << "Deleting Application2" << std::endl;
       }
       enum class ExitReason{
          CLEAN = 0,

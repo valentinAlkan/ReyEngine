@@ -48,20 +48,20 @@ namespace ReyEngine{
       static Stream warn();
       static Stream error();
       static Stream debug();
+      static Stream exit();
       Stream log(const std::string& logLevel="");
       static std::string getFront();
       static bool hasHistory();
-      static Logger& getInstance();
+      static Logger& getInstance(){static Logger _instance("GlobalLogger", std::cout); return _instance;}
       ~Logger();
       Logger(const Logger&) = delete;
       Logger& operator=(const Logger&) = delete;
    protected:
       std::ostream& _out;
-      Logger(std::ostream&);
+      Logger(const std::string& name, std::ostream&);
    private:
-      static std::unique_ptr<Logger> _self;
-
       std::queue<std::string> _history;
+      const std::string _name;
       std::mutex _mutex;
       friend class Stream;
    };
@@ -134,13 +134,16 @@ namespace ReyEngine{
 
    class CustomLogger : public Logger {
    public:
-      CustomLogger(std::ostream& os): Logger(os){};
+      CustomLogger(const std::string& name, std::ostream& os)
+      : Logger(name, os)
+      {};
    private:
       //disable these static functions
       static Stream info();
       static Stream warn();
       static Stream error();
       static Stream debug();
+      static Stream exit();
    };
 
 }

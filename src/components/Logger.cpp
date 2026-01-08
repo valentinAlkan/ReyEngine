@@ -5,20 +5,17 @@
 using namespace std;
 using namespace ReyEngine;
 
-unique_ptr<Logger> ReyEngine::Logger::_self;
 /////////////////////////////////////////////////////////////////////////////////////////
-Logger::Logger(std::ostream& outdevice): _out(outdevice){}
-/////////////////////////////////////////////////////////////////////////////////////////
-Logger &Logger::Logger::getInstance() {
-   if (!_self){
-      _self = unique_ptr<Logger>(new Logger(cout));
-   }
-   return *_self;
-}
+Logger::Logger(const std::string& name, std::ostream& outdevice)
+: _out(outdevice)
+, _name(name)
+{}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Logger::~Logger(){
-   Stream(*this, "INFO") << "Shutting down logger" << endl;
+   // can trigger a lot of nastiness if you don't use the global logger here.
+   // Custom loggers and callback streams in particular might react very weirdly
+   Logger::exit() << "Shutting down logger " << _name << endl;
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 Logger::Stream::Stream(Logger& logger, const std::string& level)
@@ -71,6 +68,11 @@ Logger::Stream Logger::error() {
 /////////////////////////////////////////////////////////////////////////////////////////
 Logger::Stream Logger::debug() {
    return {Logger::getInstance(), "DEBUG"};
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Logger::Stream Logger::exit() {
+   return {Logger::getInstance(), "EXIT"};
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
