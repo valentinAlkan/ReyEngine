@@ -735,6 +735,8 @@ namespace ReyEngine {
       constexpr inline void operator=(const Size<T>&) = delete;
       [[nodiscard]] Rect<T> toRect() const;
       [[nodiscard]] Rect<T> toRect(const Size<T>&) const;
+      template <typename R> [[nodiscard]] Rect<R> toRectType() const {return {this->x,this->y,0,0};}
+      template <typename R> [[nodiscard]] Rect<R> toRectType(const Size<T>& s) const {return {{this->x, this->y}, {s}};}
       [[nodiscard]] Rect<T> toCenterRect(const Size<T>&) const;
       [[nodiscard]] constexpr inline Pos clamp(Pos clampA, Pos clampB) const { return Pos(Vec2<T>::clamp(clampA, clampB));}
 //      inline Pos& operator=(const Vec2<T>& other){Pos::x = other.x; Pos::y = other.y; return *this;}
@@ -800,6 +802,8 @@ namespace ReyEngine {
       [[nodiscard]] constexpr inline Pos<T> center() const {return {this->x/2.0f,this->y/2.0f};}
       [[nodiscard]] constexpr inline Rect<T> toRect() const {return {{0,0}, {*this}};}
       [[nodiscard]] constexpr inline Rect<T> toRect(const Pos<T>& p) const {return {p, {*this}};}
+      template <typename R> [[nodiscard]] Rect<R> toRectType() const {return {{0,0}, {*this}};}
+      template <typename R> [[nodiscard]] Rect<R> toRectType(const Size<T>& s) const {return {{0,0}, {*this}};}
       inline explicit operator std::string() const {return Vec2<T>::toString();}
       constexpr inline static Size Max(){return {std::numeric_limits<T>::max(),std::numeric_limits<T>::max()};}
    };
@@ -2275,6 +2279,11 @@ namespace ReyEngine {
    //Underlying RenderTexture2D is different from ReyTexture's underlying Texture2D. So these are not interchangeable.
    // Use this when you are drawing to a texture.
    class RenderTarget{
+   private:
+      struct RenderContext {
+         ~RenderContext(){EndTextureMode();}
+         RenderContext(RenderTarget& target){BeginTextureMode(target._tex);}
+      };
    public:
       explicit RenderTarget();
       RenderTarget(const Size<int>& size);
@@ -2282,14 +2291,16 @@ namespace ReyEngine {
       RenderTarget& operator=(const RenderTarget&) = delete;
       void setSize(const Size<int>& newSize);
       inline Size<int> getSize() const {return _size;}
-      inline void beginRenderMode(){BeginTextureMode(_tex);}
-      inline void endRenderMode(){EndTextureMode();}
       inline bool ready() const {return _texLoaded;}
       [[nodiscard]] inline const Texture2D& getTexture() const {return _tex.texture;}
+      [[nodiscard]] inline RenderContext renderContext() {return RenderContext(*this);}
    protected:
+      inline void beginRenderMode(){BeginTextureMode(_tex);}
+      inline void endRenderMode(){EndTextureMode();}
       bool _texLoaded = false;
       RenderTexture2D _tex;
       Size<float> _size;
+      friend class Canvas;
    };
 
    class Canvas;
@@ -2302,14 +2313,18 @@ namespace ReyEngine {
    void maximizeWindow();
    void minimizeWindow();
    void drawText(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font);
-   void drawText(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font, const ColorRGBA& color, R_FLOAT size, R_FLOAT spacing);
-   void drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font);
-   void drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font, const ColorRGBA& color, R_FLOAT size, R_FLOAT spacing);
-   void drawTextRelative(const std::string& text, const Pos<R_FLOAT>& relPos, const ReyEngineFont& font);
    void drawText(const std::string& text, const Pos<R_FLOAT>& pos, const std::shared_ptr<ReyEngineFont>& font);
+   void drawText(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font, const ColorRGBA& color, R_FLOAT size, R_FLOAT spacing);
    void drawText(const std::string& text, const Pos<R_FLOAT>& pos, const std::shared_ptr<ReyEngineFont>& font, const ColorRGBA& color, R_FLOAT size, R_FLOAT spacing);
+   void drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font);
    void drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos, const std::shared_ptr<ReyEngineFont>& font);
+   void drawTextCentered(const std::string& text, const Rect<R_FLOAT>& r, const ReyEngineFont& font);
+   void drawTextCentered(const std::string& text, const Rect<R_FLOAT>& r, const std::shared_ptr<ReyEngineFont>& font);
+   void drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font, const ColorRGBA& color, R_FLOAT size, R_FLOAT spacing);
    void drawTextCentered(const std::string& text, const Pos<R_FLOAT>& pos, const std::shared_ptr<ReyEngineFont>& font, const ColorRGBA& color, R_FLOAT size, R_FLOAT spacing);
+   void drawTextCentered(const std::string& text, const Rect<R_FLOAT>& r, const ReyEngineFont& font, const ColorRGBA& color, R_FLOAT size, R_FLOAT spacing);
+   void drawTextCentered(const std::string& text, const Rect<R_FLOAT>& r, const std::shared_ptr<ReyEngineFont>& font, const ColorRGBA& color, R_FLOAT size, R_FLOAT spacing);
+   void drawTextRelative(const std::string& text, const Pos<R_FLOAT>& relPos, const ReyEngineFont& font);
    void drawTextRelative(const std::string& text, const Pos<R_FLOAT>& relPos, const std::shared_ptr<ReyEngineFont>& font);
    void drawTextRect(const std::string& text, const Pos<R_FLOAT>& p, const std::shared_ptr<ReyEngineFont>& font, const ColorRGBA& rectColor, float rectRoundness = 0); //draw a rectangle text centered inside it
    void drawTextRect(const std::string& text, const Rect<R_FLOAT>& r, const std::shared_ptr<ReyEngineFont>& font, const ColorRGBA& rectColor, float rectRoundness = 0); //draw a rectangle text centered inside it

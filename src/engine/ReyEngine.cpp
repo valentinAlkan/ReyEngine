@@ -86,6 +86,16 @@ void ReyEngine::drawTextCentered(const std::string& text, const Pos<R_FLOAT>& po
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawTextCentered(const std::string& text, const Rect<R_FLOAT>& rect, const ReyEngineFont& font){
+   drawTextCentered(text, rect.center(), font, font.color, font.size, font.spacing);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawTextCentered(const std::string& text, const Rect<R_FLOAT>& rect, const std::shared_ptr<ReyEngineFont>& font){
+   drawTextCentered(text, rect.center(), font, font->color, font->size, font->spacing);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::drawTextRelative(const std::string& text, const Pos<R_FLOAT>& relPos, const ReyEngineFont& font){
    //draw text relative as a percentage of the screen
    Vec2<R_FLOAT> screenSize = {(float)GetScreenWidth(), (float)GetScreenHeight()};

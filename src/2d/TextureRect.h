@@ -86,7 +86,6 @@ namespace ReyEngine {
          std::shared_ptr<ReyShader> _shader;
          FitType _fitType = FitType::FIT_RECT;
          bool _fitScheduled = false; //if we're not inited yet
-      protected:
          static constexpr FitType DEFAULT_FIT = FitType::FIT_RECT;
          void _on_rect_changed() override {_calculateFit();}
       };
