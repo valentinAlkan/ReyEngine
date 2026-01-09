@@ -53,6 +53,7 @@ void LineEdit::render2D() const {
          drawLine({{caretHPos, 2}, {caretHPos, getHeight() - 2}}, 2, theme->font->color);
       }
    }
+   drawRectangleLines(getSizeRect(), 1.0, theme->background.colorPrimary);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -76,6 +77,7 @@ void LineEdit::setText(const std::string& _newText, bool noPublish) {
 
 ///////////////////////////////////////////////////////////////////////////////////////
 Widget* LineEdit::_unhandled_input(const InputEvent& event) {
+   bool handleInput;
    if (auto isMouse = event.isMouse()){
       auto& mouse = isMouse.value();
       switch (event.eventId) {
@@ -89,14 +91,16 @@ Widget* LineEdit::_unhandled_input(const InputEvent& event) {
                      if (mouse->getLocalPos().x > measureText(_text, theme->font).x){
                         //clicked off end - set caret position to the end
                         _caretPos = -1;
+                        return this;
                      }
                   } else {
                      //grab iput
                      setFocused(true);
                      _caretPos = -1;
-                     return this;
                   }
                }
+               //eat input
+               return this;
             } else {
                if (isFocused()) {
                   //release input

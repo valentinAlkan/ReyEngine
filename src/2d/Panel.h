@@ -35,7 +35,7 @@ with :: like this-> ::make_child(...)"
       template<typename T, typename InstanceName, typename... Args>
       std::shared_ptr<T> make_child(InstanceName&& instanceName, Args&&... args){
          static_assert(std::is_convertible_v<InstanceName, std::string_view>, USE_TYPE_ERROR_MSG);
-         return Internal::Tree::_make_child<T>(getNode(), instanceName, std::forward<Args>(args)...);
+         return Internal::Tree::_make_child<T>(_viewArea->getNode(), instanceName, std::forward<Args>(args)...);
       }
       /// Creates a child as part of the panel widget's built-in functionality, not as a child
       /// of the viewable area
@@ -57,7 +57,7 @@ with :: like this-> ::make_child(...)"
       void setVisible(bool visible){Widget::setVisible(visible);} //hide from public view
       Widget* _unhandled_input(const InputEvent&) override;
       void _on_mouse_exit() override;
-      void _init() override;
+      void __init() override;
       void _on_rect_changed() override;
 //      ReyEngine::Rect<R_FLOAT> getScissorArea();
       enum class ResizeDir{NONE, N, E, S, W, NE, SE, SW, NW};

@@ -65,8 +65,10 @@ namespace ReyEngine {
       void setFocused(bool);
       void setModal(bool);
       [[nodiscard]] Pos<float> getLocalMousePos() const;
-      CanvasSpace<Pos<float>> toCanvasSpace(const Pos<float>&);
-      WindowSpace<Pos<float>> toWindowSpace(const Pos<float>&);
+      CanvasSpace<Rect<float>> toCanvasRect() const;
+      void fromCanvasRect(const CanvasSpace<Rect<float>>&);
+      CanvasSpace<Pos<float>> toCanvasSpace(const Pos<float>&) const;
+      WindowSpace<Pos<float>> toWindowSpace(const Pos<float>&) const;
       void setEnabled(bool newState){enabled = newState;}
       [[nodiscard]] bool getIsEnabled() const {return enabled;}
       void setInputFiltering(InputFilter newFilter){ _inputFilter = newFilter;}

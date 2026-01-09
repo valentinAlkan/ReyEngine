@@ -74,7 +74,7 @@ namespace ReyEngine::Internal {
          }
          return retval;
       }
-      inline CanvasSpace<Rect<R_FLOAT>> getGloablRect(){
+      inline CanvasSpace<Rect<R_FLOAT>> getGlobalRect(){
          auto gpos = getGlobalTransform().get().extractTranslation();
          Rect<R_FLOAT> rect = {Pos<R_FLOAT>(gpos),size};
          return rect;

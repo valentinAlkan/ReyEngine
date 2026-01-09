@@ -254,13 +254,48 @@ Pos<R_FLOAT> Widget::getLocalMousePos() const {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-CanvasSpace<Pos<R_FLOAT>> Widget::toCanvasSpace(const Pos<float>& p) {
+CanvasSpace<Pos<R_FLOAT>> Widget::toCanvasSpace(const Pos<float>& p) const {
    auto globaltransform = getGlobalTransform().get();
    return {Pos<R_FLOAT>(globaltransform.transform(p))};
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-WindowSpace<Pos<R_FLOAT>> Widget::toWindowSpace(const Pos<float>& p) {
+CanvasSpace<Rect<float>> Widget::toCanvasRect() const {
+   return Rect<float>(toCanvasSpace(Pos<float>(0, 0)).get(), getSize());
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void Widget::fromCanvasRect(const CanvasSpace<Rect<float>>& r){
+   const Rect<float>& worldRect = r.get();
+
+   auto parentOpt = getParentWidget();
+   Rect<float> newLocalRect;
+
+   if (parentOpt) {
+      // If a parent exists, get its global transform matrix (which converts from parent-local to world space).
+      auto parentGlobalTransform = parentOpt.value()->getGlobalTransform().get();
+
+
+      auto worldToParentLocalTransform = parentGlobalTransform.inverse();
+
+      // Transform the position of the worldRect into the parent's coordinate system.
+      Pos<float> newPosInParentSpace = Pos<float>(worldToParentLocalTransform.transform(worldRect.pos()));
+
+      // The size of the rectangle remains the same.
+      newLocalRect = Rect<float>(newPosInParentSpace, worldRect.size());
+   } else {
+      // If there's no parent, the widget's local space is the same as world space.
+      newLocalRect = worldRect;
+   }
+
+   // Use setRect() to apply the new local rectangle. This will trigger all necessary
+   // updates, such as anchoring calculations and firing the _on_rect_changed event.
+   setRect(newLocalRect);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
+WindowSpace<Pos<R_FLOAT>> Widget::toWindowSpace(const Pos<float>& p) const {
    auto globaltransform = getGlobalTransform().get();
    return {Pos<R_FLOAT>(globaltransform.transform(p))};
 }

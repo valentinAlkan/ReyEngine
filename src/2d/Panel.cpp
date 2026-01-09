@@ -56,10 +56,12 @@ void Panel::render2D() const {
 //}
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Panel::_init() {
+void Panel::__init() {
+   Canvas::_init();
    theme->background.fill = Style::Fill::SOLID;
    theme->background.colorPrimary = ReyEngine::ColorRGBA(94, 142, 181, 255);
-   _viewArea = make_child<Widget>("_viewArea");
+   _viewArea = ::make_child<Widget>(this, "viewArea");
+   _on_rect_changed();
    setAcceptsHover(true);
    _inputFilter = InputFilter::PROCESS_AND_PASS;
    //create subwidgets
@@ -148,6 +150,7 @@ void Panel::_init() {
 //      _window.setScissorArea(_window.getSizeRect().embiggen(-1));
 //   };
 //   window->setRectChangedCallback(windowRectChangeCB);
+   _init();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -161,7 +164,7 @@ void Panel::_on_rect_changed(){
    stretchRegion.at(3) = getSizeRect().splitAtVPos(getWidth() - STRETCH_REGION_SIZE).first;
 
    //update viewable area
-   if (_viewArea) _viewArea->setRect(getSizeRect().splitAtHPos(_header.rect.height).second);
+   _viewArea->setRect(getSizeRect().splitAtVPos(_header.rect.height).second.embiggen(-theme->layoutMargin));
 
    //header bar
    static constexpr float HEADER_HEIGHT = 35;
