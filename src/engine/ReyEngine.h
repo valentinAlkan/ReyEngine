@@ -84,7 +84,7 @@ namespace ReyEngine {
    public:
       CanvasSpace() = default;
       CanvasSpace(const T& other): underlying(other){}
-      CanvasSpace& operator=(const T& other){ underlying = other;}
+//      CanvasSpace& operator=(const T& other){ underlying = other;}
       T& get(){return underlying;}
       const T& get() const {return underlying;}
       friend std::ostream& operator<<(std::ostream& os, const CanvasSpace<T>& other) {os << other.get(); return os;}
@@ -999,24 +999,6 @@ namespace ReyEngine {
       constexpr inline Rect& stretchHorizontal(T amt) {
          return *this += Rect<T>(-amt, 0, 2 * amt, 0);
       } //embiggen wideness evenly
-      constexpr inline Rect& chopTop(T amt) {
-         y += amt;
-         height -= amt;
-         return *this;
-      } //remove the topmost amt of the rectangle and return the remainder (moves y, cuts height)
-      constexpr inline Rect& chopBottom(T amt) {
-         height -= amt;
-         return *this;
-      } //remove the bottommost amt of the rectangle and return the remainder (cuts height)
-      constexpr inline Rect& chopRight(T amt) {
-         width -= amt;
-         return *this;
-      } //remove the rightmost amt of the rectangle and return the remainder (cuts width)
-      constexpr inline Rect& chopLeft(T amt) {
-         x += amt;
-         width -= amt;
-         return *this;
-      } //remove the leftmost amt of the rectangle and return the remainder (moves x, cuts width)
       constexpr inline Rect& pushX(T amt) {
          x += amt;
          return *this;
@@ -1089,32 +1071,6 @@ namespace ReyEngine {
 
       [[nodiscard]] constexpr inline Rect stretchHorizontal(T amt) const {
          return *this + Rect<T>(-amt, 0, 2 * amt, 0);
-      }
-
-      [[nodiscard]] constexpr inline Rect chopTop(T amt) const {
-         auto retval = *this;
-         retval.y += amt;
-         retval.height -= amt;
-         return retval;
-      }
-
-      [[nodiscard]] constexpr inline Rect chopBottom(T amt) const {
-         auto retval = *this;
-         retval.height -= amt;
-         return retval;
-      }
-
-      [[nodiscard]] constexpr inline Rect chopRight(T amt) const {
-         auto retval = *this;
-         retval.width -= amt;
-         return retval;
-      }
-
-      [[nodiscard]] constexpr inline Rect chopLeft(T amt) const {
-         auto retval = *this;
-         retval.x += amt;
-         retval.width -= amt;
-         return retval;
       }
 
       [[nodiscard]] constexpr inline Rect pushX(T amt) const {
@@ -1957,6 +1913,12 @@ namespace ReyEngine {
             // 3. Translate back
             translate(centerPoint);
          }
+      }
+
+      inline Transform2D scaled(const Vec2<float>& scale, const Vec2<float>& centerPoint = {0.0f, 0.0f}) {
+         Transform2D retval = *this;
+         retval.scale(scale, centerPoint);
+         return retval;
       }
 
       // New function: shear transformation

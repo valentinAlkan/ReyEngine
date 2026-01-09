@@ -5,6 +5,11 @@ using namespace ReyEngine;
 using namespace Internal;
 
 ////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::_init() {
+
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::__on_child_added_to_tree(TypeNode *child) {
    //move all nodes to background by default
    _background.add(child);
@@ -21,8 +26,11 @@ void Canvas::__on_child_removed_from_tree(TypeNode *n) {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
-void Canvas::_on_rect_changed() {
-   _renderTarget.setSize(getSize());
+void Canvas::__on_rect_changed(const Rect<float> &oldRect, const Rect<R_FLOAT>& newRect, bool byLayout) {
+   Widget::__on_rect_changed(oldRect, newRect, byLayout);
+   if (oldRect.size() != newRect.size()) {
+      _renderTarget.setSize(getSize());
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -87,6 +95,9 @@ void Canvas::renderProcess(RenderTarget& parentTarget) {
    if (!_retained) {
       ClearBackground(Colors::lightGray);
    }
+   render2DBegin();
+   render2D();
+   render2DEnd();
 
    BeginMode2D(camera);
    for (auto& child : _background.getValues()){
@@ -111,15 +122,14 @@ void Canvas::renderProcess(RenderTarget& parentTarget) {
    rlPopMatrix();
 
    //root canvas has no parent canvas. So ensure root canvas draws its foreground.
-   rlPushMatrix();
    if (!getCanvas()) {
+      rlPushMatrix();
       for (auto& child : _foreground.getValues()){
          processNode<RenderProcess>(child, false);
       }
+      rlPopMatrix();
    }
-   rlPopMatrix();
 
-   render2DEnd();
    _renderTarget.endRenderMode();
    if (&parentTarget != &_renderTarget) {
       parentTarget.beginRenderMode();
@@ -141,8 +151,7 @@ Widget* Canvas::__process_hover(const InputEventMouseHover& event){
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
-   //local coordinates have not been transformed at this point. so they are wrt parent object, window or otherwise
-   // isInside will not work yet
+   //In order for the canvas to know what the event was, we have to cache it since we will end up transforming it
    auto isMouse = event.isMouse();
    //determine what type of input this is
 
@@ -189,8 +198,15 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
       if (handled) return handled;
    }
 
-   //then we attempt to handle it ourselves
-   return createProcessNodeForEvent(getNode(), false, event);
+   //finally we attempt to handle it ourselves as foreground input, but we need to handjam some values since that never
+   // gets set. There's probably a specific transform one coudl pass to scope transformer, but damned if i know what it is.
+   if (isMouse){
+      auto mousePos = isMouse.value()->getLocalPos() - getPos();
+      isMouse.value()->setCanvasPos(mousePos);
+      isMouse.value()->setLocalPos(mousePos);
+      isMouse.value()->setIsInside(getSizeRect().contains(mousePos));
+   }
+   return _unhandled_input(event);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

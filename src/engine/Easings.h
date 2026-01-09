@@ -225,7 +225,8 @@ namespace ReyEngine {
    // represents a value between 0 and 1 (min and max) although the output value is not strictly enforced since
    // overshoot is allowed
    struct Easing {
-      Easing(EasingFunctor&& easing, std::chrono::milliseconds duration, const EasingCallback& callbackDuring, const std::function<void()>& callbackAfter=nullptr)
+      Easing(EasingFunctor&& easing,
+             std::chrono::milliseconds duration, const EasingCallback& callbackDuring, const std::function<void()>& callbackAfter=nullptr)
       : _duration(duration)
       , _callbackDuring(callbackDuring)
       , _callbackAfter(callbackAfter)
@@ -244,7 +245,7 @@ namespace ReyEngine {
          input = (double)dt / (double)msDuration;
          if (input>1) input = 1; //clamp output
          output = functor(input);
-         _callbackDuring(output); //alert the easable that the easing has been processed
+         if (_callbackDuring) _callbackDuring(output); //alert the easable that the easing has been processed
          return input == 1;
       }
       [[nodiscard]] bool done() const {return input >= 1.0;}

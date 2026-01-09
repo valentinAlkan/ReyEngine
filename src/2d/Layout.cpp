@@ -156,7 +156,7 @@ void Layout::layoutApplyRect(Widget* widget, Rect<float>& r){
    r.clampWidth({minSize.x, maxSize.x});
    r.clampHeight({minSize.y, maxSize.y});
    widget->applyRect(r);
-   widget->__on_rect_changed(oldRect, true);
+   widget->__on_rect_changed(oldRect, getRect(), true);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

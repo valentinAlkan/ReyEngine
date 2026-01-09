@@ -57,6 +57,11 @@ namespace ReyEngine {
                                                    //children.
       }
       ~Canvas() override = default;
+      void __init() override {
+         Canvas::_init();
+         _init();
+      };
+      void _init() override;
       CanvasSpace<Pos<float>> getMousePos();
       inline const Transform2D getCameraTransform() const {return GetCameraMatrix2D(camera);}
       inline Transform2D getCameraTransform() {return GetCameraMatrix2D(camera);}
@@ -71,7 +76,7 @@ namespace ReyEngine {
       [[nodiscard]] const RenderTarget& getRenderTarget() const {return _renderTarget;}
       Widget* __process_unhandled_input(const InputEvent& event) override;
       Widget* __process_hover(const InputEventMouseHover& event);
-      void _on_rect_changed() override;
+      void __on_rect_changed(const Rect<R_FLOAT>& oldRect, const Rect<R_FLOAT>& newRect, bool byLayout = false) override;
       void _removeAllStatus(Widget*);
 
       RenderTarget _renderTarget;

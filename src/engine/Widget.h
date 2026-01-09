@@ -77,9 +77,10 @@ namespace ReyEngine {
       //convenience
       void moveToForeground();
       void moveToBackground();
-      [[nodiscard]] bool getIsRendering() const; //determines if this widget and all it's ancestors are visible
+      [[nodiscard]] bool getIsRendering() const; //determines if this widget and all it's ancestors are being drawn - checks visibility of all ancestors
    protected:
       //input
+      virtual void render2D() const {};
       virtual Widget* __process_unhandled_input(const InputEvent& event){ return _unhandled_input(event);}
       virtual Widget* _unhandled_input(const InputEvent&){return nullptr;}
       virtual Widget* _process_unhandled_editor_input(const InputEvent&){return nullptr;} //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)
@@ -114,7 +115,7 @@ namespace ReyEngine {
          _on_visibility_changed();
       }
 
-      void __on_rect_changed(const Rect<R_FLOAT>& oldRect, bool byLayout = false) override {
+      void __on_rect_changed(const Rect<R_FLOAT>& oldRect, const Rect<R_FLOAT>& newRect, bool byLayout = false) override {
          if (!byLayout) {
             //layout will have already resized children
             calculateAnchoring(getRect());

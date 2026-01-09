@@ -26,6 +26,9 @@ namespace ReyEngine{
       [[nodiscard]] CanvasSpace<Pos<float>> getCanvasPos() const {return _canvasPos;}
       [[nodiscard]] Pos<float> getLocalPos() const {return _localPos;}
       [[nodiscard]] bool isInside() const {return _isInside;}
+      void setIsInside(bool isInside) {_isInside = isInside;}
+      void setLocalPos(Pos<float>& p) {_localPos = p;}
+      void setCanvasPos(const Pos<float>& p) {_canvasPos = p;}
    protected:
       void transformLocalPos(const Transform2D& xform) {
          //account for other transformations?
@@ -64,7 +67,7 @@ namespace ReyEngine{
          Pos<float> _localPos_cached; //for recall on dtor
       };
    private:
-      const CanvasSpace<Pos<float>> _canvasPos;
+      CanvasSpace<Pos<float>> _canvasPos;
       Pos<float> _localPos;
       bool _isInside = false;
    };

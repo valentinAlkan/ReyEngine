@@ -126,7 +126,7 @@ namespace ReyEngine {
 
          //draw the dropdown arrow
          //configure the drop handle
-         auto dropRect = getSizeRect().chopLeft(getWidth()-DROP_HANDLE_WIDTH);
+         auto dropRect = getSizeRect().splitAtHPos(getWidth()-DROP_HANDLE_WIDTH).second;
          if (_isOpen) {
             //color in rect if its open
             drawRectangle(dropRect, theme->background.colorActive1);

@@ -17,9 +17,12 @@ Panel::Panel()
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::render2D() const {
-
    //draw the header
-   drawRectangleLines(_header.rect, 1.0, theme->background.colorSecondary);
+   drawRectangle(_header.rect, theme->background.colorTertiary);
+   drawRectangle(_header.btnClose, Colors::red);
+   drawRectangleLines(getSizeRect(), 1.0, theme->background.colorSecondary);
+   drawLine(_header.rect.bottom(), 1.0, theme->background.colorSecondary);
+   drawTextCentered("x", _header.btnClose.center(), theme->font);
 //   if (!_isMinimized) {
 //      //dont need to draw these if we're minimized
 //      static constexpr float roundness = 2.0;
@@ -39,24 +42,24 @@ void Panel::render2D() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Panel::render2DBegin() {
+//void Panel::render2DBegin() {
 //   startScissor(_scissorArea);
 //   mask.beginRenderMode();
 //   ClearBackground(Colors::black);
 //   drawRectangleRounded(getSizeRect(), 5, 10, Colors::white);
 //   mask.endRenderMode();
 //   BeginDrawing();
-}
+//}
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Panel::render2DEnd() {
-}
+//void Panel::render2DEnd() {
+//}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::_init() {
    theme->background.fill = Style::Fill::SOLID;
    theme->background.colorPrimary = ReyEngine::ColorRGBA(94, 142, 181, 255);
-   _viewArea = make_child<Control>("_viewArea");
+   _viewArea = make_child<Widget>("_viewArea");
    setAcceptsHover(true);
    _inputFilter = InputFilter::PROCESS_AND_PASS;
    //create subwidgets
@@ -150,24 +153,23 @@ void Panel::_init() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::_on_rect_changed(){
    //update render masks
-
    //adjust stretch regions
    static constexpr int STRETCH_REGION_SIZE = 5;
-   stretchRegion.at(0)= getSizeRect().chopBottom(getHeight() - STRETCH_REGION_SIZE);
-   stretchRegion.at(1)= getSizeRect().chopLeft(getWidth() - STRETCH_REGION_SIZE);
-   stretchRegion.at(2)= getSizeRect().chopTop(getHeight() - STRETCH_REGION_SIZE);
-   stretchRegion.at(3)= getSizeRect().chopRight(getWidth() - STRETCH_REGION_SIZE);
+   stretchRegion.at(0) = getSizeRect().splitAtHPos(getHeight() - STRETCH_REGION_SIZE).first;
+   stretchRegion.at(1) = getSizeRect().splitAtVPos(getWidth() - STRETCH_REGION_SIZE).second;
+   stretchRegion.at(2) = getSizeRect().splitAtHPos(getHeight() - STRETCH_REGION_SIZE).second;
+   stretchRegion.at(3) = getSizeRect().splitAtVPos(getWidth() - STRETCH_REGION_SIZE).first;
 
    //update viewable area
-   _viewArea->setRect(getSizeRect().chopTop(_header.rect.height));
+   if (_viewArea) _viewArea->setRect(getSizeRect().splitAtHPos(_header.rect.height).second);
 
    //header bar
-   static constexpr float MENU_BAR_HEIGHT = 35;
-   static constexpr float BUTTON_SIZE = MENU_BAR_HEIGHT - 4;
-   _header.rect = {0, 0, getWidth(), MENU_BAR_HEIGHT};
+   static constexpr float HEADER_HEIGHT = 35;
+   static constexpr float BUTTON_SIZE = HEADER_HEIGHT - 10;
+   _header.rect = {0, 0, getWidth(), HEADER_HEIGHT};
    _header.btnClose = {{0,0}, Size<float>(BUTTON_SIZE)};
-   _header.btnClose = _header.btnClose.alignRight(getSizeRect().right().midpoint() - Pos<float>(4, 0));
    _header.btnClose = _header.btnClose.centerV(_header.rect.right().midpoint());
+   _header.btnClose = _header.btnClose.alignRight(getSizeRect().right().midpoint() - Pos<float>(_header.btnClose.topRight().y, 0));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -175,8 +177,8 @@ TypeNode* Panel::addChild(std::unique_ptr<TypeNode>&& child) {
    return _viewArea->addChild(std::move(child));
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
-Widget *Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
+///////////////////////////////////////////////////////////////////////////////////////
+Widget* Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
    auto getStretchDir = [&]() -> ResizeDir {
       if (auto mouse = event.isMouse()) {
          auto localPos = mouse.value()->getLocalPos();
@@ -199,96 +201,124 @@ Widget *Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
       case InputEventMouseButton::getUniqueEventId(): {
          auto &mbEvent = event.toEvent<InputEventMouseButton>();
          if (mbEvent.button != InputInterface::MouseButton::LEFT) break;
-         if (mbEvent.isDown && !mbEvent.mouse.isInside()) break; //ingore downs that occur outside the rect
+         if (_dragState == DragState::NONE && !mbEvent.isDown && !mbEvent.mouse.isInside()){
+            hide();
+            return this;
+         }
+         if (!mbEvent.isDown && _header.btnClose.contains(mbEvent.mouse.getLocalPos())){
+            hide();
+         }
          dragStart = mbEvent.mouse.getLocalPos();
-         resizeStartRect = getRect();
-         offset = mbEvent.mouse.getLocalPos() - getPos(); //record position
+//         resizeStartRect = getRect();
+//         offset = mbEvent.mouse.getLocalPos() - getPos(); //record position
 
-         if (!_isMinimized && _isResizable && _resizeDir == ResizeDir::NONE){
-            //if we're resizing, stop here and return
-            //see if we clicked in a resize region
-            _resizeDir = getStretchDir();
-         }
+//         if (!_isMinimized && _isResizable && _resizeDir == ResizeDir::NONE){
+//            //if we're resizing, stop here and return
+//            //see if we clicked in a resize region
+//            _resizeDir = getStretchDir();
+//         }
 
-         //start dragging
-         if (!_isMaximized && _resizeDir == ResizeDir::NONE && _header.rect.contains(mbEvent.mouse.getLocalPos()) && mbEvent.isDown) {
-            _isDragging = true;
-            return this;
-         } else if ((_isDragging || _resizeDir != ResizeDir::NONE) && !mbEvent.isDown){
-            //make sure to check for dragging or resizing states otherwise this will eat all mouse-ups intended for other widgets
-            _isDragging = false;
-            _resizeDir = ResizeDir::NONE;
-            return this;
+         //dragging logic
+         if (_header.rect.contains(mbEvent.mouse.getLocalPos()) && _isDragable) {
+            if (mbEvent.isDown) {
+               //start dragging
+               _dragState = DragState::DRAGGING;
+            } else {
+               // stop dragging
+               _dragState = DragState::NONE;
+            }
          }
+//            if (_isResizable && resizeStartRect) {
+//               if (!_isMaximized && _resizeDir == ResizeDir::NONE && _header.rect.contains(mbEvent.mouse.getLocalPos()) && mbEvent.isDown) {
+//                  _dragState = DragState::DRAGGING;
+//                  return this;
+//               } else if ((_dragState == DragState::DRAGGING || _resizeDir != ResizeDir::NONE) && !mbEvent.isDown) {
+//                  //make sure to check for dragging or resizing states otherwise this will eat all mouse-ups intended for other widgets
+//                  _dragState = DragState::NONE;
+//                  _resizeDir = ResizeDir::NONE;
+//                  return this;
+//               }
+//            }
       }
-      break;
+         break;
       case InputEventMouseMotion::getUniqueEventId():
-         auto& mmEvent = event.toEvent<InputEventMouseMotion>();
+         auto &mmEvent = event.toEvent<InputEventMouseMotion>();
          //no dragging or resizing if we're maximized
          if (_isMaximized) break;
          auto delta = mmEvent.mouse.getLocalPos() - dragStart;
-         //stretching overrides dragging
-         auto stretchN = [&](Rect<float> newRect){newRect.y+=delta.y; newRect.height -= delta.y; return newRect;};
-         auto stretchE = [&](Rect<float> newRect){newRect.width += delta.x; return newRect;};
-         auto stretchW = [&](Rect<float> newRect){newRect.x+=delta.x; newRect.width -= delta.x; return newRect;};
-         auto stretchS = [&](Rect<float> newRect){newRect.height += delta.y; return newRect;};
-
-         if (_resizeDir != ResizeDir::NONE) {
-//            Logger::info() << "Old rect size = " << getRect() << endl;
-            switch (_resizeDir){
-               case ResizeDir::N: setRect(stretchN(resizeStartRect));break;
-               case ResizeDir::E: setRect(stretchE(resizeStartRect)); break;
-               case ResizeDir::W: setRect(stretchW(resizeStartRect)); break;
-               case ResizeDir::S: setRect(stretchS(resizeStartRect)); break;
-               case ResizeDir::NW: setRect(stretchW(stretchN(resizeStartRect))); break;
-               case ResizeDir::NE: setRect(stretchN(stretchE(resizeStartRect))); break;
-               case ResizeDir::SE: setRect(stretchS(stretchE(resizeStartRect))); break;
-               case ResizeDir::SW: setRect(stretchS(stretchW(resizeStartRect))); break;
-            }
-//            Logger::info() << "New Rect size = " << getRect() << endl;
-//            Logger::info() << "Current Mouse pos = " << mmEvent.mouse.getLocalPos() << endl;
-//            Logger::info() << "Start rect = " << resizeStartRect << endl;
-//            Logger::info() << "Delta = " << delta << endl;
-//            Logger::info() << "-----------------" << endl;
-            return this;
-         } else if (_isDragging) {
-            movePosition(mmEvent.mouse.getLocalPos() - dragStart);
-            return this;
-         } else {
-            if (!mmEvent.mouse.isInside() || _isMinimized) break;
-            //update cursor
-            auto cursorDir = getStretchDir();
-            switch (cursorDir) {
-               case ResizeDir::N:
-               case ResizeDir::S:
-                  InputInterface::setCursor(InputInterface::MouseCursor::RESIZE_NS);
-                  break;
-               case ResizeDir::E:
-               case ResizeDir::W:
-                  InputInterface::setCursor(InputInterface::MouseCursor::RESIZE_EW);
-                  break;
-               case ResizeDir::NW:
-               case ResizeDir::SE:
-                  InputInterface::setCursor(InputInterface::MouseCursor::RESIZE_NWSE);
-                  break;
-               case ResizeDir::NE:
-               case ResizeDir::SW:
-                  InputInterface::setCursor(InputInterface::MouseCursor::RESIZE_NESW);
-                  break;
-               default:
-                  InputInterface::setCursor(InputInterface::MouseCursor::DEFAULT);
-                  break;
-            }
+         if (_dragState == DragState::DRAGGING) {
+            movePosition(delta);
             return this;
          }
    }
 
+//         //stretching overrides dragging
+//         auto stretchN = [&](Rect<float> newRect){newRect.y+=delta.y; newRect.height -= delta.y; return newRect;};
+//         auto stretchE = [&](Rect<float> newRect){newRect.width += delta.x; return newRect;};
+//         auto stretchW = [&](Rect<float> newRect){newRect.x+=delta.x; newRect.width -= delta.x; return newRect;};
+//         auto stretchS = [&](Rect<float> newRect){newRect.height += delta.y; return newRect;};
+
+//         if (_isResizable && _resizeDir != ResizeDir::NONE) {
+////            Logger::info() << "Old rect size = " << getRect() << endl;
+//            switch (_resizeDir){
+//               case ResizeDir::N: setRect(stretchN(resizeStartRect));break;
+//               case ResizeDir::E: setRect(stretchE(resizeStartRect)); break;
+//               case ResizeDir::W: setRect(stretchW(resizeStartRect)); break;
+//               case ResizeDir::S: setRect(stretchS(resizeStartRect)); break;
+//               case ResizeDir::NW: setRect(stretchW(stretchN(resizeStartRect))); break;
+//               case ResizeDir::NE: setRect(stretchN(stretchE(resizeStartRect))); break;
+//               case ResizeDir::SE: setRect(stretchS(stretchE(resizeStartRect))); break;
+//               case ResizeDir::SW: setRect(stretchS(stretchW(resizeStartRect))); break;
+//            }
+////            Logger::info() << "New Rect size = " << getRect() << endl;
+////            Logger::info() << "Current Mouse pos = " << mmEvent.mouse.getLocalPos() << endl;
+////            Logger::info() << "Start rect = " << resizeStartRect << endl;
+////            Logger::info() << "Delta = " << delta << endl;
+////            Logger::info() << "-----------------" << endl;
+//            return this;
+//         } else if (_isDragging) {
+//            movePosition(mmEvent.mouse.getLocalPos() - dragStart);
+//            return this;
+//         } else {
+//            if (!_isResizable) break;
+//            if (!mmEvent.mouse.isInside() || _isMinimized) break;
+//            //update cursor
+//            auto cursorDir = getStretchDir();
+//            switch (cursorDir) {
+//               case ResizeDir::N:
+//               case ResizeDir::S:
+//                  InputInterface::setCursor(InputInterface::MouseCursor::RESIZE_NS);
+//                  break;
+//               case ResizeDir::E:
+//               case ResizeDir::W:
+//                  InputInterface::setCursor(InputInterface::MouseCursor::RESIZE_EW);
+//                  break;
+//               case ResizeDir::NW:
+//               case ResizeDir::SE:
+//                  InputInterface::setCursor(InputInterface::MouseCursor::RESIZE_NWSE);
+//                  break;
+//               case ResizeDir::NE:
+//               case ResizeDir::SW:
+//                  InputInterface::setCursor(InputInterface::MouseCursor::RESIZE_NESW);
+//                  break;
+//               default:
+//                  InputInterface::setCursor(InputInterface::MouseCursor::DEFAULT);
+//                  break;
+//            }
+//            return this;
+//         }
+//   }
+
    //consume all mouse input that is inside the panel so it doesn't fall through to the area behind
-   if (auto mouse = event.isMouse()){
-      if (getSizeRect().contains(mouse.value()->getLocalPos())) {
-         Logger::info() << "Panel consuming event!" << endl;
-         return this;
-      }
+//   if (auto mouse = event.isMouse()){
+//      if (getSizeRect().contains(mouse.value()->getLocalPos())) {
+//         Logger::info() << "Panel consuming event!" << endl;
+//         return this;
+//      }
+//   }
+   //consume all inside mouse events
+   if (auto isMouse = event.isMouse()){
+      if (isMouse.value()->isInside()) return this;
    }
    return nullptr;
 }
@@ -308,10 +338,21 @@ Widget *Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::_on_mouse_exit() {
-   InputInterface::setCursor(InputInterface::MouseCursor::DEFAULT);
+//   InputInterface::setCursor(InputInterface::MouseCursor::DEFAULT);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::setTitle(const std::string &newtitle) {
    panelTitle = newtitle;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Panel::hide(){
+   setVisible(false);
+   _dragState = DragState::NONE;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Panel::show(){
+   setVisible(true);
 }
