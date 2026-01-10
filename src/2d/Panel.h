@@ -91,6 +91,7 @@ with :: like this-> ::make_child(...)"
       ReyEngine::Rect<R_FLOAT>& REGION_EAST;
       ReyEngine::Rect<R_FLOAT>& REGION_WEST;
       ReyEngine::Rect<R_FLOAT>& REGION_SOUTH;
+      ReyEngine::Pos<float> testPos;
    };
 }
 #undef PANEL_MAKE_CHILD_USE_TYPE_ERROR_MSG

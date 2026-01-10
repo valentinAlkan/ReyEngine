@@ -1,8 +1,5 @@
 #pragma once
-#include "Control.h"
-#include "Button.h"
-#include "Layout.h"
-#include "Label.h"
+#include "Panel.h"
 
 namespace ReyEngine {
    enum class DialogOptions{CANCEL, OK, CLOSE, YES, NO};
@@ -15,13 +12,13 @@ namespace ReyEngine {
             case DialogOptions::CLOSE: return "Close";
             case DialogOptions::NO: return "No";
             case DialogOptions::YES: return "Yes";
-            default: return "";
+            default: return "<invalid>";
          }
       }
    }
 
    template <size_t N, typename OptMetaType=void>
-   class Dialog : public Control {
+   class Dialog : public ReyEngine::Panel {
    public:
       REYENGINE_OBJECT(Dialog);
       Dialog(std::array<DialogOptions, N> options, const std::string& message="", Layout::LayoutDir layoutDirection = Layout::LayoutDir::HORIZONTAL)
@@ -44,8 +41,10 @@ namespace ReyEngine {
 
       EVENT_ARGS(DialogCloseEvent, 6454984, const std::string& option, DialogOptions value)
          , value(value)
+         , asString(__::toString(value))
          {}
          const DialogOptions value;
+         const std::string asString;
       };
 
       void show(){ setVisible(true);} //setVisible calls onvis change

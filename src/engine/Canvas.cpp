@@ -199,14 +199,16 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
    }
 
    //finally we attempt to handle it ourselves as foreground input, but we need to handjam some values since that never
-   // gets set. There's probably a specific transform one coudl pass to scope transformer, but damned if i know what it is.
-   if (isMouse){
+   // gets set. There's probably a specific transform one could pass to scope transformer, but damned if i know what it is.
+   // also, copy the event in case it needs to be used elsewhere, we won't have screwed it up
+   auto newEvent = event;
+   if (auto newEventMouse = newEvent.isMouse()){
       auto mousePos = isMouse.value()->getLocalPos() - getPos();
-      isMouse.value()->setCanvasPos(mousePos);
-      isMouse.value()->setLocalPos(mousePos);
-      isMouse.value()->setIsInside(getSizeRect().contains(mousePos));
+//      newEventMouse.value()->setCanvasPos(mousePos);
+      newEventMouse.value()->setLocalPos(mousePos);
+      newEventMouse.value()->setIsInside(getSizeRect().contains(mousePos));
    }
-   return _unhandled_input(event);
+   return _unhandled_input(newEvent);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

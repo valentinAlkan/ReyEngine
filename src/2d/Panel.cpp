@@ -23,6 +23,9 @@ void Panel::render2D() const {
    drawRectangleLines(getSizeRect(), 1.0, theme->background.colorSecondary);
    drawLine(_header.rect.bottom(), 1.0, theme->background.colorSecondary);
    drawTextCentered("x", _header.btnClose.center(), theme->font);
+   drawCircle({testPos, 4}, Colors::blue);
+   drawText(testPos.toString(), {10, 40}, theme->font);
+   drawText(testPos.toString(), {10, 40}, theme->font);
 //   if (!_isMinimized) {
 //      //dont need to draw these if we're minimized
 //      static constexpr float roundness = 2.0;
@@ -211,7 +214,7 @@ Widget* Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
          if (!mbEvent.isDown && _header.btnClose.contains(mbEvent.mouse.getLocalPos())){
             hide();
          }
-         dragStart = mbEvent.mouse.getLocalPos();
+
 //         resizeStartRect = getRect();
 //         offset = mbEvent.mouse.getLocalPos() - getPos(); //record position
 
@@ -226,6 +229,7 @@ Widget* Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
             if (mbEvent.isDown) {
                //start dragging
                _dragState = DragState::DRAGGING;
+               dragStart = mbEvent.mouse.getLocalPos();
             } else {
                // stop dragging
                _dragState = DragState::NONE;
@@ -246,6 +250,7 @@ Widget* Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
          break;
       case InputEventMouseMotion::getUniqueEventId():
          auto &mmEvent = event.toEvent<InputEventMouseMotion>();
+         testPos = mmEvent.mouse.getLocalPos();
          //no dragging or resizing if we're maximized
          if (_isMaximized) break;
          auto delta = mmEvent.mouse.getLocalPos() - dragStart;

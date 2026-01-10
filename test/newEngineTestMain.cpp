@@ -13,6 +13,7 @@
 #include "Sprite.h"
 #include "Panel.h"
 #include "Tree.h"
+#include "Panel.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -166,7 +167,10 @@ int main() {
 
          // add some children to the layout
          auto subcanvas = make_child<Canvas>(layoutl, "SubCanvas");
-         make_child<PosTestWidget>(subcanvas, "SubCanvasTestWidget", "test")->setPosition({100, 100});
+//         make_child<PosTestWidget>(subcanvas, "SubCanvasTestWidget", "test")->setPosition({100, 100});
+         auto panela = make_child<Panel>(subcanvas, "SubCanvasPanel");
+         panela->setPosition({300, 100});
+         panela->setSize(100,100);
          auto scrollArea = make_child<ScrollArea>(layoutl, "MainScrollArea");
          auto tabHolder = make_child<Layout>(layoutr, "TabLayout", Layout::LayoutDir::VERTICAL);
          auto widgetsHolder = make_child<Layout>(layoutr, "WidgetsLayout", Layout::LayoutDir::VERTICAL);
@@ -206,39 +210,11 @@ int main() {
             auto dialogHButton = make_child<PushButton>(buttonHolder, "btnDialogH", "Summon Horizontal Dialog");
             auto dialogVButton = make_child<PushButton>(buttonHolder, "btnDialogV", "Summon Vertical Dialog");
             auto button4 = make_child<PushButton>(buttonHolder, "button4");
-
-//            auto cbPopup = [&](const PushButton::ButtonPressEvent& event) {
-//               auto isWidget = popup->as<Widget>();
-//               if (isWidget) {
-//                  auto& popup = isWidget.value();
-//                  popup->setVisible(true);
-//                  popup->setModal(true);
-//               }
-//            };
-//            summonButton->subscribe<PushButton::ButtonPressEvent>(summonButton.get(), cbPopup);
-
-            //create dialog test
-//            auto cbDialogH = [&](const PushButton::ButtonPressEvent& event) {
-//               auto isWidget = dialogHNode->as<Widget>();
-//               if (isWidget) {
-//                  auto& dialog = isWidget.value();
-//                  dialog->setVisible(true);
-//                  dialog->setModal(true);
-//               }
-//            };
-//            dialogHButton->subscribe<PushButton::ButtonPressEvent>(dialogHButton.get(), cbDialogH);
-//
-//            auto cbDialogV = [&](const PushButton::ButtonPressEvent& event) {
-//               auto isWidget = dialogVNode->as<Widget>();
-//               if (isWidget) {
-//                  auto& dialog = isWidget.value();
-//                  dialog->setVisible(true);
-//                  dialog->setModal(true);
-//               }
-//            };
-//            dialogVButton->subscribe<PushButton::ButtonPressEvent>(dialogVButton.get(), cbDialogV);
-
          }
+
+         //add a popup dialog
+//         auto hDialog =
+
 
          //make a tab widget
          {
@@ -313,14 +289,6 @@ int main() {
             }
          }
 
-         // add a subcanvas
-         {
-//            auto subcanvas = make_child<Canvas>(subCanvasHolder, "SubCanvas");
-//            subcanvas->setAnchoring(ReyEngine::Anchor::FILL);
-//            //add a label to the subcanvas
-//            make_child<PosTestWidget>(subcanvas, "SubCanvasTestWidget", "test")->setPosition({100, 100});
-         }
-
          // add a scroll area
          {
             //add a layout to the scroll area
@@ -329,7 +297,10 @@ int main() {
             //add a button to the scrollArea
             make_child<PushButton>(scrollArea, "ScrollAreaTestBtn", "Scroll Button")->setPosition(200, 350);
             //add a panel to the scroll area
-            make_child<Panel>(scrollArea, "Panel")->setRect(100, 300, 200, 200);
+            auto panel = make_child<Panel>(scrollArea, "Panel");
+            panel->setRect(100, 300, 200, 200);
+            auto panelLabel = make_child<Label>(panel, "label");
+
          }
 
          //create popup control
@@ -374,10 +345,10 @@ int main() {
                std::pair{std::string("dialog3"), testEnum::test3},
                std::pair{std::string("dialog4"), testEnum::test4}
          };
-         using TestDialog = Dialog<testEnum, 4>;
+         using TestDialog = Dialog<4, testEnum>;
          //add a callback
          auto dialogCB = [](const TestDialog::DialogCloseEvent& e){
-            Logger::info() << "Dialog box " << e.publisher->as<TestDialog>().value()->getNode()->name << " selected option " << e.option << " which corresponds to an int value of " << (int)e.value << endl;
+            Logger::info() << "Dialog box " << e.publisher->as<TestDialog>().value()->getNode()->name << " selected option " << e.asString << " which corresponds to an int value of " << (int)e.value << endl;
          };
          //create dialog H control
 //         {

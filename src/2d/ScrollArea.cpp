@@ -5,6 +5,11 @@
 using namespace std;
 using namespace ReyEngine;
 
+void ScrollArea::render2D() const {
+   Logger::info() << testPos << endl;
+   drawCircle({testPos, 4}, Colors::blue);
+}
+/////////////////////////////////////////////////////////////////////////////////////////
 ScrollArea::ScrollArea() {
    _ignoreOutsideInput = true;
 }
@@ -125,6 +130,10 @@ void ScrollArea::_on_child_added_to_tree(TypeNode* typeNode) {
 ///////////////////////////////////////////////////////////////////////////////////////////
 Widget* ScrollArea::_unhandled_input(const InputEvent& e) {
    switch (e.eventId){
+      case InputEventMouseMotion::ID:{
+         auto& mmEvent = e.toEvent<InputEventMouseMotion>();
+         testPos = mmEvent.mouse.getLocalPos();
+      } break;
       case InputEventMouseWheel::ID:{
          constexpr float SPEED_FACTOR = 5.0;
          auto& mwEvent = e.toEvent<InputEventMouseWheel>();
