@@ -18,13 +18,6 @@ with :: like this-> ::make_child(...)"
    class Panel : public Canvas {
    public:
       REYENGINE_OBJECT(Panel)
-      static constexpr char VLAYOUT_NAME[] = "__vlayout";
-      static constexpr char MENU_NAME[] = "__menu";
-      static constexpr char WINDOW_NAME[] = "__window";
-      static constexpr char BTN_CLOSE_NAME[] = "__btn_close";
-      static constexpr char BTN_MIN_NAME[] = "__btn_min";
-      static constexpr char BTN_MAX_NAME[] = "__btn_max";
-      static constexpr char TITLE_LABEL_NAME[] = "__titleLabel";
       Panel();
    public:
       TypeNode* addChild(std::unique_ptr<TypeNode>&& child);
@@ -66,11 +59,12 @@ with :: like this-> ::make_child(...)"
       struct Header {
          Rect<float> rect;
          Rect<float> btnClose;
+         Pos<float> titlePos;
          Rect<float> btnMinimize;
       } _header;
       bool showHeader;
 
-      Rect<float> titleLabel;
+//      Rect<float> titleLabel;
 //      ReyEngine::Pos<R_FLOAT> offset;
       ReyEngine::Pos<R_FLOAT> dragStart;
 //      ReyEngine::Rect<R_FLOAT> resizeStartRect;

@@ -29,7 +29,6 @@ namespace ReyEngine {
          if (layoutDirection != Layout::LayoutDir::HORIZONTAL && layoutDirection != Layout::LayoutDir::VERTICAL) {
             Logger::error() << "Dialogs do not support this layout direction. Defaulting to Horizontal" << std::endl;
          }
-         setSize(320, 240); //todo: find minimum size
          _visible = false; //no events
       }
 
@@ -54,6 +53,7 @@ namespace ReyEngine {
    protected:
       void _init() override{
          //calculate splits
+         setSize(320, 240); //todo: find minimum size
          std::vector<Percent> percents;
          for (size_t i=0; i<N; i++){
             percents.emplace_back(100/N);

@@ -84,8 +84,8 @@ struct Layout::LayoutHelper {
       }
       return nullopt;
    }
-   /// Sets the x or y value appropriately based on the layout - one value should always be 0
-   void setReleventPosition(R_FLOAT pos) {
+   /// Sets the x or y value appropriately based on the layout
+   void setRelevantPosition(R_FLOAT pos) {
       switch (layoutDir) {
          case LayoutDir::HORIZONTAL:
             pendingRect.x = pos;
@@ -112,6 +112,7 @@ Layout::Layout(LayoutDir layoutDir)
 : alignment(Alignment::EVEN)
 , layoutDir(layoutDir)
 {
+   _usesLayoutRatios = true;
    isLayout = true;
    if (DEBUG_DRAW) DEBUG_COLOR = ColorRGBA::random(255);
 }
@@ -120,7 +121,7 @@ Layout::Layout(LayoutDir layoutDir)
 void Layout::_on_child_added_to_tree(TypeNode* child) {
    if (auto isWidget = child->as<Widget>()) {
       if constexpr (VERBOSE) Logger::debug() << child->getName() << " added to layout " << getName() << std::endl;
-      if (layoutRatios.size() < getChildren().size()) {
+      if (_usesLayoutRatios && layoutRatios.size() < getChildren().size()) {
          layoutRatios.push_back(1.0);
       }
       isWidget.value()->isLocked = true;
@@ -136,7 +137,7 @@ void Layout::_on_child_added_to_tree(TypeNode* child) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Layout::_on_child_removed_from_tree(TypeNode* child) {
-   if (layoutRatios.size() > getChildren().size()){
+   if (_usesLayoutRatios && layoutRatios.size() > getChildren().size()){
       layoutRatios.pop_back();
    }
 }
@@ -159,6 +160,11 @@ void Layout::layoutApplyRect(Widget* widget, Rect<float>& r){
    widget->__on_rect_changed(oldRect, getRect(), true);
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
+void Layout::_on_rect_changed() {
+   _layoutArea = getSizeRect();
+   arrangeChildren();
+}
 /////////////////////////////////////////////////////////////////////////////////////////
 void Layout::arrangeChildren() {
    if (getChildren().empty()) return;
@@ -188,20 +194,20 @@ void Layout::arrangeChildren() {
          }
       }
    } else {
-      const auto expandingDimension = layoutDir == LayoutDir::HORIZONTAL ? getWidth() : getHeight();
+      const auto expandingDimension = layoutDir == LayoutDir::HORIZONTAL ? _layoutArea.width : _layoutArea.height;
       if (expandingDimension <= 0) return; //do not try to allocate for 0 sizes
       // For front and back alignment, set all widgets to their minimum/maximum size, then allocate the leftover space to nothing.
       switch (alignment){
          case Alignment::FRONT:{
-            R_FLOAT pos = 0;
+            R_FLOAT pos = _layoutArea.x;
             for (int i=0; i<childCount; i++){
                //just make the thing as small as possible - setpendingrect will spit back its minimum size
                auto child = getChildren().at(i);
                auto isWidget = child->as<Widget>();
                if (!isWidget) continue;
                LayoutHelper helper(layoutDir, i, childCount, this, isWidget.value());
-               helper.setReleventPosition(pos);
-               auto pendingRect = layoutDir == LayoutDir::HORIZONTAL ? Rect<R_FLOAT>(pos, 0, 0, getHeight()) : Rect<R_FLOAT>(0, pos, getWidth(), 0);
+               helper.setRelevantPosition(pos);
+               auto pendingRect = layoutDir == LayoutDir::HORIZONTAL ? Rect<R_FLOAT>(pos, _layoutArea.y, 0, _layoutArea.height) : Rect<R_FLOAT>(_layoutArea.x, pos, _layoutArea.width, 0);
                auto minSizeOpt = helper.setPendingRect(pendingRect);
                //will either be constrained, or be 0, so we don't need to check other conditions
                if (minSizeOpt && minSizeOpt.value()){
@@ -210,20 +216,20 @@ void Layout::arrangeChildren() {
             }
             break;}
          case Alignment::BACK:{
-            R_FLOAT pos = layoutDir == LayoutDir::HORIZONTAL ? getWidth() : getHeight();
+            R_FLOAT pos = layoutDir == LayoutDir::HORIZONTAL ? _layoutArea.topRight().x : _layoutArea.bottomLeft().y;
             for (int i=0; i<childCount; i++){
                //just make the thing as small as possible - setpendingrect will spit back its minimum size
                auto child = getChildren().at(i);
                auto isWidget = child->as<Widget>();
                if (!isWidget) continue;
                LayoutHelper helper(layoutDir, i, childCount, this, isWidget.value());
-               auto pendingRect = layoutDir == LayoutDir::HORIZONTAL ? Rect<R_FLOAT>(0, 0, 0, getHeight()) : Rect<R_FLOAT>(0, 0, getWidth(), 0);
+               auto pendingRect = layoutDir == LayoutDir::HORIZONTAL ? Rect<R_FLOAT>(_layoutArea.pos(), {0, _layoutArea.height}) : Rect<R_FLOAT>(_layoutArea.pos(), {_layoutArea.width, 0});
                auto minSizeOpt = helper.setPendingRect(pendingRect);
                //will either be constrained, or be 0, so we don't need to check other conditions
                if (minSizeOpt){
                   pos -= minSizeOpt.value();
                }
-               helper.setReleventPosition(pos);
+               helper.setRelevantPosition(pos);
             }
             break;}
          case Alignment::EVEN:{
@@ -270,9 +276,9 @@ void Layout::arrangeChildren() {
                   }
                   std::optional<int> isConstrained;
                   if (layoutDir == LayoutDir::HORIZONTAL) {
-                     isConstrained = layout->setPendingRect({{0, 0},{allocatedSpace, getHeight()}});
+                     isConstrained = layout->setPendingRect({_layoutArea.pos(),{allocatedSpace, _layoutArea.height}});
                   } else {
-                     isConstrained = layout->setPendingRect({{0, 0}, {getWidth(), allocatedSpace}});
+                     isConstrained = layout->setPendingRect({_layoutArea.pos(), {_layoutArea.width, allocatedSpace}});
                   }
                   if (isConstrained) {
                      removeLayoutFromConsideration(layout);
@@ -284,9 +290,9 @@ void Layout::arrangeChildren() {
             } while (startOver && !childLayoutsAvailable.empty());
 
             // Now that the sizes of the children are correctly determined, we must place them at their appropriate positions
-            int currentPos = 0;
+            int currentPos = layoutDir == LayoutDir::HORIZONTAL ? _layoutArea.x : _layoutArea.y;
             for (auto& layout : childLayoutsAll) {
-               layout->setReleventPosition(currentPos);
+               layout->setRelevantPosition(currentPos);
                currentPos += layout->getReleventDimension();
             }
          break;}

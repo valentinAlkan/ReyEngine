@@ -178,7 +178,8 @@ namespace ReyEngine {
             rlPushMatrix();
             rlMultMatrixf(MatrixToFloat(thisCanvas->transformStack.getGlobalTransform().matrix));
             //draw the render target at its local origin
-            drawRenderTargetRect(subCanvas->getRenderTarget(), subCanvas->getSizeRect(), subCanvas->getSizeRect(), Colors::none);
+            //NOTE: not sure why theres a 1 pixel offset for source rect, but without it the top line of pixels gets drawn on the bottom of the subcanvas.
+            drawRenderTargetRect(subCanvas->getRenderTarget(), subCanvas->getSizeRect()-Pos<float>(0,1), subCanvas->getSizeRect(), Colors::none);
             //subtract off the subcanvas' transform and render its foreground
             rlPushMatrix();
             rlMultMatrixf(MatrixToFloat(subCanvas->transform2D.inverse().matrix));

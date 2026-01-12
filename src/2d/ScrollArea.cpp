@@ -6,8 +6,6 @@ using namespace std;
 using namespace ReyEngine;
 
 void ScrollArea::render2D() const {
-   Logger::info() << testPos << endl;
-   drawCircle({testPos, 4}, Colors::blue);
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 ScrollArea::ScrollArea() {

@@ -11,7 +11,7 @@ namespace ReyEngine{
       REYENGINE_OBJECT(Label)
       Label(): _text(""){}
       Label(const std::string& text)
-      : _text(text)
+            : _text(text)
       {}
       void render2D() const override{
 //         ScopeScissor scissor(getSizeRect());
@@ -28,12 +28,25 @@ namespace ReyEngine{
             case Style::Outline::LINE:
                drawRectangleLines(getRect().toSizeRect(), theme->outline.linethick, theme->outline.colorPrimary);
                break;
-   //         case Style::Outline::SHADOW:
-   //            break;
+               //         case Style::Outline::SHADOW:
+               //            break;
             default:
                break;
          }
-          drawText(_displayText, {0, 0}, theme->font);
+         if (_wrap) {
+            float yPos = 0;
+            if (_wrappedText.empty()) return;
+
+            // Use the height of a sample string to determine line height
+            float lineHeight = theme->font->measure(" ").y;
+
+            for(const auto& line : _wrappedText){
+               drawText(line, {0, yPos}, theme->font);
+               yPos += lineHeight + Y_GAP_PXL;
+            }
+         } else {
+            drawText(_displayText, {0, 0}, theme->font);
+         }
       };
 
       void setMaxChars(size_t charCount){_maxCharCount = charCount;  setText(_text);}
@@ -47,13 +60,69 @@ namespace ReyEngine{
          if (expandOpt) {
             setMinSize(expandOpt.value());
          }
+         //recalculate wrapped text
+         _wrappedText.clear();
+         // BEGIN: MODIFIED setText
+         if (_wrap){
+            auto boxWidth = getSize().x;
+            // Can't wrap if there's no width to wrap into, or no text.
+            if (boxWidth <= 0 || _text.empty()) {
+               return;
+            }
+
+            std::string remainingText = _text;
+            while(!remainingText.empty()){
+               size_t breakIndex = 0; // The point in the string where we will break the line.
+               size_t lastGoodIndex = 0; // The last index that we know for sure fits.
+               size_t lastSpaceIndex = std::string::npos; // The index of the last space found.
+
+               // Find the longest possible line by checking character by character
+               for(size_t i = 1; i <= remainingText.length(); ++i){
+                  auto substr = remainingText.substr(0, i);
+                  if (theme->font->measure(substr).x > boxWidth){
+                     // This substring is too long, so the break must have happened before
+                     breakIndex = lastGoodIndex;
+                     break;
+                  }
+                  if (remainingText[i-1] == ' ') {
+                     lastSpaceIndex = i - 1;
+                  }
+                  lastGoodIndex = i;
+                  if (i == remainingText.length()){
+                     breakIndex = i; // The whole remaining text fits
+                  }
+               }
+
+               if (breakIndex == 0 && remainingText.length() > 0) {
+                  // This happens if not even one character fits.
+                  // Force a break at the first character to prevent an infinite loop.
+                  breakIndex = 1;
+               }
+
+               // Now decide where to actually cut the line
+               size_t cutIndex = breakIndex;
+               // If we are not at the end of the text and we found a space on the line, prefer that.
+               if(breakIndex < remainingText.length() && lastSpaceIndex != std::string::npos){
+                  cutIndex = lastSpaceIndex;
+               }
+
+               _wrappedText.push_back(remainingText.substr(0, cutIndex));
+
+               // Trim leading spaces from the start of the next line
+               size_t nextStart = cutIndex;
+               while(nextStart < remainingText.length() && remainingText[nextStart] == ' '){
+                  nextStart++;
+               }
+               remainingText = remainingText.substr(nextStart);
+            }
+         }
       }
       void appendText(const std::string& newText){
          _text += newText;
          if (!isLocked) {
             auto expandOpt = needsExpand();
             if (expandOpt) {
-                setMinSize(expandOpt.value());
+               setMinSize(expandOpt.value());
             }
          }
       }
@@ -69,7 +138,11 @@ namespace ReyEngine{
          setText(std::to_string(newText));
       }
       [[nodiscard]] std::string getText() const {return _text;}
-
+      bool setWrap(bool newWrap) {
+         _wrap = newWrap;
+         setText(_text);
+         return _wrap;
+      }
    protected:
       void _init() override {
          if (_text.empty()) _text = getName();
@@ -93,6 +166,9 @@ namespace ReyEngine{
       inline ReyEngine::Size<R_FLOAT> measureText() const {return theme->font->measure(_displayText);}
       std::string _text;
       std::string _displayText;
+      std::vector<std::string> _wrappedText;
+      bool _wrap = false; //enables wrapping aka multi-line mode
       size_t _maxCharCount = std::numeric_limits<size_t>::max();
+      static constexpr float Y_GAP_PXL = 2; //the vertical gap between lines
    };
 }

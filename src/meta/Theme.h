@@ -109,7 +109,9 @@ namespace ReyEngine {
    //A theme, the underlying class that controls widgets' appearances
    class Theme {
    public:
-      Theme(const std::string& instanceName = "DefaultTheme"){
+      Theme(const std::string& instanceName = "DefaultTheme")
+      {
+         name = instanceName;
          //apply defaults
          background.fill = Style::Fill::SOLID;
          background.colorPrimary = Colors::lightGray;
@@ -134,11 +136,20 @@ namespace ReyEngine {
       Style::Margins<float> widgetPadding; //only used for anchoring - adds pixel buffer around our edges - this is usually the one you want
       InputInterface::MouseCursor cursor;
       float segments = 5; //used for roundness
+      std::string name;
 
       //Set the size of the font
       void setFontSize(float size){
          font->size = size;
       }
+      std::shared_ptr<Theme> copy(const std::string& newThemeName){
+         auto newTheme = std::shared_ptr<Theme>(new Theme(*this));
+         newTheme->name = newThemeName;
+         return newTheme;
+      }
+   protected:
+      Theme(const Theme&) = default;
+      Theme& operator=(const Theme&) = default;
    };
 }
 

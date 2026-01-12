@@ -17,23 +17,24 @@ void LineEdit::render2D() const {
 
    static constexpr int textStartHPos = 1;
    auto renderText = [&](const std::string& text){
-      auto textWidth = measureText(text, font).x;
-      if (textWidth <= 0) return;
-      auto ourWidth = getWidth();
-      auto textStart = textWidth > ourWidth ? ourWidth - textWidth : 2;
 
-      drawText(text, {textStart, textPosV}, font);
    };
 
    //draw default text
-   if (_text.empty() && !_defaultText.empty()) {
+   auto displayText = _text.empty() ? _defaultText : _text;
+   bool isDefaultText = _text.empty();
+   if (!displayText.empty() && (!isDefaultText || !_isEditing)) {
       if (_highlight_start || _highlight_end) {
          auto highlightRect = getRect() - Size<R_FLOAT>(2, 2) + Pos<R_FLOAT>(1, 1);
          drawRectangle(highlightRect, theme->highlight.colorPrimary);
       }
-      renderText(_defaultText);
-   } else {
-      renderText(_text);
+      auto textWidth = measureText(displayText, font).x;
+      if (textWidth <= 0) return;
+      auto ourWidth = getWidth();
+      auto textStart = textWidth > ourWidth ? ourWidth - textWidth : 2;
+
+      auto color = _text.empty() ? font->colorDisabled : font->color;
+      drawText(displayText, {textStart, textPosV}, font, color, font->size, font->spacing);
    }
 
    //draw caret
@@ -45,7 +46,7 @@ void LineEdit::render2D() const {
          float caretHPos = 80;
          if (_caretPos == -1){
             //set caret to end
-            caretHPos = measureText(_text, theme->font).x;
+            caretHPos = measureText(_text, theme->font).x + 4;
             if (caretHPos > getWidth()){
                caretHPos = getWidth() - 2;
             }

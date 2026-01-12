@@ -987,6 +987,21 @@ namespace ReyEngine {
       }
 
       constexpr inline bool isInverted() const {return (width < 0 || height < 0);}
+      constexpr inline Rect& setTopRightPos(const Pos<T>& p){
+         x = p.x - width;
+         y = p.y;
+         return *this;
+      }
+      constexpr inline Rect& setBottomRightPos(const Pos<T>& p){
+         x = p.x - width;
+         y = p.y - height;
+         return *this;
+      }
+      constexpr inline Rect& setBottomLeftPos(const Pos<T>& p){
+         x = p.x;
+         y = p.y - height;
+         return *this;
+      }
       constexpr inline Rect& centerOnPoint(const Pos<R_FLOAT>& p) {
          return setPos(p - Pos<R_FLOAT>(size().toPos() / 2));
       } /// Return the rect such that it would be centered on point p
@@ -2095,6 +2110,7 @@ namespace ReyEngine {
       R_FLOAT spacing = 1;
       bool isDefault = true;
       ColorRGBA color = COLORS::black;
+      ColorRGBA colorDisabled = COLORS::gray;
       std::string fileName;
       ReyEngineFont copy() const;
       [[nodiscard]] Size<R_FLOAT> measure(const std::string& text) const;

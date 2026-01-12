@@ -23,9 +23,10 @@ void Panel::render2D() const {
    drawRectangleLines(getSizeRect(), 1.0, theme->background.colorSecondary);
    drawLine(_header.rect.bottom(), 1.0, theme->background.colorSecondary);
    drawTextCentered("x", _header.btnClose.center(), theme->font);
-   drawCircle({testPos, 4}, Colors::blue);
-   drawText(testPos.toString(), {10, 40}, theme->font);
-   drawText(testPos.toString(), {10, 40}, theme->font);
+   drawText(panelTitle, _header.titlePos, theme->font);
+//   drawCircle({testPos, 4}, Colors::blue);
+//   drawText(testPos.toString(), {10, 40}, theme->font);
+//   drawText(testPos.toString(), {10, 40}, theme->font);
 //   if (!_isMinimized) {
 //      //dont need to draw these if we're minimized
 //      static constexpr float roundness = 2.0;
@@ -167,15 +168,17 @@ void Panel::_on_rect_changed(){
    stretchRegion.at(3) = getSizeRect().splitAtVPos(getWidth() - STRETCH_REGION_SIZE).first;
 
    //update viewable area
-   _viewArea->setRect(getSizeRect().splitAtVPos(_header.rect.height).second.embiggen(-theme->layoutMargin));
+   _viewArea->setRect(getSizeRect().splitAtVPos(_header.rect.height).second.embiggen(-8));
+//   _viewArea->setTheme(_viewArea->getTheme().copy("ViewAreaTheme"));
 
    //header bar
-   static constexpr float HEADER_HEIGHT = 35;
-   static constexpr float BUTTON_SIZE = HEADER_HEIGHT - 10;
-   _header.rect = {0, 0, getWidth(), HEADER_HEIGHT};
-   _header.btnClose = {{0,0}, Size<float>(BUTTON_SIZE)};
-   _header.btnClose = _header.btnClose.centerV(_header.rect.right().midpoint());
-   _header.btnClose = _header.btnClose.alignRight(getSizeRect().right().midpoint() - Pos<float>(_header.btnClose.topRight().y, 0));
+   static constexpr float HEADER_HEIGHT_PXL = 35;
+   static constexpr float BUTTON_SIZE_PXL = HEADER_HEIGHT_PXL - 10;
+   static constexpr float HEADER_PADDING_PXL = (HEADER_HEIGHT_PXL - BUTTON_SIZE_PXL) / 2;
+   _header.rect = {0, 0, getWidth(), HEADER_HEIGHT_PXL};
+   _header.btnClose = {{0,0}, Size<float>(BUTTON_SIZE_PXL)};
+   _header.btnClose = _header.btnClose.setTopRightPos(_header.rect.topRight() + Pos<float>(-HEADER_PADDING_PXL, HEADER_PADDING_PXL));
+   _header.titlePos = _header.rect.topLeft() + Pos<float>(HEADER_PADDING_PXL, +HEADER_PADDING_PXL);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
