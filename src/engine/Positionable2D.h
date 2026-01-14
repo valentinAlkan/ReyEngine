@@ -18,7 +18,7 @@ namespace ReyEngine::Internal {
          if (isLocked) return;
          auto r = getRect();
          transform2D.setPosition(newPosition);
-         __on_rect_changed(r, getRect());
+         __on_rect_changed(r, getRect(), true);
       }
       inline void setPosition(R_FLOAT x, R_FLOAT y){setPosition({x, y});}
       inline void centerOnPoint(const Pos<R_FLOAT>&pos){setRect(getRect().centerOnPoint(pos));}
@@ -30,20 +30,20 @@ namespace ReyEngine::Internal {
          if (isLocked) return;
          auto r = getRect();
          transform2D.rotate(newRotation);
-         __on_rect_changed(r, getRect());
+         __on_rect_changed(r, getRect(), true);
       }
       inline void setScale(const Vec2<R_FLOAT>& newScale ){
          if (isLocked) return;
          auto r = getRect();
          transform2D.scale(newScale);
-         __on_rect_changed(r, getRect());
+         __on_rect_changed(r, getRect(), true);
       }
       inline void setSize(const Size<R_FLOAT>& newSize ){
          if (isLocked) return;
          auto r = getRect();
          size = newSize.max(minSize);
          size = size.min(maxSize);
-         __on_rect_changed(r, getRect());
+         __on_rect_changed(r, getRect(), true);
       }
       inline void setSize(R_FLOAT x, R_FLOAT y){setSize({x, y});}
       inline void setRect(const Rect<R_FLOAT>& newRect){
@@ -51,7 +51,7 @@ namespace ReyEngine::Internal {
          auto r = getRect();
          size = newRect.size();
          transform2D.setPosition(newRect.pos());
-         __on_rect_changed(r, newRect);
+         __on_rect_changed(r, newRect, true);
       }
       inline void setWidth(R_FLOAT x){setSize({x, getHeight()});}
       inline void setHeight(R_FLOAT y){setSize({getWidth(), y});}
@@ -109,7 +109,7 @@ namespace ReyEngine::Internal {
          size = rect.size();
       }
 
-      virtual void __on_rect_changed(const Rect<R_FLOAT>& oldRect, const Rect<R_FLOAT>& newRect, bool byLayout=false){}; //internal. Trigger resize for anchored widgets.
+      virtual void __on_rect_changed(const Rect<R_FLOAT>& oldRect, const Rect<R_FLOAT>& newRect, bool allowAnchor, bool byLayout=false){}; //internal. Trigger resize for anchored widgets.
 
 //      Transform2D  globalTransform;
       Transform2D transform2D;

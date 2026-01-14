@@ -60,9 +60,9 @@ void Widget::calculateAnchoring(const Rect<R_FLOAT>& r){
    float anchorHeight = 0;
    float anchorWidth = 0;
    if(parentWidget && getAnchoring() != Anchor::NONE) {
-      if (_anchorArea) {
-         anchorX = _anchorArea->x;
-         anchorY = _anchorArea->y;
+      if (parentWidget.value()->_anchorArea) {
+         anchorX = parentWidget.value()->_anchorArea->x;
+         anchorY = parentWidget.value()->_anchorArea->y;
          anchorHeight = parentWidget.value()->_anchorArea->height;
          anchorWidth = parentWidget.value()->_anchorArea->width;
       } else {
@@ -172,8 +172,9 @@ void Widget::setAnchoring(Anchor newAnchor) {
          Logger::error() << _node->getScenePath() << ": Anchoring failure : " << getName() << " has no parent!" << endl;
          return;
       }
-   if (parent->as<Layout>()) {
-      Logger::error() << _node->getScenePath() << ": Children of layouts cannot have anchoring!" << endl;
+   auto isLayout = parent->as<Layout>();
+   if (isLayout && !isLayout.value()->getAllowsAnchoring()) {
+      Logger::error() << _node->getScenePath() << ": This layout does not allow anchoring!" << endl;
       return;
    }
    _anchor = newAnchor;

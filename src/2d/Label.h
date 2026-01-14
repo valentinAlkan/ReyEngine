@@ -62,7 +62,7 @@ namespace ReyEngine{
          }
          //recalculate wrapped text
          _wrappedText.clear();
-         // BEGIN: MODIFIED setText
+
          if (_wrap){
             auto boxWidth = getSize().x;
             // Can't wrap if there's no width to wrap into, or no text.
@@ -117,15 +117,7 @@ namespace ReyEngine{
             }
          }
       }
-      void appendText(const std::string& newText){
-         _text += newText;
-         if (!isLocked) {
-            auto expandOpt = needsExpand();
-            if (expandOpt) {
-               setMinSize(expandOpt.value());
-            }
-         }
-      }
+      void appendText(const std::string& newText){setText(getText() + newText);}
       //precision refers to how many decimal places should appear
       void setText(double newText, int precision){
          auto textRepr = std::to_string(newText);

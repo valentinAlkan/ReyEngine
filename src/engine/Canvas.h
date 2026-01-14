@@ -76,7 +76,7 @@ namespace ReyEngine {
       [[nodiscard]] const RenderTarget& getRenderTarget() const {return _renderTarget;}
       Widget* __process_unhandled_input(const InputEvent& event) override;
       Widget* __process_hover(const InputEventMouseHover& event);
-      void __on_rect_changed(const Rect<R_FLOAT>& oldRect, const Rect<R_FLOAT>& newRect, bool byLayout = false) override;
+      void __on_rect_changed(const Rect<R_FLOAT>& oldRect, const Rect<R_FLOAT>& newRect, bool allowsAnchor, bool byLayout = false) override;
       void _removeAllStatus(Widget*);
 
       RenderTarget _renderTarget;

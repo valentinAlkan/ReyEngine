@@ -44,7 +44,7 @@ namespace ReyEngine {
                shader = LoadShader(f.canonical().c_str(), nullptr);
             }
          }
-         if (IsShaderReady(shader)) return shader;
+         if (IsShaderValid(shader)) return shader;
          return {};
       }
 
@@ -70,7 +70,7 @@ namespace ReyEngine {
                shader = LoadShaderFromMemory(source.c_str(), nullptr);
             }
          }
-         if (IsShaderReady(shader)) return shader;
+         if (IsShaderValid(shader)) return shader;
          return {};
       }
       struct ShaderPrototype{Shader shader;};
@@ -223,7 +223,7 @@ namespace ReyEngine {
          }
       };
       ~ReyShader();
-      [[nodiscard]] bool valid(){return IsShaderReady(_shader);}
+      [[nodiscard]] bool valid(){return IsShaderValid(_shader);}
       template <typename T>
       [[nodiscard]] ShaderValue<Attribute, T> getAttribute(const std::string& name){
          return ShaderValue<Attribute, T>(*this, name);

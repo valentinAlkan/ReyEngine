@@ -7,6 +7,7 @@
 
 namespace ReyEngine {
    enum class Anchor{NONE, LEFT, RIGHT, TOP, TOP_WIDTH, BOTTOM, FILL, TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, CENTER, CUSTOM};
+   class FocusGroup;
    class Widget
    : public Internal::Drawable2D
    , public Internal::Tree::Processable
@@ -117,10 +118,10 @@ namespace ReyEngine {
          _on_visibility_changed();
       }
 
-      void __on_rect_changed(const Rect<R_FLOAT>& oldRect, const Rect<R_FLOAT>& newRect, bool byLayout = false) override {
-         if (!byLayout) {
-            //layout will have already resized children
-            calculateAnchoring(getRect());
+      void __on_rect_changed(const Rect<R_FLOAT>& oldRect, const Rect<R_FLOAT>& newRect, bool allowAnchor, bool byLayout = false) override {
+         if (allowAnchor) {
+            //layout will have already resized children by now
+            calculateAnchoring(newRect);
          }
          _on_rect_changed();
          auto event = RectChangedEvent(this, oldRect);
@@ -136,7 +137,7 @@ namespace ReyEngine {
 
          //might not be in tree yet.
          if (!getNode()) return;
-         if (byLayout) return; //layouts don't inform their parents when the child rect is changed
+         if (byLayout) return; //children of layouts don't always inform their parents when the child rect is changed
          if (auto parent = getParentWidget()) {
             if (parent) {
                parent.value()->_on_child_rect_changed(this);

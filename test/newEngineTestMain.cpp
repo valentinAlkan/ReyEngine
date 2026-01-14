@@ -167,7 +167,9 @@ int main() {
 
          // add some children to the layout
          auto subcanvas = make_child<Canvas>(layoutl, "SubCanvas");
-//         make_child<PosTestWidget>(subcanvas, "SubCanvasTestWidget", "test")->setPosition({100, 100});
+         auto ptw = make_child<PosTestWidget>(subcanvas, "SubCanvasTestWidget", "test");
+         ptw->setPosition({100, 100});
+         ptw->setFocused(true);
          auto panela = make_child<Panel>(subcanvas, "SubCanvasPanel");
          panela->setPosition({300, 100});
          panela->setSize(100,100);

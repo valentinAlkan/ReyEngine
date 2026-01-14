@@ -26,8 +26,8 @@ void Canvas::__on_child_removed_from_tree(TypeNode *n) {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
-void Canvas::__on_rect_changed(const Rect<float> &oldRect, const Rect<R_FLOAT>& newRect, bool byLayout) {
-   Widget::__on_rect_changed(oldRect, newRect, byLayout);
+void Canvas::__on_rect_changed(const Rect<float> &oldRect, const Rect<float> &newRect, bool allowsAnchor, bool byLayout) {
+   Widget::__on_rect_changed(oldRect, newRect, allowsAnchor, byLayout);
    if (oldRect.size() != newRect.size()) {
       _renderTarget.setSize(getSize());
    }

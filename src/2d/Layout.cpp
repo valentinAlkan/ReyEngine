@@ -157,146 +157,177 @@ void Layout::layoutApplyRect(Widget* widget, Rect<float>& r){
    r.clampWidth({minSize.x, maxSize.x});
    r.clampHeight({minSize.y, maxSize.y});
    widget->applyRect(r);
-   widget->__on_rect_changed(oldRect, getRect(), true);
+   widget->__on_rect_changed(oldRect, widget->getRect(), _allowsAnchoring, true);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Layout::_on_rect_changed() {
-   _layoutArea = getSizeRect();
    arrangeChildren();
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 void Layout::arrangeChildren() {
    if (getChildren().empty()) return;
+   //use layout area if one is specified, otherwise use size rect
+   auto layoutArea = _layoutArea;
+   if (!layoutArea) layoutArea = getSizeRect();
    const auto childCount = getChildren().size();
-   if (layoutDir == LayoutDir::GRID){
-      //divide the space into boxes, each box being large enough to exactly contain the largest child (in either dimension)
-      // Center each child inside it's respective box.
+   switch (layoutDir) {
+      case LayoutDir::GRID: {
+         //divide the space into boxes, each box being large enough to exactly contain the largest child (in either dimension)
+         // Center each child inside it's respective box.
 
-      //determine box size
-      Size<int> boundingBox;
-      for (const auto& child : getChildren()){
-         auto isWidget = child->as<Widget>();
-         if (!isWidget) continue;
-         auto widget = isWidget.value();
-         boundingBox = boundingBox.max(widget->getMaxSize());
-      }
-      if (!boundingBox.x || !boundingBox.y) return; //invalid rect
-      //create subrects to lay out the children
-      if (getWidth()!=0 && getHeight()!=0) {
-         for (int i = 0; i < childCount; i++) {
-            auto child = getChildren().at(i);
+         //determine box size
+         Size<int> boundingBox;
+         for (const auto &child: getChildren()) {
             auto isWidget = child->as<Widget>();
             if (!isWidget) continue;
             auto widget = isWidget.value();
-            auto subrect= getRect().toSizeRect().getSubRect(boundingBox, i);
-            layoutApplyRect(widget, subrect);
+            boundingBox = boundingBox.max(widget->getMaxSize());
          }
+         if (!boundingBox.x || !boundingBox.y) return; //invalid rect
+         //create subrects to lay out the children
+         if (getWidth() != 0 && getHeight() != 0) {
+            for (int i = 0; i < childCount; i++) {
+               auto child = getChildren().at(i);
+               auto isWidget = child->as<Widget>();
+               if (!isWidget) continue;
+               auto widget = isWidget.value();
+               auto subrect = getRect().toSizeRect().getSubRect(boundingBox, i);
+               layoutApplyRect(widget, subrect);
+            }
+         }
+         break;
       }
-   } else {
-      const auto expandingDimension = layoutDir == LayoutDir::HORIZONTAL ? _layoutArea.width : _layoutArea.height;
-      if (expandingDimension <= 0) return; //do not try to allocate for 0 sizes
-      // For front and back alignment, set all widgets to their minimum/maximum size, then allocate the leftover space to nothing.
-      switch (alignment){
-         case Alignment::FRONT:{
-            R_FLOAT pos = _layoutArea.x;
-            for (int i=0; i<childCount; i++){
-               //just make the thing as small as possible - setpendingrect will spit back its minimum size
-               auto child = getChildren().at(i);
-               auto isWidget = child->as<Widget>();
-               if (!isWidget) continue;
-               LayoutHelper helper(layoutDir, i, childCount, this, isWidget.value());
-               helper.setRelevantPosition(pos);
-               auto pendingRect = layoutDir == LayoutDir::HORIZONTAL ? Rect<R_FLOAT>(pos, _layoutArea.y, 0, _layoutArea.height) : Rect<R_FLOAT>(_layoutArea.x, pos, _layoutArea.width, 0);
-               auto minSizeOpt = helper.setPendingRect(pendingRect);
-               //will either be constrained, or be 0, so we don't need to check other conditions
-               if (minSizeOpt && minSizeOpt.value()){
-                  pos += minSizeOpt.value();
-               }
-            }
-            break;}
-         case Alignment::BACK:{
-            R_FLOAT pos = layoutDir == LayoutDir::HORIZONTAL ? _layoutArea.topRight().x : _layoutArea.bottomLeft().y;
-            for (int i=0; i<childCount; i++){
-               //just make the thing as small as possible - setpendingrect will spit back its minimum size
-               auto child = getChildren().at(i);
-               auto isWidget = child->as<Widget>();
-               if (!isWidget) continue;
-               LayoutHelper helper(layoutDir, i, childCount, this, isWidget.value());
-               auto pendingRect = layoutDir == LayoutDir::HORIZONTAL ? Rect<R_FLOAT>(_layoutArea.pos(), {0, _layoutArea.height}) : Rect<R_FLOAT>(_layoutArea.pos(), {_layoutArea.width, 0});
-               auto minSizeOpt = helper.setPendingRect(pendingRect);
-               //will either be constrained, or be 0, so we don't need to check other conditions
-               if (minSizeOpt){
-                  pos -= minSizeOpt.value();
-               }
-               helper.setRelevantPosition(pos);
-            }
-            break;}
-         case Alignment::EVEN:{
-            //how much space we will allocate to each child
-            auto totalSizeToAllocate = expandingDimension;
-            if constexpr (VERBOSE) Logger::debug() << "Layout " << getName() << " has " << childCount << " children" << endl;
-
-            //determine which children we are giving space to. Children which are maxed out will not be considered
-            // in this calculation. Start with a vector of all children, and remove them as we need to.
-            // use unique ptrs in case things get reallocated
-            std::vector<std::unique_ptr<LayoutHelper>> childLayoutsAll;
-            std::vector<LayoutHelper*> childLayoutsAvailable;
-            for (int i=0; i<childCount; i++){
-               auto child = getChildren().at(i);
-               auto isWidget = child->as<Widget>();
-               if (!isWidget) continue;
-               childLayoutsAll.emplace_back(make_unique<LayoutHelper>(layoutDir, i, childCount, this, isWidget.value()));
-               childLayoutsAvailable.push_back(childLayoutsAll.back().get());
-            }
-            auto removeLayoutFromConsideration = [&](LayoutHelper* layout){
-               for (auto it = childLayoutsAvailable.begin(); it != childLayoutsAvailable.end(); it++){
-                  if (layout == *it){
-                     childLayoutsAvailable.erase(it);
-                     return;
+      case LayoutDir::HORIZONTAL:
+      case LayoutDir::VERTICAL:{
+         const auto expandingDimension = layoutDir == LayoutDir::HORIZONTAL ? layoutArea.width : layoutArea.height;
+         if (expandingDimension <= 0) return; //do not try to allocate for 0 sizes
+         // For front and back alignment, set all widgets to their minimum/maximum size, then allocate the leftover space to nothing.
+         switch (alignment) {
+            case Alignment::FRONT: {
+               R_FLOAT pos = layoutArea.x;
+               for (int i = 0; i < childCount; i++) {
+                  //just make the thing as small as possible - setpendingrect will spit back its minimum size
+                  auto child = getChildren().at(i);
+                  auto isWidget = child->as<Widget>();
+                  if (!isWidget) continue;
+                  LayoutHelper helper(layoutDir, i, childCount, this, isWidget.value());
+                  helper.setRelevantPosition(pos);
+                  auto pendingRect =
+                        layoutDir == LayoutDir::HORIZONTAL ? Rect<R_FLOAT>(pos, layoutArea.y, 0, layoutArea.height)
+                                                           : Rect<R_FLOAT>(layoutArea.x, pos, layoutArea.width, 0);
+                  auto minSizeOpt = helper.setPendingRect(pendingRect);
+                  //will either be constrained, or be 0, so we don't need to check other conditions
+                  if (minSizeOpt && minSizeOpt.value()) {
+                     pos += minSizeOpt.value();
                   }
                }
-            };
+               break;
+            }
+            case Alignment::BACK: {
+               R_FLOAT pos = layoutDir == LayoutDir::HORIZONTAL ? layoutArea.topRight().x : layoutArea.bottomLeft().y;
+               for (int i = 0; i < childCount; i++) {
+                  //just make the thing as small as possible - setpendingrect will spit back its minimum size
+                  auto child = getChildren().at(i);
+                  auto isWidget = child->as<Widget>();
+                  if (!isWidget) continue;
+                  LayoutHelper helper(layoutDir, i, childCount, this, isWidget.value());
+                  auto pendingRect =
+                        layoutDir == LayoutDir::HORIZONTAL ? Rect<R_FLOAT>(layoutArea.pos(), {0, layoutArea.height})
+                                                           : Rect<R_FLOAT>(layoutArea.pos(), {layoutArea.width, 0});
+                  auto minSizeOpt = helper.setPendingRect(pendingRect);
+                  //will either be constrained, or be 0, so we don't need to check other conditions
+                  if (minSizeOpt) {
+                     pos -= minSizeOpt.value();
+                  }
+                  helper.setRelevantPosition(pos);
+               }
+               break;
+            }
+            case Alignment::EVEN: {
+               //how much space we will allocate to each child
+               auto totalSizeToAllocate = expandingDimension;
+               if constexpr (VERBOSE)
+                  Logger::debug() << "Layout " << getName() << " has " << childCount << " children" << endl;
 
-            bool startOver = false;
-            if constexpr (VERBOSE) Logger::debug() << "Parent " << getName() << " allocating " << getSize() << " pixels to children!" << endl;
-            do {
-               for (auto& _layout: childLayoutsAvailable){
-                  auto& layout = _layout;
-                  startOver = false;
-                  float allocatedSpace;
-                  {
-                     double denominator = 0;
-                     double numerator = layoutRatios.at(layout->childIndex);
-                     for (int i=0; i<childLayoutsAvailable.size(); i++) {
-                        denominator += layoutRatios.at(childLayoutsAvailable.at(i)->childIndex);
+               //determine which children we are giving space to. Children which are maxed out will not be considered
+               // in this calculation. Start with a vector of all children, and remove them as we need to.
+               // use unique ptrs in case things get reallocated
+               std::vector<std::unique_ptr<LayoutHelper>> childLayoutsAll;
+               std::vector<LayoutHelper *> childLayoutsAvailable;
+               for (int i = 0; i < childCount; i++) {
+                  auto child = getChildren().at(i);
+                  auto isWidget = child->as<Widget>();
+                  if (!isWidget) continue;
+                  childLayoutsAll.emplace_back(make_unique<LayoutHelper>(layoutDir, i, childCount, this, isWidget.value()));
+                  childLayoutsAvailable.push_back(childLayoutsAll.back().get());
+               }
+               auto removeLayoutFromConsideration = [&](LayoutHelper *layout) {
+                  for (auto it = childLayoutsAvailable.begin(); it != childLayoutsAvailable.end(); it++) {
+                     if (layout == *it) {
+                        childLayoutsAvailable.erase(it);
+                        return;
                      }
-                     allocatedSpace = totalSizeToAllocate * numerator / denominator;
-                     if constexpr (VERBOSE) Logger::debug() << "Child " << layout->child->getName() << " with scale of " << numerator << "/" << denominator << " can potentially be allocated " << allocatedSpace << " pixels" << endl;
                   }
-                  std::optional<int> isConstrained;
-                  if (layoutDir == LayoutDir::HORIZONTAL) {
-                     isConstrained = layout->setPendingRect({_layoutArea.pos(),{allocatedSpace, _layoutArea.height}});
-                  } else {
-                     isConstrained = layout->setPendingRect({_layoutArea.pos(), {_layoutArea.width, allocatedSpace}});
-                  }
-                  if (isConstrained) {
-                     removeLayoutFromConsideration(layout);
-                     totalSizeToAllocate -= isConstrained.value();
-                     startOver = true;
-                  }
-                  if (startOver) break;
-               }
-            } while (startOver && !childLayoutsAvailable.empty());
+               };
 
-            // Now that the sizes of the children are correctly determined, we must place them at their appropriate positions
-            int currentPos = layoutDir == LayoutDir::HORIZONTAL ? _layoutArea.x : _layoutArea.y;
-            for (auto& layout : childLayoutsAll) {
-               layout->setRelevantPosition(currentPos);
-               currentPos += layout->getReleventDimension();
+               bool startOver = false;
+               if constexpr (VERBOSE)
+                  Logger::debug() << "Parent " << getName() << " allocating " << getSize() << " pixels to children!"
+                                  << endl;
+               do {
+                  for (auto &_layout: childLayoutsAvailable) {
+                     auto &layout = _layout;
+                     startOver = false;
+                     float allocatedSpace;
+                     {
+                        double denominator = 0;
+                        double numerator = layoutRatios.at(layout->childIndex);
+                        for (int i = 0; i < childLayoutsAvailable.size(); i++) {
+                           denominator += layoutRatios.at(childLayoutsAvailable.at(i)->childIndex);
+                        }
+                        allocatedSpace = totalSizeToAllocate * numerator / denominator;
+                        if constexpr (VERBOSE)
+                           Logger::debug() << "Child " << layout->child->getName() << " with scale of " << numerator
+                                           << "/" << denominator << " can potentially be allocated " << allocatedSpace
+                                           << " pixels" << endl;
+                     }
+                     std::optional<int> isConstrained;
+                     if (layoutDir == LayoutDir::HORIZONTAL) {
+                        isConstrained = layout->setPendingRect({layoutArea.pos(), {allocatedSpace, layoutArea.height}});
+                     } else {
+                        isConstrained = layout->setPendingRect({layoutArea.pos(), {layoutArea.width, allocatedSpace}});
+                     }
+                     if (isConstrained) {
+                        removeLayoutFromConsideration(layout);
+                        totalSizeToAllocate -= isConstrained.value();
+                        startOver = true;
+                     }
+                     if (startOver) break;
+                  }
+               } while (startOver && !childLayoutsAvailable.empty());
+
+               // Now that the sizes of the children are correctly determined, we must place them at their appropriate positions
+               int currentPos = layoutDir == LayoutDir::HORIZONTAL ? layoutArea.x : layoutArea.y;
+               for (auto &layout: childLayoutsAll) {
+                  layout->setRelevantPosition(currentPos);
+                  currentPos += layout->getReleventDimension();
+               }
+               break;
             }
+         }
          break;}
-      }
+      case LayoutDir::NONE:
+         //simply push the children into the layoutarea
+         for (auto& child : getChildren()){
+            if (auto isWidget = child->as<Widget>()){
+               auto& widget = isWidget.value();
+               if constexpr (VERBOSE) Logger::debug() << "Using layout area " << layoutArea << endl;
+               auto restrictedRect = widget->getRect().restrictTo(layoutArea);
+               layoutApplyRect(widget, restrictedRect);
+               if constexpr (VERBOSE) Logger::debug() << "Parent " << getNode()->getName() << " applying rectangle " << restrictedRect << " to child " << widget->getNode()->getName() << endl;
+            }
+         }
    }
 }
 

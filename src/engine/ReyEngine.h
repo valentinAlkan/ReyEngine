@@ -1176,10 +1176,19 @@ namespace ReyEngine {
 
       // constrains this rectangle's position so that it is INSIDE the larger rectangle, otherwise does nothing
       constexpr inline Rect& restrictTo(const Rect& larger) {
-         if (x + width > larger.x + larger.width) x = larger.x + larger.width - width;
-         if (x < larger.x) x += larger.x - x;
-         if (y + height > larger.y + larger.height) y = larger.y + larger.height - height;
-         if (y < larger.y) y += larger.y - y;
+         auto container = larger.normalized();
+         normalize();
+
+         if (width > container.width) width = container.width;
+         if (height > container.height) height = container.height;
+         if (x < container.x) x = container.x;
+         if (y < container.y) y = container.y;
+         if (x + width > container.x + container.width) {
+            x = container.x + container.width - width;
+         }
+         if (y + height > container.y + container.height) {
+            y = container.y + container.height - height;
+         }
          return *this;
       }
 
@@ -1196,11 +1205,11 @@ namespace ReyEngine {
       // return a rectangle that would render the same but has positive width and height
       constexpr inline void normalize() {
          if (width < 0) {
-            x += width;
+            x += -width;
             width = -width;
          }
          if (height < 0) {
-            y += height;
+            y += -height;
             height = -height;
          }
       }
@@ -1430,7 +1439,7 @@ namespace ReyEngine {
 
       //Split into two rects, vertically, at a specific y value
       constexpr inline std::pair<Rect<float>, Rect<float>> splitAtVPos(float vPos){
-         Rect<float> top(x, y, width, vPos - y);
+         Rect<float> top(x, vPos, width, height);
          Rect<float> bottom(x, vPos, width, (y + height) - vPos);
          return {top, bottom};
       }
@@ -1645,6 +1654,7 @@ namespace ReyEngine {
       [[nodiscard]] constexpr Rect alignBottom(const Pos<T>& p){ return {x, p.y - height, width, height}; }
       [[nodiscard]] constexpr Rect centerH(const Pos<T>& p){ return {p.x - width / 2, y, width, height}; }
       [[nodiscard]] constexpr Rect centerV(const Pos<T>& p){ return {x, p.y - height / 2, width, height}; }
+      [[nodiscard]] constexpr std::array<Line<float>, 4> getLines() const {return {top(), right(), bottom(), left()};}
 
       //centers text in the given rectangle
       [[nodiscard]] static Rect<float> textRectangleCentered(const std::string& text, const Pos<float>& pos, const ReyEngineFont& font);
@@ -2330,6 +2340,8 @@ namespace ReyEngine {
    void drawCircleSector(const CircleSector&, const ColorRGBA&  color, int segments);
    void drawCircleSectorLines(const CircleSector&, const ColorRGBA&  color, int segments);
    void drawLine(const Line<R_FLOAT>&, float lineThick, const ColorRGBA& color);
+   void drawDashedLine(const Line<R_FLOAT>&, int dashLen, int blankLen, const ColorRGBA&);
+   void drawDashedRectangleLines(const Rect<float> &r, int dashLen, int blankLen, const ReyEngine::ColorRGBA &color);
    void drawArrow(const Line<R_FLOAT>&, float lineThick, const ColorRGBA& color, float headSize=20); //Head drawn at A
    void drawArrowHead(const Line<R_FLOAT>&, float lineThick, const ColorRGBA& color, float headSize=20); //Head drawn at A
    void drawTexture(const ReyTexture& texture, const Rect<R_FLOAT>& source, const Rect<R_FLOAT>& dest, const ColorRGBA& tint);

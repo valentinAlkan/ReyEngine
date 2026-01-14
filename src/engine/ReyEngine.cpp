@@ -177,7 +177,7 @@ void ReyEngine::drawRectangleLines(const Rect<R_FLOAT>& r, float lineThick, cons
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::drawRectangleRoundedLines(const Rect<R_FLOAT>& r, float roundness, int segments, float lineThick, const ReyEngine::ColorRGBA& color) {
-   DrawRectangleRoundedLines({r.x, r.y, r.width, r.height}, roundness, segments, lineThick, color);
+   DrawRectangleRoundedLinesEx({r.x, r.y, r.width, r.height}, roundness, segments, lineThick, color);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -212,6 +212,38 @@ void ReyEngine::drawCircleSectorLines(const CircleSector& sector, const ReyEngin
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::drawLine(const Line<R_FLOAT>& line, float lineThick, const ReyEngine::ColorRGBA& color) {
    DrawLineEx((Vector2)line.a, (Vector2)line.b, lineThick, color);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawDashedLine(const Line<R_FLOAT>& l , int dashLength, int blankLength, const ColorRGBA& color){
+   auto& startPos = l.a;
+   auto& endPos = l.b;
+   float lineLength = Vector2Distance(startPos, endPos);
+   Vector2 direction = Vector2Normalize(Vector2Subtract(endPos, startPos));
+
+   float remaining = lineLength;
+   Vector2 currentPos = startPos;
+
+   while (remaining >= (dashLength + blankLength))
+   {
+      Vector2 dashEnd = Vector2Add(currentPos, Vector2Scale(direction, dashLength));
+      DrawLineV(currentPos, dashEnd, color);
+      currentPos = Vector2Add(dashEnd, Vector2Scale(direction, blankLength));
+      remaining -= (dashLength + blankLength);
+   }
+
+   // Draw the last partial dash if any
+   if (remaining > 0)
+   {
+      DrawLineV(currentPos, endPos, color);
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawDashedRectangleLines(const Rect<float> &r, int dashLen, int blankLen, const ReyEngine::ColorRGBA &color) {
+   for (auto& line : r.getLines()){
+      drawDashedLine(line, dashLen, blankLen, color);
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

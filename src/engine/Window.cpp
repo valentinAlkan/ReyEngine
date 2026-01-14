@@ -38,6 +38,7 @@ void Window::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
    _root = std::move(node);
    canvas->setSize(getSize());
    canvas->window = this;
+   SetExitKey(KEY_NULL);
 //   root->_init();
 //   root->_has_inited = true;
 //   root->setRect(Rect<int>(0, 0, startingWidth, startingHeight)); //initialize to be the same size as the window
@@ -46,7 +47,6 @@ void Window::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Window::exec(){
-   InputInterface::setExitKey(InputInterface::KeyCode::KEY_ESCAPE);
    auto canvas = _root->ref<Canvas>();
    Size<float> size;
    Pos<float> position;

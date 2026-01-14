@@ -16,10 +16,6 @@ void LineEdit::render2D() const {
    float textPosV = ((availableHeight - textheight) / 2);
 
    static constexpr int textStartHPos = 1;
-   auto renderText = [&](const std::string& text){
-
-   };
-
    //draw default text
    auto displayText = _text.empty() ? _defaultText : _text;
    bool isDefaultText = _text.empty();
@@ -78,7 +74,6 @@ void LineEdit::setText(const std::string& _newText, bool noPublish) {
 
 ///////////////////////////////////////////////////////////////////////////////////////
 Widget* LineEdit::_unhandled_input(const InputEvent& event) {
-   bool handleInput;
    if (auto isMouse = event.isMouse()){
       auto& mouse = isMouse.value();
       switch (event.eventId) {
@@ -86,6 +81,7 @@ Widget* LineEdit::_unhandled_input(const InputEvent& event) {
             const auto& mouseEvent = event.toEvent<InputEventMouseButton>();
             if (mouse->isInside()) {
                if (!mouseEvent.isDown) {
+                  Logger::info() << getName() << endl;
                   if (isFocused()){
                      //has input - move caret
                      //see if we clicked off the end
@@ -114,6 +110,7 @@ Widget* LineEdit::_unhandled_input(const InputEvent& event) {
    if (_isEditing){
       switch (event.eventId) {
          case InputEventChar::getUniqueEventId(): {
+            if (!isFocused()) break;
             const auto& charEvent = event.toEvent<InputEventChar>();
             auto oldText = _text;
             _text += charEvent.ch;
@@ -122,7 +119,9 @@ Widget* LineEdit::_unhandled_input(const InputEvent& event) {
          }
          case InputEventKey::getUniqueEventId(): {
             const auto& keyEvent = event.toEvent<InputEventKey>();
+            if (!isFocused()) break;
             switch (keyEvent.key) {
+               default: break;
                case InputInterface::KeyCode::KEY_BACKSPACE:
                   if (keyEvent.isDown) {
                      if (!_text.empty()) {
@@ -153,7 +152,10 @@ void LineEdit::_init() {
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void LineEdit::_on_focus_gained() {
-   _isEditing = true;
+   if (!_isEditing) {
+      _isEditing = true;
+      _caretPos = -1;
+   }
 }
 ///////////////////////////////////////////////////////////////////////////////////////
 void LineEdit::_on_focus_lost() {

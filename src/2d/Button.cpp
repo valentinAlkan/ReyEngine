@@ -27,7 +27,9 @@ Widget* Button::_unhandled_input(const InputEvent& event) {
                _on_down();
                _drawState = DrawState::DOWN;
             }
-            setFocused(false);
+            if (!isInside) {
+               setFocused(false);
+            }
             return this;
          }
       }
@@ -88,6 +90,9 @@ void Button::_render2D() const {
        drawRectangleRoundedLines(size.embiggen(-1), theme->outline.roundness, SEGMENTS, 1.0, COLORS::white);
     }
     drawTextCentered(text, getSizeRect().center(), *theme->font, textColor, theme->font->size, theme->font->spacing);
+    if (isFocused()){
+       drawDashedRectangleLines(getSizeRect().embiggen(-3), 5, 5, theme->foreground.colorSecondary);
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

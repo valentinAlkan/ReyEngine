@@ -12,12 +12,12 @@ Panel::Panel()
 , REGION_SOUTH(stretchRegion[2])
 , REGION_WEST(stretchRegion[3])
 {
-
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::render2D() const {
    //draw the header
+   drawRectangle(getSizeRect(), theme->background.colorPrimary);
    drawRectangle(_header.rect, theme->background.colorTertiary);
    drawRectangle(_header.btnClose, Colors::red);
    drawRectangleLines(getSizeRect(), 1.0, theme->background.colorSecondary);
@@ -60,11 +60,9 @@ void Panel::render2D() const {
 //}
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Panel::__init() {
-   Canvas::_init();
+void Panel::_init() {
    theme->background.fill = Style::Fill::SOLID;
    theme->background.colorPrimary = ReyEngine::ColorRGBA(94, 142, 181, 255);
-   _viewArea = ::make_child<Widget>(this, "viewArea");
    _on_rect_changed();
    setAcceptsHover(true);
    _inputFilter = InputFilter::PROCESS_AND_PASS;
@@ -161,15 +159,11 @@ void Panel::__init() {
 void Panel::_on_rect_changed(){
    //update render masks
    //adjust stretch regions
-   static constexpr int STRETCH_REGION_SIZE = 5;
-   stretchRegion.at(0) = getSizeRect().splitAtHPos(getHeight() - STRETCH_REGION_SIZE).first;
-   stretchRegion.at(1) = getSizeRect().splitAtVPos(getWidth() - STRETCH_REGION_SIZE).second;
-   stretchRegion.at(2) = getSizeRect().splitAtHPos(getHeight() - STRETCH_REGION_SIZE).second;
-   stretchRegion.at(3) = getSizeRect().splitAtVPos(getWidth() - STRETCH_REGION_SIZE).first;
-
-   //update viewable area
-   _viewArea->setRect(getSizeRect().splitAtVPos(_header.rect.height).second.embiggen(-8));
-//   _viewArea->setTheme(_viewArea->getTheme().copy("ViewAreaTheme"));
+//   static constexpr int STRETCH_REGION_SIZE = 5;
+//   stretchRegion.at(0) = getSizeRect().splitAtHPos(getHeight() - STRETCH_REGION_SIZE).first;
+//   stretchRegion.at(1) = getSizeRect().splitAtVPos(getWidth() - STRETCH_REGION_SIZE).second;
+//   stretchRegion.at(2) = getSizeRect().splitAtHPos(getHeight() - STRETCH_REGION_SIZE).second;
+//   stretchRegion.at(3) = getSizeRect().splitAtVPos(getWidth() - STRETCH_REGION_SIZE).first;
 
    //header bar
    static constexpr float HEADER_HEIGHT_PXL = 35;
@@ -179,11 +173,7 @@ void Panel::_on_rect_changed(){
    _header.btnClose = {{0,0}, Size<float>(BUTTON_SIZE_PXL)};
    _header.btnClose = _header.btnClose.setTopRightPos(_header.rect.topRight() + Pos<float>(-HEADER_PADDING_PXL, HEADER_PADDING_PXL));
    _header.titlePos = _header.rect.topLeft() + Pos<float>(HEADER_PADDING_PXL, +HEADER_PADDING_PXL);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-TypeNode* Panel::addChild(std::unique_ptr<TypeNode>&& child) {
-   return _viewArea->addChild(std::move(child));
+   _anchorArea = getSizeRect().splitAtVPos(_header.rect.height).second.embiggen(-8);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -253,7 +243,6 @@ Widget* Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
          break;
       case InputEventMouseMotion::getUniqueEventId():
          auto &mmEvent = event.toEvent<InputEventMouseMotion>();
-         testPos = mmEvent.mouse.getLocalPos();
          //no dragging or resizing if we're maximized
          if (_isMaximized) break;
          auto delta = mmEvent.mouse.getLocalPos() - dragStart;
@@ -366,4 +355,5 @@ void Panel::hide(){
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::show(){
    setVisible(true);
+   setFocused(true);
 }

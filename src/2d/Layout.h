@@ -12,7 +12,8 @@ namespace ReyEngine{
       enum class Alignment{EVEN, FRONT, BACK};
 
       Layout(Layout::LayoutDir layoutDir);
-      ReyEngine::Size<int> calculateIdealBoundingBox();
+      [[nodiscard]] ReyEngine::Size<int> calculateIdealBoundingBox();
+      [[nodiscard]] bool getAllowsAnchoring() const {return _allowsAnchoring;}
       std::vector<float> layoutRatios;
       Alignment alignment;
       /////////////////////////////////////////////////////////////////////////////////////////
@@ -27,6 +28,7 @@ namespace ReyEngine{
       void render2D() const override;
       const LayoutDir layoutDir;
       bool _usesLayoutRatios = false; //different types of layouts might not use layout ratios.
+      bool _allowsAnchoring = false; //layouts can allow anchoring if they desire
       Rect<float> _layoutArea; // the area to use as layout space.
    private:
       ColorRGBA DEBUG_COLOR;
