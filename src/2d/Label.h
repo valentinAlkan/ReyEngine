@@ -9,8 +9,7 @@ namespace ReyEngine{
    class Label : public Widget {
    public:
       REYENGINE_OBJECT(Label)
-      Label(): _text(""){}
-      Label(const std::string& text)
+      Label(const std::string& text = "")
             : _text(text)
       {}
       void render2D() const override{
@@ -109,21 +108,24 @@ namespace ReyEngine{
                }
             }
 
-            // Now, calculate the required height and update the widget's minimum height.
+            // Calculate the required height and update the widget's size directly.
+            float requiredHeight = 0;
             if (!_wrappedText.empty()){
                float lineHeight = theme->font->measure(" ").y;
-               float requiredHeight = _wrappedText.size() * (lineHeight + Y_GAP_PXL) - Y_GAP_PXL; // No gap after the last line
-               setMinSize(getMinSize().x, requiredHeight); // Keep minWidth, update minHeight
-            } else {
-               setMinSize(getMinSize().x, 0); // Keep minWidth, update minHeight
+               requiredHeight = _wrappedText.size() * (lineHeight + Y_GAP_PXL) - Y_GAP_PXL; // No gap after the last line
             }
+            // Set the size directly, preserving the current width and updating the height.
+            // This prevents the widget from changing its width, only its height.
+            Logger::info() << "New required height is " << requiredHeight << std::endl;
+            setSize(getSize().x, requiredHeight);
+
          } else {
-            // For non-wrapped text, the minimum size is the text's measured size.
             auto textSize = measureText();
             setMinSize(textSize);
+            setSize(0,0); // Trigger auto-resize based on minSize
          }
-         setSize(0,0);
       }
+      void prependText(const std::string& newText){setText(newText + getText());}
       void appendText(const std::string& newText){setText(getText() + newText);}
       //precision refers to how many decimal places should appear
       void setText(double newText, int precision){
@@ -137,11 +139,10 @@ namespace ReyEngine{
          setText(std::to_string(newText));
       }
       [[nodiscard]] std::string getText() const {return _text;}
-      bool setWrap(bool newWrap) {
-         if (_wrap == newWrap) return _wrap; // No change needed
+      void setWrap(bool newWrap) {
+         if (_wrap == newWrap) return;
          _wrap = newWrap;
          setText(_text); // Recalculate size and layout with the new wrap setting
-         return _wrap;
       }
    protected:
       void _init() override {

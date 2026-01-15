@@ -5,39 +5,51 @@ using namespace ReyEngine;
 /////////////////////////////////////////////////////////////////////////////////////////
 Widget* Button::_unhandled_input(const InputEvent& event) {
    if (!enabled) return nullptr;
-   if (event.isEvent<InputEventMouseButton>()) {
-      auto& mbEvent = event.toEvent<InputEventMouseButton>();
-      if (mbEvent.button == InputInterface::MouseButton::LEFT) {
-         bool isInside = event.isMouse().value()->isInside();
-         bool isPress = mbEvent.isDown && isInside;
-         bool isRelease = isFocused() && !mbEvent.isDown;
-         if (mbEvent.isDown && !isInside){
-            setFocused(false);
-            //clear focus when clicking down outside the button
-            //dont' handle
+   switch (event.eventId){
+      case InputEventKey::ID:{
+         auto &kbEvent = event.toEvent<InputEventKey>();
+         switch (kbEvent.key){
+            case InputInterface::KeyCode::KEY_ENTER:
+            case InputInterface::KeyCode::KEY_KP_ENTER:
+               if (kbEvent.isDown && !kbEvent.isRepeat && isFocused()){
+                  click();
+               }
          }
-         if (isPress && isInside) {
-            //normal inside-click
-            _drawState = DrawState::DOWN_PRESS;
-            setFocused(true);
-            return this;
-         } else if (isRelease){
-            //mouse release
-            if (!_isToggle || _down){
-               _down = false;
-               _drawState = DrawState::UP;
-               _on_up(!isInside);
-            } else if (!_down){
-               _down = true;
-               _on_down();
-               _drawState = DrawState::DOWN;
-            }
-            if (!isInside) {
+      }break;
+      case InputEventMouseButton::ID: {
+         auto &mbEvent = event.toEvent<InputEventMouseButton>();
+         if (mbEvent.button == InputInterface::MouseButton::LEFT) {
+            bool isInside = event.isMouse().value()->isInside();
+            bool isPress = mbEvent.isDown && isInside;
+            bool isRelease = isFocused() && !mbEvent.isDown;
+            if (mbEvent.isDown && !isInside) {
                setFocused(false);
+               //clear focus when clicking down outside the button
+               //dont' handle
             }
-            return this;
+            if (isPress && isInside) {
+               //normal inside-click
+               _drawState = DrawState::DOWN_PRESS;
+               setFocused(true);
+               return this;
+            } else if (isRelease) {
+               //mouse release
+               if (!_isToggle || _down) {
+                  _down = false;
+                  _drawState = DrawState::UP;
+                  _on_up(!isInside);
+               } else if (!_down) {
+                  _down = true;
+                  _on_down();
+                  _drawState = DrawState::DOWN;
+               }
+               if (!isInside) {
+                  setFocused(false);
+               }
+               return this;
+            }
          }
-      }
+      }break;
    }
     return nullptr;
 }

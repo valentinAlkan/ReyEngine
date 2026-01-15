@@ -10,7 +10,7 @@ namespace ReyEngine{
    class Panel : public Widget {
    public:
       REYENGINE_OBJECT(Panel)
-      Panel();
+      Panel(const std::string& panelTitle="");
    public:
 //      void render2DBegin() override;
 //      void render2DEnd() override;
@@ -30,7 +30,7 @@ namespace ReyEngine{
 //      ReyEngine::Rect<R_FLOAT> getScissorArea();
       enum class ResizeDir{NONE, N, E, S, W, NE, SE, SW, NW};
 
-      std::string panelTitle;
+      std::string _title;
       struct Header {
          Rect<float> rect;
          Rect<float> btnClose;

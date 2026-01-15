@@ -6,11 +6,12 @@ using namespace ReyEngine;
 using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Panel::Panel()
+Panel::Panel(const std::string &panelTitle)
 : REGION_NORTH(stretchRegion[0])
 , REGION_EAST(stretchRegion[1])
 , REGION_SOUTH(stretchRegion[2])
 , REGION_WEST(stretchRegion[3])
+, _title(panelTitle)
 {
 }
 
@@ -23,7 +24,7 @@ void Panel::render2D() const {
    drawRectangleLines(getSizeRect(), 1.0, theme->background.colorSecondary);
    drawLine(_header.rect.bottom(), 1.0, theme->background.colorSecondary);
    drawTextCentered("x", _header.btnClose.center(), theme->font);
-   drawText(panelTitle, _header.titlePos, theme->font);
+   drawText(_title, _header.titlePos, theme->font);
 //   drawCircle({testPos, 4}, Colors::blue);
 //   drawText(testPos.toString(), {10, 40}, theme->font);
 //   drawText(testPos.toString(), {10, 40}, theme->font);
@@ -61,11 +62,7 @@ void Panel::render2D() const {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::_init() {
-   theme->background.fill = Style::Fill::SOLID;
-   theme->background.colorPrimary = ReyEngine::ColorRGBA(94, 142, 181, 255);
-   _on_rect_changed();
-   setAcceptsHover(true);
-   _inputFilter = InputFilter::PROCESS_AND_PASS;
+   hide(); //hidden by default
    //create subwidgets
 //   vlayout = make_child<Layout>(getNode(), VLAYOUT_NAME, Layout::LayoutDir::VERTICAL);
 //   if (!window) window = make_child<Control>(vlayout->getNode(), WINDOW_NAME);
@@ -152,7 +149,6 @@ void Panel::_init() {
 //      _window.setScissorArea(_window.getSizeRect().embiggen(-1));
 //   };
 //   window->setRectChangedCallback(windowRectChangeCB);
-   _init();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -199,11 +195,11 @@ Widget* Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
    switch (event.eventId) {
       case InputEventMouseButton::getUniqueEventId(): {
          auto &mbEvent = event.toEvent<InputEventMouseButton>();
-         if (mbEvent.button != InputInterface::MouseButton::LEFT) break;
          if (_dragState == DragState::NONE && !mbEvent.isDown && !mbEvent.mouse.isInside()){
             hide();
             return this;
          }
+         if (mbEvent.button != InputInterface::MouseButton::LEFT) break;
          if (!mbEvent.isDown && _header.btnClose.contains(mbEvent.mouse.getLocalPos())){
             hide();
          }
@@ -343,7 +339,7 @@ void Panel::_on_mouse_exit() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::setTitle(const std::string &newtitle) {
-   panelTitle = newtitle;
+   _title = newtitle;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

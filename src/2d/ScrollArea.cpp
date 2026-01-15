@@ -130,7 +130,6 @@ Widget* ScrollArea::_unhandled_input(const InputEvent& e) {
    switch (e.eventId){
       case InputEventMouseMotion::ID:{
          auto& mmEvent = e.toEvent<InputEventMouseMotion>();
-         testPos = mmEvent.mouse.getLocalPos();
       } break;
       case InputEventMouseWheel::ID:{
          constexpr float SPEED_FACTOR = 5.0;
