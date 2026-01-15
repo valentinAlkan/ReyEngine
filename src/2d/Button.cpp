@@ -11,6 +11,11 @@ Widget* Button::_unhandled_input(const InputEvent& event) {
          bool isInside = event.isMouse().value()->isInside();
          bool isPress = mbEvent.isDown && isInside;
          bool isRelease = isFocused() && !mbEvent.isDown;
+         if (mbEvent.isDown && !isInside){
+            setFocused(false);
+            //clear focus when clicking down outside the button
+            //dont' handle
+         }
          if (isPress && isInside) {
             //normal inside-click
             _drawState = DrawState::DOWN_PRESS;
