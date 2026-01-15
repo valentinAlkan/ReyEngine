@@ -45,8 +45,8 @@ namespace ReyEngine{
             return retval;
          }
          MenuEntry* at(size_t index){return _entries.at(index).get();};
-         std::optional<MenuEntry*> at(Pos<float>&);
-         std::optional<MenuEntry*> at(Pos<float>&& p){return at(p);}
+         std::optional<MenuEntry*> at(const Pos<float>&);
+         std::optional<MenuEntry*> at(const Pos<float>&& p){return at(p);}
          MenuEntry* front(){return _entries.front().get();}
          void erase(int index){
             auto it = _entries.begin();
@@ -66,7 +66,10 @@ namespace ReyEngine{
    }
    class DropDownMenu : public ReyEngine::Widget, public Internal::MenuInterface {
    public:
-      DropDownMenu(std::vector<std::unique_ptr<MenuEntry>>&& items): Internal::MenuInterface(std::move(items)){_on_change();}
+      DropDownMenu(std::vector<std::unique_ptr<MenuEntry>>&& items)
+      : Internal::MenuInterface(std::move(items)){
+         _on_change();
+      }
       DropDownMenu(): Internal::MenuInterface(){}
       EVENT_ARGS(EventItemHovered, 98123475981, const MenuEntry* item), item(item){}
          const MenuEntry* item;
@@ -74,8 +77,8 @@ namespace ReyEngine{
       EVENT_ARGS(EventItemSelected, 981234759822, const MenuEntry* item), item(item){}
          const MenuEntry* item;
       };
-      void open(){setVisible(true);setModal(true);}
-      void close(){setVisible(false);setModal(false);}
+      void open();
+      void close();
       void addEntry(std::shared_ptr<ReyTexture> icon, const std::string& text);
       void addEntry(const std::string& text) {addEntry(nullptr, text);}
    protected:
@@ -94,19 +97,24 @@ namespace ReyEngine{
       MenuBar(): Internal::MenuInterface(){}
       std::shared_ptr<DropDownMenu> createDropDown(const std::string& name);
       void removeDropDownMenu(const std::string& name);
+      void hideAllDropDowns();
    protected:
       void render2D() const override;
       void _init() override;
       void _on_change() override;
       void _on_rect_changed() override{_on_change();}
       Widget* _unhandled_input(const InputEvent&) override;
-      std::optional<DropDownMenu*> getDropDown(const std::string& menu);
+      std::optional<DropDownMenu*> getDropDown(const std::string& menu) const;
       void showDropDown(const std::string& menu, const Pos<float>&);
+      void showDropDown(DropDownMenu* dropDown);
+      void showDropDownAt(const Pos<float>&);
+      DropDownMenu* getDropDownAt(const Pos<float>&);
       bool _itemDown = false;
       DropDownMenu* _lastDrop = nullptr;
    private:
       static constexpr ColorRGBA GRADIENT_1 = Colors::activeBlue;
       static constexpr ColorRGBA GRADIENT_2 = Colors::lightGray;
       static constexpr char DROP_DOWN_PREFIX[] = "DROPDOWN_";
+      friend class DropDownMenu;
    };
 }

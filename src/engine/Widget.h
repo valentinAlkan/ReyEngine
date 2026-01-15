@@ -104,6 +104,9 @@ namespace ReyEngine {
       std::optional<Rect<float>> _anchorArea; //optional area to anchor to, if not our size rect
       Anchor _anchor = Anchor::NONE;
       bool _ignoreOutsideInput = false;
+      bool _handleAllModalInput = true; //by default, modal widgets handle all input.
+                                     // But this can be disabled, as in the case of drop down menus, which
+                                     // want to offer input to the menu bar, but need to be drawn modally
 
       std::shared_ptr<Theme> theme;
    private:

@@ -1,4 +1,5 @@
 #include "MenuBar.h"
+#include "Canvas.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -25,7 +26,7 @@ Internal::MenuInterface::MenuEntry* Internal::MenuInterface::push_back(std::uniq
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::optional<Internal::MenuInterface::MenuEntry*> Internal::MenuInterface::at(Pos<float>& p) {
+std::optional<Internal::MenuInterface::MenuEntry*> Internal::MenuInterface::at(const Pos<float>& p) {
    for (const auto& entry : _entries){
       if (entry->_area.contains(p)){return entry.get();}
    }
@@ -37,6 +38,7 @@ std::optional<Internal::MenuInterface::MenuEntry*> Internal::MenuInterface::at(P
 /////////////////////////////////////////////////////////////////////////////////////////
 void DropDownMenu::_init() {
    setMinWidth(200);
+   _handleAllModalInput = false; //allow input to fall through, in case a menu bar needs it.
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -77,15 +79,18 @@ Size<float> DropDownMenu::_calculateSize() {
 Widget *DropDownMenu::_unhandled_input(const ReyEngine::InputEvent& e) {
    switch (e.eventId){
       case InputEventMouseMotion::ID:{
-         auto& mhEvent = e.toEvent<InputEventMouseMotion>();
-         _activeEntry = at(mhEvent.mouse.getLocalPos());
-         return this;}
+         auto& mmEvent = e.toEvent<InputEventMouseMotion>();
+         if (mmEvent.mouse.isInside()) {
+            _activeEntry = at(mmEvent.mouse.getLocalPos());
+            return this;
+         }
+         //actively offer the input to the parent
+         break;}
       case InputEventMouseButton::ID:{
          auto& mbEvent = e.toEvent<InputEventMouseButton>();
          if (!mbEvent.isDown) {
             if (!mbEvent.mouse.isInside()) {
-               setModal(false);
-               setVisible(false);
+               close();
                return this;
             }
             for (auto &entry: _entries) {
@@ -98,6 +103,29 @@ Widget *DropDownMenu::_unhandled_input(const ReyEngine::InputEvent& e) {
          return this;}
    }
    return nullptr;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void DropDownMenu::open() {
+   setVisible(true);
+   setModal(true);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void DropDownMenu::close() {
+   setVisible(false);
+   setModal(false);
+   if (auto parent = getParentWidget()){
+      if (auto menu = parent.value()->as<MenuBar>()){
+         menu.value()->hideAllDropDowns();
+      }
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void DropDownMenu::addEntry(std::shared_ptr<ReyTexture> icon, const std::string &text) {
+   _entries.emplace_back(make_unique<Internal::MenuInterface::MenuEntry>(this, icon, text));
+   _on_change();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -124,27 +152,32 @@ void MenuBar::_on_change() {
 Widget* MenuBar::_unhandled_input(const ReyEngine::InputEvent& e) {
    switch (e.eventId){
       case InputEventMouseMotion::ID:{
-         auto& mhEvent = e.toEvent<InputEventMouseMotion>();
-         if (isFocused() || mhEvent.mouse.isInside()) {
-            _activeEntry = at(mhEvent.mouse.getLocalPos());
+         auto& mmEvent = e.toEvent<InputEventMouseMotion>();
+         if (isFocused() || mmEvent.mouse.isInside()) {
+            _activeEntry = at(mmEvent.mouse.getLocalPos());
             setFocused(_activeEntry.has_value());
-         } else {
-            _activeEntry.reset();
-            return nullptr;
-         }
-         return this;}
-      case InputEventMouseButton::ID:{
-         auto& mbEvent = e.toEvent<InputEventMouseButton>();
-         _itemDown = _activeEntry ? mbEvent.isDown : false;
-         if (!mbEvent.isDown) {
-            for (auto &entry: _entries) {
-               if (entry->_area.contains(mbEvent.mouse.getLocalPos())) {
-                  showDropDown(entry->_text, entry->_area.bottomLeft());
-                  return this;
+            //check if we should open a new drop down menu from modal input
+            if (!_itemDown) return nullptr;
+            if (auto canvas = getCanvas()) {
+               if (auto dropDown = getDropDownAt(mmEvent.mouse.getLocalPos())) {
+                  hideAllDropDowns();
+                  showDropDown(dropDown);
                }
             }
+            return this;
+         } else {
+            _activeEntry = at(mmEvent.mouse.getLocalPos());
+            return this;
          }
-      }
+         break;}
+      case InputEventMouseButton::ID:{
+         auto& mbEvent = e.toEvent<InputEventMouseButton>();
+         _itemDown = false;
+         if (!mbEvent.isDown) {
+            hideAllDropDowns();
+            showDropDownAt(mbEvent.mouse.getLocalPos());
+         }
+      break;}
    }
    return nullptr;
 }
@@ -162,14 +195,14 @@ void MenuBar::render2D() const {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<DropDownMenu> MenuBar::createDropDown(const std::string& name) {
-   auto menuEntry = push_back(name);
+   push_back(name);
    auto dropDown = make_child<DropDownMenu>(this, DROP_DOWN_PREFIX + name);
    dropDown->setVisible(false);
    return dropDown;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::optional<DropDownMenu*> MenuBar::getDropDown(const std::string& menu) {
+std::optional<DropDownMenu*> MenuBar::getDropDown(const std::string& menu) const {
    for (const auto& child : getChildren()){
       if (child->getName() == DROP_DOWN_PREFIX + menu) return child->as<DropDownMenu>().value();
    }
@@ -180,6 +213,8 @@ std::optional<DropDownMenu*> MenuBar::getDropDown(const std::string& menu) {
 void MenuBar::showDropDown(const std::string& menu, const Pos<float>& pos) {
    if (auto dropDownOpt = getDropDown(menu)){
       auto dropDown = dropDownOpt.value();
+      _lastDrop = dropDown;
+      _itemDown = true;
       dropDown->open();
       dropDown->setPosition(pos);
    } else {
@@ -188,7 +223,41 @@ void MenuBar::showDropDown(const std::string& menu, const Pos<float>& pos) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void DropDownMenu::addEntry(std::shared_ptr<ReyTexture> icon, const std::string &text) {
-   _entries.emplace_back(make_unique<Internal::MenuInterface::MenuEntry>(this, icon, text));
-   _on_change();
+void MenuBar::showDropDown(ReyEngine::DropDownMenu* dropDown) {
+   if (dropDown){
+      for (const auto& entry : _entries){
+         if (DROP_DOWN_PREFIX + entry->_text == dropDown->getName()){
+            showDropDown(entry->_text, entry->_area.bottomLeft());
+            break;
+         }
+      }
+   } else {
+      Logger::warn() << "Null dropdown menu!" << endl;
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+DropDownMenu* MenuBar::getDropDownAt(const Pos<float>& pos) {
+   for (const auto& entry : _entries) {
+      if (entry->_area.contains(pos)){
+         if (auto dropDown = getDropDown(entry->_text)) return dropDown.value();
+      }
+   }
+   return nullptr;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void MenuBar::showDropDownAt(const Pos<float>& pos) {
+   if (auto dropDown = getDropDownAt(pos)) showDropDown(dropDown);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void MenuBar::hideAllDropDowns() {
+   for (auto& child : getChildren()){
+      if (auto dropDown = child->as<DropDownMenu>()){
+         dropDown.value()->setVisible(false);
+      }
+   }
+   _itemDown = false;
 }

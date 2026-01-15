@@ -151,9 +151,7 @@ Widget* Canvas::__process_hover(const InputEventMouseHover& event){
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
-   //In order for the canvas to know what the event was, we have to cache it since we will end up transforming it
-   auto isMouse = event.isMouse();
-   //determine what type of input this is
+   auto isMouse = event.isMouse(); //cache this for speed
 
    auto createProcessNodeForEvent = [&](TypeNode *thisNode, bool isModal, const InputEvent& event, auto&&... args) -> Widget* {
       if (event.isEvent<InputEventMouseHover>()){
@@ -172,7 +170,8 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
    Widget* handled = nullptr;
    //query modal widgets first. A modal widget consumes input even if unhandled and prevents anyone else from getting it.
    if (auto modal = getModal()){
-      return createProcessNodeForEvent(modal->_node, true, event);
+      handled = createProcessNodeForEvent(modal->_node, true, event);
+      if (modal->_handleAllModalInput || handled) return handled;
    }
 
    //then focused widgets
