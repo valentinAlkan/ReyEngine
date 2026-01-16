@@ -41,7 +41,6 @@ namespace ReyEngine{
 //      std::optional<std::shared_ptr<Draggable>>getDragNDrop(){if (_dragNDrop) return _dragNDrop; return std::nullopt;}
       inline void keyInput(InputInterface::KeyCode){};
       int getFPS() const {return GetFPS();}
-      std::optional<Widget*> processInput(const InputEvent&);
       void setInternalLogLevel(int logLevel){SetTraceLogLevel(logLevel);}
       bool isClosing() const {return _isClosing;}
    protected:
@@ -51,7 +50,7 @@ namespace ReyEngine{
    private:
       bool _isEditor = false; //enables other features
       uint64_t _frameCounter=0;
-      int targetFPS;
+      int _targetFPS;
       std::chrono::milliseconds _keyDownRepeatDelay = std::chrono::milliseconds(500); //how long a key must be held down before it counts as a repeat
       std::chrono::milliseconds _keyDownRepeatRate = std::chrono::milliseconds(25); //how long must pass before each key repeat event is sent
       std::chrono::milliseconds _doubleClickThreshold = std::chrono::milliseconds(500); //time threshold for a mouse input to be considered double click

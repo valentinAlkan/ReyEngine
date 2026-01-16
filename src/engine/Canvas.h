@@ -10,7 +10,8 @@ namespace ReyEngine {
       struct Modal{static constexpr char NAME[] = "Modal";}; // Focused widgets get first dibs on input events, *and consume those events that are not handled explicitly*
       struct Focus{static constexpr char NAME[] = "Focus";}; // Focused widgets get first dibs on non-modal input events
       struct Hover{static constexpr char NAME[] = "Hover";};
-      using StatusTypes = std::tuple<Modal, Focus, Hover>;
+      struct ToolTip{static constexpr char NAME[] = "ToolTip";}; //The currently displayed tool-tip
+      using StatusTypes = std::tuple<Modal, Focus, Hover, ToolTip>;
       // Type trait to check if a type is in the tuple
       template <typename T, typename Tuple> struct is_in_tuple;
       template <typename T, typename... Ts> struct is_in_tuple<T, std::tuple<Ts...>> : std::disjunction<std::is_same<T, Ts>...> {};
@@ -78,6 +79,8 @@ namespace ReyEngine {
       Widget* __process_hover(const InputEventMouseHover& event);
       void __on_rect_changed(const Rect<R_FLOAT>& oldRect, const Rect<R_FLOAT>& newRect, bool allowsAnchor, bool byLayout = false) override;
       void _removeAllStatus(Widget*);
+      void windowSetToolTip(Widget* w){setToolTip(w);}
+
 
       RenderTarget _renderTarget;
       Camera2D camera;
@@ -223,7 +226,7 @@ namespace ReyEngine {
          }
 
          Widget* process(){
-            return processedWidget->_unhandled_input(event);
+            return processedWidget->__process_unhandled_input(event);
          };
 
          Widget* publish(){
@@ -406,9 +409,11 @@ namespace ReyEngine {
       void setHover(Widget* w){setStatus<WidgetStatus::Hover>(w);}
       void setFocus(Widget* w){setStatus<WidgetStatus::Focus>(w);}
       void setModal(Widget* w){setStatus<WidgetStatus::Modal>(w);}
+      void setToolTip(Widget* w){setStatus<WidgetStatus::ToolTip>(w);}
       Widget* getHover(){return getStatus<WidgetStatus::Hover>();}
       Widget* getFocus(){return getStatus<WidgetStatus::Focus>();}
       Widget* getModal(){return getStatus<WidgetStatus::Modal>();}
+      Widget* getToolTip(){return getStatus<WidgetStatus::ToolTip>();}
 
       friend class Widget;
       friend class Window;

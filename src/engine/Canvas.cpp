@@ -1,4 +1,5 @@
 #include "Canvas.h"
+#include "MiscTools.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -130,7 +131,15 @@ void Canvas::renderProcess(RenderTarget& parentTarget) {
       rlPopMatrix();
    }
 
+   //finally, draw tooltip
+   if (auto toolTip = getToolTip()){
+      rlPushMatrix();
+//      drawRectangle({toolTip->getPos(), Size<float>(100,20)}, Colors::black);
+      rlPopMatrix();
+   }
+
    _renderTarget.endRenderMode();
+   //return render control to the parent canvas, if any
    if (&parentTarget != &_renderTarget) {
       parentTarget.beginRenderMode();
    }
@@ -153,6 +162,34 @@ Widget* Canvas::__process_hover(const InputEventMouseHover& event){
 Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
    auto isMouse = event.isMouse(); //cache this for speed
 
+   //lets us catch and do stuff with handlers before they fall out of scope. Basically lets us query arbitrary widgets
+   // to see if they want to respond to an event
+   struct EventHandler {
+      EventHandler(Canvas* canvas, const InputEvent& event)
+      : canvas(canvas)
+      , event(event)
+      {}
+      ~EventHandler(){
+         if (!handler) return;
+         switch (event.eventId){
+            case InputEventMouseToolTip::ID:
+               if (!handler->getToolTipText().empty()) {
+                  canvas->setToolTip(handler);
+               }
+               break;
+         }
+      }
+      EventHandler& operator=(Widget* w){handler = w; return *this;}
+      operator bool(){return handler!=nullptr;}
+      operator Widget*(){return handler;}
+   private:
+      Widget* handler = nullptr;
+      Canvas* canvas = nullptr;
+      const InputEvent& event;
+   };
+
+   EventHandler handled(this, event);
+
    auto createProcessNodeForEvent = [&](TypeNode *thisNode, bool isModal, const InputEvent& event, auto&&... args) -> Widget* {
       if (event.isEvent<InputEventMouseHover>()){
          return processNode<HoverProcess>(thisNode, isModal, event, std::forward<decltype(args)>(args)...);
@@ -167,7 +204,6 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
       }
    }
 
-   Widget* handled = nullptr;
    //query modal widgets first. A modal widget consumes input even if unhandled and prevents anyone else from getting it.
    if (auto modal = getModal()){
       handled = createProcessNodeForEvent(modal->_node, true, event);
@@ -207,7 +243,7 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
       newEventMouse.value()->setLocalPos(mousePos);
       newEventMouse.value()->setIsInside(getSizeRect().contains(mousePos));
    }
-   return _unhandled_input(newEvent);
+   return Widget::__process_unhandled_input(event);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

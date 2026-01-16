@@ -106,6 +106,12 @@ namespace ReyEngine{
       MouseEvent mouse;
    };
 
+   EVENT_ARGS(InputEventMouseToolTip, 3434343435, const Pos<float>& pos)
+   , mouse(pos)
+   {}
+      MouseEvent mouse;
+   };
+
    // other types
    EVENT(InputEventController, 4444444444444)
    {}
@@ -119,6 +125,7 @@ namespace ReyEngine{
          InputEventChar* chr;
          InputEventMouseMotion* motion;
          InputEventMouseHover* hover;
+         InputEventMouseToolTip* toolTip;
          InputEventMouseButton* button;
          InputEventMouseWheel* wheel;
          InputEventController* controller;
@@ -145,6 +152,9 @@ namespace ReyEngine{
          if constexpr (T::ID == InputEventMouseWheel::ID){
             _mouseData = &_union.wheel->mouse;
          }
+         if constexpr (T::ID == InputEventMouseToolTip::ID){
+            _mouseData = &_union.toolTip->mouse;
+         }
          eventBase = &event;
       }
       Internal::InputUnion _union = {};
@@ -156,6 +166,7 @@ namespace ReyEngine{
       InputEvent(InputEventMouseButton& event)  {assign<std::remove_cvref_t<decltype(event)>>(_union.button       , event);}
       InputEvent(InputEventMouseWheel& event)   {assign<std::remove_cvref_t<decltype(event)>>(_union.wheel        , event);}
       InputEvent(InputEventController& event)   {assign<std::remove_cvref_t<decltype(event)>>(_union.controller   , event);}
+      InputEvent(InputEventMouseToolTip& event)   {assign<std::remove_cvref_t<decltype(event)>>(_union.toolTip    , event);}
       template <typename T>
       std::optional<const T*> isEvent() const {return eventBase->isEvent<T>();} //get base address
       template <typename T>
@@ -193,6 +204,11 @@ namespace ReyEngine{
          }
          if constexpr (T::ID == InputEventController::ID){
             auto member = _union.controller;
+            static_assert(std::is_same_v<decltype(member), T*>);
+            return static_cast<const T&>(*member);
+         }
+         if constexpr (T::ID == InputEventMouseToolTip::ID){
+            auto member = _union.toolTip;
             static_assert(std::is_same_v<decltype(member), T*>);
             return static_cast<const T&>(*member);
          }

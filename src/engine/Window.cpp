@@ -14,12 +14,15 @@ constexpr bool PRINT_MOUSEUP = false;
 constexpr bool PRINT_MOUSEDOWN = false;
 constexpr bool PRINT_HOVER= false;
 constexpr bool PRINT_MOTION = false;
+constexpr bool PRINT_TOOLTIP = true;
 constexpr bool PRINT_WHEEL = false;
+
+constexpr std::chrono::milliseconds TOOLTIP_DELAY = 500ms;
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 Window::Window(const std::string &title, int width, int height, const std::vector<WindowFlags> &flags, int targetFPS)
-: targetFPS(targetFPS)
+: _targetFPS(targetFPS)
 {
 
 }
@@ -50,10 +53,14 @@ void Window::exec(){
    auto canvas = _root->ref<Canvas>();
    Size<float> size;
    Pos<float> position;
-   SetTargetFPS(targetFPS);
+   WindowSpace<Pos<float>> mousePos = {{std::numeric_limits<float>::min(), std::numeric_limits<float>::min()}};
+   Vec2<float> mouseDelta;
+   bool checkedToolTip = false;
+   SetTargetFPS(_targetFPS);
    auto inputEventMouseButtonTimeStampUp = sc::now();
    auto inputEventMouseButtonTimeStampDown = sc::now();
    auto lastMouseButtonInput = InputInterface::MouseButton::NONE;
+   std::chrono::steady_clock::time_point mousePosChangeTime;
    publish(WindowExecEvent(this));
    while (!WindowShouldClose()){
       //see if the window size has changed
@@ -154,6 +161,8 @@ void Window::exec(){
 
       //now do mouse input
       //UPS
+      mouseDelta = InputManager::getMouseDelta();
+      mousePos = InputManager::getMousePos();
       for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
          auto btnUp = InputManager::instance().getMouseButtonReleased();
          if (btnUp != InputInterface::MouseButton::NONE) {
@@ -161,8 +170,7 @@ void Window::exec(){
             bool isDouble = (now - inputEventMouseButtonTimeStampUp) < _doubleClickThreshold && lastMouseButtonInput == btnUp;
             inputEventMouseButtonTimeStampUp = now;
             lastMouseButtonInput = btnUp;
-            auto pos = InputManager::getMousePos();
-            InputEventMouseButton event(this, pos.get(), btnUp, false, isDouble);
+            InputEventMouseButton event(this, mousePos.get(), btnUp, false, isDouble);
             if (isDouble) inputEventMouseButtonTimeStampUp = sc::time_point{};
             auto handledBy = canvas->__process_unhandled_input(event);
             if constexpr (PRINT_MOUSEUP) if (handledBy) Logger::info() << "MouseUp handled by " << handledBy->getName() << endl;
@@ -179,8 +187,7 @@ void Window::exec(){
             bool isDouble = (now - inputEventMouseButtonTimeStampDown) < _doubleClickThreshold && lastMouseButtonInput == btnDown;
             inputEventMouseButtonTimeStampDown = now;
             lastMouseButtonInput = btnDown;
-            auto pos = InputManager::getMousePos();
-            InputEventMouseButton event(this, pos.get(), btnDown, true, isDouble);
+            InputEventMouseButton event(this, mousePos.get(), btnDown, true, isDouble);
             auto handledBy = canvas->__process_unhandled_input(event);
             if constexpr (PRINT_MOUSEDOWN) if (handledBy) Logger::info() << "MouseDown handled by " << handledBy->getName() << endl;
             if (isDouble) inputEventMouseButtonTimeStampDown = sc::time_point{};
@@ -192,7 +199,7 @@ void Window::exec(){
       {
          auto wheel = InputManager::getMouseWheel();
          if (wheel) {
-            InputEventMouseWheel event(this, InputManager::getMousePos().get(), wheel);
+            InputEventMouseWheel event(this, mousePos.get(), wheel);
             if constexpr (PRINT_WHEEL) Logger::info() << "Sending mouse wheel event " << event.wheelMove << endl;
             auto handledBy = canvas->__process_unhandled_input(event);
             if constexpr (PRINT_WHEEL) if (handledBy) Logger::info() << "Mouse wheel handled by " << handledBy->getName() << endl;
@@ -200,30 +207,13 @@ void Window::exec(){
       }
 
 
-//         //check the mouse delta compared to last frame
-      auto mouseDelta = InputManager::getMouseDelta();
+      //check the mouse delta compared to last frame
       if (mouseDelta) {
-         auto pos = InputManager::getMousePos().get();
-         InputEventMouseHover hoverEvent(this, pos);
-         InputEventMouseMotion motionEvent(this, pos, mouseDelta);
+         checkedToolTip = false;
+         mousePosChangeTime = std::chrono::steady_clock::now();
+         InputEventMouseHover hoverEvent(this, mousePos.get());
+         InputEventMouseMotion motionEvent(this, mousePos.get(), mouseDelta);
 
-         //don't do hovering or mouse input if we're dragging and dropping
-//            static constexpr unsigned int DRAG_THRESHOLD = 20;
-//            if (_dragNDrop) {
-         //only drag if we've moved the mouse above a certain threshold
-//               auto dragDelta = _dragNDrop.value()->startPos - getMousePos();
-//               if (abs(dragDelta.x) > DRAG_THRESHOLD || abs(dragDelta.y) > DRAG_THRESHOLD) {
-//                  _isDragging = true;
-//               }
-//            } else {
-         //find out which widget will accept the mouse motion as focus
-//               auto hovered = canvas->askHover(canvas->screenToWorld(event.canvasPos));
-//               if (hovered) {
-//                  setHover(hovered.value());
-//               } else {
-//                  clearHover();
-//               }
-//            if (_isEditor) continue;
          auto handledBy = canvas->__process_unhandled_input(motionEvent);
          if constexpr (PRINT_MOTION) if (handledBy) Logger::info() << "Motion handled by " << handledBy->getName() << endl;
          if (!handledBy) {
@@ -233,8 +223,16 @@ void Window::exec(){
 //            }
       }
 
+      //check for tooltips
+      if (!checkedToolTip && canvas->getRect().contains(mousePos.get()) && std::chrono::steady_clock::now() - mousePosChangeTime > TOOLTIP_DELAY){
+         InputEventMouseToolTip tooltipEvent(this, mousePos.get());
+         checkedToolTip = true;
+         auto handledBy = canvas->__process_unhandled_input(tooltipEvent);
+         if constexpr (PRINT_TOOLTIP) if (handledBy) Logger::info() << "Tooltip handled by " << handledBy->getName() << endl;
+      }
+
       //process timers and call their callbacks
-//         SystemTime::processTimers();
+      //SystemTime::processTimers();
 
       //process logic
       float dt = getFrameDelta();
@@ -311,12 +309,4 @@ Window::~Window(){
 ///////////////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<Canvas> Window::getCanvas() {
    return _root->ref<Canvas>();
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
-std::optional<Widget *> Window::processInput(const InputEvent& event) {
-   // live dangerously. (root MUST be a canvas or you will crash and burn and die too probably)
-   auto handler = ReyEngine::Internal::Tree::ProtectedFunctionAccessor(_root.get()).dangerousIs<Canvas>()->__process_unhandled_input(event);
-   if (handler) return handler;
-   return {};
 }

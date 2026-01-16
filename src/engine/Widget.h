@@ -81,10 +81,12 @@ namespace ReyEngine {
       void moveToForeground();
       void moveToBackground();
       [[nodiscard]] bool getIsRendering() const; //determines if this widget and all it's ancestors are being drawn - checks visibility of all ancestors
+      void setToolTipText(const std::string& t){_tooltipText = t;}
+      [[nodiscard]] std::string getToolTipText() const {return _tooltipText;}
    protected:
       //input
       virtual void render2D() const {};
-      virtual Widget* __process_unhandled_input(const InputEvent& event){ return _unhandled_input(event);}
+      virtual Widget* __process_unhandled_input(const InputEvent& event);
       virtual Widget* _unhandled_input(const InputEvent&){return nullptr;}
       virtual Widget* _process_unhandled_editor_input(const InputEvent&){return nullptr;} //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)
       virtual void _on_mouse_enter(){};
@@ -151,6 +153,7 @@ namespace ReyEngine {
 
       Widget* _parentWidget = nullptr; //the closest related parent that is a widget.
       bool _modal = false;
+      std::string _tooltipText;
 
    #ifndef NDEBUG
       // Debug build

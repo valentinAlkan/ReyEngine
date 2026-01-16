@@ -352,3 +352,19 @@ bool Widget::getIsRendering() const {
    }
    return true;
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////
+Widget *Widget::__process_unhandled_input(const ReyEngine::InputEvent &event) {
+   //we can intercept certain events and always handle them, for example, tooltips (and eventually hovers)
+   bool isInside = event.isMouse() && event.isMouse().value()->isInside();
+   if (isInside){
+      switch (event.eventId){
+         //offer these events to children who may want them, but then accept them if there are no takers.
+         case InputEventMouseToolTip::ID:
+            auto handled = _unhandled_input(event);
+            if (!handled) return this;
+      }
+   }
+
+   return _unhandled_input(event);
+}
