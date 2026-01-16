@@ -29,23 +29,12 @@ Window::Window(const std::string &title, int width, int height, const std::vecto
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Window::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
-   //Create canvas if not provided
-//   if (!optRoot) {
-//      optRoot = Canvas::build("root");
-//   }
-//   auto& root = optRoot.value();
-//   root->ReyEngine::Internal::TypeContainer<ReyEngine::Widget>::setRoot(true);
-//   root->setAnchoring(Widget::Anchor::FILL); //canvas is filled by default
-//   //make sure we init the root
    auto [canvas, node] = make_node<Canvas>("root");
    _root = std::move(node);
    canvas->setSize(getSize());
    canvas->window = this;
+   canvas->__on_added_to_tree();
    SetExitKey(KEY_NULL);
-//   root->_init();
-//   root->_has_inited = true;
-//   root->setRect(Rect<int>(0, 0, startingWidth, startingHeight)); //initialize to be the same size as the window
-//   TypeContainer<Widget>::addChild(root);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

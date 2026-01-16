@@ -134,7 +134,15 @@ void Canvas::renderProcess(RenderTarget& parentTarget) {
    //finally, draw tooltip
    if (auto toolTip = getToolTip()){
       rlPushMatrix();
-//      drawRectangle({toolTip->getPos(), Size<float>(100,20)}, Colors::black);
+      auto windowPos = InputManager::getMousePos();
+      auto localPos = windowToLocalPos(windowPos);
+      auto toolTipText = toolTip->getToolTipText();
+      auto textSize = measureText(toolTipText, theme->font);
+      static constexpr float embiggenness = 4;
+      Rect<float> toolTipRect = Rect<float>(localPos + Pos<float>(20,20), textSize).embiggen(embiggenness);
+      drawRectangle(toolTipRect, Colors::white);
+      drawText(toolTipText, toolTipRect.topLeft() + Pos<float>(embiggenness, embiggenness), theme->font);
+      drawRectangleLines(toolTipRect, 1.0, Colors::black);
       rlPopMatrix();
    }
 
@@ -172,11 +180,14 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
       ~EventHandler(){
          if (!handler) return;
          switch (event.eventId){
-            case InputEventMouseToolTip::ID:
+            case InputEventMouseToolTip::ID:{
                if (!handler->getToolTipText().empty()) {
                   canvas->setToolTip(handler);
                }
-               break;
+               break;}
+            case InputEventMouseMotion::ID:{
+               canvas->setToolTip(nullptr);
+               break;}
          }
       }
       EventHandler& operator=(Widget* w){handler = w; return *this;}

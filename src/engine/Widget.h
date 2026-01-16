@@ -98,6 +98,7 @@ namespace ReyEngine {
       virtual void _on_visibility_changed(){}
       virtual void _on_child_rect_changed(Widget*){};
       virtual void _on_rect_changed(){};
+      void __on_added_to_tree() override;
 
       bool acceptsHover = false;
       bool isLayout = false;
@@ -113,7 +114,6 @@ namespace ReyEngine {
       std::shared_ptr<Theme> theme;
    private:
       void __init() override;
-      void __on_added_to_tree() override;
       void __on_visibility_changed() override {
          if (!_visible && getCanvas()) {
             //strip widgets of focus and modality when they are no longer visible. Otherwise we can softlock.
