@@ -26,7 +26,7 @@ namespace ReyEngine{
       void setDown(bool newDown, PublishType pubTybe=PublishType::DO_PUBLISH);
       [[nodiscard]] bool getDown() const;
       void setIsToggle(bool isToggle) { _isToggle = isToggle;}
-      [[nodiscard]] bool getIsToggle() const {return _isToggle;}
+      [[nodiscard]] bool getIsToggleButton() const {return _isToggle;}
    protected:
       DrawState _drawState = DrawState::UP;
       bool _down = false;
@@ -92,10 +92,11 @@ namespace ReyEngine{
    public:
       REYENGINE_OBJECT(CheckBox)
       CheckBox(const std::string& text): ToggleButton(text){}
+      [[nodiscard]] bool getChecked() const {return getDown();} //alias
    protected:
       void render2D() const override;
       void _init() override {
-         Button::_init();
+         ReyEngine::ToggleButton::_init();
       }
       void _on_rect_changed() override;
       Rect<float> _box;

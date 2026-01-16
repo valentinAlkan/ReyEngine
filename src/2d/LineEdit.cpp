@@ -7,7 +7,8 @@ using namespace ReyEngine;
 ///////////////////////////////////////////////////////////////////////////////////////
 void LineEdit::render2D() const {
    ScopeScissor scissor(getGlobalTransform(true), getSizeRect());
-   drawRectangle(getRect().toSizeRect(), theme->background.colorTertiary);
+   bool disabled = !getIsEnabled();
+   drawRectangle(getRect().toSizeRect(), disabled ? theme->background.colorDisabled : theme->background.colorTertiary);
 
    auto& font = theme->font;
    auto textheight = font->size;
@@ -29,8 +30,13 @@ void LineEdit::render2D() const {
       auto ourWidth = getWidth();
       auto textStart = textWidth > ourWidth ? ourWidth - textWidth : 2;
 
-      auto color = _text.empty() ? font->colorDisabled : font->color;
-      drawText(displayText, {textStart, textPosV}, font, color, font->size, font->spacing);
+      ColorRGBA textColor;
+      if (!_text.empty() && !disabled){
+        textColor = font->color;
+      }  else if (!_text.empty() && disabled){
+         textColor = font->color;
+      }
+      drawText(displayText, {textStart, textPosV}, font, textColor, font->size, font->spacing);
    }
 
    //draw caret

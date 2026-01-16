@@ -70,8 +70,8 @@ namespace ReyEngine {
       void fromCanvasRect(const CanvasSpace<Rect<float>>&);
       CanvasSpace<Pos<float>> toCanvasSpace(const Pos<float>&) const;
       WindowSpace<Pos<float>> toWindowSpace(const Pos<float>&) const;
-      void setEnabled(bool newState){enabled = newState;}
-      [[nodiscard]] bool getIsEnabled() const {return enabled;}
+      void setEnabled(bool newState){_enabled = newState;}
+      [[nodiscard]] bool getIsEnabled() const {return _enabled;}
       void setInputFiltering(InputFilter newFilter){ _inputFilter = newFilter;}
       [[nodiscard]] InputFilter getInputFiltering() const {return _inputFilter;}
       void setAcceptsHover(bool accepts);
@@ -102,7 +102,7 @@ namespace ReyEngine {
 
       bool acceptsHover = false;
       bool isLayout = false;
-      bool enabled = true; //changes visuals and (typically) ingores input
+      bool _enabled = true; //changes visuals and (typically) ingores input
       InputFilter _inputFilter = InputFilter::PASS_AND_PROCESS;
       std::optional<Rect<float>> _anchorArea; //optional area to anchor to, if not our size rect
       Anchor _anchor = Anchor::NONE;

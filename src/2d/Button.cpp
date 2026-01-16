@@ -4,7 +4,7 @@ using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Widget* Button::_unhandled_input(const InputEvent& event) {
-   if (!enabled) return nullptr;
+   if (!getIsEnabled()) return nullptr;
    switch (event.eventId){
       case InputEventKey::ID:{
          auto &kbEvent = event.toEvent<InputEventKey>();
@@ -81,7 +81,7 @@ void Button::_render2D() const {
     static constexpr int THICKNESS = 2;
     ColorRGBA backgroundColor;
     ColorRGBA textColor;
-    if (enabled) {
+    if (getIsEnabled()) {
        backgroundColor = theme->background.colorPrimary;
        textColor = theme->font->color;
        if (_drawState == DrawState::DOWN) {
@@ -115,7 +115,6 @@ void Button::_render2D() const {
 /////////////////////////////////////////////////////////////////////////////////////////
 bool Button::getDown() const {
    return _drawState == DrawState::DOWN || _drawState == DrawState::DOWN_PRESS;
-
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -144,11 +143,13 @@ void PushButton::_on_up(bool mouseEscaped) {
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 void CheckBox::render2D() const {
+   if (getIsEnabled()){
+      drawRectangle(_box, theme->background.colorTertiary);
+   }
    if (isHovered()) {
       drawRectangleLines(_outline, 2.0, theme->background.colorHighlight);
    }
-   drawRectangleLines(_box, 1.0, theme->foreground.colorSecondary);
-//   drawRectangleLines(_textRect, 1.0, theme->foreground.colorTertiary);
+   drawRectangleLines(_box, 1.0, getIsEnabled() ? theme->foreground.colorSecondary : theme->background.colorDisabled);
    if (getDown()) {
       drawLine(_box.backSlash(), 1.0, theme->foreground.colorPrimary);
       drawLine(_box.frontSlash(), 1.0, theme->foreground.colorPrimary);
