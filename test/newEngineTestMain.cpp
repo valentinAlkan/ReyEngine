@@ -174,6 +174,7 @@ int main() {
          auto panela = make_child<Panel>(subcanvas, "SubCanvasPanel");
          panela->setPosition({300, 100});
          panela->setSize(100,100);
+         panela->show();
          auto scrollArea = make_child<ScrollArea>(layoutl, "MainScrollArea");
          auto tabHolder = make_child<Layout>(layoutr, "TabLayout", Layout::LayoutDir::VERTICAL);
          auto widgetsHolder = make_child<Layout>(layoutr, "WidgetsLayout", Layout::LayoutDir::VERTICAL);
@@ -303,6 +304,7 @@ int main() {
             //add a panel to the scroll area
             auto panel = make_child<Panel>(scrollArea, "Panel");
             panel->setRect(100, 300, 200, 200);
+            panel->show();
             auto panelLabel = make_child<Label>(panel, "label");
 
          }
