@@ -53,8 +53,6 @@ void Canvas::__on_descendant_added_to_tree(TypeNode *n) {
       if (!isDrawable.value()->canvas) {
          isDrawable.value()->canvas = this;
       }
-      //assign the object to its owning window
-      isDrawable.value()->window = window;
    }
    //make sure to call dispatchers
    ReyObject::__on_descendant_added_to_tree(n);

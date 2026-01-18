@@ -11,8 +11,6 @@ namespace ReyEngine {
          REYENGINE_OBJECT(Drawable2D)
          [[nodiscard]] inline Transform2D& getTransform(){return transform2D;}
          [[nodiscard]] inline Transform2D getTransform() const {return transform2D;}
-         [[nodiscard]] inline std::optional<Window*> getWindow(){if (window) { return window; } else {return std::nullopt;}}
-         [[nodiscard]] inline std::optional<const Window*> getWindow() const {if (window) { return window; } else {return std::nullopt;}}
             [[nodiscard]] inline std::optional<Canvas*> getCanvas(){if (canvas) { return canvas; } else {return std::nullopt;}}
          [[nodiscard]] inline std::optional<const Canvas*> getCanvas() const {return const_cast<Drawable2D*>(this)->getCanvas();}
          [[nodiscard]] inline bool getVisible(){return _visible;}
@@ -24,7 +22,6 @@ namespace ReyEngine {
          virtual void __on_visibility_changed(){}
          bool _visible = true;
          bool _isCanvas = false; //whether or not this drawable is a canvas
-         Window* window = nullptr;
       private:
          Canvas* canvas = nullptr;
       friend class ReyEngine::Canvas;

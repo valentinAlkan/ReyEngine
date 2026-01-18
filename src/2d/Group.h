@@ -5,10 +5,13 @@ namespace ReyEngine {
    class Group : public Layout {
    public:
       REYENGINE_OBJECT(Group)
-      Group(const std::string& groupName)
+      Group(const std::string& groupName="")
       : Layout(LayoutDir::VERTICAL)
-      , _groupName(groupName)
-      {}
+      {
+      }
+      void _init() override {
+         if (_groupName.empty()) _groupName = getName();
+      }
       void render2D() const override {
          drawLine(_frameRect.left(), 1.0, theme->foreground.colorPrimary);
          drawLine(_frameRect.right(), 1.0, theme->foreground.colorPrimary);
@@ -22,7 +25,7 @@ namespace ReyEngine {
       void _on_rect_changed() override {
          static constexpr float STUB_OFFSET = 15;
          auto textHeight = measureText(_groupName, theme->font).y;
-         _frameRect = getSizeRect();
+         _frameRect = getSizeRect().embiggen(-4);
          _frameRect = _frameRect.splitAtVPos(textHeight - textHeight * .5 ).second;
          _leftStub = _frameRect.top().shorten(_frameRect.width - STUB_OFFSET);
          _textPos = Pos<float>(20, 0);

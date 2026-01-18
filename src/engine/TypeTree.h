@@ -12,11 +12,26 @@
 #include <unordered_set>
 #include "ProcessList.h"
 #include "Easings.h"
+#include "DeferredCallList.h"
 
+namespace ReyEngine{class Window;}
 namespace ReyEngine::Internal::Tree {
    class TypeNode;
    template <typename T>
    using MakeNodeReturnType = std::pair<std::shared_ptr<T>, std::unique_ptr<TypeNode>>;
+
+   struct Windowable {
+      Window* _window = nullptr;
+      DeferredCallList* _deferredCallList = nullptr;  // Set by Window when attached
+
+      template <typename F, typename... Args>
+      void defer(F&& func, Args&&... args) {
+         if (_deferredCallList) {
+            _deferredCallList->add(std::forward<F>(func), std::forward<Args>(args)...);
+         }
+      }
+      friend class Window;
+   };
 
    class TypeNode;
    struct TreeStorable {
@@ -122,7 +137,7 @@ namespace ReyEngine::Internal::Tree {
 
    // Convert type-erased data to a format that can be stored in the tree
    struct ProtectedFunctionAccessor;
-   class TypeNode {
+   class TypeNode : public Windowable {
    protected:
       explicit TypeNode(std::unique_ptr<TypeBase> data, const std::string& instanceName, const std::string& typeName)
       : name(instanceName)
@@ -174,6 +189,10 @@ namespace ReyEngine::Internal::Tree {
             _childOrder.push_back(childptr);
             childptr->_index = _childOrder.size()-1;
          }
+
+         //set the window and associated information
+         childptr->_window = _window;                     //must be initially set by window on canvas root
+         childptr->_deferredCallList = _deferredCallList; //must be initially set by window on canvas root
 
          // Set parent
          childptr->_parent = this;

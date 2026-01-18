@@ -125,7 +125,7 @@ void Layout::_on_child_added_to_tree(TypeNode* child) {
          layoutRatios.push_back(1.0);
       }
       isWidget.value()->isLocked = true;
-      arrangeChildren();
+      defer([this](){arrangeChildren();});
    }
 }
 

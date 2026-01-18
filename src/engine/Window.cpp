@@ -31,8 +31,9 @@ Window::Window(const std::string &title, int width, int height, const std::vecto
 void Window::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
    auto [canvas, node] = make_node<Canvas>("root");
    _root = std::move(node);
+   _root->_window = this;
+   _root->_deferredCallList = &_deferredCallList;
    canvas->setSize(getSize());
-   canvas->window = this;
    canvas->__on_added_to_tree();
    SetExitKey(KEY_NULL);
 }
@@ -264,14 +265,17 @@ void Window::exec(){
 ////            _dragNDrop.value()->preview.value()->setPos(InputManager2::getMousePos().get());
 ////            _dragNDrop.value()->preview.value()->render2DChain();
 ////         }
-      //render the canvas to the window
 
-         BeginDrawing();
-         auto& _renderTarget = canvas->getRenderTarget();
-         Rect<R_FLOAT> rect = getSize().toRect();
-         drawRenderTargetRect(_renderTarget, rect, rect, Colors::none);
-         EndDrawing();
-         _frameCounter++;
+      //call deferred calls
+      _deferredCallList.executeAllAndClear();
+
+      //render the canvas to the window
+      BeginDrawing();
+      auto& _renderTarget = canvas->getRenderTarget();
+      Rect<R_FLOAT> rect = getSize().toRect();
+      drawRenderTargetRect(_renderTarget, rect, rect, Colors::none);
+      EndDrawing();
+      _frameCounter++;
 //      } // release scoped lock here
    }
    _isClosing = true;

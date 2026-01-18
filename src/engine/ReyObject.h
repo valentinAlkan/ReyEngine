@@ -109,6 +109,10 @@ namespace ReyEngine{
          virtual void _on_child_removed_from_tree(TypeNode*){};
          virtual void _on_descendant_removed_from_tree(TypeNode*){};
          virtual inline bool operator==(const ReyObject& rhs){return uniqueValue == rhs.uniqueValue;}
+         [[nodiscard]] inline std::optional<Window*> getWindow(){if (_node && _node->_window) { return _node->_window; } else {return std::nullopt;}}
+         [[nodiscard]] inline std::optional<const Window*> getWindow() const {return const_cast<ReyObject&>(*this).getWindow();}
+         template <typename F, typename... Args>
+         void defer(F&& func, Args&&... args) {_node->defer(std::forward<F>(func), std::forward<Args>(args)...);}
       protected:
          ReyObject(){
             uniqueValue = Application::generateUniqueValue();

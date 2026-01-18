@@ -58,6 +58,8 @@ namespace ReyEngine{
       std::queue<std::unique_ptr<InputEvent>> _inputQueueKey; //a place to hold programatically generated input
       std::unique_ptr<TypeNode> _root;
       bool _isClosing = false;
+      DeferredCallList _deferredCallList;
+
       /////////////////////
       /////////////////////
       friend class Application;

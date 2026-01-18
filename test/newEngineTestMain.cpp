@@ -14,6 +14,7 @@
 #include "Panel.h"
 #include "Tree.h"
 #include "Panel.h"
+#include "Group.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -176,7 +177,7 @@ int main() {
          auto scrollArea = make_child<ScrollArea>(layoutl, "MainScrollArea");
          auto tabHolder = make_child<Layout>(layoutr, "TabLayout", Layout::LayoutDir::VERTICAL);
          auto widgetsHolder = make_child<Layout>(layoutr, "WidgetsLayout", Layout::LayoutDir::VERTICAL);
-         auto buttonHolder = make_child<Layout>(layoutr, "ButtonLayout", Layout::LayoutDir::VERTICAL);
+         auto buttonHolder = make_child<Group>(layoutr, "ButtonLayout");
          //add some other widgets
          {
             auto lineedit = make_child<LineEdit>(widgetsHolder, "LineEdit", "Try clicking on this line edit");
@@ -208,6 +209,7 @@ int main() {
 
          //add some buttons
          {
+            //make a button group
             auto summonButton = make_child<PushButton>(buttonHolder, "btnPopup", "Summon Popup");
             auto dialogHButton = make_child<PushButton>(buttonHolder, "btnDialogH", "Summon Horizontal Dialog");
             auto dialogVButton = make_child<PushButton>(buttonHolder, "btnDialogV", "Summon Vertical Dialog");
