@@ -2350,6 +2350,10 @@ namespace ReyEngine {
    inline float getFrameDelta() {return GetFrameTime();}
    inline Size<R_FLOAT> measureText(const std::string& text, const ReyEngineFont& font){return MeasureTextEx(font.font, text.c_str(), font.size, font.spacing);}
    inline Size<R_FLOAT> measureText(const std::string& text, const std::shared_ptr<ReyEngineFont>& font){return MeasureTextEx(font->font, text.c_str(), font->size, font->spacing);}
+   std::string getCharAt(const std::string& s, const Pos<float>& pos, const std::shared_ptr<ReyEngineFont>& font);
+   std::string getSubstrAt(const std::string& s, const Pos<float>& pos, const std::shared_ptr<ReyEngineFont>& font);
+   std::optional<size_t> getCharIndexAt(const std::string& s, const Pos<float>& pos, const std::shared_ptr<ReyEngineFont>& font);
+   std::optional<std::pair<size_t, std::string>> getSubstrInfoAt(const std::string& s, const Pos<float>& pos, const std::shared_ptr<ReyEngineFont>& font);
    inline void printMatrix(const Transform2D& t) { printMatrix(t.matrix);}
 
    /////////////////////////////////////////////////////////////////////////////////////////

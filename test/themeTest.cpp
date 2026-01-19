@@ -63,8 +63,10 @@ int main() {
    //add each widget type
    auto pushbutton = make_child<PushButton>(vlayoutl, "pushbutton");
    auto toggleButton = make_child<ToggleButton>(vlayoutl, "toggleButton");
-   auto lineedit = make_child<LineEdit>(vlayoutl, "lineedit", "LineEdit");
-   auto checkbox = make_child<CheckBox>(vlayoutl, "checkbox", "This is a checkbox");
+   auto lineEditHLayout = make_child<Layout>(vlayoutl, "lineEditHLayout", Layout::LayoutDir::HORIZONTAL);
+   auto lineEdit = make_child<LineEdit>(lineEditHLayout, "lineedit", "LineEdit");
+   auto checkbox = make_child<CheckBox>(lineEditHLayout, "checkbox", "Enabled");
+   checkbox->setChecked(true);
 
    auto menuBar = make_child<MenuBar>(vlayoutl, "menubar");
    auto fileMenu = menuBar->createDropDown("File");
@@ -76,6 +78,11 @@ int main() {
    for (auto& child : vlayoutl->getChildren()){
       child->as<Widget>().value()->setMaxHeight(ROW_HEIGHT);
    }
+
+   auto cbLineEditDisabled = [lineEdit](const CheckBox::ButtonToggleEvent& e){
+      lineEdit->setEnabled(e.button().getDown());
+   };
+   lineEdit->subscribe<CheckBox::ButtonToggleEvent>(checkbox, cbLineEditDisabled);
 
    window.exec();
 

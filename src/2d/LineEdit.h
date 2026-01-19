@@ -29,7 +29,7 @@ namespace ReyEngine {
       void setText(const std::string&, bool noPublish=false);
       void setDefaultText(const std::string&, bool noPublish=false);
       void render2D() const override;
-      [[nodiscard]] std::string getText(){return _text.empty() ? _defaultText : _text;}
+      [[nodiscard]] std::string getText(){return _input.empty() ? _defaultText : _input;}
    protected:
       void _init() override;
       void _on_focus_gained() override;
@@ -41,7 +41,7 @@ namespace ReyEngine {
    private:
       void publishText(const std::string&);
       std::string _defaultText;
-      std::string _text;
+      std::string _input;
       int _highlight_start = 0;
       int _highlight_end = 0;
       bool _isEditing = false; //the user is editing - blink the cursor

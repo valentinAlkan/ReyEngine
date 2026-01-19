@@ -93,6 +93,7 @@ namespace ReyEngine{
       REYENGINE_OBJECT(CheckBox)
       CheckBox(const std::string& text): ToggleButton(text){}
       [[nodiscard]] bool getChecked() const {return getDown();} //alias
+      void setChecked(bool checked){setDown(checked);}
    protected:
       void render2D() const override;
       void _init() override {

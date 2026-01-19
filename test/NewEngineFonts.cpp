@@ -33,7 +33,7 @@ int main(int argc, char** argv){
 
    int nextPos = 0;
    Logger::info() << "Searching for .ttf fonts in " << fontDir.canonical() << endl;
-   for (const auto& fontFileName : fontDir.listContents()){
+   for (const auto& fontFileName : fontDir.listContents().first){
       auto tail = fontFileName.tail();
       if (!tail.ends_with(".ttf")) continue;
       for (auto i : FONT_SIZES){

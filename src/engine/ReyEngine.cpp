@@ -325,6 +325,80 @@ void ReyEngine::RenderTarget::setSize(const Size<int> &newSize) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+struct CharPosResult {
+   size_t byteOffset = 0;
+   size_t charIndex = 0;
+   int codepointByteCount = 0;
+   bool found = false;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////
+static CharPosResult findCharAtPos(const std::string& s, float posX, const std::shared_ptr<ReyEngineFont>& font) {
+   CharPosResult result;
+   if (s.empty()) return result;
+
+   float currentX = 0.0f;
+   const char* text = s.c_str();
+
+   while (text[result.byteOffset] != '\0') {
+      int codepoint = GetCodepoint(&text[result.byteOffset], &result.codepointByteCount);
+      int glyphIndex = GetGlyphIndex(font->font, codepoint);
+      float charWidth;
+      if (font->font.glyphs[glyphIndex].advanceX == 0) {
+         charWidth = (float)font->font.recs[glyphIndex].width * font->size / font->font.baseSize;
+      } else {
+         charWidth = (float)font->font.glyphs[glyphIndex].advanceX * font->size / font->font.baseSize;
+      }
+      charWidth += font->spacing;
+      if (posX < currentX + charWidth) {
+         result.found = true;
+         return result;
+      }
+      currentX += charWidth;
+      result.byteOffset += result.codepointByteCount;
+      result.charIndex++;
+   }
+
+   return result;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::string ReyEngine::getCharAt(const std::string& s, const Pos<float>& pos, const std::shared_ptr<ReyEngineFont>& font) {
+   auto result = findCharAtPos(s, pos.x, font);
+   if (result.found) {
+      return s.substr(result.byteOffset, result.codepointByteCount);
+   }
+   return "";
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::string ReyEngine::getSubstrAt(const std::string& s, const Pos<float>& pos, const std::shared_ptr<ReyEngineFont>& font) {
+   auto result = findCharAtPos(s, pos.x, font);
+   if (result.found) {
+      return s.substr(0, result.byteOffset);
+   }
+   return s;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<size_t> ReyEngine::getCharIndexAt(const std::string& s, const Pos<float>& pos, const std::shared_ptr<ReyEngineFont>& font) {
+   auto result = findCharAtPos(s, pos.x, font);
+   if (result.found) {
+      return result.charIndex;
+   }
+   return std::nullopt;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<std::pair<size_t, std::string>> ReyEngine::getSubstrInfoAt(const std::string& s, const Pos<float>& pos, const std::shared_ptr<ReyEngineFont>& font) {
+   auto result = findCharAtPos(s, pos.x, font);
+   if (result.found) {
+      return std::make_pair(result.charIndex, s.substr(0, result.byteOffset + result.codepointByteCount));
+   }
+   return std::nullopt;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::setWindowSize(ReyEngine::Size<float> size) {

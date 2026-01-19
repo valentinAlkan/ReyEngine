@@ -18,8 +18,8 @@ void LineEdit::render2D() const {
 
    static constexpr int textStartHPos = 1;
    //draw default text
-   auto displayText = _text.empty() ? _defaultText : _text;
-   bool isDefaultText = _text.empty();
+   auto displayText = _input.empty() ? _defaultText : _input;
+   bool isDefaultText = _input.empty();
    if (!displayText.empty() && (!isDefaultText || !_isEditing)) {
       if (_highlight_start || _highlight_end) {
          auto highlightRect = getRect() - Size<R_FLOAT>(2, 2) + Pos<R_FLOAT>(1, 1);
@@ -31,10 +31,12 @@ void LineEdit::render2D() const {
       auto textStart = textWidth > ourWidth ? ourWidth - textWidth : 2;
 
       ColorRGBA textColor;
-      if (!_text.empty() && !disabled){
-        textColor = font->color;
-      }  else if (!_text.empty() && disabled){
-         textColor = font->color;
+      if (!_input.empty() && !disabled){
+         textColor = font->color; //normal text, not disabled
+      }  else if (!_input.empty() && disabled){
+         textColor = font->color; //normal text, disabled
+      } else if (!_defaultText.empty()){
+         textColor = font->colorDisabled; //default text
       }
       drawText(displayText, {textStart, textPosV}, font, textColor, font->size, font->spacing);
    }
@@ -46,12 +48,11 @@ void LineEdit::render2D() const {
       if (caretHigh) {
          //measure the position of the text for where it should start
          float caretHPos = 80;
-         if (_caretPos == -1){
-            //set caret to end
-            caretHPos = measureText(_text, theme->font).x + 4;
-            if (caretHPos > getWidth()){
-               caretHPos = getWidth() - 2;
-            }
+         //set caret pos
+         auto substr = _caretPos == -1 ? _input : _input.substr(0, _caretPos);
+         caretHPos = measureText(substr, theme->font).x + 4;
+         if (caretHPos > getWidth()){
+            caretHPos = getWidth() - 2;
          }
          drawLine({{caretHPos, 2}, {caretHPos, getHeight() - 2}}, 2, theme->font->color);
       }
@@ -72,9 +73,9 @@ void LineEdit::setDefaultText(const std::string& _newDefaultText, bool noPublish
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void LineEdit::setText(const std::string& _newText, bool noPublish) {
-   auto oldText = _text;
-   _text = _newText;
-   _on_text_changed(oldText, _text);
+   auto oldText = _input;
+   _input = _newText;
+   _on_text_changed(oldText, _input);
    if (!noPublish) publishText(oldText);
 }
 
@@ -85,21 +86,29 @@ Widget* LineEdit::_unhandled_input(const InputEvent& event) {
       switch (event.eventId) {
          case InputEventMouseButton::ID:
             const auto& mouseEvent = event.toEvent<InputEventMouseButton>();
-            if (mouse->isInside()) {
+            if (getIsEnabled() && mouse->isInside()) {
                if (!mouseEvent.isDown) {
                   Logger::info() << getName() << endl;
                   if (isFocused()){
                      //has input - move caret
                      //see if we clicked off the end
-                     if (mouse->getLocalPos().x > measureText(_text, theme->font).x){
+                     if (mouse->getLocalPos().x > measureText(_input, theme->font).x){
                         //clicked off end - set caret position to the end
                         _caretPos = -1;
                         return this;
-                     }
+                     };
                   } else {
                      //grab iput
                      setFocused(true);
                      _caretPos = -1;
+                  }
+               }
+               if (isFocused() && !_input.empty()){
+                  //which character did we click on?
+                  if (auto valid = getSubstrInfoAt(_input, mouse->getLocalPos(), theme->font)) {
+                     auto [index, substr] = valid.value();
+                     Logger::info() << "Clicked on character " << substr.back() << " at position " << index << ", substr = " << substr << endl;
+                     _caretPos = (int)index;
                   }
                }
                //eat input
@@ -118,8 +127,10 @@ Widget* LineEdit::_unhandled_input(const InputEvent& event) {
          case InputEventChar::getUniqueEventId(): {
             if (!isFocused()) break;
             const auto& charEvent = event.toEvent<InputEventChar>();
-            auto oldText = _text;
-            _text += charEvent.ch;
+            auto oldText = _input;
+            size_t insertPos = (_caretPos == -1) ? _input.size() : (size_t)_caretPos;
+            _input.insert(insertPos, 1, charEvent.ch);
+            _caretPos = (int)insertPos + 1;
             publishText(oldText);
             return this;
          }
@@ -128,11 +139,21 @@ Widget* LineEdit::_unhandled_input(const InputEvent& event) {
             if (!isFocused()) break;
             switch (keyEvent.key) {
                default: break;
+               case InputInterface::KeyCode::KEY_RIGHT: if (!_input.empty()) _caretPos += 1; if (_caretPos > _input.size()) return this;
+               case InputInterface::KeyCode::KEY_LEFT: if (!_input.empty()) _caretPos -= 1; if (_caretPos < 0) _caretPos = -1; return this;
+               case InputInterface::KeyCode::KEY_DELETE:
                case InputInterface::KeyCode::KEY_BACKSPACE:
                   if (keyEvent.isDown) {
-                     if (!_text.empty()) {
-                        auto oldText = _text;
-                        _text.pop_back();
+                     size_t erasePos = (_caretPos == -1) ? _input.size() : (size_t)_caretPos;
+                     if (!_input.empty() && erasePos > 0) {
+                        auto oldText = _input;
+                        if (keyEvent.key == InputInterface::KeyCode::KEY_DELETE){
+                           erasePos += 1;
+                        } else {
+                           erasePos -= 1;
+                        }
+                        _input.erase(erasePos - 1, 1);
+                        _caretPos = (int)erasePos - 1;
                         publishText(oldText);
                      }
                      return this;
@@ -170,7 +191,7 @@ void LineEdit::_on_focus_lost() {
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void LineEdit::publishText(const std::string& oldText) {
-   EventLineEditTextChanged event(this, oldText, _text);
+   EventLineEditTextChanged event(this, oldText, _input);
    publish(event);
 }
 

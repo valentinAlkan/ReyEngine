@@ -5,10 +5,11 @@
 #include <functional>
 #include <optional>
 
-namespace string_tools{
+namespace ReyEngine::string_tools{
    std::vector<std::string> split(const std::string& s, const std::string& delimString);
    std::vector<std::string> split(const std::string& s, char delimChar);
    std::vector<std::string> split(const std::string& s); //split all whitespace
+   std::pair<std::string, std::string> splitAt(const std::string& s, int pos);
    std::string lstrip(const std::string& s, char c); //strips char(s) c from the left
    std::string lstrip(const std::string& s); //strips whitespace from the left
    std::string rstrip(const std::string& s, char c); //strips char(s) c from the right

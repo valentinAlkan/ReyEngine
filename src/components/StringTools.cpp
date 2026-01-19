@@ -2,6 +2,7 @@
 //#include "FileSystem.h"
 #include <algorithm>
 
+using namespace ReyEngine;
 using namespace string_tools;
 using namespace AnsiColor;
 using namespace std;
@@ -57,6 +58,16 @@ vector<string> string_tools::split(const std::string &s) {
     }
     if (retval.empty()) retval.push_back(substr);
     return retval;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::pair<string, string> string_tools::splitAt(const std::string& s, int pos){
+   if (pos == 0) return {"", s};
+   if (pos >= s.size() - 1) return {s, ""};
+   if (pos < 0){
+      pos = (int)s.size() - pos;
+   }
+   return {s.substr(0, pos),s.substr(pos, s.size())};
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

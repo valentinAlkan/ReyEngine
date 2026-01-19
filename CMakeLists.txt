@@ -283,8 +283,8 @@ target_link_libraries(NewEngineFonts ReyEngine2D ReyEngineComponentArgParse)
 
 
 # Test Projects
-add_executable( uitest test/uitest.cpp)
-target_link_libraries(uitest ReyEngine2D)
+add_executable(themeTest test/themeTest.cpp)
+target_link_libraries(themeTest ReyEngine2D)
 ##########################################
 # for testing basic raylib stuff
 add_executable( raylibTest test/raylibTest.cpp)

@@ -210,7 +210,7 @@ namespace ReyEngine::FileSystem {
    };
 }
 
-namespace string_tools{
+namespace ReyEngine::string_tools{
    [[nodiscard]] std::vector<std::string> pathSplit(const std::string& s);
    [[nodiscard]] std::string pathJoin(const std::vector<std::string>& v); //join into an array-like list
 }
