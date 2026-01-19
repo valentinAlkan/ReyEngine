@@ -40,11 +40,14 @@ namespace ReyEngine {
       virtual void _on_text_changed(const std::string& old, const std::string& _new){};
    private:
       void publishText(const std::string&);
+      void ensureCaretVisible(); //adjusts _scrollOffset so caret is visible
       std::string _defaultText;
       std::string _input;
       int _highlight_start = 0;
       int _highlight_end = 0;
       bool _isEditing = false; //the user is editing - blink the cursor
       int _caretPos = 0; //the char BEFORE which the cursor should be drawn; -1 if end
+      float _scrollOffset = 0; //horizontal scroll offset for text
+      std::chrono::steady_clock::time_point caretHighTime; //timestamp of when the caret should be high
    };
 }
