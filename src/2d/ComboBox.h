@@ -44,7 +44,7 @@ namespace ReyEngine {
 
       REYENGINE_OBJECT(ComboBox)
       ComboBox() {
-         acceptsHover = true;
+         _acceptsHover = true;
       }
       constexpr ComboBox(const auto& items)
       : ComboBox()

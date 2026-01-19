@@ -77,7 +77,7 @@ namespace ReyEngine{
       static constexpr float ROW_HEIGHT = 20;
       REYENGINE_OBJECT(Tree)
       Tree() : Layout(Layout::LayoutDir::VERTICAL){
-         acceptsHover = true;
+         _acceptsHover = true;
       }
       Tree(std::unique_ptr<TreeItem>&& root) : Tree()
       {

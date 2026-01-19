@@ -76,7 +76,6 @@ namespace ReyEngine {
       virtual void renderProcess(RenderTarget& parentTarget); //provide the parent's render target. so we can control stuff.
       [[nodiscard]] const RenderTarget& getRenderTarget() const {return _renderTarget;}
       Widget* __process_unhandled_input(const InputEvent& event) override;
-      Widget* __process_hover(const InputEventMouseHover& event);
       void __on_rect_changed(const Rect<R_FLOAT>& oldRect, const Rect<R_FLOAT>& newRect, bool allowsAnchor, bool byLayout = false) override;
       void _removeAllStatus(Widget*);
 
@@ -206,7 +205,6 @@ namespace ReyEngine {
       struct InputProcess : public TreeProcess<Internal::ProcessOrdering::OrderingInputNewestFirst> {
          InputProcess(Canvas* thisCanvas, Widget* processedWidget, const InputEvent& event, const Transform2D& inputTransform)
          : TreeProcess(thisCanvas, processedWidget)
-         , inputTransform(inputTransform)
          , event(event)
          {
             if (auto mouseData = event.isMouse()) {
@@ -235,28 +233,7 @@ namespace ReyEngine {
 
          //transforms mouse coordinates
          std::unique_ptr<MouseEvent::ScopeTransformer> mouseTransformer;
-         Transform2D inputTransform;
          const InputEvent& event;
-      };
-
-      /////////////////////////////////////////////////////////////////////////////////////////
-      ////////// HOVERING
-      // return value = who hovered
-      struct HoverProcess : public InputProcess {
-         HoverProcess(Canvas* thisCanvas, Widget* processedWidget, const InputEvent& event, const Transform2D& inputTransform)
-         : InputProcess(thisCanvas, processedWidget, event, inputTransform)
-         {}
-
-         Widget* subcanvasProcess(){
-            return subCanvas->__process_hover(event.toEvent<InputEventMouseHover>());
-         }
-
-         Widget* process(){
-            if (processedWidget->acceptsHover && event.isMouse().value()->isInside()){
-               return processedWidget;
-            }
-            return nullptr;
-         };
       };
 
       /////////////////////////////////////////////////////////////////////////////////////////
@@ -319,7 +296,7 @@ namespace ReyEngine {
          //  two large and similar blocks of code that both iterate over the tree and 'doStuff' in slightly
          //  different ways.
          auto createProcessTransformer = [this, &widget, &args...](const Transform2D& inputTransform) {
-            if constexpr (std::is_same_v<ProcessType, InputProcess> || std::is_same_v<ProcessType, HoverProcess>) {
+            if constexpr (std::is_same_v<ProcessType, InputProcess>) {
                const auto& event = std::get<0>(std::forward_as_tuple(std::forward<Args>(args)...));
                return ProcessType(this, widget, event, inputTransform);
             } else {
@@ -350,8 +327,8 @@ namespace ReyEngine {
                return processChildren<ProcessType>(thisNode, std::forward<Args>(args)...);
             }
 
-            //input and hover
-            if constexpr (std::is_same_v<ProcessType, InputProcess> || std::is_same_v<ProcessType, HoverProcess>) {
+            //input
+            if constexpr (std::is_same_v<ProcessType, InputProcess>) {
                //process children first for input
                auto pass = [&](){return processChildren<ProcessType>(thisNode, std::forward<Args>(args)...);};
                auto publish = [&](){return processTransformer.publish();};

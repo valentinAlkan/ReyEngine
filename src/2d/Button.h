@@ -33,7 +33,7 @@ namespace ReyEngine{
       using ColorPack = std::tuple<ColorRGBA, ColorRGBA, ColorRGBA>;
       Button(const std::string& text) {
          setText(text);
-         acceptsHover = true;
+         _acceptsHover = true;
       }
       void _init() override {
          setMinSize(measureText(text, getTheme().font) + Size<float>(10, 10));

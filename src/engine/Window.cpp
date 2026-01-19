@@ -207,7 +207,7 @@ void Window::exec(){
          auto handledBy = canvas->__process_unhandled_input(motionEvent);
          if constexpr (PRINT_MOTION) if (handledBy) Logger::info() << "Motion handled by " << handledBy->getName() << endl;
          if (!handledBy) {
-            handledBy = canvas->__process_hover(hoverEvent);
+            handledBy = canvas->__process_unhandled_input(hoverEvent);
             if constexpr (PRINT_HOVER) if (handledBy) Logger::info() << "Hover handled by " << handledBy->getName() << endl;
          }
 //            }

@@ -303,8 +303,8 @@ WindowSpace<Pos<R_FLOAT>> Widget::toWindowSpace(const Pos<float>& p) const {
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 void Widget::setAcceptsHover(bool accepts) {
-   acceptsHover = accepts;
-   if (isHovered() && !acceptsHover){
+   _acceptsHover = accepts;
+   if (isHovered() && !_acceptsHover){
       setHovered(false);
    }
 }
@@ -358,11 +358,18 @@ Widget *Widget::__process_unhandled_input(const ReyEngine::InputEvent &event) {
    //we can intercept certain events and always handle them, for example, tooltips (and eventually hovers)
    bool isInside = event.isMouse() && event.isMouse().value()->isInside();
    if (isInside){
-      switch (event.eventId){
+      switch (event.eventId) {
          //offer these events to children who may want them, but then accept them if there are no takers.
-         case InputEventMouseToolTip::ID:
+         case InputEventMouseToolTip::ID:{
             auto handled = _unhandled_input(event);
-            if (!handled) return this;
+            if (!handled) return this;}
+         //offer these events to children who may want them, but then accept them if there are no takers.
+         case InputEventMouseHover::ID: {
+            auto handled = _unhandled_input(event);
+            if (_acceptsHover && isInside) {
+               if (!handled) return this;
+            }
+            break;}
       }
    }
 

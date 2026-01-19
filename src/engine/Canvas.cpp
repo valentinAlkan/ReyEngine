@@ -157,14 +157,6 @@ CanvasSpace<Pos<float>> Canvas::getMousePos() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Widget* Canvas::__process_hover(const InputEventMouseHover& event){
-   auto& _event = const_cast<InputEventMouseHover&>(event); //should not be rvalue
-   auto accepted = __process_unhandled_input(_event);
-   setHover(accepted);
-   return accepted;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
 Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
    auto isMouse = event.isMouse(); //cache this for speed
 
@@ -174,6 +166,7 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
       EventHandler(Canvas* canvas, const InputEvent& event)
       : canvas(canvas)
       , event(event)
+      , cachedMouseData(event.isMouse() ? *event.isMouse().value() : decltype(cachedMouseData)())
       {}
       ~EventHandler(){
          if (!handler) return;
@@ -186,6 +179,13 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
             case InputEventMouseMotion::ID:{
                canvas->setToolTip(nullptr);
                break;}
+            case InputEventMouseHover::ID:{
+               canvas->setHover(handler);
+               break;}
+         }
+         //return mouse data to its original state
+         if (auto mouseData = event.isMouse()) {
+            *mouseData.value() = cachedMouseData.value();
          }
       }
       EventHandler& operator=(Widget* w){handler = w; return *this;}
@@ -194,17 +194,11 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
    private:
       Widget* handler = nullptr;
       Canvas* canvas = nullptr;
+      std::optional<const MouseEvent> cachedMouseData;
       const InputEvent& event;
    };
 
    EventHandler handled(this, event);
-
-   auto createProcessNodeForEvent = [&](TypeNode *thisNode, bool isModal, const InputEvent& event, auto&&... args) -> Widget* {
-      if (event.isEvent<InputEventMouseHover>()){
-         return processNode<HoverProcess>(thisNode, isModal, event, std::forward<decltype(args)>(args)...);
-      }
-      return processNode<InputProcess>(thisNode, isModal, event);
-   };
 
    //reject mouse input from outside the canvas
    if (_ignoreOutsideInput) {
@@ -215,19 +209,19 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
 
    //query modal widgets first. A modal widget consumes input even if unhandled and prevents anyone else from getting it.
    if (auto modal = getModal()){
-      handled = createProcessNodeForEvent(modal->_node, true, event);
+      handled = processNode<InputProcess>(modal->_node, true, event);
       if (modal->_handleAllModalInput || handled) return handled;
    }
 
    //then focused widgets
    if (auto focus = getFocus()){
-      handled = createProcessNodeForEvent(focus->_node, true, event);
+      handled = processNode<InputProcess>(focus->_node, true, event);
       if (handled) return handled;
    }
 
    //then foreground (which is unaffected by camera transform)
    for (auto& child : _foreground.getValues() | std::views::reverse) {
-      handled = createProcessNodeForEvent(child, false, event);
+      handled = processNode<InputProcess>(child, false, event);
       if (handled) return handled;
    }
 
@@ -238,7 +232,7 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
       if (isMouse){
          xformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), getLocalTransform(), child->as<Widget>().value()->size, getCameraTransform());
       }
-      handled = createProcessNodeForEvent(child, false, event);
+      handled = processNode<InputProcess>(child, false, event);
       if (handled) return handled;
    }
 
