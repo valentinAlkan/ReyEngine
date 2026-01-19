@@ -111,6 +111,7 @@ namespace ReyEngine {
    public:
       Theme(const std::string& instanceName = "DefaultTheme")
       {
+         static constexpr unsigned int offset = 20;
          name = instanceName;
          //apply defaults
          background.fill = Style::Fill::SOLID;
@@ -119,17 +120,23 @@ namespace ReyEngine {
          background.colorTertiary = Colors::white;
          background.colorDisabled = Colors::disabledGray;
          background.colorActive1 = Colors::gray;
-         static constexpr unsigned int offset = 20;
          background.colorActive2 = ColorRGBA(Colors::gray.r - offset, Colors::gray.g - offset, Colors::gray.b - offset, Colors::gray.a);
          background.colorHighlight = ColorRGBA(0, 140, 255);
+
+         foreground.fill = Style::Fill::SOLID;
          foreground.colorPrimary = Colors::black;
-         foreground.colorDisabled = Colors::white;
+         foreground.colorSecondary = Colors::white;
+         foreground.colorTertiary = Colors::yellow;
+         foreground.colorDisabled = Colors::lightGray;
+         foreground.colorActive1 = Colors::gray;
+         foreground.colorActive2 = ColorRGBA(Colors::gray.r - offset, Colors::gray.g - offset, Colors::gray.b - offset, Colors::gray.a);
+         foreground.colorHighlight = ColorRGBA(0, 100, 255);
+
          font = std::make_shared<ReyEngineFont>();
       }
 
       Style::StyleRole background;
       Style::StyleRole foreground;
-      Style::StyleRole highlight;
       Style::StyleRole outline;
       std::shared_ptr<ReyEngine::ReyEngineFont> font;
       float layoutMargin = 2; //only used by layouts - adds space BETWEEN all children

@@ -46,13 +46,13 @@ namespace ReyEngine {
       ComboBox() {
          _acceptsHover = true;
       }
-      constexpr ComboBox(const auto& items)
+      ComboBox(const auto& items)
       : ComboBox()
       {
          setItems(items);
       }
       template <typename I>
-      constexpr void setItems(const I& items, size_t _currentIndex=0) {
+      void setItems(const I& items, size_t _currentIndex=0) {
          for (auto& s : items){
             addItem(s);
          }
@@ -160,7 +160,7 @@ namespace ReyEngine {
                auto& field = fields.at(i);
                auto& rect = _selectionMenuItemRects.at(i);
                if (field->highlighted){
-                  drawRectangle(rect, theme->highlight.colorPrimary);
+                  drawRectangle(rect, theme->foreground.colorHighlight);
                }
                drawText(field->text, rect.pos(), font);
             }

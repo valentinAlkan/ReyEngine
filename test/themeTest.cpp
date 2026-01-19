@@ -32,6 +32,14 @@ class ThemeExplorer : public Widget {
       setPairs(4, "Background: colorActive1", theme->background.colorActive1);
       setPairs(5, "Background: colorActive2", theme->background.colorActive2);
       setPairs(6, "Background: colorDisabled", theme->background.colorDisabled);
+
+      setPairs(7, "Foreground: colorPrimary", theme->foreground.colorPrimary);
+      setPairs(8, "Foreground: colorSecondary", theme->foreground.colorSecondary);
+      setPairs(9, "Foreground: colorTertiary", theme->foreground.colorTertiary);
+      setPairs(10, "Foreground: colorHighlight", theme->foreground.colorHighlight);
+      setPairs(11, "Foreground: colorActive1", theme->foreground.colorActive1);
+      setPairs(12, "Foreground: colorActive2", theme->foreground.colorActive2);
+      setPairs(13, "Foreground: colorDisabled", theme->foreground.colorDisabled);
    }
    void render2D() const override {
       for (const auto& [rect, text, color] : _rects){

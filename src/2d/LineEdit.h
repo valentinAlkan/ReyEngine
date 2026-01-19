@@ -41,11 +41,24 @@ namespace ReyEngine {
    private:
       void publishText(const std::string&);
       void ensureCaretVisible(); //adjusts _scrollOffset so caret is visible
+
+      // Selection helpers
+      bool hasSelection() const { return _selectionStart != _selectionEnd; }
+      void clearSelection() { _selectionStart = _selectionEnd = 0; }
+      std::string getSelectedText() const;
+      void deleteSelection(); //deletes selected text and updates caret
+      void setSelectionFromCaret(); //sets selection start to current caret pos
+      int getSelectionMin() const;
+      int getSelectionMax() const;
+      int caretPosToIndex(int pos) const; //converts -1 to actual index
+      int getCaretPosFromMouse(float mouseLocalX) const; //gets caret position from mouse x coordinate
+
       std::string _defaultText;
       std::string _input;
-      int _highlight_start = 0;
-      int _highlight_end = 0;
+      int _selectionStart = 0; //character index where selection begins
+      int _selectionEnd = 0;   //character index where selection ends (can be < start)
       bool _isEditing = false; //the user is editing - blink the cursor
+      bool _isDragging = false; //mouse is being dragged for selection
       int _caretPos = 0; //the char BEFORE which the cursor should be drawn; -1 if end
       float _scrollOffset = 0; //horizontal scroll offset for text
       std::chrono::steady_clock::time_point caretHighTime; //timestamp of when the caret should be high
