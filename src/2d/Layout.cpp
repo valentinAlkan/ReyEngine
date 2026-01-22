@@ -59,7 +59,7 @@ struct Layout::LayoutHelper {
          case ChildOrder::ONLY:
             break;
          default:
-            throw std::runtime_error("Grid layout margins not implemented!");
+            Logger::error() << "Grid layout margins not implemented!" << endl;
       }
 
       parent->layoutApplyRect(child, pendingRect);
@@ -162,6 +162,7 @@ void Layout::layoutApplyRect(Widget* widget, Rect<float>& r){
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Layout::_on_rect_changed() {
+   _layoutArea = getSizeRect();
    arrangeChildren();
 }
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -1002,34 +1002,29 @@ namespace ReyEngine {
          y = p.y - height;
          return *this;
       }
-      constexpr inline Rect& centerOnPoint(const Pos<R_FLOAT>& p) {
-         return setPos(p - Pos<R_FLOAT>(size().toPos() / 2));
-      } /// Return the rect such that it would be centered on point p
-      constexpr inline Rect& embiggen(T amt) {
-         return *this += Rect<T>(-amt, -amt, 2 * amt, 2 * amt);
-      } //shrink/expand borders evenly. Perfectly cromulent name.
-      constexpr inline Rect& stretchVertical(T amt) {
-         return *this += Rect<T>(0, -amt, 0, 2 * amt);
-      } //embiggen tallness evenly
-      constexpr inline Rect& stretchHorizontal(T amt) {
-         return *this += Rect<T>(-amt, 0, 2 * amt, 0);
-      } //embiggen wideness evenly
-      constexpr inline Rect& pushX(T amt) {
-         x += amt;
+      // Return the rect such that it would be centered on point p
+      constexpr inline Rect& centerOnPoint(const Pos<R_FLOAT>& p) {return setPos(p - Pos<R_FLOAT>(size().toPos() / 2));}
+      //shrink/expand borders evenly. Perfectly cromulent name.
+      constexpr inline Rect& embiggen(T amt) {return *this += Rect<T>(-amt, -amt, 2 * amt, 2 * amt);}
+      //make the rectangle pct% the size of rect. new rect and old rect should have same center.
+      constexpr inline Rect& embiggenTo(Percent pct) {
+         T newWidth = width * (pct.get() / 100.0);
+         T newHeight = height * (pct.get() / 100.0);
+         T deltaX = width - newWidth;
+         T deltaY = height - newHeight;
+         x += deltaX / 2;
+         y += deltaY / 2;
+         width = newWidth;
+         height = newHeight;
          return *this;
       }
-
-      constexpr inline Rect& pushY(T amt) {
-         y += amt;
-         return *this;
-      }
-
-      constexpr inline Rect& stretchLeft(T amt) {
-         x -= amt;
-         width += amt;
-         return *this;
-      }
-
+      //embiggen tallness evenly
+      constexpr inline Rect& stretchVertical(T amt) {return *this += Rect<T>(0, -amt, 0, 2 * amt);}
+      //embiggen wideness evenly
+      constexpr inline Rect& stretchHorizontal(T amt) {return *this += Rect<T>(-amt, 0, 2 * amt, 0);}
+      constexpr inline Rect& pushX(T amt) {x += amt; return *this;}
+      constexpr inline Rect& pushY(T amt) {y += amt; return *this;}
+      constexpr inline Rect& stretchLeft(T amt) {x -= amt; width += amt; return *this;}
       constexpr inline Rect& stretchRight(T amt) {
          width += amt;
          return *this;
@@ -1078,16 +1073,10 @@ namespace ReyEngine {
          return {c.x, 0, c.x, height};
       }
 
-      [[nodiscard]] constexpr inline Rect embiggen(T amt) const {
-         return *this + Rect<T>(-amt, -amt, 2 * amt, 2 * amt);
-      }
-
+      [[nodiscard]] constexpr inline Rect embiggen(T amt) const {return *this + Rect<T>(-amt, -amt, 2 * amt, 2 * amt);};
+      [[nodiscard]] constexpr inline Rect embiggenTo(Percent pct) const {return Rect<float>(*this).embiggenTo(pct);}
       [[nodiscard]] constexpr inline Rect stretchVertical(T amt) const { return *this + Rect<T>(0, -amt, 0, 2 * amt); }
-
-      [[nodiscard]] constexpr inline Rect stretchHorizontal(T amt) const {
-         return *this + Rect<T>(-amt, 0, 2 * amt, 0);
-      }
-
+      [[nodiscard]] constexpr inline Rect stretchHorizontal(T amt) const {return *this + Rect<T>(-amt, 0, 2 * amt, 0);}
       [[nodiscard]] constexpr inline Rect pushX(T amt) const {
          auto retval = *this;
          retval.x += amt;
@@ -2086,6 +2075,7 @@ namespace ReyEngine {
       static constexpr ColorRGBA activeBlue = {32, 155, 238, 255};
       static constexpr ColorRGBA lightGray = {200, 200, 200, 255};
       static constexpr ColorRGBA red = {230, 41, 55, 255};
+      static constexpr ColorRGBA darkRed = {166, 27, 37, 255};
       static constexpr ColorRGBA green = { 0, 228, 48, 255};
       static constexpr ColorRGBA blue = { 0, 121, 241, 255};
       static constexpr ColorRGBA black = { 0, 0, 0, 255};

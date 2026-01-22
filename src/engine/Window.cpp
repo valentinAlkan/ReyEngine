@@ -14,7 +14,7 @@ constexpr bool PRINT_MOUSEUP = false;
 constexpr bool PRINT_MOUSEDOWN = false;
 constexpr bool PRINT_HOVER= false;
 constexpr bool PRINT_MOTION = false;
-constexpr bool PRINT_TOOLTIP = true;
+constexpr bool PRINT_TOOLTIP = false;
 constexpr bool PRINT_WHEEL = false;
 
 constexpr std::chrono::milliseconds TOOLTIP_DELAY = 500ms;

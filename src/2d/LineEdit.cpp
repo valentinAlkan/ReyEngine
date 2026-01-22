@@ -121,6 +121,7 @@ Widget* LineEdit::_unhandled_input(const InputEvent& event) {
                   // Clicked outside while focused - release focus
                   setFocused(false);
                   _isDragging = false;
+                  return this;
                }
             }
             break;
@@ -345,9 +346,11 @@ void LineEdit::_on_focus_gained() {
 ///////////////////////////////////////////////////////////////////////////////////////
 void LineEdit::_on_focus_lost() {
    _isEditing = false;
+   if (!_isDragging){
+      _scrollOffset = 0; // Reset scroll when not editing
+      clearSelection();
+   }
    _isDragging = false;
-   _scrollOffset = 0; // Reset scroll when not editing
-   clearSelection();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////

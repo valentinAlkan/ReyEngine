@@ -20,30 +20,12 @@ void Panel::render2D() const {
    //draw the header
    drawRectangle(getSizeRect(), theme->background.colorPrimary);
    drawRectangle(_header.rect, theme->background.colorTertiary);
-   drawRectangle(_header.btnClose, Colors::red);
+   drawRectangle(_header.btnClose, _closeDown ? Colors::darkRed : Colors::red);
+   drawRectangleLines(_header.btnClose, 1.0, Colors::black);
    drawRectangleLines(getSizeRect(), 1.0, theme->background.colorSecondary);
    drawLine(_header.rect.bottom(), 1.0, theme->background.colorSecondary);
    drawTextCentered("x", _header.btnClose.center(), theme->font);
    drawText(_title, _header.titlePos, theme->font);
-//   drawCircle({testPos, 4}, Colors::blue);
-//   drawText(testPos.toString(), {10, 40}, theme->font);
-//   drawText(testPos.toString(), {10, 40}, theme->font);
-//   if (!_isMinimized) {
-//      //dont need to draw these if we're minimized
-//      static constexpr float roundness = 2.0;
-//
-//      //draw the rounded bottom portion
-//      drawRectangle(getSizeRect(), theme->background.colorPrimary);
-//
-//      drawRectangleLines(getSizeRect(), 1.0, theme->background.colorSecondary);
-//
-//      //debug:
-////      draw the stretch regions
-//      for (const auto &region: stretchRegion) {
-//         drawRectangle(region, ColorRGBA(0, 0, 255, 128));
-//      }
-//   }
-
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -195,13 +177,20 @@ Widget* Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
    switch (event.eventId) {
       case InputEventMouseButton::getUniqueEventId(): {
          auto &mbEvent = event.toEvent<InputEventMouseButton>();
+         _closeDown = false;
          if (_dragState == DragState::NONE && !mbEvent.isDown && !mbEvent.mouse.isInside()){
             hide();
             return this;
          }
          if (mbEvent.button != InputInterface::MouseButton::LEFT) break;
-         if (!mbEvent.isDown && _header.btnClose.contains(mbEvent.mouse.getLocalPos())){
-            hide();
+
+         //close button click
+         if (_header.btnClose.contains(mbEvent.mouse.getLocalPos())){
+            if (mbEvent.isDown){
+               _closeDown = true;
+            } else {
+               hide();
+            }
          }
 
 //         resizeStartRect = getRect();
@@ -214,7 +203,7 @@ Widget* Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
 //         }
 
          //dragging logic
-         if (_header.rect.contains(mbEvent.mouse.getLocalPos()) && _isDragable) {
+         if (_header.rect.contains(mbEvent.mouse.getLocalPos()) && !_closeDown && _isDragable) {
             if (mbEvent.isDown) {
                //start dragging
                _dragState = DragState::DRAGGING;
@@ -346,10 +335,12 @@ void Panel::setTitle(const std::string &newtitle) {
 void Panel::hide(){
    setVisible(false);
    _dragState = DragState::NONE;
+   _closeDown = false;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::show(){
    setVisible(true);
    setFocused(true);
+   _closeDown = false;
 }

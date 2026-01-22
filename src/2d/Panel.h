@@ -50,6 +50,7 @@ namespace ReyEngine{
       bool _isResizable = false;
       bool _isMinimized = false;
       bool _isMaximized = false;
+      bool _closeDown = false; //whether or not the close button is down
 
       InputFilter _filterCache;
 
