@@ -125,8 +125,10 @@ namespace ReyEngine{
       std::optional<size_t> getSelectedIndex();
       void setHighlighted(TreeItem*, bool publish=true);
       void setHighlightedIndex(size_t visibleItemIndex, bool publish=true); //sets highlighted by its CURRENTLY VISIBLE index (not internal raw index)
+      void clearHighlight(){_hoveredImplDetails.reset();}
       void setSelected(TreeItem* selectedItem, bool publish=true);
       void setSelectedIndex(size_t visibleItemIndex, bool publish=true); //sets selected by its CURRENTLY VISIBLE index (not internal raw index)
+      void clearSelection(){_selectedItem.reset();}
       Size<float> measureContents(); // Measures how big the contents of the tree are, not how big the tree itself is. Used for sizing.
       void fit(){setSize(measureContents());}
       struct Iterator {

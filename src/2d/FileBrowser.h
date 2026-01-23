@@ -36,6 +36,7 @@ namespace ReyEngine {
       }
       auto getCurrentDirectory() const {return _dir;}
       void open();
+      void open(const ReyEngine::FileSystem::Directory&);
       void close();
       std::vector<FileSystem::Directory> getSystemDirs();
       std::optional<FileSystem::Path> extractPathFromItem(const TreeItem*) const;
@@ -62,10 +63,12 @@ namespace ReyEngine {
             if (auto path = item->getMetaData<FileSystem::Path>(VAR_PATH)) {
                if (path->isDirectory() && path == _dir) {
                   _systemBrowserTree->setSelected(item.get());
-                  break;
+                  return;
                }
             }
          }
+         //otherwise clear selection
+         _systemBrowserTree->clearSelection();
       }
       bool _modMultiSelectRange = false;
       bool _modMultiSelect = false;

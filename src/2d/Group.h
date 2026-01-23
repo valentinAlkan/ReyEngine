@@ -7,6 +7,7 @@ namespace ReyEngine {
       REYENGINE_OBJECT(Group)
       Group(const std::string& groupName="")
       : Layout(LayoutDir::VERTICAL)
+      , _groupName(groupName)
       {
       }
       void _init() override {

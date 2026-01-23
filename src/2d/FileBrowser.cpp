@@ -13,6 +13,14 @@ void FileBrowser::open() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void FileBrowser::open(const ReyEngine::FileSystem::Directory& d) {
+   open();
+   if (d.isDirectory() && d.exists()) {
+      setDirectoryAndClearHistory(d);
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void FileBrowser::close() {
    setVisible(false);
    setModal(false);
