@@ -12,11 +12,8 @@ namespace ReyEngine{
       REYENGINE_OBJECT(Panel)
       Panel(const std::string& panelTitle="");
    public:
-//      void render2DBegin() override;
-//      void render2DEnd() override;
       void render2D() const override;
       void setTitle(const std::string& newtitle);
-//      void addChildToPanel(std::shared_ptr<Widget> child);
       inline void setResizable(bool resizeable){_isResizable = resizeable;}
       inline bool getResizable(){return _isResizable;}
       void hide();
@@ -27,6 +24,8 @@ namespace ReyEngine{
       void _on_mouse_exit() override;
       void _init() override;
       void _on_rect_changed() override;
+      virtual void _on_about_to_show(){};
+      virtual void _on_about_to_hide(){};
 //      ReyEngine::Rect<R_FLOAT> getScissorArea();
       enum class ResizeDir{NONE, N, E, S, W, NE, SE, SW, NW};
 

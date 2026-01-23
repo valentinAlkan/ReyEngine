@@ -6,6 +6,9 @@ namespace ReyEngine {
 
    class FocusGroup {
    public:
+      [[nodiscard]] bool groupHasFocus(){
+         return getCurrentInFocus().has_value();
+      }
       void removeFromGroup(std::shared_ptr<Widget>& widget){
          cleanup();
          for (auto it = _widgets.begin(); it != _widgets.end(); /**/){
@@ -31,7 +34,6 @@ namespace ReyEngine {
 
 
       [[nodiscard]] std::optional<Widget*> getNextInFocus() const {
-         //all pointers should be valid here
          if (_widgets.empty()) return {};
          auto inFocus = getCurrentInFocus();
          if (_widgets.size() == 1 || inFocus == nullptr) return _widgets.at(0).lock().get();
