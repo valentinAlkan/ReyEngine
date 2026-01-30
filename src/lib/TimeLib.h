@@ -12,7 +12,7 @@ public:
       TimePoint(T value): timeUnit(value){}
       TimePoint(const TimePoint& other): timeUnit(other.timeUnit){}
       TimePoint& operator=(const TimePoint& other){timeUnit = other.timeUnit; return *this;}
-      static TimePoint epoch(); //the '0' value of our time system
+      static TimePoint epoch(); //the '0' value of our time system. User supplied.
       [[nodiscard]] Duration sinceEpoch() const {return *this - epoch();}
       [[nodiscard]] bool operator==(const TimePoint& other) const {return timeUnit == other.timeUnit;}
       [[nodiscard]] bool operator!=(const TimePoint& other) const {return timeUnit != other.timeUnit;}

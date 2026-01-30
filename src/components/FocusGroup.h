@@ -6,9 +6,7 @@ namespace ReyEngine {
 
    class FocusGroup {
    public:
-      [[nodiscard]] bool groupHasFocus(){
-         return getCurrentInFocus().has_value();
-      }
+      [[nodiscard]] bool groupHasFocus() const {return getCurrentInFocus().has_value();}
       void removeFromGroup(std::shared_ptr<Widget>& widget){
          cleanup();
          for (auto it = _widgets.begin(); it != _widgets.end(); /**/){

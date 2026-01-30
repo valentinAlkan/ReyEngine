@@ -153,26 +153,26 @@ Widget* MenuBar::_unhandled_input(const ReyEngine::InputEvent& e) {
    switch (e.eventId){
       case InputEventMouseMotion::ID:{
          auto& mmEvent = e.toEvent<InputEventMouseMotion>();
-         if (isFocused() || mmEvent.mouse.isInside()) {
-            _activeEntry = at(mmEvent.mouse.getLocalPos());
-            setFocused(_activeEntry.has_value());
+         if (mmEvent.mouse.isInside() && _lastDrop) {
             //check if we should open a new drop down menu from modal input
-            if (!_itemDown) return nullptr;
             if (auto canvas = getCanvas()) {
                if (auto dropDown = getDropDownAt(mmEvent.mouse.getLocalPos())) {
                   hideAllDropDowns();
+                  _activeEntry = at(mmEvent.mouse.getLocalPos());
+                  setFocused(true);
                   showDropDown(dropDown);
                }
             }
             return this;
-         } else {
-            _activeEntry = at(mmEvent.mouse.getLocalPos());
+         } else if (isFocused() && _lastDrop) {
+             if (auto newActive = at(mmEvent.mouse.getLocalPos())){
+                _activeEntry = newActive;
+             }
             return this;
          }
          break;}
       case InputEventMouseButton::ID:{
          auto& mbEvent = e.toEvent<InputEventMouseButton>();
-         _itemDown = false;
          if (!mbEvent.isDown) {
             hideAllDropDowns();
             showDropDownAt(mbEvent.mouse.getLocalPos());
@@ -214,7 +214,6 @@ void MenuBar::showDropDown(const std::string& menu, const Pos<float>& pos) {
    if (auto dropDownOpt = getDropDown(menu)){
       auto dropDown = dropDownOpt.value();
       _lastDrop = dropDown;
-      _itemDown = true;
       dropDown->open();
       dropDown->setPosition(pos);
    } else {
@@ -259,5 +258,6 @@ void MenuBar::hideAllDropDowns() {
          dropDown.value()->setVisible(false);
       }
    }
-   _itemDown = false;
+   _activeEntry.reset();
+   _lastDrop = nullptr;
 }

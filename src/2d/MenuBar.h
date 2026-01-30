@@ -109,7 +109,6 @@ namespace ReyEngine{
       void showDropDown(DropDownMenu* dropDown);
       void showDropDownAt(const Pos<float>&);
       DropDownMenu* getDropDownAt(const Pos<float>&);
-      bool _itemDown = false;
       DropDownMenu* _lastDrop = nullptr;
    private:
       static constexpr ColorRGBA GRADIENT_1 = Colors::activeBlue;

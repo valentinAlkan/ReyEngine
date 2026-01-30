@@ -16,6 +16,10 @@ constexpr bool PRINT_HOVER= false;
 constexpr bool PRINT_MOTION = false;
 constexpr bool PRINT_TOOLTIP = false;
 constexpr bool PRINT_WHEEL = false;
+constexpr bool PRINT_CHAR = false;
+constexpr bool PRINT_KEYUP = false;
+constexpr bool PRINT_KEYDOWN = false;
+constexpr bool PRINT_KEYREPEAT = false;
 
 constexpr std::chrono::milliseconds TOOLTIP_DELAY = 500ms;
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -92,7 +96,8 @@ void Window::exec(){
          if (charDown) {
             InputEventChar event(this);
             event.ch = charDown;
-            canvas->__process_unhandled_input(InputEvent(event));
+            auto handledBy = canvas->__process_unhandled_input(InputEvent(event));
+            if constexpr (PRINT_CHAR) if (handledBy) Logger::info() << "Char handled by " << handledBy->getName() << endl;
          } else {
             break;
          }
@@ -107,7 +112,8 @@ void Window::exec(){
             event.key = keyUp;
             event.isDown = false;
             event.isRepeat = false;
-            canvas->__process_unhandled_input(InputEvent(event));
+            auto handledBy = canvas->__process_unhandled_input(InputEvent(event));
+            if constexpr (PRINT_KEYUP) if (handledBy) Logger::info() << "Key up handled by " << handledBy->getName() << endl;
          } else {
             break;
          }
@@ -128,7 +134,8 @@ void Window::exec(){
                   event.key = lastKey;
                   event.isDown = true;
                   event.isRepeat = true;
-                  canvas->__process_unhandled_input(event);
+                  auto handledBy = canvas->__process_unhandled_input(event);
+                  if constexpr (PRINT_KEYREPEAT) if (handledBy) Logger::info() << "Key repeat handled by " << handledBy->getName() << endl;
                }
             }
          }
@@ -142,7 +149,8 @@ void Window::exec(){
                event.key = keyDown;
                event.isDown = true;
                event.isRepeat = false;
-               canvas->__process_unhandled_input(event);
+               auto handledBy = canvas->__process_unhandled_input(event);
+               if constexpr (PRINT_KEYDOWN) if (handledBy) Logger::info() << "Key down handled by " << handledBy->getName() << endl;
             } else {
                break;
             }
