@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #option(REY_ENABLE_NETWORK "Enable the Network component" ON)
 option(REY_ENABLE_YAML "Enable YAML support" ON)
 option(REY_ENABLE_LUA "Enable LUA support" ON)
+option(REY_ENABLE_TIMESPEC_OPERATORS "Enable timespec operators" ON)
 
 # Ensure pthread is linked statically
 set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -202,12 +203,17 @@ target_compile_options(ReyEngine2D PUBLIC -pthread)
 
 #conditional compilations
 if(REY_ENABLE_LUA)
+    message(STATUS "REY_ENABLE_LUA is ON. Linking LUA!")
     add_subdirectory(src/thirdParty/lua)
     target_link_libraries(ReyEngine2D lua)
 endif()
 if(REY_ENABLE_YAML)
-    message(STATUS "Linking YAML!")
+    message(STATUS "REY_ENABLE_YAML is ON. Linking YAML!")
     target_link_libraries(ReyEngine2D yaml-cpp::yaml-cpp)
+endif()
+if(REY_ENABLE_TIMESPEC_OPERATORS)
+    message(STATUS "REY_ENABLE_TIMESPEC_OPERATORS is ON. Including CTimeOperators.h")
+    target_compile_definitions(ReyEngine2D PUBLIC REY_ADD_TIMESPEC_OPERATORS)
 endif()
 
 #default compilations

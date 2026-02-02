@@ -288,4 +288,4 @@ namespace ReyEngine{
 #define EVENT_ARGS(EVENT_NAME, UNIQUE_EVENT_ID, ...) \
    struct EVENT_NAME : public ReyEngine::Event<EVENT_NAME, UNIQUE_EVENT_ID> { \
       CONSTEXPR_EVENTID(UNIQUE_EVENT_ID)             \
-      explicit EVENT_NAME(const ReyEngine::EventPublisher* publisher, __VA_ARGS__) : Event<EVENT_NAME, UNIQUE_EVENT_ID>(publisher)
+      explicit EVENT_NAME(const ReyEngine::EventPublisher* publisher, __VA_ARGS__) : ReyEngine::Event<EVENT_NAME, UNIQUE_EVENT_ID>(publisher)
