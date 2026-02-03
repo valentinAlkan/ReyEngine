@@ -19,8 +19,8 @@ namespace ReyEngine{
           }
        }
        void setUnhandledInputCallback(std::function<Widget*(Control&, const InputEvent&)> fx){unhandledInputCallback = fx;}
-       void setMouseEnterCallback(std::function<void(Control&)> fx){mouseEnterCallback=fx; _acceptsHover=true;}
-       void setMouseExitCallback(std::function<void(Control&)> fx){mouseExitCallback=fx; _acceptsHover=true;}
+       void setMouseEnterCallback(std::function<void(Control&)> fx){mouseEnterCallback=fx;}
+       void setMouseExitCallback(std::function<void(Control&)> fx){mouseExitCallback=fx;}
        void setRectChangedCallback(std::function<void(Control&)> fx){rectChangedCallback=fx;}
        void setScissorArea(const ReyEngine::Rect<int>&);
        void clearScissorArea();

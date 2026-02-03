@@ -12,7 +12,7 @@ using sc = chrono::steady_clock;
 
 constexpr bool PRINT_MOUSEUP = false;
 constexpr bool PRINT_MOUSEDOWN = false;
-constexpr bool PRINT_HOVER= false;
+constexpr bool PRINT_HOVER = false;
 constexpr bool PRINT_MOTION = false;
 constexpr bool PRINT_TOOLTIP = false;
 constexpr bool PRINT_WHEEL = false;
@@ -214,10 +214,8 @@ void Window::exec(){
 
          auto handledBy = canvas->__process_unhandled_input(motionEvent);
          if constexpr (PRINT_MOTION) if (handledBy) Logger::info() << "Motion handled by " << handledBy->getName() << endl;
-         if (!handledBy) {
-            handledBy = canvas->__process_unhandled_input(hoverEvent);
-            if constexpr (PRINT_HOVER) if (handledBy) Logger::info() << "Hover handled by " << handledBy->getName() << endl;
-         }
+         handledBy = canvas->__process_unhandled_input(hoverEvent);
+         if constexpr (PRINT_HOVER) if (handledBy) Logger::info() << "Hover handled by " << handledBy->getName() << endl;
 //            }
       }
 

@@ -77,7 +77,7 @@ namespace ReyEngine{
       static constexpr float ROW_HEIGHT = 20;
       REYENGINE_OBJECT(Tree)
       Tree() : Layout(Layout::LayoutDir::VERTICAL){
-         _acceptsHover = true;
+
       }
       Tree(std::unique_ptr<TreeItem>&& root) : Tree()
       {
@@ -119,10 +119,10 @@ namespace ReyEngine{
 //      TreeItem* addItem(std::unique_ptr<TreeItem>&&); //takes ownership of another tree item
       void setAllowHighlight(bool allowHighlight){_allowHighlight = allowHighlight;}
       void setAllowSelect(bool allowSelect){_allowSelect = allowSelect;}
-      [[nodiscard]] bool getAllowSelect(){return _allowSelect;}
-      [[nodiscard]] bool getAllowHighlight(){return _allowHighlight;}
-      std::optional<TreeItem*> getSelected(){return _selectedItem;}
-      std::optional<size_t> getSelectedIndex();
+      [[nodiscard]] bool getAllowSelect() const {return _allowSelect;}
+      [[nodiscard]] bool getAllowHighlight() const {return _allowHighlight;}
+      [[nodiscard]] std::optional<TreeItem*> getSelected() const {return _selectedItem;}
+      [[nodiscard]] std::optional<size_t> getSelectedIndex() const;
       void setHighlighted(TreeItem*, bool publish=true);
       void setHighlightedIndex(size_t visibleItemIndex, bool publish=true); //sets highlighted by its CURRENTLY VISIBLE index (not internal raw index)
       void clearHighlight(){_hoveredImplDetails.reset();}
@@ -179,7 +179,7 @@ namespace ReyEngine{
       Widget* _unhandled_input(const InputEvent&) override;
       void _on_mouse_enter() override {};
       void _on_mouse_exit() override { _hoveredImplDetails.reset();}
-      std::optional<TreeItemImplDetails*> getImplDetailsAt(const Pos<float>& localPos);
+      std::optional<TreeItemImplDetails*> getItemDetailsAt(const Pos<float>& localPos);
    private:
       bool _allowSelect = false;
       bool _allowHighlight = true;

@@ -29,7 +29,9 @@ TreeItem *TreeItemContainer::push_back(const std::string& name) {
 /////////////////////////////////////////////////////////////////////////////////////////
 TreeItem *TreeItemContainer::insertItem(size_t atIndex, std::unique_ptr<TreeItem> item) {
    _children.insert(_children.begin()+atIndex, std::move(item));
-   return _children.at(atIndex).get();
+   auto retval = _children.at(atIndex).get();
+   if (_tree) _tree->determineOrdering();
+   return retval;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -40,12 +42,11 @@ std::unique_ptr<TreeItem> TreeItem::takeItem(size_t index){
 
    //item no longer is in the tree so has no parent
    ptr->_parent = nullptr;
-
-   //let the tree know to recalculate
-   if (_tree) _tree->determineOrdering();
    //remove reference to tree
    ptr->_tree = nullptr;
    ptr->_generation = TreeItem::GENERATION_NULL;
+   //let the tree know to recalculate
+   if (_tree) _tree->determineOrdering();
    return ptr;
 }
 
@@ -69,6 +70,8 @@ void Tree::determineOrdering(){
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 void Tree::determineVisible() {
+   //get any currently selected item
+   auto oldSelected = _selectedItem;
    //count how many rows are visible/expanded
    _visibleItems.clear();
    std::function<void(TreeItem*)> pushVisible = [&](TreeItem* item){
@@ -86,6 +89,20 @@ void Tree::determineVisible() {
       }
    };
    if (root) pushVisible(root.get());
+
+   //reselect selected items, if any
+   if (oldSelected){
+      bool found = false;
+      for (const auto& visibleItem : _visibleItems){
+         if (visibleItem->item == oldSelected.value()){
+            _selectedItem = visibleItem->item;
+            found = true;
+            break;
+         }
+      }
+      //if the selected item is gone, reset it
+      if (!found) _selectedItem.reset();
+   }
 
    //make ourselves larger if we need to
    fit();
@@ -165,7 +182,7 @@ Widget* Tree::_unhandled_input(const InputEvent& event) {
           auto localPos = mouseEvent->getLocalPos();
 
           //figure out which row the cursor is in
-          auto implDetailsAt = getImplDetailsAt(localPos);
+          auto implDetailsAt = getItemDetailsAt(localPos);
           if (implDetailsAt){
              bool newImplDetails = _hoveredImplDetails != implDetailsAt;
              _hoveredImplDetails = implDetailsAt;
@@ -219,7 +236,7 @@ Widget* Tree::_unhandled_input(const InputEvent& event) {
                 }
 
              }
-             if (auto stillThere = getImplDetailsAt(localPos)) {
+             if (auto stillThere = getItemDetailsAt(localPos)) {
                 _lastClicked = stillThere.value()->item;
              } else {
 
@@ -246,7 +263,7 @@ TreeItem* Tree::setRoot(const std::string& rootName) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::optional<Tree::TreeItemImplDetails*> Tree::getImplDetailsAt(const Pos<float>& localPos) {
+std::optional<Tree::TreeItemImplDetails*> Tree::getItemDetailsAt(const Pos<float>& localPos) {
    auto rowHeight = theme->font->size;
    int rowAt = (int)(localPos.y / rowHeight);
    if (rowAt < _visibleItems.size()) {
@@ -269,10 +286,14 @@ void TreeItem::setGeneration(size_t generation){
 ///////////////////////////////////////////////////////////////////////////////////////////
 void Tree::setHighlighted(ReyEngine::TreeItem* highlighted, bool _publish) {
    decltype(_hoveredImplDetails) oldHovered;
-   for (auto& visible : _visibleItems){
-      if (visible->item == highlighted){
-         oldHovered = _hoveredImplDetails;
-         _hoveredImplDetails = visible;
+   if (!highlighted){
+      _hoveredImplDetails.reset();
+   } else {
+      for (auto &visible: _visibleItems) {
+         if (visible->item == highlighted) {
+            oldHovered = _hoveredImplDetails;
+            _hoveredImplDetails = visible;
+         }
       }
    }
 
@@ -296,6 +317,17 @@ void Tree::setHighlightedIndex(size_t visibleItemIndex, bool _publish) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 void Tree::setSelected(ReyEngine::TreeItem* selectedItem, bool _publish) {
+   bool valid = false;
+   for (const auto& visibleItem : _visibleItems){
+      if (selectedItem == visibleItem->item) {
+         valid = true;
+         break;
+      }
+   }
+   if (!valid) {
+      Logger::info() << "Unable to set invalid tree item!" << endl;
+      return;
+   }
    auto oldSelected = _selectedItem;
    _selectedItem = selectedItem;
    if (_selectedItem == nullptr) _selectedItem.reset();
@@ -331,7 +363,7 @@ Size<float> Tree::measureContents() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::optional<size_t> Tree::getSelectedIndex() {
+std::optional<size_t> Tree::getSelectedIndex() const {
    if (auto item = getSelected()){
       int i=0;
       for (const auto& visibleItem : _visibleItems){

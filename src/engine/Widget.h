@@ -74,7 +74,6 @@ namespace ReyEngine {
       [[nodiscard]] bool getIsEnabled() const {return _enabled;}
       void setInputFiltering(InputFilter newFilter){ _inputFilter = newFilter;}
       [[nodiscard]] InputFilter getInputFiltering() const {return _inputFilter;}
-      void setAcceptsHover(bool accepts);
       [[nodiscard]] bool getIgnoreOutsideInput() const {return _ignoreOutsideInput;}
       void setIgnoreOutsideInput(bool newValue){ _ignoreOutsideInput = newValue;}
       //convenience
@@ -100,7 +99,6 @@ namespace ReyEngine {
       virtual void _on_rect_changed(){};
       void __on_added_to_tree() override;
 
-      bool _acceptsHover = false;
       bool isLayout = false;
       bool _enabled = true; //changes visuals and (typically) ingores input
       InputFilter _inputFilter = InputFilter::PASS_AND_PROCESS;

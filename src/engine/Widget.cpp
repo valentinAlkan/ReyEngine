@@ -302,14 +302,6 @@ WindowSpace<Pos<R_FLOAT>> Widget::toWindowSpace(const Pos<float>& p) const {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-void Widget::setAcceptsHover(bool accepts) {
-   _acceptsHover = accepts;
-   if (isHovered() && !_acceptsHover){
-      setHovered(false);
-   }
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
 void Widget::moveToForeground() {
    if (auto canvas = getCanvas()){
       getCanvas().value()->moveToForeground(this);
@@ -366,7 +358,7 @@ Widget *Widget::__process_unhandled_input(const ReyEngine::InputEvent &event) {
          //offer these events to children who may want them, but then accept them if there are no takers.
          case InputEventMouseHover::ID: {
             auto handled = _unhandled_input(event);
-            if (_acceptsHover && isInside) {
+            if (isInside) {
                if (!handled) return this;
             }
             break;}
