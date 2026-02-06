@@ -151,7 +151,7 @@ void FileBrowser::refreshDirectoryContents() {
       return;
    }
    auto contents = Directory(itemPath.value()).listContents();
-   Directory::logfsError(Logger::error(), contents.second);
+   if (!contents.second.empty()) Directory::logfsError(Logger::error(), contents.second); //log errors
    for (const auto& entry : contents.first) {
       if (entry.isDirectory()){
          dirs.emplace_back(entry);

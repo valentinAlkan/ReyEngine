@@ -172,7 +172,10 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
          if (!handler) return;
          switch (event.eventId){
             case InputEventMouseToolTip::ID:{
-               if (!handler->getToolTipText().empty()) {
+               auto& ttEvent = event.toEvent<InputEventMouseToolTip>();
+               if (ttEvent.isCancel) {
+                  canvas->setToolTip(nullptr);
+               } else if (!handler->getToolTipText().empty()) {
                   canvas->setToolTip(handler);
                }
                break;}

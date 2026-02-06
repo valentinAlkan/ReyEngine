@@ -16,6 +16,7 @@ namespace ReyEngine {
       EVENT_ARGS(EventOk, 287346538943582, TreeItem* selectedItem), _selectedItem(selectedItem)
          {}
          TreeItem* _selectedItem;
+         std::optional<FileSystem::Path> getPath() const {return _selectedItem->getMetaData<FileSystem::Path>(VAR_PATH);}
       };
       FileBrowser()
       : _dir("/")
@@ -31,8 +32,9 @@ namespace ReyEngine {
          _setCurrentDirectory(newDir);
       }
       inline void setDirectoryAndClearHistory(auto arg) {
-         _setCurrentDirectory(FileSystem::Directory(arg));
          _history.clear();
+         _setCurrentDirectory(FileSystem::Directory(arg));
+         _history.add(arg);
       }
       auto getCurrentDirectory() const {return _dir;}
       void open();

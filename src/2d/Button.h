@@ -43,8 +43,8 @@ namespace ReyEngine{
          theme->background.colorTertiary = std::get<2>(colorPack);
       }
       void _render2D() const;
-      virtual void _on_down() {publish<ButtonDownEvent>(ButtonDownEvent(this));}
-      virtual void _on_up(bool mouseEscaped) {if (!mouseEscaped) publish<ButtonUpEvent>(ButtonUpEvent(this, mouseEscaped));}
+      virtual void _on_down_publish() {publish<ButtonDownEvent>(ButtonDownEvent(this));}
+      virtual void _on_up_publish(bool mouseEscaped) {if (!mouseEscaped) publish<ButtonUpEvent>(ButtonUpEvent(this, mouseEscaped));}
       void __down();
       void __up();
       Widget* _unhandled_input(const InputEvent& event) override;
@@ -64,7 +64,7 @@ namespace ReyEngine{
       void _init() override {
          Button::_init();
       }
-      void _on_up(bool mouseEscaped) override;
+      void _on_up_publish(bool mouseEscaped) override;
       void render2D() const override{_render2D();}
    };
 
@@ -82,8 +82,8 @@ namespace ReyEngine{
       void _init() override {
          Button::_init();
       }
-      void _on_up(bool mouseEscaped) override;
-      void _on_down() override;
+      void _on_up_publish(bool mouseEscaped) override;
+      void _on_down_publish() override;
       void render2D() const override{_render2D();}
    };
 

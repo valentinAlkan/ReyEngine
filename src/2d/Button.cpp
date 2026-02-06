@@ -37,10 +37,10 @@ Widget* Button::_unhandled_input(const InputEvent& event) {
                if (!_isToggle || _down) {
                   _down = false;
                   _drawState = DrawState::UP;
-                  _on_up(!isInside);
+                  _on_up_publish(!isInside);
                } else if (!_down) {
                   _down = true;
-                  _on_down();
+                  _on_down_publish();
                   _drawState = DrawState::DOWN;
                }
                if (!isInside) {
@@ -56,16 +56,14 @@ Widget* Button::_unhandled_input(const InputEvent& event) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Button::setDown(bool newDown, PublishType pubTybe){
-   if (pubTybe == PublishType::DO_PUBLISH) {
-      if (newDown && !getDown()) {
-         _down = newDown;
-         _drawState = DrawState::DOWN;
-         _on_down();
-      } else if (!newDown && getDown()){
-         _down = newDown;
-         _drawState = DrawState::UP;
-         _on_up(false);
-      }
+   if (newDown && !getDown()) {
+      _down = newDown;
+      _drawState = DrawState::DOWN;
+      if (pubTybe == PublishType::DO_PUBLISH) _on_down_publish();
+   } else if (!newDown && getDown()){
+      _down = newDown;
+      _drawState = DrawState::UP;
+      if (pubTybe == PublishType::DO_PUBLISH) _on_up_publish(false);
    }
 }
 
@@ -120,22 +118,22 @@ bool Button::getDown() const {
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
-void ToggleButton::_on_down() {
-   Button::_on_down();
+void ToggleButton::_on_down_publish() {
+   Button::_on_down_publish();
    publish(ToggleButton::ButtonToggleEvent(this));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void ToggleButton::_on_up(bool mouseEscaped) {
-   Button::_on_up(mouseEscaped);
+void ToggleButton::_on_up_publish(bool mouseEscaped) {
+   Button::_on_up_publish(mouseEscaped);
    publish(ToggleButton::ButtonToggleEvent(this));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
-void PushButton::_on_up(bool mouseEscaped) {
-   Button::_on_up(mouseEscaped);
+void PushButton::_on_up_publish(bool mouseEscaped) {
+   Button::_on_up_publish(mouseEscaped);
    if (!mouseEscaped) publish(PushButton::ButtonPressEvent(this));
 }
 

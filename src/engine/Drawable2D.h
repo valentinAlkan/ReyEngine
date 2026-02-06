@@ -11,7 +11,7 @@ namespace ReyEngine {
          REYENGINE_OBJECT(Drawable2D)
          [[nodiscard]] inline Transform2D& getTransform(){return transform2D;}
          [[nodiscard]] inline Transform2D getTransform() const {return transform2D;}
-            [[nodiscard]] inline std::optional<Canvas*> getCanvas(){if (canvas) { return canvas; } else {return std::nullopt;}}
+         [[nodiscard]] inline std::optional<Canvas*> getCanvas(){if (canvas) { return canvas; } else {return std::nullopt;}}
          [[nodiscard]] inline std::optional<const Canvas*> getCanvas() const {return const_cast<Drawable2D*>(this)->getCanvas();}
          [[nodiscard]] inline bool getVisible(){return _visible;}
          inline void setVisible(bool newValue){ _visible = newValue; __on_visibility_changed();}

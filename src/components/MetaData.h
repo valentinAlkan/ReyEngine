@@ -12,9 +12,6 @@ namespace ReyEngine {
 
    struct MetaData {
       using MetaDataStoredType = std::map<std::string, std::any>;
-      MetaData& operator=(const MetaData&) = delete;
-      MetaData(const MetaData&) = delete;
-
       template <typename T>
       void setMetaData(void* addr, const std::string& name, const T& newData){
          auto& ptr = metaData.try_emplace(addr).first->second;
@@ -80,14 +77,18 @@ namespace ReyEngine {
          return ptrFound->second;
       }
 
-      static MetaData& instance();
-   private:      
+      static MetaData& instance(){
+         static MetaData instance;
+         return instance;
+      }
+   private:
+      MetaData& operator=(const MetaData&) = delete;
+      MetaData(const MetaData&) = delete;
       MetaData() = default;
       std::map<void*, std::map<std::string, std::any>> metaData;
-      static std::unique_ptr<MetaData> _self;
    };
 
-   struct MetaDataInterface{
+   struct MetaDataInterface : public virtual TypeTag {
       virtual ~MetaDataInterface(){removeAllMetaData();}
       MetaDataInterface() = default;
       MetaDataInterface(const MetaDataInterface& other){

@@ -24,6 +24,7 @@ namespace ReyEngine {
    class ComboBox : public Widget {
       static constexpr float DROP_HANDLE_WIDTH = 20;
    public:
+      enum class MenuDir {UP, DOWN};
       EVENT_ARGS(EventComboBoxItemSelected, 654654654, size_t itemIndex, const ComboBoxDataField<T>* field)
          , itemIndex(itemIndex)
          , field(field)
@@ -58,9 +59,11 @@ namespace ReyEngine {
          }
          setCurrentIndex(_currentIndex);
       }
+      void setMenuDir(MenuDir m){_menuDir = m;}
+      [[nodiscard]] MenuDir getMenuDir() const {return _menuDir;}
       void clear() {
          fields.clear();
-         _selectionMenuRect = Rect<float>(0, theme->font->size, getWidth(), 5);
+         _selectionMenuRect = Rect<float>(getSelectionMenuPos(), {getWidth(), 5});
          _selectionMenuItemRects.clear();
       }
       void eraseItem(size_t index) {
@@ -140,7 +143,6 @@ namespace ReyEngine {
          drawLine(line.copy().rotate(center, rotate_amt), 2.0, theme->background.colorSecondary);
          drawLine(line.rotate(center, -rotate_amt), 2.0, theme->background.colorSecondary);
 
-
          auto& font = theme->font;
 
          auto textheight = font->size;
@@ -181,16 +183,15 @@ namespace ReyEngine {
 
          auto openMenu = [this]() {
             setModal(true);
-            auto textSize = theme->font->size;
             //build the menu rect
-            _selectionMenuRect = Rect<float>(0, getHeight(), getWidth(), textSize * fields.size());
+            _selectionMenuRect = Rect<float>(getSelectionMenuPos(), {getWidth(), theme->font->size * fields.size()});
             //build the item rects
             _selectionMenuItemRects.clear();
             for (int i = 0; i < fields.size(); i++) {
                fieldSelectionRectHeight = theme->font->size;
                auto itemWidth = getRect().width;
                auto itemY = getRect().height + (i * fieldSelectionRectHeight);
-               _selectionMenuItemRects.emplace_back(0, itemY, itemWidth, fieldSelectionRectHeight);
+               _selectionMenuItemRects.emplace_back(Rect<float>(getSelectionMenuPos() + Pos<float>(0, itemY - getHeight()), {itemWidth, fieldSelectionRectHeight}));
             }
          };
 
@@ -273,6 +274,13 @@ namespace ReyEngine {
          }
          return {};
       }
+      [[nodiscard]] Pos<float> getSelectionMenuPos() {
+         switch (_menuDir) {
+            case MenuDir::UP: return {0, -(theme->font->size * fields.size())};
+            case MenuDir::DOWN: return {0, getHeight()};
+         }
+         throw std::runtime_error("Unhandled direction!");
+      }
       void _on_modality_lost() override { _isOpen = false;}
       std::string toolTip;
       std::vector<std::unique_ptr<ComboBoxDataField<T>>> fields; //dont want addresses to change
@@ -283,6 +291,6 @@ namespace ReyEngine {
       bool _isOpen = false;
       Rect<int> _selectionMenuRect;
       std::vector<Rect<float>> _selectionMenuItemRects;
-
+      MenuDir _menuDir = MenuDir::DOWN;
    };
 }

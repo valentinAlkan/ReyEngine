@@ -108,9 +108,11 @@ namespace ReyEngine{
       MouseEvent mouse;
    };
 
-   EVENT_ARGS(InputEventMouseToolTip, 3434343435, const Pos<float>& pos)
+   EVENT_ARGS(InputEventMouseToolTip, 3434343435, const Pos<float>& pos, bool isCancel=false)
    , mouse(pos)
+   , isCancel(isCancel)
    {}
+      bool isCancel;
       MouseEvent mouse;
    };
 

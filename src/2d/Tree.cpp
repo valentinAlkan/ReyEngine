@@ -250,6 +250,7 @@ Widget* Tree::_unhandled_input(const InputEvent& event) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 TreeItem* Tree::setRoot(std::unique_ptr<TreeItem>&& item) {
+    root.reset();
     root = std::move(item);
     root->isRoot = true;
     root->_tree = this;

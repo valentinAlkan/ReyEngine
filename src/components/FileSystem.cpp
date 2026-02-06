@@ -158,6 +158,7 @@ void Path::parsePath() {
    //rebuild path
    _path.clear();
    for (const auto& component : components.second){
+      if (component.empty()) continue;
       _path /= component;
    }
 
@@ -202,7 +203,12 @@ void Path::parsePath() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 std::optional<Directory> FileSystem::Path::getParentDirectory() const {
-   auto parent = Directory(head());
+   Directory parent;
+   if (isDirectory()){
+      parent = _path.parent_path();
+   } else {
+      parent = Directory(head());
+   }
    if (parent.exists()){
       return parent;
    }

@@ -257,7 +257,7 @@ namespace ReyEngine{
          cancelSubscription(deadPublisher, false);
       }
    protected:
-         //publisher doesn't want you as a customer anymore. doesn't reach back out to publisher.
+      //publisher doesn't want you as a customer anymore. doesn't reach back out to publisher.
       void cancelSubscription(EventPublisher* deadPublisher, bool fromPublisher){
          for (auto it=_subscriptions.begin(); it!=_subscriptions.end(); it++){
             auto publisher = it->first;

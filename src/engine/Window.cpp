@@ -15,6 +15,7 @@ constexpr bool PRINT_MOUSEDOWN = false;
 constexpr bool PRINT_HOVER = false;
 constexpr bool PRINT_MOTION = false;
 constexpr bool PRINT_TOOLTIP = false;
+constexpr bool PRINT_TOOLTIP_CANCEL = false;
 constexpr bool PRINT_WHEEL = false;
 constexpr bool PRINT_CHAR = false;
 constexpr bool PRINT_KEYUP = false;
@@ -211,12 +212,14 @@ void Window::exec(){
          mousePosChangeTime = std::chrono::steady_clock::now();
          InputEventMouseHover hoverEvent(this, mousePos.get());
          InputEventMouseMotion motionEvent(this, mousePos.get(), mouseDelta);
+         InputEventMouseToolTip toolTipCancel(this, mousePos.get(), true); //cancel open tooltips as soon as there's mouse movement
 
          auto handledBy = canvas->__process_unhandled_input(motionEvent);
          if constexpr (PRINT_MOTION) if (handledBy) Logger::info() << "Motion handled by " << handledBy->getName() << endl;
          handledBy = canvas->__process_unhandled_input(hoverEvent);
          if constexpr (PRINT_HOVER) if (handledBy) Logger::info() << "Hover handled by " << handledBy->getName() << endl;
-//            }
+         handledBy = canvas->__process_unhandled_input(toolTipCancel);
+         if constexpr (PRINT_TOOLTIP_CANCEL) if (handledBy) Logger::info() << "Tooltip Cancel handled by " << handledBy->getName() << endl;
       }
 
       //check for tooltips

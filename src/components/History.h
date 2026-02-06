@@ -6,7 +6,9 @@ namespace ReyEngine {
    template<typename T>
    struct History {
       void add(const T &dir) {
-         if (_ptr != _history.size()) {
+         if (_history.empty()) {
+            _ptr = 0;
+         } else if (_history.size() >= _ptr + 1) {
             //overwrite at ptr+1;
             auto iter = _history.begin() + (long long) _ptr + 1;
             //erase everything after that point
@@ -17,8 +19,8 @@ namespace ReyEngine {
       }
 
       std::optional<T> back() {
-         if (!_history.empty() && _ptr <= _history.size()) {
-            if (_ptr >= 1) {
+         if (hasBack()){
+            if (_ptr > 0) {
                _ptr--;
             }
             return _history.at(_ptr);

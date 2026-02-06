@@ -42,7 +42,7 @@ Window& WindowPrototype::createWindow() {
 void WindowPrototype::use() {
    if (_usedUp) {
       throw std::runtime_error(
-            "WindowPrototype2 for window " + title + " {" + std::to_string(width) + ":" + std::to_string(height) + " already used!");
+            "WindowPrototype for window " + title + " {" + std::to_string(width) + ":" + std::to_string(height) + " already used!");
    }
    _usedUp = true;
 }

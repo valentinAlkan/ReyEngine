@@ -163,7 +163,6 @@ add_library(ReyEngine2D STATIC
         src/engine/TypeTree.cpp
 
         src/components/SystemTime.cpp
-        src/components/MetaData.cpp
         src/components/Platform.cpp
         src/components/Shader.cpp
 
@@ -180,6 +179,7 @@ add_library(ReyEngine2D STATIC
         src/2d/Panel.cpp
         src/2d/FileBrowser.cpp
         src/2d/MenuBar.cpp
+        src/2d/Table.cpp
 
         src/meta/CSVParser.cpp
         src/meta/XML.cpp

@@ -8,7 +8,7 @@
 class CSVParser {
 public:
    using Row = std::vector<std::string>;
-   CSVParser(const std::shared_ptr<ReyEngine::FileSystem::FileHandle>& file, bool hasHeader = false, char csv_sep = ',');
+   CSVParser(const std::shared_ptr<ReyEngine::FileSystem::FileHandle>& file, bool hasHeader, char csv_sep = ',');
    CSVParser(const std::string& filePath, bool hasHeader = false, char csv_sep = ',');
    /**
     * Returns a std::vector with all of the rows parsed from the file
@@ -33,7 +33,7 @@ public:
     * @return : the index of the given header std::string; nullopt if the header doesn't exist, or the file has no header
     */
    std::optional<size_t> getHeaderIndex(const std::string& name);
-   std::optional<const std::reference_wrapper<Row>> getHeader(){return _header;}
+   std::optional<const Row*> getHeader() const {return &_header;}
    bool hasHeader(){return !_header.empty();}
 
 private:
@@ -43,35 +43,32 @@ private:
 
 public:
    // Iterator class for rows of csv data
-   class iterator : public std::iterator<std::forward_iterator_tag, std::string> {
+   template <typename T>
+   class iterator_impl {
    public:
-      iterator(std::optional<std::reference_wrapper<CSVParser>> parser = std::nullopt)
-      : _parser(parser)
-      {}
-      const Row& operator*() const {
-         auto& r = _parser.value().get()._data.at(rowNo);
-         return r;
-      }
-      iterator& operator++() {
-         rowNo++;
+      using iterator_category = std::forward_iterator_tag;
+      using difference_type   = std::ptrdiff_t;
+      using value_type        = T;
+      using pointer           = T*;
+      using reference         = T&;
+
+      iterator_impl(std::vector<Row>* data_ptr, size_t index): _data_ptr(data_ptr), _index(index) {}
+      reference operator*() const { return (*_data_ptr)[_index]; }
+      pointer operator->() const { return &((*_data_ptr)[_index]); }
+      iterator_impl& operator++() {
+         _index++;
          return *this;
       }
 
-      bool operator!=(const iterator& other) const {
-         if (!_parser) return false;
-         if (!other._parser) {return rowNo < _parser.value().get().getAllRows().size();} //the end() case
-         return _parser.value().get()._data[rowNo] != other._parser.value().get()._data[rowNo];
+      iterator_impl operator++(int) {
+         iterator_impl tmp = *this;
+         ++(*this);
+         return tmp;
       }
-
-      size_t getCurrentRowNo(){return rowNo;}
+      friend bool operator==(const iterator_impl& a, const iterator_impl& b) {return a._data_ptr == b._data_ptr && a._index == b._index;}
+      friend bool operator!=(const iterator_impl& a, const iterator_impl& b) {return !(a == b);}
    private:
-      size_t rowNo = 0;
-      std::optional<std::reference_wrapper<CSVParser>> _parser;
+      std::vector<Row>* _data_ptr;
+      size_t _index;
    };
-
-   iterator begin() {
-      auto it = iterator(std::ref(*this));
-      return it;
-   }
-   iterator end() const { return {};}
 };
