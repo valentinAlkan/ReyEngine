@@ -58,6 +58,7 @@ namespace ReyEngine::FileSystem {
       inline Path& operator=(const std::string& rhs){*this = rhs.c_str(); parsePath(); return *this;}
       inline Path& operator=(const char* rhs){_path.clear(); _path = rhs; parsePath(); return *this;}
       inline Path& operator=(const Path& rhs){_path.clear(); _path = rhs._path; parsePath(); return *this;}
+      inline Path& operator=(const std::filesystem::path& rhs){_path.clear(); _path = rhs; parsePath(); return *this;}
       inline bool operator==(const std::string& rhs) const {return _path == rhs;}
       inline bool operator==(const Path& rhs) const {return _path == rhs._path;}
 
@@ -198,7 +199,7 @@ namespace ReyEngine::FileSystem {
       using Path::createIfNotExist;
       using Path::overwrite;
       using Path::create;
-      Directory(){}
+      Directory()= default;
       Directory(const Path& other): Path(other){_pathType = DIRECTORY;}
       Directory(const std::string& other): Path(other){_pathType = DIRECTORY;}
       Directory(const char* other): Path(other){_pathType = DIRECTORY;}

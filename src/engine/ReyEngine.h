@@ -44,6 +44,14 @@ namespace ReyEngine {
       static constexpr std::size_t hash(std::string_view str) {std::size_t hash = 5381;for (char c: str) {hash = ((hash << 5) + hash) + static_cast<std::size_t>(c);}return hash;}
    };
 
+   enum class FontAlignmentHorizontal{LEFT, CENTER, RIGHT, /*JUSTIFIED*/};
+   enum class FontAlignmentVertical{TOP, CENTER, BOTTOM};
+
+   struct FontAlignment{
+      FontAlignmentHorizontal horizontal = FontAlignmentHorizontal::LEFT;
+      FontAlignmentVertical vertical = FontAlignmentVertical::TOP;
+   };
+
    inline std::ostream& operator<<(std::ostream& os, const Matrix& m) {
       os << "[" << std::fixed << std::setprecision(3) << m.m0 << "  " << m.m1 << "  " << m.m2 << "  " << m.m3 << "]\n";
       os << "[" << std::fixed << std::setprecision(3) << m.m4 << "  " << m.m5 << "  " << m.m6 << "  " << m.m7 << "]\n";
@@ -1645,8 +1653,8 @@ namespace ReyEngine {
       [[nodiscard]] constexpr Rect centerV(const Pos<T>& p){ return {x, p.y - height / 2, width, height}; }
       [[nodiscard]] constexpr std::array<Line<float>, 4> getLines() const {return {top(), right(), bottom(), left()};}
 
-      //centers text in the given rectangle
-      [[nodiscard]] static Rect<float> textRectangleCentered(const std::string& text, const Pos<float>& pos, const ReyEngineFont& font);
+      //returns the position that text needs to be drawn such that hte text is justified inside the rectangle
+      [[nodiscard]] Pos<float> alignText(const std::string& text, FontAlignment alignment, const ReyEngineFont& font);
 
       T x;
       T y;
@@ -2088,14 +2096,6 @@ namespace ReyEngine {
       static constexpr ColorRGBA none = {255, 255, 255, 255};
       static inline ColorRGBA randColor(){return {std::rand() % 255, std::rand() % 255, std::rand() % 255, 255};}  //not very random
    }
-
-   enum class FontAlignmentHorizontal{LEFT, CENTER, RIGHT, /*JUSTIFIED*/};
-   enum class FontAlignmentVertical{TOP, CENTER, BOTTOM};
-
-   struct FontAlignment{
-      FontAlignmentHorizontal horizontal = FontAlignmentHorizontal::LEFT;
-      FontAlignmentVertical vertical = FontAlignmentVertical::TOP;
-   };
 
    struct ReyEngineFont{
       ReyEngineFont(): ReyEngineFont("", 20){}

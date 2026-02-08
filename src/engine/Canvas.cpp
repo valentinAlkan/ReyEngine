@@ -224,16 +224,20 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
 
    //then foreground (which is unaffected by camera transform)
    for (auto& child : _foreground.getValues() | std::views::reverse) {
-      handled = processNode<InputProcess>(child, false, event);
-      if (handled) return handled;
+      if (auto widget = child->as<Widget>()){
+         handled = processNode<InputProcess>(child, false, event);
+         if (handled) return handled;
+      }
    }
 
    //then background (which is affected by camera transorm)
    // this here is "normal" input
    for (auto& child : _background.getValues() | std::views::reverse) {
       std::unique_ptr<MouseEvent::ScopeTransformer> xformer;
+      auto widget = child->as<Widget>();
       if (isMouse){
-         xformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), getLocalTransform(), child->as<Widget>().value()->size, getCameraTransform());
+         if (!widget) continue;
+         xformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), getLocalTransform(), widget.value()->size, getCameraTransform());
       }
       handled = processNode<InputProcess>(child, false, event);
       if (handled) return handled;

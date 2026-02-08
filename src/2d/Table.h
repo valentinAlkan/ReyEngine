@@ -1,41 +1,84 @@
 #pragma once
+#include <format>
 #include "ScrollArea.h"
 
 namespace ReyEngine {
-   class TableItem : public Internal::Drawable2D, public MetaDataInterface {
+   class Table;
+   class TableItem : public MetaDataInterface {
+   public:
       std::string text;
+      Pos<float> textPos;
       std::shared_ptr<Theme> overrideTheme;
+      FontAlignment fontAlignment;
    };
+
+   namespace Internal {
+      class TableViewWidget : public Widget {
+      public:
+         TableViewWidget(Table& table)
+         : _table(table)
+         {}
+         Rect<float> getCellRect(const Pos<size_t>& cellPos) const;
+         Rect<float> getCellRect(const Pos<float>& mousePos) const;
+         Pos<size_t> getCellRectCoords(const Pos<float>& mousePos) const;
+         void render2D() const override;
+         void _recalculate();
+         float _columnWidth = 200;
+         float _rowHeight = 50;
+         std::vector<Line<float>> _vlines;
+         std::vector<Line<float>> _hlines;
+         size_t _columnCount = 1;
+         size_t _rowCount = 1;
+         bool _showVeritcalSeparators = true;
+         bool _showHorizontalSeparators = true;
+         std::map<size_t, std::map<size_t, std::unique_ptr<TableItem>>> _data;
+         Table& _table;
+      };
+   }
+
    class Table : public ScrollArea {
    public:
       REYENGINE_OBJECT(Table)
+      void _init() override {
+         ScrollArea::_init();
+         _view = make_child<Internal::TableViewWidget>(this, "tableView", *this);
+      }
       template <typename T>
-      void setData(const Pos<size_t>& cellPos, const std::string& metaName, const T& data){
-         auto it = _data.try_emplace(cellPos.x).first->second.try_emplace(cellPos.y);
-         auto& ptr = it.first->second;
+      TableItem* setData(const Pos<size_t>& cellPos, const std::string& text, const std::string& metaName, const T& data){
+         auto ptr = setData(cellPos, text);
+         ptr->setMetaData(metaName, data);
+         return ptr;
+      }
+      TableItem* setData(const Pos<size_t>& cellPos, const std::string& text){
+         auto [fst, snd] = _view->_data.try_emplace(cellPos.x).first->second.try_emplace(cellPos.y);
+         auto& ptr = fst->second;
          if (!ptr){
             //add the child
-            auto child = make_child<TableItem>(this, std::format("item {},{}", cellPos.x, cellPos.y));
-            auto c = child->as<TypeNode>;
+            ptr = std::make_unique<TableItem>();
          }
-         ptr->setMetaData(metaName, data);
-         return;
+         ptr->text = text;
+         _view->_recalculate();
+         return ptr.get();
       }
       template <typename T>
       std::optional<T*> getData(const Pos<size_t>& cellPos, const std::string& metaName) const {
-         auto foundX = _data.find(cellPos.x);
-         if (foundX == _data.end()) return {};
-         auto foundY = foundX->second.find(cellPos.y);
+         const auto foundX = _view->_data.find(cellPos.x);
+         if (foundX == _view->_data.end()) return {};
+         const auto foundY = foundX->second.find(cellPos.y);
          if (foundY == foundX->second.end()) return {};
-         if (auto metaDataAble = foundY->second->tag<MetaDataInterface>()){
-            return metaDataAble.value()->getMetaData<T>(metaName);
-         }
-         return {};
+         return foundY->second->getMetaData<T>(metaName);
       }
-      void setWidgetAsData(const std::shared_ptr<Widget>& w){
+      void addWidgetAs(const std::shared_ptr<Widget>& w){
 
       }
-      std::map<size_t, std::map<size_t, TypeNode*>> _data;
-      //std::vector<std::vector<TableItem*>> _cache; //todo: for fast access
+      Widget* _unhandled_input(const InputEvent&) override;
+      void setRowCount(size_t rowCount) const {_view->_rowCount = rowCount; _view->_recalculate();}
+      void setColumnCount(size_t columnCount) const {_view->_columnCount = columnCount; _view->_recalculate();}
+      void setShowVerticalSeparators(bool show) const {_view->_showVeritcalSeparators = show;}
+      void setShowHorizontalSeparators(bool show) const {_view->_showHorizontalSeparators = show;}
+   protected:
+      std::shared_ptr<Internal::TableViewWidget> _view;
+      FontAlignment fontAlignment = {FontAlignmentHorizontal::LEFT, FontAlignmentVertical::CENTER};
+      friend class Internal::TableViewWidget;
    };
 }

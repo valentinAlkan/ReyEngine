@@ -439,11 +439,38 @@ template<> Circle Rect<double>::inscribe() const {return {{(R_FLOAT)(x + width /
 template<> Circle Rect<int>::inscribe() const {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/2};}
 template<> Circle Rect<float>::inscribe() const {return {{(R_FLOAT)(x + width / 2), (R_FLOAT)(y+height/2)}, (R_FLOAT)height/2};}
 /////////////////////////////////////////////////////////////////////////////////////////
-template<> Rect<float> Rect<float>::textRectangleCentered(const std::string& text, const Pos<float>& pos, const ReyEngineFont& font) {
-   auto textWidth = MeasureText(text.c_str(), font.size);
-   float newX = (float) pos.x - (float) textWidth / 2;
-   float newY = (float) pos.y - (float) font.size / 2;
-   return {{newX, newY}, {(float)textWidth, font.size}};
+template<> Pos<float> Rect<float>::alignText(const std::string& text, FontAlignment alignment, const ReyEngineFont& font){
+   auto textSize = measureText(text.c_str(), font.size);
+   float textWidth = textSize.x;
+   float textHeight = textSize.y;
+
+   float posX;
+   switch (alignment.horizontal) {
+      case FontAlignmentHorizontal::LEFT:
+         posX = x;
+         break;
+      case FontAlignmentHorizontal::CENTER:
+         posX = x + (width - textWidth) / 2.0f;
+         break;
+      case FontAlignmentHorizontal::RIGHT:
+         posX = x + width - textWidth;
+         break;
+   }
+
+   float posY;
+   switch (alignment.vertical) {
+      case FontAlignmentVertical::TOP:
+         posY = y;
+         break;
+      case FontAlignmentVertical::CENTER:
+         posY = y + (height - textHeight) / 2.0f;
+         break;
+      case FontAlignmentVertical::BOTTOM:
+         posY = y + height - textHeight;
+         break;
+   }
+
+   return {posX, posY};
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
