@@ -159,7 +159,7 @@ Widget* TileMap::_unhandled_input(const InputEvent& event) {
    auto mouse = event.isMouse();
    if (mouse && mouse.value()->isInside()) {
       switch (event.eventId) {
-         case InputEventMouseMotion::getUniqueEventId(): {
+         case InputEventMouseMotion::ID: {
             auto cellPos = getCell(mouse.value()->getLocalPos());
             float dt = (float)cellPos.x - ((float)mouse.value()->getLocalPos().x / (float)_tileSize.x);
             if (cellPos != currentHover) {
@@ -172,7 +172,7 @@ Widget* TileMap::_unhandled_input(const InputEvent& event) {
             }
          break;
          }
-         case InputEventMouseButton::getUniqueEventId():
+         case InputEventMouseButton::ID:
             auto& mbEvent = event.toEvent<InputEventMouseButton>();
             if (mbEvent.isDown && mbEvent.button == InputInterface::MouseButton::LEFT){
                if (!_on_clicked(currentHover.value())) {

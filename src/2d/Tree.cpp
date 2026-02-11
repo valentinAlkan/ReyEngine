@@ -150,7 +150,7 @@ void Tree::render2D() const{
 /////////////////////////////////////////////////////////////////////////////////////////
 Widget* Tree::_unhandled_input(const InputEvent& event) {
    switch (event.eventId){
-      case InputEventKey::getUniqueEventId():{
+      case InputEventKey::ID:{
          //up and down selection navigation
          auto& kbEvent = event.toEvent<InputEventKey>();
          if (!kbEvent.isDown || !_selectedItem) break;
@@ -175,8 +175,8 @@ Widget* Tree::_unhandled_input(const InputEvent& event) {
             }
          }
          break;}
-       case InputEventMouseMotion::getUniqueEventId():
-       case InputEventMouseButton::getUniqueEventId():
+       case InputEventMouseMotion::ID:
+       case InputEventMouseButton::ID:
           auto mouseEvent = event.isMouse().value();
           if (!mouseEvent->isInside()) return nullptr;
           auto localPos = mouseEvent->getLocalPos();

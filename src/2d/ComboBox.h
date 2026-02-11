@@ -202,7 +202,7 @@ namespace ReyEngine {
             //open the menu
             if (mouse) {
                switch (event.eventId) {
-                  case InputEventMouseMotion::getUniqueEventId(): {
+                  case InputEventMouseMotion::ID: {
                      if (_isOpen) {
                         //highlight the field
                         auto indexAt = getIndexAt(mouse->getLocalPos());
@@ -222,7 +222,7 @@ namespace ReyEngine {
                      }
                      break;
                   }
-                  case InputEventMouseButton::getUniqueEventId(): {
+                  case InputEventMouseButton::ID: {
                      auto& mbEvent = event.toEvent<InputEventMouseButton>();
                      if (mbEvent.isDown) return nullptr;
                      if (mouse->isInside()) {
@@ -255,7 +255,7 @@ namespace ReyEngine {
                      }
                      break;
                   }
-                  case InputEventMouseWheel::getUniqueEventId():
+                  case InputEventMouseWheel::ID:
                      auto& mwEvent = event.toEvent<InputEventMouseWheel>();
 //               mwEvent.wheelMove.pct()
                      break;

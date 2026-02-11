@@ -140,7 +140,7 @@ Widget* LineEdit::_unhandled_input(const InputEvent& event) {
    }
    if (_isEditing){
       switch (event.eventId) {
-         case InputEventChar::getUniqueEventId(): {
+         case InputEventChar::ID: {
             if (!isFocused()) break;
             const auto& charEvent = event.toEvent<InputEventChar>();
             auto oldText = _input;
@@ -160,7 +160,7 @@ Widget* LineEdit::_unhandled_input(const InputEvent& event) {
             ensureCaretVisible();
             return this;
          }
-         case InputEventKey::getUniqueEventId(): {
+         case InputEventKey::ID: {
             const auto& keyEvent = event.toEvent<InputEventKey>();
             if (!isFocused()) break;
 

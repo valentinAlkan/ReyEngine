@@ -176,7 +176,7 @@ Widget* Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
    };
 
    switch (event.eventId) {
-      case InputEventMouseButton::getUniqueEventId(): {
+      case InputEventMouseButton::ID: {
          auto &mbEvent = event.toEvent<InputEventMouseButton>();
          _closeDown = false;
          if (_dragState == DragState::NONE && !mbEvent.isDown && !mbEvent.mouse.isInside()){
@@ -227,7 +227,7 @@ Widget* Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
 //            }
       }
          break;
-      case InputEventMouseMotion::getUniqueEventId():
+      case InputEventMouseMotion::ID:
          auto &mmEvent = event.toEvent<InputEventMouseMotion>();
          //no dragging or resizing if we're maximized
          if (_isMaximized) break;

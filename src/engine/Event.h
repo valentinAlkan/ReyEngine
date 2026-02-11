@@ -277,8 +277,7 @@ namespace ReyEngine{
    };
 }
 
-#define CONSTEXPR_EVENTID(EVENT_ID) static constexpr ReyEngine::EventId ID = EVENT_ID; \
-                                    static constexpr ReyEngine::EventId getUniqueEventId(){return ID;} //temporary <- eases porting
+#define CONSTEXPR_EVENTID(EVENT_ID) static constexpr ReyEngine::EventId ID = EVENT_ID;
 #define EVENT(EVENT_NAME, UNIQUE_EVENT_ID) \
    struct EVENT_NAME : public ReyEngine::Event<EVENT_NAME, UNIQUE_EVENT_ID> { \
       CONSTEXPR_EVENTID(UNIQUE_EVENT_ID)                   \
