@@ -9,6 +9,9 @@ namespace ReyEngine{
       /////////////////////////////////////////////////////////////////////////////////////////
       enum class LayoutDir{HORIZONTAL, VERTICAL, GRID, NONE}; //None is reserved for use by subclasses
       /////////////////////////////////////////////////////////////////////////////////////////
+      // EVEN - space split in accordance with layout ratios (which are all the same by default)
+      // FRONT - makes all children as small as possible and leaves blank space at the BACK (right side or bottom)
+      // BACK - makes all children as small as possible and leaves blank space at the FRONT (left side or top)
       enum class Alignment{EVEN, FRONT, BACK};
 
       Layout(Layout::LayoutDir layoutDir);
@@ -32,6 +35,8 @@ namespace ReyEngine{
       Rect<float> _layoutArea; // the area to use as layout space.
    private:
       ColorRGBA DEBUG_COLOR;
-
    };
+   //aliases.
+   class HLayout : public Layout{public: HLayout() : Layout(LayoutDir::HORIZONTAL){};};
+   class VLayout : public Layout{public: VLayout() : Layout(LayoutDir::VERTICAL){};};
 }

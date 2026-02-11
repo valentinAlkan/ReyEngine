@@ -26,7 +26,6 @@ namespace ReyEngine{
       void _on_rect_changed() override;
       virtual void _on_about_to_show(){};
       virtual void _on_about_to_hide(){};
-//      ReyEngine::Rect<R_FLOAT> getScissorArea();
       enum class ResizeDir{NONE, N, E, S, W, NE, SE, SW, NW};
 
       std::string _title;
@@ -36,22 +35,15 @@ namespace ReyEngine{
          Pos<float> titlePos;
          Rect<float> btnMinimize;
       } _header;
-      bool showHeader;
 
-//      Rect<float> titleLabel;
-//      ReyEngine::Pos<R_FLOAT> offset;
       ReyEngine::Pos<R_FLOAT> dragStart;
-//      ReyEngine::Rect<R_FLOAT> resizeStartRect;
-//      ReyEngine::Rect<R_FLOAT> cacheRect; //for caching size before maximize
       bool _isDragable = true;
       enum class DragState {NONE, DRAGGING, CANT_DRAG};
-      DragState _dragState;
+      DragState _dragState = DragState::NONE;
       bool _isResizable = false;
       bool _isMinimized = false;
       bool _isMaximized = false;
       bool _closeDown = false; //whether or not the close button is down
-
-      InputFilter _filterCache;
 
       ResizeDir _resizeDir = ResizeDir::NONE;
       std::array<ReyEngine::Rect<R_FLOAT>, 4> stretchRegion; //top/right/bottom/left

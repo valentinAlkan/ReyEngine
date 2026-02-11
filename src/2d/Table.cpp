@@ -5,7 +5,7 @@ using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Internal::TableViewWidget::render2D() const {
-    //draw table lines
+   //draw table lines
     std::vector<const std::vector<Line<float>>*> _lines;
     if (_showHorizontalSeparators) _lines.push_back(&_hlines);
     if (_showVeritcalSeparators) _lines.push_back(&_vlines);
@@ -42,7 +42,7 @@ Pos<size_t> Internal::TableViewWidget::getCellRectCoords(const Pos<float>& mouse
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Internal::TableViewWidget::_recalculate() {
-    setSize(_columnCount * _columnWidth, _rowCount * _rowHeight);
+    setSize((float)_columnCount * _columnWidth, (float)_rowCount * _rowHeight);
     _hlines.clear();
     _vlines.clear();
     for (int i = 0; i < _columnCount + 1; i++) {
@@ -69,11 +69,11 @@ void Internal::TableViewWidget::_recalculate() {
 Widget* Table::_unhandled_input(const InputEvent& e) {
     if (e.isMouse()) {
         switch (e.eventId) {
-        case InputEventMouseButton::ID: {
-            auto& mbEvent = e.toEvent<InputEventMouseButton>();
-            Logger::info() << std::format("Clicked on cell {}", _view->getCellRectCoords(mbEvent.mouse.getLocalPos()).toString()) << endl;
-        }
+           case InputEventMouseButton::ID: {
+               auto& mbEvent = e.toEvent<InputEventMouseButton>();
+               Logger::info() << std::format("Clicked on cell {}", _view->getCellRectCoords(mbEvent.mouse.getLocalPos()).toString()) << endl;
+           }
         }
     }
-    return nullptr;
+    return ScrollArea::_unhandled_input(e);
 }

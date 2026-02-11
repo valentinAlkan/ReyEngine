@@ -49,5 +49,8 @@ namespace ReyEngine {
       float _separation = 5;
       Line<float> _visual;
    };
+   //aliases.
+   class HSeparator : public Separator{public: HSeparator() : Separator(SeparatorStyle::HORIZONTAL){};};
+   class VSeparator : public Separator{public: VSeparator() : Separator(SeparatorStyle::VERTICAL){};};
 }
 

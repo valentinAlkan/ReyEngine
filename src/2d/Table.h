@@ -23,12 +23,12 @@ namespace ReyEngine {
          Pos<size_t> getCellRectCoords(const Pos<float>& mousePos) const;
          void render2D() const override;
          void _recalculate();
-         float _columnWidth = 200;
-         float _rowHeight = 50;
+         float _columnWidth = 100;
+         float _rowHeight = 25;
          std::vector<Line<float>> _vlines;
          std::vector<Line<float>> _hlines;
-         size_t _columnCount = 1;
-         size_t _rowCount = 1;
+         size_t _columnCount = 0;
+         size_t _rowCount = 0;
          bool _showVeritcalSeparators = true;
          bool _showHorizontalSeparators = true;
          std::map<size_t, std::map<size_t, std::unique_ptr<TableItem>>> _data;
@@ -68,6 +68,7 @@ namespace ReyEngine {
          if (foundY == foundX->second.end()) return {};
          return foundY->second->getMetaData<T>(metaName);
       }
+
       void addWidgetAs(const std::shared_ptr<Widget>& w){
 
       }
@@ -76,6 +77,14 @@ namespace ReyEngine {
       void setColumnCount(size_t columnCount) const {_view->_columnCount = columnCount; _view->_recalculate();}
       void setShowVerticalSeparators(bool show) const {_view->_showVeritcalSeparators = show;}
       void setShowHorizontalSeparators(bool show) const {_view->_showHorizontalSeparators = show;}
+      void clear(){
+         setRowCount(0);
+         setColumnCount(0);
+         _view->_data.clear();
+         _view->_recalculate();
+      }
+      void setColumnWidth(float w){_view->_columnWidth = w;}
+      void setRowHeight(float h){_view->_rowHeight = h;}
    protected:
       std::shared_ptr<Internal::TableViewWidget> _view;
       FontAlignment fontAlignment = {FontAlignmentHorizontal::LEFT, FontAlignmentVertical::CENTER};

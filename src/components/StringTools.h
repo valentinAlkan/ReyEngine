@@ -46,6 +46,17 @@ namespace ReyEngine::string_tools{
    std::pair<std::string, std::string> nBack(const std::string& s, size_t n); //returns last n characters of string, in order
    std::optional<std::tuple<std::string, std::string, std::string>> nAt(const std::string& s, size_t n, size_t pos); //returns n characters of string, in order, starting at pos. Nullopt on bad params
 
+   template <size_t N>
+   std::optional<std::array<std::string, N>> split(const std::string& s, const std::string& delimString){
+      auto result = split(s, delimString);
+      if (result.size() != N) return {};
+      std::array<std::string, N> arr;
+      for (size_t i = 0; i < N; ++i) {
+         arr[i] = std::move(result[i]);
+      }
+      return arr;
+   }
+
     namespace AnsiColor{
         namespace Foreground {
             std::string EscapeBlack(std::string_view str);

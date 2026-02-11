@@ -7,7 +7,6 @@ using namespace string_tools;
 using namespace AnsiColor;
 using namespace std;
 
-
 /////////////////////////////////////////////////////////////////////////////////////////
 vector<string> string_tools::split(const std::string& s, const std::string& delimString) {
    vector<string> retval;

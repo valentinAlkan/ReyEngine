@@ -13,6 +13,7 @@ Panel::Panel(const std::string &panelTitle)
 , REGION_WEST(stretchRegion[3])
 , _title(panelTitle)
 {
+   _visible = false;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
