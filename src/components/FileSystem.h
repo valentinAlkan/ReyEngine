@@ -99,6 +99,8 @@ namespace ReyEngine::FileSystem {
       File(const Path& other): Path(other){_pathType = REGULAR_FILE;}
       File(Path&& other): Path(other){_pathType = REGULAR_FILE;}
       File& operator=(const File& other) = default;
+      File& operator=(const Directory& other) = delete;
+      Directory toDir() const = delete;
       void clear(){_path.clear();}
       operator Directory() = delete;
       [[nodiscard]] std::shared_ptr<FileHandle> open() const;
@@ -204,6 +206,8 @@ namespace ReyEngine::FileSystem {
       Directory(const std::string& other): Path(other){_pathType = DIRECTORY;}
       Directory(const char* other): Path(other){_pathType = DIRECTORY;}
       Directory(Directory& other) = default;
+      Directory& operator=(const File& other) = delete;
+      File toFile() const = delete;
       operator FileHandle() = delete;
       //returns set of content paths, and a set of pairs of paths and the error codes they generated
       [[nodiscard]] std::pair<std::set<Path>, std::set<std::pair<Path, std::error_code>>> listContents() const;
