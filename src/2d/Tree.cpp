@@ -6,7 +6,7 @@ using namespace ReyEngine;
 ///////////////////////////////////////////////////////////////////////////////////////////
 void TreeItemContainer::clear() {
    _children.clear();
-   if (_tree) _tree->determineOrdering();
+   if (_tree) _tree->refresh();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -16,7 +16,7 @@ TreeItem* TreeItemContainer::push_back(std::unique_ptr<TreeItem>&& newChildItem)
    item->_parent = this;
    item->_tree = _tree;
    item->setGeneration(_generation+1);
-   if (_tree) _tree->determineOrdering();
+   if (_tree) _tree->refresh();
    return item;
 }
 
@@ -30,7 +30,7 @@ TreeItem *TreeItemContainer::push_back(const std::string& name) {
 TreeItem *TreeItemContainer::insertItem(size_t atIndex, std::unique_ptr<TreeItem> item) {
    _children.insert(_children.begin()+atIndex, std::move(item));
    auto retval = _children.at(atIndex).get();
-   if (_tree) _tree->determineOrdering();
+   if (_tree) _tree->refresh();
    return retval;
 }
 
@@ -46,12 +46,12 @@ std::unique_ptr<TreeItem> TreeItem::takeItem(size_t index){
    ptr->_tree = nullptr;
    ptr->_generation = TreeItem::GENERATION_NULL;
    //let the tree know to recalculate
-   if (_tree) _tree->determineOrdering();
+   if (_tree) _tree->refresh();
    return ptr;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Tree::determineOrdering(){
+void Tree::refresh(){
    order.clear();
    int i=0;
    std::function<void(TreeItem*)> pushToVector = [&](TreeItem* item){
@@ -63,7 +63,6 @@ void Tree::determineOrdering(){
    };
    pushToVector(root.get());
    determineVisible();
-
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -105,7 +104,10 @@ void Tree::determineVisible() {
    }
 
    //make ourselves larger if we need to
-   fit();
+   auto parent = getParentWidget();
+   if (!parent || parent && !parent.value()->isLayout()){
+      setSize(measureContents());
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -113,7 +115,6 @@ void Tree::render2D() const{
    // draw the items
    auto& font = theme->font;
    auto pos = Pos<float>(0,-ROW_HEIGHT);
-   long long generationOffset = _hideRoot ? -1 : 0;
    size_t currentRow = 0;
    for (auto it = _visibleItems.begin(); it != _visibleItems.end(); it++) {
       auto& itemMeta = *it;
@@ -132,14 +133,12 @@ void Tree::render2D() const{
          if (highlightColor) drawRectangle({pos, {getWidth(), theme->font->size}}, highlightColor.value());
       }
 
-      char c = item->expandable && !item->_children.empty() ? (item->expanded ? '-' : '+') : ' ';
-      std::string expansionRegionText = c + std::string(generationOffset + item->_generation, c);
       auto enabledColor = font->color;
       constexpr ReyEngine::ColorRGBA disabledColor = {127, 127, 127, 255};
       if (!item->_enabled) {
          font->color = disabledColor;
       }
-      drawText(expansionRegionText + item->getText(), pos, font);
+      drawText(itemMeta->expansionRegionText + item->getText(), pos, font);
       if (!item->_enabled) {
          font->color = enabledColor;
       }
@@ -255,7 +254,7 @@ TreeItem* Tree::setRoot(std::unique_ptr<TreeItem>&& item) {
     root->isRoot = true;
     root->_tree = this;
     root->setGeneration(0);
-    determineOrdering();
+   refresh();
     return root.get();
 }
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -319,13 +318,15 @@ void Tree::setHighlightedIndex(size_t visibleItemIndex, bool _publish) {
 ///////////////////////////////////////////////////////////////////////////////////////////
 void Tree::setSelected(ReyEngine::TreeItem* selectedItem, bool _publish) {
    bool valid = false;
-   for (const auto& visibleItem : _visibleItems){
-      if (selectedItem == visibleItem->item) {
-         valid = true;
-         break;
+   if (selectedItem) {
+      for (const auto &visibleItem: _visibleItems) {
+         if (selectedItem == visibleItem->item) {
+            valid = true;
+            break;
+         }
       }
    }
-   if (!valid) {
+   if (!valid && selectedItem) {
       Logger::info() << "Unable to set invalid tree item!" << endl;
       return;
    }
@@ -353,12 +354,14 @@ void Tree::setSelectedIndex(size_t visibleItemIndex, bool publish){
 ///////////////////////////////////////////////////////////////////////////////////////////
 Size<float> Tree::measureContents() {
    Size<float> retval;
+   int i =0;
    for (const auto& item : _visibleItems){
-      auto itemSize = measureText(item->item->_text, theme->font);
+      auto itemSize = measureText(item->expansionRegionText + item->item->_text, theme->font);
       if (itemSize.x > retval.x){
          retval.x = itemSize.x;
       }
       retval.y += itemSize.y;
+      i++;
    }
    return retval;
 }

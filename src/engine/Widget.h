@@ -82,6 +82,7 @@ namespace ReyEngine {
       [[nodiscard]] bool getIsRendering() const; //determines if this widget and all it's ancestors are being drawn - checks visibility of all ancestors
       void setToolTipText(const std::string& t){_tooltipText = t;}
       [[nodiscard]] std::string getToolTipText() const {return _tooltipText;}
+      [[nodiscard]] bool isLayout() const {return _isLayout;}
    protected:
       //input
       virtual void render2D() const {};
@@ -99,7 +100,7 @@ namespace ReyEngine {
       virtual void _on_rect_changed(){};
       void __on_added_to_tree() override;
 
-      bool isLayout = false;
+      bool _isLayout = false;
       bool _enabled = true; //changes visuals and (typically) ingores input
       InputFilter _inputFilter = InputFilter::PASS_AND_PROCESS;
       std::optional<Rect<float>> _anchorArea; //optional area to anchor to, if not our size rect

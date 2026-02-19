@@ -262,7 +262,7 @@ void FileBrowser::_on_fwd(const PushButton::ButtonPressEvent&) {
 /////////////////////////////////////////////////////////////////////////////////////////
 void FileBrowser::_on_ok(const PushButton::ButtonPressEvent &) {
    close();
-   publish(EventOk(this, _directoryTree->getSelected().value()));
+   if (auto value = _directoryTree->getSelected()) publish(EventOk(this, _directoryTree->getSelected().value()));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

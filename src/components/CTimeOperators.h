@@ -25,6 +25,28 @@ inline timespec operator-(const timespec& t1, const timespec& t2) {
    return result;
 }
 
+inline timespec& operator+=(timespec& lhs, const timespec& rhs) {
+   lhs.tv_sec += rhs.tv_sec;
+   lhs.tv_nsec += rhs.tv_nsec;
+   // Handle nanoseconds overflow
+   if (lhs.tv_nsec >= 1000000000) {
+      lhs.tv_sec += 1;
+      lhs.tv_nsec -= 1000000000;
+   }
+   return lhs;
+}
+
+inline timespec& operator-=(timespec& lhs, const timespec& rhs) {
+   lhs.tv_sec -= rhs.tv_sec;
+   lhs.tv_nsec -= rhs.tv_nsec;
+   // Handle nanoseconds underflow
+   if (lhs.tv_nsec < 0) {
+      lhs.tv_sec -= 1;
+      lhs.tv_nsec += 1000000000;
+   }
+   return lhs;
+}
+
 inline bool operator>(const timespec& t1, const timespec& t2) {
    if (t1.tv_sec > t2.tv_sec) return true;
    return t1.tv_sec == t2.tv_sec && t1.tv_nsec > t2.tv_nsec;

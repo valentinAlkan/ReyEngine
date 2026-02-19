@@ -85,7 +85,7 @@ void TabContainer::setCurrentTab(Widget* w) {
 
    currentTab = w;
    //if current tab is null
-   if (!currentTab){
+   if (!w){
       currentTab = {};
       return;
    }

@@ -76,15 +76,15 @@ namespace ReyEngine{
    public:
       static constexpr float ROW_HEIGHT = 20;
       REYENGINE_OBJECT(Tree)
-      Tree() : Layout(Layout::LayoutDir::VERTICAL){
-
-      }
-      Tree(std::unique_ptr<TreeItem>&& root) : Tree()
+      Tree()
+      : Layout(Layout::LayoutDir::VERTICAL)
+      {}
+      Tree(std::unique_ptr<TreeItem>&& root)
+      : Tree()
       {
          setRoot(std::move(root));
       }
-      EVENT(EventTreeClicked, 654987984653){}
-      };
+      EVENT(EventTreeClicked, 654987984653){}};
       EVENT_ARGS(EventItemAdded, 654987984654, TreeItem*& item), item(item){}
          TreeItem*& item;
       };
@@ -116,7 +116,6 @@ namespace ReyEngine{
       bool getHideRoot() const {return _hideRoot;}
       TreeItem* setRoot(std::unique_ptr<TreeItem>&& item);
       TreeItem* setRoot(const std::string& rootName);
-//      TreeItem* addItem(std::unique_ptr<TreeItem>&&); //takes ownership of another tree item
       void setAllowHighlight(bool allowHighlight){_allowHighlight = allowHighlight;}
       void setAllowSelect(bool allowSelect){_allowSelect = allowSelect;}
       [[nodiscard]] bool getAllowSelect() const {return _allowSelect;}
@@ -130,7 +129,6 @@ namespace ReyEngine{
       void setSelectedIndex(size_t visibleItemIndex, bool publish=true); //sets selected by its CURRENTLY VISIBLE index (not internal raw index)
       void clearSelection(){_selectedItem.reset();}
       Size<float> measureContents(); // Measures how big the contents of the tree are, not how big the tree itself is. Used for sizing.
-      void fit(){setSize(measureContents());}
       struct Iterator {
          using iterator_category = std::forward_iterator_tag;
          using difference_type   = std::ptrdiff_t;
@@ -167,17 +165,22 @@ namespace ReyEngine{
 
       //Stores extra details that the tree can use
       struct TreeItemImplDetails{
-         TreeItemImplDetails(TreeItem*& item, int visibleRowindex): item(item), visibleRowIndex(visibleRowindex){}
+         TreeItemImplDetails(TreeItem*& item, int visibleRowindex): item(item), visibleRowIndex(visibleRowindex){
+            char c = item->expandable && !item->_children.empty() ? (item->expanded ? '-' : '+') : ' ';
+            long long generationOffset = item->_tree->_hideRoot ? -1 : 0;
+            expansionRegionText = c + std::string(generationOffset + item->_generation, c);
+         }
          ReyEngine::Rect<float> expansionIconClickRegion; //where we can click to determine if an item should be "expanded" or not;
+         std::string expansionRegionText;
          TreeItem* item;
          const int visibleRowIndex = -1;
       };
 
-      void determineOrdering();
+      void refresh();
       void determineVisible();
       void render2D() const override;
       Widget* _unhandled_input(const InputEvent&) override;
-      void _on_mouse_enter() override {};
+      void _on_mouse_enter() override {}
       void _on_mouse_exit() override { _hoveredImplDetails.reset();}
       std::optional<TreeItemImplDetails*> getItemDetailsAt(const Pos<float>& localPos);
    private:

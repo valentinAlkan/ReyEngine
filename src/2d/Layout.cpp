@@ -113,7 +113,7 @@ Layout::Layout(LayoutDir layoutDir)
 , layoutDir(layoutDir)
 {
    _usesLayoutRatios = true;
-   isLayout = true;
+   _isLayout = true;
    if (DEBUG_DRAW) DEBUG_COLOR = ColorRGBA::random(255);
 }
 

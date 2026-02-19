@@ -310,19 +310,6 @@ Widget* Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-//void Panel::registerProperties(){
-   //register properties specific to your type here.
-//}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-//ReyEngine::Rect<R_FLOAT> Panel::getScissorArea() {
-//   if (_isMinimized){
-//      return _menuBar;
-//   }
-//   return getSizeRect();
-//}
-
-/////////////////////////////////////////////////////////////////////////////////////////
 void Panel::_on_mouse_exit() {
 //   InputInterface::setCursor(InputInterface::MouseCursor::DEFAULT);
 }
@@ -334,6 +321,7 @@ void Panel::setTitle(const std::string &newtitle) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::hide(){
+   _on_about_to_hide();
    setVisible(false);
    _dragState = DragState::NONE;
    _closeDown = false;
@@ -341,6 +329,7 @@ void Panel::hide(){
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Panel::show(){
+   _on_about_to_show();
    setVisible(true);
    setFocused(true);
    _closeDown = false;
