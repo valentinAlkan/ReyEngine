@@ -832,118 +832,113 @@ namespace ReyEngine {
    template <typename T>
    struct Rect {
       using SubRectCoords = Vec2<int>;
-      enum class Corner {
-         TOP_LEFT = 1, TOP_RIGHT = 2, BOTTOM_RIGHT = 4, BOTTOM_LEFT = 8
+      enum class Corner {TOP_LEFT = 1, TOP_RIGHT = 2, BOTTOM_RIGHT = 4, BOTTOM_LEFT = 8};
+      template <Corner CORNER>
+      struct CornerPos {
+         CornerPos(const Pos<T>& p): pos(p){}
+         Pos<T> pos;
+         static constexpr Corner getCorner(){return CORNER;}
       };
-
       constexpr inline Rect() : x(0), y(0), width(0), height(0) {}
-
-      constexpr inline Rect(const T x, const T y, const T width, const T height) : x(x), y(y), width(width),
-                                                                                   height(height) {}
-
-      constexpr inline explicit Rect(const Rectangle& r) : x((T) r.x), y((T) r.y), width((T) r.width),
-                                                           height((T) r.height) {}
-
+      constexpr inline Rect(const T x, const T y, const T width, const T height) : x(x), y(y), width(width), height(height) {}
+      //construct from corners
+      template <Corner CORNER1, Corner CORNER2>
+      constexpr inline Rect(const CornerPos<CORNER1>& c1, const CornerPos<CORNER2> c2){
+         static_assert(CORNER1 != CORNER2, "Rectangles can't be constructed from the same point. I mean, they can, but it's probably a mistake.");
+         static_assert((static_cast<int>(CORNER1) | static_cast<int>(CORNER2)) == 5 || (static_cast<int>(CORNER1) | static_cast<int>(CORNER2)) == 10, "Corners must be opposite (e.g., TOP_LEFT and BOTTOM_RIGHT).");
+         x = Math::min(c1.pos.x, c2.pos.x);
+         y = Math::min(c1.pos.y, c2.pos.y);
+         if constexpr ((CORNER1 == Corner::TOP_LEFT && CORNER2 == Corner::BOTTOM_RIGHT) || (CORNER1 == Corner::BOTTOM_RIGHT && CORNER2 == Corner::TOP_LEFT))
+         {
+            // Normal case: Top-Left to Bottom-Right
+            width = Math::max(c1.pos.x, c2.pos.x) - x;
+            height = Math::max(c1.pos.y, c2.pos.y) - y;
+         } else if constexpr ((CORNER1 == Corner::TOP_RIGHT && CORNER2 == Corner::BOTTOM_LEFT) || (CORNER1 == Corner::BOTTOM_LEFT && CORNER2 == Corner::TOP_RIGHT)) {
+            // Inverted case: Top-Right to Bottom-Left
+            x = Math::min(c1.pos.x, c2.pos.x);
+            y = Math::min(c1.pos.y, c2.pos.y);
+            width = Math::max(c1.pos.x, c2.pos.x) - x;
+            height = Math::max(c1.pos.y, c2.pos.y) - y;
+         }
+      }
+      constexpr inline explicit Rect(const Rectangle& r) : x((T) r.x), y((T) r.y), width((T) r.width), height((T) r.height) {}
       template<typename R>
       constexpr inline Rect(const Rect<R>& r): x((T) r.x), y((T) r.y), width((T) r.width), height((T) r.height) {}
-
       inline explicit Rect(const Vec2<T>&) = delete;
-
       [[nodiscard]] constexpr inline Rect copy() const { return *this; }
-
       constexpr inline explicit Rect(const Pos<T>& v) : x((T) v.x), y((T) v.y), width(0), height(0) {}
-
       constexpr inline explicit Rect(const Size<T>& v) : x(0), y(0), width((T) v.x), height((T) v.y) {}
-
       constexpr inline operator bool() { return x || y || width || height; }
-
-      constexpr inline Rect(const Pos<T>& pos, const Size<T>& size) : x((T) pos.x), y((T) pos.y), width((T) size.x),
-                                                                      height((T) size.y) {}
-
+      constexpr inline Rect(const Pos<T>& pos, const Size<T>& size) : x((T) pos.x), y((T) pos.y), width((T) size.x), height((T) size.y) {}
       constexpr inline operator Rectangle() const { return {x, y, width, height}; }
-
       constexpr inline bool operator==(const Rect<T>& rhs) const {
          return rhs.x == x && rhs.y == y && rhs.width == width && rhs.height == height;
       }
-
       constexpr inline bool operator!=(const Rect<T>& rhs) const { return !(*this == rhs); }
-
       constexpr inline Rect operator+(const Pos<T>& rhs) const {
          Rect<T> val = *this;
          val.x += rhs.x;
          val.y += rhs.y;
          return val;
       }
-
       constexpr inline Rect operator-(const Pos<T>& rhs) const {
          Rect<T> val = *this;
          val.x -= rhs.x;
          val.y -= rhs.y;
          return val;
       }
-
       constexpr inline Rect& operator+=(const Pos<T>& rhs) {
          x += rhs.x;
          y += rhs.y;
          return *this;
       }
-
       constexpr inline Rect& operator-=(const Pos<T>& rhs) {
          x -= rhs.x;
          y -= rhs.y;
          return *this;
       }
-
       constexpr inline Rect& operator*=(const Pos<T>& rhs) {
          x *= rhs.x;
          y *= rhs.y;
          return *this;
       }
-
       constexpr inline Rect& operator/=(const Pos<T>& rhs) {
          x /= rhs.x;
          y /= rhs.y;
          return *this;
       }
-
       constexpr inline Rect operator+(const Size<T>& rhs) const {
          Rect<T> val = *this;
          val.width += rhs.x;
          val.height += rhs.y;
          return val;
       }
-
       constexpr inline Rect operator-(const Size<T>& rhs) const {
          Rect<T> val = *this;
          val.width -= rhs.x;
          val.height -= rhs.y;
          return val;
       }
-
       constexpr inline Rect& operator+=(const Size<T>& rhs) {
          width += rhs.width;
          height += rhs.height;
          return *this;
       }
-
       constexpr inline Rect& operator-=(const Size<T>& rhs) {
          width -= rhs.width;
          height -= rhs.height;
          return *this;
       }
-
       constexpr inline Rect& operator*=(const Size<T>& rhs) {
          width *= rhs.width;
          height *= rhs.height;
          return *this;
       }
-
       constexpr inline Rect& operator/=(const Size<T>& rhs) {
          width /= rhs.width;
          height /= rhs.height;
          return *this;
       }
-
       constexpr inline Rect operator+(const Rect<T>& rhs) const {
          Rect<T> val = *this;
          val.x += rhs.x;
@@ -952,7 +947,6 @@ namespace ReyEngine {
          val.height += rhs.height;
          return val;
       }
-
       constexpr inline Rect operator-(const Rect<T>& rhs) const {
          Rect<T> val = *this;
          val.x -= rhs.x;
@@ -961,7 +955,6 @@ namespace ReyEngine {
          val.height -= rhs.height;
          return val;
       }
-
       constexpr inline Rect& operator+=(const Rect<T>& rhs) {
          x += rhs.x;
          y += rhs.y;
@@ -969,7 +962,6 @@ namespace ReyEngine {
          height += rhs.height;
          return *this;
       }
-
       constexpr inline Rect& operator-=(const Rect<T>& rhs) {
          x -= rhs.x;
          y -= rhs.y;
@@ -977,7 +969,6 @@ namespace ReyEngine {
          height -= rhs.height;
          return *this;
       }
-
       constexpr inline Rect& operator*=(const Rect<T>& rhs) {
          x *= rhs.x;
          y *= rhs.y;
@@ -985,7 +976,6 @@ namespace ReyEngine {
          height *= rhs.height;
          return *this;
       }
-
       constexpr inline Rect& operator/=(const Rect<T>& rhs) {
          x /= rhs.x;
          y /= rhs.y;
@@ -993,7 +983,6 @@ namespace ReyEngine {
          height /= rhs.height;
          return *this;
       }
-
       constexpr inline bool isInverted() const {return (width < 0 || height < 0);}
       constexpr inline Rect& setTopRightPos(const Pos<T>& p){
          x = p.x - width;
@@ -1408,17 +1397,10 @@ namespace ReyEngine {
          auto b = getSubRect(size, indexStop);
          return getBoundingRect(a, b);
       }
-
       [[nodiscard]] Circle circumscribe() const;
-
       [[nodiscard]] Circle inscribe() const;
-
-      constexpr inline void clear() {
-         x = 0, y = 0, width = 0;
-         height = 0;
-      }
-
-      constexpr inline std::array<Vec2<R_FLOAT>, 4> transform(const Matrix& m) const {
+      constexpr inline void clear() {x = 0, y = 0, width = 0; height = 0;}
+      [[nodiscard]] constexpr inline std::array<Vec2<R_FLOAT>, 4> transform(const Matrix& m) const {
          std::array<Vec2<R_FLOAT>, 4> corners;
          corners[0] = topLeft().transform(m);
          corners[1] = topRight().transform(m);
@@ -1614,11 +1596,40 @@ namespace ReyEngine {
       /// {0.5, 0.5}. Not quite the same as UV because it uses the typical bottom-right convention and not the
       /// top-right convention that UV uses.
       /// To avoid making things ugly, returns 0,0 if x or y is 0;
-      [[nodiscard]] Vec2<Fraction> ratio(const Pos<float>& p) const {
+      [[nodiscard]] Vec2<Fraction> ratioPos(const Pos<float>& p) const {
          if (width == 0 || height == 0) return {0, 0};
          return {p.x / width, p.y / height};
       }
+      /// Takes a pair of rects representing a ratio A:B, and given our current dimensions as A', spit out the rectangle
+      /// that represents B' that has the same ratio such that A':B' == A:B. The point of this is, for example,
+      /// if you are tracking a rectangle B that is a relative size to another rectangle A, and rectangle A changes
+      /// (to A'), then rectangle B should change accordingly (to B').
+      [[nodiscard]] Rect ratioRect(const std::pair<Rect, Rect>& sourceRects) const {
+         const Rect& sourceA = sourceRects.first;
+         const Rect& sourceB = sourceRects.second;
 
+         // Avoid division by zero if the source rectangle has no area.
+         if (sourceA.width == 0 || sourceA.height == 0) {
+            return {}; // Return an empty rectangle.
+         }
+
+         // Calculate the ratio of B's position relative to A's position and size.
+         float x_ratio = (sourceB.x - sourceA.x) / sourceA.width;
+         float y_ratio = (sourceB.y - sourceA.y) / sourceA.height;
+
+         // Calculate the ratio of B's size relative to A's size.
+         float width_ratio = sourceB.width / sourceA.width;
+         float height_ratio = sourceB.height / sourceA.height;
+
+         // Apply these ratios to the current rectangle (*this) to find the new rectangle.
+         Rect result;
+         result.x = this->x + (this->width * x_ratio);
+         result.y = this->y + (this->height * y_ratio);
+         result.width = this->width * width_ratio;
+         result.height = this->height * height_ratio;
+
+         return result;
+      }
 
       [[nodiscard]] Pos<T> scalePoint(const Vec2<Fraction>& p_f, const Rect& r) const {
          auto retval = Pos<T>(p_f.x.get() * r.width, p_f.y.get() * r.height) + r.pos();
@@ -1629,7 +1640,7 @@ namespace ReyEngine {
       /// ie if point p is in the dead center of this rectangle then the return value will
       /// be the point that is the dead center of rect r
       [[nodiscard]] Pos<T> scalePoint(const Pos<T>& p, const Rect& r) const {
-         return scalePoint(ratio(p), r);
+         return scalePoint(ratioPos(p), r);
       }
 
       template<bool AsTuple = false, typename... Args, typename = std::enable_if_t<(sizeof...(Args) > 1)>>

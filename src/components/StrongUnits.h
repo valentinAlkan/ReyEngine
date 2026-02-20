@@ -164,6 +164,7 @@ protected:
 namespace std {
    template<typename NamedType> constexpr bool isfinite(const NamedType &v) {return std::isfinite(v.get());}
    template<typename NamedType> constexpr NamedType abs(const NamedType &v) {return std::abs(v.get());}
+   template<typename NamedType> std::string to_string(const NamedType& t) {return std::to_string(t.get());}
 };
 
 template <typename T, typename Parameter, template<typename> class... Skills>
