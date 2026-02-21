@@ -13,8 +13,8 @@ int main(){
    table->setAnchoring(Anchor::FILL);
 
    table->setData<std::string>({1,1}, "tableData", "tableData", "tableData");
-   table->setColumnCount(5);
-   table->setRowCount(5);
+   table->setColumnCount(0);
+   table->setRowCount(0);
 
    table->setData({3,4}, "sometext");
 
