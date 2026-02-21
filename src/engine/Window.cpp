@@ -234,14 +234,13 @@ void Window::exec(){
       //SystemTime::processTimers();
 
       //process logic
-      float dt = getFrameDelta();
-      ProcessList<Internal::Tree::Processable>::processAll(dt);
+      ProcessList<Tree::Processable>::processAll(getFrameDelta());
       //process and reap easings
       std::vector<Easing*> toReap;
-      if (auto first = ProcessList<Easing>::processfirst(dt)){
+      if (auto first = ProcessList<Easing>::processfirst(getFrameDelta())){
          if (first->done()) toReap.push_back(first);
       }
-      while(auto easing = ProcessList<Easing>::processNext(dt)){
+      while(auto easing = ProcessList<Easing>::processNext(getFrameDelta())){
          if (easing->done()) toReap.push_back(easing);
       }
       for (auto& reap : toReap){

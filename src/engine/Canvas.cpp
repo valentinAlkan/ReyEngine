@@ -203,13 +203,6 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
 
    EventHandler handled(this, event);
 
-   //reject mouse input from outside the canvas
-   if (_ignoreOutsideInput) {
-      if (isMouse && !getSizeRect().contains(isMouse.value()->getLocalPos() - getPos())){
-         return nullptr;
-      }
-   }
-
    //query modal widgets first. A modal widget consumes input even if unhandled and prevents anyone else from getting it.
    if (auto modal = getModal()){
       handled = processNode<InputProcess>(modal->_node, true, event);
@@ -227,6 +220,13 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
       if (auto widget = child->as<Widget>()){
          handled = processNode<InputProcess>(child, false, event);
          if (handled) return handled;
+      }
+   }
+
+   //outside input should still propogate to focused, modal, and foreground widgets
+   if (_ignoreOutsideInput) {
+      if (isMouse && !getSizeRect().contains(isMouse.value()->getLocalPos() - getPos())){
+         return nullptr;
       }
    }
 

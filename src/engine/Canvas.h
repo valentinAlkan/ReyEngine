@@ -226,7 +226,7 @@ namespace ReyEngine {
          };
 
          Widget* publish(){
-            Widget::WidgetUnhandledInputEvent _event(processedWidget, event);
+            WidgetUnhandledInputEvent _event(processedWidget, event);
             processedWidget->publishMutable(_event);
             return _event.handler;
          }
