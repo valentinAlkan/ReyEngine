@@ -87,12 +87,11 @@ void ScrollArea::_on_rect_changed(){
       _renderTarget.setSize(boundingBox.size());
    }
 
-   auto areaSize = getRect().size();
-   auto vsliderNewRect = Rect<float>((areaSize.x - sliderSize), 0, sliderSize, areaSize.y) + getPos();
-   auto hsliderNewRect = Rect<float>(0, (areaSize.y - sliderSize), (areaSize.x - sliderSize), sliderSize) + getPos();
-   bool needShowHSlider = boundingBox.width > _viewport.width;
-   auto needShowVSlider = boundingBox.height > _viewport.height;
-   if (!needShowVSlider) hsliderNewRect.stretchRight(sliderSize);
+   const auto areaSize = getRect().size();
+   const auto vsliderNewRect = Rect<float>((areaSize.x - sliderSize), 0, sliderSize, areaSize.y) + getPos();
+   const auto hsliderNewRect = Rect<float>(0, (areaSize.y - sliderSize), (areaSize.x - sliderSize), sliderSize) + getPos();
+   const bool needShowHSlider = boundingBox.width > _viewport.width;
+   const auto needShowVSlider = boundingBox.height > _viewport.height;
 
    //subtract the slider sizes before updating viewport since each dimension depends on the other
    if (needShowHSlider) _viewport.height -= sliderSize;

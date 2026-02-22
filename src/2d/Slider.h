@@ -40,7 +40,6 @@ namespace ReyEngine{
          _compute_appearance();
       }
       double getVisibleAmount() const { return _visibleAmount; }
-      void setMinGrabberSize(float size) { _minGrabberSize = size; }
       inline float getSliderValue() const {return sliderValue;}
       inline void setSliderValue(float value, bool publish=true){
          sliderValue = Math::clamp(minSliderValue, maxSlidervalue, value);
@@ -73,7 +72,6 @@ namespace ReyEngine{
          if (!mouseEvent) return nullptr;
          auto localPos = mouseEvent.value()->getLocalPos();
          if (e.isEvent<InputEventMouseMotion>()){
-            _localPos = e.isMouse().value()->getLocalPos();
             if (_is_dragging) {
                setFocused(true);
                // Calculate new grabber position based on mouse movement (1:1 tracking)
@@ -82,14 +80,16 @@ namespace ReyEngine{
                switch (sliderType) {
                   case SliderType::VERTICAL: {
                      float newGrabberY = localPos.y - _dragOffset;
-                     Vec2<double> grabberRange = {0, getHeight() - _grabber.height};
+                     // Position is relative to track, not full slider
+                     Vec2<double> grabberRange = {_track.y, _track.y + _track.height - _grabber.height};
                      newValue = _range.lerp(grabberRange.pct(newGrabberY));
                      sliderValue = _range.clamp(newValue);
                   }
                   break;
                   case SliderType::HORIZONTAL: {
                      float newGrabberX = localPos.x - _dragOffset;
-                     Vec2<double> grabberRange = {0, getWidth() - _grabber.width};
+                     // Position is relative to track, not full slider
+                     Vec2<double> grabberRange = {_track.x, _track.x + _track.width - _grabber.width};
                      newValue = _range.lerp(grabberRange.pct(newGrabberX));
                      sliderValue = _range.clamp(newValue);
                   }
@@ -101,42 +101,64 @@ namespace ReyEngine{
             }
          }
 
-         if (e.isEvent<InputEventMouseButton>()){
+         if (e.isEvent<InputEventMouseButton>()) {
             auto &buttonEvent = e.toEvent<InputEventMouseButton>();
-            if (mouseEvent.value()->isInside() && buttonEvent.isDown && _grabber.contains(localPos)) {
-               _cursor_down = true;
-               _is_dragging = _cursor_down;
-               // Store offset from mouse to grabber position so grabber follows mouse 1:1
-               switch (sliderType) {
+            if (mouseEvent.value()->isInside() && buttonEvent.isDown) {
+               // Check nudge buttons first
+               if (_btnNudge0.contains(localPos)) {
+                  _cursorInNudge0 = true;
+                  setSliderValue(sliderValue - _nudgeAmount);
+                  return this;
+               }
+               if (_btnNudge1.contains(localPos)) {
+                  _cursorInNudge1 = true;
+                  setSliderValue(sliderValue + _nudgeAmount);
+                  return this;
+               }
+               // Check grabber for dragging
+               if (_grabber.contains(localPos)) {
+                  _cursorInGrabber = true;
+                  _is_dragging = true;
+                  // Store offset from mouse to grabber position so grabber follows mouse 1:1
+                  switch (sliderType) {
                   case SliderType::VERTICAL:
                      _dragOffset = localPos.y - _grabber.y;
                      break;
                   case SliderType::HORIZONTAL:
                      _dragOffset = localPos.x - _grabber.x;
                      break;
+                  }
+                  setFocused(true);
+                  _publish_slider_val<EventSliderPressed>();
+                  return this;
                }
-               setFocused(true);
-               _publish_slider_val<EventSliderPressed>();
-               return this;
             }
-            if (!buttonEvent.isDown && _is_dragging) {
-               _cursor_down = buttonEvent.isDown;
-               _is_dragging = false;
-               setFocused(false);
-               _publish_slider_val<EventSliderReleased>();
-               return this;
+            if (!buttonEvent.isDown) {
+               _cursorInGrabber = false;
+               _cursorInNudge0 = false;
+               _cursorInNudge1 = false;
+               if (_is_dragging) {
+                  _is_dragging = false;
+                  setFocused(false);
+                  _publish_slider_val<EventSliderReleased>();
+                  return this;
+               }
             }
          }
          return nullptr;
       }
       void render2D() const override {
-         //draw slider
-         auto r = getRect().toSizeRect();
-         drawRectangle(r, _cursor_in_slider || _is_dragging ? Colors::green : Colors::red);
+         //draw track background
+         // drawRectangle(_track, _cursor_in_slider || _is_dragging ? Colors::green : Colors::red);
+         //draw nudge buttons
+         static constexpr float ROUNDNESS = 0.3;
+         static constexpr float SEGMENTS = 10;
+         auto nudgerect0 = _btnNudge0.embiggen(-2);
+         auto nudgerect1 = _btnNudge1.embiggen(-2);
+         drawRectangleRounded(nudgerect0, ROUNDNESS, SEGMENTS, _cursorInNudge0 ? Colors::lightGray : Colors::gray);
+         drawRectangleRounded(nudgerect1, ROUNDNESS, SEGMENTS, _cursorInNudge1 ? Colors::lightGray : Colors::gray);
          //draw grabber
-         drawRectangle(_grabber, _cursor_down && _cursor_in_grabber || _is_dragging ? Colors::yellow : Colors::blue);
-         drawRectangleLines(_grabber, 1.0, Colors::black);
-         drawRectangleLines(getSizeRect(), 1.0, Colors::black);
+         drawRectangleRounded(_grabber.embiggen(-4), ROUNDNESS, SEGMENTS, _cursorInGrabber || _is_dragging ? Colors::yellow : Colors::blue);
       }
       void _on_rect_changed() override {
          _compute_appearance();
@@ -160,29 +182,45 @@ namespace ReyEngine{
 
          switch(sliderType){
             case SliderType::VERTICAL: {
-               _grabber.width = getRect().width;
+               float btnSize = getRect().width; // square buttons
+               // Nudge buttons at top and bottom
+               _btnNudge0 = {0, 0, btnSize, btnSize};
+               _btnNudge1 = {0, getHeight() - btnSize, btnSize, btnSize};
+               // Track is the area between buttons
+               _track = {0, btnSize, getRect().width, getHeight() - 2 * btnSize};
+
+               _grabber.width = _track.width;
                if (_visibleAmount > 0 && totalRange > 0) {
                   double ratio = _visibleAmount / (totalRange + _visibleAmount);
-                  float calculatedHeight = static_cast<float>(getRect().height * ratio);
+                  float calculatedHeight = static_cast<float>(_track.height * ratio);
                   _grabber.height = std::max(_minGrabberSize, calculatedHeight);
                } else {
-                  _grabber.height = getRect().height / 10; // default behavior
+                  _grabber.height = _track.height / 10; // default behavior
                }
-               Vec2<double> adjustedRange = {0, getHeight() - _grabber.height};
-               _grabber.y = adjustedRange.lerp(getSliderPct());
+               Vec2<double> adjustedRange = {0, _track.height - _grabber.height};
+               _grabber.x = _track.x;
+               _grabber.y = _track.y + adjustedRange.lerp(getSliderPct());
             }
             break;
             case SliderType::HORIZONTAL: {
-               _grabber.height = getRect().height;
+               float btnSize = getRect().height; // square buttons
+               // Nudge buttons at left and right
+               _btnNudge0 = {0, 0, btnSize, btnSize};
+               _btnNudge1 = {getWidth() - btnSize, 0, btnSize, btnSize};
+               // Track is the area between buttons
+               _track = {btnSize, 0, getWidth() - 2 * btnSize, getRect().height};
+
+               _grabber.height = _track.height;
                if (_visibleAmount > 0 && totalRange > 0) {
-                  double ratio = _visibleAmount / (totalRange + _visibleAmount);
-                  float calculatedWidth = static_cast<float>(getRect().width * ratio);
+                  const double ratio = _visibleAmount / (totalRange + _visibleAmount);
+                  float calculatedWidth = static_cast<float>(_track.width * ratio);
                   _grabber.width = std::max(_minGrabberSize, calculatedWidth);
                } else {
-                  _grabber.width = getRect().width / 10; // default behavior
+                  _grabber.width = _track.width / 10; // default behavior
                }
-               Vec2<double> adjustedRange = {0, getWidth() - _grabber.width};
-               _grabber.x = adjustedRange.lerp(getSliderPct());
+               Vec2<double> adjustedRange = {0, _track.width - _grabber.width};
+               _grabber.x = _track.x + adjustedRange.lerp(getSliderPct());
+               _grabber.y = _track.y;
             }
             break;
          }
@@ -194,14 +232,17 @@ namespace ReyEngine{
       double _visibleAmount = 0; // 0 means use default (fixed size grabber)
       float _minGrabberSize = 20.0f; // minimum grabber size in pixels
       SliderType sliderType;
-      bool _cursor_in_slider = false;
-      bool _cursor_in_grabber = false;
-      bool _cursor_down = false;
+      bool _cursorInGrabber = false;
+      bool _cursorInNudge0 = false;
+      bool _cursorInNudge1 = false;
       bool _is_dragging = false;
       float _dragOffset = 0; // offset from mouse to grabber position when drag starts
       Rect<float> _grabber = {0, 0, 0, 0};
+      Rect<float> _btnNudge0 = {0, 0, 0, 0}; // left/up nudge button
+      Rect<float> _btnNudge1 = {0, 0, 0, 0}; // right/down nudge button
+      Rect<float> _track = {0, 0, 0, 0}; // area where grabber can move (between nudge buttons)
+      static constexpr float _nudgeAmount = 5.0f; // how much to nudge per click (in slider value units)
       Vec2<float> _range = {0,0};
-      Pos<float> _localPos;
       friend class ScrollArea;
    };
 }
