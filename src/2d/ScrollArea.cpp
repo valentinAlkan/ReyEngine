@@ -102,11 +102,21 @@ void ScrollArea::_on_rect_changed(){
    if (_hslider) {
       _hslider->setRect(hsliderNewRect);
       _hslider->setVisible(!_hideHSlider && needShowHSlider);
+      // Set visible amount so grabber size reflects viewport/content ratio
+      auto scrollableWidth = boundingBox.width - _viewport.width;
+      if (scrollableWidth > 0) {
+         _hslider->setVisibleAmount(100.0 * _viewport.width / scrollableWidth);
+      }
    }
 
    if (_vslider) {
       _vslider->setRect(vsliderNewRect);
       _vslider->setVisible(!_hideVSlider && needShowVSlider);
+      // Set visible amount so grabber size reflects viewport/content ratio
+      auto scrollableHeight = boundingBox.height - _viewport.height;
+      if (scrollableHeight > 0) {
+         _vslider->setVisibleAmount(100.0 * _viewport.height / scrollableHeight);
+      }
    }
    camera.offset = {-_viewport.pos().x, -_viewport.pos().y};
 }
