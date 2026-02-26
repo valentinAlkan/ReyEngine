@@ -48,6 +48,7 @@ Logger::Stream::~Stream() {
    if (_logger._history.size() > HISTORY_SIZE){
       _logger._history.pop();
    }
+   _logger.onFlush(log_message);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

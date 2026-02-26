@@ -59,6 +59,7 @@ namespace ReyEngine{
    protected:
       std::ostream& _out;
       Logger(const std::string& name, std::ostream&);
+      virtual void onFlush(const std::string& msg){}
    private:
       std::queue<std::string> _history;
       const std::string _name;
@@ -146,4 +147,12 @@ namespace ReyEngine{
       static Stream exit();
    };
 
+   //same as above but echoes to stdout
+   class EchoLogger : public CustomLogger {
+   public:
+      EchoLogger(const std::string& name, std::ostream& os)
+      : CustomLogger(name, os)
+      {};
+      void onFlush(const std::string& msg) override {std::cout << msg;}
+   };
 }
