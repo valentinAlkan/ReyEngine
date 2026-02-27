@@ -155,10 +155,12 @@ namespace ReyEngine{
          static constexpr float SEGMENTS = 10;
          auto nudgerect0 = _btnNudge0.embiggen(-2);
          auto nudgerect1 = _btnNudge1.embiggen(-2);
-         drawRectangleRounded(nudgerect0, ROUNDNESS, SEGMENTS, _cursorInNudge0 ? Colors::lightGray : Colors::gray);
-         drawRectangleRounded(nudgerect1, ROUNDNESS, SEGMENTS, _cursorInNudge1 ? Colors::lightGray : Colors::gray);
+         const auto& active1 = getTheme().foreground.colorActive1;
+         const auto& active2 = getTheme().foreground.colorActive2;
+         drawRectangleRounded(nudgerect0, ROUNDNESS, SEGMENTS, _cursorInNudge0 ? active1 : active2);
+         drawRectangleRounded(nudgerect1, ROUNDNESS, SEGMENTS, _cursorInNudge1 ? active1 : active2);
          //draw grabber
-         drawRectangleRounded(_grabber.embiggen(-4), ROUNDNESS, SEGMENTS, _cursorInGrabber || _is_dragging ? Colors::yellow : Colors::blue);
+         drawRectangleRounded(_grabber.embiggen(-4), ROUNDNESS, SEGMENTS, _cursorInGrabber || _is_dragging ? active2 : active1);
       }
       void _on_rect_changed() override {
          _compute_appearance();

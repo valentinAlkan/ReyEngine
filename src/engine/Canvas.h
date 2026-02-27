@@ -116,6 +116,10 @@ namespace ReyEngine {
                newWidget->_on_modality_gained();
             }
          }
+         //propogate upwards
+         if (auto canvas = getCanvas()){
+            canvas.value()->setFocus(newWidget ? this : nullptr);
+         }
       }
       template <WidgetStatus::StatusType Status>
       Widget* getStatus(){
@@ -381,10 +385,10 @@ namespace ReyEngine {
       void __on_child_removed_from_tree(TypeNode* child) override;
 
    public:
-      void setHover(Widget* w){  setStatus<WidgetStatus::Hover>(w);}
-      void setFocus(Widget* w){  setStatus<WidgetStatus::Focus>(w);}
-      void setModal(Widget* w){  setStatus<WidgetStatus::Modal>(w);}
-      void setToolTip(Widget* w){setStatus<WidgetStatus::ToolTip>(w);}
+      void setHover(Widget* w){   setStatus<WidgetStatus::Hover>(w);}
+      void setFocus(Widget* w){   setStatus<WidgetStatus::Focus>(w);}
+      void setModal(Widget* w){   setStatus<WidgetStatus::Modal>(w);}
+      void setToolTip(Widget* w){ setStatus<WidgetStatus::ToolTip>(w);}
       Widget* getHover(){return   getStatus<WidgetStatus::Hover>();}
       Widget* getFocus(){return   getStatus<WidgetStatus::Focus>();}
       Widget* getModal(){return   getStatus<WidgetStatus::Modal>();}

@@ -35,15 +35,15 @@ void ScrollArea::_init() {
    };
 
    //make sure we only capture outside input when the sliders are being used
-   auto cbSliderPress = [this](const Slider::EventSliderPressed& event){ _ignoreOutsideInput = false;};
-   auto cbSliderRelease = [this](const Slider::EventSliderReleased& event){ _ignoreOutsideInput = true;};
+   auto cbSliderPress = [this](Slider::EventSliderPressed& event){setFocus(event.publisher->asMut<Slider>().value());};
+   auto cbSliderRelease = [this](Slider::EventSliderReleased& event){setFocus(nullptr);};
 
    subscribe<Slider::EventSliderValueChanged>(_hslider, setOffsetX);
    subscribe<Slider::EventSliderValueChanged>(_vslider, setOffsetY);
-   subscribe<Slider::EventSliderPressed>(_vslider, cbSliderPress);
-   subscribe<Slider::EventSliderPressed>(_hslider, cbSliderPress);
-   subscribe<Slider::EventSliderReleased>(_vslider, cbSliderRelease);
-   subscribe<Slider::EventSliderReleased>(_hslider, cbSliderRelease);
+   subscribeMutable<Slider::EventSliderPressed>(_vslider, cbSliderPress);
+   subscribeMutable<Slider::EventSliderPressed>(_hslider, cbSliderPress);
+   subscribeMutable<Slider::EventSliderReleased>(_vslider, cbSliderRelease);
+   subscribeMutable<Slider::EventSliderReleased>(_hslider, cbSliderRelease);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

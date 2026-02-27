@@ -27,7 +27,7 @@ namespace ReyEngine {
         std::shared_ptr<Slider> _vslider;
         std::shared_ptr<Slider> _hslider;
         Rect<R_FLOAT> boundingBox; //contains all children, is at least as big as scrollArea. RenderTarget takes its size
-        Rect<R_FLOAT> _viewport;
+        Rect<R_FLOAT> _viewport; //the 'window' that reveals the children
         bool _hideVSlider = false;
         bool _hideHSlider = false;
     private:
