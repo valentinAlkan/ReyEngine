@@ -196,7 +196,7 @@ Widget* Tree::_unhandled_input(const InputEvent& event) {
 
           //mouse click
           if (event.isEvent<InputEventMouseButton>()){
-             auto btnEvent = event.toEvent<InputEventMouseButton>();
+             const auto& btnEvent = event.toEvent<InputEventMouseButton>();
              if (btnEvent.button != InputInterface::MouseButton::LEFT) return nullptr;
              if (!implDetailsAt){
                 if (_selectedItem) {

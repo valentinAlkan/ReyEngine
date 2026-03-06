@@ -118,7 +118,7 @@ namespace ReyEngine {
          }
          //propogate upwards
          if (auto canvas = getCanvas()){
-            canvas.value()->setFocus(newWidget ? this : nullptr);
+            canvas.value()->setFocus(newWidget ? newWidget : nullptr);
          }
       }
       template <WidgetStatus::StatusType Status>
@@ -311,11 +311,15 @@ namespace ReyEngine {
 
          // Call the lambda to trigger template deduction
          auto processTransformer = createProcessTransformer(isGlobal ? widget->getGlobalTransform().get() : widget->getLocalTransform());
-   //
-   //         if constexpr (std::is_same_v<ProcessType, InputProcess>) {
-   //            auto& xformer = static_cast<InputProcess&>(processTransformer);
-   //            Logger::info() << "Input Event offset by " << xformer.mouseTransformer->_applicableXform.extractTranslation() << " to " << xformer.event.isMouse().value()->getLocalPos() << std::endl;
-   //         }
+
+//         if constexpr (std::is_same_v<ProcessType, InputProcess>) {
+//            auto& xformer = static_cast<InputProcess &>(processTransformer);
+//            if (isGlobal && xformer.mouseTransformer) {
+//               Logger::info() << "Input Event offset by "
+//                              << xformer.mouseTransformer->_applicableXform.extractTranslation() << " to "
+//                              << xformer.event.isMouse().value()->getLocalPos() << std::endl;
+//            }
+//         }
 
          //subcanvases do some funky stuff so they need special handling
          if (processTransformer.subCanvas && processTransformer.subCanvas != this) {
@@ -383,7 +387,6 @@ namespace ReyEngine {
    private:
       void __on_child_added_to_tree(TypeNode* child) override;
       void __on_child_removed_from_tree(TypeNode* child) override;
-
    public:
       void setHover(Widget* w){   setStatus<WidgetStatus::Hover>(w);}
       void setFocus(Widget* w){   setStatus<WidgetStatus::Focus>(w);}

@@ -211,7 +211,14 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
 
    //then focused widgets
    if (auto focus = getFocus()){
-      handled = processNode<InputProcess>(focus->_node, true, event);
+      if (event.isMouse() && focus->canvas != this) {
+         //subtract off our own global transform in case this focus was propogated from a subcanvas
+         auto xformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), focus->canvas->getGlobalTransform(false).get(), size);
+         handled = processNode<InputProcess>(focus->canvas->_node, true, event);
+      } else {
+         //this version makes sure we don't get stuck in an infinite loop since the focused node's canvas could be us
+         handled = processNode<InputProcess>(focus->_node, true, event);
+      }
       if (handled) return handled;
    }
 
