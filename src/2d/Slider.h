@@ -148,8 +148,6 @@ namespace ReyEngine{
          return nullptr;
       }
       void render2D() const override {
-         //draw track background
-         // drawRectangle(_track, _cursor_in_slider || _is_dragging ? Colors::green : Colors::red);
          //draw nudge buttons
          static constexpr float ROUNDNESS = 0.3;
          static constexpr float SEGMENTS = 10;
@@ -157,8 +155,8 @@ namespace ReyEngine{
          auto nudgerect1 = _btnNudge1.embiggen(-2);
          const auto& active1 = getTheme().foreground.colorActive1;
          const auto& active2 = getTheme().foreground.colorActive2;
-         drawRectangleRounded(nudgerect0, ROUNDNESS, SEGMENTS, _cursorInNudge0 ? active1 : active2);
-         drawRectangleRounded(nudgerect1, ROUNDNESS, SEGMENTS, _cursorInNudge1 ? active1 : active2);
+         drawRectangleRounded(nudgerect0, ROUNDNESS, SEGMENTS, _cursorInNudge0 ? active2 : active1);
+         drawRectangleRounded(nudgerect1, ROUNDNESS, SEGMENTS, _cursorInNudge1 ? active2 : active1);
          //draw grabber
          drawRectangleRounded(_grabber.embiggen(-4), ROUNDNESS, SEGMENTS, _cursorInGrabber || _is_dragging ? active2 : active1);
       }

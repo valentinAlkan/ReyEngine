@@ -165,6 +165,7 @@ add_library(ReyEngine2D STATIC
         src/components/SystemTime.cpp
         src/components/Platform.cpp
         src/components/Shader.cpp
+        src/components/TextEditContext.cpp
 
         src/2d/Control.cpp
         src/2d/Layout.cpp

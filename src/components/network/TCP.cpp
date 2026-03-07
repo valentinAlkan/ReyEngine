@@ -30,7 +30,9 @@ namespace TCP{
             info = nullptr;
         }
         ~AutoAddrInfo(){
-            freeaddrinfo(info);
+            if (info) {
+                freeaddrinfo(info);
+            }
         }
         addrinfo* info;
     };
@@ -76,10 +78,11 @@ bool TCPClient::connect(){
     // Attempt to connect to an address until one succeeds
     for(ptr=result.info; ptr != nullptr ;ptr=ptr->ai_next) {
         //make sure we're not trying to connect to 0.0.0.0, which will not work and log spurious errors
-        if (ptr->ai_addr->sa_data[0] == 0 &&
-            ptr->ai_addr->sa_data[1] == 0 &&
+        //skip 0.0.0.0 addresses (sa_data[0-1] is port, [2-5] is IP)
+        if (ptr->ai_addr->sa_data[2] == 0 &&
             ptr->ai_addr->sa_data[3] == 0 &&
-            ptr->ai_addr->sa_data[4] == 0) continue;
+            ptr->ai_addr->sa_data[4] == 0 &&
+            ptr->ai_addr->sa_data[5] == 0) continue;
         // Create a SOCKET for connecting to server
         sock = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
         if (sock == INVALID_SOCKET) {
@@ -207,11 +210,11 @@ int TCPClient::send(const char* msg, size_t len){
 
 ///////////////////////////////////////////////////////////////////////////////
 int TCPClient::recv(char* msg, size_t len, chrono::milliseconds timeout){
-    if (!isConnected()){
+    scoped_lock<std::mutex> sl(_lock);
+    if (!_ready){
         printf("TCPClient: not connected\n");
         return -1;
     }
-    scoped_lock<std::mutex> sl(_lock);
     fd_set fds;
     FD_ZERO(&fds);
     FD_SET(sock, &fds);
@@ -219,7 +222,7 @@ int TCPClient::recv(char* msg, size_t len, chrono::milliseconds timeout){
     if (timeout.count()) {
         timeval tv;
         tv.tv_sec = timeout.count() / 1000;
-        tv.tv_usec = timeout.count() % 1000;
+        tv.tv_usec = (timeout.count() % 1000) * 1000;
 
         auto result = select(sock + 1, &fds, 0, 0, &tv);
         if (result == 0) {
@@ -240,7 +243,11 @@ int TCPClient::recv(char* msg, size_t len, chrono::milliseconds timeout){
 #ifdef PLATFORM_WINDOWS
         errorCode = WSAGetLastError();
 #endif
-        if (errorCode != 11) {
+#ifdef PLATFORM_WINDOWS
+        if (errorCode != WSAEWOULDBLOCK) {
+#elif defined(PLATFORM_LINUX)
+        if (errorCode != EAGAIN && errorCode != EWOULDBLOCK) {
+#endif
             printf("TCPClient: recv failure %d (%s)\n", errorCode, ::strerror(errorCode));
         }
     }
@@ -250,7 +257,13 @@ int TCPClient::recv(char* msg, size_t len, chrono::milliseconds timeout){
 bool TCPClient::disconnect(){
     scoped_lock<std::mutex> sl(_lock);
     _ready = false;
-    if (sock) close(sock);
+    if (sock != -1) {
+#ifdef PLATFORM_WINDOWS
+        closesocket(sock);
+#elif defined(PLATFORM_LINUX)
+        close(sock);
+#endif
+    }
     sock = -1;
     return _ready;
 }
@@ -274,10 +287,12 @@ void TCPClient::logMsg(const std::string& msg, LogLevel level){
     messageLog.emplace(msg, level);
 }
 ///////////////////////////////////////////////////////////////////////////////
-TCPClient::LogMsg TCPClient::getLogMsg() {
-    LogMsg retval;
+std::optional<TCPClient::LogMsg> TCPClient::getLogMsg() {
     std::scoped_lock<std::mutex> sl(messageLock);
-    retval = messageLog.front();
+    if (messageLog.empty()) {
+        return std::nullopt;
+    }
+    LogMsg retval = messageLog.front();
     messageLog.pop();
     return retval;
 }
@@ -362,11 +377,10 @@ int TCPServer::run(){
 
     //resolve hostnames
     char addr_buf[64];
-    struct addrinfo* feed_server = nullptr;
-    getaddrinfo(ip.c_str(), nullptr, nullptr, &feed_server);
-    for(data.servinfo.info = feed_server; data.servinfo.info != nullptr; data.servinfo.info = data.servinfo.info->ai_next){
-        if ( data.servinfo.info->ai_family == AF_INET){
-            inet_ntop(AF_INET, &((struct sockaddr_in *)data.servinfo.info->ai_addr)->sin_addr, addr_buf, sizeof(addr_buf));
+    getaddrinfo(ip.c_str(), nullptr, nullptr, &data.servinfo.info);
+    for(struct addrinfo* ai = data.servinfo.info; ai != nullptr; ai = ai->ai_next){
+        if (ai->ai_family == AF_INET){
+            inet_ntop(AF_INET, &((struct sockaddr_in *)ai->ai_addr)->sin_addr, addr_buf, sizeof(addr_buf));
         }
     }
 
@@ -401,7 +415,7 @@ int TCPServer::run(){
 #elif defined(PLATFORM_LINUX)
     if ((data.rv = getaddrinfo(NULL, (const char*)std::to_string(port).c_str(), &data.hints, &data.servinfo.info)) != 0) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(data.rv));
-        exit(1);
+        return 1;
     }
 
     // loop through all the results and bind to the first we can
@@ -415,7 +429,7 @@ int TCPServer::run(){
 
         if (setsockopt(data.listener_fd, SOL_SOCKET, SO_REUSEADDR, &data.yes, sizeof(int)) == -1) {
             perror("setsockopt");
-            exit(1);
+            return 1;
         }
 
         if (bind(data.listener_fd, data.p->ai_addr, data.p->ai_addrlen) == -1) {
@@ -427,12 +441,12 @@ int TCPServer::run(){
 
     if (data.p == NULL)  {
         fprintf(stderr, "server: failed to bind\n");
-        exit(1);
+        return 1;
     }
 
     if (listen(data.listener_fd, BACKLOG) == -1) {
         perror("listen");
-        exit(1);
+        return 1;
     }
 
     struct sigaction sa;
@@ -441,7 +455,7 @@ int TCPServer::run(){
     sa.sa_flags = SA_RESTART;
     if (sigaction(SIGCHLD, &sa, nullptr) == -1) {
         perror("sigaction");
-        exit(1);
+        return 1;
     }
 #endif
 

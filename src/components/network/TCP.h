@@ -50,7 +50,7 @@ public:
     bool connect();
     bool disconnect();
     bool isConnected() const;
-    LogMsg getLogMsg();
+    std::optional<LogMsg> getLogMsg();
     LogLevel getLogLevel(){return logLevel;}
 private:
     void printNetworkError();
