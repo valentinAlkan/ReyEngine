@@ -21,6 +21,7 @@
 template<typename> inline constexpr bool always_false_v = false;
 
 namespace ReyEngine {
+   class Window;
    enum WindowFlags{RESIZE, IS_EDITOR};
    static constexpr long long MaxInt = INT_MAX;
    static constexpr long long MinInt = INT_MIN;
@@ -2208,7 +2209,6 @@ namespace ReyEngine {
          _texLoaded = _tex.id != 0;
          return *this;
       }
-//      ReyTexture& operator=(ReyImage&&); // this is ok because ReyImage is managed
       void loadTexture(const FileSystem::File& file);
       ~ReyTexture(){
          _release();
@@ -2217,9 +2217,32 @@ namespace ReyEngine {
       [[nodiscard]] operator bool() const {return _texLoaded;}
       Size<int> size() const {return {_tex.width, _tex.height};}
    protected:
-      void _release(){if (_texLoaded) UnloadTexture(_tex);}
+      void _release(){
+         //can only be done by main thread, so we usually offload to OrphanedTextureCache
+         if (_texLoaded) OrphanedTextureCache::instance().move(_tex);
+      }
       Texture2D _tex = {0};
       bool _texLoaded = false;
+   public:
+      struct OrphanedTextureCache {
+         static OrphanedTextureCache& instance(){static OrphanedTextureCache cache; return cache;}
+         void move(Texture& tex) {_mtx.lock(); _cache.push(tex); _mtx.unlock(); _size += 1;}
+         void clear(){
+            _mtx.lock();
+            while (!_cache.empty()) {
+               UnloadTexture(_cache.front());
+               _cache.pop();
+            }
+            _size = 0;
+            _mtx.unlock();}
+         [[nodiscard]] size_t size() const {return _size;}
+      protected:
+         OrphanedTextureCache() = default;
+      private:
+         std::mutex _mtx;
+         std::queue<Texture> _cache;
+         std::atomic<size_t> _size = 0;
+      };
    };
 
    /// Since loading textures in alternate threads is not allowed, a lazy texture stores data
@@ -2248,7 +2271,7 @@ namespace ReyEngine {
       void releaseImage(){_img.release();}
       template<typename... Args>
       void load(Args&&... args) {
-         _tex.reset();
+         if (_tex) _tex.reset();
          if constexpr (sizeof...(args) == 1) {
             using FirstArgType = std::decay_t<std::tuple_element_t<0, std::tuple<Args...>>>;
             if constexpr (std::is_same_v<FirstArgType, ReyEngine::FileSystem::File>) {

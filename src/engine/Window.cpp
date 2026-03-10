@@ -276,6 +276,11 @@ void Window::exec(){
 
       //call deferred calls
       _deferredCallList.executeAllAndClear();
+      //clean up orphaned textures
+      if (ReyTexture::OrphanedTextureCache::instance().size()) {
+         ReyTexture::OrphanedTextureCache::instance().clear();
+      }
+
 
       //render the canvas to the window
       BeginDrawing();
