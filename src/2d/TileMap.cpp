@@ -6,13 +6,13 @@ using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void TileMap::_init() {
-   _retained = true;
+   _showGrid = false;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void TileMap::render2DBegin() {
-   render2D();
-}
+// void TileMap::render2DBegin() {
+//
+// }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void TileMap::render2DEnd() {
@@ -22,7 +22,7 @@ void TileMap::render2DEnd() {
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 void TileMap::render2D() const {
-   if (!_needsRedraw) return;
+   // if (!_needsRedraw) return;
    ClearBackground(Colors::none);
    //draw all tiles in the layer
    for (auto& layer: _layers) {
@@ -189,7 +189,6 @@ Widget* TileMap::_unhandled_input(const InputEvent& event) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void TileMap::_on_rect_changed() {
-   Canvas::_on_rect_changed();
    _needsRedraw = true;
 }
 

@@ -3,7 +3,7 @@
 #include "Canvas.h"
 
 namespace ReyEngine {
-   class TileMap : public Canvas {
+   class TileMap : public Widget {
    public:
       REYENGINE_OBJECT(TileMap)
       struct TileCoord : public Vec2<int> {
@@ -82,7 +82,7 @@ namespace ReyEngine {
          TileMapLayer(TileMap& tileMap, SpriteAtlas* atlas): tileMap(tileMap), atlas(atlas){}
          inline std::optional<SpriteAtlas*> getAtlas(){return atlas;}
 //         void setTileByIndex(const TileCoord&, TileIndex);
-         void setTileByCoords(const TileCoord& src, const TileCoord& target);
+         void setTileByCoords(const TileCoord& target, const TileCoord& src);
 //         std::optional<TileIndex> getTileIndex(const TileCoord& pos); //slow
          void removeTileIndex(const TileCoord& pos);
       protected:
@@ -135,7 +135,7 @@ namespace ReyEngine {
    protected:
       virtual Handled _on_hovered(const TileCoord&){return false;}
       virtual Handled _on_clicked(const TileCoord&){return false;}
-      void render2DBegin() override;
+      // void render2DBegin() override;
       void render2D() const override;
       void render2DEnd() override;
       void _init();
