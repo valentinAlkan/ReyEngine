@@ -1,4 +1,5 @@
 #include "TypeTree.h"
+#include "Window.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -24,4 +25,6 @@ void Tree::Processable::setProcess(bool value) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-//Tree::Deferrable::
+void Windowable::updateTree() const {
+   if (_window) _window->_on_tree_updated();
+}

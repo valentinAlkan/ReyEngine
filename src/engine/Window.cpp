@@ -38,6 +38,7 @@ void Window::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
    _root = std::move(node);
    _root->_window = this;
    _root->_deferredCallList = &_deferredCallList;
+   _canvas = canvas.get();
    canvas->setSize(getSize());
    canvas->__on_added_to_tree();
    SetExitKey(KEY_NULL);
@@ -81,13 +82,13 @@ void Window::exec(){
       while(!_inputQueueKey.empty()){
          auto event = std::move(_inputQueueKey.front());
          _inputQueueKey.pop();
-         canvas->__process_unhandled_input(*event);
+         __process_unhandled_input(*event);
       }
 
       while(!_inputQueueMouse.empty()){
          auto event = std::move(_inputQueueMouse.front());
          _inputQueueMouse.pop();
-         canvas->__process_unhandled_input(*event);
+         __process_unhandled_input(*event);
       }
 
       // collect char input (up to limit)
@@ -97,7 +98,7 @@ void Window::exec(){
          if (charDown) {
             InputEventChar event(this);
             event.ch = charDown;
-            auto handledBy = canvas->__process_unhandled_input(InputEvent(event));
+            auto handledBy = __process_unhandled_input(InputEvent(event));
             if constexpr (PRINT_CHAR) if (handledBy) Logger::info() << "Char handled by " << handledBy->getName() << endl;
          } else {
             break;
@@ -113,7 +114,7 @@ void Window::exec(){
             event.key = keyUp;
             event.isDown = false;
             event.isRepeat = false;
-            auto handledBy = canvas->__process_unhandled_input(InputEvent(event));
+            auto handledBy = __process_unhandled_input(InputEvent(event));
             if constexpr (PRINT_KEYUP) if (handledBy) Logger::info() << "Key up handled by " << handledBy->getName() << endl;
          } else {
             break;
@@ -135,7 +136,7 @@ void Window::exec(){
                   event.key = lastKey;
                   event.isDown = true;
                   event.isRepeat = true;
-                  auto handledBy = canvas->__process_unhandled_input(event);
+                  auto handledBy = __process_unhandled_input(event);
                   if constexpr (PRINT_KEYREPEAT) if (handledBy) Logger::info() << "Key repeat handled by " << handledBy->getName() << endl;
                }
             }
@@ -150,7 +151,7 @@ void Window::exec(){
                event.key = keyDown;
                event.isDown = true;
                event.isRepeat = false;
-               auto handledBy = canvas->__process_unhandled_input(event);
+               auto handledBy = __process_unhandled_input(event);
                if constexpr (PRINT_KEYDOWN) if (handledBy) Logger::info() << "Key down handled by " << handledBy->getName() << endl;
             } else {
                break;
@@ -171,7 +172,7 @@ void Window::exec(){
             lastMouseButtonInput = btnUp;
             InputEventMouseButton event(this, mousePos.get(), btnUp, false, isDouble);
             if (isDouble) inputEventMouseButtonTimeStampUp = sc::time_point{};
-            auto handledBy = canvas->__process_unhandled_input(event);
+            auto handledBy = __process_unhandled_input(event);
             if constexpr (PRINT_MOUSEUP) if (handledBy) Logger::info() << "MouseUp handled by " << handledBy->getName() << endl;
          } else {
             break;
@@ -187,7 +188,7 @@ void Window::exec(){
             inputEventMouseButtonTimeStampDown = now;
             lastMouseButtonInput = btnDown;
             InputEventMouseButton event(this, mousePos.get(), btnDown, true, isDouble);
-            auto handledBy = canvas->__process_unhandled_input(event);
+            auto handledBy = __process_unhandled_input(event);
             if constexpr (PRINT_MOUSEDOWN) if (handledBy) Logger::info() << "MouseDown handled by " << handledBy->getName() << endl;
             if (isDouble) inputEventMouseButtonTimeStampDown = sc::time_point{};
          } else {
@@ -200,7 +201,7 @@ void Window::exec(){
          if (wheel) {
             InputEventMouseWheel event(this, mousePos.get(), wheel);
             if constexpr (PRINT_WHEEL) Logger::info() << "Sending mouse wheel event " << event.wheelMove << endl;
-            auto handledBy = canvas->__process_unhandled_input(event);
+            auto handledBy = __process_unhandled_input(event);
             if constexpr (PRINT_WHEEL) if (handledBy) Logger::info() << "Mouse wheel handled by " << handledBy->getName() << endl;
          }
       }
@@ -214,11 +215,11 @@ void Window::exec(){
          InputEventMouseMotion motionEvent(this, mousePos.get(), mouseDelta);
          InputEventMouseToolTip toolTipCancel(this, mousePos.get(), true); //cancel open tooltips as soon as there's mouse movement
 
-         auto handledBy = canvas->__process_unhandled_input(motionEvent);
+         auto handledBy = __process_unhandled_input(motionEvent);
          if constexpr (PRINT_MOTION) if (handledBy) Logger::info() << "Motion handled by " << handledBy->getName() << endl;
-         handledBy = canvas->__process_unhandled_input(hoverEvent);
+         handledBy = __process_unhandled_input(hoverEvent);
          if constexpr (PRINT_HOVER) if (handledBy) Logger::info() << "Hover handled by " << handledBy->getName() << endl;
-         handledBy = canvas->__process_unhandled_input(toolTipCancel);
+         handledBy = __process_unhandled_input(toolTipCancel);
          if constexpr (PRINT_TOOLTIP_CANCEL) if (handledBy) Logger::info() << "Tooltip Cancel handled by " << handledBy->getName() << endl;
       }
 
@@ -226,7 +227,7 @@ void Window::exec(){
       if (!checkedToolTip && canvas->getRect().contains(mousePos.get()) && std::chrono::steady_clock::now() - mousePosChangeTime > TOOLTIP_DELAY){
          InputEventMouseToolTip tooltipEvent(this, mousePos.get());
          checkedToolTip = true;
-         auto handledBy = canvas->__process_unhandled_input(tooltipEvent);
+         auto handledBy = __process_unhandled_input(tooltipEvent);
          if constexpr (PRINT_TOOLTIP) if (handledBy) Logger::info() << "Tooltip handled by " << handledBy->getName() << endl;
       }
 
@@ -247,32 +248,8 @@ void Window::exec(){
          reap->easable()->removeEasing(reap);
       }
 
-
-      //draw the canvas to our render texture
-//         Application::getWindow(0).pushRenderTarget(_renderTarget);
-//         _renderTarget.clear();
-//         rlLoadIdentity();
-//         rlPushMatrix();
+      //draw each canvas to our render texture
       canvas->renderProcess(canvas->_renderTarget);
-      //after invoking the normal render process, we have to draw foreground objects
-//         for (auto& foregroudChild : canvas->_foreground.getValues()){
-//            canvas->processNode<Canvas::RenderProcess>(foregroudChild, false);
-//         }
-//         rlPopMatrix();
-//         Application::getWindow(0).popRenderTarget(); //debug
-
-      //do physics synchronously for now
-//         rlLoadIdentity();
-//         Application::getWindow(0).pushRenderTarget(_renderTarget); //debug
-//         Physics::PhysicsSystem::process();
-//         Application::getWindow(0).popRenderTarget(); //debug
-
-//
-//         //draw the drag and drop preview (if any)
-////         if (_isDragging && _dragNDrop && _dragNDrop.value()->preview) {
-////            _dragNDrop.value()->preview.value()->setPos(InputManager2::getMousePos().get());
-////            _dragNDrop.value()->preview.value()->render2DChain();
-////         }
 
       //call deferred calls
       _deferredCallList.executeAllAndClear();
@@ -282,8 +259,7 @@ void Window::exec(){
       }
 
 
-      //render the canvas to the window
-      BeginDrawing();
+      //render each canvas to a render texture the window
       auto& _renderTarget = canvas->getRenderTarget();
       Rect<R_FLOAT> rect = getSize().toRect();
       drawRenderTargetRect(_renderTarget, rect, rect, Colors::none);
@@ -315,4 +291,29 @@ Window::~Window(){
 ///////////////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<Canvas> Window::getCanvas() {
    return _root->ref<Canvas>();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+Widget* Window::__process_unhandled_input(const InputEvent& event) {
+   return nullptr;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
+void findCanvas(std::vector<Canvas*>& graph, TypeNode* thisNode) {
+   if (auto isCanvas = thisNode->as<Canvas>()) {
+      graph.push_back(isCanvas.value());
+   }
+   for (auto& node : thisNode->getChildren()) {
+      findCanvas(graph, node);
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+void Window::_on_tree_updated() {
+   //rebuild the DAG
+   _renderGraph.clear();
+   //walk the graph and pick out canvases
+   findCanvas(_renderGraph, _root.get());
 }

@@ -8,6 +8,7 @@
 #include "Canvas.h"
 
 namespace ReyEngine{
+   namespace Internal::Tree { struct Windowable;}
    class Canvas;
    class Widget;
    class Window : public EventPublisher {
@@ -46,22 +47,27 @@ namespace ReyEngine{
    protected:
       Window(const std::string& title, int width, int height, const std::vector<WindowFlags>& flags, int targetFPS);
       void initialize(std::optional<std::shared_ptr<Canvas>> root);
+      void _on_tree_updated(); //regenerate the dag
       static constexpr size_t INPUT_COUNT_LIMIT = 256;
    private:
+      Widget* __process_unhandled_input(const InputEvent&);
       bool _isEditor = false; //enables other features
       uint64_t _frameCounter=0;
       int _targetFPS;
       std::chrono::milliseconds _keyDownRepeatDelay = std::chrono::milliseconds(500); //how long a key must be held down before it counts as a repeat
       std::chrono::milliseconds _keyDownRepeatRate = std::chrono::milliseconds(25); //how long must pass before each key repeat event is sent
       std::chrono::milliseconds _doubleClickThreshold = std::chrono::milliseconds(500); //time threshold for a mouse input to be considered double click
+      std::vector<Canvas*> _renderGraph;
       std::queue<std::unique_ptr<InputEvent>> _inputQueueMouse; //a place to hold programatically generated input
       std::queue<std::unique_ptr<InputEvent>> _inputQueueKey; //a place to hold programatically generated input
       std::unique_ptr<TypeNode> _root;
+      Canvas* _canvas;
       bool _isClosing = false;
       DeferredCallList _deferredCallList;
 
       /////////////////////
       /////////////////////
       friend class Application;
+      friend class Internal::Tree::Windowable;
    };
 }

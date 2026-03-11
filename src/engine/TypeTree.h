@@ -23,13 +23,13 @@ namespace ReyEngine::Internal::Tree {
    struct Windowable {
       Window* _window = nullptr;
       DeferredCallList* _deferredCallList = nullptr;  // Set by Window when attached
-
       template <typename F, typename... Args>
       void defer(F&& func, Args&&... args) {
          if (_deferredCallList) {
             _deferredCallList->add(std::forward<F>(func), std::forward<Args>(args)...);
          }
       }
+      void updateTree() const;
       friend class Window;
    };
 
@@ -225,6 +225,8 @@ namespace ReyEngine::Internal::Tree {
             addedStorable->__init();
             addedStorable->_has_inited = true;
          }
+         //tell the window to refresh the DAG
+         updateTree();
          return childptr;
       }
 
