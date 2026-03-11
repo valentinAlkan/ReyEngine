@@ -4,6 +4,8 @@
 #include "Widget.h"
 #include "CacheVectorMap.h"
 #include "rlgl.h"
+#include "InputContext.h"
+
 namespace ReyEngine {
    namespace WidgetStatus{
       //give special status to widgets - define new status here and add to tuple
@@ -64,7 +66,7 @@ namespace ReyEngine {
       };
       void _init() override;
       CanvasSpace<Pos<float>> getMousePos();
-      inline const Transform2D getCameraTransform() const {return GetCameraMatrix2D(camera);}
+      inline Transform2D getCameraTransform() const {return GetCameraMatrix2D(camera);}
       inline Transform2D getCameraTransform() {return GetCameraMatrix2D(camera);}
       Camera2D& getCamera(){return camera;}
       void moveToForeground(Widget*);
@@ -72,7 +74,7 @@ namespace ReyEngine {
    protected:
       void __on_descendant_added_to_tree(TypeNode* child) override;
       void __on_descendant_removed_from_tree(TypeNode* child) override;
-      void render2D() const override {};
+      void render2D() const override {}
       virtual void renderProcess(RenderTarget& parentTarget); //provide the parent's render target. so we can control stuff.
       [[nodiscard]] const RenderTarget& getRenderTarget() const {return _renderTarget;}
       Widget* __process_unhandled_input(const InputEvent& event) override;
@@ -81,6 +83,7 @@ namespace ReyEngine {
 
       RenderTarget _renderTarget;
       Camera2D camera;
+      // std::unique_ptr<InputContext> _inputContext;
       bool _retained = false; //set to true if you want to retain the image between draw calls. Requires manually clearing the render target.
 
       std::map<size_t, std::vector<Widget*>> _processLayers; //different layers of widgets that can be processed differently

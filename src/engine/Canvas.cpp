@@ -158,6 +158,11 @@ CanvasSpace<Pos<float>> Canvas::getMousePos() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
+   // if (_inputContext) {
+   //    auto handled = _inputContext->handleInput(event);
+   //    if (handled) return handled;
+   // }
+
    auto isMouse = event.isMouse(); //cache this for speed
 
    //lets us catch and do stuff with handlers before they fall out of scope. Basically lets us query arbitrary widgets
