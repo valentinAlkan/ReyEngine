@@ -59,6 +59,7 @@ namespace ReyEngine::Internal {
       [[nodiscard]] Pos<R_FLOAT> windowToLocalPos(const WindowSpace<Pos<float>>& p){ return (Pos<float>)getGlobalTransform(false).get().transform(p.get());}
       inline Transform2D& getLocalTransform(){return transform2D;}
       [[nodiscard]] inline const Transform2D& getLocalTransform() const {return transform2D;}
+      [[nodiscard]] inline CanvasSpace<Transform2D> getCanvasTransform() const {return getGlobalTransform(true);}
       [[nodiscard]] inline CanvasSpace<Transform2D> getGlobalTransform(bool respectGlobalTransformBoundary=true) const {
          auto retval = getLocalTransform();
          auto parent = selfNode->getParent();

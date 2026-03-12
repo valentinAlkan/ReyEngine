@@ -82,73 +82,87 @@ void Canvas::_removeAllStatus(Widget* widget) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Canvas::renderProcess(RenderTarget& parentTarget) {
-   if (!_visible) return;
-   if (&parentTarget != &_renderTarget) {
-      parentTarget.endRenderMode();
+void Canvas::doRender(RenderContext& context, Widget* widget, bool isModalRenderChain) {
+   if (widget->as<Canvas>()) return;
+   context.push(widget->transform2D);
+   if (widget->_modal && !isModalRenderChain) {
+      context.recordModal();
+   } else {
+      widget->render2DBegin();
+      widget->render2D();
+      widget->render2DEnd();
    }
-   _renderTarget.beginRenderMode();
-   rlPushMatrix();
-   render2DBegin();
+   for (auto& child : widget->getChildrenAs<Widget>()) {
+      doRender(context, child);
+   }
+   context.pop();
+}
 
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::doRenderModal(RenderContext& context, Widget* widget) {
+   context.push(context.getModalTransform());
+   widget->render2DBegin();
+   widget->render2D();
+   widget->render2DEnd();
+   for (auto& child : widget->getChildrenAs<Widget>()) {
+      doRender(context, child, true);
+   }
+   context.pop();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::renderProcess(RenderContext& renderContext) {
    if (!_retained) {
       ClearBackground(Colors::lightGray);
    }
+
    render2DBegin();
    render2D();
    render2DEnd();
 
-   BeginMode2D(camera);
-   for (auto& child : _background.getValues()){
-      processNode<RenderProcess>(child, false);
+   //render background elements, which are affected by camera transform
+   {
+      auto cameraMode = renderContext.cameraContext(camera);
+      for (auto& child : _background.getValues()){
+         if (auto widget = child->as<Widget>()) {
+            doRender(renderContext, widget.value());
+         }
+      }
    }
-   EndMode2D();
 
-   //the modal widget's xform includes canvas xform, so we want to pop that off as if we are rendering globally
+   //draw the modal widget and place it where it needs to go
    if (auto modal = getModal()){
-      auto modalDrawable = modal->_node->as<Widget>();
-      transformStack.pushTransform(&getModal()->getGlobalTransform().get());
-
-      //invert (subtract off) the modal widget's own position since it's already encoded in modalXform.
-      auto inverseXform = modalDrawable.value()->getTransform().inverse();
-      transformStack.pushTransform(&inverseXform);
-
-      processNode<RenderProcess>(modal->_node, true);
-      transformStack.popTransform();
-      //there might need to be an extra pop here
+      if (auto modalDrawable = modal->_node->as<Widget>()) {
+         //find the canvas transform of the modal widget
+         doRenderModal(renderContext, modalDrawable.value());
+      }
    }
 
-   rlPopMatrix();
+   // rlPopMatrix(); // TODO: investigate what is pushing this - seems to be needed but no matching push is visible
 
    //root canvas has no parent canvas. So ensure root canvas draws its foreground.
    if (!getCanvas()) {
-      rlPushMatrix();
       for (auto& child : _foreground.getValues()){
-         processNode<RenderProcess>(child, false);
+         if (auto widget = child->as<Widget>()) {
+            doRender(renderContext, widget.value());
+         }
       }
-      rlPopMatrix();
    }
 
-   //finally, draw tooltip
-   if (auto toolTip = getToolTip()){
-      rlPushMatrix();
-      auto windowPos = InputManager::getMousePos();
-      auto localPos = windowToLocalPos(windowPos);
-      auto toolTipText = toolTip->getToolTipText();
-      auto textSize = measureText(toolTipText, theme->font);
-      static constexpr float embiggenness = 4;
-      Rect<float> toolTipRect = Rect<float>(localPos + Pos<float>(20,20), textSize).embiggen(embiggenness);
-      drawRectangle(toolTipRect, Colors::white);
-      drawText(toolTipText, toolTipRect.topLeft() + Pos<float>(embiggenness, embiggenness), theme->font);
-      drawRectangleLines(toolTipRect, 1.0, Colors::black);
-      rlPopMatrix();
-   }
-
-   _renderTarget.endRenderMode();
-   //return render control to the parent canvas, if any
-   if (&parentTarget != &_renderTarget) {
-      parentTarget.beginRenderMode();
-   }
+   // //finally, draw tooltip
+   // if (auto toolTip = getToolTip()){
+   //    rlPushMatrix();
+   //    auto windowPos = InputManager::getMousePos();
+   //    auto localPos = windowToLocalPos(windowPos);
+   //    auto toolTipText = toolTip->getToolTipText();
+   //    auto textSize = measureText(toolTipText, theme->font);
+   //    static constexpr float embiggenness = 4;
+   //    Rect<float> toolTipRect = Rect<float>(localPos + Pos<float>(20,20), textSize).embiggen(embiggenness);
+   //    drawRectangle(toolTipRect, Colors::white);
+   //    drawText(toolTipText, toolTipRect.topLeft() + Pos<float>(embiggenness, embiggenness), theme->font);
+   //    drawRectangleLines(toolTipRect, 1.0, Colors::black);
+   //    rlPopMatrix();
+   // }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

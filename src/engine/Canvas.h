@@ -72,11 +72,12 @@ namespace ReyEngine {
       void moveToForeground(Widget*);
       void moveToBackground(Widget*);
    protected:
+      const RenderTarget& readRenderTarget() const {return _renderTarget;}
+      RenderContext createRenderContext(){return _renderTarget;}
       void __on_descendant_added_to_tree(TypeNode* child) override;
       void __on_descendant_removed_from_tree(TypeNode* child) override;
       void render2D() const override {}
-      virtual void renderProcess(RenderTarget& parentTarget); //provide the parent's render target. so we can control stuff.
-      [[nodiscard]] const RenderTarget& getRenderTarget() const {return _renderTarget;}
+      void renderProcess(RenderContext&);
       Widget* __process_unhandled_input(const InputEvent& event) override;
       void __on_rect_changed(const Rect<R_FLOAT>& oldRect, const Rect<R_FLOAT>& newRect, bool allowsAnchor, bool byLayout = false) override;
       void _removeAllStatus(Widget*);
@@ -177,26 +178,26 @@ namespace ReyEngine {
          {
          }
 
-         Widget* subcanvasProcess(){
-            rlPopMatrix();
-            //pop the global matrix and render the subvancas from origin
-            subCanvas->renderProcess(thisCanvas->_renderTarget);
-            //restore the global matrix
-            rlPushMatrix();
-            rlMultMatrixf(MatrixToFloat(thisCanvas->transformStack.getGlobalTransform().matrix));
-            //draw the render target at its local origin
-            //NOTE: not sure why theres a 1 pixel offset for source rect, but without it the top line of pixels gets drawn on the bottom of the subcanvas.
-            drawRenderTargetRect(subCanvas->getRenderTarget(), subCanvas->getSizeRect()-Pos<float>(0,1), subCanvas->getSizeRect(), Colors::none);
-            //subtract off the subcanvas' transform and render its foreground
-            rlPushMatrix();
-            rlMultMatrixf(MatrixToFloat(subCanvas->transform2D.inverse().matrix));
-            //render foreground
-            for (auto& foregroundChild : subCanvas->_foreground.getValues()) {
-               subCanvas->processNode<RenderProcess>(foregroundChild, false);
-            }
-            rlPopMatrix();
-            return nullptr;
-         }
+         // Widget* subcanvasProcess(){
+         //    rlPopMatrix();
+         //    //pop the global matrix and render the subvancas from origin
+         //    subCanvas->renderProcess(thisCanvas->_renderTarget);
+         //    //restore the global matrix
+         //    rlPushMatrix();
+         //    rlMultMatrixf(MatrixToFloat(thisCanvas->transformStack.getGlobalTransform().matrix));
+         //    //draw the render target at its local origin
+         //    //NOTE: not sure why theres a 1 pixel offset for source rect, but without it the top line of pixels gets drawn on the bottom of the subcanvas.
+         //    drawRenderTargetRect(subCanvas->getRenderTarget(), subCanvas->getSizeRect()-Pos<float>(0,1), subCanvas->getSizeRect(), Colors::none);
+         //    //subtract off the subcanvas' transform and render its foreground
+         //    rlPushMatrix();
+         //    rlMultMatrixf(MatrixToFloat(subCanvas->transform2D.inverse().matrix));
+         //    //render foreground
+         //    for (auto& foregroundChild : subCanvas->_foreground.getValues()) {
+         //       subCanvas->processNode<RenderProcess>(foregroundChild, false);
+         //    }
+         //    rlPopMatrix();
+         //    return nullptr;
+         // }
 
          Widget* process(){
             processedWidget->render2DBegin();
@@ -388,6 +389,8 @@ namespace ReyEngine {
          return handled;
       }
    private:
+      static void doRender(RenderContext&, Widget*, bool isModal=false);
+      static void doRenderModal(RenderContext&, Widget*);
       void __on_child_added_to_tree(TypeNode* child) override;
       void __on_child_removed_from_tree(TypeNode* child) override;
    public:

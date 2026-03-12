@@ -9,6 +9,7 @@
 #include "StringTools.h"
 #include "Logger.h"
 #include "FileSystem.h"
+#include "rlgl.h"
 #include "StrongUnits.h"
 #ifdef linux
 #include <limits.h>
@@ -2026,15 +2027,6 @@ namespace ReyEngine {
       }
    };
 
-//   struct Transform2DProperty : public Property<Transform2D>{
-//      using Property<Transform2D>::operator=;
-//      Transform2DProperty(const std::string& instanceName,  Transform2D&& defaultvalue={})
-//      : Property<Transform2D>(instanceName, PropertyTypes::Color, std::move(defaultvalue))
-//      {}
-//      std::string toString() const override {return "{}";}
-//      Transform2D fromString(const std::string& str) override {return Transform2D();}
-//   };
-
    struct ColorRGBA {
       ColorRGBA(): r(0), g(0), b(0), a(255){}
       constexpr ColorRGBA(int r, int g, int b): r(r), g(g), b(b), a(255){}
@@ -2043,7 +2035,7 @@ namespace ReyEngine {
       constexpr inline ColorRGBA& operator=(const Color& rhs){r = rhs.r; g=rhs.g; b=rhs.b; a=rhs.a; return *this;}
       constexpr inline operator Color() const {return {r, g, b, a};}
       void dim(Fraction p){a = (float)a * Fraction(p).get();}
-      inline static ColorRGBA random(int alpha = -1){
+      static ColorRGBA random(int alpha = -1){
          auto retval = ColorRGBA(std::rand() % 255, std::rand() % 256, std::rand() % 256, alpha >= 0 ? alpha % 256 : std::rand() % 256);
          return retval;
       }
@@ -2303,12 +2295,8 @@ namespace ReyEngine {
 
    //Underlying RenderTexture2D is different from ReyTexture's underlying Texture2D. So these are not interchangeable.
    // Use this when you are drawing to a texture.
+   class RenderContext;
    class RenderTarget{
-   private:
-      struct RenderContext {
-         ~RenderContext(){EndTextureMode();}
-         RenderContext(RenderTarget& target){BeginTextureMode(target._tex);}
-      };
    public:
       explicit RenderTarget();
       RenderTarget(const Size<int>& size);
@@ -2318,7 +2306,6 @@ namespace ReyEngine {
       inline Size<int> getSize() const {return _size;}
       inline bool ready() const {return _texLoaded;}
       [[nodiscard]] inline const Texture2D& getTexture() const {return _tex.texture;}
-      [[nodiscard]] inline RenderContext renderContext() {return RenderContext(*this);}
    protected:
       inline void beginRenderMode(){BeginTextureMode(_tex);}
       inline void endRenderMode(){EndTextureMode();}
@@ -2326,9 +2313,58 @@ namespace ReyEngine {
       RenderTexture2D _tex;
       Size<float> _size;
       friend class Canvas;
+      friend class RenderContext;
    };
 
-   class Canvas;
+
+   class RenderContext {
+      struct CameraContext;
+   public:
+      RenderContext(RenderTarget& renderTarget)
+      : _renderTarget(renderTarget)
+      {
+         _renderTarget.beginRenderMode();
+      }
+      ~RenderContext() {
+         while (!empty()) pop();
+         _renderTarget.endRenderMode();
+      }
+      void push(const Transform2D& xform) {
+         rlPushMatrix();
+         rlMultMatrixf(MatrixToFloat(xform.matrix));
+         _transformStack.push_back(xform);
+      }
+      //doesn't check for empty!
+      void pop() {
+         if (_transformStack.empty()) {
+            std::cerr << "ERROR: RenderContext::pop() called on empty stack!" << std::endl;
+            return;
+         }
+         _transformStack.pop_back();
+         rlPopMatrix();
+      }
+      bool empty() const {return _transformStack.empty();}
+      void recordModal(){_modalXform = rlGetMatrixTransform();}
+      const Transform2D& getModalTransform() const {return _modalXform;}
+      CameraContext cameraContext(const Camera2D& camera) const {return CameraContext(camera);}
+   private:
+      struct CameraContext {
+         CameraContext(const Camera2D& camera)
+         :_camera(camera)
+         {
+            BeginMode2D(_camera);
+         }
+         ~CameraContext() {
+            EndMode2D();
+         }
+      private:
+         Camera2D _camera;
+      };
+      std::vector<Transform2D> _transformStack;
+      RenderTarget& _renderTarget; //the thing we are drawing to
+      Transform2D _modalXform; //a modal transform we want to save
+   };
+
    WindowSpace<Pos<R_FLOAT>> getScreenCenter();
    Size<float> getScreenSize();
    Size<float> getWindowSize();
