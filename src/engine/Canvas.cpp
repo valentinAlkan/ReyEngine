@@ -83,17 +83,31 @@ void Canvas::_removeAllStatus(Widget* widget) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::doRender(RenderContext& context, Widget* widget, bool isModalRenderChain) {
-   if (widget->as<Canvas>()) return;
    context.push(widget->transform2D);
-   if (widget->_modal && !isModalRenderChain) {
-      context.recordModal();
+   if (auto canvas = widget->as<Canvas>()) {
+      //freeze the render context and switch to the new texture
+      auto subCanvas = canvas.value();
+      {
+         auto frozenContext = context.freeze();
+         {
+            //scope desctruction control
+            RenderContext newContext(subCanvas->_renderTarget);
+            canvas.value()->renderProcess(newContext);
+         }
+      } //automatically unfreeze and revert the render context
+      //draw the render target
+      drawRenderTargetRect(subCanvas->readRenderTarget(), subCanvas->getSizeRect(), subCanvas->getSizeRect(), Colors::none);
    } else {
-      widget->render2DBegin();
-      widget->render2D();
-      widget->render2DEnd();
-   }
-   for (auto& child : widget->getChildrenAs<Widget>()) {
-      doRender(context, child);
+      if (widget->_modal && !isModalRenderChain) {
+         context.recordModal();
+      } else {
+         widget->render2DBegin();
+         widget->render2D();
+         widget->render2DEnd();
+      }
+      for (auto& child : widget->getChildrenAs<Widget>()) {
+         doRender(context, child);
+      }
    }
    context.pop();
 }
@@ -130,6 +144,13 @@ void Canvas::renderProcess(RenderContext& renderContext) {
       }
    }
 
+   //draw foreground elements
+   for (auto& child : _foreground.getValues()){
+      if (auto widget = child->as<Widget>()) {
+         doRender(renderContext, widget.value());
+      }
+   }
+
    //draw the modal widget and place it where it needs to go
    if (auto modal = getModal()){
       if (auto modalDrawable = modal->_node->as<Widget>()) {
@@ -137,17 +158,7 @@ void Canvas::renderProcess(RenderContext& renderContext) {
          doRenderModal(renderContext, modalDrawable.value());
       }
    }
-
    // rlPopMatrix(); // TODO: investigate what is pushing this - seems to be needed but no matching push is visible
-
-   //root canvas has no parent canvas. So ensure root canvas draws its foreground.
-   if (!getCanvas()) {
-      for (auto& child : _foreground.getValues()){
-         if (auto widget = child->as<Widget>()) {
-            doRender(renderContext, widget.value());
-         }
-      }
-   }
 
    // //finally, draw tooltip
    // if (auto toolTip = getToolTip()){
@@ -163,6 +174,12 @@ void Canvas::renderProcess(RenderContext& renderContext) {
    //    drawRectangleLines(toolTipRect, 1.0, Colors::black);
    //    rlPopMatrix();
    // }
+
+   // auto& currentCanvas = _renderGraph[i];
+   // auto& currentXform = _renderGraphXforms[i];
+   // auto& _renderTarget = currentCanvas->readRenderTarget();
+   // //pop off as many transforms as we need to
+   // // Logger::info() << "Drawing " << currentCanvas->getName()  << " @ gpos " << dstRect.transform(rlGetMatrixTransform())[0] << endl;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

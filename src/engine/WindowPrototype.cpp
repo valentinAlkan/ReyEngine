@@ -9,11 +9,11 @@ using namespace std;
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 WindowPrototype::WindowPrototype(const std::string &title, int width, int height, const std::vector<WindowFlags> &flags, int targetFPS)
-      : title(title)
-      , width(width)
-      , height(height)
-      , flags(flags)
-      , targetFPS(targetFPS)
+: title(title)
+, width(width)
+, height(height)
+, flags(flags)
+, targetFPS(targetFPS)
 {
    for (const auto& flag : flags){
       switch (flag){
@@ -41,8 +41,6 @@ Window& WindowPrototype::createWindow() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void WindowPrototype::use() {
    if (_usedUp) {
-      throw std::runtime_error(
-            "WindowPrototype for window " + title + " {" + std::to_string(width) + ":" + std::to_string(height) + " already used!");
-   }
+      throw std::runtime_error("WindowPrototype for window " + title + " {" + std::to_string(width) + ":" + std::to_string(height) + " already used!");}
    _usedUp = true;
 }

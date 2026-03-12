@@ -2319,35 +2319,57 @@ namespace ReyEngine {
 
    class RenderContext {
       struct CameraContext;
+      struct FrozenContext;
    public:
       RenderContext(RenderTarget& renderTarget)
       : _renderTarget(renderTarget)
+      , matrixState(MatrixIdentity())
       {
          _renderTarget.beginRenderMode();
+         rlPushMatrix();
       }
       ~RenderContext() {
-         while (!empty()) pop();
+         rlPopMatrix();
          _renderTarget.endRenderMode();
       }
       void push(const Transform2D& xform) {
-         rlPushMatrix();
          rlMultMatrixf(MatrixToFloat(xform.matrix));
          _transformStack.push_back(xform);
+         matrixState *= xform.matrix;
       }
       //doesn't check for empty!
       void pop() {
-         if (_transformStack.empty()) {
-            std::cerr << "ERROR: RenderContext::pop() called on empty stack!" << std::endl;
-            return;
-         }
+         rlMultMatrixf(MatrixToFloat(_transformStack.back().inverse().matrix));
+         matrixState *= _transformStack.back().inverse().matrix;
+         matrixState = rlGetMatrixTransform();
          _transformStack.pop_back();
-         rlPopMatrix();
       }
       bool empty() const {return _transformStack.empty();}
       void recordModal(){_modalXform = rlGetMatrixTransform();}
       const Transform2D& getModalTransform() const {return _modalXform;}
       CameraContext cameraContext(const Camera2D& camera) const {return CameraContext(camera);}
+      FrozenContext freeze() {return *this;}
    private:
+      //so we can save and recall render contexts
+      struct FrozenContext {
+         FrozenContext(RenderContext& renderContext)
+         : _renderContext(renderContext)
+         {
+            matrixState = renderContext.matrixState;
+            rlPopMatrix();
+            _renderContext._renderTarget.endRenderMode();
+         }
+         ~FrozenContext() {
+            _renderContext._renderTarget.beginRenderMode();
+            rlPushMatrix();
+            rlMultMatrixf(MatrixToFloat(_renderContext.matrixState));
+         }
+
+      private:
+         RenderContext& _renderContext;
+         Matrix matrixState;
+      };
+
       struct CameraContext {
          CameraContext(const Camera2D& camera)
          :_camera(camera)
@@ -2363,6 +2385,8 @@ namespace ReyEngine {
       std::vector<Transform2D> _transformStack;
       RenderTarget& _renderTarget; //the thing we are drawing to
       Transform2D _modalXform; //a modal transform we want to save
+      Matrix matrixState;
+      friend class FrozenContext;
    };
 
    WindowSpace<Pos<R_FLOAT>> getScreenCenter();

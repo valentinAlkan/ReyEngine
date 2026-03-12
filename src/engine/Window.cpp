@@ -22,51 +22,37 @@ constexpr bool PRINT_KEYUP = false;
 constexpr bool PRINT_KEYDOWN = false;
 constexpr bool PRINT_KEYREPEAT = false;
 
-struct CanvasTransform {
-   CanvasTransform(CanvasTransform* parentTransform)
-   : parentTransform(parentTransform)
-   , transform(MatrixIdentity())
-   {}
-   Matrix transform;
-   CanvasTransform* parentTransform;
-
-   struct Stack {
-      ~Stack() {
-         while (!_stack.empty()) {
-            pop();
-         }
-      }
-      void push(CanvasTransform* transform) {
-         rlPushMatrix();
-         rlMultMatrixf(MatrixToFloat(transform->transform));
-         _stack.push(transform);
-      }
-      void pop() {
-         rlPopMatrix();
-         _stack.pop();
-      }
-      CanvasTransform* top(){return _stack.top();}
-      bool empty() const {return _stack.empty();}
-   private:
-      std::stack<CanvasTransform*> _stack;
-   };
-};
+// struct CanvasTransform {
+//    CanvasTransform(CanvasTransform* parentTransform)
+//    : parentTransform(parentTransform)
+//    , transform(MatrixIdentity())
+//    {}
+//    Matrix transform;
+//    CanvasTransform* parentTransform;
+//
+//    struct Stack {
+//       ~Stack() {
+//          while (!_stack.empty()) {
+//             pop();
+//          }
+//       }
+//       void push(CanvasTransform* transform) {
+//          rlPushMatrix();
+//          rlMultMatrixf(MatrixToFloat(transform->transform));
+//          _stack.push(transform);
+//       }
+//       void pop() {
+//          rlPopMatrix();
+//          _stack.pop();
+//       }
+//       CanvasTransform* top(){return _stack.top();}
+//       bool empty() const {return _stack.empty();}
+//    private:
+//       std::stack<CanvasTransform*> _stack;
+//    };
+// };
 
 constexpr std::chrono::milliseconds TOOLTIP_DELAY = 500ms;
-std::vector<CanvasTransform> _renderGraphXforms;
-int transformId;
-////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////
-void composeGraph(Widget* widget) {
-   _renderGraphXforms.back().transform *= widget->getTransform().matrix;
-   if (widget->as<Canvas>()) {
-      _renderGraphXforms.emplace_back(&_renderGraphXforms.back()); //all canvases have a local transform of Identity for these purposes
-   }
-   for (const auto& child : widget->getChildrenAs<Widget>()) {
-      composeGraph(child);
-   }
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -85,7 +71,6 @@ void Window::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
    _canvas = canvas.get();
    canvas->setSize(getSize());
    canvas->__on_added_to_tree();
-   _renderGraph.push_back(canvas.get());
    SetExitKey(KEY_NULL);
 }
 
@@ -300,44 +285,24 @@ void Window::exec(){
          ReyTexture::OrphanedTextureCache::instance().clear();
       }
 
-      //render each canvas to a render texture
-      for (auto& graphCanvas : _renderGraph) {
-         auto renderContext = graphCanvas->createRenderContext();
-         graphCanvas->renderProcess(renderContext);
+      {
+         //scoped so the destructor fires
+         RenderContext renderContext(_canvas->_renderTarget);
+         canvas->renderProcess(renderContext);
       }
 
       //walk the tree and figure out where each canvas is in space
-      _renderGraphXforms.clear();
-      _renderGraphXforms.reserve(_renderGraph.size() + 1);
-      _renderGraphXforms.emplace_back(nullptr);
-      composeGraph(canvas->as<Widget>().value());
-      _renderGraphXforms.pop_back(); //pop off extra matrix
-
       BeginDrawing();
-      {
-         CanvasTransform::Stack canvasTransformStack;
-         for (int i = 0; i < _renderGraph.size(); i++) {
-            auto& currentCanvas = _renderGraph[i];
-            auto& currentXform = _renderGraphXforms[i];
-            auto& _renderTarget = currentCanvas->readRenderTarget();
-            //pop off as many transforms as we need to
-            while (!canvasTransformStack.empty() && currentXform.parentTransform && currentXform.parentTransform != canvasTransformStack.top()) {
-               canvasTransformStack.pop();
-            }
-            auto srcRect = currentCanvas->getSizeRect();
-            auto dstRect = currentCanvas->getRect();
-            canvasTransformStack.push(&currentXform);
-            // Logger::info() << "Drawing " << currentCanvas->getName()  << " @ gpos " << dstRect.transform(rlGetMatrixTransform())[0] << endl;
-            drawRenderTargetRect(_renderTarget, srcRect, srcRect, Colors::none);
-         }
-      }
-
+      // rlPushMatrix();
+      // ClearBackground(Colors::lightGray);
+      auto rect = _canvas->getSizeRect();
+      drawRenderTargetRect(_canvas->readRenderTarget(), rect, rect, Colors::none);
+      // rlPopMatrix();
       EndDrawing();
       _frameCounter++;
-//      } // release scoped lock here
    }
    _isClosing = true;
-   ProcessList<Internal::Tree::Processable>::clear();
+   ProcessList<Tree::Processable>::clear();
    ProcessList<Easing>::clear();
 }
 
@@ -381,8 +346,8 @@ void findCanvas(std::vector<Canvas*>& graph, TypeNode* thisNode) {
 /////////////////////////////////////////////////////////////////////////////////////////////
 void Window::_on_tree_updated() {
    //rebuild the DAG
-   _renderGraph.clear();
+   // _renderGraph.clear();
    //walk the graph and pick out canvases
-   findCanvas(_renderGraph, _root.get());
+   // findCanvas(_renderGraph, _root.get());
 }
 
