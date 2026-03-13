@@ -10,10 +10,10 @@ using namespace ReyEngine;
 using namespace Internal;
 using sc = chrono::steady_clock;
 
-constexpr bool PRINT_MOUSEUP = false;
-constexpr bool PRINT_MOUSEDOWN = false;
-constexpr bool PRINT_HOVER = false;
-constexpr bool PRINT_MOTION = false;
+constexpr bool PRINT_MOUSEUP = true;
+constexpr bool PRINT_MOUSEDOWN = true;
+constexpr bool PRINT_HOVER = true;
+constexpr bool PRINT_MOTION = true;
 constexpr bool PRINT_TOOLTIP = false;
 constexpr bool PRINT_TOOLTIP_CANCEL = false;
 constexpr bool PRINT_WHEEL = false;
@@ -280,6 +280,7 @@ void Window::exec(){
 
       //call deferred calls
       _deferredCallList.executeAllAndClear();
+
       //clean up orphaned textures
       if (ReyTexture::OrphanedTextureCache::instance().size()) {
          ReyTexture::OrphanedTextureCache::instance().clear();
@@ -291,13 +292,10 @@ void Window::exec(){
          canvas->renderProcess(renderContext);
       }
 
-      //walk the tree and figure out where each canvas is in space
+      //draw the scene to the window
       BeginDrawing();
-      // rlPushMatrix();
-      // ClearBackground(Colors::lightGray);
       auto rect = _canvas->getSizeRect();
       drawRenderTargetRect(_canvas->readRenderTarget(), rect, rect, Colors::none);
-      // rlPopMatrix();
       EndDrawing();
       _frameCounter++;
    }
@@ -329,7 +327,8 @@ std::shared_ptr<Canvas> Window::getCanvas() {
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 Widget* Window::__process_unhandled_input(const InputEvent& event) {
-   return nullptr;
+   Logger::debug() << "---------------------" << endl;
+   return _canvas->__process_unhandled_input(event);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

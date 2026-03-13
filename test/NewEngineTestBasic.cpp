@@ -5,52 +5,68 @@
 using namespace ReyEngine;
 using namespace std;
 
-Size<float> windowSize = {800,600};
-
-
 class Grid : public Widget {
 public:
    REYENGINE_OBJECT(Grid)
    void render2D() const override {
-      for (int x=0; x<windowSize.x; x+=50) {
-         for (int y=0; y<windowSize.y; y+=50) {
-            drawLine(Line<float>({0,(float)y},{windowSize.x,(float)y}), 1.0, Colors::black);
+      auto size = getSize();
+      for (int x=0; x<size.x; x+=50) {
+         for (int y=0; y<size.y; y+=50) {
+            drawLine(Line<float>({0,(float)y},{size.x,(float)y}), 1.0, Colors::black);
          }
-         drawLine(Line<float>({(float)x, 0},{(float)x, windowSize.y}), 1.0, Colors::black);
+         drawLine(Line<float>({(float)x, 0},{(float)x, size.y}), 1.0, Colors::black);
       }
    }
 };
 
 class TestCanvas : public Canvas {
-   public:
+public:
    REYENGINE_OBJECT(TestCanvas)
-   TestCanvas()
-   :color(ColorRGBA::random(255))
+   TestCanvas(const ColorRGBA& color)
+   :color(color)
    {
    }
    void render2D() const override {
       drawRectangle(getSizeRect(), color);
+      if (highlight) {
+         drawRectangleLines(getSizeRect().embiggen(-1), 2.0, Colors::red);
+      }
+      drawText(mousePos, mousePos + Pos<float>(20,20), theme->font);
    }
    void _init() override {
-      make_child<Label>(this, "TestCanvasLabel", getName());
+      setToolTipText(getName());
+      auto label = make_child<Label>(this, "TestCanvasLabel", getName());
+      label->setToolTipText(label->getText() + "label size = " + label->getSize().toString());
+   }
+   Widget* __process_unhandled_input(const InputEvent& event) override {
+      Logger::info() << getName() << " processing input " << event.isMouse().value()->getLocalPos() << endl;
+      if (event.isMouse().value()->isInside()) Logger::info() << "Which is inside" << endl;
+      mousePos = event.isMouse().value()->getLocalPos();
+      highlight = event.isMouse().value()->isInside();
+      return nullptr;
    }
    const ColorRGBA color;
+   bool highlight = false;
+   Pos<float> mousePos;
 };
 
 int main() {
-   auto& window = Application::createWindowPrototype("window", windowSize.x, windowSize.y, {WindowFlags::RESIZE}, 60)->createWindow();
+   auto& window = Application::createWindowPrototype("window", 800, 600, {WindowFlags::RESIZE}, 60)->createWindow();
    auto root = window.getCanvas();
 
-   auto testCanvas1 = make_child<TestCanvas>(root, "testCanvas1");
+   auto testCanvas1 = make_child<TestCanvas>(root, "testCanvas1", Colors::blue);
    testCanvas1->setRect({50,50,500,500});
 
-   auto testCanvas2 = make_child<TestCanvas>(testCanvas1, "testCanvas2");
+   auto testCanvas2 = make_child<TestCanvas>(testCanvas1, "testCanvas2", Colors::yellow);
    testCanvas2->setRect({50,50,400,400});
 
-   auto testCanvas3 = make_child<TestCanvas>(testCanvas2, "testCanvas3");
+   auto testCanvas3 = make_child<TestCanvas>(testCanvas2, "testCanvas3", Colors::green);
    testCanvas3->setRect({50,50,300,300});
 
-   auto grid = make_child<Grid>(root, "grid");
+   make_child<Grid>(root, "grid")->setAnchoring(Anchor::FILL);
+
+   InputEventMouseMotion motion(&window, {51,51}, {0,0});
+   root->processInput(motion);
 
    window.exec();
    return 0;

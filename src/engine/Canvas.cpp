@@ -83,6 +83,7 @@ void Canvas::_removeAllStatus(Widget* widget) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::doRender(RenderContext& context, Widget* widget, bool isModalRenderChain) {
+   if (!widget->_visible) return;
    context.push(widget->transform2D);
    if (auto canvas = widget->as<Canvas>()) {
       //freeze the render context and switch to the new texture
@@ -158,33 +159,94 @@ void Canvas::renderProcess(RenderContext& renderContext) {
          doRenderModal(renderContext, modalDrawable.value());
       }
    }
-   // rlPopMatrix(); // TODO: investigate what is pushing this - seems to be needed but no matching push is visible
 
-   // //finally, draw tooltip
-   // if (auto toolTip = getToolTip()){
-   //    rlPushMatrix();
-   //    auto windowPos = InputManager::getMousePos();
-   //    auto localPos = windowToLocalPos(windowPos);
-   //    auto toolTipText = toolTip->getToolTipText();
-   //    auto textSize = measureText(toolTipText, theme->font);
-   //    static constexpr float embiggenness = 4;
-   //    Rect<float> toolTipRect = Rect<float>(localPos + Pos<float>(20,20), textSize).embiggen(embiggenness);
-   //    drawRectangle(toolTipRect, Colors::white);
-   //    drawText(toolTipText, toolTipRect.topLeft() + Pos<float>(embiggenness, embiggenness), theme->font);
-   //    drawRectangleLines(toolTipRect, 1.0, Colors::black);
-   //    rlPopMatrix();
-   // }
-
-   // auto& currentCanvas = _renderGraph[i];
-   // auto& currentXform = _renderGraphXforms[i];
-   // auto& _renderTarget = currentCanvas->readRenderTarget();
-   // //pop off as many transforms as we need to
-   // // Logger::info() << "Drawing " << currentCanvas->getName()  << " @ gpos " << dstRect.transform(rlGetMatrixTransform())[0] << endl;
+   //finally, draw tooltip
+   if (auto toolTip = getToolTip()){
+      auto windowPos = InputManager::getMousePos();
+      auto localPos = windowToLocalPos(windowPos);
+      auto toolTipText = toolTip->getToolTipText();
+      auto textSize = measureText(toolTipText, theme->font);
+      static constexpr float embiggenness = 4;
+      Rect<float> toolTipRect = Rect<float>(localPos + Pos<float>(20,20), textSize).embiggen(embiggenness);
+      drawRectangle(toolTipRect, Colors::white);
+      drawText(toolTipText, toolTipRect.topLeft() + Pos<float>(embiggenness, embiggenness), theme->font);
+      drawRectangleLines(toolTipRect, 1.0, Colors::black);
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 CanvasSpace<Pos<float>> Canvas::getMousePos() {
    return InputManager::getMousePos().get();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Widget* Canvas::pass(Widget* currentWidget, const InputEvent& event, bool isModal) {
+   for (auto& child : currentWidget->getChildrenAs<Widget>()) {
+      if (child->isModal()) {
+         //we will come back to this later
+         continue;
+      } else {
+         auto handled = doInput(child, event, isModal);
+         if (handled) return handled;
+      }
+   }
+   return nullptr;
+}
+/////////////////////////////////////////////////////////////////////////////////////////
+Widget* Canvas::publish(Widget* currentWidget, const InputEvent& event, bool isModal) {
+   WidgetUnhandledInputEvent _event(currentWidget, event);
+   currentWidget->publishMutable(_event);
+   return _event.handler;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Widget* Canvas::process(Widget* currentWidget, const InputEvent& event, bool isModal){
+   return currentWidget->__process_unhandled_input(event);
+}
+/////////////////////////////////////////////////////////////////////////////////////////
+Widget* Canvas::doInput(Widget* w, const InputEvent& e, bool isModal){
+   //transform mouse input into the child's space
+   std::unique_ptr<MouseEvent::ScopeTransformer> xformer;
+   if (e.isMouse()) {
+      // Logger::debug() << w->getName() << " local pos before = " << e.isMouse().value()->getLocalPos() << endl;
+      xformer = make_unique<MouseEvent::ScopeTransformer>(*e.isMouse().value(), w->getLocalTransform(), w->getSize());
+      // Logger::debug() << w->getName() << " local pos after = " << e.isMouse().value()->getLocalPos() << (e.isMouse().value()->isInside() ? " inside " : "")  << endl;
+   }
+   if (!w->isModal() || isModal) {
+      //ignore outside input if applicable
+      auto shouldIgnore = [](const Widget& widget, const Pos<float>& pos){
+         return widget._ignoreOutsideInput && !widget.getSizeRect().contains(pos);
+      };
+      if (auto mouse = e.isMouse()) {
+         auto localPos = mouse.value()->getLocalPos();
+         if (shouldIgnore(*w, localPos)) return nullptr;
+      }
+   }
+   #define RETURN if (handled) return handled
+   Widget* handled = nullptr;
+   switch(w->_inputFilter) {
+      case InputFilter::PASS_ONLY: handled = pass(w, e, isModal); RETURN; break;
+      case InputFilter::PROCESS_ONLY: handled = process(w, e, isModal); RETURN; break;
+      case InputFilter::PUBLISH_ONLY: handled = publish(w, e, isModal); RETURN; break;
+      case InputFilter::PASS_AND_PROCESS: handled = pass(w, e, isModal); RETURN; handled = process(w, e, isModal); RETURN; break;
+      case InputFilter::PROCESS_AND_PASS: handled = process(w, e, isModal); RETURN; handled = pass(w, e, isModal); RETURN; break;
+      case InputFilter::PROCESS_AND_STOP: handled = process(w, e, isModal); RETURN; return this;
+      case InputFilter::PROCESS_AND_PUBLISH: handled = process(w, e, isModal); RETURN; handled = publish(w, e, isModal); RETURN; break;
+      case InputFilter::IGNORE_AND_PASS: handled = pass(w, e, isModal); RETURN; break;
+      case InputFilter::IGNORE_AND_STOP: return this;
+      case InputFilter::PUBLISH_AND_PASS: handled = publish(w, e, isModal); RETURN; handled = pass(w, e, isModal); RETURN; break;
+      case InputFilter::PASS_AND_PUBLISH: handled = pass(w, e, isModal); RETURN; handled = publish(w, e, isModal); RETURN; break;
+      case InputFilter::PUBLISH_AND_STOP: handled = publish(w, e, isModal); RETURN; return this;
+      case InputFilter::PASS_PUBLISH_PROCESS: handled = pass(w, e, isModal); RETURN; handled = publish(w, e, isModal); RETURN; handled = process(w, e, isModal); RETURN; break;
+      case InputFilter::PASS_PROCESS_PUBLISH: handled = pass(w, e, isModal);  RETURN; handled = process(w, e, isModal); RETURN; handled = publish(w, e, isModal); RETURN; break;
+      case InputFilter::PASS_PROCESS_STOP: handled = pass(w, e, isModal);  RETURN; handled = process(w, e, isModal); RETURN; return this;
+      case InputFilter::PROCESS_PUBLISH_PASS: handled = process(w, e, isModal); RETURN; handled = publish(w, e, isModal); RETURN; handled = pass(w, e, isModal); RETURN; break;
+      case InputFilter::PROCESS_PASS_PUBLISH: handled = process(w, e, isModal); RETURN; handled = pass(w, e, isModal); RETURN; handled = publish(w, e, isModal); RETURN; break;
+      case InputFilter::PUBLISH_PASS_PROCESS: handled = publish(w, e, isModal); RETURN; handled = pass(w, e, isModal); RETURN; handled = process(w, e, isModal); RETURN; break;
+case InputFilter::PUBLISH_PROCESS_PASS: handled = publish(w, e, isModal); RETURN; handled = process(w, e, isModal); RETURN; handled = pass(w, e, isModal); RETURN; break;
+   }
+   #undef RETURN
+   return nullptr;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -241,27 +303,31 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
 
    //query modal widgets first. A modal widget consumes input even if unhandled and prevents anyone else from getting it.
    if (auto modal = getModal()){
-      handled = processNode<InputProcess>(modal->_node, true, event);
+      handled = doInput(modal, event, true);
       if (modal->_handleAllModalInput || handled) return handled;
    }
 
    //then focused widgets
-   if (auto focus = getFocus()){
-      if (event.isMouse() && focus->canvas != this) {
-         //subtract off our own global transform in case this focus was propogated from a subcanvas
-         auto xformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), focus->canvas->getGlobalTransform(false).get(), size);
-         handled = processNode<InputProcess>(focus->canvas->_node, true, event);
-      } else {
-         //this version makes sure we don't get stuck in an infinite loop since the focused node's canvas could be us
-         handled = processNode<InputProcess>(focus->_node, true, event);
+   if (auto focused = getFocus()){
+      std::unique_ptr<MouseEvent::ScopeTransformer> scopeXformer;
+      if (event.isMouse()) {
+         //figure out the transform for the focused element
+         auto parent = focused->getParentWidget();
+         Transform2D transform = focused->transform2D;
+         while (parent && parent.value() != this) {
+            transform *= parent.value()->getTransform();
+            parent = parent.value()->getParentWidget();
+         }
+         scopeXformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), transform, focused->size, getCameraTransform());
       }
+      handled = doInput(focused, event, true);
       if (handled) return handled;
    }
 
    //then foreground (which is unaffected by camera transform)
    for (auto& child : _foreground.getValues() | std::views::reverse) {
       if (auto widget = child->as<Widget>()){
-         handled = processNode<InputProcess>(child, false, event);
+         handled = doInput(widget.value(), event, false);
          if (handled) return handled;
       }
    }
@@ -276,14 +342,14 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
    //then background (which is affected by camera transorm)
    // this here is "normal" input
    for (auto& child : _background.getValues() | std::views::reverse) {
-      std::unique_ptr<MouseEvent::ScopeTransformer> xformer;
-      auto widget = child->as<Widget>();
-      if (isMouse){
-         if (!widget) continue;
-         xformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), getLocalTransform(), widget.value()->size, getCameraTransform());
+      if (auto isWidget= child->as<Widget>()) {
+         std::unique_ptr<MouseEvent::ScopeTransformer> xformer;
+         if (isMouse){
+            xformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), MatrixIdentity(), isWidget.value()->size, getCameraTransform());
+         }
+         handled = doInput(isWidget.value(), event, false);
+         if (handled) return handled;
       }
-      handled = processNode<InputProcess>(child, false, event);
-      if (handled) return handled;
    }
 
    //finally we attempt to handle it ourselves as foreground input, but we need to handjam some values since that never

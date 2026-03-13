@@ -179,10 +179,10 @@ Widget* Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
       case InputEventMouseButton::ID: {
          auto &mbEvent = event.toEvent<InputEventMouseButton>();
          _closeDown = false;
-         if (_dragState == DragState::NONE && !mbEvent.isDown && !mbEvent.mouse.isInside()){
-            hide();
-            return this;
-         }
+         // if (_dragState == DragState::NONE && !mbEvent.isDown && !mbEvent.mouse.isInside()){
+         //    hide();
+         //    return this;
+         // }
          if (mbEvent.button != InputInterface::MouseButton::LEFT) break;
 
          //close button click
@@ -304,7 +304,9 @@ Widget* Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
 //   }
    //consume all inside mouse events
    if (auto isMouse = event.isMouse()){
-      if (isMouse.value()->isInside()) return this;
+      if (isMouse.value()->isInside()) {
+         return this;
+      }
    }
    return nullptr;
 }

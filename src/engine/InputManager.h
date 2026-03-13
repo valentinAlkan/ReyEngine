@@ -19,17 +19,17 @@ namespace ReyEngine{
 
    // mouse types
    struct MouseEvent {
-      explicit MouseEvent(const CanvasSpace<Pos<float>>& canvasPos)
-      : _canvasPos(canvasPos)
-      , _localPos(canvasPos.get())
+      explicit MouseEvent(const Pos<float>& pos)
+      // : _canvasPos(pos)
+      : _localPos(pos)
       {}
-      [[nodiscard]] CanvasSpace<Pos<float>> getCanvasPos() const {return _canvasPos;}
+      // [[nodiscard]] CanvasSpace<Pos<float>> getCanvasPos() const {return _canvasPos;}
       [[nodiscard]] Pos<float> getLocalPos() const {return _localPos;}
       [[nodiscard]] bool isInside() const {return _isInside;}
    protected:
       void setIsInside(bool isInside) {_isInside = isInside;}
       void setLocalPos(Pos<float>& p) {_localPos = p;}
-      void setCanvasPos(const Pos<float>& p) {_canvasPos = p;}
+      // void setCanvasPos(const Pos<float>& p) {_canvasPos = p;}
       void transformLocalPos(const Transform2D& xform) {
          //account for other transformations?
          _localPos = Pos<float>(xform.inverse().transform(_localPos));
@@ -45,8 +45,6 @@ namespace ReyEngine{
          , _localPos_cached(mouseEvent._localPos)
          , _applicableXform(xform)
          {
-
-            std::stringstream msg;
             if (cameraTransform) {
                mouseEvent.transformLocalPos(cameraTransform.value());
             }
@@ -58,7 +56,7 @@ namespace ReyEngine{
             mouseEvent._isInside = _isinside_cached;
          }
          [[nodiscard]] Pos<float> getLocalPos() const {return mouseEvent._localPos;}
-         [[nodiscard]] CanvasSpace<Pos<float>> getCanvasPos() const {return mouseEvent._canvasPos;}
+         // [[nodiscard]] CanvasSpace<Pos<float>> getCanvasPos() const {return mouseEvent._canvasPos;}
          const Transform2D& _applicableXform;
       private:
          MouseEvent& mouseEvent;
@@ -67,7 +65,7 @@ namespace ReyEngine{
          Pos<float> _localPos_cached; //for recall on dtor
       };
    private:
-      CanvasSpace<Pos<float>> _canvasPos;
+      // CanvasSpace<Pos<float>> _canvasPos;
       Pos<float> _localPos;
       bool _isInside = false;
 

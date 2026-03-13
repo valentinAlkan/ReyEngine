@@ -358,9 +358,7 @@ Widget *Widget::__process_unhandled_input(const ReyEngine::InputEvent &event) {
          //offer these events to children who may want them, but then accept them if there are no takers.
          case InputEventMouseHover::ID: {
             auto handled = _unhandled_input(event);
-            if (isInside) {
-               if (!handled) return this;
-            }
+            if (!handled) return this;
             break;}
       }
    }

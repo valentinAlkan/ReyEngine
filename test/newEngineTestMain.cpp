@@ -91,7 +91,7 @@ protected:
                break;
             }
             case InputEventMouseMotion::ID: {
-               globalMousePos = isMouse.value()->getCanvasPos().get();
+               // globalMousePos = isMouse.value()->getCanvasPos().get();
                localMousePos = isMouse.value()->getLocalPos();
                static size_t inputNo = 0;
                auto& mmEvent = event.toEvent<InputEventMouseMotion>();
