@@ -5,12 +5,19 @@
 using namespace std;
 using namespace ReyEngine;
 
+/////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::render2D() const {
+   drawCircle({testpos, 5}, Colors::blue);
+   drawText(testpos, testpos + Pos<float>(20,20), theme->font);
 }
+
 /////////////////////////////////////////////////////////////////////////////////////////
 ScrollArea::ScrollArea() {
    _ignoreOutsideInput = true;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::_init() {
@@ -88,8 +95,8 @@ void ScrollArea::_on_rect_changed(){
    }
 
    const auto areaSize = getRect().size();
-   const auto vsliderNewRect = Rect<float>((areaSize.x - sliderSize), 0, sliderSize, areaSize.y) + getPos();
-   const auto hsliderNewRect = Rect<float>(0, (areaSize.y - sliderSize), (areaSize.x - sliderSize), sliderSize) + getPos();
+   const auto vsliderNewRect = Rect<float>((areaSize.x - sliderSize), 0, sliderSize, areaSize.y);
+   const auto hsliderNewRect = Rect<float>(0, (areaSize.y - sliderSize), (areaSize.x - sliderSize), sliderSize);
    const bool needShowHSlider = boundingBox.width > _viewport.width;
    const auto needShowVSlider = boundingBox.height > _viewport.height;
 
@@ -139,6 +146,7 @@ Widget* ScrollArea::_unhandled_input(const InputEvent& e) {
    switch (e.eventId){
       case InputEventMouseMotion::ID:{
          auto& mmEvent = e.toEvent<InputEventMouseMotion>();
+         testpos = mmEvent.mouse.getLocalPos();
       } break;
       case InputEventMouseWheel::ID:{
          constexpr float SPEED_FACTOR = 5.0;

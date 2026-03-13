@@ -50,7 +50,7 @@ namespace ReyEngine{
       void _on_tree_updated(); //regenerate the dag
       static constexpr size_t INPUT_COUNT_LIMIT = 256;
    private:
-      Widget* __process_unhandled_input(const InputEvent&);
+      Widget* __process_unhandled_input(const InputEvent&) const;
       bool _isEditor = false; //enables other features
       uint64_t _frameCounter=0;
       int _targetFPS;

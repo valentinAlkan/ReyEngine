@@ -326,9 +326,9 @@ std::shared_ptr<Canvas> Window::getCanvas() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
-Widget* Window::__process_unhandled_input(const InputEvent& event) {
-   Logger::debug() << "---------------------" << endl;
-   return _canvas->__process_unhandled_input(event);
+Widget* Window::__process_unhandled_input(const InputEvent& event) const {
+   // Logger::debug() << "---------------------" << endl;
+   return _canvas->processInput(event);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

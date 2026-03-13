@@ -53,6 +53,7 @@ namespace ReyEngine {
          _isCanvas = true;
          camera.zoom = 1.0f;
          camera.target = (Vector2)(size / 2);
+         _inputFilter = InputFilter::PROCESS_AND_PUBLISH;
       }
       ~Canvas() override = default;
       void __init() override {
@@ -66,7 +67,7 @@ namespace ReyEngine {
       Camera2D& getCamera(){return camera;}
       void moveToForeground(Widget*);
       void moveToBackground(Widget*);
-      Widget* processInput(const InputEvent& e){return __process_unhandled_input(e);}
+      Widget* processInput(const InputEvent& e);
    protected:
       const RenderTarget& readRenderTarget() const {return _renderTarget;}
       RenderContext createRenderContext(){return _renderTarget;}
@@ -74,7 +75,6 @@ namespace ReyEngine {
       void __on_descendant_removed_from_tree(TypeNode* child) override;
       void render2D() const override {}
       void renderProcess(RenderContext&);
-      Widget* __process_unhandled_input(const InputEvent& event) override;
       void __on_rect_changed(const Rect<R_FLOAT>& oldRect, const Rect<R_FLOAT>& newRect, bool allowsAnchor, bool byLayout = false) override;
       void _removeAllStatus(Widget*);
 
@@ -140,258 +140,13 @@ namespace ReyEngine {
          std::stack<Transform2D*> globalTransformStack;
          Transform2D globalTransform;
       } transformStack;
-
-      /////////////////////////////////////////////////////////////////////////////////////////
-      //Scoping helpers
-
-      // template <ReyEngine::Internal::ProcessOrdering::OrderingType ProcessOrder>
-      // struct TreeProcess{
-      //    using ProcessOrderType = ProcessOrder;
-      //    TreeProcess(Canvas* thisCanvas, Widget* processedWidget)
-      //    : thisCanvas(thisCanvas)
-      //    , processedWidget(processedWidget)
-      //    , subCanvas(dynamic_cast<Canvas*>(processedWidget))
-      //    {
-      //       thisCanvas->transformStack.pushTransform(&processedWidget->getTransform());
-      //    }
-      //    ~TreeProcess(){
-      //       thisCanvas->transformStack.popTransform();
-      //    }
-      //
-      //    Canvas* thisCanvas;
-      //    Widget* processedWidget;
-      //    Canvas* subCanvas; //only valid if the processed widget is a canvas
-      // };
-      //
-      // /////////////////////////////////////////////////////////////////////////////////////////
-      // /////////////////////////////////////////////////////////////////////////////////////////
-      // /////////////////////////////////////////////////////////////////////////////////////////
-      // ////////// RENDERING
-      // //return value = not meaningful
-      // struct RenderProcess : public TreeProcess<Internal::ProcessOrdering::OrderingRenderingOldestFirst> {
-      //    RenderProcess(Canvas* thisCanvas, Widget* processedWidget)
-      //    : TreeProcess(thisCanvas, processedWidget)
-      //    {
-      //    }
-      //
-      //    // Widget* subcanvasProcess(){
-      //    //    rlPopMatrix();
-      //    //    //pop the global matrix and render the subvancas from origin
-      //    //    subCanvas->renderProcess(thisCanvas->_renderTarget);
-      //    //    //restore the global matrix
-      //    //    rlPushMatrix();
-      //    //    rlMultMatrixf(MatrixToFloat(thisCanvas->transformStack.getGlobalTransform().matrix));
-      //    //    //draw the render target at its local origin
-      //    //    //NOTE: not sure why theres a 1 pixel offset for source rect, but without it the top line of pixels gets drawn on the bottom of the subcanvas.
-      //    //    drawRenderTargetRect(subCanvas->getRenderTarget(), subCanvas->getSizeRect()-Pos<float>(0,1), subCanvas->getSizeRect(), Colors::none);
-      //    //    //subtract off the subcanvas' transform and render its foreground
-      //    //    rlPushMatrix();
-      //    //    rlMultMatrixf(MatrixToFloat(subCanvas->transform2D.inverse().matrix));
-      //    //    //render foreground
-      //    //    for (auto& foregroundChild : subCanvas->_foreground.getValues()) {
-      //    //       subCanvas->processNode<RenderProcess>(foregroundChild, false);
-      //    //    }
-      //    //    rlPopMatrix();
-      //    //    return nullptr;
-      //    // }
-      //
-      //    Widget* process(){
-      //       processedWidget->render2DBegin();
-      //       processedWidget->render2D();
-      //       processedWidget->render2DEnd();
-      //       return nullptr; //arbitrary return value
-      //    };
-      // };
-
-      /////////////////////////////////////////////////////////////////////////////////////////
-      ////////// INPUT
-      // return value = who handled
-      // struct InputProcess : public TreeProcess<Internal::ProcessOrdering::OrderingInputNewestFirst> {
-      //    InputProcess(Canvas* thisCanvas, Widget* processedWidget, const InputEvent& event, const Transform2D& inputTransform)
-      //    : TreeProcess(thisCanvas, processedWidget)
-      //    , event(event)
-      //    {
-      //       if (auto mouseData = event.isMouse()) {
-      //          if (subCanvas){
-      //             // zero-out subcanvas' transform - subcanvas's perceive themselves as having a null global transform
-      //             mouseTransformer = std::make_unique<MouseEvent::ScopeTransformer>(*mouseData.value(), thisCanvas->getGlobalTransform().get(), processedWidget->getSize());
-      //          } else {
-      //             mouseTransformer = std::make_unique<MouseEvent::ScopeTransformer>(*mouseData.value(), inputTransform, processedWidget->getSize());
-      //          }
-      //       }
-      //    }
-      //
-      //    Widget* subcanvasProcess(){
-      //       return subCanvas->__process_unhandled_input(event);
-      //    }
-      //
-      //    Widget* process(){
-      //       return processedWidget->__process_unhandled_input(event);
-      //    };
-      //
-      //    Widget* publish(){
-      //       WidgetUnhandledInputEvent _event(processedWidget, event);
-      //       processedWidget->publishMutable(_event);
-      //       return _event.handler;
-      //    }
-      //
-      //    //transforms mouse coordinates
-      //    std::unique_ptr<MouseEvent::ScopeTransformer> mouseTransformer;
-      //    const InputEvent& event;
-      // };
-
-      /////////////////////////////////////////////////////////////////////////////////////////
-      /////////////////////////////////////////////////////////////////////////////////////////
-      /////////////////////////////////////////////////////////////////////////////////////////
-//       template <typename ProcessType, typename... Args>
-//       Widget* processChildren(TypeNode *thisNode, Args&&... args) {
-//          //dispatch to children in correct order:
-//          // oldest (drawn on bottom) first for rendering
-//          // newest (drawn on top) first for input
-//          auto createProcessVector = [&](TypeNode* parentNode){
-//             if constexpr (std::is_same_v<typename ProcessType::ProcessOrderType, Internal::ProcessOrdering::OrderingInputNewestFirst>){
-//                //newest first - input
-//                return parentNode->getChildren() | std::views::reverse;
-//             }
-//             else if constexpr (std::is_same_v<typename ProcessType::ProcessOrderType, Internal::ProcessOrdering::OrderingRenderingOldestFirst>){
-//                //oldest first - rendering
-//                return std::views::all(parentNode->getChildren());
-//             }
-//          };
-//
-//          auto v = createProcessVector(thisNode);
-//          for (auto& child : v) {
-//             if (auto childWidget = child->template as<Widget>()){
-//                auto& _childWidget = childWidget.value();
-//                if (_childWidget->_modal) {
-//                   //we will come back to this later
-//                   continue;
-//                } else {
-//                   auto handled = processNode<ProcessType>(child, false, std::forward<Args>(args)...);
-//                   if (handled) return handled;
-//                }
-//             }
-//          }
-//          return nullptr;
-//       };
-//
-//       /////////////////////////////////////////////////////////////////////////////////////////
-//       /////////////////////////////////////////////////////////////////////////////////////////
-//       /////////////////////////////////////////////////////////////////////////////////////////
-//       template <typename ProcessType, typename... Args>
-//       Widget* processNode(TypeNode *thisNode, bool isGlobal, Args&&... args )  {
-//          auto isWidget = thisNode->as<Widget>();
-//          //processes actual widget itself
-//          if (!isWidget) {
-//             //non-widget node with children - widgets should never reach this
-//             return processChildren<ProcessType>(thisNode, std::forward<Args>(args)...);
-//          }
-//
-//          Widget* handled = nullptr;
-//          auto& widget = isWidget.value();
-//          //ignore invisible
-//          if (!widget->_visible) return nullptr;
-//
-//          //template magic!
-//          // Create the appropriate arguments based on ProcessType
-//          // Basically what we're doing is taking arbitrary args to the processNode function and
-//          //  seeing if we can match them to the ctor for the given ProcessType. Each ctor is conditionally compiled
-//          //  so that only one actually exists at any given time. This keeps us from having to write
-//          //  two large and similar blocks of code that both iterate over the tree and 'doStuff' in slightly
-//          //  different ways.
-//          auto createProcessTransformer = [this, &widget, &args...](const Transform2D& inputTransform) {
-//             if constexpr (std::is_same_v<ProcessType, InputProcess>) {
-//                const auto& event = std::get<0>(std::forward_as_tuple(std::forward<Args>(args)...));
-//                return ProcessType(this, widget, event, inputTransform);
-//             } else {
-//                // For other types like RenderProcess, don't pass the extra args
-//                return ProcessType(this, widget);
-//             }
-//          };
-//
-//          // Call the lambda to trigger template deduction
-//          auto processTransformer = createProcessTransformer(isGlobal ? widget->getGlobalTransform().get() : widget->getLocalTransform());
-//
-// //         if constexpr (std::is_same_v<ProcessType, InputProcess>) {
-// //            auto& xformer = static_cast<InputProcess &>(processTransformer);
-// //            if (isGlobal && xformer.mouseTransformer) {
-// //               Logger::info() << "Input Event offset by "
-// //                              << xformer.mouseTransformer->_applicableXform.extractTranslation() << " to "
-// //                              << xformer.event.isMouse().value()->getLocalPos() << std::endl;
-// //            }
-// //         }
-//
-//          //subcanvases do some funky stuff so they need special handling
-//          if (processTransformer.subCanvas && processTransformer.subCanvas != this) {
-//             handled = processTransformer.subcanvasProcess();
-//             //does not dispatch to children as this is handled explicitly by canvas
-//          } else {
-//             //render process (self-first) with child dispatch
-//             if constexpr (std::is_same_v<ProcessType, RenderProcess>) {
-//                if (!widget->_modal || isGlobal) {
-//                   handled = processTransformer.process();
-//                   if (handled) return handled;
-//                }
-//                return processChildren<ProcessType>(thisNode, std::forward<Args>(args)...);
-//             }
-//
-//             //input
-//             if constexpr (std::is_same_v<ProcessType, InputProcess>) {
-//                //process children first for input
-//                auto pass = [&](){return processChildren<ProcessType>(thisNode, std::forward<Args>(args)...);};
-//                auto publish = [&](){return processTransformer.publish();};
-//                auto process = [&](){ return processTransformer.process();};
-//                #define RETURN if (handled) return handled
-//                if (!widget->_modal || isGlobal) {
-//                   //ignore outside input if applicable
-//                   auto shouldIgnore = [](const Widget& widget, const Pos<float>& pos){
-//                      return widget._ignoreOutsideInput && !widget.getSizeRect().contains(pos);
-//                   };
-//                   if (auto mouse = processTransformer.event.isMouse()) {
-//                      if (auto isWidget = thisNode->as<Widget>()) {
-//                         auto localPos = mouse.value()->getLocalPos();
-//                         if (shouldIgnore(*isWidget.value(), localPos)) return nullptr;
-//                      }
-//                   }
-//
-//                   switch(widget->_inputFilter) {
-//                      case InputFilter::PASS_ONLY: handled = pass(); RETURN; break;
-//                      case InputFilter::PROCESS_ONLY: handled = process(); RETURN; break;
-//                      case InputFilter::PUBLISH_ONLY: handled = publish(); RETURN; break;
-//                      case InputFilter::PASS_AND_PROCESS: handled = pass(); RETURN; handled = process(); RETURN; break;
-//                      case InputFilter::PROCESS_AND_PASS: handled = process(); RETURN; handled = pass(); RETURN; break;
-//                      case InputFilter::PROCESS_AND_STOP: handled = process(); RETURN; return this;
-//                      case InputFilter::PROCESS_AND_PUBLISH: handled = process(); RETURN; handled = publish(); RETURN; break;
-//                      case InputFilter::IGNORE_AND_PASS: handled = pass(); RETURN; break;
-//                      case InputFilter::IGNORE_AND_STOP: return this;
-//                      case InputFilter::PUBLISH_AND_PASS: handled = publish(); RETURN; handled = pass(); RETURN; break;
-//                      case InputFilter::PASS_AND_PUBLISH: handled = pass(); RETURN; handled = publish(); RETURN; break;
-//                      case InputFilter::PUBLISH_AND_STOP: handled = publish(); RETURN; return this;
-//                      case InputFilter::PASS_PUBLISH_PROCESS: handled = pass(); RETURN; handled = publish(); RETURN; handled = process(); RETURN; break;
-//                      case InputFilter::PASS_PROCESS_PUBLISH: handled = pass();  RETURN; handled = process(); RETURN; handled = publish(); RETURN; break;
-//                      case InputFilter::PASS_PROCESS_STOP: handled = pass();  RETURN; handled = process(); RETURN; return this;
-//                      case InputFilter::PROCESS_PUBLISH_PASS: handled = process(); RETURN; handled = publish(); RETURN; handled = pass(); RETURN; break;
-//                      case InputFilter::PROCESS_PASS_PUBLISH: handled = process(); RETURN; handled = pass(); RETURN; handled = publish(); RETURN; break;
-//                      case InputFilter::PUBLISH_PASS_PROCESS: handled = publish(); RETURN; handled = pass(); RETURN; handled = process(); RETURN; break;
-//                      case InputFilter::PUBLISH_PROCESS_PASS: handled = publish(); RETURN; handled = process(); RETURN; handled = pass(); RETURN; break;
-//                   }
-//                   return nullptr;
-//                }
-//                #undef RETURN
-//             }
-//          }
-//          // go no further as a widget
-//          // pop local transform (processTransformer falls out of scope)
-//          return handled;
-//       }
    private:
       static void doRender(RenderContext&, Widget*, bool isModal=false);
       static void doRenderModal(RenderContext&, Widget*);
-      Widget* doInput(Widget*, const InputEvent& e, bool isModal=false);
-      Widget* doInputModal(Widget*, const InputEvent& e);
-      Widget* pass(Widget* currentWidget, const InputEvent& e, bool isModal=false);
-      static Widget* process(Widget* currentWidget, const InputEvent& e, bool isModal=false);
-      static Widget* publish(Widget* currentWidget, const InputEvent& e, bool isModal=false);
+      Widget* doInput(Widget*, const InputEvent& e);
+      Widget* pass(Widget* currentWidget, const InputEvent& e);
+      static Widget* process(Widget* currentWidget, const InputEvent& e);
+      static Widget* publish(Widget* currentWidget, const InputEvent& e);
       void __on_child_added_to_tree(TypeNode* child) override;
       void __on_child_removed_from_tree(TypeNode* child) override;
    public:

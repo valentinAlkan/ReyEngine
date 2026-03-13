@@ -1,5 +1,4 @@
 #include "Canvas.h"
-#include "MiscTools.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -180,31 +179,32 @@ CanvasSpace<Pos<float>> Canvas::getMousePos() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Widget* Canvas::pass(Widget* currentWidget, const InputEvent& event, bool isModal) {
+Widget* Canvas::pass(Widget* currentWidget, const InputEvent& event) {
    for (auto& child : currentWidget->getChildrenAs<Widget>()) {
       if (child->isModal()) {
          //we will come back to this later
          continue;
       } else {
-         auto handled = doInput(child, event, isModal);
+         auto handled = doInput(child, event);
          if (handled) return handled;
       }
    }
    return nullptr;
 }
 /////////////////////////////////////////////////////////////////////////////////////////
-Widget* Canvas::publish(Widget* currentWidget, const InputEvent& event, bool isModal) {
+Widget* Canvas::publish(Widget* currentWidget, const InputEvent& event) {
    WidgetUnhandledInputEvent _event(currentWidget, event);
    currentWidget->publishMutable(_event);
    return _event.handler;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Widget* Canvas::process(Widget* currentWidget, const InputEvent& event, bool isModal){
+Widget* Canvas::process(Widget* currentWidget, const InputEvent& event){
    return currentWidget->__process_unhandled_input(event);
 }
 /////////////////////////////////////////////////////////////////////////////////////////
-Widget* Canvas::doInput(Widget* w, const InputEvent& e, bool isModal){
+Widget* Canvas::doInput(Widget* w, const InputEvent& e){
+   if (!w->_visible) return nullptr;
    //transform mouse input into the child's space
    std::unique_ptr<MouseEvent::ScopeTransformer> xformer;
    if (e.isMouse()) {
@@ -212,7 +212,7 @@ Widget* Canvas::doInput(Widget* w, const InputEvent& e, bool isModal){
       xformer = make_unique<MouseEvent::ScopeTransformer>(*e.isMouse().value(), w->getLocalTransform(), w->getSize());
       // Logger::debug() << w->getName() << " local pos after = " << e.isMouse().value()->getLocalPos() << (e.isMouse().value()->isInside() ? " inside " : "")  << endl;
    }
-   if (!w->isModal() || isModal) {
+   if (!w->isModal()) {
       //ignore outside input if applicable
       auto shouldIgnore = [](const Widget& widget, const Pos<float>& pos){
          return widget._ignoreOutsideInput && !widget.getSizeRect().contains(pos);
@@ -222,35 +222,43 @@ Widget* Canvas::doInput(Widget* w, const InputEvent& e, bool isModal){
          if (shouldIgnore(*w, localPos)) return nullptr;
       }
    }
+
+   //check for subcanvases, apply scope transformations
+   if (auto isCanvas = w->as<Canvas>()) {
+      //trigger canvas processing
+      auto handled = isCanvas.value()->processInput(e);
+      if (handled) return handled;
+   }
+
    #define RETURN if (handled) return handled
    Widget* handled = nullptr;
    switch(w->_inputFilter) {
-      case InputFilter::PASS_ONLY: handled = pass(w, e, isModal); RETURN; break;
-      case InputFilter::PROCESS_ONLY: handled = process(w, e, isModal); RETURN; break;
-      case InputFilter::PUBLISH_ONLY: handled = publish(w, e, isModal); RETURN; break;
-      case InputFilter::PASS_AND_PROCESS: handled = pass(w, e, isModal); RETURN; handled = process(w, e, isModal); RETURN; break;
-      case InputFilter::PROCESS_AND_PASS: handled = process(w, e, isModal); RETURN; handled = pass(w, e, isModal); RETURN; break;
-      case InputFilter::PROCESS_AND_STOP: handled = process(w, e, isModal); RETURN; return this;
-      case InputFilter::PROCESS_AND_PUBLISH: handled = process(w, e, isModal); RETURN; handled = publish(w, e, isModal); RETURN; break;
-      case InputFilter::IGNORE_AND_PASS: handled = pass(w, e, isModal); RETURN; break;
+      case InputFilter::PASS_ONLY: handled = pass(w, e); RETURN; break;
+      case InputFilter::PROCESS_ONLY: handled = process(w, e); RETURN; break;
+      case InputFilter::PUBLISH_ONLY: handled = publish(w, e); RETURN; break;
+      case InputFilter::PASS_AND_PROCESS: handled = pass(w, e); RETURN; handled = process(w, e); RETURN; break;
+      case InputFilter::PROCESS_AND_PASS: handled = process(w, e); RETURN; handled = pass(w, e); RETURN; break;
+      case InputFilter::PROCESS_AND_STOP: handled = process(w, e); RETURN; return this;
+      case InputFilter::PROCESS_AND_PUBLISH: handled = process(w, e); RETURN; handled = publish(w, e); RETURN; break;
+      case InputFilter::IGNORE_AND_PASS: handled = pass(w, e); RETURN; break;
       case InputFilter::IGNORE_AND_STOP: return this;
-      case InputFilter::PUBLISH_AND_PASS: handled = publish(w, e, isModal); RETURN; handled = pass(w, e, isModal); RETURN; break;
-      case InputFilter::PASS_AND_PUBLISH: handled = pass(w, e, isModal); RETURN; handled = publish(w, e, isModal); RETURN; break;
-      case InputFilter::PUBLISH_AND_STOP: handled = publish(w, e, isModal); RETURN; return this;
-      case InputFilter::PASS_PUBLISH_PROCESS: handled = pass(w, e, isModal); RETURN; handled = publish(w, e, isModal); RETURN; handled = process(w, e, isModal); RETURN; break;
-      case InputFilter::PASS_PROCESS_PUBLISH: handled = pass(w, e, isModal);  RETURN; handled = process(w, e, isModal); RETURN; handled = publish(w, e, isModal); RETURN; break;
-      case InputFilter::PASS_PROCESS_STOP: handled = pass(w, e, isModal);  RETURN; handled = process(w, e, isModal); RETURN; return this;
-      case InputFilter::PROCESS_PUBLISH_PASS: handled = process(w, e, isModal); RETURN; handled = publish(w, e, isModal); RETURN; handled = pass(w, e, isModal); RETURN; break;
-      case InputFilter::PROCESS_PASS_PUBLISH: handled = process(w, e, isModal); RETURN; handled = pass(w, e, isModal); RETURN; handled = publish(w, e, isModal); RETURN; break;
-      case InputFilter::PUBLISH_PASS_PROCESS: handled = publish(w, e, isModal); RETURN; handled = pass(w, e, isModal); RETURN; handled = process(w, e, isModal); RETURN; break;
-case InputFilter::PUBLISH_PROCESS_PASS: handled = publish(w, e, isModal); RETURN; handled = process(w, e, isModal); RETURN; handled = pass(w, e, isModal); RETURN; break;
+      case InputFilter::PUBLISH_AND_PASS: handled = publish(w, e); RETURN; handled = pass(w, e); RETURN; break;
+      case InputFilter::PASS_AND_PUBLISH: handled = pass(w, e); RETURN; handled = publish(w, e); RETURN; break;
+      case InputFilter::PUBLISH_AND_STOP: handled = publish(w, e); RETURN; return this;
+      case InputFilter::PASS_PUBLISH_PROCESS: handled = pass(w, e); RETURN; handled = publish(w, e); RETURN; handled = process(w, e); RETURN; break;
+      case InputFilter::PASS_PROCESS_PUBLISH: handled = pass(w, e);  RETURN; handled = process(w, e); RETURN; handled = publish(w, e); RETURN; break;
+      case InputFilter::PASS_PROCESS_STOP: handled = pass(w, e);  RETURN; handled = process(w, e); RETURN; return this;
+      case InputFilter::PROCESS_PUBLISH_PASS: handled = process(w, e); RETURN; handled = publish(w, e); RETURN; handled = pass(w, e); RETURN; break;
+      case InputFilter::PROCESS_PASS_PUBLISH: handled = process(w, e); RETURN; handled = pass(w, e); RETURN; handled = publish(w, e); RETURN; break;
+      case InputFilter::PUBLISH_PASS_PROCESS: handled = publish(w, e); RETURN; handled = pass(w, e); RETURN; handled = process(w, e); RETURN; break;
+case InputFilter::PUBLISH_PROCESS_PASS: handled = publish(w, e); RETURN; handled = process(w, e); RETURN; handled = pass(w, e); RETURN; break;
    }
    #undef RETURN
    return nullptr;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
+Widget* Canvas::processInput(const InputEvent& event) {
    // if (_inputContext) {
    //    auto handled = _inputContext->handleInput(event);
    //    if (handled) return handled;
@@ -303,7 +311,13 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
 
    //query modal widgets first. A modal widget consumes input even if unhandled and prevents anyone else from getting it.
    if (auto modal = getModal()){
-      handled = doInput(modal, event, true);
+      std::unique_ptr<MouseEvent::ScopeTransformer> scopeXformer;
+      if (event.isMouse()) {
+         //subtract off the modal widget's transform to avoid double-apply
+         auto modalXform = modal->getCanvasTransform().get() * modal->getLocalTransform().inverse();
+         scopeXformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), modalXform, modal->size, getCameraTransform());
+      }
+      handled = doInput(modal, event);
       if (modal->_handleAllModalInput || handled) return handled;
    }
 
@@ -311,23 +325,18 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
    if (auto focused = getFocus()){
       std::unique_ptr<MouseEvent::ScopeTransformer> scopeXformer;
       if (event.isMouse()) {
-         //figure out the transform for the focused element
-         auto parent = focused->getParentWidget();
-         Transform2D transform = focused->transform2D;
-         while (parent && parent.value() != this) {
-            transform *= parent.value()->getTransform();
-            parent = parent.value()->getParentWidget();
-         }
-         scopeXformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), transform, focused->size, getCameraTransform());
+         //subtract off the focus widget's transform to avoid double-apply
+         auto focusTransform = focused->getCanvasTransform().get() * focused->getLocalTransform().inverse();
+         scopeXformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), focusTransform, focused->size, getCameraTransform());
       }
-      handled = doInput(focused, event, true);
+      handled = doInput(focused, event);
       if (handled) return handled;
    }
 
    //then foreground (which is unaffected by camera transform)
    for (auto& child : _foreground.getValues() | std::views::reverse) {
       if (auto widget = child->as<Widget>()){
-         handled = doInput(widget.value(), event, false);
+         handled = doInput(widget.value(), event);
          if (handled) return handled;
       }
    }
@@ -347,7 +356,7 @@ Widget* Canvas::__process_unhandled_input(const InputEvent& event) {
          if (isMouse){
             xformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), MatrixIdentity(), isWidget.value()->size, getCameraTransform());
          }
-         handled = doInput(isWidget.value(), event, false);
+         handled = doInput(isWidget.value(), event);
          if (handled) return handled;
       }
    }

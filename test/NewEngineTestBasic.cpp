@@ -43,6 +43,10 @@ public:
       if (event.isMouse().value()->isInside()) Logger::info() << "Which is inside" << endl;
       mousePos = event.isMouse().value()->getLocalPos();
       highlight = event.isMouse().value()->isInside();
+      if (isFocused()) {
+         Logger::info() << "Handling focused" << endl;
+         return this;
+      }
       return nullptr;
    }
    const ColorRGBA color;
@@ -51,22 +55,32 @@ public:
 };
 
 int main() {
-   auto& window = Application::createWindowPrototype("window", 800, 600, {WindowFlags::RESIZE}, 60)->createWindow();
+   auto& window = Application::createWindowPrototype("window", 800, 800, {WindowFlags::RESIZE}, 60)->createWindow();
    auto root = window.getCanvas();
 
-   auto testCanvas1 = make_child<TestCanvas>(root, "testCanvas1", Colors::blue);
-   testCanvas1->setRect({50,50,500,500});
+   // auto testCanvas1 = make_child<TestCanvas>(root, "testCanvas1", Colors::blue);
+   // testCanvas1->setRect({50,50,500,500});
+   // testCanvas1->setFocused(true);
+   //
+   // auto testCanvas2 = make_child<TestCanvas>(testCanvas1, "testCanvas2", Colors::yellow);
+   // testCanvas2->setRect({50,50,400,400});
+   //
+   // auto testCanvas3 = make_child<TestCanvas>(testCanvas2, "testCanvas3", Colors::green);
+   // testCanvas3->setRect({50,50,300,300});
+   //
+   // make_child<Grid>(root, "grid")->setAnchoring(Anchor::FILL);
+   //
+   // InputEventMouseMotion motion(&window, {51,51}, {0,0});
+   // root->processInput(motion);
 
-   auto testCanvas2 = make_child<TestCanvas>(testCanvas1, "testCanvas2", Colors::yellow);
-   testCanvas2->setRect({50,50,400,400});
+   auto scrollArea = make_child<ScrollArea>(root, "scroll area");
+   scrollArea->setRect(100,100,600,600);
 
-   auto testCanvas3 = make_child<TestCanvas>(testCanvas2, "testCanvas3", Colors::green);
-   testCanvas3->setRect({50,50,300,300});
+   auto subgrid = make_child<Grid>(scrollArea, "subgrid");
+   subgrid->setAnchoring(Anchor::FILL);
 
-   make_child<Grid>(root, "grid")->setAnchoring(Anchor::FILL);
-
-   InputEventMouseMotion motion(&window, {51,51}, {0,0});
-   root->processInput(motion);
+   auto label = make_child<Label>(scrollArea, "label");
+   label->setPosition(1500,1500);
 
    window.exec();
    return 0;
