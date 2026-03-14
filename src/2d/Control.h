@@ -6,7 +6,7 @@ namespace ReyEngine{
    public:
        REYENGINE_OBJECT(Control);
        void _process(float dt) override;
-       Widget* _unhandled_input(const InputEvent&) override;
+       Handled _unhandled_input(const InputEvent&) override;
        void _on_mouse_enter() override;
        void _on_mouse_exit() override;
 //       void _on_rect_changed() override;

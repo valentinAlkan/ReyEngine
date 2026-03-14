@@ -147,7 +147,7 @@ void Tree::render2D() const{
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Widget* Tree::_unhandled_input(const InputEvent& event) {
+Handled Tree::_unhandled_input(const InputEvent& event) {
    switch (event.eventId){
       case InputEventKey::ID:{
          //up and down selection navigation

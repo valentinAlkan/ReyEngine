@@ -179,7 +179,7 @@ namespace ReyEngine{
       void refresh();
       void determineVisible();
       void render2D() const override;
-      Widget* _unhandled_input(const InputEvent&) override;
+      Handled _unhandled_input(const InputEvent&) override;
       void _on_mouse_enter() override {}
       void _on_mouse_exit() override { _hoveredImplDetails.reset();}
       std::optional<TreeItemImplDetails*> getItemDetailsAt(const Pos<float>& localPos);

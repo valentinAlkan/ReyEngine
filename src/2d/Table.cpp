@@ -66,7 +66,7 @@ void Internal::TableViewWidget::_recalculate() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Widget* Table::_unhandled_input(const InputEvent& e) {
+Handled Table::_unhandled_input(const InputEvent& e) {
     if (e.isMouse()) {
         switch (e.eventId) {
            case InputEventMouseButton::ID: {

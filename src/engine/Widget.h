@@ -8,6 +8,20 @@
 namespace ReyEngine {
    enum class Anchor{NONE, LEFT, RIGHT, TOP, TOP_WIDTH, BOTTOM, FILL, TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, CENTER, CUSTOM};
    class FocusGroup;
+   class Widget;
+   //contains information about how input events were handled
+   struct Handled {
+      Handled()
+      : handler(nullptr)
+      {}
+      Handled(Widget* handler, std::optional<Pos<float>> pos = {})
+      : handler(handler)
+      , pos(pos)
+      {}
+      Widget* handler;
+      std::optional<Pos<float>> pos; //for positional input, the position where the input was handled at by the handler (in local space)
+      operator bool() const {return handler != nullptr;}
+   };
    class Widget
    : public Internal::Drawable2D
    , public Internal::Tree::Processable
@@ -38,15 +52,11 @@ namespace ReyEngine {
          {}
          Rect<R_FLOAT> rect;
          const InputEvent& fwdEvent;
-         Widget* handler = nullptr;
+         Handled handled;
       };
 
       Widget()= default;
-      ~Widget() override{
-         if constexpr (isDebugBuild) {
-//            std::cout << "Goodbye from " << getName() << "!!" << std::endl;
-         }
-      }
+      ~Widget() override{}
       REYENGINE_OBJECT(Widget)
       Theme& getTheme(){return *theme;}
       const Theme& getTheme() const {return *theme;}
@@ -84,11 +94,10 @@ namespace ReyEngine {
       [[nodiscard]] std::string getToolTipText() const {return _tooltipText;}
       [[nodiscard]] bool isLayout() const {return _isLayout;}
    protected:
-      //input
       virtual void render2D() const {};
-      virtual Widget* __process_unhandled_input(const InputEvent& event);
-      virtual Widget* _unhandled_input(const InputEvent&){return nullptr;}
-      virtual Widget* _process_unhandled_editor_input(const InputEvent&){return nullptr;} //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)
+      virtual Handled __process_unhandled_input(const InputEvent& event);
+      virtual Handled _unhandled_input(const InputEvent&){return nullptr;}
+      virtual Handled _process_unhandled_editor_input(const InputEvent&){return nullptr;} //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)
       virtual void _on_mouse_enter(){};
       virtual void _on_mouse_exit(){};
       virtual void _on_modality_gained(){}
@@ -121,7 +130,6 @@ namespace ReyEngine {
          }
          _on_visibility_changed();
       }
-
       void __on_rect_changed(const Rect<R_FLOAT>& oldRect, const Rect<R_FLOAT>& newRect, bool allowAnchor, bool byLayout = false) override {
          if (allowAnchor) {
             //layout will have already resized children by now
@@ -153,15 +161,6 @@ namespace ReyEngine {
       Widget* _parentWidget = nullptr; //the closest related parent that is a widget.
       bool _modal = false;
       std::string _tooltipText;
-
-   #ifndef NDEBUG
-      // Debug build
-      static constexpr bool isDebugBuild = true;
-//      std::string _name = "nobody";
-   #else
-      static constexpr bool isDebugBuild = false;
-   #endif
-
       friend class Layout;
       friend class Canvas;
 

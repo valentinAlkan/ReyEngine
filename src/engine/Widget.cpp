@@ -346,7 +346,7 @@ bool Widget::getIsRendering() const {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-Widget *Widget::__process_unhandled_input(const ReyEngine::InputEvent &event) {
+Handled Widget::__process_unhandled_input(const InputEvent &event) {
    //we can intercept certain events and always handle them, for example, tooltips (and eventually hovers)
    bool isInside = event.isMouse() && event.isMouse().value()->isInside();
    if (isInside){

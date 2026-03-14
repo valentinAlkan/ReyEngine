@@ -41,7 +41,6 @@ namespace ReyEngine{
    using TypeNode = Internal::Tree::TypeNode;
    using TreeStorable = Internal::Tree::TreeStorable;
    using TypeTag = Internal::Tree::TypeTag;
-   using Handled = bool;
    #define TYPENAME(CLASSNAME) \
    static constexpr char TYPE_NAME[] = #CLASSNAME; \
 

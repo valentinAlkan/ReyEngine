@@ -220,7 +220,7 @@ namespace ReyEngine{
 
    class EventSubscriber {
    public:
-      ~EventSubscriber(){
+      virtual ~EventSubscriber(){
          //unsubscribe from all events
          while(!_subscriptions.empty()){
             cancelSubscription(_subscriptions.begin()->first);

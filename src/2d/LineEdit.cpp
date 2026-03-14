@@ -92,7 +92,7 @@ int LineEdit::getCaretPosFromMouse(float mouseLocalX) const {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-Widget* LineEdit::_unhandled_input(const InputEvent& event) {
+Handled LineEdit::_unhandled_input(const InputEvent& event) {
    if (auto isMouse = event.isMouse()){
       auto& mouse = isMouse.value();
       switch (event.eventId) {

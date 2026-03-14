@@ -76,7 +76,7 @@ Size<float> DropDownMenu::_calculateSize() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Widget *DropDownMenu::_unhandled_input(const ReyEngine::InputEvent& e) {
+Handled DropDownMenu::_unhandled_input(const ReyEngine::InputEvent& e) {
    switch (e.eventId){
       case InputEventMouseMotion::ID:{
          auto& mmEvent = e.toEvent<InputEventMouseMotion>();
@@ -148,7 +148,7 @@ void MenuBar::_on_change() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Widget* MenuBar::_unhandled_input(const ReyEngine::InputEvent& e) {
+Handled MenuBar::_unhandled_input(const InputEvent& e) {
    switch (e.eventId){
       case InputEventMouseMotion::ID:{
          auto& mmEvent = e.toEvent<InputEventMouseMotion>();

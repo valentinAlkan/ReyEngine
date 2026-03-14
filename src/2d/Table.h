@@ -72,7 +72,7 @@ namespace ReyEngine {
       void addWidgetAs(const std::shared_ptr<Widget>& w){
 
       }
-      Widget* _unhandled_input(const InputEvent&) override;
+      Handled _unhandled_input(const InputEvent&) override;
       void setRowCount(size_t rowCount) const {_view->_rowCount = rowCount; _view->_recalculate();}
       void setColumnCount(size_t columnCount) const {_view->_columnCount = columnCount; _view->_recalculate();}
       void setShowVerticalSeparators(bool show) const {_view->_showVeritcalSeparators = show;}

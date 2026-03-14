@@ -155,7 +155,7 @@ void TileMap::setTileSize(const Size<int>& size) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Widget* TileMap::_unhandled_input(const InputEvent& event) {
+Handled TileMap::_unhandled_input(const InputEvent& event) {
    auto mouse = event.isMouse();
    if (mouse && mouse.value()->isInside()) {
       switch (event.eventId) {

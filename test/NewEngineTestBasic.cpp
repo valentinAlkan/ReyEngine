@@ -38,7 +38,7 @@ public:
       auto label = make_child<Label>(this, "TestCanvasLabel", getName());
       label->setToolTipText(label->getText() + "label size = " + label->getSize().toString());
    }
-   Widget* __process_unhandled_input(const InputEvent& event) override {
+   Handled __process_unhandled_input(const InputEvent& event) override {
       Logger::info() << getName() << " processing input " << event.isMouse().value()->getLocalPos() << endl;
       if (event.isMouse().value()->isInside()) Logger::info() << "Which is inside" << endl;
       mousePos = event.isMouse().value()->getLocalPos();
@@ -69,9 +69,6 @@ int main() {
    // testCanvas3->setRect({50,50,300,300});
    //
    // make_child<Grid>(root, "grid")->setAnchoring(Anchor::FILL);
-   //
-   // InputEventMouseMotion motion(&window, {51,51}, {0,0});
-   // root->processInput(motion);
 
    auto scrollArea = make_child<ScrollArea>(root, "scroll area");
    scrollArea->setRect(100,100,600,600);
@@ -81,6 +78,9 @@ int main() {
 
    auto label = make_child<Label>(scrollArea, "label");
    label->setPosition(1500,1500);
+
+   InputEventMouseMotion motion(&window, {202,202}, {0,0});
+   root->processInput(motion);
 
    window.exec();
    return 0;

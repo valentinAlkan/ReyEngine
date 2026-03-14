@@ -34,15 +34,6 @@ namespace ReyEngine {
       concept StatusType = is_in_tuple_v<T, StatusTypes>;
    }
 
-   namespace Internal::ProcessOrdering{
-      //ordering type helpers for tree processes - children must be processed in one of these two ways
-      struct OrderingRenderingOldestFirst{}; //older siblings are processed first; rendering
-      struct OrderingInputNewestFirst{}; //newer siblings are processed first; input
-      template<typename T>
-      concept OrderingType = std::same_as<T, OrderingRenderingOldestFirst> ||
-                             std::same_as<T, OrderingInputNewestFirst>;
-   }
-
    class Canvas: public Widget {
    public:
       enum class CanvasLayer {FOREGROUND, BACKGROUND};
@@ -67,7 +58,7 @@ namespace ReyEngine {
       Camera2D& getCamera(){return camera;}
       void moveToForeground(Widget*);
       void moveToBackground(Widget*);
-      Widget* processInput(const InputEvent& e);
+      Handled processInput(const InputEvent& e);
    protected:
       const RenderTarget& readRenderTarget() const {return _renderTarget;}
       RenderContext createRenderContext(){return _renderTarget;}
@@ -143,10 +134,10 @@ namespace ReyEngine {
    private:
       static void doRender(RenderContext&, Widget*, bool isModal=false);
       static void doRenderModal(RenderContext&, Widget*);
-      Widget* doInput(Widget*, const InputEvent& e);
-      Widget* pass(Widget* currentWidget, const InputEvent& e);
-      static Widget* process(Widget* currentWidget, const InputEvent& e);
-      static Widget* publish(Widget* currentWidget, const InputEvent& e);
+      Handled doInput(Widget*, const InputEvent& e);
+      Handled pass(Widget* currentWidget, const InputEvent& e);
+      static Handled process(Widget* currentWidget, const InputEvent& e);
+      static Handled publish(Widget* currentWidget, const InputEvent& e);
       void __on_child_added_to_tree(TypeNode* child) override;
       void __on_child_removed_from_tree(TypeNode* child) override;
    public:

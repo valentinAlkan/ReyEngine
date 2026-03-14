@@ -47,7 +47,7 @@ namespace ReyEngine{
       virtual void _on_up_publish(bool mouseEscaped) {if (!mouseEscaped) publish<ButtonUpEvent>(ButtonUpEvent(this, mouseEscaped));}
       void __down();
       void __up();
-      Widget* _unhandled_input(const InputEvent& event) override;
+      Handled _unhandled_input(const InputEvent& event) override;
       std::string text;
       bool _isToggle = false;
       ColorPack PUSHBUTTON_COLORS = {Colors::gray, Colors::lightGray, Colors::blue};

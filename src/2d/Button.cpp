@@ -3,7 +3,7 @@ using namespace std;
 using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Widget* Button::_unhandled_input(const InputEvent& event) {
+Handled Button::_unhandled_input(const InputEvent& event) {
    if (!getIsEnabled()) return nullptr;
    switch (event.eventId){
       case InputEventKey::ID:{

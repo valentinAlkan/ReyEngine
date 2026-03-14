@@ -142,7 +142,7 @@ void ScrollArea::_on_child_added_to_tree(TypeNode* typeNode) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-Widget* ScrollArea::_unhandled_input(const InputEvent& e) {
+Handled ScrollArea::_unhandled_input(const InputEvent& e) {
    switch (e.eventId){
       case InputEventMouseMotion::ID:{
          auto& mmEvent = e.toEvent<InputEventMouseMotion>();

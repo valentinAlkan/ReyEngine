@@ -20,7 +20,7 @@ namespace ReyEngine{
       void show();
    protected:
       void setVisible(bool visible){Widget::setVisible(visible);} //hide from public view
-      Widget* _unhandled_input(const InputEvent&) override;
+      Handled _unhandled_input(const InputEvent&) override;
       void _on_mouse_exit() override;
       void _init() override;
       void _on_rect_changed() override;

@@ -133,13 +133,13 @@ namespace ReyEngine {
       [[nodiscard]] Size<int> getTileSize() const {return _tileSize;}
       void redraw(){_needsRedraw = true;}
    protected:
-      virtual Handled _on_hovered(const TileCoord&){return false;}
-      virtual Handled _on_clicked(const TileCoord&){return false;}
+      virtual Handled _on_hovered(const TileCoord&){return nullptr;}
+      virtual Handled _on_clicked(const TileCoord&){return nullptr;}
       // void render2DBegin() override;
       void render2D() const override;
       void render2DEnd() override;
       void _init();
-      Widget* _unhandled_input(const InputEvent&) override;
+      Handled _unhandled_input(const InputEvent&) override;
       void _on_rect_changed() override;
       std::map<LayerIndex, std::unique_ptr<TileMapLayer>> _layers;
       std::map<std::string, std::unique_ptr<SpriteAtlas>> _atlases;

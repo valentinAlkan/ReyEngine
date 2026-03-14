@@ -129,7 +129,7 @@ void Window::exec(){
             InputEventChar event(this);
             event.ch = charDown;
             auto handledBy = __process_unhandled_input(InputEvent(event));
-            if constexpr (PRINT_CHAR) if (handledBy) Logger::info() << "Char handled by " << handledBy->getName() << endl;
+            if constexpr (PRINT_CHAR) if (handledBy) Logger::info() << "Char handled by " << handledBy.handler->getName() << endl;
          } else {
             break;
          }
@@ -145,7 +145,7 @@ void Window::exec(){
             event.isDown = false;
             event.isRepeat = false;
             auto handledBy = __process_unhandled_input(InputEvent(event));
-            if constexpr (PRINT_KEYUP) if (handledBy) Logger::info() << "Key up handled by " << handledBy->getName() << endl;
+            if constexpr (PRINT_KEYUP) if (handledBy) Logger::info() << "Key up handled by " << handledBy.handler->getName() << endl;
          } else {
             break;
          }
@@ -167,7 +167,7 @@ void Window::exec(){
                   event.isDown = true;
                   event.isRepeat = true;
                   auto handledBy = __process_unhandled_input(event);
-                  if constexpr (PRINT_KEYREPEAT) if (handledBy) Logger::info() << "Key repeat handled by " << handledBy->getName() << endl;
+                  if constexpr (PRINT_KEYREPEAT) if (handledBy) Logger::info() << "Key repeat handled by " << handledBy.handler->getName() << endl;
                }
             }
          }
@@ -182,7 +182,7 @@ void Window::exec(){
                event.isDown = true;
                event.isRepeat = false;
                auto handledBy = __process_unhandled_input(event);
-               if constexpr (PRINT_KEYDOWN) if (handledBy) Logger::info() << "Key down handled by " << handledBy->getName() << endl;
+               if constexpr (PRINT_KEYDOWN) if (handledBy) Logger::info() << "Key down handled by " << handledBy.handler->getName() << endl;
             } else {
                break;
             }
@@ -203,7 +203,7 @@ void Window::exec(){
             InputEventMouseButton event(this, mousePos.get(), btnUp, false, isDouble);
             if (isDouble) inputEventMouseButtonTimeStampUp = sc::time_point{};
             auto handledBy = __process_unhandled_input(event);
-            if constexpr (PRINT_MOUSEUP) if (handledBy) Logger::info() << "MouseUp handled by " << handledBy->getName() << endl;
+            if constexpr (PRINT_MOUSEUP) if (handledBy) Logger::info() << "MouseUp handled by " << handledBy.handler->getName() << endl;
          } else {
             break;
          }
@@ -219,7 +219,7 @@ void Window::exec(){
             lastMouseButtonInput = btnDown;
             InputEventMouseButton event(this, mousePos.get(), btnDown, true, isDouble);
             auto handledBy = __process_unhandled_input(event);
-            if constexpr (PRINT_MOUSEDOWN) if (handledBy) Logger::info() << "MouseDown handled by " << handledBy->getName() << endl;
+            if constexpr (PRINT_MOUSEDOWN) if (handledBy) Logger::info() << "MouseDown handled by " << handledBy.handler->getName() << endl;
             if (isDouble) inputEventMouseButtonTimeStampDown = sc::time_point{};
          } else {
             break;
@@ -232,7 +232,7 @@ void Window::exec(){
             InputEventMouseWheel event(this, mousePos.get(), wheel);
             if constexpr (PRINT_WHEEL) Logger::info() << "Sending mouse wheel event " << event.wheelMove << endl;
             auto handledBy = __process_unhandled_input(event);
-            if constexpr (PRINT_WHEEL) if (handledBy) Logger::info() << "Mouse wheel handled by " << handledBy->getName() << endl;
+            if constexpr (PRINT_WHEEL) if (handledBy) Logger::info() << "Mouse wheel handled by " << handledBy.handler->getName() << endl;
          }
       }
 
@@ -246,11 +246,11 @@ void Window::exec(){
          InputEventMouseToolTip toolTipCancel(this, mousePos.get(), true); //cancel open tooltips as soon as there's mouse movement
 
          auto handledBy = __process_unhandled_input(motionEvent);
-         if constexpr (PRINT_MOTION) if (handledBy) Logger::info() << "Motion handled by " << handledBy->getName() << endl;
+         if constexpr (PRINT_MOTION) if (handledBy) Logger::info() << "Motion handled by " << handledBy.handler->getName() << endl;
          handledBy = __process_unhandled_input(hoverEvent);
-         if constexpr (PRINT_HOVER) if (handledBy) Logger::info() << "Hover handled by " << handledBy->getName() << endl;
+         if constexpr (PRINT_HOVER) if (handledBy) Logger::info() << "Hover handled by " << handledBy.handler->getName() << endl;
          handledBy = __process_unhandled_input(toolTipCancel);
-         if constexpr (PRINT_TOOLTIP_CANCEL) if (handledBy) Logger::info() << "Tooltip Cancel handled by " << handledBy->getName() << endl;
+         if constexpr (PRINT_TOOLTIP_CANCEL) if (handledBy) Logger::info() << "Tooltip Cancel handled by " << handledBy.handler->getName() << endl;
       }
 
       //check for tooltips
@@ -258,7 +258,7 @@ void Window::exec(){
          InputEventMouseToolTip tooltipEvent(this, mousePos.get());
          checkedToolTip = true;
          auto handledBy = __process_unhandled_input(tooltipEvent);
-         if constexpr (PRINT_TOOLTIP) if (handledBy) Logger::info() << "Tooltip handled by " << handledBy->getName() << endl;
+         if constexpr (PRINT_TOOLTIP) if (handledBy) Logger::info() << "Tooltip handled by " << handledBy.handler->getName() << endl;
       }
 
       //process timers and call their callbacks
@@ -326,7 +326,7 @@ std::shared_ptr<Canvas> Window::getCanvas() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
-Widget* Window::__process_unhandled_input(const InputEvent& event) const {
+Handled Window::__process_unhandled_input(const InputEvent& event) const {
    // Logger::debug() << "---------------------" << endl;
    return _canvas->processInput(event);
 }

@@ -297,7 +297,7 @@ void FileBrowser::AddrBar::render2D() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Widget* FileBrowser::AddrBar::_unhandled_input(const ReyEngine::InputEvent& event) {
+Handled FileBrowser::AddrBar::_unhandled_input(const ReyEngine::InputEvent& event) {
    auto handled = LineEdit::_unhandled_input(event);
    if (handled) return handled;
 

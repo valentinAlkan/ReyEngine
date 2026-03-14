@@ -25,7 +25,7 @@ void UI::_init() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Widget* UI::_unhandled_input(const InputEvent& event){
+Handled UI::_unhandled_input(const InputEvent& event){
    switch (event.eventId){
       case InputEventMouseWheel::ID:
          const auto& mwEvent = event.toEvent<InputEventMouseWheel>();

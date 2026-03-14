@@ -174,7 +174,7 @@ namespace ReyEngine {
          setMinSize(0,  theme->font->size);
          setMaxSize(std::numeric_limits<float>::max(), theme->font->size);
       }
-      Widget* _unhandled_input(const InputEvent& event) override {
+      Handled _unhandled_input(const InputEvent& event) override {
          auto closeMenu = [this]() {
             setModal(false);
             _isOpen = false;

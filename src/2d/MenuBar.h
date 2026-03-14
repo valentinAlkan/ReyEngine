@@ -82,7 +82,7 @@ namespace ReyEngine{
       void addEntry(std::shared_ptr<ReyTexture> icon, const std::string& text);
       void addEntry(const std::string& text) {addEntry(nullptr, text);}
    protected:
-      Widget* _unhandled_input(const InputEvent&) override;
+      Handled _unhandled_input(const InputEvent&) override;
       void render2D() const override;
       void _init() override;
       void _on_change() override;
@@ -103,7 +103,7 @@ namespace ReyEngine{
       void _init() override;
       void _on_change() override;
       void _on_rect_changed() override{_on_change();}
-      Widget* _unhandled_input(const InputEvent&) override;
+      Handled _unhandled_input(const InputEvent&) override;
       std::optional<DropDownMenu*> getDropDown(const std::string& menu) const;
       void showDropDown(const std::string& menu, const Pos<float>&);
       void showDropDown(DropDownMenu* dropDown);

@@ -119,7 +119,7 @@ void TabContainer::arrangeChildren() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Widget* TabContainer::_unhandled_input(const InputEvent& event){
+Handled TabContainer::_unhandled_input(const InputEvent& event){
    if (auto isMouse = event.isMouse()) {
       switch (event.eventId) {
          case InputEventMouseButton::ID: {

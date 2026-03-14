@@ -67,7 +67,7 @@ namespace ReyEngine{
          _range = {minSliderValue, maxSlidervalue};
       }
    protected:
-      Widget* _unhandled_input(const InputEvent& e) override {
+      Handled _unhandled_input(const InputEvent& e) override {
          auto mouseEvent = e.isMouse();
          if (!mouseEvent) return nullptr;
          auto localPos = mouseEvent.value()->getLocalPos();

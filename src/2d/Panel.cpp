@@ -156,7 +156,7 @@ void Panel::_on_rect_changed(){
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-Widget* Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
+Handled Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
    auto getStretchDir = [&]() -> ResizeDir {
       if (auto mouse = event.isMouse()) {
          auto localPos = mouse.value()->getLocalPos();

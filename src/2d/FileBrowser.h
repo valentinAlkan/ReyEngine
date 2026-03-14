@@ -108,7 +108,7 @@ namespace ReyEngine {
             std::string addr;
          };
       protected:
-         Widget* _unhandled_input(const InputEvent&) override;
+         Handled _unhandled_input(const InputEvent&) override;
          void render2D() const override;
          std::vector<DirectoryToken> _dirTokens;
          std::optional<DirectoryToken*> _hoveredDirToken;
