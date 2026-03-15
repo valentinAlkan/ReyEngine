@@ -363,5 +363,70 @@ Handled Widget::__process_unhandled_input(const InputEvent &event) {
       }
    }
 
-   return _unhandled_input(event);
+   auto handler = _unhandled_input(event);
+   if (event.isMouse() && handler.handler == this && !handler.pos.has_value()) {
+      handler.pos = event.isMouse().value()->getLocalPos();
+   }
+   return handler;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+Handled Widget::processInput(const InputEvent& e) {
+   auto pass = [&](const InputEvent& e) -> Handled {
+      //doesn't respect modality or focus - that is handled by canvases
+      for (auto& child : getChildrenAs<Widget>()) {
+         //transform mouse input into our own coordinate space
+         std::unique_ptr<MouseEvent::ScopeTransformer> xformer;
+         if (e.isMouse()) {
+            // Logger::debug() << w->getName() << " local pos before = " << e.isMouse().value()->getLocalPos() << (e.isMouse().value()->isInside() ? " inside " : "")  << endl;
+            xformer = make_unique<MouseEvent::ScopeTransformer>(*e.isMouse().value(), child->getLocalTransform(), child->getSize());
+            Logger::debug() << getName() << " local pos after = " << e.isMouse().value()->getLocalPos() << (e.isMouse().value()->isInside() ? " inside " : "")  << endl;
+         }
+         auto handled = child->processInput(e);
+         if (handled) return handled;
+      }
+      return nullptr;
+   };
+   
+   auto process = [&](const InputEvent& e) -> Handled {
+      return __process_unhandled_input(e);
+   };
+   
+   auto _publish = [&](const InputEvent& e) -> Handled {
+      WidgetUnhandledInputEvent _event(this, e);
+      publishMutable(_event);
+      return _event.handled;
+   };
+
+   if (auto canvas = as<Canvas>()) {
+      //this is a canvas
+      return canvas.value()->processInput(e);
+   }
+   
+   #define RETURN if (handled) return handled
+   Handled here(this, e.isMouse() ? e.isMouse().value()->getLocalPos() : std::optional<Pos<float>>());
+   Handled handled;
+   switch(_inputFilter) {
+      case InputFilter::PASS_ONLY: handled = pass(e); RETURN; break;
+      case InputFilter::PROCESS_ONLY: handled = process(e); RETURN; break;
+      case InputFilter::PUBLISH_ONLY: handled = _publish(e); RETURN; break;
+      case InputFilter::PASS_AND_PROCESS: handled = pass(e); RETURN; handled = process(e); RETURN; break;
+      case InputFilter::PROCESS_AND_PASS: handled = process(e); RETURN; handled = pass(e); RETURN; break;
+      case InputFilter::PROCESS_AND_STOP: handled = process(e); RETURN; return here;
+      case InputFilter::PROCESS_AND_PUBLISH: handled = process(e); RETURN; handled = _publish(e); RETURN; break;
+      case InputFilter::IGNORE_AND_PASS: handled = pass(e); RETURN; break;
+      case InputFilter::IGNORE_AND_STOP: return here;
+      case InputFilter::PUBLISH_AND_PASS: handled = _publish(e); RETURN; handled = pass(e); RETURN; break;
+      case InputFilter::PASS_AND_PUBLISH: handled = pass(e); RETURN; handled = _publish(e); RETURN; break;
+      case InputFilter::PUBLISH_AND_STOP: handled = _publish(e); RETURN; return here;
+      case InputFilter::PASS_PUBLISH_PROCESS: handled = pass(e); RETURN; handled = _publish(e); RETURN; handled = process(e); RETURN; break;
+      case InputFilter::PASS_PROCESS_PUBLISH: handled = pass(e);  RETURN; handled = process(e); RETURN; handled = _publish(e); RETURN; break;
+      case InputFilter::PASS_PROCESS_STOP: handled = pass(e);  RETURN; handled = process(e); RETURN; return here;
+      case InputFilter::PROCESS_PUBLISH_PASS: handled = process(e); RETURN; handled = _publish(e); RETURN; handled = pass(e); RETURN; break;
+      case InputFilter::PROCESS_PASS_PUBLISH: handled = process(e); RETURN; handled = pass(e); RETURN; handled = _publish(e); RETURN; break;
+      case InputFilter::PUBLISH_PASS_PROCESS: handled = _publish(e); RETURN; handled = pass(e); RETURN; handled = process(e); RETURN; break;
+      case InputFilter::PUBLISH_PROCESS_PASS: handled = _publish(e); RETURN; handled = process(e); RETURN; handled = pass(e); RETURN; break;
+   }
+   #undef RETURN
+   return nullptr;
 }

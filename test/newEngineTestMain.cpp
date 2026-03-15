@@ -74,7 +74,7 @@ struct PosTestWidget : public Widget {
 protected:
    void _on_rect_changed() override {}
 
-   Widget* _unhandled_input(const InputEvent& event) override {
+   Handled _unhandled_input(const InputEvent& event) override {
       if (auto isMouse = event.isMouse()) {
          isInside = isMouse.value()->isInside();
          switch (event.eventId) {
@@ -268,7 +268,7 @@ int main() {
                         const auto& mwEvent = event.fwdEvent.toEvent<InputEventMouseWheel>().wheelMove;
                         zoomCanvas->getCamera().zoom += zoomCanvas->getCamera().zoom * mwEvent.y * .1;
                         cout << "zoom = " << zoomCanvas->getCamera().zoom << endl;
-                        event.handler = zoomCanvas.get();
+                        event.handled = zoomCanvas.get();
                      }
                   };
 

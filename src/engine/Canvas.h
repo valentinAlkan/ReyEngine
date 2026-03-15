@@ -58,7 +58,7 @@ namespace ReyEngine {
       Camera2D& getCamera(){return camera;}
       void moveToForeground(Widget*);
       void moveToBackground(Widget*);
-      Handled processInput(const InputEvent& e);
+      Handled processInput(const InputEvent& e) override;
    protected:
       const RenderTarget& readRenderTarget() const {return _renderTarget;}
       RenderContext createRenderContext(){return _renderTarget;}
@@ -134,10 +134,6 @@ namespace ReyEngine {
    private:
       static void doRender(RenderContext&, Widget*, bool isModal=false);
       static void doRenderModal(RenderContext&, Widget*);
-      Handled doInput(Widget*, const InputEvent& e);
-      Handled pass(Widget* currentWidget, const InputEvent& e);
-      static Handled process(Widget* currentWidget, const InputEvent& e);
-      static Handled publish(Widget* currentWidget, const InputEvent& e);
       void __on_child_added_to_tree(TypeNode* child) override;
       void __on_child_removed_from_tree(TypeNode* child) override;
    public:

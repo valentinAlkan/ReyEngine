@@ -301,22 +301,22 @@ namespace ReyEngine::Internal::Tree {
 
       std::vector<std::unique_ptr<TypeNode>> removeAllChildren (){
          std::vector<std::unique_ptr<TypeNode>> retVector;
-         for(auto it = _childMap.begin(); it != _childMap.end(); it++){
-            retVector.push_back(std::move(it->second));
+         while (_childOrder.size()) {
+            if (auto removed = removeChild(_childOrder[0]->getName())){
+               retVector.push_back(std::move(removed.value()));
+            }
          }
-         _childMap.clear();
-         _childOrder.clear();
          return retVector;
       };
 
-      inline std::optional<TypeNode*> getChild(const std::string& _name) {
+      std::optional<TypeNode*> getChild(const std::string& _name) {
          auto it = _childMap.find(_name);
          if (it != _childMap.end()) return {it->second.get()};
          return std::nullopt;
       }
 
       //veeeeeery slow
-      inline std::optional<std::vector<TypeNode*>> findChild(const std::string& searchTerm){
+      std::optional<std::vector<TypeNode*>> findChild(const std::string& searchTerm){
          std::vector<TypeNode*> retval;
          for (const auto& child : _childOrder){
             if (string_tools::contains(child->name, searchTerm)){

@@ -86,6 +86,7 @@ namespace ReyEngine {
       [[nodiscard]] InputFilter getInputFiltering() const {return _inputFilter;}
       [[nodiscard]] bool getIgnoreOutsideInput() const {return _ignoreOutsideInput;}
       void setIgnoreOutsideInput(bool newValue){ _ignoreOutsideInput = newValue;}
+      virtual Handled processInput(const InputEvent& e); //process an input local to this widget
       //convenience
       void moveToForeground();
       void moveToBackground();
@@ -95,7 +96,7 @@ namespace ReyEngine {
       [[nodiscard]] bool isLayout() const {return _isLayout;}
    protected:
       virtual void render2D() const {};
-      virtual Handled __process_unhandled_input(const InputEvent& event);
+      Handled __process_unhandled_input(const InputEvent& event);
       virtual Handled _unhandled_input(const InputEvent&){return nullptr;}
       virtual Handled _process_unhandled_editor_input(const InputEvent&){return nullptr;} //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)
       virtual void _on_mouse_enter(){};

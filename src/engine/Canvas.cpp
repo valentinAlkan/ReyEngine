@@ -18,7 +18,6 @@ void Canvas::__on_child_added_to_tree(TypeNode *child) {
 
 ////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::__on_child_removed_from_tree(TypeNode *n) {
-   cout << "REMOVING FORM TREE!" << endl;
    _foreground.remove(n);
    _background.remove(n);
    ReyObject::__on_child_removed_from_tree(n);
@@ -179,86 +178,6 @@ CanvasSpace<Pos<float>> Canvas::getMousePos() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled Canvas::pass(Widget* currentWidget, const InputEvent& event) {
-   for (auto& child : currentWidget->getChildrenAs<Widget>()) {
-      if (child->isModal()) {
-         //we will come back to this later
-         continue;
-      } else {
-         auto handled = doInput(child, event);
-         if (handled) return handled;
-      }
-   }
-   return nullptr;
-}
-/////////////////////////////////////////////////////////////////////////////////////////
-Handled Canvas::publish(Widget* currentWidget, const InputEvent& event) {
-   WidgetUnhandledInputEvent _event(currentWidget, event);
-   currentWidget->publishMutable(_event);
-   return _event.handled;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-Handled Canvas::process(Widget* currentWidget, const InputEvent& event){
-   return currentWidget->__process_unhandled_input(event);
-}
-/////////////////////////////////////////////////////////////////////////////////////////
-Handled Canvas::doInput(Widget* w, const InputEvent& e){
-   if (!w->_visible) return nullptr;
-   //transform mouse input into the child's space
-   std::unique_ptr<MouseEvent::ScopeTransformer> xformer;
-   if (e.isMouse()) {
-      Logger::debug() << w->getName() << " local pos before = " << e.isMouse().value()->getLocalPos() << endl;
-      xformer = make_unique<MouseEvent::ScopeTransformer>(*e.isMouse().value(), w->getLocalTransform(), w->getSize());
-      Logger::debug() << w->getName() << " local pos after = " << e.isMouse().value()->getLocalPos() << (e.isMouse().value()->isInside() ? " inside " : "")  << endl;
-   }
-   if (!w->isModal()) {
-      //ignore outside input if applicable
-      auto shouldIgnore = [](const Widget& widget, const Pos<float>& pos){
-         return widget._ignoreOutsideInput && !widget.getSizeRect().contains(pos);
-      };
-      if (auto mouse = e.isMouse()) {
-         auto localPos = mouse.value()->getLocalPos();
-         if (shouldIgnore(*w, localPos)) return nullptr;
-      }
-   }
-
-   //check for subcanvases, apply scope transformations
-   if (auto isCanvas = w->as<Canvas>()) {
-      //trigger canvas processing
-      auto handled = isCanvas.value()->processInput(e);
-      if (handled) return handled;
-   }
-
-   #define RETURN if (handled) return handled
-   Handled here(this, e.isMouse() ? e.isMouse().value()->getLocalPos() : std::optional<Pos<float>>());
-   Handled handled;
-   switch(w->_inputFilter) {
-      case InputFilter::PASS_ONLY: handled = pass(w, e); RETURN; break;
-      case InputFilter::PROCESS_ONLY: handled = process(w, e); RETURN; break;
-      case InputFilter::PUBLISH_ONLY: handled = publish(w, e); RETURN; break;
-      case InputFilter::PASS_AND_PROCESS: handled = pass(w, e); RETURN; handled = process(w, e); RETURN; break;
-      case InputFilter::PROCESS_AND_PASS: handled = process(w, e); RETURN; handled = pass(w, e); RETURN; break;
-      case InputFilter::PROCESS_AND_STOP: handled = process(w, e); RETURN; return here;
-      case InputFilter::PROCESS_AND_PUBLISH: handled = process(w, e); RETURN; handled = publish(w, e); RETURN; break;
-      case InputFilter::IGNORE_AND_PASS: handled = pass(w, e); RETURN; break;
-      case InputFilter::IGNORE_AND_STOP: return here;
-      case InputFilter::PUBLISH_AND_PASS: handled = publish(w, e); RETURN; handled = pass(w, e); RETURN; break;
-      case InputFilter::PASS_AND_PUBLISH: handled = pass(w, e); RETURN; handled = publish(w, e); RETURN; break;
-      case InputFilter::PUBLISH_AND_STOP: handled = publish(w, e); RETURN; return here;
-      case InputFilter::PASS_PUBLISH_PROCESS: handled = pass(w, e); RETURN; handled = publish(w, e); RETURN; handled = process(w, e); RETURN; break;
-      case InputFilter::PASS_PROCESS_PUBLISH: handled = pass(w, e);  RETURN; handled = process(w, e); RETURN; handled = publish(w, e); RETURN; break;
-      case InputFilter::PASS_PROCESS_STOP: handled = pass(w, e);  RETURN; handled = process(w, e); RETURN; return here;
-      case InputFilter::PROCESS_PUBLISH_PASS: handled = process(w, e); RETURN; handled = publish(w, e); RETURN; handled = pass(w, e); RETURN; break;
-      case InputFilter::PROCESS_PASS_PUBLISH: handled = process(w, e); RETURN; handled = pass(w, e); RETURN; handled = publish(w, e); RETURN; break;
-      case InputFilter::PUBLISH_PASS_PROCESS: handled = publish(w, e); RETURN; handled = pass(w, e); RETURN; handled = process(w, e); RETURN; break;
-case InputFilter::PUBLISH_PROCESS_PASS: handled = publish(w, e); RETURN; handled = process(w, e); RETURN; handled = pass(w, e); RETURN; break;
-   }
-   #undef RETURN
-   return nullptr;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
 Handled Canvas::processInput(const InputEvent& event) {
    // if (_inputContext) {
    //    auto handled = _inputContext->handleInput(event);
@@ -267,15 +186,15 @@ Handled Canvas::processInput(const InputEvent& event) {
 
    auto isMouse = event.isMouse(); //cache this for speed
 
-   //lets us catch and do stuff with handlers before they fall out of scope. Basically lets us query arbitrary widgets
-   // to see if they want to respond to an event before it gets passed along the chain
-   struct ScopeHandler {
-      ScopeHandler(Canvas* canvas, const InputEvent& event)
+   //lets us catch and do stuff with unhandled input on the canvas level
+   // only reacts to unhandled input, after it has fallen out of scope
+   struct UnhandledInputExitQuery {
+      UnhandledInputExitQuery(Canvas* canvas, const InputEvent& event)
       : canvas(canvas)
       , event(event)
       , cachedMouseData(event.isMouse() ? *event.isMouse().value() : decltype(cachedMouseData)())
       {}
-      ~ScopeHandler(){
+      ~UnhandledInputExitQuery(){
          if (!handled) return;
          switch (event.eventId){
             case InputEventMouseToolTip::ID:{
@@ -298,7 +217,7 @@ Handled Canvas::processInput(const InputEvent& event) {
             *mouseData.value() = cachedMouseData.value();
          }
       }
-      ScopeHandler& operator=(const Handled& h){handled = h; return *this;}
+      UnhandledInputExitQuery& operator=(const Handled& h){handled = h; return *this;}
       operator bool(){return handled;}
       operator Handled&(){return handled;}
 
@@ -309,7 +228,7 @@ Handled Canvas::processInput(const InputEvent& event) {
       const InputEvent& event;
    };
 
-   ScopeHandler handledBy(this, event);
+   UnhandledInputExitQuery handled(this, event);
 
    //query modal widgets first. A modal widget consumes input even if unhandled and prevents anyone else from getting it.
    if (auto modal = getModal()){
@@ -319,8 +238,8 @@ Handled Canvas::processInput(const InputEvent& event) {
          auto modalXform = modal->getCanvasTransform().get() * modal->getLocalTransform().inverse();
          scopeXformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), modalXform, modal->size, getCameraTransform());
       }
-      handledBy = doInput(modal, event);
-      if (modal->_handleAllModalInput || handledBy) return handledBy;
+      handled = processInput(event);
+      if (modal->_handleAllModalInput || handled) return handled;
    }
 
    //then focused widgets
@@ -328,27 +247,33 @@ Handled Canvas::processInput(const InputEvent& event) {
       std::unique_ptr<MouseEvent::ScopeTransformer> scopeXformer;
       if (event.isMouse()) {
          //subtract off the focus widget's transform to avoid double-apply
-         auto focusTransform = focused->getCanvasTransform().get() * focused->getLocalTransform().inverse();
+         auto focusTransform = focused->getCanvasTransform().get();
          scopeXformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), focusTransform, focused->size, getCameraTransform());
       }
-      handledBy = doInput(focused, event);
-      if (handledBy) return handledBy;
+      handled = focused->processInput(event);
+      if (handled) return handled;
    }
 
    //then foreground (which is unaffected by camera transform)
    for (auto& child : _foreground.getValues() | std::views::reverse) {
       if (auto widget = child->as<Widget>()){
-         handledBy = doInput(widget.value(), event);
-         if (handledBy) return handledBy;
+         //transform mouse input into our own coordinate space
+         std::unique_ptr<MouseEvent::ScopeTransformer> xformer;
+         if (event.isMouse()) {
+            // Logger::debug() << w->getName() << " local pos before = " << e.isMouse().value()->getLocalPos() << (e.isMouse().value()->isInside() ? " inside " : "")  << endl;
+            xformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), widget.value()->getLocalTransform(), widget.value()->getSize());
+         }
+         handled = widget.value()->processInput(event);
+         if (handled) return handled;
       }
    }
 
    //outside input should still propogate to focused, modal, and foreground widgets
-   if (_ignoreOutsideInput) {
-      if (isMouse && !getSizeRect().contains(isMouse.value()->getLocalPos() - getPos())){
-         return nullptr;
-      }
-   }
+   // if (_ignoreOutsideInput) {
+   //    if (isMouse && !getSizeRect().contains(isMouse.value()->getLocalPos() - getPos())){
+   //       return nullptr;
+   //    }
+   // }
 
    //then background (which is affected by camera transorm)
    // this here is "normal" input
@@ -356,24 +281,16 @@ Handled Canvas::processInput(const InputEvent& event) {
       if (auto isWidget= child->as<Widget>()) {
          std::unique_ptr<MouseEvent::ScopeTransformer> xformer;
          if (isMouse){
-            xformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), MatrixIdentity(), isWidget.value()->size, getCameraTransform());
+            Logger::debug() << child->getName() << " camera transform (" << (Vec2<float>)camera.offset << ",z" << camera.zoom << ") local pos after = " << event.isMouse().value()->getLocalPos() << (event.isMouse().value()->isInside() ? " inside " : "")  << endl;
+            xformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), isWidget.value()->getLocalTransform(), isWidget.value()->size, getCameraTransform());
          }
-         handledBy = doInput(isWidget.value(), event);
-         if (handledBy) return handledBy;
+         handled = isWidget.value()->processInput(event);
+         if (handled) return handled;
       }
    }
 
-   //finally we attempt to handle it ourselves as foreground input, but we need to handjam some values since that never
-   // gets set. There's probably a specific transform one could pass to scope transformer, but damned if i know what it is.
-   // also, copy the event in case it needs to be used elsewhere, we won't have screwed it up
-   auto newEvent = event;
-   if (auto newEventMouse = newEvent.isMouse()){
-      auto mousePos = isMouse.value()->getLocalPos() - getPos();
-//      newEventMouse.value()->setCanvasPos(mousePos);
-      newEventMouse.value()->setLocalPos(mousePos);
-      newEventMouse.value()->setIsInside(getSizeRect().contains(mousePos));
-   }
-   return Widget::__process_unhandled_input(event);
+   //finally we attempt to handle it ourselves as foreground input
+   return __process_unhandled_input(event);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

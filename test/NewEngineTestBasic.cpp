@@ -1,6 +1,7 @@
 #include "Window.h"
 #include "Label.h"
 #include "Table.h"
+#include <cassert>
 
 using namespace ReyEngine;
 using namespace std;
@@ -38,16 +39,16 @@ public:
       auto label = make_child<Label>(this, "TestCanvasLabel", getName());
       label->setToolTipText(label->getText() + "label size = " + label->getSize().toString());
    }
-   Handled __process_unhandled_input(const InputEvent& event) override {
+   Handled _unhandled_input(const InputEvent& event) override {
       Logger::info() << getName() << " processing input " << event.isMouse().value()->getLocalPos() << endl;
       if (event.isMouse().value()->isInside()) Logger::info() << "Which is inside" << endl;
       mousePos = event.isMouse().value()->getLocalPos();
       highlight = event.isMouse().value()->isInside();
-      if (isFocused()) {
-         Logger::info() << "Handling focused" << endl;
-         return this;
+      if (const auto isMouse = event.isMouse(); isMouse.value()->isInside()) {
+         Logger::info() << "Handling input @ " << mousePos << endl;
+         return {this, mousePos};
       }
-      return nullptr;
+      return {};
    }
    const ColorRGBA color;
    bool highlight = false;
@@ -58,17 +59,43 @@ int main() {
    auto& window = Application::createWindowPrototype("window", 800, 800, {WindowFlags::RESIZE}, 60)->createWindow();
    auto root = window.getCanvas();
 
-   // auto testCanvas1 = make_child<TestCanvas>(root, "testCanvas1", Colors::blue);
-   // testCanvas1->setRect({50,50,500,500});
-   // testCanvas1->setFocused(true);
-   //
-   // auto testCanvas2 = make_child<TestCanvas>(testCanvas1, "testCanvas2", Colors::yellow);
-   // testCanvas2->setRect({50,50,400,400});
-   //
-   // auto testCanvas3 = make_child<TestCanvas>(testCanvas2, "testCanvas3", Colors::green);
-   // testCanvas3->setRect({50,50,300,300});
-   //
-   // make_child<Grid>(root, "grid")->setAnchoring(Anchor::FILL);
+   std::shared_ptr<Canvas> testCanvas1;
+   std::shared_ptr<Canvas> testCanvas2;
+   std::shared_ptr<Canvas> testCanvas3;
+
+   testCanvas1 = make_child<TestCanvas>(root, "testCanvas1", Colors::blue);
+   testCanvas1->setRect({50,50,500,500});
+   {
+      InputEventMouseMotion motion(&window, {51,51}, {0,0});
+      auto handler = root->processInput(motion);
+      if (handler) {
+         Logger::info() << "Input handled by " << handler.handler->getName() << " @ " << handler.pos.value() << endl;
+      } else {
+         Logger::error() << "Input unhandled!" << endl;
+      }
+      assert(handler.handler == testCanvas1.get());
+      assert(handler.pos == Pos<float>(1, 1));
+   }
+
+   {
+      InputEventMouseMotion motion(&window, {124,113}, {0,0});
+      testCanvas2 = make_child<TestCanvas>(testCanvas1, "testCanvas2", Colors::yellow);
+      testCanvas2->setRect({50,50,400,400});
+      auto handler = root->processInput(motion);
+      assert(handler.handler == testCanvas2.get());
+      assert(handler.pos == Pos<float>(24,13));
+   }
+   {
+      InputEventMouseMotion motion(&window, {347,399}, {0,0});
+      testCanvas3 = make_child<TestCanvas>(testCanvas2, "testCanvas3", Colors::green);
+      testCanvas3->setRect({50,50,300,300});
+
+      auto handler = root->processInput(motion);
+      assert(handler.handler == testCanvas3.get());
+      assert(handler.pos == Pos<float>(197, 249));
+   }
+
+   root->removeAllChildren();
 
    auto scrollArea = make_child<ScrollArea>(root, "scroll area");
    scrollArea->setRect(100,100,600,600);
@@ -77,10 +104,12 @@ int main() {
    subgrid->setAnchoring(Anchor::FILL);
 
    auto label = make_child<Label>(scrollArea, "label");
-   label->setPosition(1500,1500);
+   label->setPosition(900,900);
 
-   InputEventMouseMotion motion(&window, {202,202}, {0,0});
-   root->processInput(motion);
+   InputEventMouseMotion motion(&window, {102,102}, {0,0});
+   auto handler = root->processInput(motion);
+   assert(handler.handler == scrollArea.get());
+   assert(handler.pos == Pos<float>(2,2));
 
    window.exec();
    return 0;

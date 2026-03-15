@@ -147,6 +147,7 @@ Handled ScrollArea::_unhandled_input(const InputEvent& e) {
       case InputEventMouseMotion::ID:{
          auto& mmEvent = e.toEvent<InputEventMouseMotion>();
          testpos = mmEvent.mouse.getLocalPos();
+         return {this, testpos};
       } break;
       case InputEventMouseWheel::ID:{
          constexpr float SPEED_FACTOR = 5.0;
@@ -160,7 +161,7 @@ Handled ScrollArea::_unhandled_input(const InputEvent& e) {
             _vslider->setSliderValue(_vslider->getSliderValue() - mwEvent.wheelMove.y * SPEED_FACTOR);
             handle = true;
          }
-         if (handle) return this;
+         if (handle) return {this, e.isMouse().value()->getLocalPos()};
       }
    }
    return nullptr;
