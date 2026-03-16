@@ -28,6 +28,7 @@ struct OrderedCache {
       _vec.erase(found);
    }
    const std::vector<T>& getValues(){return _vec;}
+   bool contains(const T& key) const { return _set.find(key) != _set.end(); }
 
 
 //   //iterator that just wraps vector iterator

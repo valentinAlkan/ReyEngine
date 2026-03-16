@@ -254,7 +254,13 @@ Handled Canvas::processInput(const InputEvent& event) {
       if (event.isMouse()) {
          //subtract off the focus widget's transform to avoid double-apply
          auto focusTransform = focused->getCanvasTransform().get();
-         scopeXformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), focusTransform, focused->size, getCameraTransform());
+         // Only apply camera transform for background widgets, not foreground
+         bool isForeground = _foreground.contains(focused->getNode());
+         if (isForeground) {
+            scopeXformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), focusTransform, focused->size);
+         } else {
+            scopeXformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), focusTransform, focused->size, getCameraTransform());
+         }
       }
       handled = focused->processInput(event);
       if (handled) return handled;
