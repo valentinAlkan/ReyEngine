@@ -51,7 +51,7 @@ namespace ReyEngine {
          _isCanvas = true;
          camera.zoom = 1.0f;
          camera.target = (Vector2)(size / 2);
-         _inputFilter = InputFilter::PROCESS_AND_PUBLISH;
+         _inputFilter = InputFilter::PASS_PROCESS_PUBLISH; //canvas don't actually respect input filter, but they pass, process, and publish in that order
       }
       ~Canvas() override = default;
       void __init() override {

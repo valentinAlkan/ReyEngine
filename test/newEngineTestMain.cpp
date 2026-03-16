@@ -377,10 +377,17 @@ int main() {
          //         dialogVCtl->subscribe<TestDialog::DialogCloseEvent>(dialogVCtl, dialogCB);
       }
 
-      InputEventMouseWheel wheelEvent(&window, window.getSize().toRect().bottomLeft() + Pos<float>(5, 5), Vec2<float>(0,20));
+      // Trigger layout calculation by setting root canvas size to window size
+      root->setRect(window.getSize().toRect());
+
+      // Test wheel input on zoomCanvas
+      auto zoomCanvas = root->findChild("ZoomTest").value().at(0)->as<Canvas>().value();
+      auto zoomCanvasRect = zoomCanvas->toCanvasRect().get();
+      Logger::info() << "zoom canvas rect = " << zoomCanvasRect << endl;
+      InputEventMouseWheel wheelEvent(&window, zoomCanvasRect.center(), Vec2<float>(0,20));
       auto handled = root->processInput(wheelEvent);
-      auto tabcontainer = root->findChild("tabContainer").value().at(0)->as<Widget>().value();
-      assert(handled.handler == tabcontainer);
+      if (handled.handler) Logger::info() << "handled by " << handled.handler->getName() << endl;
+      assert(handled.handler == zoomCanvas);
 
       window.exec();
       return 0;

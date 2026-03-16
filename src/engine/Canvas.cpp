@@ -294,8 +294,14 @@ Handled Canvas::processInput(const InputEvent& event) {
       }
    }
 
-   //finally we attempt to handle it ourselves as foreground input
-   return __process_unhandled_input(event);
+   //penultimately, we attempt to handle it ourselves as foreground input
+   handled = __process_unhandled_input(event);
+   if (handled) return handled;
+
+   //finally we publish the input
+   WidgetUnhandledInputEvent unhandledInputEvent(this, event);
+   publishMutable(unhandledInputEvent);
+   return unhandledInputEvent.handled;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

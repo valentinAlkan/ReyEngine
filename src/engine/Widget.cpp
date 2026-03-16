@@ -371,6 +371,8 @@ Handled Widget::__process_unhandled_input(const InputEvent& event) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 Handled Widget::processInput(const InputEvent& e) {
+   if (!_visible) return nullptr;
+
    auto pass = [&](const InputEvent& e) -> Handled {
       //doesn't respect modality or focus - that is handled by canvases
       for (auto& child : getChildrenAs<Widget>()) {
