@@ -378,11 +378,7 @@ Handled Widget::processInput(const InputEvent& e) {
          std::unique_ptr<MouseEvent::ScopeTransformer> xformer;
          if (e.isMouse()) {
             // Logger::debug() << w->getName() << " local pos before = " << e.isMouse().value()->getLocalPos() << (e.isMouse().value()->isInside() ? " inside " : "")  << endl;
-            auto posBefore = e.isMouse().value()->getLocalPos();
             xformer = make_unique<MouseEvent::ScopeTransformer>(*e.isMouse().value(), child->getLocalTransform(), child->getSize());
-            Logger::debug() << "[" << getName() << "] " << child->getName() << " pos " << posBefore << " -> " << e.isMouse().value()->getLocalPos()
-                           << " (child at " << child->getPos() << " size " << child->getSize() << ")"
-                           << (e.isMouse().value()->isInside() ? " inside" : "") << endl;
          }
          auto handled = child->processInput(e);
          if (handled) return handled;

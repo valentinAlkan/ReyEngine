@@ -79,6 +79,7 @@ void TabContainer::_on_child_removed_from_tree(ReyEngine::TypeNode* node) {
    }
    arrangeChildren();
 }
+
 /////////////////////////////////////////////////////////////////////////////////////////
 void TabContainer::setCurrentTab(Widget* w) {
    if (currentTab) publish(EventTabHidden(this, w));
@@ -95,6 +96,15 @@ void TabContainer::setCurrentTab(Widget* w) {
       child->setVisible(child == currentTab.value());
    }
    if (currentTab) publish(EventTabShown(this, w));
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void TabContainer::setCurrentTabIndex(size_t index) {
+   auto count = getChildren().size();
+   if (getChildren().empty()) return;
+   if (index < count) {
+      setCurrentTab(getChildrenAs<Widget>()[index]);
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

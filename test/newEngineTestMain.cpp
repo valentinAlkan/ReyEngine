@@ -1,3 +1,4 @@
+#include <cassert>
 #include "Window.h"
 #include "Canvas.h"
 #include "Label.h"
@@ -218,7 +219,7 @@ int main() {
          }
 
          //add a popup dialog
-//         auto hDialog =
+         //         auto hDialog =
 
 
          //make a tab widget
@@ -231,10 +232,10 @@ int main() {
                {
                   auto textureTestLayout = make_child<Layout>(tabContainer, "TextureTestLayout", Layout::LayoutDir::VERTICAL);
                   std::vector<std::pair<std::string, TextureRect::FitType>> fitTypes = {
-                        {"FitRect",   TextureRect::FitType::FIT_RECT},
-                        {"FitWidth",  TextureRect::FitType::FIT_WIDTH},
-                        {"FitHeight", TextureRect::FitType::FIT_HEIGHT},
-                        {"None",      TextureRect::FitType::NONE}
+                     {"FitRect",   TextureRect::FitType::FIT_RECT},
+                     {"FitWidth",  TextureRect::FitType::FIT_WIDTH},
+                     {"FitHeight", TextureRect::FitType::FIT_HEIGHT},
+                     {"None",      TextureRect::FitType::NONE}
                   };
                   auto textureTestComboBox = make_child<ComboBox<TextureRect::FitType>>(textureTestLayout, "TextureTestComboBox", fitTypes);
                   auto textureRect = make_child<TextureRect>(textureTestLayout, "TextureTest", FileSystem::File("test/spritesheet.png"), TextureRect::FitType::FIT_RECT);
@@ -280,6 +281,7 @@ int main() {
                   texRect->setTexture(FileSystem::File("test/spritesheet.png"));
                   texRect->setAnchoring(ReyEngine::Anchor::FILL);
                   texRect->setFitType(ReyEngine::TextureRect::FitType::NONE);
+
                   // add some ui to the canvas
                   auto label = make_child<Label>(zoomCanvas, "UILabel", "This should be on the foreground");
                   label->setPosition({5,50});
@@ -292,6 +294,7 @@ int main() {
                }
                drawTest->setAnchoring(ReyEngine::Anchor::FILL);
             }
+            tabContainer->setCurrentTabIndex(3);
          }
 
          // add a scroll area
@@ -346,10 +349,10 @@ int main() {
          enum class testEnum { test1, test2, test3, test4};
          using namespace std::literals; // For string_view literals
          std::array options = {
-               std::pair{std::string("dialog1"), testEnum::test1},
-               std::pair{std::string("dialog2"), testEnum::test2},
-               std::pair{std::string("dialog3"), testEnum::test3},
-               std::pair{std::string("dialog4"), testEnum::test4}
+            std::pair{std::string("dialog1"), testEnum::test1},
+            std::pair{std::string("dialog2"), testEnum::test2},
+            std::pair{std::string("dialog3"), testEnum::test3},
+            std::pair{std::string("dialog4"), testEnum::test4}
          };
          using TestDialog = Dialog<4, testEnum>;
          //add a callback
@@ -357,22 +360,28 @@ int main() {
             Logger::info() << "Dialog box " << e.publisher->as<TestDialog>().value()->getNode()->name << " selected option " << e.asString << " which corresponds to an int value of " << (int)e.value << endl;
          };
          //create dialog H control
-//         {
-//            auto dialog = make_child<TestDialog>(root, "dialogH", options, "Test Text");
-//            dialogHCtl->setPosition(dialogHCtl->getRect().centerOnPoint(root->getRect().center()).pos());
-//            dialogHCtl->setVisible(false);
-//         }
-//
-//         //create dialog V control
-//         {
-//            auto dialog = make_child<TestDialog>(root, "dialogV", options, "Test Text", Layout::LayoutDir::VERTICAL);
-//            dialogVCtl->setPosition(dialogVCtl->getRect().centerOnPoint(root->getRect().center()).pos());
-//            dialogVCtl->setVisible(false);
-//         }
-//
-//         dialogHCtl->subscribe<TestDialog::DialogCloseEvent>(dialogHCtl, dialogCB);
-//         dialogVCtl->subscribe<TestDialog::DialogCloseEvent>(dialogVCtl, dialogCB);
+         //         {
+         //            auto dialog = make_child<TestDialog>(root, "dialogH", options, "Test Text");
+         //            dialogHCtl->setPosition(dialogHCtl->getRect().centerOnPoint(root->getRect().center()).pos());
+         //            dialogHCtl->setVisible(false);
+         //         }
+         //
+         //         //create dialog V control
+         //         {
+         //            auto dialog = make_child<TestDialog>(root, "dialogV", options, "Test Text", Layout::LayoutDir::VERTICAL);
+         //            dialogVCtl->setPosition(dialogVCtl->getRect().centerOnPoint(root->getRect().center()).pos());
+         //            dialogVCtl->setVisible(false);
+         //         }
+         //
+         //         dialogHCtl->subscribe<TestDialog::DialogCloseEvent>(dialogHCtl, dialogCB);
+         //         dialogVCtl->subscribe<TestDialog::DialogCloseEvent>(dialogVCtl, dialogCB);
       }
+
+      InputEventMouseWheel wheelEvent(&window, window.getSize().toRect().bottomLeft() + Pos<float>(5, 5), Vec2<float>(0,20));
+      auto handled = root->processInput(wheelEvent);
+      auto tabcontainer = root->findChild("tabContainer").value().at(0)->as<Widget>().value();
+      assert(handled.handler == tabcontainer);
+
       window.exec();
       return 0;
    }

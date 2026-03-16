@@ -31,6 +31,7 @@ namespace ReyEngine{
       void _on_child_added_to_tree(TypeNode*) override;
       void _on_child_removed_from_tree(TypeNode*) override;
       void setCurrentTab(Widget*);
+      void setCurrentTabIndex(size_t index);
       std::optional<Widget*> getCurrentTab(){return currentTab;}
    protected:
       Handled _unhandled_input(const InputEvent&) override;

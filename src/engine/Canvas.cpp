@@ -250,7 +250,6 @@ Handled Canvas::processInput(const InputEvent& event) {
 
    //then focused widgets
    if (auto focused = getFocus()){
-      Logger::debug() << getName() << " has focus: " << focused->getName() << endl;
       std::unique_ptr<MouseEvent::ScopeTransformer> scopeXformer;
       if (event.isMouse()) {
          //subtract off the focus widget's transform to avoid double-apply
@@ -276,11 +275,11 @@ Handled Canvas::processInput(const InputEvent& event) {
    }
 
    //outside input should still propogate to focused, modal, and foreground widgets
-   // if (_ignoreOutsideInput) {
-   //    if (isMouse && !getSizeRect().contains(isMouse.value()->getLocalPos() - getPos())){
-   //       return nullptr;
-   //    }
-   // }
+   if (_ignoreOutsideInput) {
+      if (isMouse && !isMouse.value()->isInside()){
+         return nullptr;
+      }
+   }
 
    //then background (which is affected by camera transorm)
    // this here is "normal" input
@@ -288,11 +287,7 @@ Handled Canvas::processInput(const InputEvent& event) {
       if (auto isWidget= child->as<Widget>()) {
          std::unique_ptr<MouseEvent::ScopeTransformer> xformer;
          if (isMouse){
-            auto posBefore = event.isMouse().value()->getLocalPos();
             xformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), isWidget.value()->getLocalTransform(), isWidget.value()->size, getCameraTransform());
-            Logger::debug() << getName() << " -> " << child->getName() << " cam(" << (Vec2<float>)camera.offset << ") pos " << posBefore << " -> " << event.isMouse().value()->getLocalPos()
-                           << " (child at " << isWidget.value()->getPos() << " size " << isWidget.value()->size << ")"
-                           << (event.isMouse().value()->isInside() ? " inside" : "") << endl;
          }
          handled = isWidget.value()->processInput(event);
          if (handled) return handled;
