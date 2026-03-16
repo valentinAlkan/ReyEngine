@@ -128,8 +128,9 @@ void ScrollArea::_on_rect_changed(){
    //subtract the slider sizes before updating viewport since each dimension depends on the other
    if (needShowHSlider) _viewport.height -= sliderSize;
    if (needShowVSlider) _viewport.width -= sliderSize;
-   _viewport.x = (boundingBox.width - areaSize.x) * static_cast<float>(Fraction(scrollOffsetX).get());
-   _viewport.y = (boundingBox.height - areaSize.y) * static_cast<float>(Fraction(scrollOffsetY).get());
+   // Use viewport size (adjusted for scrollbars) so content at edges isn't hidden behind scrollbars
+   _viewport.x = (boundingBox.width - _viewport.width) * static_cast<float>(Fraction(scrollOffsetX).get());
+   _viewport.y = (boundingBox.height - _viewport.height) * static_cast<float>(Fraction(scrollOffsetY).get());
    if (_hslider) {
       _hslider->setRect(hsliderNewRect);
       _hslider->setVisible(!_hideHSlider && needShowHSlider);

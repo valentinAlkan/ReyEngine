@@ -138,9 +138,9 @@ namespace ReyEngine {
          std::stack<Transform2D*> globalTransformStack;
          Transform2D globalTransform;
       } transformStack;
-   private:
       static void doRender(RenderContext&, Widget*, bool isModal=false);
       static void doRenderModal(RenderContext&, Widget*);
+   private:
       void __on_child_added_to_tree(TypeNode* child) override;
       void __on_child_removed_from_tree(TypeNode* child) override;
    public:
