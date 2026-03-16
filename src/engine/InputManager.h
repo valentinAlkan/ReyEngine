@@ -50,14 +50,14 @@ namespace ReyEngine{
             }
             mouseEvent.transformLocalPos(xform);
             mouseEvent._isInside = localSize.toRect().contains(getLocalPos());
-            std::string insideBefore = _isinside_cached ? "(i)" : "" ;
-            std::string insideAfter = mouseEvent._isInside ? "(i)" : "" ;
-            Logger::debug() << "    Scope transformer translating " << _localPos_cached << insideBefore << " --> " << mouseEvent._localPos << insideAfter << std::endl;
+            // std::string insideBefore = _isinside_cached ? "(i)" : "" ;
+            // std::string insideAfter = mouseEvent._isInside ? "(i)" : "" ;
+            // Logger::debug() << "    Scope transformer translating " << _localPos_cached << insideBefore << " --> " << mouseEvent._localPos << insideAfter << std::endl;
          }
          ~ScopeTransformer(){
-            std::string insideBefore = mouseEvent._isInside ? "(i)" : "" ;
-            std::string insideAfter = _isinside_cached ? "(i)" : "" ;
-            Logger::debug() << "    Scope transformer reverting " << mouseEvent._localPos << insideBefore << " <-- " << _localPos_cached << insideAfter << std::endl;
+            // std::string insideBefore = mouseEvent._isInside ? "(i)" : "" ;
+            // std::string insideAfter = _isinside_cached ? "(i)" : "" ;
+            // Logger::debug() << "    Scope transformer reverting " << mouseEvent._localPos << insideBefore << " <-- " << _localPos_cached << insideAfter << std::endl;
             mouseEvent.transformLocalPos(_localPos_cached);
             mouseEvent._isInside = _isinside_cached;
          }

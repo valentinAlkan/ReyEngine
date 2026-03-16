@@ -9,6 +9,10 @@ namespace ReyEngine {
         ScrollArea();
         void hideVSlider(bool hidden);
         void hideHSlider(bool hidden);
+        void setOffsetX(const Percent& pct);
+        void setOffsetY(const Percent& pct);
+        void setOffsetX(float amt);
+        void setOffsetY(float amt);
     protected:
         void render2D() const override;
         static constexpr std::string_view VSLIDER_NAME = "__vslider";
@@ -33,7 +37,7 @@ namespace ReyEngine {
     private:
         static constexpr float sliderSize = 20;
         bool _autoResize = true; // will cause the internal render target to resize automatically to fit children outside of the extents of the scroll area
-        Pos<float> testpos;
+        // BackgroundSpace testpos;
     };
 
 }

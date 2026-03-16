@@ -1,6 +1,7 @@
 #include "Window.h"
 #include "Label.h"
 #include "Table.h"
+#include "Button.h"
 #include <cassert>
 
 using namespace ReyEngine;
@@ -100,16 +101,26 @@ int main() {
    auto scrollArea = make_child<ScrollArea>(root, "scroll area");
    scrollArea->setRect(100,100,600,600);
 
+   auto label = make_child<Label>(scrollArea, "GridLabel!");
+   label->setPosition(1000,1000);
+
    auto subgrid = make_child<Grid>(scrollArea, "subgrid");
    subgrid->setAnchoring(Anchor::FILL);
 
-   auto label = make_child<Label>(scrollArea, "label");
-   label->setPosition(900,900);
+   auto pushButton = make_child<PushButton>(subgrid, "pushButton");
+   pushButton->setPosition(200,200);
 
-   InputEventMouseMotion motion(&window, {102,102}, {0,0});
-   auto handler = root->processInput(motion);
-   assert(handler.handler == scrollArea.get());
-   assert(handler.pos == Pos<float>(2,2));
+   //so far so good, lets test offset stuff
+   scrollArea->setOffsetX(100);
+   scrollArea->setOffsetY(100);
+
+   //interact with the pushbutton
+   {
+      InputEventMouseHover hover(&window, {201,201});
+      auto handler = root->processInput(hover);
+      assert(handler.handler == pushButton.get());
+      assert(handler.pos == Pos<float>(1,1));
+   }
 
    window.exec();
    return 0;

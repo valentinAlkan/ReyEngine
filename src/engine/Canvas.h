@@ -34,7 +34,14 @@ namespace ReyEngine {
       concept StatusType = is_in_tuple_v<T, StatusTypes>;
    }
 
+   namespace Internal {
+      struct BackgroundSpaceParam{};
+   }
+
    class Canvas: public Widget {
+   protected:
+      //Coordinates that are in background space as opposed to foreground space. Filtered through camera transform.
+      using BackgroundSpace = NamedType<Pos<float>, Internal::BackgroundSpaceParam>;
    public:
       enum class CanvasLayer {FOREGROUND, BACKGROUND};
       REYENGINE_OBJECT(Canvas)
@@ -59,6 +66,8 @@ namespace ReyEngine {
       void moveToForeground(Widget*);
       void moveToBackground(Widget*);
       Handled processInput(const InputEvent& e) override;
+      BackgroundSpace toBackgroundPos(const Pos<float>& p);
+      Pos<float> toForegroundPos(const BackgroundSpace& p);
    protected:
       const RenderTarget& readRenderTarget() const {return _renderTarget;}
       RenderContext createRenderContext(){return _renderTarget;}
@@ -107,10 +116,8 @@ namespace ReyEngine {
                newWidget->_on_modality_gained();
             }
          }
-         //propogate upwards
-         if (auto canvas = getCanvas()){
-            canvas.value()->setFocus(newWidget ? newWidget : nullptr);
-         }
+         //Note: focus should NOT propagate upwards - each canvas manages its own focus
+         //Propagating would cause widgets to be focused on canvases they don't belong to
       }
       template <WidgetStatus::StatusType Status>
       Widget* getStatus(){

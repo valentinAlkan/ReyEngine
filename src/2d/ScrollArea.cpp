@@ -7,8 +7,6 @@ using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::render2D() const {
-   drawCircle({testpos, 5}, Colors::blue);
-   drawText(testpos, testpos + Pos<float>(20,20), theme->font);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -32,21 +30,12 @@ void ScrollArea::_init() {
    _vslider->setVisible(true);
    _hslider->setVisible(true);
 
-   auto setOffsetX = [this](const Slider::EventSliderValueChanged& event) {
-      scrollOffsetX = event.pct;
-      _on_rect_changed();
-   };
-   auto setOffsetY = [this](const Slider::EventSliderValueChanged& event) {
-      scrollOffsetY = event.pct;
-      _on_rect_changed();
-   };
-
    //make sure we only capture outside input when the sliders are being used
    auto cbSliderPress = [this](Slider::EventSliderPressed& event){setFocus(event.publisher->asMut<Slider>().value());};
    auto cbSliderRelease = [this](Slider::EventSliderReleased& event){setFocus(nullptr);};
 
-   subscribe<Slider::EventSliderValueChanged>(_hslider, setOffsetX);
-   subscribe<Slider::EventSliderValueChanged>(_vslider, setOffsetY);
+   subscribe<Slider::EventSliderValueChanged>(_hslider, [&](auto e){setOffsetX(e.pct);});
+   subscribe<Slider::EventSliderValueChanged>(_vslider, [&](auto e){setOffsetY(e.pct);});
    subscribeMutable<Slider::EventSliderPressed>(_vslider, cbSliderPress);
    subscribeMutable<Slider::EventSliderPressed>(_hslider, cbSliderPress);
    subscribeMutable<Slider::EventSliderReleased>(_vslider, cbSliderRelease);
@@ -63,6 +52,42 @@ void ScrollArea::hideVSlider(bool hidden) {
 void ScrollArea::hideHSlider(bool hidden) {
     _hideHSlider = hidden;
     if (_hslider) _hslider->setVisible(!hidden);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ScrollArea::setOffsetX(const Percent& pct) {
+   scrollOffsetX = pct;
+   if (_hslider) _hslider->setSliderPct(Fraction(pct), false);
+   _on_rect_changed();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ScrollArea::setOffsetY(const Percent& pct) {
+   scrollOffsetY = pct;
+   if (_vslider) _vslider->setSliderPct(Fraction(pct), false);
+   _on_rect_changed();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ScrollArea::setOffsetX(float amt) {
+   auto scrollableWidth = boundingBox.width - getRect().width;
+   if (scrollableWidth <= 0) {
+      setOffsetX(Percent(0));
+      return;
+   }
+   amt = std::clamp(amt, 0.0f, scrollableWidth);
+   setOffsetX(Percent(amt / scrollableWidth * 100.0f));
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ScrollArea::setOffsetY(float amt) {
+   auto scrollableHeight = boundingBox.height - getRect().height;
+   if (scrollableHeight <= 0) {
+      setOffsetY(Percent(0));
+      return;
+   }
+   amt = std::clamp(amt, 0.0f, scrollableHeight);
+   setOffsetY(Percent(amt / scrollableHeight * 100.0f));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -103,8 +128,8 @@ void ScrollArea::_on_rect_changed(){
    //subtract the slider sizes before updating viewport since each dimension depends on the other
    if (needShowHSlider) _viewport.height -= sliderSize;
    if (needShowVSlider) _viewport.width -= sliderSize;
-   _viewport.x = (boundingBox.width - areaSize.x) * (float)Fraction(scrollOffsetX).get();
-   _viewport.y = (boundingBox.height - areaSize.y) * (float)Fraction(scrollOffsetY).get();
+   _viewport.x = (boundingBox.width - areaSize.x) * static_cast<float>(Fraction(scrollOffsetX).get());
+   _viewport.y = (boundingBox.height - areaSize.y) * static_cast<float>(Fraction(scrollOffsetY).get());
    if (_hslider) {
       _hslider->setRect(hsliderNewRect);
       _hslider->setVisible(!_hideHSlider && needShowHSlider);
@@ -144,11 +169,11 @@ void ScrollArea::_on_child_added_to_tree(TypeNode* typeNode) {
 ///////////////////////////////////////////////////////////////////////////////////////////
 Handled ScrollArea::_unhandled_input(const InputEvent& e) {
    switch (e.eventId){
-      case InputEventMouseMotion::ID:{
-         auto& mmEvent = e.toEvent<InputEventMouseMotion>();
-         testpos = mmEvent.mouse.getLocalPos();
-         return {this, testpos};
-      } break;
+      // case InputEventMouseMotion::ID:{
+      //    auto& mmEvent = e.toEvent<InputEventMouseMotion>();
+      //    testpos = toBackgroundPos(mmEvent.mouse.getLocalPos());
+      //    return {this, testpos.get()};
+      // } break;
       case InputEventMouseWheel::ID:{
          constexpr float SPEED_FACTOR = 5.0;
          auto& mwEvent = e.toEvent<InputEventMouseWheel>();

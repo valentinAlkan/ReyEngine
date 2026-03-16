@@ -346,20 +346,19 @@ bool Widget::getIsRendering() const {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-Handled Widget::__process_unhandled_input(const InputEvent &event) {
+Handled Widget::__process_unhandled_input(const InputEvent& event) {
    //we can intercept certain events and always handle them, for example, tooltips (and eventually hovers)
-   bool isInside = event.isMouse() && event.isMouse().value()->isInside();
-   if (isInside){
+   if (event.isMouse().has_value() && event.isMouse().value()->isInside()){
       switch (event.eventId) {
          //offer these events to children who may want them, but then accept them if there are no takers.
-         case InputEventMouseToolTip::ID:{
-            auto handled = _unhandled_input(event);
-            if (!handled) return this;}
-         //offer these events to children who may want them, but then accept them if there are no takers.
+         case InputEventMouseToolTip::ID: {
+            if (auto handled = _unhandled_input(event); !handled) return {this, event.isMouse().value()->getLocalPos()};
+         }
+
          case InputEventMouseHover::ID: {
-            auto handled = _unhandled_input(event);
-            if (!handled) return this;
-            break;}
+            if (auto handled = _unhandled_input(event); !handled) return {this, event.isMouse().value()->getLocalPos()};
+            break;
+         }
       }
    }
 
@@ -379,8 +378,11 @@ Handled Widget::processInput(const InputEvent& e) {
          std::unique_ptr<MouseEvent::ScopeTransformer> xformer;
          if (e.isMouse()) {
             // Logger::debug() << w->getName() << " local pos before = " << e.isMouse().value()->getLocalPos() << (e.isMouse().value()->isInside() ? " inside " : "")  << endl;
+            auto posBefore = e.isMouse().value()->getLocalPos();
             xformer = make_unique<MouseEvent::ScopeTransformer>(*e.isMouse().value(), child->getLocalTransform(), child->getSize());
-            Logger::debug() << getName() << " local pos after = " << e.isMouse().value()->getLocalPos() << (e.isMouse().value()->isInside() ? " inside " : "")  << endl;
+            Logger::debug() << "[" << getName() << "] " << child->getName() << " pos " << posBefore << " -> " << e.isMouse().value()->getLocalPos()
+                           << " (child at " << child->getPos() << " size " << child->getSize() << ")"
+                           << (e.isMouse().value()->isInside() ? " inside" : "") << endl;
          }
          auto handled = child->processInput(e);
          if (handled) return handled;

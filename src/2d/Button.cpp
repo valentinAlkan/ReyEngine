@@ -32,7 +32,8 @@ Handled Button::_unhandled_input(const InputEvent& event) {
                _drawState = DrawState::DOWN_PRESS;
                setFocused(true);
                return this;
-            } else if (isRelease) {
+            }
+            if (isRelease) {
                //mouse release
                if (!_isToggle || _down) {
                   _down = false;
