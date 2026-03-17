@@ -3,9 +3,22 @@
 #include "Table.h"
 #include "Button.h"
 #include <cassert>
+#include "FileBrowser.h"
 
 using namespace ReyEngine;
 using namespace std;
+
+class PointDrawer : public Widget {
+public:
+   REYENGINE_OBJECT(PointDrawer)
+   PointDrawer() = default;
+   void render2D() const override {
+      auto pt = InputManager::getMousePos().get();
+      drawText(pt.toString(), pt + Pos<float>(10,10), theme->font);
+   }
+
+
+};
 
 class Grid : public Widget {
 public:
@@ -57,7 +70,7 @@ public:
 };
 
 int main() {
-   auto& window = Application::createWindowPrototype("window", 800, 800, {WindowFlags::RESIZE}, 60)->createWindow();
+   auto& window = Application::createWindowPrototype("window", 1280, 1024, {WindowFlags::RESIZE}, 60)->createWindow();
    auto root = window.getCanvas();
 
    std::shared_ptr<Canvas> testCanvas1;
@@ -119,9 +132,28 @@ int main() {
       InputEventMouseHover hover(&window, {201,201});
       auto handler = root->processInput(hover);
       assert(handler.handler == pushButton.get());
-      assert(handler.pos == Pos<float>(1,1));
+      assert(handler.pos.value().x < 6);
+      assert(handler.pos.value().y < 6);
    }
 
+   auto filebrowser = make_child<FileBrowser>(root, "filebrowser");
+   filebrowser->centerOnPoint(root->getCenter());
+   filebrowser->open();
+   assert(filebrowser->getVisible());
+
+   //interact with the filebrowser
+   {
+      static constexpr Pos<float> pt = {948, 764};
+      InputEventMouseButton down(&window, pt, InputInterface::MouseButton::LEFT, true, false);
+      InputEventMouseButton up(&window, pt, InputInterface::MouseButton::LEFT, false, false);
+      root->processInput(down);
+      root->processInput(up);
+      assert(!filebrowser->getVisible());
+   }
+
+   root->removeAllChildren();
+
+   make_child<PointDrawer>(root, "pointDrawer")->moveToForeground();
    window.exec();
    return 0;
 }

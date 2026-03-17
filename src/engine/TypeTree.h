@@ -21,12 +21,18 @@ namespace ReyEngine::Internal::Tree {
    using MakeNodeReturnType = std::pair<std::shared_ptr<T>, std::unique_ptr<TypeNode>>;
 
    struct Windowable {
+      virtual ~Windowable(){
+         //Deactivate calls
+         if (_deferredCallList){
+            _deferredCallList->removeCalls(this);
+         }
+      }
       Window* _window = nullptr;
       DeferredCallList* _deferredCallList = nullptr;  // Set by Window when attached
-      template <typename F, typename... Args>
-      void defer(F&& func, Args&&... args) {
+      template <typename... Args>
+      void defer(std::function<void()>&& func, Args&&... args) {
          if (_deferredCallList) {
-            _deferredCallList->add(std::forward<F>(func), std::forward<Args>(args)...);
+            _deferredCallList->add(this, std::move(func), std::forward<Args>(args)...);
          }
       }
       void updateTree() const;

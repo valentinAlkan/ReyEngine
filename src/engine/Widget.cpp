@@ -354,17 +354,10 @@ Handled Widget::__process_unhandled_input(const InputEvent& event) {
          case InputEventMouseToolTip::ID: {
             if (auto handled = _unhandled_input(event); !handled) return {this, event.isMouse().value()->getLocalPos()};
          }
-
          case InputEventMouseHover::ID: {
             if (auto handled = _unhandled_input(event); !handled) return {this, event.isMouse().value()->getLocalPos()};
             break;
          }
-      }
-   } else if (event.eventId == InputEventMouseHover::ID && event.isMouse().has_value()) {
-      // Debug: hover event reached widget but isInside is false
-      if (getName().find("btn") != std::string::npos) {
-         Logger::debug() << "Hover reached " << getName() << " but isInside=" << event.isMouse().value()->isInside()
-                         << " localPos=" << event.isMouse().value()->getLocalPos() << " size=" << size << endl;
       }
    }
 

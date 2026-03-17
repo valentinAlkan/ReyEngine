@@ -217,10 +217,8 @@ Handled Canvas::_processInput(const InputEvent& event) {
             case InputEventMouseHover::ID:{
                // Set hover on the handler's own canvas, fallback to interceptor's canvas
                if (auto handlerCanvas = handled.handler->getCanvas()) {
-                  Logger::debug() << "Interceptor: " << canvas->getName() << " setting hover on " << handlerCanvas.value()->getName() << " for " << handled.handler->getName() << endl;
                   handlerCanvas.value()->setHover(handled.handler);
                } else {
-                  Logger::debug() << "Interceptor fallback: " << canvas->getName() << " setting hover for " << handled.handler->getName() << endl;
                   canvas->setHover(handled.handler);
                }
                break;}
@@ -248,7 +246,7 @@ Handled Canvas::_processInput(const InputEvent& event) {
       std::unique_ptr<MouseEvent::ScopeTransformer> scopeXformer;
       if (event.isMouse()) {
          //subtract off the modal widget's transform to avoid double-apply
-         auto modalXform = modal->getCanvasTransform().get() * modal->getLocalTransform().inverse();
+         auto modalXform = modal->getCanvasTransform().get();
          scopeXformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), modalXform, modal->size, getCameraTransform());
       }
       handled = modal->processInput(event);
@@ -270,12 +268,7 @@ Handled Canvas::_processInput(const InputEvent& event) {
          }
       }
       handled = focused->processInput(event);
-      if (handled) {
-         if (event.eventId == InputEventMouseHover::ID) {
-            Logger::debug() << "Canvas " << getName() << " focus " << focused->getName() << " handled hover" << endl;
-         }
-         return handled;
-      }
+      if (handled) return handled;
    }
 
    //outside input should still propogate to focused, modal, and foreground widgets
@@ -308,13 +301,7 @@ Handled Canvas::_processInput(const InputEvent& event) {
             xformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), isWidget.value()->getLocalTransform(), isWidget.value()->size, getCameraTransform());
          }
          handled = isWidget.value()->processInput(event);
-         if (handled) {
-            if (event.eventId == InputEventMouseHover::ID) {
-               Handled& h = handled;
-               Logger::debug() << "Canvas " << getName() << " background " << isWidget.value()->getName() << " handled hover by " << h.handler->getName() << " at location " << h.pos.value() << endl;
-            }
-            return handled;
-         }
+         if (handled) return handled;
       }
    }
 
