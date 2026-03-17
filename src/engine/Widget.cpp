@@ -360,6 +360,12 @@ Handled Widget::__process_unhandled_input(const InputEvent& event) {
             break;
          }
       }
+   } else if (event.eventId == InputEventMouseHover::ID && event.isMouse().has_value()) {
+      // Debug: hover event reached widget but isInside is false
+      if (getName().find("btn") != std::string::npos) {
+         Logger::debug() << "Hover reached " << getName() << " but isInside=" << event.isMouse().value()->isInside()
+                         << " localPos=" << event.isMouse().value()->getLocalPos() << " size=" << size << endl;
+      }
    }
 
    auto handler = _unhandled_input(event);
@@ -371,6 +377,17 @@ Handled Widget::__process_unhandled_input(const InputEvent& event) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 Handled Widget::processInput(const InputEvent& e) {
+   //only really serves to check if input is inside this widget, but it has to be called by someoneone once
+   // or the input propogation chain will be wrong on the first step
+   std::unique_ptr<MouseEvent::ScopeTransformer> xformer;
+   if (e.isMouse()) {
+      xformer = make_unique<MouseEvent::ScopeTransformer>(*e.isMouse().value(), Transform2D(), getSize());
+   }
+   return _processInput(e);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+Handled Widget::_processInput(const InputEvent& e) {
    if (!_visible) return nullptr;
 
    auto pass = [&](const InputEvent& e) -> Handled {

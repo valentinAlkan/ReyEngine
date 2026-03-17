@@ -65,12 +65,12 @@ namespace ReyEngine {
       Camera2D& getCamera(){return camera;}
       void moveToForeground(Widget*);
       void moveToBackground(Widget*);
-      Handled processInput(const InputEvent& e) override;
       BackgroundSpace toBackgroundPos(const Pos<float>& p);
       Pos<float> toForegroundPos(const BackgroundSpace& p);
    protected:
       const RenderTarget& readRenderTarget() const {return _renderTarget;}
       RenderContext createRenderContext(){return _renderTarget;}
+      Handled _processInput(const InputEvent& e) override;
       void __on_descendant_added_to_tree(TypeNode* child) override;
       void __on_descendant_removed_from_tree(TypeNode* child) override;
       void render2D() const override {}

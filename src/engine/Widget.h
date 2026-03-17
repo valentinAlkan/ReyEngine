@@ -95,6 +95,7 @@ namespace ReyEngine {
       [[nodiscard]] std::string getToolTipText() const {return _tooltipText;}
       [[nodiscard]] bool isLayout() const {return _isLayout;}
    protected:
+      virtual Handled _processInput(const InputEvent& e); //process an input local to this widget
       virtual void render2D() const {};
       Handled __process_unhandled_input(const InputEvent& event);
       virtual Handled _unhandled_input(const InputEvent&){return nullptr;}
@@ -115,7 +116,7 @@ namespace ReyEngine {
       InputFilter _inputFilter = InputFilter::PASS_AND_PROCESS;
       std::optional<Rect<float>> _anchorArea; //optional area to anchor to, if not our size rect
       Anchor _anchor = Anchor::NONE;
-      bool _ignoreOutsideInput = false;
+      bool _ignoreOutsideInput = true;
       bool _handleAllModalInput = true; //by default, modal widgets handle all input.
                                      // But this can be disabled, as in the case of drop down menus, which
                                      // want to offer input to the menu bar, but need to be drawn modally

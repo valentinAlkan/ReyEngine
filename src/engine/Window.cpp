@@ -10,47 +10,17 @@ using namespace ReyEngine;
 using namespace Internal;
 using sc = chrono::steady_clock;
 
-constexpr bool PRINT_MOUSEUP = true;
-constexpr bool PRINT_MOUSEDOWN = true;
-constexpr bool PRINT_HOVER = true;
-constexpr bool PRINT_MOTION = true;
+constexpr bool PRINT_MOUSEUP = false;
+constexpr bool PRINT_MOUSEDOWN = false;
+constexpr bool PRINT_HOVER = false;
+constexpr bool PRINT_MOTION = false;
 constexpr bool PRINT_TOOLTIP = false;
 constexpr bool PRINT_TOOLTIP_CANCEL = false;
-constexpr bool PRINT_WHEEL = true;
+constexpr bool PRINT_WHEEL = false;
 constexpr bool PRINT_CHAR = false;
 constexpr bool PRINT_KEYUP = false;
 constexpr bool PRINT_KEYDOWN = false;
 constexpr bool PRINT_KEYREPEAT = false;
-
-// struct CanvasTransform {
-//    CanvasTransform(CanvasTransform* parentTransform)
-//    : parentTransform(parentTransform)
-//    , transform(MatrixIdentity())
-//    {}
-//    Matrix transform;
-//    CanvasTransform* parentTransform;
-//
-//    struct Stack {
-//       ~Stack() {
-//          while (!_stack.empty()) {
-//             pop();
-//          }
-//       }
-//       void push(CanvasTransform* transform) {
-//          rlPushMatrix();
-//          rlMultMatrixf(MatrixToFloat(transform->transform));
-//          _stack.push(transform);
-//       }
-//       void pop() {
-//          rlPopMatrix();
-//          _stack.pop();
-//       }
-//       CanvasTransform* top(){return _stack.top();}
-//       bool empty() const {return _stack.empty();}
-//    private:
-//       std::stack<CanvasTransform*> _stack;
-//    };
-// };
 
 constexpr std::chrono::milliseconds TOOLTIP_DELAY = 500ms;
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -309,17 +279,6 @@ Window::~Window(){
    Logger::debug() << "Deleting Window" << endl;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////
-////void Window::setCanvas(std::shared_ptr<Canvas>& newRoot) {
-////   makeRoot(newRoot, getSize());
-////}
-//
-/////////////////////////////////////////////////////////////////////////////////////////////
-//void Window::setSize(Size<int> newSize) {
-//   setWindowSize(newSize);
-//   getCanvas()->setSize(newSize);
-//}
-
 ///////////////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<Canvas> Window::getCanvas() {
    return _root->ref<Canvas>();
@@ -344,9 +303,6 @@ void findCanvas(std::vector<Canvas*>& graph, TypeNode* thisNode) {
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 void Window::_on_tree_updated() {
-   //rebuild the DAG
-   // _renderGraph.clear();
-   //walk the graph and pick out canvases
-   // findCanvas(_renderGraph, _root.get());
+
 }
 

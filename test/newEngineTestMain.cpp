@@ -74,7 +74,6 @@ struct PosTestWidget : public Widget {
 
 protected:
    void _on_rect_changed() override {}
-
    Handled _unhandled_input(const InputEvent& event) override {
       if (auto isMouse = event.isMouse()) {
          isInside = isMouse.value()->isInside();
@@ -380,14 +379,28 @@ int main() {
       // Trigger layout calculation by setting root canvas size to window size
       root->setRect(window.getSize().toRect());
 
-      // Test wheel input on zoomCanvas
-      auto zoomCanvas = root->findChild("ZoomTest").value().at(0)->as<Canvas>().value();
-      auto zoomCanvasRect = zoomCanvas->toCanvasRect().get();
-      Logger::info() << "zoom canvas rect = " << zoomCanvasRect << endl;
-      InputEventMouseWheel wheelEvent(&window, zoomCanvasRect.center(), Vec2<float>(0,20));
-      auto handled = root->processInput(wheelEvent);
-      if (handled.handler) Logger::info() << "handled by " << handled.handler->getName() << endl;
-      assert(handled.handler == zoomCanvas);
+      {
+         // Test wheel input on zoomCanvas
+         auto zoomCanvas = root->findChild("ZoomTest").value().at(0)->as<Canvas>().value();
+         auto rect = zoomCanvas->toCanvasRect().get();
+         Logger::info() << "zoom canvas rect = " << rect << endl;
+         InputEventMouseWheel wheelEvent(&window, rect.center(), Vec2<float>(0,20));
+         auto handled = root->processInput(wheelEvent);
+         if (handled.handler) Logger::info() << "handled by " << handled.handler->getName() << endl;
+         assert(handled.handler == zoomCanvas);
+      }
+
+      {
+         //test hover on push button
+         auto btnpopup = root->findChild("btnPopup").value().at(0)->as<PushButton>().value();
+         auto rect = btnpopup->toCanvasRect().get();
+         Logger::info() << btnpopup->getName() << " rect = " << rect << endl;
+         InputEventMouseHover hoverEvent(&window, rect.center());
+         auto handled = root->processInput(hoverEvent);
+         if (handled.handler) Logger::info() << "handled by " << handled.handler->getName() << " @ " << handled.pos.value() << endl;
+         assert(handled.handler == btnpopup);
+      }
+
 
       window.exec();
       return 0;

@@ -179,7 +179,7 @@ CanvasSpace<Pos<float>> Canvas::getMousePos() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled Canvas::processInput(const InputEvent& event) {
+Handled Canvas::_processInput(const InputEvent& event) {
    // if (_inputContext) {
    //    auto handled = _inputContext->handleInput(event);
    //    if (handled) return handled;
@@ -202,9 +202,12 @@ Handled Canvas::processInput(const InputEvent& event) {
                auto& ttEvent = event.toEvent<InputEventMouseToolTip>();
                if (ttEvent.isCancel) {
                   canvas->setToolTip(nullptr);
-               } else if (auto handlerCanvas = handled.handler->getCanvas()) {
-                  if (!handled.handler->getToolTipText().empty()) {
+               } else if (!handled.handler->getToolTipText().empty()) {
+                  // Set tooltip on the handler's own canvas, fallback to interceptor's canvas
+                  if (auto handlerCanvas = handled.handler->getCanvas()) {
                      handlerCanvas.value()->setToolTip(handled.handler);
+                  } else {
+                     canvas->setToolTip(handled.handler);
                   }
                }
                break;}
@@ -212,9 +215,13 @@ Handled Canvas::processInput(const InputEvent& event) {
                canvas->setToolTip(nullptr);
                break;}
             case InputEventMouseHover::ID:{
-               // Set hover on the handler's own canvas, not this canvas
+               // Set hover on the handler's own canvas, fallback to interceptor's canvas
                if (auto handlerCanvas = handled.handler->getCanvas()) {
+                  Logger::debug() << "Interceptor: " << canvas->getName() << " setting hover on " << handlerCanvas.value()->getName() << " for " << handled.handler->getName() << endl;
                   handlerCanvas.value()->setHover(handled.handler);
+               } else {
+                  Logger::debug() << "Interceptor fallback: " << canvas->getName() << " setting hover for " << handled.handler->getName() << endl;
+                  canvas->setHover(handled.handler);
                }
                break;}
          }
@@ -263,7 +270,19 @@ Handled Canvas::processInput(const InputEvent& event) {
          }
       }
       handled = focused->processInput(event);
-      if (handled) return handled;
+      if (handled) {
+         if (event.eventId == InputEventMouseHover::ID) {
+            Logger::debug() << "Canvas " << getName() << " focus " << focused->getName() << " handled hover" << endl;
+         }
+         return handled;
+      }
+   }
+
+   //outside input should still propogate to focused, modal, and foreground widgets
+   if (_ignoreOutsideInput) {
+      if (isMouse && !isMouse.value()->isInside()){
+         return nullptr;
+      }
    }
 
    //then foreground (which is unaffected by camera transform)
@@ -280,13 +299,6 @@ Handled Canvas::processInput(const InputEvent& event) {
       }
    }
 
-   //outside input should still propogate to focused, modal, and foreground widgets
-   if (_ignoreOutsideInput) {
-      if (isMouse && !isMouse.value()->isInside()){
-         return nullptr;
-      }
-   }
-
    //then background (which is affected by camera transorm)
    // this here is "normal" input
    for (auto& child : _background.getValues() | std::views::reverse) {
@@ -296,7 +308,13 @@ Handled Canvas::processInput(const InputEvent& event) {
             xformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), isWidget.value()->getLocalTransform(), isWidget.value()->size, getCameraTransform());
          }
          handled = isWidget.value()->processInput(event);
-         if (handled) return handled;
+         if (handled) {
+            if (event.eventId == InputEventMouseHover::ID) {
+               Handled& h = handled;
+               Logger::debug() << "Canvas " << getName() << " background " << isWidget.value()->getName() << " handled hover by " << h.handler->getName() << " at location " << h.pos.value() << endl;
+            }
+            return handled;
+         }
       }
    }
 
