@@ -1,6 +1,6 @@
 #pragma once
 #include "Drawable2D.h"
-#include "InputHandler.h"
+#include "InputManager.h"
 #include "Theme.h"
 #include "WeakUnits.h"
 #include "MetaData.h"
@@ -9,19 +9,6 @@ namespace ReyEngine {
    enum class Anchor{NONE, LEFT, RIGHT, TOP, TOP_WIDTH, BOTTOM, FILL, TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, CENTER, CUSTOM};
    class FocusGroup;
    class Widget;
-   //contains information about how input events were handled
-   struct Handled {
-      Handled()
-      : handler(nullptr)
-      {}
-      Handled(Widget* handler, std::optional<Pos<float>> pos = {})
-      : handler(handler)
-      , pos(pos)
-      {}
-      Widget* handler;
-      std::optional<Pos<float>> pos; //for positional input, the position where the input was handled at by the handler (in local space)
-      operator bool() const {return handler != nullptr;}
-   };
    class Widget
    : public Internal::Drawable2D
    , public Internal::Tree::Processable
@@ -120,7 +107,10 @@ namespace ReyEngine {
       bool _handleAllModalInput = true; //by default, modal widgets handle all input.
                                      // But this can be disabled, as in the case of drop down menus, which
                                      // want to offer input to the menu bar, but need to be drawn modally
-
+       Widget* _parentWidget = nullptr; //the closest related parent that is a widget.
+      bool _modal = false;
+      std::string _tooltipText;
+      std::unique_ptr<InputContext::Semaphore> _inputContext; //only care if the destructor fires
       std::shared_ptr<Theme> theme;
    private:
       void __init() override;
@@ -159,10 +149,6 @@ namespace ReyEngine {
          }
       }
       void calculateAnchoring(const Rect<R_FLOAT>& oldRect);
-
-      Widget* _parentWidget = nullptr; //the closest related parent that is a widget.
-      bool _modal = false;
-      std::string _tooltipText;
       friend class Layout;
       friend class Canvas;
 

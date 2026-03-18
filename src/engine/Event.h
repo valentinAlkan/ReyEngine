@@ -84,12 +84,13 @@ namespace ReyEngine{
 
    template <typename T, size_t EVENT_ID>
    struct Event : public BaseEvent {
-   Event(const EventPublisher* publisher): BaseEvent(publisher, EVENT_ID){}
+      using BaseEvent::isEvent;
+      Event(const EventPublisher* publisher): BaseEvent(publisher, EVENT_ID){}
       template <typename Other>
-      const Other& toEventType() const {
-         static_assert(std::is_base_of_v<BaseEvent, Other>);
-         return static_cast<const Other&>(*this);
-      }
+         const Other& toEventType() const {
+            static_assert(std::is_base_of_v<BaseEvent, Other>);
+            return static_cast<const Other&>(*this);
+         }
 
       template <typename Other>
       Other& toEventType() {

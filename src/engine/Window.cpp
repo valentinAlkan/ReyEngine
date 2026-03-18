@@ -12,7 +12,7 @@ using sc = chrono::steady_clock;
 
 constexpr bool PRINT_MOUSEUP = false;
 constexpr bool PRINT_MOUSEDOWN = false;
-constexpr bool PRINT_HOVER = false;
+constexpr bool PRINT_HOVER = true;
 constexpr bool PRINT_MOTION = false;
 constexpr bool PRINT_TOOLTIP = false;
 constexpr bool PRINT_TOOLTIP_CANCEL = false;
@@ -200,7 +200,6 @@ void Window::exec(){
          auto wheel = InputManager::getMouseWheel();
          if (wheel) {
             InputEventMouseWheel event(this, mousePos.get(), wheel);
-            if constexpr (PRINT_WHEEL) Logger::info() << "Sending mouse wheel event " << event.wheelMove << endl;
             auto handledBy = __process_unhandled_input(event);
             if constexpr (PRINT_WHEEL) if (handledBy) Logger::info() << "Mouse wheel handled by " << handledBy.handler->getName() << endl;
          }
@@ -306,3 +305,8 @@ void Window::_on_tree_updated() {
 
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////
+std::optional<std::unique_ptr<InputContext::Semaphore>> Window::makeInputContext(Widget* widget){
+   _inputContext = std::unique_ptr<InputContext>(new InputContext(widget));
+   return _inputContext->getSemaphore();
+}

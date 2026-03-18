@@ -5,6 +5,21 @@
 #include <algorithm>
 
 namespace ReyEngine{
+   //contains information about how input events were handled
+   class Widget;
+   struct Handled {
+      Handled()
+            : handler(nullptr)
+      {}
+      Handled(Widget* handler, std::optional<Pos<float>> pos = {})
+            : handler(handler)
+            , pos(pos)
+      {}
+      Widget* handler;
+      std::optional<Pos<float>> pos; //for positional input, the position where the input was handled at by the handler (in local space)
+      operator bool() const {return handler != nullptr;}
+   };
+
    EVENT(InputEventKey, 13234646664){}
       InputInterface::KeyCode key;
       bool isDown = false;
@@ -291,4 +306,61 @@ namespace ReyEngine{
       }
       friend class Window;
    };
+
+   class ContextHandler;
+   class Widget;
+   //Bypasses normal input propogation chain, effectively allowing us to capture all input at an application level and
+   // forward it to where we want it. Useful if we are in a situation where there's no ambiguity about where input
+   // should be handled
+   class InputContext {
+     //Lets us communicate with an input context in case the widget owning the context is deleted
+     // Whichever one dies first lets the other one know of its deceasedness
+   protected:
+      struct Semaphore{
+         Semaphore(InputContext* context, Widget* widget)
+         : _context(context)
+         , _widget(widget)
+         {}
+         ~Semaphore() { if (_linked) _context->_linked = false;}
+         void cancel(){if (_linked) _context->cancel(); _linked = false;}
+      protected:
+         InputContext* _context;
+         Widget* _widget;
+         bool _linked = true; //if context goes away, this should be set to false
+         friend class InputContext;
+      };
+      std::optional<std::unique_ptr<Semaphore>> getSemaphore(){
+         if (semaphore && semaphoreAlreadyAssigned) {
+            auto ptr = std::unique_ptr<Semaphore>(semaphore);
+            semaphore = nullptr;
+            semaphoreAlreadyAssigned = true;
+            return ptr;
+         }
+         return {};
+      }
+      Handled handleInput(const InputEvent& event);
+      InputContext(Widget* handler)
+      : _handler(handler)
+      , semaphore(new Semaphore(this, handler))
+      {}
+      void cancel() {
+         _linked = false;
+         if (_linked) semaphore->_linked = false;
+      }
+   public:
+      ~InputContext() {
+         if (_linked) {
+            semaphore->_linked = false;
+         }
+      }
+      bool alive() const {return _linked;}
+   private:
+      Widget* _handler = nullptr;
+      bool _linked = true; //if the semaphore goes away, this should be set to false
+      Semaphore* semaphore = nullptr;
+      bool semaphoreAlreadyAssigned = false;
+      InputInterface::KeyCode cancelKey; //the key that cancels the input interface automatically
+      friend class Widget;
+      friend class Window;
+  };
 }

@@ -392,7 +392,7 @@ Handled Widget::_processInput(const InputEvent& e) {
             // Logger::debug() << w->getName() << " local pos before = " << e.isMouse().value()->getLocalPos() << (e.isMouse().value()->isInside() ? " inside " : "")  << endl;
             xformer = make_unique<MouseEvent::ScopeTransformer>(*e.isMouse().value(), child->getLocalTransform(), child->getSize());
          }
-         auto handled = child->processInput(e);
+         auto handled = child->_processInput(e);
          if (handled) return handled;
       }
       return nullptr;

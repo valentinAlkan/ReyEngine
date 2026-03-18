@@ -250,7 +250,7 @@ Handled Canvas::_processInput(const InputEvent& event) {
          auto modalXform = modal->getCanvasTransform().get();
          scopeXformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), modalXform, modal->size, getCameraTransform());
       }
-      handled = modal->processInput(event);
+      handled = modal->_processInput(event);
       if (modal->_handleAllModalInput || handled) return handled;
    }
 
@@ -268,12 +268,12 @@ Handled Canvas::_processInput(const InputEvent& event) {
             scopeXformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), focusTransform, focused->size, getCameraTransform());
          }
       }
-      handled = focused->processInput(event);
+      handled = focused->_processInput(event);
       if (handled) return handled;
    }
 
    //outside input should still propogate to focused, modal, and foreground widgets
-   if (_ignoreOutsideInput) {
+   if (_ignoreOutsideInput && !isFocused() && !isModal()) {
       if (isMouse && !isMouse.value()->isInside()){
          return nullptr;
       }
@@ -288,7 +288,7 @@ Handled Canvas::_processInput(const InputEvent& event) {
             // Logger::debug() << w->getName() << " local pos before = " << e.isMouse().value()->getLocalPos() << (e.isMouse().value()->isInside() ? " inside " : "")  << endl;
             xformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), widget.value()->getLocalTransform(), widget.value()->getSize());
          }
-         handled = widget.value()->processInput(event);
+         handled = widget.value()->_processInput(event);
          if (handled) return handled;
       }
    }
@@ -301,7 +301,7 @@ Handled Canvas::_processInput(const InputEvent& event) {
          if (isMouse){
             xformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), isWidget.value()->getLocalTransform(), isWidget.value()->size, getCameraTransform());
          }
-         handled = isWidget.value()->processInput(event);
+         handled = isWidget.value()->_processInput(event);
          if (handled) return handled;
       }
    }

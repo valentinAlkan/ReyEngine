@@ -1,7 +1,7 @@
 #pragma once
 #include "ReyObject.h"
 #include "Application.h"
-#include "InputHandler.h"
+#include "InputManager.h"
 #include <unordered_set>
 #include "WeakUnits.h"
 #include "WindowPrototype.h"
@@ -44,6 +44,7 @@ namespace ReyEngine{
       int getFPS() const {return GetFPS();}
       void setInternalLogLevel(int logLevel){SetTraceLogLevel(logLevel);}
       bool isClosing() const {return _isClosing;}
+      std::optional<std::unique_ptr<InputContext::Semaphore>> makeInputContext(Widget*);
    protected:
       Window(const std::string& title, int width, int height, const std::vector<WindowFlags>& flags, int targetFPS);
       void initialize(std::optional<std::shared_ptr<Canvas>> root);
@@ -63,6 +64,7 @@ namespace ReyEngine{
       Canvas* _canvas;
       bool _isClosing = false;
       DeferredCallList _deferredCallList;
+      std::unique_ptr<InputContext> _inputContext;
 
       /////////////////////
       /////////////////////

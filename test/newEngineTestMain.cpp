@@ -263,6 +263,7 @@ int main() {
                   zoomCanvas->setInputFiltering(InputFilter::PUBLISH_ONLY);
                   auto processCB = [zoomCanvas]() {
                      if (!zoomCanvas->getVisible()) return;
+                     if (!zoomCanvas->isFocused()) return;
                      auto& camera = zoomCanvas->getCamera();
                      constexpr float SPEED = 10;
                      Vec2<float> moveVec;
@@ -286,6 +287,18 @@ int main() {
                   zoomCanvas->setProcess(processCB);
                   // connect to unhandled input signal
                   auto cbUnhandledInput = [zoomCanvas](Widget::WidgetUnhandledInputEvent& event){
+                     if (auto isMouse = event.fwdEvent.isMouse()) {
+                        if (auto btnEvent = event.fwdEvent.isEvent<InputEventMouseButton>()) {
+                           if (btnEvent.value()->isDown) return;
+                           if (isMouse.value()->isInside()) {
+                              zoomCanvas->setFocused(true);
+                              event.handled.handler = zoomCanvas.get();
+                           } else {
+                              zoomCanvas->setFocused(false);
+                           }
+                        }
+                     }
+                     if (!zoomCanvas->isFocused()) return;
                      if (event.fwdEvent.isEvent<InputEventMouseWheel>()){
                         const auto& mwEvent = event.fwdEvent.toEvent<InputEventMouseWheel>();
                         auto& cam = zoomCanvas->getCamera();
@@ -422,10 +435,19 @@ int main() {
          auto zoomCanvas = root->findChild("ZoomTest").value().at(0)->as<Canvas>().value();
          auto rect = zoomCanvas->toCanvasRect().get();
          Logger::info() << "zoom canvas rect = " << rect << endl;
-         InputEventMouseWheel wheelEvent(&window, rect.center(), Vec2<float>(0,20));
-         auto handled = root->processInput(wheelEvent);
-         if (handled.handler) Logger::info() << "handled by " << handled.handler->getName() << endl;
-         assert(handled.handler == zoomCanvas);
+         //focus first
+         {
+            InputEventMouseButton btnEvent(&window, rect.center(), InputInterface::MouseButton::LEFT, false, false);
+            auto handled = root->processInput(btnEvent);
+            if (handled.handler) Logger::info() << "handled by " << handled.handler->getName() << endl;
+            assert(handled.handler == zoomCanvas);
+         }
+         {
+            InputEventMouseWheel wheelEvent(&window, rect.center(), Vec2<float>(0, 20));
+            auto handled = root->processInput(wheelEvent);
+            if (handled.handler) Logger::info() << "handled by " << handled.handler->getName() << endl;
+            assert(handled.handler == zoomCanvas);
+         }
       }
 
       {

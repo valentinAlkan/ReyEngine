@@ -1,4 +1,5 @@
 #include "InputManager.h"
+#include "Widget.h"
 
 using namespace ReyEngine;
 using namespace InputInterface;
@@ -48,7 +49,6 @@ InputInterface::MouseButton InputManager::getMouseButtonPressed() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 InputInterface::MouseButton InputManager::getMouseButtonReleased() {
-
    for (auto it=mouseButtonQueue.begin(); it!=mouseButtonQueue.end(); it++){
       InputInterface::MouseButton btn = *it;
       if (InputInterface::isMouseButtonUp(btn)){
@@ -57,4 +57,10 @@ InputInterface::MouseButton InputManager::getMouseButtonReleased() {
       }
    }
    return InputInterface::MouseButton::NONE;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Handled InputContext::handleInput(const ReyEngine::InputEvent &event) {
+   if (!_linked) return nullptr;
+   return _handler->processInput(event);
 }
