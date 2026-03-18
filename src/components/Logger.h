@@ -52,7 +52,12 @@ namespace ReyEngine{
       Stream log(const std::string& logLevel="");
       static std::string getFront();
       static bool hasHistory();
-      static Logger& getInstance(){static Logger _instance("GlobalLogger", std::cout); return _instance;}
+      static Logger& getInstance() {
+         //intentionally leaks to overcome static destruction order fiasco when logging from Application dtor
+         // doesn't matter, OS reclaims memory anyway. We aren't
+         static auto _instance = new Logger("GlobalLogger", std::cout);
+         return *_instance;
+      }
       ~Logger();
       Logger(const Logger&) = delete;
       Logger& operator=(const Logger&) = delete;

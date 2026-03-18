@@ -102,10 +102,12 @@ namespace ReyEngine::Internal::Tree {
 
    struct Processable : public virtual TypeTag {
       virtual ~Processable();
-      virtual void _process(float dt){};
+      virtual void _process(float dt){if (_processCB) _processCB();} //by default, we call the processCB
       void setProcess(bool);
+      void setProcess(std::function<void()> fx){_processCB = fx; setProcess(true);}
       [[nodiscard]] bool isProcessed() const {return _isProcessed;}
    protected:
+      std::function<void()> _processCB;
       bool _wantsProcess = false;
       bool _isProcessed = false;
    };

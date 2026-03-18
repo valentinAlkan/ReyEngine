@@ -180,6 +180,7 @@ CanvasSpace<Pos<float>> Canvas::getMousePos() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Handled Canvas::_processInput(const InputEvent& event) {
+   if (!_visible) return nullptr;
    // if (_inputContext) {
    //    auto handled = _inputContext->handleInput(event);
    //    if (handled) return handled;
@@ -368,12 +369,12 @@ void Canvas::moveToBackground(Widget* widget) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Canvas::BackgroundSpace Canvas::toBackgroundPos(const Pos<float>& p) {
-   return Pos<float>(getCameraTransform().transform(p));
+   return (Pos<float>)GetScreenToWorld2D(Vector2(p), getCamera());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Pos<float> Canvas::toForegroundPos(const BackgroundSpace& p) {
-   return Pos<float>(getCameraTransform().inverse().transform(p.get()));
+   return (Pos<float>)GetWorldToScreen2D(Vector2(p.get()), getCamera());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -218,11 +218,11 @@ void ReyEngine::drawLine(const Line<R_FLOAT>& line, float lineThick, const ReyEn
 void ReyEngine::drawDashedLine(const Line<R_FLOAT>& l , int dashLength, int blankLength, const ColorRGBA& color){
    auto& startPos = l.a;
    auto& endPos = l.b;
-   float lineLength = Vector2Distance(startPos, endPos);
-   Vector2 direction = Vector2Normalize(Vector2Subtract(endPos, startPos));
+   float lineLength = Vector2Distance(Vector2(startPos), Vector2(endPos));
+   auto direction = Vector2Normalize(Vector2Subtract(Vector2(endPos), Vector2(startPos)));
 
    float remaining = lineLength;
-   Vector2 currentPos = startPos;
+   auto currentPos = Vector2(startPos);
 
    while (remaining >= (dashLength + blankLength))
    {
@@ -235,7 +235,7 @@ void ReyEngine::drawDashedLine(const Line<R_FLOAT>& l , int dashLength, int blan
    // Draw the last partial dash if any
    if (remaining > 0)
    {
-      DrawLineV(currentPos, endPos, color);
+      DrawLineV(currentPos, Vector2(endPos), color);
    }
 }
 

@@ -224,9 +224,8 @@ namespace ReyEngine {
       constexpr inline Vec2 operator-(const Vec2& rhs) const {Vec2<T> val = *this; val.x -= rhs.x; val.y -= rhs.y; return val;}
       constexpr inline Vec2& operator+=(const Vec2& rhs){x += rhs.x; y += rhs.y; return *this;}
       constexpr inline Vec2& operator-=(const Vec2& rhs){x -= rhs.x; y -= rhs.y; return *this;}
-      constexpr inline Vec2 operator*(double rhs) const {Vec2 retval(*this); retval.x *= rhs; retval.y *= rhs; return retval;}
-//      inline Vec2& operator*=(const Vec2& rhs){x *= rhs.x; y *= rhs.y; return *this;}
-      constexpr inline Vec2& operator*=(double rhs){x *= rhs; y *= rhs; return *this;}
+      constexpr inline Vec2 operator*(float rhs) const {Vec2 retval(*this); retval.x *= rhs; retval.y *= rhs; return retval;}
+      constexpr inline Vec2& operator*=(float rhs){x *= rhs; y *= rhs; return *this;}
       constexpr inline Vec2<R_FLOAT> operator/(double rhs) const {Vec2<R_FLOAT> retval(*this); retval.x /= rhs; retval.y /= rhs; return retval;}
       constexpr inline Vec2& operator/=(const Vec2& rhs){x /= rhs.x; y /= rhs.y; return *this;}
       constexpr inline Vec2& operator=(const Vec2& rhs){x = rhs.x; y=rhs.y; return *this;}
@@ -236,7 +235,7 @@ namespace ReyEngine {
       constexpr inline void operator=(Size<T>&) = delete;
 
       inline void operator=(Pos<T>&) = delete;
-      inline constexpr operator Vector2() const {return {(float)x,(float)y};}
+      inline constexpr explicit operator Vector2() const {return {static_cast<float>(x),static_cast<float>(y)};}
       [[nodiscard]] constexpr inline T magnitude() const {return std::sqrt(x * x + y * y);}
       static constexpr inline T magnitude(T x, T y) {return std::sqrt(x * x + y * y);}
       [[nodiscard]] UnitVector2 direction(const Vec2<T>& dest) const; //get the unit vector that points at dest from this point's perspective

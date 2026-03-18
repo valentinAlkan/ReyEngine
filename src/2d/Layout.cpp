@@ -8,7 +8,6 @@ using namespace Tree;
 
 static constexpr bool VERBOSE = false;
 static constexpr bool DEBUG_DRAW = false;
-static constexpr bool DEBUG_LAYOUT_SIZES = true;
 /// A struct that helps us layout widgets. Applies changes on dtor.
 struct Layout::LayoutHelper {
    LayoutHelper(LayoutDir layoutDir, int childIndex, size_t totalChildrenInLayout, Layout* parent, Widget* child)
@@ -157,12 +156,6 @@ void Layout::layoutApplyRect(Widget* widget, Rect<float>& r){
    auto maxSize = widget->getMaxSize();
    r.clampWidth({minSize.x, maxSize.x});
    r.clampHeight({minSize.y, maxSize.y});
-   if constexpr (DEBUG_LAYOUT_SIZES) {
-      if (getName() == "Layoutr" || getName() == "Layoutl" || getName() == "mainLayout") {
-         Logger::debug() << "Layout " << getName() << " applying rect " << r << " to child " << widget->getName()
-                        << " (min=" << minSize << ", max=" << maxSize << ")" << endl;
-      }
-   }
    widget->applyRect(r);
    widget->__on_rect_changed(oldRect, widget->getRect(), _allowsAnchoring, true);
 }
@@ -178,12 +171,6 @@ void Layout::arrangeChildren() {
    //use layout area if one is specified, otherwise use size rect
    auto layoutArea = _layoutArea;
    if (!layoutArea) layoutArea = getSizeRect();
-   if constexpr (DEBUG_LAYOUT_SIZES) {
-      if (getName() == "Layoutr" || getName() == "Layoutl" || getName() == "mainLayout") {
-         Logger::debug() << "Layout " << getName() << " arrangeChildren() layoutArea=" << layoutArea
-                        << " getSizeRect()=" << getSizeRect() << " children=" << getChildren().size() << endl;
-      }
-   }
    const auto childCount = getChildren().size();
    switch (layoutDir) {
       case LayoutDir::GRID: {

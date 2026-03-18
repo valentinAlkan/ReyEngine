@@ -261,13 +261,51 @@ int main() {
                {
                   auto zoomCanvas = make_child<Canvas>(tabContainer, "ZoomTest");
                   zoomCanvas->setInputFiltering(InputFilter::PUBLISH_ONLY);
+                  auto processCB = [zoomCanvas]() {
+                     if (!zoomCanvas->getVisible()) return;
+                     auto& camera = zoomCanvas->getCamera();
+                     constexpr float SPEED = 10;
+                     Vec2<float> moveVec;
+                     if (InputManager::isKeyDown(InputInterface::KeyCode::KEY_W)){
+                        moveVec.y += -1;
+                     }
+                     if (InputManager::isKeyDown(InputInterface::KeyCode::KEY_S)){
+                        moveVec.y += 1;
+                     }
+                     if (InputManager::isKeyDown(InputInterface::KeyCode::KEY_A)){
+                        moveVec.x += -1;
+                     }
+                     if (InputManager::isKeyDown(InputInterface::KeyCode::KEY_D)){
+                        moveVec.x += 1;
+                     }
+                     if (moveVec) {
+                        moveVec *= 1/camera.zoom * SPEED;
+                        camera.target += moveVec;
+                     }
+                  };
+                  zoomCanvas->setProcess(processCB);
                   // connect to unhandled input signal
-
                   auto cbUnhandledInput = [zoomCanvas](Widget::WidgetUnhandledInputEvent& event){
                      if (event.fwdEvent.isEvent<InputEventMouseWheel>()){
-                        const auto& mwEvent = event.fwdEvent.toEvent<InputEventMouseWheel>().wheelMove;
-                        zoomCanvas->getCamera().zoom += zoomCanvas->getCamera().zoom * mwEvent.y * .1;
-                        cout << "zoom = " << zoomCanvas->getCamera().zoom << endl;
+                        const auto& mwEvent = event.fwdEvent.toEvent<InputEventMouseWheel>();
+                        auto& cam = zoomCanvas->getCamera();
+                        auto mousePos = mwEvent.mouse.getLocalPos();
+
+                        // Get world position under mouse before zoom
+                        Pos<float> worldBefore = zoomCanvas->toBackgroundPos(mousePos).get();
+
+                        // Apply zoom
+                        cam.zoom += cam.zoom * mwEvent.wheelMove.y * 0.1f;
+                        cam.zoom = clamp(cam.zoom, 0.1f, 10.f); //limit zoom
+
+                        // Get world position under mouse after zoom (with old target)
+                        Pos<float> worldAfter = zoomCanvas->toBackgroundPos(mousePos).get();
+
+                        // Adjust target so the same world point stays under the mouse
+                        cam.target += worldBefore - worldAfter;
+
+                        cout << "zoom = " << cam.zoom << endl;
+                        cout << "target = " << (Vec2<float>)cam.target << endl;
                         event.handled = zoomCanvas.get();
                      }
                   };
