@@ -1,10 +1,12 @@
 #pragma once
 #include <map>
+#include <tuple>
 #include "Canvas.h"
 
 namespace ReyEngine {
    class TileMap : public Widget {
    public:
+      enum class NeighborType{ORTHOGONAL, DIAGONAL}; //orthogonal neighbors are only NSEW neighbors, diagonal includes NE, NW, SE and SW neighbors too
       REYENGINE_OBJECT(TileMap)
       struct TileCoord : public Vec2<int> {
          constexpr TileCoord(): Vec2(){}
@@ -17,13 +19,15 @@ namespace ReyEngine {
             Vec2<int>::y = other.y;
             return *this;
          }
-
          constexpr TileCoord& operator=(TileCoord&& other) noexcept {
             Vec2<int>::x = other.x;
             Vec2<int>::y = other.y;
             return *this;
          }
-
+         constexpr bool operator<(const TileCoord& other) const {
+            if (y != other.y) return y < other.y;
+            return x < other.x;
+         }
       };
       using LayerIndex = size_t;
 
@@ -54,12 +58,9 @@ namespace ReyEngine {
             _columnCount = texture.size().y / _tileSize.y;
             _needsUpdate = true;
          }
-//         [[nodiscard]] inline TileIndex getTileIndex(const Pos<int>& pos) const {
-//            //find the index of the tile at the position
-//            auto rect = Rect<int>(texture.size);
-//            return rect.getSubRectIndex(_tileSize, pos);
-//         }
-         [[nodiscard]] inline Rect<R_FLOAT> getTile(const TileCoord coords) const {
+         std::optional<float> getNavWeight(const TileCoord& coord) const;
+         inline void setNavWeight(const TileCoord& coord, float weight){_weights[coord] = weight;}
+         [[nodiscard]] inline Rect<R_FLOAT> getTile(const TileCoord& coords) const {
             Pos<R_FLOAT> src = {(R_FLOAT) _tileSize.x * coords.x + (_padding.x * coords.x + 1) + _offset.x, (R_FLOAT) _tileSize.y * coords.y + (_padding.y * coords.y + 1) + _offset.y};
             return {src, _tileSize};
          }
@@ -76,14 +77,14 @@ namespace ReyEngine {
          Pos<R_FLOAT> _offset; //x,y offset of first tile
          Size<R_FLOAT> _padding; // lines of spacing between each tile
          bool _needsUpdate = true;
+         std::map<TileCoord, float> _weights; //optional weighting
       friend class TileMap;
       };
       struct TileMapLayer{
          TileMapLayer(TileMap& tileMap, SpriteAtlas* atlas): tileMap(tileMap), atlas(atlas){}
          inline std::optional<SpriteAtlas*> getAtlas(){return atlas;}
-//         void setTileByIndex(const TileCoord&, TileIndex);
-         void setTileByCoords(const TileCoord& target, const TileCoord& src);
-//         std::optional<TileIndex> getTileIndex(const TileCoord& pos); //slow
+         void setTileAtCoords(const TileCoord& target, const TileCoord& src);
+         std::optional<TileCoord> getTileAtCoords(const TileCoord& src);
          void removeTileIndex(const TileCoord& pos);
       protected:
          //x, y
@@ -95,7 +96,6 @@ namespace ReyEngine {
       };
 
       enum class GridType {SQUARE, SQUARE_OFFSET, HEX};
-
       EVENT_ARGS(EventTileMapCellClicked, 1354659879, const TileCoord& cellCoord)
       , cellCoord(cellCoord)
       {}
@@ -107,7 +107,7 @@ namespace ReyEngine {
       {}
          const TileCoord& cellCoord;
       };
-   public:
+
       TileMap(const Size<int>& tileSize): _tileSize(tileSize){}
       TileMap(int tileWidth, int tileheight): _tileSize(Size<int>(tileWidth, tileheight)){}
       std::optional<SpriteAtlas*> addAtlas(
@@ -132,6 +132,26 @@ namespace ReyEngine {
       void setTileSize(const Size<int>&);
       [[nodiscard]] Size<int> getTileSize() const {return _tileSize;}
       void redraw(){_needsRedraw = true;}
+      std::optional<float> getTotalNavWeight(const TileCoord&) const;
+      std::vector<TileCoord> getTileNeighbors(const TileCoord& coords) const {
+         std::vector<TileCoord> neighbors;
+         neighbors.reserve(_neighborType == NeighborType::DIAGONAL ? 8 : 4);
+         auto x = coords.x;
+         auto y = coords.y;
+         std::vector<std::pair<int, int>> offsets = {
+            {x, y - 1}, // N
+            {x, y + 1}, // S
+            {x + 1, y}, // E
+            {x - 1, y}  // W
+         };
+         if (_neighborType == NeighborType::DIAGONAL) {
+            offsets.push_back({x + 1, y - 1}); // NE
+            offsets.push_back({x - 1, y - 1}); // NW
+            offsets.push_back({x + 1, y + 1}); // SE
+            offsets.push_back({x - 1, y + 1}); // SW
+         }
+         return neighbors;
+      }
    protected:
       virtual Handled _on_hovered(const TileCoord&){return nullptr;}
       virtual Handled _on_clicked(const TileCoord&){return nullptr;}
@@ -143,7 +163,7 @@ namespace ReyEngine {
       void _on_rect_changed() override;
       std::map<LayerIndex, std::unique_ptr<TileMapLayer>> _layers;
       std::map<std::string, std::unique_ptr<SpriteAtlas>> _atlases;
-      bool _showGrid;
+      bool _showGrid = false;
 
 private:
       LayerIndex getFirstEmptyLayerIndex();
@@ -151,6 +171,7 @@ private:
       Size<int> _tileSize;
       bool _needsRedraw = false;
       std::optional<TileCoord> currentHover;
+      NeighborType _neighborType = NeighborType::DIAGONAL;
 
       /////////////////////////////////////////////////////////////////////////////////////////
       // Iterator class for layers
@@ -184,5 +205,22 @@ private:
 //      }
 //      [[nodiscard]] static iterator end() { return {};}
 //      friend class iterator;
+   };
+
+   // Structured binding support for TileCoord
+   template<std::size_t I>
+   constexpr int get(const TileMap::TileCoord& t) {
+      if constexpr (I == 0) return t.x;
+      else if constexpr (I == 1) return t.y;
+   }
+}
+
+namespace std {
+   template<>
+   struct tuple_size<ReyEngine::TileMap::TileCoord> : std::integral_constant<std::size_t, 2> {};
+
+   template<std::size_t I>
+   struct tuple_element<I, ReyEngine::TileMap::TileCoord> {
+      using type = int;
    };
 }

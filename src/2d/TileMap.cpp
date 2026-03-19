@@ -96,6 +96,8 @@ optional<TileMap::TileMapLayer*> TileMap::addLayer(SpriteAtlas *atlas) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////
 TileMap::LayerIndex TileMap::getFirstEmptyLayerIndex() {
    //find the first available tilemap index
    LayerIndex available = 0;
@@ -152,6 +154,25 @@ void TileMap::setTileSize(const Size<int>& size) {
    _tileSize.x = size.x;
    _tileSize.y = size.y;
    redraw();
+}
+////////////////////////////////////////////////////////////////////////////////////////
+std::optional<float> TileMap::SpriteAtlas::getNavWeight(const TileCoord& coord) const {
+   const auto found = _weights.find(coord);
+   if (found == _weights.end()) return {};
+   return found->second;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+std::optional<float> TileMap::getTotalNavWeight(const TileCoord& coords) const {
+   bool found = false;
+   float totalWeight = 1;
+   for (const auto& [coord, layer] : _layers) {
+      if (auto weight = layer->getAtlas().value()->getNavWeight(coords)) {
+         totalWeight *= weight.value();
+         found = true;
+      }
+   }
+   return found ? totalWeight : optional<float>();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -210,7 +231,16 @@ void TileMap::TileMapLayer::removeTileIndex(const TileCoord &pos) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void TileMap::TileMapLayer::setTileByCoords(const TileCoord& target, const TileCoord& source) {
+void TileMap::TileMapLayer::setTileAtCoords(const TileCoord& target, const TileCoord& source) {
    tiles[target.x][target.y] = source;
    tileMap._needsRedraw = true;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<TileMap::TileCoord> TileMap::TileMapLayer::getTileAtCoords(const TileCoord& src) {
+   const auto foundX = tiles.find(src.x);
+   if (foundX == tiles.end()) return {};
+   const auto foundY = foundX->second.find(src.y);
+   if (foundY == foundX->second.end()) return {};
+   return foundY->second;
 }

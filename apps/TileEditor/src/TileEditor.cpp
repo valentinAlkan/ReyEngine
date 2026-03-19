@@ -19,12 +19,12 @@ TileEditor::TileEditor()
 
    //setup the world
    if (layer) {
-      layer.value()->setTileByCoords({0,0}, {0,0});
-      layer.value()->setTileByCoords({0,1}, {0,1});
-      layer.value()->setTileByCoords({0,2}, {0,2});
-      layer.value()->setTileByCoords({1,0}, {1,0});
-      layer.value()->setTileByCoords({1,1}, {1,1});
-      layer.value()->setTileByCoords({1,2}, {1,2});
+      layer.value()->setTileAtCoords({0,0}, {0,0});
+      layer.value()->setTileAtCoords({0,1}, {0,1});
+      layer.value()->setTileAtCoords({0,2}, {0,2});
+      layer.value()->setTileAtCoords({1,0}, {1,0});
+      layer.value()->setTileAtCoords({1,1}, {1,1});
+      layer.value()->setTileAtCoords({1,2}, {1,2});
    } else {
       throw std::runtime_error("something bad, not good!");
    }
@@ -32,6 +32,6 @@ TileEditor::TileEditor()
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Handled TileEditor::_on_hovered(const TileCoord& tile) {
-   getLayer(0).value()->setTileByCoords(tile, {2,1});
+   getLayer(0).value()->setTileAtCoords(tile, {2,1});
    return true;
 }

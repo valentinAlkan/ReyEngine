@@ -268,6 +268,8 @@ namespace ReyEngine {
          return Vec2<T>(x / magnitude, y / magnitude);
       }
       inline Vec2<T> normalize() const {return normalize(x, y);}
+      [[nodiscard]] constexpr inline float distanceTo(const Vec2& other) const {return (*this - other).magnitude();}
+      static constexpr float distanceTo(const Vec2& a, const Vec2& b) {return a.distanceTo(b);}
       inline static std::optional<Vec2<T>> fromString(const std::string& s){return Vec<T, 2>::template fromString<Vec2<T>>(s);}
       friend std::ostream& operator<<(std::ostream& os, Vec2<T> v) {os << v.toString(); return os;}
       friend Vector2& operator+=(Vector2& in, Vec2<T> add) {in.x += add.x; in.y += add.y; return in;}
