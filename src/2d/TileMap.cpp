@@ -180,9 +180,8 @@ Handled TileMap::_unhandled_input(const InputEvent& event) {
    auto mouse = event.isMouse();
    if (mouse && mouse.value()->isInside()) {
       switch (event.eventId) {
-         case InputEventMouseMotion::ID: {
+         case InputEventMouseHover::ID: {
             auto cellPos = getCell(mouse.value()->getLocalPos());
-            float dt = (float)cellPos.x - ((float)mouse.value()->getLocalPos().x / (float)_tileSize.x);
             if (cellPos != currentHover) {
                currentHover = cellPos;
                if (!_on_hovered(cellPos)) {
