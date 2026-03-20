@@ -7,12 +7,8 @@ using namespace std;
 /////////////////////////////////////////////////////////////////////////////////////////
 void TileMap::_init() {
    _showGrid = false;
+   _acceptsHover = true;
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////
-// void TileMap::render2DBegin() {
-//
-// }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void TileMap::render2DEnd() {
@@ -213,6 +209,29 @@ void TileMap::_on_rect_changed() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void TileMap::_on_tiles_changed() {
+   if (_autoResize) {
+      Rect<float> combined;
+      bool first = true;
+      for (const auto& [idx, layer] : _layers) {
+         auto layerBoundingBox = layer->getBoundingBox();
+         if (layerBoundingBox.width <= 0 || layerBoundingBox.height <= 0) continue;
+         if (first) {
+            combined = layerBoundingBox;
+            first = false;
+         } else {
+            combined = combined.combine(layerBoundingBox);
+         }
+      }
+      if (!first) {
+         setRect(combined);
+         Logger::info() << "New tilemap rect = " << combined << endl;
+      }
+   }
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 void TileMap::TileMapLayer::removeTileIndex(const TileCoord &pos) {
@@ -232,7 +251,9 @@ void TileMap::TileMapLayer::removeTileIndex(const TileCoord &pos) {
 /////////////////////////////////////////////////////////////////////////////////////////
 void TileMap::TileMapLayer::setTileAtCoords(const TileCoord& target, const TileCoord& source) {
    tiles[target.x][target.y] = source;
+   tileMap._on_tiles_changed();
    tileMap._needsRedraw = true;
+   Logger::info() << "Adding tile " << target << endl;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -242,4 +263,32 @@ std::optional<TileMap::TileCoord> TileMap::TileMapLayer::getTileAtCoords(const T
    const auto foundY = foundX->second.find(src.y);
    if (foundY == foundX->second.end()) return {};
    return foundY->second;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Rect<float> TileMap::TileMapLayer::getBoundingBox() const {
+   // we (we? ha! YOU) can improve this algorithm by making it create a rect from 0,0 that only includes each new tile,
+   // then comparing that rect withour current rect, and expanding if necessary. We still would need to do a
+   // full recalculation. Possibly we could track the cornery-est tiles and use that to determine if we should
+   // shrink to speed that up too.
+   if (tiles.empty()) return {};
+
+   int minX = tiles.begin()->first;
+   int maxX = tiles.rbegin()->first;
+   int minY = std::numeric_limits<int>::max();
+   int maxY = std::numeric_limits<int>::min();
+
+   for (const auto& [x, yMap] : tiles) {
+      if (!yMap.empty()) {
+         minY = std::min(minY, yMap.begin()->first);
+         maxY = std::max(maxY, yMap.rbegin()->first);
+      }
+   }
+
+   auto tileSize = tileMap.getTileSize();
+   float posX = minX * tileSize.x;
+   float posY = minY * tileSize.y;
+   float width = (maxX - minX + 1) * tileSize.x;
+   float height = (maxY - minY + 1) * tileSize.y;
+   return {{posX, posY}, {width, height}};
 }

@@ -134,7 +134,20 @@ int main() {
       assert(handler.handler == pushButton.get());
       assert(handler.pos.value().x < 6);
       assert(handler.pos.value().y < 6);
+      assert(pushButton->toWindowSpace(handler.pos.value()).get() == hover.mouse.getLocalPos());
    }
+
+   {
+      InputEventMouseHover hover(scrollArea.get(), {101,101});
+      auto handler = scrollArea->processInput(hover);
+      assert(handler.handler == pushButton.get());
+      assert(handler.pos.value() = hover.mouse.getLocalPos());
+   }
+   auto canvasSpace = pushButton->toCanvasSpace({}).get();
+   Logger::info() << "pushbutton localpos " << Pos<float>() << " == canvas pos " << canvasSpace << endl;
+   assert(canvasSpace == Pos<float>(200, 200));
+
+   // Logger::info() << "pushbutton localpos " << handler.pos.value() << " == windowPos " << windowPos << endl;
 
    auto filebrowser = make_child<FileBrowser>(root, "filebrowser");
    filebrowser->centerOnPoint(root->getCenter());

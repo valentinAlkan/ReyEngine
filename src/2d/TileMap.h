@@ -86,6 +86,7 @@ namespace ReyEngine {
          void setTileAtCoords(const TileCoord& target, const TileCoord& src);
          std::optional<TileCoord> getTileAtCoords(const TileCoord& src);
          void removeTileIndex(const TileCoord& pos);
+         [[nodiscard]] Rect<float> getBoundingBox() const; //determine the size of the bounding box that encapsulates every set tile in this layer
       protected:
          //x, y
          std::map<int, std::map<int, TileCoord>> tiles;
@@ -108,7 +109,7 @@ namespace ReyEngine {
          const TileCoord& cellCoord;
       };
 
-      TileMap(const Size<int>& tileSize): _tileSize(tileSize){}
+      TileMap(const Size<int>& tileSize): _tileSize(tileSize) {}
       TileMap(int tileWidth, int tileheight): _tileSize(Size<int>(tileWidth, tileheight)){}
       std::optional<SpriteAtlas*> addAtlas(
             const std::string& atlasName,
@@ -161,9 +162,11 @@ namespace ReyEngine {
       void _init();
       Handled _unhandled_input(const InputEvent&) override;
       void _on_rect_changed() override;
+      void _on_tiles_changed();
       std::map<LayerIndex, std::unique_ptr<TileMapLayer>> _layers;
       std::map<std::string, std::unique_ptr<SpriteAtlas>> _atlases;
       bool _showGrid = false;
+      bool _autoResize = true; //when adding tiles, the size of the tilemap expands to include them
 
 private:
       LayerIndex getFirstEmptyLayerIndex();

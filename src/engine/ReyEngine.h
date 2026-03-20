@@ -733,9 +733,9 @@ namespace ReyEngine {
       constexpr inline Pos operator*(R amt) const {return {static_cast<T>(Vec2<T>::x*amt), static_cast<T>(Vec2<T>::y*amt)};}
       template <typename R>
       constexpr inline Pos operator/(R amt) const {return {Vec2<T>::x/amt, Vec2<T>::y/amt};}
-      constexpr inline Pos transform(const Matrix& m){return Pos<T>(Vec2<T>::transform(*this, m));}
-      constexpr inline Pos xOnly(){return {Pos::x, 0};}
-      constexpr inline Pos yOnly(){return {0, Pos::y};}
+      constexpr inline Pos transform(const Matrix& m) const {return Pos<T>(Vec2<T>::transform(*this, m));}
+      constexpr inline Pos xOnly() const {return {Pos::x, 0};}
+      constexpr inline Pos yOnly() const {return {0, Pos::y};}
       constexpr inline Pos& pushX(R_FLOAT amt) {this->x += amt; return *this;}
       constexpr inline Pos& pushY(R_FLOAT amt) {this->y += amt; return *this;}
       inline static std::optional<Pos<T>> fromString(const std::string& s){

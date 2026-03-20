@@ -3,7 +3,6 @@
 #include <ranges>
 #include "Widget.h"
 #include "CacheVectorMap.h"
-#include "rlgl.h"
 
 namespace ReyEngine {
    namespace WidgetStatus{
@@ -62,10 +61,17 @@ namespace ReyEngine {
       inline Transform2D getCameraTransform() const {return GetCameraMatrix2D(camera);}
       inline Transform2D getCameraTransform() {return GetCameraMatrix2D(camera);}
       Camera2D& getCamera(){return camera;}
+      const Camera2D& getCamera() const {return camera;}
       void moveToForeground(Widget*);
       void moveToBackground(Widget*);
-      BackgroundSpace toBackgroundPos(const Pos<float>& p);
-      Pos<float> toForegroundPos(const BackgroundSpace& p);
+      BackgroundSpace toBackgroundPos(const Pos<float>& p) const;
+      Pos<float> toForegroundPos(const BackgroundSpace& p) const;
+      //converts a point in local canvas space to a local pos in the child, and applies camera transform if neccessary.
+      //If it is not a child of this canvas, returns nullopt.
+      std::optional<Pos<float>> toChildPos(const Widget* child, const Pos<float>& p) const;
+      std::optional<Transform2D> getChildXform(const Widget* child) const;
+      bool isInBackground(const Widget* w) const {return _background.contains(w->_node);}
+      bool isInForeground(const Widget* w) const {return _foreground.contains(w->_node);}
    protected:
       const RenderTarget& readRenderTarget() const {return _renderTarget;}
       RenderContext createRenderContext(){return _renderTarget;}

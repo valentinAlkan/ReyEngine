@@ -12,8 +12,8 @@ namespace ReyEngine{
             : handler(nullptr)
       {}
       Handled(Widget* handler, std::optional<Pos<float>> pos = {})
-            : handler(handler)
-            , pos(pos)
+      : handler(handler)
+      , pos(pos)
       {}
       Widget* handler;
       std::optional<Pos<float>> pos; //for positional input, the position where the input was handled at by the handler (in local space)

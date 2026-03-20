@@ -245,19 +245,46 @@ void Widget::setModal(bool newValue) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-Pos<R_FLOAT> Widget::getLocalMousePos() const {
-   auto hasCanvas = getCanvas();
-   if (!hasCanvas) return {};
-   auto globaltransform = getGlobalTransform(false).get();
-   auto cameraTransform = hasCanvas.value()->getCameraTransform();
-   auto mousepos = InputManager::getMousePos().get();
-   return Pos<R_FLOAT>((globaltransform * cameraTransform).inverse().transform(mousepos));
+WindowSpace<Pos<R_FLOAT>> Widget::toWindowSpace(const Pos<float>& p) const {
+   auto optParent = getParentWidget();
+   auto child = this;
+   Transform2D transform;
+   while (optParent) {
+      auto parent = optParent.value();
+      if (parent->_isCanvas) {
+         auto canvas = parent->as<Canvas>().value();
+         if (auto validTransform = canvas->getChildXform(child)) {
+            transform *= validTransform.value();
+         }
+      } else {
+         transform *= getLocalTransform();
+      }
+      child = parent;
+      optParent = child->getParentWidget();
+   }
+   return Pos<float>(transform.transform(p));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 CanvasSpace<Pos<R_FLOAT>> Widget::toCanvasSpace(const Pos<float>& p) const {
-   auto globaltransform = getGlobalTransform().get();
-   return {Pos<R_FLOAT>(globaltransform.transform(p))};
+   auto optParent = getParentWidget();
+   auto child = this;
+   Transform2D transform;
+   while (optParent) {
+      auto parent = optParent.value();
+      if (parent->_isCanvas) {
+         auto canvas = parent->as<Canvas>().value();
+         if (auto validTransform = canvas->getChildXform(child)) {
+            transform *= validTransform.value();
+            break;
+         }
+      } else {
+         transform *= getLocalTransform();
+      }
+      child = parent;
+      optParent = child->getParentWidget();
+   }
+   return Pos<float>(transform.transform(p));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -292,13 +319,6 @@ void Widget::fromCanvasRect(const CanvasSpace<Rect<float>>& r){
    // Use setRect() to apply the new local rectangle. This will trigger all necessary
    // updates, such as anchoring calculations and firing the _on_rect_changed event.
    setRect(newLocalRect);
-}
-
-
-///////////////////////////////////////////////////////////////////////////////////////////
-WindowSpace<Pos<R_FLOAT>> Widget::toWindowSpace(const Pos<float>& p) const {
-   auto globaltransform = getGlobalTransform().get();
-   return {Pos<R_FLOAT>(globaltransform.transform(p))};
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -352,10 +372,13 @@ Handled Widget::__process_unhandled_input(const InputEvent& event) {
       switch (event.eventId) {
          //offer these events to children who may want them, but then accept them if there are no takers.
          case InputEventMouseToolTip::ID: {
-            if (auto handled = _unhandled_input(event); !handled) return {this, event.isMouse().value()->getLocalPos()};
+            if (auto handled = _unhandled_input(event); !handled && !_tooltipText.empty())
+               return {this, event.isMouse().value()->getLocalPos()};
+            break;
          }
          case InputEventMouseHover::ID: {
-            if (auto handled = _unhandled_input(event); !handled) return {this, event.isMouse().value()->getLocalPos()};
+            if (auto handled = _unhandled_input(event); !handled && _acceptsHover)
+               return {this, event.isMouse().value()->getLocalPos()};
             break;
          }
       }

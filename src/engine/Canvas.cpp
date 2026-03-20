@@ -368,14 +368,37 @@ void Canvas::moveToBackground(Widget* widget) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Canvas::BackgroundSpace Canvas::toBackgroundPos(const Pos<float>& p) {
+Canvas::BackgroundSpace Canvas::toBackgroundPos(const Pos<float>& p) const {
    return (Pos<float>)GetScreenToWorld2D(Vector2(p), getCamera());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Pos<float> Canvas::toForegroundPos(const BackgroundSpace& p) {
+Pos<float> Canvas::toForegroundPos(const BackgroundSpace& p) const {
    return (Pos<float>)GetWorldToScreen2D(Vector2(p.get()), getCamera());
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<Pos<float>> Canvas::toChildPos(const Widget* child, const Pos<float>& p) const {
+   if (isInBackground(child)) {
+      return toBackgroundPos(p).get().transform(child->getLocalTransform().matrix);
+   }
+   if (isInForeground(child)) {
+      return p.transform(child->getLocalTransform().matrix);
+   }
+   return {};
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<Transform2D> Canvas::getChildXform(const Widget* child) const {
+   if (isInBackground(child)) {
+      return getCameraTransform() * child->getLocalTransform();
+   }
+   if (isInForeground(child)) {
+      return child->getLocalTransform();
+   }
+   return {};
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////

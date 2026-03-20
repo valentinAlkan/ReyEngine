@@ -59,14 +59,16 @@ namespace ReyEngine {
       [[nodiscard]] bool isHovered() const;
       [[nodiscard]] bool isFocused() const;
       [[nodiscard]] bool isModal() const;
+      [[nodiscard]] bool getAcceptsHover() const {return _acceptsHover;}
+      void setAcceptsHover(bool accepts){_acceptsHover = accepts;}
       void setHovered(bool);
       void setFocused(bool);
       void setModal(bool);
       [[nodiscard]] Pos<float> getLocalMousePos() const;
-      CanvasSpace<Rect<float>> toCanvasRect() const;
+      [[nodiscard]] CanvasSpace<Rect<float>> toCanvasRect() const;
       void fromCanvasRect(const CanvasSpace<Rect<float>>&);
-      CanvasSpace<Pos<float>> toCanvasSpace(const Pos<float>&) const;
-      WindowSpace<Pos<float>> toWindowSpace(const Pos<float>&) const;
+      [[nodiscard]] CanvasSpace<Pos<float>> toCanvasSpace(const Pos<float>&) const;
+      [[nodiscard]] WindowSpace<Pos<float>> toWindowSpace(const Pos<float>&) const;
       void setEnabled(bool newState){_enabled = newState;}
       [[nodiscard]] bool getIsEnabled() const {return _enabled;}
       void setInputFiltering(InputFilter newFilter){ _inputFilter = newFilter;}
@@ -110,6 +112,7 @@ namespace ReyEngine {
        Widget* _parentWidget = nullptr; //the closest related parent that is a widget.
       bool _modal = false;
       std::string _tooltipText;
+      bool _acceptsHover = false; //whether this will implicitly handle hover events
       std::unique_ptr<InputContext::Semaphore> _inputContext; //only care if the destructor fires
       std::shared_ptr<Theme> theme;
    private:
