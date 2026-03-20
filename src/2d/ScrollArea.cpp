@@ -56,38 +56,54 @@ void ScrollArea::hideHSlider(bool hidden) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::setOffsetX(const Percent& pct) {
-   scrollOffsetX = pct;
+   auto scrollableWidth = boundingBox.width - _viewport.width;
+   if (scrollableWidth <= 0) {
+      scrollOffsetX = 0;
+   } else {
+      scrollOffsetX = scrollableWidth * Fraction(pct).get();
+   }
    if (_hslider) _hslider->setSliderPct(Fraction(pct), false);
    _on_rect_changed();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::setOffsetY(const Percent& pct) {
-   scrollOffsetY = pct;
+   auto scrollableHeight = boundingBox.height - _viewport.height;
+   if (scrollableHeight <= 0) {
+      scrollOffsetY = 0;
+   } else {
+      scrollOffsetY = scrollableHeight * Fraction(pct).get();
+   }
    if (_vslider) _vslider->setSliderPct(Fraction(pct), false);
    _on_rect_changed();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::setOffsetX(float amt) {
-   auto scrollableWidth = boundingBox.width - getRect().width;
+   auto scrollableWidth = boundingBox.width - _viewport.width;
    if (scrollableWidth <= 0) {
-      setOffsetX(Percent(0));
-      return;
+      scrollOffsetX = 0;
+   } else {
+      scrollOffsetX = std::clamp(amt, 0.0f, scrollableWidth);
    }
-   amt = std::clamp(amt, 0.0f, scrollableWidth);
-   setOffsetX(Percent(amt / scrollableWidth * 100.0f));
+   if (_hslider && scrollableWidth > 0) {
+      _hslider->setSliderPct(Fraction(scrollOffsetX / scrollableWidth), false);
+   }
+   _on_rect_changed();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ScrollArea::setOffsetY(float amt) {
-   auto scrollableHeight = boundingBox.height - getRect().height;
+   auto scrollableHeight = boundingBox.height - _viewport.height;
    if (scrollableHeight <= 0) {
-      setOffsetY(Percent(0));
-      return;
+      scrollOffsetY = 0;
+   } else {
+      scrollOffsetY = std::clamp(amt, 0.0f, scrollableHeight);
    }
-   amt = std::clamp(amt, 0.0f, scrollableHeight);
-   setOffsetY(Percent(amt / scrollableHeight * 100.0f));
+   if (_vslider && scrollableHeight > 0) {
+      _vslider->setSliderPct(Fraction(scrollOffsetY / scrollableHeight), false);
+   }
+   _on_rect_changed();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -128,9 +144,14 @@ void ScrollArea::_on_rect_changed(){
    //subtract the slider sizes before updating viewport since each dimension depends on the other
    if (needShowHSlider) _viewport.height -= sliderSize;
    if (needShowVSlider) _viewport.width -= sliderSize;
-   // Use viewport size (adjusted for scrollbars) so content at edges isn't hidden behind scrollbars
-   _viewport.x = (boundingBox.width - _viewport.width) * static_cast<float>(Fraction(scrollOffsetX).get());
-   _viewport.y = (boundingBox.height - _viewport.height) * static_cast<float>(Fraction(scrollOffsetY).get());
+   // Clamp offsets to valid range after viewport size changes
+   auto scrollableWidth = boundingBox.width - _viewport.width;
+   auto scrollableHeight = boundingBox.height - _viewport.height;
+   scrollOffsetX = std::clamp(scrollOffsetX, 0.0f, std::max(0.0f, scrollableWidth));
+   scrollOffsetY = std::clamp(scrollOffsetY, 0.0f, std::max(0.0f, scrollableHeight));
+   // Use absolute offset values directly
+   _viewport.x = scrollOffsetX;
+   _viewport.y = scrollOffsetY;
    if (_hslider) {
       _hslider->setRect(hsliderNewRect);
       _hslider->setVisible(!_hideHSlider && needShowHSlider);

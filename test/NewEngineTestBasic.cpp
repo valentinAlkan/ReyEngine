@@ -143,9 +143,12 @@ int main() {
       assert(handler.handler == pushButton.get());
       assert(handler.pos.value() = hover.mouse.getLocalPos());
    }
+
+   scrollArea->setOffsetX(150);
+   scrollArea->setOffsetY(150);
    auto canvasSpace = pushButton->toCanvasSpace({}).get();
-   Logger::info() << "pushbutton localpos " << Pos<float>() << " == canvas pos " << canvasSpace << endl;
-   assert(canvasSpace == Pos<float>(200, 200));
+   // Logger::info() << "pushbutton localpos " << Pos<float>() << " == canvas pos " << canvasSpace << endl;
+   assert(canvasSpace == Pos<float>(50, 50));
 
    // Logger::info() << "pushbutton localpos " << handler.pos.value() << " == windowPos " << windowPos << endl;
 

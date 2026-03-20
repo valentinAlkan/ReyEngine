@@ -73,34 +73,14 @@ namespace ReyEngine {
       return ss.str();
    }
 
+
+   namespace ______ {struct WindowSpaceParam{}; struct CanvasSpaceParam{};}
+   // Window Coordinates - relative to application window
+   template <typename T>
+   using WindowSpace = NamedType<T, ______::WindowSpaceParam>;
    // Canvas Coordinates - relative to current canvas
    template <typename T>
-   struct WindowSpace{
-   public:
-      WindowSpace() = default;
-      WindowSpace(const T& other): underlying(other){}
-      WindowSpace& operator=(const T& other){ underlying = other;}
-      T& get(){return underlying;}
-      const T& get() const {return underlying;}
-      friend std::ostream& operator<<(std::ostream& os, const WindowSpace<T>& other) {os << other.get(); return os;}
-
-   private:
-      T underlying;
-   };
-
-   // Canvas Coordinates - relative to current canvas
-   template <typename T>
-   struct CanvasSpace{
-   public:
-      CanvasSpace() = default;
-      CanvasSpace(const T& other): underlying(other){}
-//      CanvasSpace& operator=(const T& other){ underlying = other;}
-      T& get(){return underlying;}
-      const T& get() const {return underlying;}
-      friend std::ostream& operator<<(std::ostream& os, const CanvasSpace<T>& other) {os << other.get(); return os;}
-   private:
-      T underlying;
-   };
+   using CanvasSpace = NamedType<T, ______::CanvasSpaceParam>;
 
    /// This struct aids in remembering values. Using it like type T should always use the 'first' value,
    /// but you can swap between two values, or march the values down the line to 'remember' the x most recent values

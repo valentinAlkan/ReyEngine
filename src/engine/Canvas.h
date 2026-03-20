@@ -134,15 +134,6 @@ namespace ReyEngine {
       [[nodiscard]] const Widget* getStatus() const {return const_cast<Canvas*>(this)->getStatus<Status>();}
       std::array<Widget*, std::tuple_size_v<WidgetStatus::StatusTypes>> statusWidgetStorage = {0};
 
-      /////////////////////////////////////////////////////////////////////////////////////////
-      struct TransformStack{
-         void pushTransform(Transform2D* transform2D);
-         void popTransform();
-         const Transform2D& getGlobalTransform() const {return globalTransform;}
-      private:
-         std::stack<Transform2D*> globalTransformStack;
-         Transform2D globalTransform;
-      } transformStack;
       static void doRender(RenderContext&, Widget*, bool isModal=false);
       static void doRenderModal(RenderContext&, Widget*);
    private:

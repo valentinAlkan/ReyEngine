@@ -26,8 +26,8 @@ namespace ReyEngine {
         Handled _unhandled_input(const InputEvent&) override;
         void _init() override;
 
-        Percent scrollOffsetX;
-        Percent scrollOffsetY;
+        float scrollOffsetX = 0;
+        float scrollOffsetY = 0;
         std::shared_ptr<Slider> _vslider;
         std::shared_ptr<Slider> _hslider;
         Rect<R_FLOAT> boundingBox; //contains all children, is at least as big as scrollArea. RenderTarget takes its size

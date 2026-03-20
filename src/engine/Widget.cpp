@@ -257,12 +257,20 @@ WindowSpace<Pos<R_FLOAT>> Widget::toWindowSpace(const Pos<float>& p) const {
             transform *= validTransform.value();
          }
       } else {
-         transform *= getLocalTransform();
+         transform *= child->getLocalTransform();
       }
       child = parent;
       optParent = child->getParentWidget();
    }
+   transform *= child->getLocalTransform();
    return Pos<float>(transform.transform(p));
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+Pos<float> Widget::getLocalMousePos() const {
+   auto widgetOrigin = toWindowSpace({});
+   auto mousePos = InputManager::getMousePos();
+   return (mousePos - widgetOrigin).get();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

@@ -398,20 +398,3 @@ std::optional<Transform2D> Canvas::getChildXform(const Widget* child) const {
    }
    return {};
 }
-
-
-/////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-void Canvas::TransformStack::pushTransform(Transform2D* transform2D) {
-   rlMultMatrixf(MatrixToFloat(transform2D->matrix));
-   globalTransformStack.push(transform2D);
-   globalTransform = rlGetMatrixTransform();
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-void Canvas::TransformStack::popTransform() {
-   rlMultMatrixf(MatrixToFloat(globalTransformStack.top()->inverse().matrix));
-   globalTransformStack.pop();
-   globalTransform = rlGetMatrixTransform();
-}
