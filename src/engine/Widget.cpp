@@ -246,6 +246,7 @@ void Widget::setModal(bool newValue) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 WindowSpace<Pos<R_FLOAT>> Widget::toWindowSpace(const Pos<float>& p) const {
+   static constexpr bool VERBOSE = true;
    auto optParent = getParentWidget();
    auto child = this;
    Transform2D transform;
@@ -254,15 +255,20 @@ WindowSpace<Pos<R_FLOAT>> Widget::toWindowSpace(const Pos<float>& p) const {
       if (parent->_isCanvas) {
          auto canvas = parent->as<Canvas>().value();
          if (auto validTransform = canvas->getChildXform(child)) {
+            Logger::debug() << "canvas " << canvas->getName() << " transform  of child : " << child->getName() << ": " << validTransform.value() << endl;
             transform *= validTransform.value();
          }
       } else {
+         Logger::debug() << "transform  of child : " << child->getName() << ": " << child->getLocalTransform() << endl;
          transform *= child->getLocalTransform();
       }
+      if constexpr (VERBOSE) Logger::debug() << "applying transform  = " << transform << endl;
       child = parent;
       optParent = child->getParentWidget();
+      if constexpr (VERBOSE) Logger::debug() << "current transform : " << transform << endl;
    }
    transform *= child->getLocalTransform();
+   if constexpr (VERBOSE) Logger::debug() << "final transform : " << transform << endl;
    return Pos<float>(transform.transform(p));
 }
 

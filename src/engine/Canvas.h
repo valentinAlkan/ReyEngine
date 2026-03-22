@@ -111,7 +111,7 @@ namespace ReyEngine {
                if (newWidget) newWidget->_on_focus_gained();
          }
          if constexpr (std::is_same_v<Status, WidgetStatus::Modal>){
-            //only drawables can be modal, so we can set some extra statuses to help us out
+            //only drawables can be modal, so we can set some extra statuses to help us outd
             if (oldWidget){
                oldWidget->_modal = false;
                oldWidget->_on_modality_lost();
