@@ -33,6 +33,8 @@ namespace ReyEngine::FileSystem {
       Path(const File& file);
       Path(const char* path): _path(path){ parsePath();}
       Path(const std::string& path): _path(path){ parsePath();}
+      Path(const Path& other) : _path(other._path), _pathType(other._pathType) {}
+      Path(Path&& other) noexcept : _path(std::move(other._path)), _pathType(other._pathType) {}
       [[nodiscard]] bool exists() const {return std::filesystem::exists(_path);};
       [[nodiscard]] std::string tail() const {return _path.filename().string();}
       [[nodiscard]] std::string head() const {if (_path.has_parent_path())return _path.parent_path().string(); return {FILESYSTEM_PATH_SEP, 1};}
@@ -58,6 +60,7 @@ namespace ReyEngine::FileSystem {
       inline Path& operator=(const std::string& rhs){*this = rhs.c_str(); parsePath(); return *this;}
       inline Path& operator=(const char* rhs){_path.clear(); _path = rhs; parsePath(); return *this;}
       inline Path& operator=(const Path& rhs){_path.clear(); _path = rhs._path; parsePath(); return *this;}
+      inline Path& operator=(Path&& rhs) noexcept {if (this != &rhs) {_path = std::move(rhs._path);_pathType = rhs._pathType;}return *this;}
       inline Path& operator=(const std::filesystem::path& rhs){_path.clear(); _path = rhs; parsePath(); return *this;}
       inline bool operator==(const std::string& rhs) const {return _path == rhs;}
       inline bool operator==(const Path& rhs) const {return _path == rhs._path;}
@@ -80,8 +83,8 @@ namespace ReyEngine::FileSystem {
       void erase(EraseType eraseType);
       void overwrite(bool createParent=false);
       void parsePath();
-      PathType _pathType = EMPTY;
       std::filesystem::path _path;
+      PathType _pathType = EMPTY;
    private:
       friend struct DirectoryContents;
    };
@@ -97,7 +100,8 @@ namespace ReyEngine::FileSystem {
       File(File&& other) = default;
       File(const char* other): Path(other){_pathType = REGULAR_FILE;}
       File(const Path& other): Path(other){_pathType = REGULAR_FILE;}
-      File(Path&& other): Path(other){_pathType = REGULAR_FILE;}
+      File(Path&& other): Path(std::move(other)){_pathType = REGULAR_FILE;}
+
       File& operator=(const File& other) = default;
       File& operator=(const Directory& other) = delete;
       Directory toDir() const = delete;

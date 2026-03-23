@@ -34,8 +34,8 @@ namespace ReyEngine {
       };
 
       EVENT_ARGS(EventComboBoxItemHovered, 654654655, size_t itemIndex, const ComboBoxDataField<T>* field)
-         , field(field)
          , itemIndex(itemIndex)
+         , field(field)
          {}
          const size_t itemIndex;
          const ComboBoxDataField<T>* field;
@@ -158,7 +158,7 @@ namespace ReyEngine {
          //draw if the menu is open
          if (_isOpen){
             drawRectangle(_selectionMenuRect, Colors::gray);
-            for (int i=0; i < fields.size(); i++){
+            for (unsigned int i=0; i < fields.size(); i++){
                auto& field = fields.at(i);
                auto& rect = _selectionMenuItemRects.at(i);
                if (field->highlighted){
@@ -187,7 +187,7 @@ namespace ReyEngine {
             _selectionMenuRect = Rect<float>(getSelectionMenuPos(), {getWidth(), theme->font->size * fields.size()});
             //build the item rects
             _selectionMenuItemRects.clear();
-            for (int i = 0; i < fields.size(); i++) {
+            for (unsigned int i = 0; i < fields.size(); i++) {
                fieldSelectionRectHeight = theme->font->size;
                auto itemWidth = getRect().width;
                auto itemY = getRect().height + (i * fieldSelectionRectHeight);
@@ -207,14 +207,12 @@ namespace ReyEngine {
                         //highlight the field
                         auto indexAt = getIndexAt(mouse->getLocalPos());
                         if (indexAt) {
-                           for (int i = 0; i < fields.size(); i++) {
+                           for (unsigned int i = 0; i < fields.size(); i++) {
                               auto& field = fields.at(i);
-                              if (indexAt) {
-                                 field->highlighted = indexAt.value() == i;
-                                 if (field->highlighted) {
-                                    EventComboBoxItemHovered hoverEvent(this, i, field.get());
-                                    publish(hoverEvent);
-                                 }
+                              field->highlighted = indexAt.value() == i;
+                              if (field->highlighted) {
+                                 EventComboBoxItemHovered hoverEvent(this, i, field.get());
+                                 publish(hoverEvent);
                               }
                            }
                            return this;
@@ -255,10 +253,6 @@ namespace ReyEngine {
                      }
                      break;
                   }
-                  case InputEventMouseWheel::ID:
-                     auto& mwEvent = event.toEvent<InputEventMouseWheel>();
-//               mwEvent.wheelMove.pct()
-                     break;
                }
             }
          }
@@ -266,7 +260,7 @@ namespace ReyEngine {
       }
       [[nodiscard]] std::optional<size_t> getIndexAt(const Pos<float>& pos) const {
          //get the item in the dropdown list at the specified location
-         for (int i = 0; i < fields.size(); i++) {
+         for (unsigned int i = 0; i < fields.size(); i++) {
             auto& selectionRect = _selectionMenuItemRects.at(i);
             if (selectionRect.contains(pos)) {
                return i;

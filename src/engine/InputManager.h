@@ -77,13 +77,12 @@ namespace ReyEngine{
             mouseEvent._isInside = _isinside_cached;
          }
          [[nodiscard]] Pos<float> getLocalPos() const {return mouseEvent._localPos;}
-         // [[nodiscard]] CanvasSpace<Pos<float>> getCanvasPos() const {return mouseEvent._canvasPos;}
-         const Transform2D& _applicableXform;
       private:
          MouseEvent& mouseEvent;
          std::optional<Transform2D> cameraTransform;
          bool _isinside_cached; //for recall on dtor
          Pos<float> _localPos_cached; //for recall on dtor
+         const Transform2D& _applicableXform;
       };
    private:
       // CanvasSpace<Pos<float>> _canvasPos;
@@ -131,8 +130,8 @@ namespace ReyEngine{
    , mouse(pos)
    , isCancel(isCancel)
    {}
-      bool isCancel;
       MouseEvent mouse;
+      bool isCancel;
    };
 
    // other types

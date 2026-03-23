@@ -160,9 +160,9 @@ namespace ReyEngine {
          : _shader(reyShader._shader)
          , _name(name)
          {}
-         std::string _name;
          int _location;
          Shader _shader = {0}; //doesnt' do memory cleanup so stack-o-lee it is
+         std::string _name;
          UniformType _type;
          friend class ReyShader;
       };

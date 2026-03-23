@@ -394,8 +394,8 @@ namespace ReyEngine::Internal::Tree {
       [[nodiscard]] const std::vector<TypeNode*>& getChildren() const {return _childOrder;}
       std::vector<TypeNode*>& getChildren() {return _childOrder;}
 
-      const std::string typeName;
       const std::string name;
+      const std::string typeName;
    protected:
 
       //direct, unsafe type conversion

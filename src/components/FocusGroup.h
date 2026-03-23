@@ -18,7 +18,7 @@ namespace ReyEngine {
       }
       //return which, if any, item currently has focus
       [[nodiscard]] std::optional<Widget*> getCurrentInFocus() const {
-         for (const auto it : _widgets){
+         for (const auto& it : _widgets){
             if (auto exists = it.lock()){
                if (exists->isFocused()) return exists.get();
             }

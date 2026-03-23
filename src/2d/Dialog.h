@@ -23,8 +23,8 @@ namespace ReyEngine {
       REYENGINE_OBJECT(Dialog);
       Dialog(std::array<DialogOptions, N> options, const std::string& message="", Layout::LayoutDir layoutDirection = Layout::LayoutDir::HORIZONTAL)
       : options(options)
-      , message(message)
       , layoutDirection(layoutDirection)
+      , message(message)
       {
          if (layoutDirection != Layout::LayoutDir::HORIZONTAL && layoutDirection != Layout::LayoutDir::VERTICAL) {
             Logger::error() << "Dialogs do not support this layout direction. Defaulting to Horizontal" << std::endl;

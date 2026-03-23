@@ -13,8 +13,8 @@ namespace ReyEngine {
          const std::string newText;
       };
       EVENT_ARGS(EventLineEditTextChanged, 754321526, const std::string& oldText, const std::string& newText)
-      , newText(newText)
       , oldText(oldText)
+      , newText(newText)
       {}
          const std::string oldText;
          const std::string newText;

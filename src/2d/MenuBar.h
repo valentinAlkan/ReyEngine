@@ -10,9 +10,9 @@ namespace ReyEngine{
       struct MenuInterface{
          struct MenuEntry {
             MenuEntry(MenuInterface* interface, std::shared_ptr<ReyTexture> icon, const std::string& text)
-            : _interface(interface)
-            , _text(text)
+            : _text(text)
             , _icon(icon)
+            , _interface(interface)
             {}
             void setText(const std::string&);
             void setIcon(std::shared_ptr<ReyTexture>&);
@@ -36,7 +36,7 @@ namespace ReyEngine{
             constexpr size_t N = sizeof...(Args);
             std::array<MenuEntry*, N> retval;
             std::array<std::string, N> entryNames{args...};
-            for (int i = 0; i < N; ++i) {
+            for (unsigned int i = 0; i < N; ++i) {
                auto& text = entryNames[i];
                _entries.emplace_back(std::make_unique<MenuEntry>(this, nullptr, text));
                retval[i] = _entries.back().get();

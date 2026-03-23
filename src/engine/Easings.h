@@ -254,10 +254,10 @@ namespace ReyEngine {
    protected:
       Easable* _easable;
    private:
-      std::chrono::steady_clock::time_point _startTime;
       std::chrono::milliseconds _duration;
       EasingCallback _callbackDuring;
       std::function<void()> _callbackAfter;
+      std::chrono::steady_clock::time_point _startTime;
       const EasingFunctor functor;
       Fraction input;
       Fraction output;
