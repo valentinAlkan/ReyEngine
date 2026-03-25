@@ -12,7 +12,7 @@ using sc = chrono::steady_clock;
 
 constexpr bool PRINT_MOUSEUP = false;
 constexpr bool PRINT_MOUSEDOWN = false;
-constexpr bool PRINT_HOVER = true;
+constexpr bool PRINT_HOVER = false;
 constexpr bool PRINT_MOTION = false;
 constexpr bool PRINT_TOOLTIP = false;
 constexpr bool PRINT_TOOLTIP_CANCEL = false;
@@ -264,7 +264,9 @@ void Window::exec(){
       //draw the scene to the window
       BeginDrawing();
       auto rect = _canvas->getSizeRect();
+      BeginBlendMode(BLEND_ALPHA);
       drawRenderTargetRect(_canvas->readRenderTarget(), rect, rect, Colors::none);
+      EndBlendMode();
       EndDrawing();
       _frameCounter++;
    }

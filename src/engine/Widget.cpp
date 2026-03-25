@@ -245,8 +245,8 @@ void Widget::setModal(bool newValue) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-WindowSpace<Pos<R_FLOAT>> Widget::toWindowSpace(const Pos<float>& p) const {
-   static constexpr bool VERBOSE = true;
+Transform2D Widget::getWindowTransform() const {
+   static constexpr bool VERBOSE = false;
    auto optParent = getParentWidget();
    auto child = this;
    Transform2D transform;
@@ -255,7 +255,7 @@ WindowSpace<Pos<R_FLOAT>> Widget::toWindowSpace(const Pos<float>& p) const {
       if (parent->_isCanvas) {
          auto canvas = parent->as<Canvas>().value();
          if (auto validTransform = canvas->getChildXform(child)) {
-            Logger::debug() << "canvas " << canvas->getName() << " transform  of child : " << child->getName() << ": " << validTransform.value() << endl;
+            if constexpr (VERBOSE) Logger::debug() << "canvas " << canvas->getName() << " transform  of child : " << child->getName() << ": " << validTransform.value() << endl;
             transform *= validTransform.value();
          }
       } else {
@@ -269,14 +269,18 @@ WindowSpace<Pos<R_FLOAT>> Widget::toWindowSpace(const Pos<float>& p) const {
    }
    transform *= child->getLocalTransform();
    if constexpr (VERBOSE) Logger::debug() << "final transform : " << transform << endl;
-   return Pos<float>(transform.transform(p));
+   return transform;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+WindowSpace<Pos<R_FLOAT>> Widget::toWindowSpace(const Pos<float>& p) const {
+   return Pos<float>(getWindowTransform().transform(p));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 Pos<float> Widget::getLocalMousePos() const {
-   auto widgetOrigin = toWindowSpace({});
    auto mousePos = InputManager::getMousePos();
-   return (mousePos - widgetOrigin).get();
+   return Pos<float>(getWindowTransform().inverse().transform(mousePos.get()));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

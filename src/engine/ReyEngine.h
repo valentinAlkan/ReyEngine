@@ -1343,9 +1343,9 @@ namespace ReyEngine {
       }
 
       //Get the sub-rectangle (of size Size) that contains pos Pos. Think tilemaps.
-      [[nodiscard]] constexpr inline Rect getSubRectAtPos(const Size<R_FLOAT>& size, const Pos<R_FLOAT>& pos) const {
-         auto subx = pos.x / size.x;
-         auto suby = pos.y / size.y;
+      [[nodiscard]] inline Rect getSubRectAtPos(const Size<R_FLOAT>& size, const Pos<R_FLOAT>& pos) const {
+         auto subx = std::floor(pos.x / size.x);
+         auto suby = std::floor(pos.y / size.y);
          return Rect(subx * size.x, suby * size.y, size.x, size.y);
       }
 

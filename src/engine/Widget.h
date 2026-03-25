@@ -69,6 +69,7 @@ namespace ReyEngine {
       void fromCanvasRect(const CanvasSpace<Rect<float>>&);
       [[nodiscard]] CanvasSpace<Pos<float>> toCanvasSpace(const Pos<float>&) const;
       [[nodiscard]] WindowSpace<Pos<float>> toWindowSpace(const Pos<float>&) const;
+      [[nodiscard]] Transform2D getWindowTransform() const;
       void setEnabled(bool newState){_enabled = newState;}
       [[nodiscard]] bool getIsEnabled() const {return _enabled;}
       void setInputFiltering(InputFilter newFilter){ _inputFilter = newFilter;}
