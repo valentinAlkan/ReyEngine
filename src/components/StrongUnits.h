@@ -188,6 +188,7 @@ namespace StrongUnitParameters{
    struct Fraction{};
    struct FrequencyParameter{};
    struct RadiansPerSecondParameter{};
+   struct GramsParameter{};
 }
 
 //our implementations
@@ -220,6 +221,10 @@ using MilesPerHour = MultipleOf<MetersPerSecond, std::ratio<10000000000, 2236936
 using RadiansPerSecond = NamedType<double, StrongUnitParameters::RadiansPerSecondParameter, ToDouble>;
 using DegreesPerSecond = MultipleOf<RadiansPerSecond , std::ratio<31415926535897932, 1800000000000000000>>;
 using Knots = MultipleOf<MetersPerSecond, std::ratio<100000000000, 194384449244>>;
+
+using Grams = NamedType<double, StrongUnitParameters::GramsParameter, ToDouble>;
+using Kilograms = MultipleOf<Grams, std::ratio<1000>>;
+using Pounds = MultipleOf<Grams, std::ratio<45359237, 100000>>;
 
 constexpr MetersMSL  operator"" _m_msl(unsigned long long value){return {(double)value};}
 constexpr MetersMSL  operator"" _m_msl(long double value){return {(double)value};}
@@ -295,82 +300,83 @@ template <ChronoDuration CHRONO_TYPE> constexpr bool operator<=(const CHRONO_TYP
 
 
 //check our work
-//#define ft Feet(3048_m)
-//#define pi2Rad (M_PI * 2_rad)
-//#define three_sixty_deg 360_deg
-//template<typename T, typename U> concept CanCompare = requires(T t, U u) {{ t == u } -> std::convertible_to<bool>;};
-//static_assert(ft == 10000);
-//static_assert(ft != 3);
-//static_assert(ft != 2);
-//static_assert(ft != 1);
-//static_assert(ft != 0);
-//static_assert(ft != -1);
-//static_assert(ft != -2);
-//static_assert(ft != -3);
-//static_assert(ft == Feet(10000));
-//static_assert(Feet(1000) == 1000_ft);
-//static_assert(Feet(1000) + 1_ft == 1001_ft);
-//static_assert(1_km - 1000_m == 0);
-//static_assert(1_km + 1000_m == 2_km);
-//static_assert((1 + ft) == 10001);
-//static_assert((ft + 2) == 10002);
-//static_assert((2 + ft) == 10002);
-//static_assert((ft - 1) == 9999);
-//static_assert((1 - ft) == -9999);
-//static_assert((ft - 2) == 9998);
-//static_assert((2 - ft) == -9998);
-//static_assert((ft / 2) == 5000);
-//static_assert((2 / ft) == 5000);
-//static_assert((ft * 2) == 20000);
-//static_assert((2 * ft) == 20000);
-//static_assert(1000_m == 1000_m);
-//static_assert((1000_m).get() == 1000);
-//static_assert((1_km).get() != 1000);
-//static_assert((0.445_km).get() == 0.445);
-//static_assert(1000_m == 1_km);
-//static_assert(999_m < 1_km);
-//static_assert(1001_m > 1_km);
-//static_assert(9999_ft < 3048_m);
-//static_assert(10001_ft > 3048_m);
-//static_assert(three_sixty_deg > Degrees(359.9999999));
-//static_assert(pi2Rad < Degrees(360.0000001));
-//static_assert(three_sixty_deg/2 >= Degrees(180));
-//static_assert(pi2Rad/2 <= Degrees(180));
-//static_assert(three_sixty_deg/2 == Degrees(180));
-//static_assert(pi2Rad == Degrees(360));
-//static_assert((three_sixty_deg + 2) % 360 < 2.000000001);
-//static_assert(pi2Rad + 2 % 360 > 1.999999999);
-//static_assert(three_sixty_deg + 1 == 361);
-//static_assert(three_sixty_deg % 360 == 0);
-//static_assert(Degrees(pi2Rad) == 360);
-//static_assert(three_sixty_deg == 360);
-//static_assert(1_rad > Degrees(57.2957));
-//static_assert(1_rad < Degrees(57.2958));
-//static_assert(Meters(NAN).isNan());
-//static_assert(Meters(NAN) != 0);
-//static_assert(Milliradians(M_PI*2000) == Degrees(360));
-//static_assert(!CanCompare<MetersHAE, MetersMSL>, "MetersHAE and MetersMSL should not be comparable");
-//static_assert(MetersHAE(1).toType<Meters>() == Meters(1));
-//static_assert(MetersMSL(1).toType<Meters>() == Meters(1));
-//static_assert(Meters(MetersHAE(3048).get()) == Feet(10000));
-//static_assert(KilometersMSL(1) == MetersMSL(1000));
-//static_assert(Knots(1.94384449244) == MetersPerSecond(1));
-//static_assert(std::abs(Meters(-4)) == 4);
-//static_assert(std::abs(Knots(4)) == 4);
-//static_assert(Feet(1) == Inches(12));
-//static_assert(Hertz(1).toType<std::chrono::milliseconds>() == 1000ms);
-//static_assert(Hertz(2).toType<std::chrono::milliseconds>() == 500ms);
-//static_assert(Hertz(3).toType<std::chrono::milliseconds>() == 333ms);
-//static_assert(Hertz(0.5).toType<std::chrono::milliseconds>() == 2000ms);
-//static_assert(Hertz::fromType(std::chrono::milliseconds(1000)) == 1_hz);
-//static_assert(Hertz::fromType(std::chrono::milliseconds(100)) == 10_hz);
-//static_assert(Hertz::fromType(std::chrono::milliseconds(10)) == 100_hz);
-//static_assert(Hertz::fromType(std::chrono::milliseconds(1)) == 1000_hz);
-//static_assert(Hertz(10) == std::chrono::milliseconds (100));
-//static_assert(Hertz(10) >= std::chrono::milliseconds (100));
-//static_assert(Hertz(9) >= std::chrono::milliseconds (100));
-//static_assert(Hertz(10) <= std::chrono::milliseconds (100));
-//static_assert(NauticalMiles(1) == Meters(1852));
-//#undef ft
-//#undef pi2Rad
-//#undef three_sixty_deg
+// #define ft Feet(3048_m)
+// #define pi2Rad (M_PI * 2_rad)
+// #define three_sixty_deg 360_deg
+// template<typename T, typename U> concept CanCompare = requires(T t, U u) {{ t == u } -> std::convertible_to<bool>;};
+// static_assert(ft == 10000);
+// static_assert(ft != 3);
+// static_assert(ft != 2);
+// static_assert(ft != 1);
+// static_assert(ft != 0);
+// static_assert(ft != -1);
+// static_assert(ft != -2);
+// static_assert(ft != -3);
+// static_assert(ft == Feet(10000));
+// static_assert(Feet(1000) == 1000_ft);
+// static_assert(Feet(1000) + 1_ft == 1001_ft);
+// static_assert(1_km - 1000_m == 0);
+// static_assert(1_km + 1000_m == 2_km);
+// static_assert((1 + ft) == 10001);
+// static_assert((ft + 2) == 10002);
+// static_assert((2 + ft) == 10002);
+// static_assert((ft - 1) == 9999);
+// static_assert((1 - ft) == -9999);
+// static_assert((ft - 2) == 9998);
+// static_assert((2 - ft) == -9998);
+// static_assert((ft / 2) == 5000);
+// static_assert((2 / ft) == 5000);
+// static_assert((ft * 2) == 20000);
+// static_assert((2 * ft) == 20000);
+// static_assert(1000_m == 1000_m);
+// static_assert((1000_m).get() == 1000);
+// static_assert((1_km).get() != 1000);
+// static_assert((0.445_km).get() == 0.445);
+// static_assert(1000_m == 1_km);
+// static_assert(999_m < 1_km);
+// static_assert(1001_m > 1_km);
+// static_assert(9999_ft < 3048_m);
+// static_assert(10001_ft > 3048_m);
+// static_assert(three_sixty_deg > Degrees(359.9999999));
+// static_assert(pi2Rad < Degrees(360.0000001));
+// static_assert(three_sixty_deg/2 >= Degrees(180));
+// static_assert(pi2Rad/2 <= Degrees(180));
+// static_assert(three_sixty_deg/2 == Degrees(180));
+// static_assert(pi2Rad == Degrees(360));
+// static_assert((three_sixty_deg + 2) % 360 < 2.000000001);
+// static_assert(pi2Rad + 2 % 360 > 1.999999999);
+// static_assert(three_sixty_deg + 1 == 361);
+// static_assert(three_sixty_deg % 360 == 0);
+// static_assert(Degrees(pi2Rad) == 360);
+// static_assert(three_sixty_deg == 360);
+// static_assert(1_rad > Degrees(57.2957));
+// static_assert(1_rad < Degrees(57.2958));
+// static_assert(Meters(NAN).isNan());
+// static_assert(Meters(NAN) != 0);
+// static_assert(Milliradians(M_PI*2000) == Degrees(360));
+// static_assert(!CanCompare<MetersHAE, MetersMSL>, "MetersHAE and MetersMSL should not be comparable");
+// static_assert(MetersHAE(1).toType<Meters>() == Meters(1));
+// static_assert(MetersMSL(1).toType<Meters>() == Meters(1));
+// static_assert(Meters(MetersHAE(3048).get()) == Feet(10000));
+// static_assert(KilometersMSL(1) == MetersMSL(1000));
+// static_assert(Knots(1.94384449244) == MetersPerSecond(1));
+// static_assert(std::abs(Meters(-4)) == 4);
+// static_assert(std::abs(Knots(4)) == 4);
+// static_assert(Feet(1) == Inches(12));
+// static_assert(Hertz(1).toType<std::chrono::milliseconds>() == 1000ms);
+// static_assert(Hertz(2).toType<std::chrono::milliseconds>() == 500ms);
+// static_assert(Hertz(3).toType<std::chrono::milliseconds>() == 333ms);
+// static_assert(Hertz(0.5).toType<std::chrono::milliseconds>() == 2000ms);
+// static_assert(Hertz::fromType(std::chrono::milliseconds(1000)) == 1_hz);
+// static_assert(Hertz::fromType(std::chrono::milliseconds(100)) == 10_hz);
+// static_assert(Hertz::fromType(std::chrono::milliseconds(10)) == 100_hz);
+// static_assert(Hertz::fromType(std::chrono::milliseconds(1)) == 1000_hz);
+// static_assert(Hertz(10) == std::chrono::milliseconds (100));
+// static_assert(Hertz(10) >= std::chrono::milliseconds (100));
+// static_assert(Hertz(9) >= std::chrono::milliseconds (100));
+// static_assert(Hertz(10) <= std::chrono::milliseconds (100));
+// static_assert(NauticalMiles(1) == Meters(1852));
+// static_assert(Grams(453.59237) == Pounds(1));
+// #undef ft
+// #undef pi2Rad
+// #undef three_sixty_deg

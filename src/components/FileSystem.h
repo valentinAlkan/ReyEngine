@@ -51,9 +51,11 @@ namespace ReyEngine::FileSystem {
       inline Path& operator/=(const Path& rhs) {_path /= rhs._path; parsePath(); return *this;}
       inline Path& operator/=(const char* rhs) {_path /= rhs; parsePath(); return *this;}
       inline Path& operator/=(const std::string& rhs) {_path /= rhs; parsePath(); return *this;}
+      inline Path& operator/=(const std::string_view rhs) {_path /= rhs; parsePath(); return *this;}
       inline Path operator/(const Path& rhs) const {return (_path / rhs._path).string(); }
       inline Path operator/(const char* rhs) const {return (_path / rhs).string();}
       inline Path operator/(const std::string& rhs) const {return (_path / rhs).string();}
+      inline Path operator/(const std::string_view rhs) const {return (_path / rhs).string();}
       inline Path operator+(const char* rhs) const {return {*this + std::string(rhs)};}
       inline Path operator+(const std::string& rhs) const {return {_path.string() + rhs};}
       explicit inline operator bool() const {return !_path.empty();}
@@ -114,12 +116,20 @@ namespace ReyEngine::FileSystem {
    };
 
    struct FileHandle {
+      struct LineData {
+         LineData(): valid(false){}
+         template <typename T> LineData& operator=(const T& stringLike){data = stringLike; return *this;}
+         template <typename T> LineData(const T& stringLike): data(stringLike){}
+         operator bool() const {return valid;}
+         const std::string data;
+         bool valid = true;
+      };
       // A handle to a file that has been opened and is available to read from.
       ~FileHandle(){close();}
       std::vector<char> readFile();
       std::vector<char> readBytes(long long count);
       size_t readBytesInPlace(long long count, std::vector<char>& buffer);
-      std::string readLine(); //read until we get to a new line (treats cr/nl as single newline).
+      LineData readLine(); //read until we get to a new line (treats cr/nl as single newline).
       std::optional<char> peek() const;
       void seek(uint64_t i){ _ptr = i;}
       void write(){throw std::runtime_error("not implemented");/*todo*/}
@@ -222,4 +232,5 @@ namespace ReyEngine::FileSystem {
 namespace ReyEngine::string_tools{
    [[nodiscard]] std::vector<std::string> pathSplit(const std::string& s);
    [[nodiscard]] std::string pathJoin(const std::vector<std::string>& v); //join into an array-like list
+   [[nodiscard]] std::string pathNormalize(const std::string& s); //combines pathSplit and pathJoin. (tries to) ensure that two path strings referring to the same file are the same string. Useful for hashes.
 }

@@ -86,7 +86,7 @@ namespace ReyEngine {
       [[nodiscard]] bool isLayout() const {return _isLayout;}
    protected:
       virtual Handled _processInput(const InputEvent& e); //process an input local to this widget
-      virtual void render2D() const {};
+      virtual void render2D(const RenderContext&) const {};
       Handled __process_unhandled_input(const InputEvent& event);
       virtual Handled _unhandled_input(const InputEvent&){return nullptr;}
       virtual Handled _process_unhandled_editor_input(const InputEvent&){return nullptr;} //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)

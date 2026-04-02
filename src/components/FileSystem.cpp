@@ -298,7 +298,7 @@ size_t FileSystem::FileHandle::readBytesInPlace(long long count, std::vector<cha
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-string FileSystem::FileHandle::readLine() {
+FileHandle::LineData FileSystem::FileHandle::readLine() {
    if (_end - _ptr == 0) return {};  // empty file
    string retval;
    retval.reserve(128);  // Reserve reasonable initial capacity
@@ -306,7 +306,7 @@ string FileSystem::FileHandle::readLine() {
    while (std::size_t(_end - _ptr) > 0) {
       if (!_ifs.get(c)) {
          if (_ifs.eof()) break;
-         throw std::runtime_error(_file.str() + ": Read failed");
+         return {};
       }
       _ptr += 1;
       if (c == '\n') {
@@ -366,7 +366,7 @@ std::pair<std::set<Path>, std::set<std::pair<Path, std::error_code>>> FileSystem
    std::error_code ec;
    for (const auto& entry : std::filesystem::directory_iterator(_path, ec)) {
       if (ec) {
-         Logger::error() << "Error reading directory: " + ec.message();
+         // Logger::error() << "Error reading directory: " + ec.message();
          errors.insert({Path(entry.path().string()), ec});
          continue;
       }
@@ -410,4 +410,9 @@ std::string string_tools::pathJoin(const std::vector<std::string>& v) {
       retval += ReyEngine::FileSystem::_PATH_SEP_OTHER;
    }
    return retval;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::string string_tools::pathNormalize(const std::string& s) {
+   return (pathJoin(pathSplit(s)));
 }

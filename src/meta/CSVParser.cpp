@@ -60,3 +60,14 @@ optional<string> CSVParser::getColumnName(int index){
    }
    return _header[index];
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+bool CSVParser::hasHeader(std::shared_ptr<ReyEngine::FileSystem::FileHandle>& file) {
+   while (auto line = file->readLine()) {
+      if (line.data.empty()) continue;
+      if (string_tools::lstrip(line.data)[0] == '#') {
+         return true;
+      }
+   }
+   return false;
+}

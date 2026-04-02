@@ -34,6 +34,7 @@ namespace ReyEngine {
       template <typename T> T max(T a, T b){return a >= b ? a : b;}
    }
 
+   // FNV-1a: Better distribution, fewer collisions. Uses XOR then multiply.
    class FNVHash {
       static constexpr std::size_t FNV_PRIME = 0x100000001b3;
       static constexpr std::size_t FNV_OFFSET = 0xcbf29ce484222325;
@@ -41,6 +42,7 @@ namespace ReyEngine {
       static constexpr std::size_t hash(std::string_view str) {std::size_t hash = FNV_OFFSET; for (char c: str) {hash ^= static_cast<std::size_t>(c); hash *= FNV_PRIME;} return hash;}
    };
 
+   // DJB2: Faster (bit shift instead of multiply). hash * 33 + c
    class DJB2Hash {
    public:
       static constexpr std::size_t hash(std::string_view str) {std::size_t hash = 5381;for (char c: str) {hash = ((hash << 5) + hash) + static_cast<std::size_t>(c);}return hash;}
@@ -984,6 +986,7 @@ namespace ReyEngine {
       }
       // Return the rect such that it would be centered on point p
       constexpr inline Rect& centerOnPoint(const Pos<R_FLOAT>& p) {return setPos(p - Pos<R_FLOAT>(size().toPos() / 2));}
+      constexpr inline Rect& centerOnCenter(const Rect<R_FLOAT>& r) {return centerOnPoint(r.center());}
       //shrink/expand borders evenly. Perfectly cromulent name.
       constexpr inline Rect& embiggen(T amt) {return *this += Rect<T>(-amt, -amt, 2 * amt, 2 * amt);}
       //make the rectangle pct% the size of rect. new rect and old rect should have same center.

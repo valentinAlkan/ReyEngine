@@ -14,7 +14,7 @@ public:
     * Returns a std::vector with all of the rows parsed from the file
     * @return : all rows from the file
     */
-   const std::vector<Row>& getAllRows() const {return _data;}
+   [[nodiscard]] const std::vector<Row>& getAllRows() const {return _data;}
    std::optional<std::reference_wrapper<Row>> getRow(size_t rowIndex) {
       if (rowIndex >= _data.size()) return std::nullopt;
       return std::ref(_data[rowIndex]);
@@ -34,7 +34,8 @@ public:
     */
    std::optional<size_t> getHeaderIndex(const std::string& name);
    std::optional<const Row*> getHeader() const {return &_header;}
-   bool hasHeader(){return !_header.empty();}
+   [[nodiscard]] bool hasHeader() const {return !_header.empty();}
+   static bool hasHeader(std::shared_ptr<ReyEngine::FileSystem::FileHandle>& file);
 
 private:
    std::shared_ptr<ReyEngine::FileSystem::FileHandle> _file;
@@ -71,4 +72,8 @@ public:
       std::vector<Row>* _data_ptr;
       size_t _index;
    };
+
+   using iterator = iterator_impl<Row>;
+   iterator begin() { return iterator(&_data, 0); }
+   iterator end() { return iterator(&_data, _data.size()); }
 };

@@ -224,7 +224,6 @@ void TileMap::_on_tiles_changed() {
       }
       if (!first) {
          setRect(combined);
-         Logger::info() << "New tilemap rect = " << combined << endl;
       }
    }
 }
@@ -252,7 +251,6 @@ void TileMap::TileMapLayer::setTileAtCoords(const TileCoord& target, const TileC
    tiles[target.x][target.y] = source;
    tileMap._on_tiles_changed();
    tileMap._needsRedraw = true;
-   Logger::info() << "Adding tile " << target << endl;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

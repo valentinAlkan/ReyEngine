@@ -101,7 +101,7 @@ void Canvas::doRender(RenderContext& context, Widget* widget, bool isModalRender
          context.recordModal();
       } else {
          widget->render2DBegin();
-         widget->render2D();
+         widget->render2D(context);
          widget->render2DEnd();
       }
       for (auto& child : widget->getChildrenAs<Widget>()) {
@@ -114,9 +114,9 @@ void Canvas::doRender(RenderContext& context, Widget* widget, bool isModalRender
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::doRenderModal(RenderContext& context, Widget* widget) {
    context.push(context.getModalTransform());
-   widget->render2DBegin();
-   widget->render2D();
-   widget->render2DEnd();
+   widget->render2DBegin(context);
+   widget->render2D(context);
+   widget->render2DEnd(context);
    for (auto& child : widget->getChildrenAs<Widget>()) {
       doRender(context, child, true);
    }
