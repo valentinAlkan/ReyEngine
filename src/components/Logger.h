@@ -158,6 +158,7 @@ namespace ReyEngine{
       EchoLogger(const std::string& name, std::ostream& os)
       : CustomLogger(name, os)
       {};
+      virtual ~EchoLogger() = default;
       void onFlush(const std::string& msg) override {std::cout << msg;}
    };
 }

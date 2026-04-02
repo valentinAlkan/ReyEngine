@@ -175,6 +175,7 @@ Handled MenuBar::_unhandled_input(const InputEvent& e) {
          if (!mbEvent.isDown) {
             hideAllDropDowns();
             showDropDownAt(mbEvent.mouse.getLocalPos());
+            return this;
          }
       break;}
    }
