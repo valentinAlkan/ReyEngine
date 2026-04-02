@@ -6,7 +6,7 @@ using namespace std;
 using namespace ReyEngine;
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void LineEdit::render2D() const {
+void LineEdit::render2D(RenderContext&) const {
    ScopeScissor scissor(getGlobalTransform(), getSizeRect().embiggen(1));
    bool disabled = !getIsEnabled();
    drawRectangle(getSizeRect(), disabled ? theme->background.colorDisabled : theme->background.colorTertiary);

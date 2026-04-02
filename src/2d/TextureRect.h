@@ -49,7 +49,7 @@ namespace ReyEngine {
             }
          }
 
-         void render2D() const override{
+         void render2D(RenderContext&) const override{
             if (_dstRect.size() != Vec2<float>(0,0)) {
                ScopeScissor scopeScissor(getGlobalTransform(), getSizeRect());
                if constexpr (IsTextureRect<T>){

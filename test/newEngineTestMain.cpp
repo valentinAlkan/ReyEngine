@@ -23,7 +23,7 @@ using namespace ReyEngine;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct DrawTestWidget : public Widget {
    REYENGINE_OBJECT(DrawTestWidget)
-   void render2D() const override {
+   void render2D(RenderContext&) const override {
       //draw rectangles
       auto [splitRectHL, splitRectHR] = getSizeRect().splitH<true>();
       auto [splitRectVLL, splitRectVLR] = splitRectHL.splitV<true>();
@@ -60,7 +60,7 @@ struct PosTestWidget : public Widget {
       setSize({200, 200});
    }
 
-   void render2D() const override {
+   void render2D(RenderContext&) const override {
       float ypos = 0;
       auto renderSideLocalMousePos = getLocalMousePos();
       bool _isInsideAtRenderTime = renderSideLocalMousePos.isInside(getSizeRect());
@@ -125,7 +125,7 @@ protected:
 struct SliderReactWidget : public Widget {
    REYENGINE_OBJECT(SliderReactWidget)
    SliderReactWidget() {setMaxSize(ReyEngine::Size<R_FLOAT>::Max().x, 30);}
-   void render2D() const override {
+   void render2D(RenderContext&) const override {
       auto [rectL, rectR] = getSizeRect().splitH<true>(_pct);
       drawRectangleGradientH(rectL, Colors::blue, Colors::black);
    }
@@ -142,7 +142,7 @@ struct ScissorWidget : public Widget {
    ScissorWidget() {
       scissorRect = getSizeRect();
    }
-   void render2D() const override {
+   void render2D(RenderContext&) const override {
       ScopeScissor scissor(scissorRect);
       drawRectangleGradientV(getSizeRect(), Colors::orange, Colors::purple);
    }

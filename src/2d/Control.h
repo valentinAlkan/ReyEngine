@@ -27,9 +27,9 @@ namespace ReyEngine{
    protected:
        void _on_rect_changed() override;
        bool _doScissor = false;
-       void render2D() const override;
-       void render2DBegin() override;
-       void render2DEnd() override;
+       void render2D(RenderContext&) const override;
+       void render2DBegin(RenderContext&) override;
+       void render2DEnd(RenderContext&) override;
        std::function<void(Control&)> mouseEnterCallback;
        std::function<void(Control&)> mouseExitCallback;
        std::function<void(const Control&)> renderCallback;

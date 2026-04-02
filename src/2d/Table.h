@@ -21,7 +21,7 @@ namespace ReyEngine {
          Rect<float> getCellRect(const Pos<size_t>& cellPos) const;
          Rect<float> getCellRect(const Pos<float>& mousePos) const;
          Pos<size_t> getCellRectCoords(const Pos<float>& mousePos) const;
-         void render2D() const override;
+         void render2D(RenderContext&) const override;
          void _recalculate();
          float _columnWidth = 100;
          float _rowHeight = 25;

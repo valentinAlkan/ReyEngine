@@ -12,7 +12,7 @@ namespace ReyEngine{
       REYENGINE_OBJECT(Panel)
       Panel(const std::string& panelTitle="");
    public:
-      void render2D() const override;
+      void render2D(RenderContext&) const override;
       void setTitle(const std::string& newtitle);
       inline void setResizable(bool resizeable){_isResizable = resizeable;}
       inline bool getResizable(){return _isResizable;}

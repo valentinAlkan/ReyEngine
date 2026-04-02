@@ -178,7 +178,7 @@ namespace ReyEngine{
 
       void refresh();
       void determineVisible();
-      void render2D() const override;
+      void render2D(RenderContext&) const override;
       Handled _unhandled_input(const InputEvent&) override;
       void _on_mouse_enter() override {}
       void _on_mouse_exit() override { _hoveredImplDetails.reset();}

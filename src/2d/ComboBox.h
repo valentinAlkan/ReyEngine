@@ -122,7 +122,7 @@ namespace ReyEngine {
          if (index >= fields.size()) return {};
          return fields.at(index).get();
       }
-      void render2D() const override{
+      void render2D(RenderContext&) const override{
          //draw the background
          drawRectangle(getSizeRect(), theme->background.colorTertiary);
          drawRectangleLines(getSizeRect(), 1.0, theme->background.colorSecondary);

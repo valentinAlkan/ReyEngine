@@ -28,7 +28,7 @@ namespace ReyEngine{
       void _on_rect_changed() override;
       void _on_child_rect_changed(Widget*) override {arrangeChildren();}
       virtual void arrangeChildren();
-      void render2D() const override;
+      void render2D(RenderContext&) const override;
       const LayoutDir layoutDir;
       bool _usesLayoutRatios = false; //different types of layouts might not use layout ratios.
       bool _allowsAnchoring = false; //layouts can allow anchoring if they desire

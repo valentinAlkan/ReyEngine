@@ -144,7 +144,7 @@ void Layout::_on_child_removed_from_tree(TypeNode* child) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Layout::render2D() const {
+void Layout::render2D(RenderContext&) const {
    //debug
    if constexpr (DEBUG_DRAW) drawRectangle(getSizeRect(), DEBUG_COLOR);
 }

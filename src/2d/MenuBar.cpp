@@ -42,7 +42,7 @@ void DropDownMenu::_init() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void DropDownMenu::render2D() const {
+void DropDownMenu::render2D(RenderContext&) const {
    drawRectangle(getSizeRect(), theme->background.colorPrimary);
    if (_activeEntry){
       drawRectangle(_activeEntry.value()->_area, theme->background.colorHighlight);
@@ -182,7 +182,7 @@ Handled MenuBar::_unhandled_input(const InputEvent& e) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void MenuBar::render2D() const {
+void MenuBar::render2D(RenderContext&) const {
    if (_activeEntry){
       drawRectangle(_activeEntry.value()->_area, theme->background.colorHighlight);
    }

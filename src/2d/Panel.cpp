@@ -17,7 +17,7 @@ Panel::Panel(const std::string &panelTitle)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Panel::render2D() const {
+void Panel::render2D(RenderContext&) const {
    //draw the header
    drawRectangle(getSizeRect(), theme->background.colorPrimary);
    drawRectangle(_header.rect, theme->background.colorTertiary);

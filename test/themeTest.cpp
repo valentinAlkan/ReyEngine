@@ -41,7 +41,7 @@ class ThemeExplorer : public Widget {
       setPairs(12, "Foreground: colorActive2", theme->foreground.colorActive2);
       setPairs(13, "Foreground: colorDisabled", theme->foreground.colorDisabled);
    }
-   void render2D() const override {
+   void render2D(RenderContext&) const override {
       for (const auto& [rect, text, color] : _rects){
          drawRectangle(rect, color);
          drawText(text, rect.topLeft(), theme->font, color.getReadableTextColor(), theme->font->size, theme->font->spacing);

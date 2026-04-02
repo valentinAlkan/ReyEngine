@@ -12,7 +12,7 @@ namespace ReyEngine{
       Label(const std::string& text = "")
             : _text(text)
       {}
-      void render2D() const override{
+      void render2D(RenderContext&) const override{
 //         ScopeScissor scissor(getSizeRect());
          auto& outline = theme->background.outline;
          auto& background = theme->background;

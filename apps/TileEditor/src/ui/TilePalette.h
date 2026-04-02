@@ -6,7 +6,7 @@
 //public:
 //   REYENGINE_OBJECT(TilePalette)
 //   TilePaletteRendered();
-//   void render2D() const override;
+//   void render2D(RenderContext&) const override;
 //   Widget* _unhandled_input(const ReyEngine::InputEvent&) override;
 //private:
 //   void _init() override;
@@ -20,7 +20,7 @@ class TilePalette : public ReyEngine::Widget {
 public:
    REYENGINE_OBJECT(TilePalette)
    TilePalette();
-   void render2D() const override;
+   void render2D(RenderContext&) const override;
    Widget* _unhandled_input(const ReyEngine::InputEvent&) override;
    void _on_rect_changed() override;
 private:

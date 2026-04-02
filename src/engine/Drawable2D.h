@@ -16,9 +16,9 @@ namespace ReyEngine {
          [[nodiscard]] inline bool getVisible(){return _visible;}
          inline void setVisible(bool newValue){ _visible = newValue; __on_visibility_changed();}
       protected:
-         virtual void render2D(const RenderContext&) const = 0;
-         virtual void render2DBegin(const RenderContext&){}
-         virtual void render2DEnd(const RenderContext&){}
+         virtual void render2D(RenderContext&) const = 0;
+         virtual void render2DBegin(RenderContext&){}
+         virtual void render2DEnd(RenderContext&){}
          virtual void __on_visibility_changed(){}
          bool _visible = true;
          bool _isCanvas = false; //whether or not this drawable is a canvas

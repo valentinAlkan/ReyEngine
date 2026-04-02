@@ -4,14 +4,14 @@ using namespace std;
 using namespace ReyEngine;
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void Control::render2DBegin() {
+void Control::render2DBegin(RenderContext&) {
    if (_doScissor){
 //      startScissor(scissorArea);
    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void Control::render2D() const {
+void Control::render2D(RenderContext&) const {
    if (renderCallback) {
       renderCallback(*this);
    } else {
@@ -37,7 +37,7 @@ void Control::render2D() const {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void Control::render2DEnd() {
+void Control::render2DEnd(RenderContext&) {
    if (_doScissor){
 //      stopScissor();
    }

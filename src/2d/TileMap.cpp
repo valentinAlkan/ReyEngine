@@ -10,13 +10,13 @@ void TileMap::_init() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void TileMap::render2DEnd() {
+void TileMap::render2DEnd(RenderContext&) {
    if (_needsRedraw) {
       _needsRedraw = false;
    }
 }
 /////////////////////////////////////////////////////////////////////////////////////////
-void TileMap::render2D() const {
+void TileMap::render2D(RenderContext&) const {
    // if (!_needsRedraw) return;
    ClearBackground(Colors::none);
    //draw all tiles in the layer

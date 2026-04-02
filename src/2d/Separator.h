@@ -15,7 +15,7 @@ namespace ReyEngine {
       [[nodiscard]] float getSeparation() const {return _separation;}
    protected:
       static constexpr float DEFAULT_SEPARATION = 5;
-      void render2D() const override {
+      void render2D(RenderContext&) const override {
          drawLine(_visual, theme->foreground.linethick, theme->foreground.colorPrimary);
       }
       void _init() override {

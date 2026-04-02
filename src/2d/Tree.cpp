@@ -111,7 +111,7 @@ void Tree::determineVisible() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Tree::render2D() const{
+void Tree::render2D(RenderContext&) const{
    // draw the items
    auto& font = theme->font;
    auto pos = Pos<float>(0,-ROW_HEIGHT);

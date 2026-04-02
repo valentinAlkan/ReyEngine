@@ -14,7 +14,7 @@ namespace ReyEngine {
         void setOffsetX(float amt);
         void setOffsetY(float amt);
     protected:
-        void render2D() const override;
+        void render2D(RenderContext&) const override;
         static constexpr std::string_view VSLIDER_NAME = "__vslider";
         static constexpr std::string_view HSLIDER_NAME = "__hslider";
 

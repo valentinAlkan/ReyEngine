@@ -40,7 +40,7 @@ std::vector<FileSystem::Directory> FileBrowser::getSystemDirs() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void FileBrowser::render2D() const {
+void FileBrowser::render2D(RenderContext&) const {
    drawRectangle(getSizeRect(), theme->background.colorPrimary);
    drawRectangleLines(getSizeRect(), 2.0, Colors::black);
 }
@@ -288,8 +288,8 @@ void FileBrowser::AddrBar::setDir(FileSystem::Directory& dir) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void FileBrowser::AddrBar::render2D() const {
-   LineEdit::render2D();
+void FileBrowser::AddrBar::render2D(RenderContext& ctx) const {
+   LineEdit::render2D(ctx);
    if (_hoveredDirToken){
       auto& token = _hoveredDirToken.value();
       drawRectangleLines(token->highlightRect, 1.0, Colors::lightGray);

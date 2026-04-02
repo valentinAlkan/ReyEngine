@@ -100,9 +100,9 @@ void Canvas::doRender(RenderContext& context, Widget* widget, bool isModalRender
       if (widget->_modal && !isModalRenderChain) {
          context.recordModal();
       } else {
-         widget->render2DBegin();
+         widget->render2DBegin(context);
          widget->render2D(context);
-         widget->render2DEnd();
+         widget->render2DEnd(context);
       }
       for (auto& child : widget->getChildrenAs<Widget>()) {
          doRender(context, child);
@@ -130,9 +130,9 @@ void Canvas::renderProcess(RenderContext& renderContext) {
       ClearBackground(Colors::lightGray);
    }
 
-   render2DBegin();
-   render2D();
-   render2DEnd();
+   render2DBegin(renderContext);
+   render2D(renderContext);
+   render2DEnd(renderContext);
 
    //render background elements, which are affected by camera transform
    {

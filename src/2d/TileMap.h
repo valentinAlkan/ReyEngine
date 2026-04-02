@@ -156,9 +156,9 @@ namespace ReyEngine {
    protected:
       virtual Handled _on_hovered(const TileCoord&){return nullptr;}
       virtual Handled _on_clicked(const TileCoord&){return nullptr;}
-      // void render2DBegin() override;
-      void render2D() const override;
-      void render2DEnd() override;
+      // void render2DBegin(RenderContext&) override;
+      void render2D(RenderContext&) const override;
+      void render2DEnd(RenderContext&) override;
       void _init();
       Handled _unhandled_input(const InputEvent&) override;
       void _on_rect_changed() override;

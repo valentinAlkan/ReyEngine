@@ -12,7 +12,7 @@ class PointDrawer : public Widget {
 public:
    REYENGINE_OBJECT(PointDrawer)
    PointDrawer() = default;
-   void render2D() const override {
+   void render2D(RenderContext&) const override {
       auto pt = InputManager::getMousePos().get();
       drawText(pt.toString(), pt + Pos<float>(10,10), theme->font);
    }
@@ -23,7 +23,7 @@ public:
 class Grid : public Widget {
 public:
    REYENGINE_OBJECT(Grid)
-   void render2D() const override {
+   void render2D(RenderContext&) const override {
       auto size = getSize();
       for (int x=0; x<size.x; x+=50) {
          for (int y=0; y<size.y; y+=50) {
@@ -41,7 +41,7 @@ public:
    :color(color)
    {
    }
-   void render2D() const override {
+   void render2D(RenderContext&) const override {
       drawRectangle(getSizeRect(), color);
       if (highlight) {
          drawRectangleLines(getSizeRect().embiggen(-1), 2.0, Colors::red);

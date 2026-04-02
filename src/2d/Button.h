@@ -65,7 +65,7 @@ namespace ReyEngine{
          Button::_init();
       }
       void _on_up_publish(bool mouseEscaped) override;
-      void render2D() const override{_render2D();}
+      void render2D(RenderContext&) const override{_render2D();}
    };
 
    class ToggleButton : public Button{
@@ -84,7 +84,7 @@ namespace ReyEngine{
       }
       void _on_up_publish(bool mouseEscaped) override;
       void _on_down_publish() override;
-      void render2D() const override{_render2D();}
+      void render2D(RenderContext&) const override{_render2D();}
    };
 
    class CheckBox : public ToggleButton {
@@ -94,7 +94,7 @@ namespace ReyEngine{
       [[nodiscard]] bool getChecked() const {return getDown();} //alias
       void setChecked(bool checked){setDown(checked);}
    protected:
-      void render2D() const override;
+      void render2D(RenderContext&) const override;
       void _init() override {
          ReyEngine::ToggleButton::_init();
       }

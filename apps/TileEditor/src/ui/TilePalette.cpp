@@ -15,7 +15,7 @@ void TilePalette::_init() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void TilePalette::render2D() const {
+void TilePalette::render2D(RenderContext&) const {
 //   draw a tile palette grid
    auto sizeRect = getSizeRect();
    drawRectangle(sizeRect, Colors::blue);

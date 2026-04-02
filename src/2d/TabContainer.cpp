@@ -4,7 +4,7 @@ using namespace std;
 using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void TabContainer::render2D() const {
+void TabContainer::render2D(RenderContext&) const {
 //   auto& roundness = theme->roundness;
 //   auto& roundnessSegments = theme->roundnessSegments;
    auto& backgroundPrimary = theme->background.colorPrimary;

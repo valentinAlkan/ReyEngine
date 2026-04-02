@@ -147,7 +147,7 @@ namespace ReyEngine{
          }
          return nullptr;
       }
-      void render2D() const override {
+      void render2D(RenderContext&) const override {
          //draw nudge buttons
          static constexpr float ROUNDNESS = 0.3;
          static constexpr float SEGMENTS = 10;

@@ -27,7 +27,7 @@ namespace ReyEngine{
          Widget* widget;
       };
       TabContainer(): Layout(LayoutDir::NONE){}
-      void render2D() const override;
+      void render2D(RenderContext&) const override;
       void _on_child_added_to_tree(TypeNode*) override;
       void _on_child_removed_from_tree(TypeNode*) override;
       void setCurrentTab(Widget*);

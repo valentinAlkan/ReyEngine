@@ -75,7 +75,7 @@ namespace ReyEngine {
       bool _modMultiSelectRange = false;
       bool _modMultiSelect = false;
       void refreshDirectoryContents();
-      void render2D() const override;
+      void render2D(RenderContext&) const override;
       void _init() override;
       void _on_rect_changed() override;
       FileSystem::Directory _dir;
@@ -109,7 +109,7 @@ namespace ReyEngine {
          };
       protected:
          Handled _unhandled_input(const InputEvent&) override;
-         void render2D() const override;
+         void render2D(RenderContext&) const override;
          std::vector<DirectoryToken> _dirTokens;
          std::optional<DirectoryToken*> _hoveredDirToken;
          FileSystem::Directory _currentDir;

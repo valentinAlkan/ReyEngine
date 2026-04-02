@@ -79,7 +79,7 @@ namespace ReyEngine{
    public:
       REYENGINE_OBJECT(Sprite)
       Sprite(const FileSystem::File& texPath, const Rect<R_FLOAT>& region): BaseSprite<Rect<R_FLOAT>>(texPath, region){}
-      void render2D() const override;
+      void render2D(RenderContext&) const override;
    };
 
 
@@ -89,7 +89,7 @@ namespace ReyEngine{
       REYENGINE_OBJECT(AnimatedSprite)
       AnimatedSprite(const FileSystem::File& texPath, const std::vector<Rect<R_FLOAT>>& regions): BaseSprite(texPath, regions){}
       AnimatedSprite(const FileSystem::File& texPath, const Size<R_FLOAT>& spriteSize, FrameIndex frameStart, FrameIndex frameCount);
-      void render2D() const override;
+      void render2D(RenderContext&) const override;
       void setFrameIndex(FrameIndex newIndex){frameIndex = newIndex >= region.size() ? 0 : newIndex;}
       FrameIndex getFrameIndex(){return frameIndex >= region.size() ? 0 : frameIndex;}
    protected:

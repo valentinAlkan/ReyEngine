@@ -28,7 +28,7 @@ namespace ReyEngine {
       inline void clear(){ setText("");}
       void setText(const std::string&, bool noPublish=false);
       void setDefaultText(const std::string&, bool noPublish=false);
-      void render2D() const override;
+      void render2D(RenderContext&) const override;
       [[nodiscard]] std::string getText(){return _input.empty() ? _defaultText : _input;}
    protected:
       void _init() override;

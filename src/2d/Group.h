@@ -13,7 +13,7 @@ namespace ReyEngine {
       void _init() override {
          if (_groupName.empty()) _groupName = getName();
       }
-      void render2D() const override {
+      void render2D(RenderContext&) const override {
          drawLine(_frameRect.left(), 1.0, theme->foreground.colorPrimary);
          drawLine(_frameRect.right(), 1.0, theme->foreground.colorPrimary);
          drawLine(_frameRect.bottom(), 1.0, theme->foreground.colorPrimary);

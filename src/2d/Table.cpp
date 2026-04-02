@@ -4,7 +4,7 @@ using namespace std;
 using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Internal::TableViewWidget::render2D() const {
+void Internal::TableViewWidget::render2D(RenderContext&) const {
    //draw table lines
     std::vector<const std::vector<Line<float>>*> _lines;
     if (_showHorizontalSeparators) _lines.push_back(&_hlines);

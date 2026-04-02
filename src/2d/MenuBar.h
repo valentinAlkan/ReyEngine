@@ -83,7 +83,7 @@ namespace ReyEngine{
       void addEntry(const std::string& text) {addEntry(nullptr, text);}
    protected:
       Handled _unhandled_input(const InputEvent&) override;
-      void render2D() const override;
+      void render2D(RenderContext&) const override;
       void _init() override;
       void _on_change() override;
       void _on_rect_changed() override{_calculateSize();}
@@ -99,7 +99,7 @@ namespace ReyEngine{
       void removeDropDownMenu(const std::string& name);
       void hideAllDropDowns();
    protected:
-      void render2D() const override;
+      void render2D(RenderContext&) const override;
       void _init() override;
       void _on_change() override;
       void _on_rect_changed() override{_on_change();}

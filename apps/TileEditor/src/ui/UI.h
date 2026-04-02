@@ -8,7 +8,7 @@ public:
    REYENGINE_OBJECT(UI)
    UI(std::shared_ptr<TileEditor>& editor);
 protected:
-   void render2D() const override {}
+   void render2D(RenderContext&) const override {}
    void _init() override;
    Widget* _unhandled_input(const ReyEngine::InputEvent&) override;
    void _on_rect_changed() override;
