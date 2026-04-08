@@ -108,5 +108,5 @@ namespace CrossPlatform{
    std::vector<std::string> getRootFolders(); //returns / for unix-like systems, a vector of drive letters in windows
 
    std::string getEnvironmentVariable(const std::string& varName);
-   std::pair<std::string, std::string> execCmd(const char* cmd); //returns stderr, stdout
+   std::pair<std::stringstream, std::stringstream> execCmd(std::string_view); //returns stderr, stdout
 }

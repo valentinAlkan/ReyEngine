@@ -174,8 +174,10 @@ Handled MenuBar::_unhandled_input(const InputEvent& e) {
          auto& mbEvent = e.toEvent<InputEventMouseButton>();
          if (!mbEvent.isDown) {
             hideAllDropDowns();
-            showDropDownAt(mbEvent.mouse.getLocalPos());
-            return this;
+            if (mbEvent.mouse.isInside()) {
+               showDropDownAt(mbEvent.mouse.getLocalPos());
+               return this;
+            }
          }
       break;}
    }

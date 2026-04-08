@@ -55,31 +55,35 @@ void FileBrowser::_on_rect_changed(){
 /////////////////////////////////////////////////////////////////////////////////////////
 void FileBrowser::_init() {
    _layout = make_child<Layout>(getNode(), "layout", Layout::LayoutDir::VERTICAL);
-   auto navBar = make_child<Layout>(_layout->getNode(), "navBar", Layout::LayoutDir::HORIZONTAL);
-   auto browser = make_child<Layout>(_layout->getNode(), "browser", Layout::LayoutDir::HORIZONTAL);
-   _systemBrowserScrollArea = make_child<ScrollArea>(browser->getNode(), "systemBrowserScrollArea");
-   _directoryScrollArea = make_child<ScrollArea>(browser->getNode(), "directoryScrollArea");
-   _systemBrowserTree = make_child<Tree>(_systemBrowserScrollArea->getNode(), "systemBrowserTree");
+   auto navBar = make_child<Layout>(_layout, "navBar", Layout::LayoutDir::HORIZONTAL);
+   auto browser = make_child<Layout>(_layout, "browser", Layout::LayoutDir::HORIZONTAL);
+   _systemBrowserScrollArea = make_child<ScrollArea>(browser, "systemBrowserScrollArea");
+   _directoryScrollArea = make_child<ScrollArea>(browser, "directoryScrollArea");
+   _systemBrowserTree = make_child<Tree>(_systemBrowserScrollArea, "systemBrowserTree");
 
-   auto footer = make_child<Layout>(_layout->getNode(), "footer", Layout::LayoutDir::HORIZONTAL);
+   auto footer = make_child<Layout>(_layout, "footer", Layout::LayoutDir::HORIZONTAL);
 
    navBar->setMaxHeight(30);
    footer->setMaxHeight(60);
 
    _layout->layoutRatios = {1, 4, 1};
    browser->layoutRatios = {1, 4};
-   _directoryTree = make_child<Tree>(_directoryScrollArea->getNode(), "directoryTree");
+   _directoryTree = make_child<Tree>(_directoryScrollArea, "directoryTree");
    _directoryTree->setAllowSelect(true);
    _directoryTree->setHideRoot(true);
 
-   auto footerL = make_child<Layout>(footer->getNode(), "footerL", Layout::LayoutDir::HORIZONTAL);
-   auto footerR = make_child<Layout>(footer->getNode(), "footerR", Layout::LayoutDir::HORIZONTAL);
+   auto footerL = make_child<Layout>(footer, "footerL", Layout::LayoutDir::HORIZONTAL);
+   auto footerR = make_child<Layout>(footer, "footerR", Layout::LayoutDir::HORIZONTAL);
 
-   _filterText = make_child<LineEdit>(footerL->getNode(), "_filterText");
-//   _filterType = make_child<ComboBox<string>>(footerL->getNode(), "_filterType");
+   _filterEnableCheckbox = make_child<CheckBox>(footerL, "_filterCheckbox", "");
+   _filterText = make_child<LineEdit>(footerL, "_filterText");
+   _filterText->setDefaultText("*");
+   _filterEnableCheckbox->setMaxHeight(theme->font->size);
+   _filterEnableCheckbox->setMaxWidth(40);
+   subscribe<CheckBox::ButtonToggleEvent>(_filterEnableCheckbox, [this](const auto& e){_on_filter_checkbox_toggle(e);});
 
-   _btnOk = make_child<PushButton>(footerR->getNode(), "btnOk", "Ok");
-   _btnCancel = make_child<PushButton>(footerR->getNode(), "btnCancel", "Cancel");
+   _btnOk = make_child<PushButton>(footerR, "btnOk", "Ok");
+   _btnCancel = make_child<PushButton>(footerR, "btnCancel", "Cancel");
    _directoryTree->subscribe<Tree::EventItemSelected>(_directoryTree, [this](const Tree::EventItemSelected& e){_on_directory_item_selected(e);});
    _directoryTree->subscribe<Tree::EventItemDeselected>(_directoryTree, [this](const Tree::EventItemDeselected& e){_on_directory_item_deselected(e);});
    _directoryTree->subscribe<Tree::EventItemDoubleClicked>(_directoryTree, [this](const Tree::EventItemDoubleClicked& e){_on_directory_item_doubleClicked(e);});
@@ -88,10 +92,10 @@ void FileBrowser::_init() {
    _systemBrowserTree->subscribe<Tree::EventItemDoubleClicked>(_systemBrowserTree, [this](const Tree::EventItemDoubleClicked& e){_on_system_item_doubleClicked(e);});
    _btnOk->setEnabled(false);
 
-   _btnBack = make_child<PushButton>(navBar->getNode(), "btnBack", "<-");
-   _btnFwd = make_child<PushButton>(navBar->getNode(), "btnForward", "->");
-   _btnUp = make_child<PushButton>(navBar->getNode(), "btnUp", "^");
-   _addrBar = make_child<AddrBar>(navBar->getNode(), "addrBar", _dir);
+   _btnBack = make_child<PushButton>(navBar, "btnBack", "<-");
+   _btnFwd = make_child<PushButton>(navBar, "btnForward", "->");
+   _btnUp = make_child<PushButton>(navBar, "btnUp", "^");
+   _addrBar = make_child<AddrBar>(navBar, "addrBar", _dir);
    navBar->layoutRatios = {1,1,1,20};
 
    _addrBar->subscribe<AddrBar::EventAddrEntered>(_addrBar, [&](const AddrBar::EventAddrEntered& e){_on_addr_entered(e);});
@@ -135,6 +139,21 @@ void FileBrowser::_init() {
       _setCurrentDirectory(Directory(CrossPlatform::getUserDir()));
    }
 
+   //subscribe to filter text updates
+   auto filterTextUpdateCB = [&](const auto& e){
+      auto text = _filterText->getText();
+      _fileTypesFilter.clear();
+      //try to split it
+      if (auto split = string_tools::split(text, ","); !split.empty() && split[0] != "*"){
+         //if it makes sense, apply it to the filters
+         for (const auto& value : split){
+            _fileTypesFilter.push_back(string_tools::lrstrip(value));
+         }
+      }
+      refreshDirectoryContents();
+   };
+   subscribe<LineEdit::EventLineEditTextEntered>(_filterText, filterTextUpdateCB);
+
    setMinSize(800,600);
    setVisible(false);
 }
@@ -165,7 +184,7 @@ void FileBrowser::refreshDirectoryContents() {
    }
    for (const auto& file : files){
       //apply type filter
-      if (!_fileTypesFilter.empty()) {
+      if (_enableFilter && !_fileTypesFilter.empty() && _fileTypesFilter[0] != "*") {
          bool showFile = false;
          for (const auto& ext: _fileTypesFilter) {
             if (file.tail().ends_with(ext)) {
@@ -181,6 +200,7 @@ void FileBrowser::refreshDirectoryContents() {
    auto size = _directoryTree->measureContents();
    _directoryTree->setSize(size);
    if (!_fileTypesFilter.empty()) _filterText->setText("*"+string_tools::join(",*", _fileTypesFilter));
+   _filterText->setEnabled(!_filterEnableCheckbox->getChecked());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -272,6 +292,13 @@ void FileBrowser::_on_cancel(const PushButton::ButtonPressEvent &) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void FileBrowser::_on_filter_checkbox_toggle(const CheckBox::ButtonToggleEvent& e) {
+   _enableFilter = e.button().getDown();
+   _filterText->setEnabled(_enableFilter);
+   refreshDirectoryContents();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 void FileBrowser::AddrBar::_init() {
@@ -307,9 +334,11 @@ Handled FileBrowser::AddrBar::_unhandled_input(const ReyEngine::InputEvent& even
          if (!keyEvent.isDown) return nullptr;
          switch (keyEvent.key){
             case InputInterface::KeyCode::KEY_ENTER:{
-               EventAddrEntered addrEntered(this, getText());
-               publish(addrEntered);
-               return this;}
+               if (isEditing()){
+                  EventAddrEntered addrEntered(this, getText());
+                  publish(addrEntered);
+                  return this;}
+               }
             default:
                break;
          }

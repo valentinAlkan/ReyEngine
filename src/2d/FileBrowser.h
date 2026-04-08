@@ -74,6 +74,7 @@ namespace ReyEngine {
       }
       bool _modMultiSelectRange = false;
       bool _modMultiSelect = false;
+      bool _enableFilter = true;
       void refreshDirectoryContents();
       void render2D(RenderContext&) const override;
       void _init() override;
@@ -91,6 +92,7 @@ namespace ReyEngine {
       std::shared_ptr<PushButton> _btnUp;
       std::shared_ptr<AddrBar> _addrBar;
       std::shared_ptr<LineEdit> _filterText;
+      std::shared_ptr<CheckBox> _filterEnableCheckbox;
       std::vector<std::string> _fileTypesFilter;
 
       History<FileSystem::Directory> _history;
@@ -99,7 +101,7 @@ namespace ReyEngine {
          struct DirectoryToken;
       public:
          AddrBar(FileSystem::Directory& dir): _currentDir(dir){setDir(dir);}
-         void _init();
+         void _init() override;
          void setDir(FileSystem::Directory& dir);
          EVENT_ARGS(EventTokenClicked, 287346538947589, DirectoryToken* token), token(token){}
             DirectoryToken* token;
@@ -127,6 +129,7 @@ namespace ReyEngine {
       void _on_fwd(const PushButton::ButtonPressEvent&);
       void _on_ok(const PushButton::ButtonPressEvent&);
       void _on_cancel(const PushButton::ButtonPressEvent&);
+      void _on_filter_checkbox_toggle(const CheckBox::ButtonToggleEvent&);
       void _on_directory_item_doubleClicked(const Tree::EventItemDoubleClicked&);
       void _on_directory_item_selected(const Tree::EventItemSelected&);
       void _on_directory_item_deselected(const Tree::EventItemDeselected&);

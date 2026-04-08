@@ -380,7 +380,7 @@ std::string CrossPlatform::getEnvironmentVariable(const std::string& varName) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::pair<std::string, std::string> CrossPlatform::execCmd(const char* cmd) {
+std::pair<std::stringstream, std::stringstream> CrossPlatform::execCmd(std::string_view cmd) {
 #ifdef PLATFORM_LINUX
       // 1. Create two pipes: one for stdout and one for stderr
       int stdout_pipe[2];
@@ -423,19 +423,19 @@ std::pair<std::string, std::string> CrossPlatform::execCmd(const char* cmd) {
       close(stdout_pipe[1]);
       close(stderr_pipe[1]);
 
-      std::string stdout_str;
-      std::string stderr_str;
-      std::array<char, 256> buffer;
+      std::stringstream outStream;
+      std::stringstream errStream;
+      std::array<char, 256> buffer{};
 
       // Read from stdout pipe
       ssize_t bytes_read;
       while ((bytes_read = read(stdout_pipe[0], buffer.data(), buffer.size())) > 0) {
-         stdout_str.append(buffer.data(), bytes_read);
+         outStream << string(buffer.data(), bytes_read);
       }
 
       // Read from stderr pipe
       while ((bytes_read = read(stderr_pipe[0], buffer.data(), buffer.size())) > 0) {
-         stderr_str.append(buffer.data(), bytes_read);
+         errStream << string(buffer.data(), bytes_read);
       }
 
       // Wait for the child process to finish
@@ -445,7 +445,7 @@ std::pair<std::string, std::string> CrossPlatform::execCmd(const char* cmd) {
       close(stdout_pipe[0]);
       close(stderr_pipe[0]);
 
-      return {stdout_str, stderr_str};
+      return {std::move(outStream), std::move(errStream)};
 #else
    throw std::runtime_error("Not implemented on this platform!");
 #endif
