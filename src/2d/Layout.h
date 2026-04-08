@@ -15,7 +15,7 @@ namespace ReyEngine{
       enum class Alignment{EVEN, FRONT, BACK};
 
       Layout(Layout::LayoutDir layoutDir);
-      [[nodiscard]] ReyEngine::Size<int> calculateIdealBoundingBox();
+      [[nodiscard]] ReyEngine::Size<float> calculateIdealBoundingBox();
       [[nodiscard]] bool getAllowsAnchoring() const {return _allowsAnchoring;}
       std::vector<float> layoutRatios;
       Alignment alignment;

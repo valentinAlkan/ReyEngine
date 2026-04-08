@@ -1,13 +1,9 @@
 #pragma once
 #include <memory>
-#include <filesystem>
-#include <queue>
-#include <thread>
 #include <random>
 #include "Logger.h"
 #include "ReyEngine.h"
 #include "Platform.h"
-#include "FileSystem.h"
 #include "UniqueValue.h"
 
 namespace ReyEngine{
@@ -51,13 +47,6 @@ namespace ReyEngine{
       static std::unique_lock<std::mutex> getLock(); //use this to syncrhonize with the engine
       static constexpr Platform getPlatform(){return PLATFORM;}
       static UniqueValue generateUniqueValue(){return instance().uniqueGenerator.makeNew();}
-      template <typename T=double>
-      static T generateRandom(T low, T high){
-         std::random_device rd;
-         std::mt19937 gen(rd());
-         std::uniform_real_distribution<> dis(low, high);
-         return dis(gen);
-      };
       static long double secondsSinceInit();
    protected:
       Window& createWindow(Internal::WindowPrototype&, std::optional<std::shared_ptr<Canvas>>);

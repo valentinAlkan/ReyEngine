@@ -179,12 +179,12 @@ void Layout::arrangeChildren() {
          // Center each child inside it's respective box.
 
          //determine box size
-         Size<int> boundingBox;
+         Size<float> boundingBox;
          for (const auto &child: getChildren()) {
             auto isWidget = child->as<Widget>();
             if (!isWidget) continue;
             auto widget = isWidget.value();
-            boundingBox = boundingBox.max(widget->getMaxSize());
+            boundingBox = Size<float>(boundingBox.max(widget->getMaxSize()));
          }
          if (!boundingBox.x || !boundingBox.y) return; //invalid rect
          //create subrects to lay out the children
@@ -334,7 +334,7 @@ void Layout::arrangeChildren() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyEngine::Size<int> Layout::calculateIdealBoundingBox() {
+ReyEngine::Size<float> Layout::calculateIdealBoundingBox() {
    Size<R_FLOAT> idealBoundingBox;
    if (layoutDir == LayoutDir::GRID){
       throw std::runtime_error("not implemented!");

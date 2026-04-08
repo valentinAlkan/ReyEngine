@@ -72,6 +72,8 @@ namespace ReyEngine {
       std::optional<Transform2D> getChildXform(const Widget* child) const;
       bool isInBackground(const Widget* w) const {return _background.contains(w->_node);}
       bool isInForeground(const Widget* w) const {return _foreground.contains(w->_node);}
+      void setBackgroundColor(const ColorRGBA& c) {_backgroundColor = c;}
+      [[nodiscard]] ColorRGBA getBackgroundColor() const {return _backgroundColor;}
    protected:
       const RenderTarget& readRenderTarget() const {return _renderTarget;}
       RenderContext createRenderContext(){return _renderTarget;}
@@ -87,6 +89,7 @@ namespace ReyEngine {
       Camera2D camera;
       // std::unique_ptr<InputContext> _inputContext;
       bool _retained = false; //set to true if you want to retain the image between draw calls. Requires manually clearing the render target.
+      ColorRGBA _backgroundColor = Colors::lightGray;
 
       std::map<size_t, std::vector<Widget*>> _processLayers; //different layers of widgets that can be processed differently
       OrderedCache<TypeNode*> _foreground;

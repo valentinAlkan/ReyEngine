@@ -11,7 +11,7 @@ namespace Units {
    template<typename T, template<typename> class crtpType>
    struct crtp {
       constexpr T& underlying() { return static_cast<T &>(*this); }
-      constexpr const T& underlying() const { return static_cast<T const &>(*this); }
+      [[nodiscard]] constexpr const T& underlying() const { return static_cast<T const &>(*this); }
    };
 }
 

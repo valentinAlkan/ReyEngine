@@ -293,7 +293,7 @@ void ReyEngine::drawRenderTargetRect(const RenderTarget& target, const Rect<R_FL
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::drawRenderTarget(const RenderTarget& target, const Pos<R_FLOAT>& pos, const ColorRGBA& tint){
-   auto rect = pos.toRect(target.getSize());
+   auto rect = pos.toRect(Size<float>(target.getSize()));
    drawRenderTargetRect(target, rect, rect, tint);
 }
 

@@ -132,7 +132,7 @@ void ScrollArea::_on_rect_changed(){
       boundingBox.height = ourSize.y;
    }
    if (boundingBox.size() != Size<R_FLOAT>(_renderTarget.getSize()) && _autoResize) {
-      _renderTarget.setSize(boundingBox.size());
+      _renderTarget.setSize(Size<int>(boundingBox.size()));
    }
 
    const auto areaSize = getRect().size();

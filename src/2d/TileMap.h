@@ -64,8 +64,8 @@ namespace ReyEngine {
             Pos<R_FLOAT> src = {(R_FLOAT) _tileSize.x * coords.x + (_padding.x * coords.x + 1) + _offset.x, (R_FLOAT) _tileSize.y * coords.y + (_padding.y * coords.y + 1) + _offset.y};
             return {src, _tileSize};
          }
-         [[nodiscard]] inline Size<int> getTileSize() const {return _tileSize;}
-         [[nodiscard]] inline Size<int> getSheetSize() const {return {texture.size().x, texture.size().y};}
+         [[nodiscard]] inline Size<int> getTileSize() const {return Size<int>(_tileSize);}
+         [[nodiscard]] inline Size<int> getSheetSize() const {return Size<int>(texture.size().x, texture.size().y);}
 //         inline const FileSystem::File getFile() const {return texture.getPath();}
 //         std::string getPath() {return texture.getPath();}
       protected:
@@ -125,7 +125,7 @@ namespace ReyEngine {
       [[nodiscard]] Rect<R_FLOAT> getCellRect(const TileCoord&) const;
       [[nodiscard]] Pos<R_FLOAT> getCellPosCenter(const TileCoord&) const;
       [[nodiscard]] TileCoord getTileCoords(const Pos<R_FLOAT>& pos) const {
-         auto coords = getRect().getSubRectCoord(getTileSize(), pos);
+         auto coords = getRect().getSubRectCoord(Size<R_FLOAT>(getTileSize()), pos);
          return {coords.x, coords.y};
       }
       [[nodiscard]] int getCellIndex(const TileCoord&) const;

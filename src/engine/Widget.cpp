@@ -44,8 +44,8 @@ void Widget::calculateAnchoring(const Rect<R_FLOAT>& r){
    ReyEngine::Rect<R_FLOAT> newRect = r;
    Tools::ScopeExit exit([&](){
       //enforce min/max sizes and apply rectangle (bypassing callbacks and such)
-      newRect.setSize(newRect.size().max(minSize));
-      newRect.setSize(newRect.size().min(maxSize));
+      newRect.setSize(Size<R_FLOAT>(newRect.size().max(minSize)));
+      newRect.setSize(Size<R_FLOAT>(newRect.size().min(maxSize)));
       if (newRect != getRect()) {
          applyRect(newRect);
       }

@@ -11,6 +11,7 @@
 #include "FileSystem.h"
 #include "rlgl.h"
 #include "StrongUnits.h"
+#include <random>
 #ifdef linux
 #include <limits.h>
 #endif
@@ -33,6 +34,14 @@ namespace ReyEngine {
       template <typename T> T min(T a, T b){return a <= b ? a : b;}
       template <typename T> T max(T a, T b){return a >= b ? a : b;}
    }
+
+   template <typename T=double>
+   static T generateRandom(T low, T high){
+      std::random_device rd;
+      std::mt19937 gen(rd());
+      std::uniform_real_distribution<> dis(low, high);
+      return dis(gen);
+   };
 
    // FNV-1a: Better distribution, fewer collisions. Uses XOR then multiply.
    class FNVHash {
@@ -778,13 +787,14 @@ namespace ReyEngine {
 
    template <typename T=R_FLOAT>
    struct Size : public Vec2<T>{
+      using Vec2<T>::max;
+      using Vec2<T>::min;
       constexpr inline Size(): Vec2<T>(){}
       constexpr inline Size(const T& x, const T& y) : Vec2<T>(x, y){}
       constexpr inline explicit Size(const T& edge): Size(edge, edge){}
       constexpr inline Size(const Vector2& v)     : Vec2<T>(v.x,v.y){}
       template <typename R>
-      constexpr inline Size(const Vec2<R>& v)   : Vec2<T>(v.x,v.y){}
-//      constexpr inline Size(const Size<T>& v) : Vec2<T>(v){}
+      constexpr inline explicit Size(const Vec2<R>& v)   : Vec2<T>(v.x,v.y){}
       constexpr inline void operator=(Pos<T>&) = delete;
       constexpr inline bool operator==(const Size<T>& rhs) const {return Size::x==rhs.x && Size::y==rhs.y;}
       constexpr inline bool operator!=(const Size<T>& rhs) const {return Size::x!=rhs.x || Size::y!=rhs.y;}
@@ -1120,7 +1130,7 @@ namespace ReyEngine {
          return (point.y >= y && point.y < y + height);
       }
       [[nodiscard]] constexpr inline bool contains(const Rect<T>& other) const {
-         return other.x >= x && other.y >= y && other.width <= width && other.height <= height;
+         return other.x >= x && other.y >= y && other.width + other.x <= width + x && other.height + other.y <= height + y;
       }
       [[nodiscard]] constexpr inline bool contains(const Vec2<T>& point) const {
          return containsX(point) && containsY(point);
@@ -1177,11 +1187,11 @@ namespace ReyEngine {
       // return a rectangle that would render the same but has positive width and height
       constexpr inline void normalize() {
          if (width < 0) {
-            x += -width;
+            x += width;
             width = -width;
          }
          if (height < 0) {
-            y += -height;
+            y += height;
             height = -height;
          }
       }
@@ -1196,6 +1206,31 @@ namespace ReyEngine {
          return ((x < (other.x + other.width) && (x + width) > other.x) &&
                  (y < (other.y + other.height) && (y + height) > other.y));
       }
+      [[nodiscard]] constexpr inline bool collides(const Line<T>& line) const {
+         if (contains(line.a) || contains(line.b)) return true;
+
+         auto cross = [](const Vec2<T>& p1, const Vec2<T>& p2, const Vec2<T>& p3) {
+            return (p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x);
+         };
+
+         // Check if two line segments intersect
+         auto segmentsIntersect = [&cross](const Line<T>& s1, const Line<T>& s2) {
+            auto d1 = cross(s2.a, s2.b, s1.a);
+            auto d2 = cross(s2.a, s2.b, s1.b);
+            auto d3 = cross(s1.a, s1.b, s2.a);
+            auto d4 = cross(s1.a, s1.b, s2.b);
+
+            // Segments intersect if endpoints are on opposite sides of each other
+            return ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) &&
+                   ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0));
+         };
+
+         if (segmentsIntersect(line, Line<T>(topLeft(), topRight()))) return true;
+         if (segmentsIntersect(line, Line<T>(topRight(), bottomRight()))) return true;
+         if (segmentsIntersect(line, Line<T>(bottomRight(), bottomLeft()))) return true;
+         if (segmentsIntersect(line, Line<T>(bottomLeft(), topLeft()))) return true;
+         return false;
+      }
 
       ///stops at 3 because that's the same as 4
       [[nodiscard]] constexpr inline int getCollisionType(const Rect& other) const {
@@ -1208,6 +1243,9 @@ namespace ReyEngine {
          return pointCount;
       }
 
+      [[nodiscard]] constexpr inline std::array<Pos<T>, 4> corners() const {
+         return topLeft(), topRight(), bottomRight(), bottomLeft();
+      }
       [[nodiscard]] constexpr inline Rect getOverlap(const Rect& other) const {
          //this is pretty naive, but whatever
          //tag the coordinates
@@ -1268,7 +1306,10 @@ namespace ReyEngine {
 
       [[nodiscard]] inline std::string toString() const { return Vec4(x, y, width, height).toString(); }
 
-      inline static Rect<T> fromString(const std::string& s) { Vec4<T>::fromString(s); }
+      inline static Rect fromString(const std::string& s) { Vec4<T>::fromString(s); }
+      inline static Rect fromTLBR(const CornerPos<Corner::TOP_LEFT>&tl, const CornerPos<Corner::BOTTOM_RIGHT>&br) {
+         return Rect(tl, br);
+      }
 
       friend std::ostream& operator<<(std::ostream& os, const Rect<T>& r) {
          os << r.toString();
@@ -1393,6 +1434,17 @@ namespace ReyEngine {
          corners[2] = bottomRight().transform(m);
          corners[3] = bottomLeft().transform(m);
          return corners;
+      }
+      [[nodiscard]] constexpr inline std::array<Line<R_FLOAT>, 4> transformLines(const Matrix& m) const {
+         std::array<Pos<R_FLOAT>, 4> corners;
+         corners[0] = topLeft().transform(m);
+         corners[1] = topRight().transform(m);
+         corners[2] = bottomRight().transform(m);
+         corners[3] = bottomLeft().transform(m);
+         return {Line<R_FLOAT>(corners[0], corners[1]),
+                 Line<R_FLOAT>(corners[1], corners[2]),
+                 Line<R_FLOAT>(corners[2], corners[3]),
+                 Line<R_FLOAT>(corners[3], corners[0])};
       }
 
       //Split into two rects, horizontally, at a specific x value
@@ -1984,6 +2036,7 @@ namespace ReyEngine {
             matrix = blendedMatrix;
          }
       }
+      inline operator Matrix() const {return matrix;}
       inline friend std::ostream& operator<<(std::ostream& os, const Transform2D& t) {std::cout << t.matrix << std::endl; return os;}
    };
 
@@ -2287,15 +2340,15 @@ namespace ReyEngine {
       ~RenderTarget();
       RenderTarget& operator=(const RenderTarget&) = delete;
       void setSize(const Size<int>& newSize);
-      inline Size<int> getSize() const {return _size;}
-      inline bool ready() const {return _texLoaded;}
+      [[nodiscard]] inline Size<int> getSize() const {return _size;}
+      [[nodiscard]] inline bool ready() const {return _texLoaded;}
       [[nodiscard]] inline const Texture2D& getTexture() const {return _tex.texture;}
    protected:
       inline void beginRenderMode(){BeginTextureMode(_tex);}
       inline void endRenderMode(){EndTextureMode();}
       bool _texLoaded = false;
       RenderTexture2D _tex;
-      Size<float> _size;
+      Size<int> _size;
       friend class Canvas;
       friend class RenderContext;
    };
@@ -2304,6 +2357,7 @@ namespace ReyEngine {
    class RenderContext {
       struct CameraContext;
       struct FrozenContext;
+      struct ScopeTransform;
    public:
       RenderContext(RenderTarget& renderTarget)
       : _renderTarget(renderTarget)
@@ -2321,6 +2375,10 @@ namespace ReyEngine {
          _transformStack.push_back(xform);
          matrixState *= xform.matrix;
       }
+      //pushes on ctor, pops on dtor
+      [[nodiscard]] ScopeTransform scopeTransform(const Transform2D& xform) {
+         return {*this, xform};
+      }
       //doesn't check for empty!
       void pop() {
          rlMultMatrixf(MatrixToFloat(_transformStack.back().inverse().matrix));
@@ -2331,7 +2389,7 @@ namespace ReyEngine {
       bool empty() const {return _transformStack.empty();}
       void recordModal(){_modalXform = rlGetMatrixTransform();}
       const Transform2D& getModalTransform() const {return _modalXform;}
-      CameraContext cameraContext(const Camera2D& camera) const {return CameraContext(camera);}
+      static CameraContext cameraContext(const Camera2D& camera) {return CameraContext(camera);}
       FrozenContext freeze() {return *this;}
    private:
       //so we can save and recall render contexts
@@ -2366,6 +2424,19 @@ namespace ReyEngine {
       private:
          Camera2D _camera;
       };
+
+      struct ScopeTransform {
+         ScopeTransform(RenderContext& context, const Transform2D& xform)
+         : context(context)
+         {
+            context.push(xform);
+         }
+         ~ScopeTransform() {
+            context.pop();
+         }
+         RenderContext& context;
+      };
+
       std::vector<Transform2D> _transformStack;
       RenderTarget& _renderTarget; //the thing we are drawing to
       Transform2D _modalXform; //a modal transform we want to save

@@ -28,7 +28,7 @@ void Canvas::__on_child_removed_from_tree(TypeNode *n) {
 void Canvas::__on_rect_changed(const Rect<float> &oldRect, const Rect<float> &newRect, bool allowsAnchor, bool byLayout) {
    Widget::__on_rect_changed(oldRect, newRect, allowsAnchor, byLayout);
    if (oldRect.size() != newRect.size()) {
-      _renderTarget.setSize(getSize());
+      _renderTarget.setSize(Size<int>(getSize()));
    }
 }
 
@@ -127,7 +127,7 @@ void Canvas::doRenderModal(RenderContext& context, Widget* widget) {
 void Canvas::renderProcess(RenderContext& renderContext) {
    if (!_visible) return;
    if (!_retained) {
-      ClearBackground(Colors::lightGray);
+      ClearBackground(_backgroundColor);
    }
 
    render2DBegin(renderContext);

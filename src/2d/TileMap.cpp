@@ -18,7 +18,7 @@ void TileMap::render2DEnd(RenderContext&) {
 /////////////////////////////////////////////////////////////////////////////////////////
 void TileMap::render2D(RenderContext&) const {
    // if (!_needsRedraw) return;
-   ClearBackground(Colors::none);
+   // ClearBackground(Colors::none);
    //draw all tiles in the layer
    for (auto& layer: _layers) {
       for (auto& [x, yMap]: layer.second->tiles) {
@@ -136,12 +136,12 @@ Pos<R_FLOAT> TileMap::getCellPosCenter(const TileCoord& coord) const {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 int TileMap::getCellIndex(const TileCoord& coord) const {
-   return getRect().getSubRectIndex(getTileSize(), getCellPos(coord));
+   return getRect().getSubRectIndex(Size<R_FLOAT>(getTileSize()), getCellPos(coord));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Rect<R_FLOAT> TileMap::getCellRect(const TileCoord& coord) const {
-   return {getCellPos(coord), getTileSize()};
+   return {getCellPos(coord), Size<R_FLOAT>(getTileSize())};
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -265,7 +265,7 @@ std::optional<TileMap::TileCoord> TileMap::TileMapLayer::getTileAtCoords(const T
 /////////////////////////////////////////////////////////////////////////////////////////
 Rect<float> TileMap::TileMapLayer::getBoundingBox() const {
    // we (we? ha! YOU) can improve this algorithm by making it create a rect from 0,0 that only includes each new tile,
-   // then comparing that rect withour current rect, and expanding if necessary. We still would need to do a
+   // then comparing that rect with our current rect, and expanding if necessary. We still would need to do a
    // full recalculation. Possibly we could track the cornery-est tiles and use that to determine if we should
    // shrink to speed that up too.
    if (tiles.empty()) return {};

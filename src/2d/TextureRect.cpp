@@ -7,7 +7,7 @@ using namespace ReyEngine;
 ///////////////////////////////////////////////////////////////////////////////////////
 void TextureRect::_init() {
    if (_fitScheduled && _texture){
-      setRect({getPos(), _texture->size()});
+      setRect({getPos(), Size<float>(_texture->size())});
       _fitScheduled = false;
    }
 }
