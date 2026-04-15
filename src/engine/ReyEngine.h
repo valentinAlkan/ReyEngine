@@ -2140,19 +2140,21 @@ namespace ReyEngine {
       [[nodiscard]] void* getData() const {return _image.data;}
       operator bool() const {return _imageLoaded;}
       void release(){
-         if (_imageLoaded) {
+         if (_imageLoaded && _owning) {
             UnloadImage(_image);
-            _imageLoaded = false;
          }
+         _imageLoaded = false;
       }
       [[nodiscard]] Size<float> size() const {return {(float)_image.width, (float)_image.height};}
       [[nodiscard]] ReyImage copy() const {return {ImageCopy(_image)};}
       [[nodiscard]] Image& getImage(){return _image;}
       [[nodiscard]] const Image& getImage() const {return _image;}
+      void setOwning(bool ownsPtr){ _owning=ownsPtr;}
    protected:
       bool _imageLoaded = false;
    private:
       Image _image;
+      bool _owning = true;
       friend class ReyTexture;
       friend class LazyTexture;
    };
