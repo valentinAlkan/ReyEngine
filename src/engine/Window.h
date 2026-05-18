@@ -38,7 +38,7 @@ namespace ReyEngine{
       void setPosition(Pos<float> newPos){setWindowPosition(newPos);}
       void maximize(){maximizeWindow();}
       void minimize(){minimizeWindow();}
-      inline EngineFrameCount getFrameCount() const {return _frameCounter;}
+      [[nodiscard]] inline EngineFrameCount getFrameCount() const {return _frameCounter;}
 //      std::optional<std::shared_ptr<Draggable>>getDragNDrop(){if (_dragNDrop) return _dragNDrop; return std::nullopt;}
       inline void keyInput(InputInterface::KeyCode){};
       int getFPS() const {return GetFPS();}
@@ -53,7 +53,7 @@ namespace ReyEngine{
    private:
       Handled __process_unhandled_input(const InputEvent&) const;
       bool _isEditor = false; //enables other features
-      uint64_t _frameCounter=0;
+      std::atomic<uint64_t> _frameCounter=0;
       int _targetFPS;
       std::chrono::milliseconds _keyDownRepeatDelay = std::chrono::milliseconds(500); //how long a key must be held down before it counts as a repeat
       std::chrono::milliseconds _keyDownRepeatRate = std::chrono::milliseconds(25); //how long must pass before each key repeat event is sent
