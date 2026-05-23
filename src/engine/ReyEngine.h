@@ -1949,13 +1949,15 @@ namespace ReyEngine {
             // Simple rotation around origin
             matrix = MatrixMultiply(MatrixRotate({0, 0, 1}, (float)r.get()), matrix);
          } else {
-            // Rotation around a specific point:
-            // 1. Translate center to origin
-            translate(-centerPoint);
+            // Rotation around a specific point. Raylib's MatrixMultiply(A,B) returns B*A
+            // in standard math, so each helper post-multiplies. To build T(c)*R*T(-c)
+            // (which pivots around c), the ops must run in reverse of the visual sequence.
+            // 1. Translate back
+            translate(centerPoint);
             // 2. Rotate
             matrix = MatrixMultiply(MatrixRotate({0, 0, 1}, (float)r.get()), matrix);
-            // 3. Translate back
-            translate(centerPoint);
+            // 3. Translate center to origin
+            translate(-centerPoint);
          }
       }
 
@@ -2422,6 +2424,7 @@ namespace ReyEngine {
             EndMode2D();
          }
       private:
+
          Camera2D _camera;
       };
 
@@ -2441,7 +2444,7 @@ namespace ReyEngine {
       RenderTarget& _renderTarget; //the thing we are drawing to
       Transform2D _modalXform; //a modal transform we want to save
       Matrix matrixState;
-      friend class FrozenContext;
+      friend struct FrozenContext;
    };
 
    WindowSpace<Pos<R_FLOAT>> getScreenCenter();

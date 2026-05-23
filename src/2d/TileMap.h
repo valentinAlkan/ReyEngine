@@ -111,15 +111,15 @@ namespace ReyEngine {
 
       TileMap(const Size<int>& tileSize): _tileSize(tileSize) {}
       TileMap(int tileWidth, int tileheight): _tileSize(Size<int>(tileWidth, tileheight)){}
-      std::optional<SpriteAtlas*> addAtlas(
+      [[nodiscard]]std::optional<SpriteAtlas*> addAtlas(
             const std::string& atlasName,
             const FileSystem::File& file,
             const Size<int>& tileSize,
             const Pos<int>& offset,
             const Size<int>& padding);
-      std::optional<SpriteAtlas*> getAtlas(const std::string& atlasName);
-      std::optional<TileMapLayer*> addLayer(SpriteAtlas* atlas);
-      std::optional<TileMapLayer*> getLayer(LayerIndex);
+      [[nodiscard]]std::optional<SpriteAtlas*> getAtlas(const std::string& atlasName);
+      [[nodiscard]]std::optional<TileMapLayer*> addLayer(SpriteAtlas* atlas);
+      [[nodiscard]]std::optional<TileMapLayer*> getLayer(LayerIndex);
       [[nodiscard]] TileCoord getCell(const Pos<R_FLOAT>&) const;
       [[nodiscard]] Pos<R_FLOAT> getCellPos(const TileCoord&) const;
       [[nodiscard]] Rect<R_FLOAT> getCellRect(const TileCoord&) const;
@@ -133,8 +133,8 @@ namespace ReyEngine {
       void setTileSize(const Size<int>&);
       [[nodiscard]] Size<int> getTileSize() const {return _tileSize;}
       void redraw(){_needsRedraw = true;}
-      std::optional<float> getTotalNavWeight(const TileCoord&) const;
-      std::vector<TileCoord> getTileNeighbors(const TileCoord& coords) const {
+      [[nodiscard]]std::optional<float> getTotalNavWeight(const TileCoord&) const;
+      [[nodiscard]]std::vector<TileCoord> getTileNeighbors(const TileCoord& coords) const {
          std::vector<TileCoord> neighbors;
          neighbors.reserve(_neighborType == NeighborType::DIAGONAL ? 8 : 4);
          auto x = coords.x;
@@ -154,13 +154,13 @@ namespace ReyEngine {
          return neighbors;
       }
    protected:
-      virtual Handled _on_hovered(const TileCoord&){return nullptr;}
-      virtual Handled _on_clicked(const TileCoord&){return nullptr;}
+      [[nodiscard]]virtual Handled _on_hovered(const TileCoord&){return nullptr;}
+      [[nodiscard]]virtual Handled _on_clicked(const TileCoord&){return nullptr;}
       // void render2DBegin(RenderContext&) override;
       void render2D(RenderContext&) const override;
       void render2DEnd(RenderContext&) override;
       void _init();
-      Handled _unhandled_input(const InputEvent&) override;
+      [[nodiscard]]Handled _unhandled_input(const InputEvent&) override;
       void _on_rect_changed() override;
       void _on_tiles_changed();
       std::map<LayerIndex, std::unique_ptr<TileMapLayer>> _layers;
