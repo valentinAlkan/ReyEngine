@@ -10,7 +10,7 @@ using namespace ReyEngine;
 using namespace Internal;
 using sc = chrono::steady_clock;
 
-constexpr bool PRINT_MOUSEUP = true;
+constexpr bool PRINT_MOUSEUP = false;
 constexpr bool PRINT_MOUSEDOWN = false;
 constexpr bool PRINT_HOVER = false;
 constexpr bool PRINT_MOTION = false;
@@ -19,7 +19,7 @@ constexpr bool PRINT_TOOLTIP_CANCEL = false;
 constexpr bool PRINT_WHEEL = false;
 constexpr bool PRINT_CHAR = false;
 constexpr bool PRINT_KEYUP = true;
-constexpr bool PRINT_KEYDOWN = true;
+constexpr bool PRINT_KEYDOWN = false;
 constexpr bool PRINT_KEYREPEAT = false;
 
 constexpr std::chrono::milliseconds TOOLTIP_DELAY = 500ms;
@@ -52,7 +52,7 @@ void Window::exec(){
    WindowSpace<Pos<float>> mousePos = {{std::numeric_limits<float>::min(), std::numeric_limits<float>::min()}};
    Vec2<float> mouseDelta;
    bool checkedToolTip = false;
-   SetTargetFPS(_targetFPS);
+   if (_targetFPS) SetTargetFPS(_targetFPS);
    auto inputEventMouseButtonTimeStampUp = sc::now();
    auto inputEventMouseButtonTimeStampDown = sc::now();
    auto lastMouseButtonInput = InputInterface::MouseButton::NONE;

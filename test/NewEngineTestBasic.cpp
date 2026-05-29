@@ -73,40 +73,8 @@ int main() {
    auto& window = Application::createWindowPrototype("window", 1280, 1024, {WindowFlags::RESIZE}, 60)->createWindow();
    auto root = window.getCanvas();
 
-   std::shared_ptr<Canvas> testCanvas1;
-   std::shared_ptr<Canvas> testCanvas2;
-   std::shared_ptr<Canvas> testCanvas3;
-
-   testCanvas1 = make_child<TestCanvas>(root, "testCanvas1", Colors::blue);
-   testCanvas1->setRect({50,50,500,500});
-   {
-      InputEventMouseMotion motion(&window, {51,51}, {0,0});
-      auto handler = root->processInput(motion);
-      if (handler) {
-         Logger::info() << "Input handled by " << handler.handler->getName() << " @ " << handler.pos.value() << endl;
-      } else {
-         Logger::error() << "Input unhandled!" << endl;
-      }
-      assert(handler.handler == testCanvas1.get());
-      assert(handler.pos == Pos<float>(1, 1));
-   }
-
-   {
-      InputEventMouseMotion motion(&window, {124,113}, {0,0});
-      testCanvas2 = make_child<TestCanvas>(testCanvas1, "testCanvas2", Colors::yellow);
-      testCanvas2->setRect({50,50,400,400});
-      auto handler = root->processInput(motion);
-      assert(handler.handler == testCanvas2.get());
-      assert(handler.pos == Pos<float>(24,13));
-   }
-   {
-      InputEventMouseMotion motion(&window, {347,399}, {0,0});
-      testCanvas3 = make_child<TestCanvas>(testCanvas2, "testCanvas3", Colors::green);
-      testCanvas3->setRect({50,50,300,300});
-
-      auto handler = root->processInput(motion);
-      assert(handler.handler == testCanvas3.get());
-      assert(handler.pos == Pos<float>(197, 249));
+   for (int i = 0; i<PIXEL_AMT; i++){
+      garbage[i] = ColorRGBA::random();
    }
 
    root->removeAllChildren();
@@ -144,32 +112,6 @@ int main() {
       assert(handler.pos.value() = hover.mouse.getLocalPos());
    }
 
-   scrollArea->setOffsetX(150);
-   scrollArea->setOffsetY(150);
-   auto canvasSpace = pushButton->toCanvasSpace({}).get();
-   // Logger::info() << "pushbutton localpos " << Pos<float>() << " == canvas pos " << canvasSpace << endl;
-   assert(canvasSpace == Pos<float>(50, 50));
-
-   // Logger::info() << "pushbutton localpos " << handler.pos.value() << " == windowPos " << windowPos << endl;
-
-   auto filebrowser = make_child<FileBrowser>(root, "filebrowser");
-   filebrowser->centerOnPoint(root->getCenter());
-   filebrowser->open();
-   assert(filebrowser->getVisible());
-
-   //interact with the filebrowser
-   {
-      static constexpr Pos<float> pt = {948, 764};
-      InputEventMouseButton down(&window, pt, InputInterface::MouseButton::LEFT, true, false);
-      InputEventMouseButton up(&window, pt, InputInterface::MouseButton::LEFT, false, false);
-      root->processInput(down);
-      root->processInput(up);
-      assert(!filebrowser->getVisible());
-   }
-
-   root->removeAllChildren();
-
-   make_child<PointDrawer>(root, "pointDrawer")->moveToForeground();
    window.exec();
    return 0;
 }

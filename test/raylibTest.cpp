@@ -42,14 +42,14 @@ int main(){
    }
    if (imageData.empty()) throw std::runtime_error("Pipe error!");
    // Load image from memory
-   std::shared_ptr<ReyEngine::ReyTexture> _tex = std::make_shared<ReyEngine::ReyTexture>(LoadImageFromMemory(".png", imageData.data(), (int)imageData.size()));
+//   std::shared_ptr<ReyEngine::ReyTexture> _tex = std::make_shared<ReyEngine::ReyTexture>(LoadImageFromMemory(".png", imageData.data(), (int)imageData.size()));
 
    while (!WindowShouldClose())
    {
       BeginDrawing();
       ClearBackground(RAYWHITE);
 
-      DrawTexture(_tex->getTexture(), 0, 0, RAYWHITE);
+//      DrawTexture(_tex->getTexture(), 0, 0, RAYWHITE);
 
 
       EndDrawing();

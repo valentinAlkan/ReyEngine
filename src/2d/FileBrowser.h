@@ -16,7 +16,7 @@ namespace ReyEngine {
       EVENT_ARGS(EventOk, 287346538943582, TreeItem* selectedItem), _selectedItem(selectedItem)
          {}
          TreeItem* _selectedItem;
-         std::optional<FileSystem::Path> getPath() const {return _selectedItem->getMetaData<FileSystem::Path>(VAR_PATH);}
+         [[nodiscard]] std::optional<FileSystem::Path> getPath() const {return _selectedItem->getMetaData<FileSystem::Path>(VAR_PATH);}
       };
       FileBrowser()
       : _dir("/")

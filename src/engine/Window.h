@@ -46,7 +46,7 @@ namespace ReyEngine{
       bool isClosing() const {return _isClosing;}
       std::optional<std::unique_ptr<InputContext::Semaphore>> makeInputContext(Widget*);
    protected:
-      Window(const std::string& title, int width, int height, const std::vector<WindowFlags>& flags, int targetFPS);
+      Window(const std::string& title, int width, int height, const std::vector<WindowFlags>& flags, int targetFPS = 0);
       void initialize(std::optional<std::shared_ptr<Canvas>> root);
       void _on_tree_updated();
       static constexpr size_t INPUT_COUNT_LIMIT = 256;

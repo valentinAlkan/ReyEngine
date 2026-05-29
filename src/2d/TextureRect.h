@@ -22,6 +22,7 @@ namespace ReyEngine {
          void setShader(const std::shared_ptr<ReyShader>& shader){_shader = shader;}
          void setRegion(const Rect<float>& newRegion){ _region = newRegion; _calculateFit();}
          [[nodiscard]] std::shared_ptr<ReyShader> getShader() const {return _shader;}
+         bool isDefault() const {return _isDefault;}
       protected:
          void _calculateFit(){
             _dstRect = getSizeRect();
@@ -50,7 +51,7 @@ namespace ReyEngine {
          }
 
          void render2D(RenderContext&) const override{
-            if (_dstRect.size() != Vec2<float>(0,0)) {
+            if (_dstRect.size() != Vec2<float>(0,0) && !_isDefault) {
                ScopeScissor scopeScissor(getGlobalTransform(), getSizeRect());
                if constexpr (IsTextureRect<T>){
                   if (_texture && *_texture) {
@@ -84,6 +85,7 @@ namespace ReyEngine {
          ReyEngine::Rect<float> _srcRect; //not necessarily user defined.
          ReyEngine::Rect<float> _dstRect; //where we should draw it
          std::shared_ptr<ReyShader> _shader;
+         bool _isDefault = true;
          FitType _fitType = FitType::FIT_RECT;
          bool _fitScheduled = false; //if we're not inited yet
          static constexpr FitType DEFAULT_FIT = FitType::FIT_RECT;
@@ -95,13 +97,20 @@ namespace ReyEngine {
    class TextureRect : public Internal::DrawArea<TextureRect> {
    public:
       REYENGINE_OBJECT(TextureRect)
-      TextureRect(){
-         _texture = std::make_shared<ReyTexture>();
-      };
+      TextureRect(){};
       TextureRect(const FileSystem::File& f, FitType fit=DEFAULT_FIT): Internal::DrawArea<TextureRect>(fit) { setTexture(f);}
       TextureRect(const std::shared_ptr<ReyTexture>& t, FitType fit=DEFAULT_FIT): Internal::DrawArea<TextureRect>(fit){setTexture(t);}
       void setTexture(const FileSystem::File&);
       void setTexture(const std::shared_ptr<ReyTexture>&);
+      void updateTexture(const Image&);
+      void clearTexture(){_isDefault = true;}
+      void makeTexture(const ReyEngine::Size<float>& size){
+         _texture = std::make_shared<ReyTexture>(ReyImage(GenImageColor(size.x, size.y, BLANK)));
+         if (!_texture){
+            throw std::runtime_error("Failed to create texture. This might have happened if is size is null");
+         }
+         Logger::debug() << _texture << std::endl;
+      }
       [[nodiscard]] std::shared_ptr<ReyTexture>& getTexture(){return _texture;}
       [[nodiscard]] const std::shared_ptr<ReyTexture>& getTexture() const {return _texture;}
       void _init() override;
@@ -113,7 +122,7 @@ namespace ReyEngine {
    class RenderTargetRect : public Internal::DrawArea<RenderTargetRect> {
    public:
       REYENGINE_OBJECT(RenderTargetRect)
-      RenderTargetRect(std::shared_ptr<RenderTarget>& tgt){_renderTarget = tgt;};
+      RenderTargetRect(std::shared_ptr<RenderTarget>& tgt){_renderTarget = tgt; _isDefault = false;};
    };
 
 //   class ShaderRect : public Internal::DrawArea<ShaderRect> {

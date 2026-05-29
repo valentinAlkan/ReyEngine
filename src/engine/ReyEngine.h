@@ -2117,7 +2117,7 @@ namespace ReyEngine {
          std::swap(_imageLoaded, other._imageLoaded);
          return *this;
       }
-      inline ReyImage(const Image& im){
+      explicit inline ReyImage(const Image& im){
          _image = im;
          _imageLoaded = _image.data != nullptr;
          if (!_imageLoaded) Logger::warn() << "Null image was not loaded!" << std::endl;
@@ -2146,14 +2146,14 @@ namespace ReyEngine {
          _imageLoaded = false;
       }
       [[nodiscard]] Size<float> size() const {return {(float)_image.width, (float)_image.height};}
-      [[nodiscard]] ReyImage copy() const {return {ImageCopy(_image)};}
+      [[nodiscard]] ReyImage copy() const {return ReyImage(ImageCopy(_image));}
       [[nodiscard]] Image& getImage(){return _image;}
       [[nodiscard]] const Image& getImage() const {return _image;}
       void setOwning(bool ownsPtr){ _owning=ownsPtr;}
    protected:
       bool _imageLoaded = false;
    private:
-      Image _image;
+      Image _image = {};
       bool _owning = true;
       friend class ReyTexture;
       friend class LazyTexture;
@@ -2163,6 +2163,7 @@ namespace ReyEngine {
       ReyTexture(){}
       ReyTexture(const Size<int>& size, const ColorRGBA&);
       explicit ReyTexture(const ReyImage&);
+      ReyTexture(const Texture2D&);
       ReyTexture(const FileSystem::File&);
       ReyTexture(ReyTexture&& other) noexcept
       : _tex(other._tex)
@@ -2188,6 +2189,13 @@ namespace ReyEngine {
          return *this;
       }
       void loadTexture(const FileSystem::File& file);
+      //formats must match (obviously)
+      void update(const void* pixels){
+         if (!_texLoaded){
+            throw std::runtime_error("Cannot update non-existent texture!");
+         }
+         UpdateTexture(_tex, pixels);
+      }
       ~ReyTexture(){
          _release();
       }
@@ -2230,8 +2238,9 @@ namespace ReyEngine {
       f(args...);
    };
    struct LazyTexture {
-      LazyTexture() = default;
+      LazyTexture(){_tex = std::make_shared<ReyTexture>();}
       LazyTexture(const LazyTexture&) = delete;
+      LazyTexture(const std::shared_ptr<ReyTexture>& tex){_tex = tex;}
       LazyTexture(LazyTexture&& other){*this = std::move(other);}
       LazyTexture& operator=(const LazyTexture&) = delete;
       LazyTexture& operator=(LazyTexture&& other) noexcept {
@@ -2239,7 +2248,8 @@ namespace ReyEngine {
          std::swap(_tex, other._tex);
          return *this;
       }
-      void loadImage(const FileSystem::File& file){_img = LoadImage(file.canonical().c_str());}
+      void loadImage(const FileSystem::File& file){_img = ReyImage(LoadImage(file.canonical().c_str()));}
+      void updateImage(const Image& newImage){_img._image = newImage;}
       [[nodiscard]] bool texReady() const {return _tex && *_tex;}
       [[nodiscard]] bool imageReady() const {return _img;}
       [[nodiscard]] std::shared_ptr<ReyTexture>& getTexture() {return _tex;}

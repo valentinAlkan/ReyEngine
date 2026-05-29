@@ -19,19 +19,16 @@ ReyTexture::ReyTexture(const FileSystem::File& file){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyTexture::ReyTexture(const ReyImage& image)
-{
+ReyTexture::ReyTexture(const ReyImage& image) {
    _tex = LoadTextureFromImage(image._image);
    _texLoaded = _tex.id != 0;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-//ReyTexture& ReyTexture::operator=(ReyEngine::ReyImage&& image){
-//   _release();
-//   _tex = LoadTextureFromImage(image._image);
-//   _texLoaded = _tex.id != 0;
-//   return *this;
-//}
+ReyTexture::ReyTexture(const Texture2D& texture) {
+   _tex = texture;
+   _texLoaded = _tex.id != 0;
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyTexture::loadTexture(const FileSystem::File &file) {
