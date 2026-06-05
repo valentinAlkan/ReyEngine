@@ -31,8 +31,8 @@ void ScrollArea::_init() {
    _hslider->setVisible(true);
 
    //make sure we only capture outside input when the sliders are being used
-   auto cbSliderPress = [this](Slider::EventSliderPressed& event){setFocus(event.publisher->asMut<Slider>().value());};
-   auto cbSliderRelease = [this](Slider::EventSliderReleased& event){setFocus(nullptr);};
+   auto cbSliderPress = [this](Slider::EventSliderPressed& event){pushFocus(event.publisher->asMut<Slider>().value());};
+   auto cbSliderRelease = [this](Slider::EventSliderReleased& event){pushFocus(nullptr);};
 
    subscribe<Slider::EventSliderValueChanged>(_hslider, [&](auto e){setOffsetX(e.pct);});
    subscribe<Slider::EventSliderValueChanged>(_vslider, [&](auto e){setOffsetY(e.pct);});

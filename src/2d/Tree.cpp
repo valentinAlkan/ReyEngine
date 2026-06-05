@@ -72,6 +72,9 @@ void Tree::determineVisible() {
    //get any currently selected item
    auto oldSelected = _selectedItem;
    //count how many rows are visible/expanded
+   for (auto& item : _visibleItems){
+      delete item;
+   }
    _visibleItems.clear();
    std::function<void(TreeItem*)> pushVisible = [&](TreeItem* item){
       //root item must not be hidden, otherwise if this item isn't root, then it's parent must be expanded
@@ -214,10 +217,10 @@ Handled Tree::_unhandled_input(const InputEvent& event) {
                 EventItemClicked itemClickedEvent(this, itemAtClick);
                 publish(itemClickedEvent);
                 if (_allowSelect){
-                   if (_selectedItem != itemAtClick){
+//                   if (_selectedItem != itemAtClick){ //allow re-selecting
                       EventItemSelected itemSelectedEvent(this, itemAtClick);
                       publish(itemSelectedEvent);
-                   }
+//                   }
                    _selectedItem = itemAtClick;
                 }
 

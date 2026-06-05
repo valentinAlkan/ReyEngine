@@ -192,7 +192,7 @@ EngineFrameCount Widget::getEngineFrameCount() const {
 ///////////////////////////////////////////////////////////////////////////////////////////
 bool Widget::isHovered() const {
    if (auto hasCanvas = getCanvas()){
-      return hasCanvas.value()->getStatus<WidgetStatus::Hover>() == this;
+      return hasCanvas.value()->getHover() == this;
    }
    return false;
 }
@@ -200,7 +200,7 @@ bool Widget::isHovered() const {
 ///////////////////////////////////////////////////////////////////////////////////////////
 bool Widget::isFocused() const {
    if (auto hasCanvas = getCanvas()){
-      return hasCanvas.value()->getStatus<WidgetStatus::Focus>() == this;
+      return hasCanvas.value()->getFocus() == this;
    }
    return false;
 }
@@ -209,7 +209,7 @@ bool Widget::isFocused() const {
 ///////////////////////////////////////////////////////////////////////////////////////////
 bool Widget::isModal() const {
    if (auto hasCanvas = getCanvas()){
-      return hasCanvas.value()->getStatus<WidgetStatus::Modal>() == this;
+      return hasCanvas.value()->getModal() == this;
    }
    return false;
 }
@@ -218,7 +218,7 @@ bool Widget::isModal() const {
 void Widget::setHovered(bool newValue) {
    if (auto hasCanvas = getCanvas()){
       if (!newValue && !isHovered()) return;
-      hasCanvas.value()->setStatus<WidgetStatus::Hover>(newValue ? this : nullptr);
+      hasCanvas.value()->setHover(newValue ? this : nullptr);
    } else {
       Logger::error() << "Unable to set status on widget that is not associated with any Canvas" << endl;
    }
@@ -227,8 +227,12 @@ void Widget::setHovered(bool newValue) {
 ///////////////////////////////////////////////////////////////////////////////////////////
 void Widget::setFocused(bool newValue) {
    if (auto hasCanvas = getCanvas()){
-      if (!newValue && !isFocused()) return;
-      hasCanvas.value()->setStatus<WidgetStatus::Focus>(newValue ? this : nullptr);
+      auto& canvas = hasCanvas.value();
+      if (newValue){
+         canvas->pushFocus(this);
+      } else {
+         canvas->popFocus(this);
+      }
    } else {
       Logger::error() << "Unable to set status on widget that is not associated with any Canvas" << endl;
    }
@@ -237,8 +241,12 @@ void Widget::setFocused(bool newValue) {
 ///////////////////////////////////////////////////////////////////////////////////////////
 void Widget::setModal(bool newValue) {
    if (auto hasCanvas = getCanvas()){
-      if (!newValue && !isModal()) return;
-      hasCanvas.value()->setStatus<WidgetStatus::Modal>(newValue ? this : nullptr);
+      auto& canvas = hasCanvas.value();
+      if (newValue){
+         canvas->pushModal(this);
+      } else {
+         canvas->popModal(this);
+      }
    } else {
       Logger::error() << "Unable to set status on widget that is not associated with any Canvas" << endl;
    }

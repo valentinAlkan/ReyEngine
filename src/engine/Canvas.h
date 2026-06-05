@@ -7,7 +7,7 @@
 namespace ReyEngine {
    namespace WidgetStatus{
       //give special status to widgets - define new status here and add to tuple
-      struct Modal{static constexpr char NAME[] = "Modal";}; // Focused widgets get first dibs on input events, *and (by default) consume those events that are not handled explicitly*
+      struct Modal{static constexpr char NAME[] = "Modal";}; // Modal widgets get first dibs on input events, *and (by default) consume those events that are not handled explicitly* AND are drawn last by the canvas
       struct Focus{static constexpr char NAME[] = "Focus";}; // Focused widgets get first dibs on non-modal input events
       struct Hover{static constexpr char NAME[] = "Hover";};
       struct ToolTip{static constexpr char NAME[] = "ToolTip";}; //The currently displayed tool-tip
@@ -37,6 +37,34 @@ namespace ReyEngine {
    }
 
    class Canvas: public Widget {
+      template <WidgetStatus::StatusType Status>
+      void _setStatus(Widget* newWidget){
+         constexpr std::size_t statusIndex = WidgetStatus::tuple_type_index_v<Status, WidgetStatus::StatusTypes>;
+         //gauranteed safe against overflow by static index check, so we can live dangerously by slicing arrays
+         auto oldWidget = statusWidgetStorage[statusIndex];
+         statusWidgetStorage[statusIndex] = newWidget;
+         bool statusChange = newWidget != oldWidget;
+         if (!statusChange) return;
+         if constexpr (std::is_same_v<Status, WidgetStatus::Hover>){
+            if (oldWidget) oldWidget->_on_mouse_exit();
+            if (newWidget) newWidget->_on_mouse_enter();
+         }
+         if constexpr (std::is_same_v<Status, WidgetStatus::Focus>){
+            if (oldWidget) oldWidget->_on_focus_lost();
+            if (newWidget) newWidget->_on_focus_gained();
+         }
+         if constexpr (std::is_same_v<Status, WidgetStatus::Modal>){
+            //only drawables can be modal, so we can set some extra statuses to help us out
+            if (oldWidget){
+               oldWidget->_modal = false;
+               oldWidget->_on_modality_lost();
+            }
+            if (newWidget){
+               newWidget->_modal = true;
+               newWidget->_on_modality_gained();
+            }
+         }
+      }
    protected:
       //Coordinates that are in background space as opposed to foreground space. Filtered through camera transform.
       using BackgroundSpace = NamedType<Pos<float>, Internal::BackgroundSpaceParam>;
@@ -44,7 +72,7 @@ namespace ReyEngine {
       enum class CanvasLayer {FOREGROUND, BACKGROUND};
       REYENGINE_OBJECT(Canvas)
       Canvas()
-      : camera({0}){
+      : camera({{0}}){
          isGlobalTransformBoundary = true;
          _isCanvas = true;
          camera.zoom = 1.0f;
@@ -81,57 +109,52 @@ namespace ReyEngine {
       void render2D(RenderContext&) const override {}
       void renderProcess(RenderContext&);
       void __on_rect_changed(const Rect<R_FLOAT>& oldRect, const Rect<R_FLOAT>& newRect, bool allowsAnchor, bool byLayout = false) override;
-      void _removeAllStatus(Widget*);
+      template <WidgetStatus::StatusType Status>
+      void _removeStatus(Widget* widget){
+         //removes all instances of the widget from the status stack.
+         auto pruneStack = [&](auto& statusVector) {
+            for (auto it = statusVector.begin(); it != statusVector.end(); /**/) {
+               auto _widget = *it;
+               if (_widget == widget) {
+                  it = statusVector.erase(it);
+               } else {
+                  ++it;
+               }
+            }
+         };
+
+         if constexpr (std::is_same_v<Status, WidgetStatus::Focus>){
+            pruneStack(_focusStack);
+            if (!_focusStack.empty()){
+               _setStatus<WidgetStatus::Focus>(_focusStack.back());
+               _focusStack.pop_back();
+            }
+         }
+         if constexpr (std::is_same_v<Status, WidgetStatus::Modal>){
+            pruneStack(_modalStack);
+            if (!_modalStack.empty()){
+               _setStatus<WidgetStatus::Focus>(_modalStack.back());
+               _modalStack.pop_back();
+            }
+         } else {
+            constexpr std::size_t statusIndex = WidgetStatus::tuple_type_index_v<Status, WidgetStatus::StatusTypes>;
+            if (statusWidgetStorage[statusIndex] == widget) {
+               _setStatus<Status>(nullptr);
+            }
+         }
+      }
+      void _removeAllStatus(Widget* widget){
+         std::apply([this, widget](auto... dummyStatuses) {(this->_removeStatus<decltype(dummyStatuses)>(widget), ...);}, WidgetStatus::StatusTypes{});
+      }
 
       RenderTarget _renderTarget;
       Camera2D camera;
       // std::unique_ptr<InputContext> _inputContext;
       bool _retained = false; //set to true if you want to retain the image between draw calls. Requires manually clearing the render target.
-
-      std::map<size_t, std::vector<Widget*>> _processLayers; //different layers of widgets that can be processed differently
+      std::vector<Widget*> _modalStack;
+      std::vector<Widget*> _focusStack;
       OrderedCache<TypeNode*> _foreground;
       OrderedCache<TypeNode*> _background;
-      /////////////////////////////////////////////////////////////////////////////////////////
-      /////////////////////////////////////////////////////////////////////////////////////////
-      /////////////////////////////////////////////////////////////////////////////////////////
-      template <WidgetStatus::StatusType Status>
-      void setStatus(Widget* newWidget){
-         constexpr std::size_t statusIndex = WidgetStatus::tuple_type_index_v<Status, WidgetStatus::StatusTypes>;
-         //gauranteed safe against overflow by static index check, so we can live dangerously by slicing arrays
-         auto oldWidget = statusWidgetStorage[statusIndex];
-         statusWidgetStorage[statusIndex] = newWidget;
-         bool statusChange = newWidget != oldWidget;
-         if (!statusChange) return;
-         if constexpr (std::is_same_v<Status, WidgetStatus::Hover>){
-               if (oldWidget) oldWidget->_on_mouse_exit();
-               if (newWidget) newWidget->_on_mouse_enter();
-         }
-         if constexpr (std::is_same_v<Status, WidgetStatus::Focus>){
-               if (oldWidget) oldWidget->_on_focus_lost();
-               if (newWidget) newWidget->_on_focus_gained();
-         }
-         if constexpr (std::is_same_v<Status, WidgetStatus::Modal>){
-            //only drawables can be modal, so we can set some extra statuses to help us outd
-            if (oldWidget){
-               oldWidget->_modal = false;
-               oldWidget->_on_modality_lost();
-            }
-            if (newWidget){
-               newWidget->_modal = true;
-               newWidget->_on_modality_gained();
-            }
-         }
-         //Note: focus should NOT propagate upwards - each canvas manages its own focus
-         //Propagating would cause widgets to be focused on canvases they don't belong to
-      }
-      template <WidgetStatus::StatusType Status>
-      Widget* getStatus(){
-         constexpr std::size_t statusIndex = WidgetStatus::tuple_type_index_v<Status, WidgetStatus::StatusTypes>;
-         //gauranteed safe so no safety checks required
-         return statusWidgetStorage[statusIndex];
-      }
-      template <WidgetStatus::StatusType Status>
-      [[nodiscard]] const Widget* getStatus() const {return const_cast<Canvas*>(this)->getStatus<Status>();}
       std::array<Widget*, std::tuple_size_v<WidgetStatus::StatusTypes>> statusWidgetStorage = {0};
 
       static void doRender(RenderContext&, Widget*, bool isModal=false);
@@ -139,17 +162,63 @@ namespace ReyEngine {
    private:
       void __on_child_added_to_tree(TypeNode* child) override;
       void __on_child_removed_from_tree(TypeNode* child) override;
+      template <WidgetStatus::StatusType Status>
+      void popStatus(Widget* popWidget) {
+         static_assert(std::is_same_v<Status, WidgetStatus::Focus> || std::is_same_v<Status, WidgetStatus::Modal>);
+         constexpr bool isFocus = std::is_same_v<Status, WidgetStatus::Focus>;
+         auto& stack = isFocus ? _focusStack : _modalStack;
+         if (auto current = getStatus<Status>() ; current == popWidget){
+            if (!stack.empty()) {
+               if (auto top = stack.back()) {
+                  _setStatus<Status>(stack.back());
+                  stack.pop_back();
+               }
+            } else {
+               //stack is empty so the current widget lives in widget status
+               _setStatus<Status>(nullptr);
+            }
+         }
+      }
+      template <WidgetStatus::StatusType Status>
+      void pushStatus(Widget* newWidget) {
+         static_assert(std::is_same_v<Status, WidgetStatus::Focus> || std::is_same_v<Status, WidgetStatus::Modal>);
+         constexpr bool isFocus = std::is_same_v<Status, WidgetStatus::Focus>;
+         auto& stack = isFocus ? _focusStack : _modalStack;
+         if (!newWidget) {
+            stack.push_back(getStatus<Status>());
+         }
+         _setStatus<Status>(newWidget);
+      }
+      template <WidgetStatus::StatusType Status>
+      requires (!std::is_same_v<Status, WidgetStatus::Modal> && !std::is_same_v<Status, WidgetStatus::Focus>)
+      void setStatus(Widget* newWidget) {
+         _setStatus<Status>(newWidget);
+      }
+      template <WidgetStatus::StatusType Status>
+      [[nodiscard]] Widget* getStatus(){
+         constexpr std::size_t statusIndex = WidgetStatus::tuple_type_index_v<Status, WidgetStatus::StatusTypes>;
+         //gauranteed safe so no safety checks required
+         return statusWidgetStorage[statusIndex];
+      }
+      template <WidgetStatus::StatusType Status>
+      [[nodiscard]] const Widget* getStatus() const {return const_cast<Canvas*>(this)->getStatus<Status>();}
    public:
-      void setHover(Widget* w){   setStatus<WidgetStatus::Hover>(w);}
-      void setFocus(Widget* w){   setStatus<WidgetStatus::Focus>(w);}
-      void setModal(Widget* w){   setStatus<WidgetStatus::Modal>(w);}
+      void setHover(Widget* w) { setStatus<WidgetStatus::Hover>(w);}
+      void pushFocus(Widget* w){ pushStatus<WidgetStatus::Focus>(w);}
+      void pushModal(Widget* w){ pushStatus<WidgetStatus::Modal>(w);}
+      void popFocus(Widget* w) { popStatus<WidgetStatus::Focus>(w);}
+      void revokeFocus(Widget* w) { popStatus<WidgetStatus::Focus>(w);}
+      void popModal(Widget* w) { popStatus<WidgetStatus::Modal>(w);}
+      void revokeModal(Widget* w) { popStatus<WidgetStatus::Modal>(w);}
       void setToolTip(Widget* w){ setStatus<WidgetStatus::ToolTip>(w);}
-      Widget* getHover(){return   getStatus<WidgetStatus::Hover>();}
-      Widget* getFocus(){return   getStatus<WidgetStatus::Focus>();}
-      Widget* getModal(){return   getStatus<WidgetStatus::Modal>();}
-      Widget* getToolTip(){return getStatus<WidgetStatus::ToolTip>();}
-
-      friend class Widget;
+      Widget* getHover() {return   getStatus<WidgetStatus::Hover>();}
+      Widget* getFocus() {return   getStatus<WidgetStatus::Focus>();}
+      Widget* getModal() {return   getStatus<WidgetStatus::Modal>();}
+      Widget* getToolTip() {return getStatus<WidgetStatus::ToolTip>();}
+      const Widget* getHover() const {return   getStatus<WidgetStatus::Hover>();}
+      const Widget* getFocus() const {return   getStatus<WidgetStatus::Focus>();}
+      const Widget* getModal() const {return   getStatus<WidgetStatus::Modal>();}
+      const Widget* getToolTip() const {return getStatus<WidgetStatus::ToolTip>();}
       friend class Window;
    };
 }

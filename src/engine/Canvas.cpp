@@ -62,21 +62,7 @@ void Canvas::__on_descendant_removed_from_tree(TypeNode *n) {
    if (auto widget = n->as<Widget>()){
       _removeAllStatus(widget.value());
    }
-
    ReyObject::__on_descendant_removed_from_tree(n);
-}
-
-////////////////////////////////////////////////////////////////////////////////////////
-void Canvas::_removeAllStatus(Widget* widget) {
-   auto removeStatusForType = [this, widget]<typename StatusType>() {
-      constexpr std::size_t statusIndex = WidgetStatus::tuple_type_index_v<StatusType, WidgetStatus::StatusTypes>;
-      if (statusWidgetStorage[statusIndex] == widget) {
-         setStatus<StatusType>(nullptr);
-      }
-   };
-
-   //use std apply to unpack each status type, instantiate it, and pass it to the lambda
-   std::apply([&removeStatusForType](auto... statusTypes) {(removeStatusForType.template operator()<decltype(statusTypes)>(), ...);}, WidgetStatus::StatusTypes{});
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

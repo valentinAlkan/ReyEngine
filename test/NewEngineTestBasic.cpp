@@ -73,9 +73,9 @@ int main() {
    auto& window = Application::createWindowPrototype("window", 1280, 1024, {WindowFlags::RESIZE}, 60)->createWindow();
    auto root = window.getCanvas();
 
-   for (int i = 0; i<PIXEL_AMT; i++){
-      garbage[i] = ColorRGBA::random();
-   }
+//   for (int i = 0; i<PIXEL_AMT; i++){
+//      garbage[i] = ColorRGBA::random();
+//   }
 
    root->removeAllChildren();
 

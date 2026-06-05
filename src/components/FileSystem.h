@@ -74,9 +74,9 @@ namespace ReyEngine::FileSystem {
       inline bool operator!=(const Path& rhs) const {return _path != rhs._path;}
 
       inline auto operator<=>(const Path& rhs) const {return _path <=> rhs._path;}
-      friend std::ostream& operator<<(std::ostream& os, const Path& _path) {
-         if (_path.exists()) os << _path.canonical();
-         else os << _path.str();
+      friend std::ostream& operator<<(std::ostream& os, const Path& path) {
+         if (path.exists()) os << path.canonical();
+         else os << path.str();
          return os;
       }
    protected:
@@ -149,7 +149,6 @@ namespace ReyEngine::FileSystem {
       // Iterator class for lines of text
       class iterator {
       public:
-         // Iterator traits
          using iterator_category = std::forward_iterator_tag;
          using value_type = std::string;
          using difference_type = std::ptrdiff_t;
@@ -159,23 +158,33 @@ namespace ReyEngine::FileSystem {
             if (_file) {
                _file.value().get().open();
                operator++(); //load first line
+            } else {
+               is_end = true; // Mark as end if initialized with empty optional
             }
          }
          ~iterator(){}
          std::string operator*() const {return currentLine;}
          iterator& operator++() {
-            currentLine = _file.value().get().readLine();
+            if (is_end) return *this;
+            auto lineData = _file.value().get().readLine();
+            // Check the validity flag rather than the string content
+            if (!lineData.valid) {
+               is_end = true;
+               currentLine.clear();
+            } else {
+               currentLine = lineData.data; // Explicitly get the data field
+            }
             lineNo++;
             return *this;
          }
-
          bool operator!=(const iterator& other) const {
-            return currentLine != other.currentLine;
+            // Compare the EOF states, not the string contents
+            return is_end != other.is_end;
          }
-
          size_t getCurrentLineNo(){return lineNo;}
       private:
          size_t lineNo = 0;
+         bool is_end = false;
          std::string currentLine;
          std::optional<std::reference_wrapper<FileSystem::FileHandle>> _file;
       };
@@ -184,7 +193,7 @@ namespace ReyEngine::FileSystem {
          return it;
       }
       iterator end() const { return {{}};}
-      friend class File;
+      friend struct File;
    };
 
    struct DirectoryContents{
