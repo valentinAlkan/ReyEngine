@@ -164,6 +164,9 @@ Handled Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
    switch (event.eventId) {
       case InputEventMouseButton::ID: {
          auto &mbEvent = event.toEvent<InputEventMouseButton>();
+         if (isInside(mbEvent.mouse.getLocalPos())){
+            setFocused(true);
+         }
          _closeDown = false;
          // if (_dragState == DragState::NONE && !mbEvent.isDown && !mbEvent.mouse.isInside()){
          //    hide();
@@ -175,7 +178,6 @@ Handled Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
          if (_header.btnClose.contains(mbEvent.mouse.getLocalPos())){
             if (mbEvent.isDown){
                _closeDown = true;
-               setFocused(true);
             } else {
                setFocused(false);
                hide();
