@@ -22,10 +22,11 @@ Handled Button::_unhandled_input(const InputEvent& event) {
             bool isInside = event.isMouse().value()->isInside();
             bool isPress = mbEvent.isDown && isInside;
             bool isRelease = isFocused() && !mbEvent.isDown;
-            if (mbEvent.isDown && !isInside) {
+            if (mbEvent.isDown && !isInside && isFocused()) {
                setFocused(false);
                //clear focus when clicking down outside the button
                //dont' handle
+               return nullptr;
             }
             if (isPress && isInside) {
                //normal inside-click

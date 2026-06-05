@@ -178,12 +178,22 @@ namespace ReyEngine {
                _setStatus<Status>(nullptr);
             }
          }
+
+         //ensure invisible widgets can't have status
+         while (auto widget = getStatus<Status>()){
+            if (!widget->getIsRendering()){
+               _removeAllStatus(widget);
+            } else {
+               break;
+            }
+         }
       }
       template <WidgetStatus::StatusType Status>
       void pushStatus(Widget* newWidget) {
          static_assert(std::is_same_v<Status, WidgetStatus::Focus> || std::is_same_v<Status, WidgetStatus::Modal>);
          constexpr bool isFocus = std::is_same_v<Status, WidgetStatus::Focus>;
          auto& stack = isFocus ? _focusStack : _modalStack;
+         if (getStatus<Status>() == newWidget) return; //don't double apply status
          if (!newWidget) {
             stack.push_back(getStatus<Status>());
          }
@@ -207,12 +217,12 @@ namespace ReyEngine {
       void pushFocus(Widget* w){ pushStatus<WidgetStatus::Focus>(w);}
       void pushModal(Widget* w){ pushStatus<WidgetStatus::Modal>(w);}
       void popFocus(Widget* w) { popStatus<WidgetStatus::Focus>(w);}
-      void revokeFocus(Widget* w) { popStatus<WidgetStatus::Focus>(w);}
+      void revokeFocus(Widget* w) { _removeStatus<WidgetStatus::Focus>(w);}
       void popModal(Widget* w) { popStatus<WidgetStatus::Modal>(w);}
-      void revokeModal(Widget* w) { popStatus<WidgetStatus::Modal>(w);}
+      void revokeModal(Widget* w) { _removeStatus<WidgetStatus::Modal>(w);}
       void setToolTip(Widget* w){ setStatus<WidgetStatus::ToolTip>(w);}
       Widget* getHover() {return   getStatus<WidgetStatus::Hover>();}
-      Widget* getFocus() {return   getStatus<WidgetStatus::Focus>();}
+      Widget* getFocus() {return getStatus<WidgetStatus::Focus>();}
       Widget* getModal() {return   getStatus<WidgetStatus::Modal>();}
       Widget* getToolTip() {return getStatus<WidgetStatus::ToolTip>();}
       const Widget* getHover() const {return   getStatus<WidgetStatus::Hover>();}

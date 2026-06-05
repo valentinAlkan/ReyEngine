@@ -64,6 +64,8 @@ namespace ReyEngine {
       void setHovered(bool);
       void setFocused(bool);
       void setModal(bool);
+      void revokeFocused();
+      void revokeModal();
       [[nodiscard]] Pos<float> getLocalMousePos() const;
       [[nodiscard]] CanvasSpace<Rect<float>> toCanvasRect() const;
       void fromCanvasRect(const CanvasSpace<Rect<float>>&);
@@ -121,8 +123,8 @@ namespace ReyEngine {
       void __on_visibility_changed() override {
          if (!_visible && getCanvas()) {
             //strip widgets of focus and modality when they are no longer visible. Otherwise we can softlock.
-            setFocused(false);
-            setModal(false);
+            revokeFocused();
+            revokeModal();
          }
          _on_visibility_changed();
       }

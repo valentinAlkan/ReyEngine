@@ -175,7 +175,9 @@ Handled Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
          if (_header.btnClose.contains(mbEvent.mouse.getLocalPos())){
             if (mbEvent.isDown){
                _closeDown = true;
+               setFocused(true);
             } else {
+               setFocused(false);
                hide();
             }
          }

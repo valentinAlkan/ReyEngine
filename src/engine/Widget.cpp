@@ -253,6 +253,19 @@ void Widget::setModal(bool newValue) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
+void Widget::revokeFocused() {
+   if (auto canvas = getCanvas()){
+      canvas.value()->revokeFocus(this);
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+void Widget::revokeModal() {
+   if (auto canvas = getCanvas()){
+      canvas.value()->revokeFocus(this);
+   }
+}
+///////////////////////////////////////////////////////////////////////////////////////////
 Transform2D Widget::getWindowTransform() const {
    static constexpr bool VERBOSE = false;
    auto optParent = getParentWidget();
