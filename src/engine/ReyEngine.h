@@ -369,7 +369,7 @@ namespace ReyEngine {
       constexpr inline Vec4(const Vec4<R>& v) : Vec<T, 4>(), w((T)v.w), x((T)v.x), y((T)v.y), z((T)v.z){}
       constexpr inline Vec4& operator=(const Vec4& rhs){w = rhs.w, x = rhs.x; y=rhs.y; z=rhs.z; return *this;}
       constexpr inline Vec4& operator-(){w = -w; x = -x; y =-y; z = -z; return *this;}
-      constexpr inline static std::optional<Vec4<T>> fromString(const std::string& s){return Vec<T, 4>::fromString(s);};
+      constexpr inline static std::optional<Vec4<T>> fromString(const std::string& s){return Vec<T, 4>::template fromString<Vec4<T>>(s);};
       inline std::string toString(){return Vec<T, 4>::_toString(w, x, y, z);}
       constexpr friend std::ostream& operator<<(std::ostream& os, Vec4 v) {os << v.toString(); return os;}
       T w;
@@ -1268,7 +1268,16 @@ namespace ReyEngine {
 
       [[nodiscard]] inline std::string toString() const { return Vec4(x, y, width, height).toString(); }
 
-      inline static Rect<T> fromString(const std::string& s) { Vec4<T>::fromString(s); }
+      inline static std::optional<Rect<T>> fromString(const std::string& s) {
+         if (auto valid = Vec4<T>::fromString(s)){
+            auto& x = valid.value().w;
+            auto& y = valid.value().x;
+            auto& w = valid.value().y;
+            auto& h = valid.value().z;
+            return Rect<T>(x, y, w, h);
+         }
+         return {};
+      }
 
       friend std::ostream& operator<<(std::ostream& os, const Rect<T>& r) {
          os << r.toString();
