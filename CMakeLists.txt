@@ -318,14 +318,14 @@ copy_file(reyengine/resources/fonts/FiraCode-SemiBold.ttf ${RESOURCE_INSTALL_DIR
 copy_file(reyengine/resources/fonts/RobotoFlex.ttf ${RESOURCE_INSTALL_DIR}/fonts)
 
 # test resources
-copy_file(test/characters.png ${RESOURCE_INSTALL_DIR}/test/)
-copy_file(test/test.lua ${RESOURCE_INSTALL_DIR}/test/)
-copy_file(test/xmltest.xml ${RESOURCE_INSTALL_DIR}/test/)
-copy_file(test/spritesheet.png ${RESOURCE_INSTALL_DIR}/test/)
-copy_file(test/csvTest.csv ${RESOURCE_INSTALL_DIR}/test/)
-copy_file(test/3d/suzanne.obj ${RESOURCE_INSTALL_DIR}/test/)
-copy_file(test/10x10_checkered_board.png ${RESOURCE_INSTALL_DIR}/test/)
-copy_file(test/tiles.png ${RESOURCE_INSTALL_DIR}/test/)
+#copy_file(test/characters.png ${RESOURCE_INSTALL_DIR}/test/)
+#copy_file(test/test.lua ${RESOURCE_INSTALL_DIR}/test/)
+#copy_file(test/xmltest.xml ${RESOURCE_INSTALL_DIR}/test/)
+#copy_file(test/spritesheet.png ${RESOURCE_INSTALL_DIR}/test/)
+#copy_file(test/csvTest.csv ${RESOURCE_INSTALL_DIR}/test/)
+#copy_file(test/3d/suzanne.obj ${RESOURCE_INSTALL_DIR}/test/)
+#copy_file(test/10x10_checkered_board.png ${RESOURCE_INSTALL_DIR}/test/)
+#copy_file(test/tiles.png ${RESOURCE_INSTALL_DIR}/test/)
 
 get_property(ALL_RESOURCE_FILES GLOBAL PROPERTY RESOURCE_FILES)
 add_custom_target(CopyResources ALL DEPENDS ${ALL_RESOURCE_FILES})
