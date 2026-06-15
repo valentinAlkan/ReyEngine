@@ -41,7 +41,7 @@ namespace ReyEngine::FileSystem {
       [[nodiscard]] File toFile() const;
       [[nodiscard]] Directory toDir() const;
       [[nodiscard]] std::string abs() const {return std::filesystem::absolute(_path).string();}
-      [[nodiscard]] std::string str() const {return abs();}
+      [[nodiscard]] std::string str() const {return _path.string();}
       [[nodiscard]] std::string canonical() const {return std::filesystem::canonical(_path).string();}
       [[nodiscard]] bool isRegularFile() const {return _pathType == REGULAR_FILE;}
       [[nodiscard]] bool isDirectory() const {return _pathType == DIRECTORY;}
@@ -232,6 +232,7 @@ namespace ReyEngine::FileSystem {
       Directory& operator=(const File& other) = delete;
       File toFile() const = delete;
       operator FileHandle() = delete;
+      bool empty(){return _path.string().empty();}
       //returns set of content paths, and a set of pairs of paths and the error codes they generated
       [[nodiscard]] std::pair<std::set<Path>, std::set<std::pair<Path, std::error_code>>> listContents() const;
       static void logfsError(Logger::Stream&& log, std::set<std::pair<Path, std::error_code>>& errors);

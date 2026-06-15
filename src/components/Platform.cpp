@@ -128,7 +128,7 @@ string CrossPlatform::getReyEngineResourceDir() {
       bool validate(const FileSystem::Path& path){
          dir = path;
          Logger::debug() << "Validating potential ReyEngineResourcedir : " << dir << endl;
-         return FileSystem::Directory(dir).exists();
+         return dir.empty() ? false : FileSystem::Directory(dir).exists();
       }
       FileSystem::Directory dir;
    };
