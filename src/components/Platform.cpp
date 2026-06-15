@@ -122,29 +122,7 @@ string CrossPlatform::getProjectResourceDir() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 string CrossPlatform::getReyEngineResourceDir() {
-#define RESOURCE_PATH REYENGINE_FILESYSTEM_PATH_SEP + "reyengine" + REYENGINE_FILESYSTEM_PATH_SEP + "resources"
-   struct Validator{
-      ~Validator(){Logger::debug() << "Using ReyEngineResourcedir : " << dir << endl;}
-      bool validate(const FileSystem::Path& path){
-         dir = path;
-         Logger::debug() << "Validating potential ReyEngineResourcedir : " << dir << endl;
-         return dir.empty() ? false : FileSystem::Directory(dir).exists();
-      }
-      FileSystem::Directory dir;
-   };
-   Validator validator;
-   auto dirs = {
-         getEnvironmentVariable("REYENGINE_RESOURCE_DIR"),
-         getUserLocalConfigDir() + RESOURCE_PATH,
-         getUserDir() + RESOURCE_PATH,
-   };
-
-   for (const auto& dir : dirs){
-         if (validator.validate(dir)) return dir;
-   }
-   validator.validate(getExeDir() + RESOURCE_PATH);
-   return validator.dir.str();
-#undef RESOURCE_PATH
+   return ResourceDirLocation::getInstance().getDir();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -459,3 +437,35 @@ std::pair<std::stringstream, std::stringstream> CrossPlatform::execCmd(std::stri
    throw std::runtime_error("Not implemented on this platform!");
 #endif
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+CrossPlatform::ResourceDirLocation::ResourceDirLocation() {
+#define RESOURCE_PATH REYENGINE_FILESYSTEM_PATH_SEP + "reyengine" + REYENGINE_FILESYSTEM_PATH_SEP + "resources"
+   struct Validator{
+      ~Validator(){Logger::info() << "Using ReyEngineResourcedir : " << dir << endl;}
+      bool validate(const FileSystem::Path& path){
+         dir = path;
+         Logger::debug() << "Validating potential ReyEngineResourcedir : " << dir << endl;
+         return dir.empty() ? false : FileSystem::Directory(dir).exists();
+      }
+      FileSystem::Directory dir;
+   };
+   Validator validator;
+   auto dirs = {
+         getEnvironmentVariable("REYENGINE_RESOURCE_DIR"),
+         getUserLocalConfigDir() + RESOURCE_PATH,
+         getUserDir() + RESOURCE_PATH,
+   };
+
+   for (const auto& dir : dirs){
+      if (validator.validate(dir)) {
+         _path = dir;
+         return;
+      }
+   }
+   validator.validate(getExeDir() + RESOURCE_PATH);
+   _path = validator.dir.str();
+#undef RESOURCE_PATH
+};

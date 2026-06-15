@@ -91,6 +91,22 @@ static constexpr char REYENGINE_FILESYSTEM_PATH_SEP =
 #endif
 
 namespace CrossPlatform{
+  class ResourceDirLocation {
+      public:
+         ResourceDirLocation(const ResourceDirLocation&) = delete;
+         ResourceDirLocation& operator=(const ResourceDirLocation&) = delete;
+         ResourceDirLocation(ResourceDirLocation&&) = delete;
+         ResourceDirLocation& operator=(ResourceDirLocation&&) = delete;
+         static ResourceDirLocation& getInstance() {
+             static ResourceDirLocation instance;
+             return instance;
+         }
+         std::string getDir(){return _path;}
+      private:
+         ResourceDirLocation();
+         ~ResourceDirLocation() = default;
+         std::string _path;
+      };
    std::string getExePath();
    std::string getExeDir();
    std::string getExeName();
