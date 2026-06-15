@@ -123,6 +123,16 @@ string CrossPlatform::getProjectResourceDir() {
 /////////////////////////////////////////////////////////////////////////////////////////
 string CrossPlatform::getReyEngineResourceDir() {
 #define RESOURCE_PATH REYENGINE_FILESYSTEM_PATH_SEP + "reyengine" + REYENGINE_FILESYSTEM_PATH_SEP + "resources"
+   struct Validator{
+      ~Validator(){Logger::debug() << "Using ReyEngineResourcedir : " << dir << endl;}
+      bool validate(const FileSystem::Path& path){
+         dir = path;
+         Logger::debug() << "Validating potential ReyEngineResourcedir : " << dir << endl;
+         return FileSystem::Directory(dir).exists();
+      }
+      FileSystem::Directory dir;
+   };
+   Validator validator;
    auto dirs = {
          getEnvironmentVariable("REYENGINE_RESOURCE_DIR"),
          getUserLocalConfigDir() + RESOURCE_PATH,
@@ -130,11 +140,10 @@ string CrossPlatform::getReyEngineResourceDir() {
    };
 
    for (const auto& dir : dirs){
-      if (FileSystem::Directory(dir).exists()) {
-         return dir;
-      }
+         if (validator.validate(dir)) return dir;
    }
-   return getExeDir() + RESOURCE_PATH;
+   validator.validate(getExeDir() + RESOURCE_PATH);
+   return validator.dir.str();
 #undef RESOURCE_PATH
 }
 

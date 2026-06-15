@@ -298,54 +298,34 @@ endif (UNIX)
 #target_link_libraries(raylibTest ReyEngine2D)
 
 ##########################################
-
+#configure install dir
 if(DEFINED ENV{REYENGINE_RESOURCE_DIR})
     set(RESOURCE_INSTALL_DIR "$ENV{REYENGINE_RESOURCE_DIR}")
     message(STATUS "REYENGINE_RESOURCE_DIR is set. Installing resources to: ${RESOURCE_INSTALL_DIR}")
-
-    # Install font resources
-    install(FILES
-            reyengine/resources/icons/document.png
-            reyengine/resources/icons/folder.png
-            DESTINATION ${RESOURCE_INSTALL_DIR}/reyengine/resources/icons
-    )
-    install(DIRECTORY reyengine/resources/fonts/ DESTINATION ${RESOURCE_INSTALL_DIR}/reyengine/resources/fonts)
-
-    # Install test resources
-    install(FILES
-            test/characters.png
-            test/test.lua
-            test/xmltest.xml
-            test/spritesheet.png
-            test/csvTest.csv
-            test/3d/suzanne.obj
-            test/10x10_checkered_board.png
-            test/tiles.png
-            DESTINATION ${RESOURCE_INSTALL_DIR}/test
-    )
 else()
-    #font resources
-    message(STATUS "REYENGINE_RESOURCE_DIR is NOT set. Using fallback method")
-    copy_file(reyengine/resources/icons/document.png reyengine/resources/icons)
-    copy_file(reyengine/resources/icons/folder.png reyengine/resources/icons)
-    copy_file(reyengine/resources/fonts/FiraCode-Bold.ttf reyengine/resources/fonts)
-    copy_file(reyengine/resources/fonts/FiraCode-Light.ttf reyengine/resources/fonts)
-    copy_file(reyengine/resources/fonts/FiraCode-Medium.ttf reyengine/resources/fonts)
-    copy_file(reyengine/resources/fonts/FiraCode-Regular.ttf reyengine/resources/fonts)
-    copy_file(reyengine/resources/fonts/FiraCode-Retina.ttf reyengine/resources/fonts)
-    copy_file(reyengine/resources/fonts/FiraCode-SemiBold.ttf reyengine/resources/fonts)
-    copy_file(reyengine/resources/fonts/RobotoFlex.ttf reyengine/resources/fonts)
-
-    # test resources
-    copy_file(test/characters.png test/)
-    copy_file(test/test.lua test/)
-    copy_file(test/xmltest.xml test/)
-    copy_file(test/spritesheet.png test/)
-    copy_file(test/csvTest.csv test/)
-    copy_file(test/3d/suzanne.obj test/)
-    copy_file(test/10x10_checkered_board.png test/)
-    copy_file(test/tiles.png test/)
+    set(ENV{REYENGINE_RESOURCE_DIR} reyengine)
+    message(STATUS "REYENGINE_RESOURCE_DIR is NOT set. Setting to " ENV{REYENGINE_RESOURCE_DIR})
 endif()
+
+copy_file(reyengine/resources/icons/document.png ${RESOURCE_INSTALL_DIR}/resources/icons)
+copy_file(reyengine/resources/icons/folder.png ${RESOURCE_INSTALL_DIR}/resources/icons)
+copy_file(reyengine/resources/fonts/FiraCode-Bold.ttf ${RESOURCE_INSTALL_DIR}/resources/fonts)
+copy_file(reyengine/resources/fonts/FiraCode-Light.ttf ${RESOURCE_INSTALL_DIR}/resources/fonts)
+copy_file(reyengine/resources/fonts/FiraCode-Medium.ttf ${RESOURCE_INSTALL_DIR}/resources/fonts)
+copy_file(reyengine/resources/fonts/FiraCode-Regular.ttf ${RESOURCE_INSTALL_DIR}/resources/fonts)
+copy_file(reyengine/resources/fonts/FiraCode-Retina.ttf ${RESOURCE_INSTALL_DIR}/resources/fonts)
+copy_file(reyengine/resources/fonts/FiraCode-SemiBold.ttf ${RESOURCE_INSTALL_DIR}/resources/fonts)
+copy_file(reyengine/resources/fonts/RobotoFlex.ttf ${RESOURCE_INSTALL_DIR}/resources/fonts)
+
+# test resources
+copy_file(test/characters.png ${RESOURCE_INSTALL_DIR}/test/)
+copy_file(test/test.lua ${RESOURCE_INSTALL_DIR}/test/)
+copy_file(test/xmltest.xml ${RESOURCE_INSTALL_DIR}/test/)
+copy_file(test/spritesheet.png ${RESOURCE_INSTALL_DIR}/test/)
+copy_file(test/csvTest.csv ${RESOURCE_INSTALL_DIR}/test/)
+copy_file(test/3d/suzanne.obj ${RESOURCE_INSTALL_DIR}/test/)
+copy_file(test/10x10_checkered_board.png ${RESOURCE_INSTALL_DIR}/test/)
+copy_file(test/tiles.png ${RESOURCE_INSTALL_DIR}/test/)
 
 get_property(ALL_RESOURCE_FILES GLOBAL PROPERTY RESOURCE_FILES)
 add_custom_target(CopyResources ALL DEPENDS ${ALL_RESOURCE_FILES})
