@@ -1,0 +1,20 @@
+#include "TextRenderView.h"
+
+using namespace std;
+using namespace ReyEngine;
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void TextRenderView::_init(){
+   if (_text.empty()) _text = getName();
+   theme->background.fill = Style::Fill::NONE;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void TextRenderView::setText(const std::string& newText){
+   _text = newText;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void TextRenderView::render2D(RenderContext&) const {
+   drawText(_text, {0, 0}, theme->font);
+}

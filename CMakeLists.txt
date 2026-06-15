@@ -153,6 +153,7 @@ target_link_libraries(ReyEngineComponentArgParse PUBLIC ReyEngineComponentString
 add_library(ReyEngine2D STATIC
         src/engine/Canvas.cpp
         src/engine/Widget.cpp
+        src/engine/TextRenderView.cpp
         src/engine/Positionable2D.cpp
         src/engine/Window.cpp
         src/engine/WindowPrototype.cpp
