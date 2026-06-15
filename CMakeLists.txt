@@ -221,7 +221,7 @@ endif()
 target_link_libraries(ReyEngine2D raylib Threads::Threads ReyEngineComponentStringTools ReyEngineComponentFilesystem ReyEngineComponentLogger)
 
 if (UNIX)
-    target_link_libraries(ReyEngine2D stdc++fs)
+    target_link_libraries(ReyEngine2D stdc++fs dl)
 endif (UNIX)
 
 ##### TILE EDITOR
