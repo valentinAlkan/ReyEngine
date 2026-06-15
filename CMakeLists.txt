@@ -281,21 +281,21 @@ endif (UNIX)
 #target_link_libraries(AbstractTreeTest raylib)
 
 # Test Project
-add_executable( NewEngineMain test/newEngineTestMain.cpp)
-target_link_libraries(NewEngineMain ReyEngine2D dl)
-add_executable( NewEngineBasic test/NewEngineTestBasic.cpp)
-target_link_libraries(NewEngineBasic ReyEngine2D dl)
-add_executable( NewEngineFonts test/NewEngineFonts.cpp)
-target_link_libraries(NewEngineFonts ReyEngine2D ReyEngineComponentArgParse)
+#add_executable( NewEngineMain test/newEngineTestMain.cpp)
+#target_link_libraries(NewEngineMain ReyEngine2D dl)
+#add_executable( NewEngineBasic test/NewEngineTestBasic.cpp)
+#target_link_libraries(NewEngineBasic ReyEngine2D dl)
+#add_executable( NewEngineFonts test/NewEngineFonts.cpp)
+#target_link_libraries(NewEngineFonts ReyEngine2D ReyEngineComponentArgParse)
 
 
 # Test Projects
-add_executable(themeTest test/themeTest.cpp)
-target_link_libraries(themeTest ReyEngine2D)
+#add_executable(themeTest test/themeTest.cpp)
+#target_link_libraries(themeTest ReyEngine2D)
 ##########################################
 # for testing basic raylib stuff
-add_executable( raylibTest test/raylibTest.cpp)
-target_link_libraries(raylibTest ReyEngine2D)
+#add_executable( raylibTest test/raylibTest.cpp)
+#target_link_libraries(raylibTest ReyEngine2D)
 
 ##########################################
 
