@@ -9,7 +9,7 @@ namespace ReyEngine {
     struct TrString : std::string {
         using std::string::string;
         using std::string::operator=;
-        TrString() = default;
+        TrString(): _language(Localization::getDefaultLanguage()){}
         TrString(const std::string& key, const std::string& text)
         : std::string(text)
         , _language(Localization::getDefaultLanguage())
@@ -36,7 +36,6 @@ namespace ReyEngine {
         [[nodiscard]] std::string& str() {return *this;}
 
         std::string translate(Localization::Language* language) const {return "lorem ipsum";}
-
         Localization::Language* _language;
     private:
         std::string _key;

@@ -3,38 +3,28 @@
 #include "Widget.h"
 
 namespace ReyEngine {
+   template <typename T>
    class TextRenderModel {
    public:
-      TextRenderModel(const TrString& text)
-      : _text(text)
-      {}
+      TextRenderModel(): _text(std::make_shared<T>()){}
+      TextRenderModel(const T& text): _text(std::make_shared<T>(text)){}
+      TextRenderModel(std::shared_ptr<T>& text): _text(text){}
       TextRenderModel(const TextRenderModel& other): _text(other._text) {}
-      void setText(const TrString& text);
-      const TrString& getText() const{return _text;}
+      void setText(const T& text){*_text = text;}
+      [[nodiscard]] const T& getText() const{return *_text;}
+      void clear(){setText("");}
    private:
-      TrString _text;
-
+      std::shared_ptr<T> _text;
    };
 
-
-   class TextRenderView : public Widget {
+   class TextRenderView : public Widget, public TextRenderModel<TrString> {
    public:
       REYENGINE_OBJECT(TextRenderView)
-      TextRenderView(const TrString& text = "") : _renderModel(text){}
+      TextRenderView(std::shared_ptr<TextRenderView>& other): TextRenderModel(*other){}
+      TextRenderView(auto&&... args): TextRenderModel(std::forward<decltype(args)>(args)...){}
       ~TextRenderView() override = default;
-      void setText(const TrString& newText);
-      [[nodiscard]] TrString getText() const {
-         auto& text = _renderModel.getText();
-         if (text.getLanguage() != _language) {
-            text.translate(_language);
-         }
-         return text;
-      }
-      void clear(){setText("");}
    protected:
       void _init() override;
       void render2D(RenderContext&) const override;
-      TextRenderModel _renderModel;
-      Localization::Language* _language;
    };
 }

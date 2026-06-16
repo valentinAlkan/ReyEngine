@@ -3,6 +3,7 @@
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <FileSystem.h>
 
 namespace ReyEngine::Localization{
     struct Language {
@@ -26,11 +27,7 @@ namespace ReyEngine::Localization{
         Languages(Languages&&) = delete;
         Languages& operator=(Languages&&) = delete;
 
-        static Language* add(Language&& language) {
-            auto& thiz = instance();
-            auto [it, inserted] = thiz._languages.emplace(std::move(language));
-            return const_cast<Language*>(&*it);
-        }
+        static Language* add(Language&& language) {return instance()._add(std::move(language));}
         static void remove(Language* language) {
             if (!language) return;
             auto& thiz = instance();
@@ -51,19 +48,38 @@ namespace ReyEngine::Localization{
             return std::nullopt;
         }
         static Language* getDefault(){return instance()._defaultLanguage;}
-        static void setDefaultLanguage(Language* language) {
+        static void setDefaultLanguage(Language* language) {instance()._setDefaultLanguage(language);}
+    private:
+        Languages() {
+            _setDefaultLanguage(_add(Language("English"))); //todo: lookup from config
+        }
+        //non static for ctor
+        Language* _add(Language&& language) {
+            auto [it, inserted] = _languages.emplace(std::move(language));
+            return const_cast<Language*>(&*it);
+        }
+        void _setDefaultLanguage(Language* language) {
             if (language) {
-                instance()._defaultLanguage = language;
+                _defaultLanguage = language;
                 return;
             }
             throw std::runtime_error("Failed to set default language!");
         }
-    private:
-        Languages() {
-            setDefaultLanguage(add(Language("English"))); //todo: lookup from config
-        };
         std::set<Language> _languages;
         Language* _defaultLanguage = nullptr;
     };
     inline Language* getDefaultLanguage(){return Languages::getDefault();}
+
+    struct TranslationMap {
+        static TranslationMap& instance(){
+            static TranslationMap _instance;
+            return _instance;
+        }
+        TranslationMap(const TranslationMap&) = delete;
+        TranslationMap& operator=(const TranslationMap&) = delete;
+        TranslationMap(TranslationMap&&) = delete;
+        TranslationMap& operator=(TranslationMap&&) = delete;
+    private:
+        TranslationMap() = default;
+    };
 }
