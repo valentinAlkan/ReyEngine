@@ -18,8 +18,9 @@ float RichTextEditor::lineHeight() const {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void RichTextEditor::setText(const std::string& text) {
-   _assignString(text);
-   if (_caret > text.size()) _caret = text.size();
+   auto normalized = normalizeNewlines(text);
+   _assignString(normalized);
+   if (_caret > normalized.size()) _caret = normalized.size();
    clearSelection(); //drop any stale selection that could point past the new text
 }
 
@@ -97,6 +98,21 @@ size_t RichTextEditor::prevCharBoundary(const std::string& text, size_t i) {
    --i; //step back over the trailing continuation bytes to the lead byte
    while (i > 0 && (static_cast<unsigned char>(text[i]) & 0xC0) == 0x80) --i;
    return i;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::string RichTextEditor::normalizeNewlines(std::string text) {
+   std::string out;
+   out.reserve(text.size());
+   for (size_t i = 0; i < text.size(); ++i) {
+      if (text[i] == '\r') {
+         out.push_back('\n');
+         if (i + 1 < text.size() && text[i + 1] == '\n') ++i; //collapse a \r\n pair
+      } else {
+         out.push_back(text[i]);
+      }
+   }
+   return out;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -262,6 +278,9 @@ Handled RichTextEditor::_unhandled_input(const InputEvent& event) {
    switch (event.eventId) {
       case InputEventChar::ID: {
          const auto& charEvent = event.toEvent<InputEventChar>();
+         //drop control characters (incl. \r and \n); newlines are inserted via the Enter key,
+         //and other control codepoints have no glyph and would render as '?'
+         if (charEvent.ch < 0x20 || charEvent.ch == 0x7F) break;
          //charEvent.ch is a Unicode codepoint; encode it to UTF-8 before storing
          int byteCount = 0;
          const char* utf8 = CodepointToUTF8(charEvent.ch, &byteCount);
@@ -302,10 +321,11 @@ Handled RichTextEditor::_unhandled_input(const InputEvent& event) {
                if (ctrlHeld) {
                   const char* clip = GetClipboardText();
                   if (clip && clip[0] != '\0') {
+                     std::string pasted = normalizeNewlines(clip); //strip \r so it won't render as '?'
                      deleteSelection();
                      auto text = getText().str();
-                     text.insert(_caret, clip);
-                     _caret += strlen(clip);
+                     text.insert(_caret, pasted);
+                     _caret += pasted.size();
                      clearSelection();
                      _assignString(text);
                   }

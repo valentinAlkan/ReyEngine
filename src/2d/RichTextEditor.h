@@ -36,8 +36,10 @@ namespace ReyEngine {
       // a whole codepoint at a time or it splits multibyte characters
       [[nodiscard]] static size_t nextCharBoundary(const std::string& text, size_t i);
       [[nodiscard]] static size_t prevCharBoundary(const std::string& text, size_t i);
+      //convert "\r\n" and lone "\r" to "\n" so stray carriage returns don't render as '?'
+      [[nodiscard]] static std::string normalizeNewlines(std::string text);
 
-      // selection helpers (selection spans [selMin, selMax) of the current text)
+      // selection helpers (selection spans [selMin, selMax] of the current text)
       [[nodiscard]] bool hasSelection() const {return _selectionAnchor != _caret;}
       [[nodiscard]] size_t selMin() const {return std::min(_selectionAnchor, _caret);}
       [[nodiscard]] size_t selMax() const {return std::max(_selectionAnchor, _caret);}

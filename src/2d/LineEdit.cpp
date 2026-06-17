@@ -143,6 +143,8 @@ Handled LineEdit::_unhandled_input(const InputEvent& event) {
          case InputEventChar::ID: {
             if (!isFocused()) break;
             const auto& charEvent = event.toEvent<InputEventChar>();
+            //drop control characters (\r, \n, etc.) — they have no glyph and render as '?'
+            if (charEvent.ch < 0x20 || charEvent.ch == 0x7F) break;
             auto oldText = _input;
 
             // Delete selection first if any
