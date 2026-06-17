@@ -25,6 +25,8 @@ namespace ReyEngine {
       void _on_focus_lost() override;
       Handled _unhandled_input(const InputEvent&) override;
    private:
+      Handled _processEdit(const InputEvent&); //real input handling; wrapped by _unhandled_input
+      void resetCaretBlink(){_caretBlinkBase = getEngineFrameCount();} //force the caret on, restart the cycle
       void _assignString(const std::string&); //writes back to the model and publishes
       [[nodiscard]] float lineHeight() const;
       // caret <-> (row, col) helpers operating on the current text
@@ -53,5 +55,6 @@ namespace ReyEngine {
       size_t _selectionAnchor = 0;  //fixed end of the selection; == _caret means no selection
       bool _isEditing = false;      //focused & accepting input -> blink the caret
       bool _isDragging = false;     //mouse held down, extending the selection
+      EngineFrameCount _caretBlinkBase = 0; //frame the blink cycle started; reset when the caret moves
    };
 }

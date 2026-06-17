@@ -31,6 +31,7 @@ void RichTextEditor::_assignString(const std::string& s) {
    next.assign(s);
    TextRenderModel::setText(next);
    if (oldText != s) {
+      resetCaretBlink(); //any edit (incl. delete-forward) keeps the caret visible
       EventTextChanged event(this);
       publish(event);
    }
@@ -211,10 +212,10 @@ void RichTextEditor::render2D(RenderContext&) const {
       lineBegin = nl + 1;
    }
 
-   //draw caret
+   //draw caret - blink relative to _caretBlinkBase so a fresh move shows the caret right away
    if (_isEditing) {
-      auto frameCounter = getEngineFrameCount();
-      if (frameCounter % 60 > 30) {
+      auto elapsed = getEngineFrameCount() - _caretBlinkBase;
+      if (elapsed % 60 < 30) {
          size_t row, col;
          caretRowCol(text, _caret, row, col);
          size_t start = lineStart(text, row);
@@ -231,6 +232,7 @@ void RichTextEditor::render2D(RenderContext&) const {
 /////////////////////////////////////////////////////////////////////////////////////////
 void RichTextEditor::_on_focus_gained() {
    _isEditing = true;
+   resetCaretBlink(); //caret visible the moment editing starts
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -240,6 +242,14 @@ void RichTextEditor::_on_focus_lost() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Handled RichTextEditor::_unhandled_input(const InputEvent& event) {
+   size_t caretBefore = _caret;
+   Handled result = _processEdit(event);
+   if (_caret != caretBefore) resetCaretBlink(); //caret moved -> show it immediately
+   return result;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Handled RichTextEditor::_processEdit(const InputEvent& event) {
    if (auto isMouse = event.isMouse()) {
       auto& mouse = isMouse.value();
       switch (event.eventId) {
