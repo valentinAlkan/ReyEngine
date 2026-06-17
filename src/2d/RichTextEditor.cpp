@@ -102,6 +102,25 @@ size_t RichTextEditor::prevCharBoundary(const std::string& text, size_t i) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+static bool isWordSpace(char c) {
+   return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+size_t RichTextEditor::nextWordBoundary(const std::string& text, size_t i) {
+   while (i < text.size() && isWordSpace(text[i])) ++i;  //skip whitespace
+   while (i < text.size() && !isWordSpace(text[i])) ++i; //skip the word
+   return i;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+size_t RichTextEditor::prevWordBoundary(const std::string& text, size_t i) {
+   while (i > 0 && isWordSpace(text[i - 1])) --i;  //skip whitespace
+   while (i > 0 && !isWordSpace(text[i - 1])) --i; //skip the word
+   return i;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 std::string RichTextEditor::normalizeNewlines(std::string text) {
    std::string out;
    out.reserve(text.size());
@@ -255,18 +274,22 @@ Handled RichTextEditor::_processEdit(const InputEvent& event) {
       switch (event.eventId) {
          case InputEventMouseButton::ID: {
             const auto& mouseEvent = event.toEvent<InputEventMouseButton>();
-            if (getIsEnabled() && mouse->isInside()) {
-               if (mouseEvent.isDown) {
+            if (mouseEvent.isDown) {
+               if (getIsEnabled() && mouse->isInside()) {
                   if (!isFocused()) setFocused(true);
                   _caret = caretFromMouse(mouse->getLocalPos());
                   clearSelection();      //new click starts a fresh selection at the caret
                   _isDragging = true;
-               } else {
-                  _isDragging = false;   //button released
+                  return this;
+               } else if (isFocused()) {
+                  setFocused(false);     //pressed elsewhere -> stop editing
+                  _isDragging = false;
                }
-               return this;
-            } else if (isFocused() && !mouseEvent.isDown) {
-               setFocused(false);
+               break; //not consuming: let the click reach whatever was pressed
+            }
+            //button released: end the drag but keep focus, even if released outside the editor
+            //(otherwise dragging a selection off the widget would defocus and break editing)
+            if (_isDragging) {
                _isDragging = false;
                return this;
             }
@@ -375,7 +398,9 @@ Handled RichTextEditor::_processEdit(const InputEvent& event) {
                }
                return this;
             case InputInterface::KeyCode::KEY_LEFT:
-               if (!shiftHeld && hasSelection()) {
+               if (ctrlHeld) {
+                  _caret = prevWordBoundary(getText().str(), _caret); //jump a word
+               } else if (!shiftHeld && hasSelection()) {
                   _caret = selMin();            //collapse selection to its left edge
                } else if (_caret > 0) {
                   _caret = prevCharBoundary(getText().str(), _caret);
@@ -383,7 +408,9 @@ Handled RichTextEditor::_processEdit(const InputEvent& event) {
                if (!shiftHeld) clearSelection();
                return this;
             case InputInterface::KeyCode::KEY_RIGHT:
-               if (!shiftHeld && hasSelection()) {
+               if (ctrlHeld) {
+                  _caret = nextWordBoundary(getText().str(), _caret); //jump a word
+               } else if (!shiftHeld && hasSelection()) {
                   _caret = selMax();            //collapse selection to its right edge
                } else if (_caret < getText().str().size()) {
                   _caret = nextCharBoundary(getText().str(), _caret);
@@ -402,7 +429,19 @@ Handled RichTextEditor::_processEdit(const InputEvent& event) {
                const auto& text = getText().str();
                size_t row, col;
                caretRowCol(text, _caret, row, col);
-               _caret = lineStart(text, row);
+               size_t start = lineStart(text, row);
+               size_t end = text.find('\n', start);
+               if (end == std::string::npos) end = text.size();
+               //first non-whitespace char on the line
+               size_t firstNonWs = start;
+               while (firstNonWs < end && isWordSpace(text[firstNonWs])) ++firstNonWs;
+               //already at column 0 with leading whitespace -> jump to first non-whitespace,
+               //otherwise go to the start of the line
+               if (_caret == start && firstNonWs > start && firstNonWs < end) {
+                  _caret = firstNonWs;
+               } else {
+                  _caret = start;
+               }
                if (!shiftHeld) clearSelection();
                return this;
             }

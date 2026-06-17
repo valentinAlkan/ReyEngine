@@ -38,6 +38,9 @@ namespace ReyEngine {
       // a whole codepoint at a time or it splits multibyte characters
       [[nodiscard]] static size_t nextCharBoundary(const std::string& text, size_t i);
       [[nodiscard]] static size_t prevCharBoundary(const std::string& text, size_t i);
+      //word-wise navigation (Ctrl+arrows): skip whitespace then a run of word characters
+      [[nodiscard]] static size_t nextWordBoundary(const std::string& text, size_t i);
+      [[nodiscard]] static size_t prevWordBoundary(const std::string& text, size_t i);
       //convert "\r\n" and lone "\r" to "\n" so stray carriage returns don't render as '?'
       [[nodiscard]] static std::string normalizeNewlines(std::string text);
 
