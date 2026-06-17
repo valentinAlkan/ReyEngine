@@ -10,10 +10,8 @@ namespace ReyEngine {
    public:
       REYENGINE_OBJECT(RichTextEditor)
       EVENT(EventTextChanged, 6546547654354){}};
-
       RichTextEditor(auto&&... args): TextRenderView(std::forward<decltype(args)>(args)...){}
       ~RichTextEditor() override = default;
-
       void setText(const std::string& text); //hides TextRenderModel::setText; preserves language/key
       [[nodiscard]] std::string getString() const {return getText().str();}
       [[nodiscard]] bool isEditing() const {return _isEditing;}
