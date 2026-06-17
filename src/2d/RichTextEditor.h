@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include "TextRenderView.h"
 
 namespace ReyEngine {
@@ -32,8 +33,19 @@ namespace ReyEngine {
       [[nodiscard]] size_t caretFromMouse(const Pos<float>& localPos) const;
       void moveCaretVertical(int dir); //dir: -1 up, +1 down
 
+      // selection helpers (selection spans [selMin, selMax) of the current text)
+      [[nodiscard]] bool hasSelection() const {return _selectionAnchor != _caret;}
+      [[nodiscard]] size_t selMin() const {return std::min(_selectionAnchor, _caret);}
+      [[nodiscard]] size_t selMax() const {return std::max(_selectionAnchor, _caret);}
+      void clearSelection(){_selectionAnchor = _caret;} //collapse selection to caret
+      [[nodiscard]] std::string getSelectedText() const;
+      void deleteSelection(); //erase the selection, place caret at its start, write back
+      void drawSelection(float lineHeight) const; //highlight rects, called from render2D
+
       static constexpr float TEXT_MARGIN = 4.0f;
-      size_t _caret = 0;       //number of chars before the caret
-      bool _isEditing = false; //focused & accepting input -> blink the caret
+      size_t _caret = 0;            //number of chars before the caret
+      size_t _selectionAnchor = 0;  //fixed end of the selection; == _caret means no selection
+      bool _isEditing = false;      //focused & accepting input -> blink the caret
+      bool _isDragging = false;     //mouse held down, extending the selection
    };
 }

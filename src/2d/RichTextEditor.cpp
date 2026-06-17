@@ -20,6 +20,7 @@ float RichTextEditor::lineHeight() const {
 void RichTextEditor::setText(const std::string& text) {
    _assignString(text);
    if (_caret > text.size()) _caret = text.size();
+   clearSelection(); //drop any stale selection that could point past the new text
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -102,6 +103,53 @@ void RichTextEditor::moveCaretVertical(int dir) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+std::string RichTextEditor::getSelectedText() const {
+   if (!hasSelection()) return "";
+   return getText().str().substr(selMin(), selMax() - selMin());
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void RichTextEditor::deleteSelection() {
+   if (!hasSelection()) return;
+   auto text = getText().str();
+   size_t lo = selMin();
+   text.erase(lo, selMax() - lo);
+   _caret = lo;
+   clearSelection();
+   _assignString(text);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void RichTextEditor::drawSelection(float lh) const {
+   if (!hasSelection()) return;
+   const auto& text = getText().str();
+   const auto& font = theme->font;
+   size_t lo = selMin();
+   size_t hi = selMax();
+
+   size_t rowLo, colLo, rowHi, colHi;
+   caretRowCol(text, lo, rowLo, colLo);
+   caretRowCol(text, hi, rowHi, colHi);
+
+   for (size_t row = rowLo; row <= rowHi; ++row) {
+      size_t start = lineStart(text, row);
+      size_t end = text.find('\n', start);
+      if (end == std::string::npos) end = text.size();
+      std::string line = text.substr(start, end - start);
+
+      //columns of the selection on this row, clamped to the line
+      size_t cStart = (row == rowLo) ? colLo : 0;
+      size_t cEnd   = (row == rowHi) ? colHi : line.size();
+      float x0 = TEXT_MARGIN + measureText(line.substr(0, cStart), font).x;
+      float x1 = TEXT_MARGIN + measureText(line.substr(0, cEnd), font).x;
+      //rows fully inside the selection extend a little past EOL to signal the newline
+      if (row != rowHi) x1 += measureText(" ", font).x;
+      float y = TEXT_MARGIN + row * lh;
+      drawRectangle({{x0, y}, {x1 - x0, lh}}, theme->foreground.colorHighlight);
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void RichTextEditor::render2D(RenderContext&) const {
    ScopeScissor scissor(getGlobalTransform(), getSizeRect().embiggen(1));
    const bool disabled = !getIsEnabled();
@@ -110,6 +158,9 @@ void RichTextEditor::render2D(RenderContext&) const {
    const auto& text = getText().str();
    const auto& font = theme->font;
    const float lh = lineHeight();
+
+   //draw selection highlight beneath the text
+   drawSelection(lh);
 
    //draw each line
    float y = TEXT_MARGIN;
@@ -157,17 +208,33 @@ void RichTextEditor::_on_focus_lost() {
 Handled RichTextEditor::_unhandled_input(const InputEvent& event) {
    if (auto isMouse = event.isMouse()) {
       auto& mouse = isMouse.value();
-      if (event.eventId == InputEventMouseButton::ID) {
-         const auto& mouseEvent = event.toEvent<InputEventMouseButton>();
-         if (getIsEnabled() && mouse->isInside()) {
-            if (mouseEvent.isDown) {
-               if (!isFocused()) setFocused(true);
-               _caret = caretFromMouse(mouse->getLocalPos());
+      switch (event.eventId) {
+         case InputEventMouseButton::ID: {
+            const auto& mouseEvent = event.toEvent<InputEventMouseButton>();
+            if (getIsEnabled() && mouse->isInside()) {
+               if (mouseEvent.isDown) {
+                  if (!isFocused()) setFocused(true);
+                  _caret = caretFromMouse(mouse->getLocalPos());
+                  clearSelection();      //new click starts a fresh selection at the caret
+                  _isDragging = true;
+               } else {
+                  _isDragging = false;   //button released
+               }
+               return this;
+            } else if (isFocused() && !mouseEvent.isDown) {
+               setFocused(false);
+               _isDragging = false;
+               return this;
             }
-            return this;
-         } else if (isFocused() && !mouseEvent.isDown) {
-            setFocused(false);
-            return this;
+            break;
+         }
+         case InputEventMouseMotion::ID: {
+            if (_isDragging && isFocused()) {
+               //extend selection: move the caret, leave the anchor put
+               _caret = caretFromMouse(mouse->getLocalPos());
+               return this;
+            }
+            break;
          }
       }
    }
@@ -177,9 +244,11 @@ Handled RichTextEditor::_unhandled_input(const InputEvent& event) {
    switch (event.eventId) {
       case InputEventChar::ID: {
          const auto& charEvent = event.toEvent<InputEventChar>();
+         deleteSelection();                 //typing over a selection replaces it
          auto text = getText().str();
          text.insert(_caret, 1, charEvent.ch);
          _caret += 1;
+         clearSelection();
          _assignString(text);
          return this;
       }
@@ -188,60 +257,105 @@ Handled RichTextEditor::_unhandled_input(const InputEvent& event) {
          if (!keyEvent.isDown) break;
          bool ctrlHeld = InputInterface::isKeyDown(InputInterface::KeyCode::KEY_LEFT_CONTROL) ||
                          InputInterface::isKeyDown(InputInterface::KeyCode::KEY_RIGHT_CONTROL);
-         auto text = getText().str();
+         bool shiftHeld = InputInterface::isKeyDown(InputInterface::KeyCode::KEY_LEFT_SHIFT) ||
+                          InputInterface::isKeyDown(InputInterface::KeyCode::KEY_RIGHT_SHIFT);
          switch (keyEvent.key) {
             default: break;
+            case InputInterface::KeyCode::KEY_A:
+               if (ctrlHeld) { //select all
+                  _selectionAnchor = 0;
+                  _caret = getText().str().size();
+               }
+               return this;
+            case InputInterface::KeyCode::KEY_C:
+               if (ctrlHeld && hasSelection()) SetClipboardText(getSelectedText().c_str());
+               return this;
+            case InputInterface::KeyCode::KEY_X:
+               if (ctrlHeld && hasSelection()) {
+                  SetClipboardText(getSelectedText().c_str());
+                  deleteSelection();
+               }
+               return this;
             case InputInterface::KeyCode::KEY_V:
                if (ctrlHeld) {
                   const char* clip = GetClipboardText();
                   if (clip && clip[0] != '\0') {
+                     deleteSelection();
+                     auto text = getText().str();
                      text.insert(_caret, clip);
                      _caret += strlen(clip);
+                     clearSelection();
                      _assignString(text);
                   }
                   return this;
                }
                break;
             case InputInterface::KeyCode::KEY_ENTER:
-            case InputInterface::KeyCode::KEY_KP_ENTER:
+            case InputInterface::KeyCode::KEY_KP_ENTER: {
+               deleteSelection();
+               auto text = getText().str();
                text.insert(_caret, 1, '\n');
                _caret += 1;
+               clearSelection();
                _assignString(text);
                return this;
+            }
             case InputInterface::KeyCode::KEY_BACKSPACE:
-               if (_caret > 0) {
+               if (hasSelection()) {
+                  deleteSelection();
+               } else if (_caret > 0) {
+                  auto text = getText().str();
                   text.erase(_caret - 1, 1);
                   _caret -= 1;
+                  clearSelection();
                   _assignString(text);
                }
                return this;
             case InputInterface::KeyCode::KEY_DELETE:
-               if (_caret < text.size()) {
+               if (hasSelection()) {
+                  deleteSelection();
+               } else if (_caret < getText().str().size()) {
+                  auto text = getText().str();
                   text.erase(_caret, 1);
                   _assignString(text);
                }
                return this;
             case InputInterface::KeyCode::KEY_LEFT:
-               if (_caret > 0) _caret -= 1;
+               if (!shiftHeld && hasSelection()) {
+                  _caret = selMin();            //collapse selection to its left edge
+               } else if (_caret > 0) {
+                  _caret -= 1;
+               }
+               if (!shiftHeld) clearSelection();
                return this;
             case InputInterface::KeyCode::KEY_RIGHT:
-               if (_caret < text.size()) _caret += 1;
+               if (!shiftHeld && hasSelection()) {
+                  _caret = selMax();            //collapse selection to its right edge
+               } else if (_caret < getText().str().size()) {
+                  _caret += 1;
+               }
+               if (!shiftHeld) clearSelection();
                return this;
             case InputInterface::KeyCode::KEY_UP:
                moveCaretVertical(-1);
+               if (!shiftHeld) clearSelection();
                return this;
             case InputInterface::KeyCode::KEY_DOWN:
                moveCaretVertical(1);
+               if (!shiftHeld) clearSelection();
                return this;
             case InputInterface::KeyCode::KEY_HOME: {
+               const auto& text = getText().str();
                size_t row, col;
                caretRowCol(text, _caret, row, col);
                _caret = lineStart(text, row);
+               if (!shiftHeld) clearSelection();
                return this;
             }
             case InputInterface::KeyCode::KEY_END: {
-               size_t nl = text.find('\n', _caret);
-               _caret = (nl == std::string::npos) ? text.size() : nl;
+               size_t nl = getText().str().find('\n', _caret);
+               _caret = (nl == std::string::npos) ? getText().str().size() : nl;
+               if (!shiftHeld) clearSelection();
                return this;
             }
          }
