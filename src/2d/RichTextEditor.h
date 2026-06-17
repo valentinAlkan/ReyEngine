@@ -19,6 +19,10 @@ namespace ReyEngine {
    [[nodiscard]] std::string getString() const {return getText().str();}
    [[nodiscard]] bool isEditing() const {return _isEditing;}
    void clear(){setText("");}
+   void undo(); //reverse the most recent edit
+   void redo(); //re-apply the most recently undone edit
+   [[nodiscard]] bool canUndo() const {return _undoCursor > 0;}
+   [[nodiscard]] bool canRedo() const {return _undoCursor < _undo.size();}
    protected:
    void _init() override;
    void render2D(RenderContext&) const override;
@@ -51,8 +55,18 @@ namespace ReyEngine {
    [[nodiscard]] size_t selMax() const {return std::max(_selectionAnchor, _caret);}
    void clearSelection(){_selectionAnchor = _caret;} //collapse selection to caret
    [[nodiscard]] std::string getSelectedText() const;
-   void deleteSelection(); //erase the selection, place caret at its start, write back
+   void deleteSelection(); //erase the selection (as a RemoveTextAction), caret at its start
    void drawSelection(float lineHeight) const; //highlight rects, called from render2D
+
+   // undo/redo driver. Every content change funnels through pushAction: it applies
+   // the action now, drops any stale redo branch, optionally coalesces it into the
+   // previous step, and records it. replaceSelectionWith() is the shared path for
+   // edits that overwrite a selection (type/paste/newline over a highlight).
+   struct EditAction; //the action hierarchy is defined further down in this class
+   void pushAction(std::shared_ptr<EditAction> action, bool mergeable);
+   void replaceSelectionWith(const TrString& text, bool mergeable);
+   void breakUndoMerge(){_coalesce = false;} //a caret move/discrete op ends a typing run
+   void resetHistory(){_undo.clear(); _undoCursor = 0; _coalesce = false;}
 
    static constexpr float TEXT_MARGIN = 4.0f;
    size_t _caret = 0;            //number of chars before the caret
@@ -83,6 +97,7 @@ namespace ReyEngine {
    struct InsertTextAction : public EditAction {
       size_t index;   //caret position the text was inserted at
       TrString text;  //the run that was inserted
+      InsertTextAction(size_t index, TrString text): index(index), text(std::move(text)){}
       void redo(RichTextEditor&) override; //insert `text` at `index`
       void undo(RichTextEditor&) override; //remove the inserted run
       bool tryMerge(const EditAction&) override; //coalesce contiguous typing
@@ -91,6 +106,7 @@ namespace ReyEngine {
    struct RemoveTextAction : public EditAction {
       size_t index;   //offset the run was removed from
       TrString text;  //the run that was removed (captured so undo can restore it)
+      RemoveTextAction(size_t index, TrString text): index(index), text(std::move(text)){}
       void redo(RichTextEditor&) override; //remove the run at `index`
       void undo(RichTextEditor&) override; //re-insert the removed run
       bool tryMerge(const EditAction&) override; //coalesce consecutive deletes
@@ -105,7 +121,13 @@ namespace ReyEngine {
       void undo(RichTextEditor&) override;
    };
 
-   //holds the undo history
-   History<std::shared_ptr<EditAction>> _history;
+   // Command history for undo/redo. Actions [0, _undoCursor) are currently applied;
+   // [_undoCursor, size) are undone and available to redo. A fresh edit truncates
+   // the redo tail. (History<T> isn't used here: its back()/fwd() are browser-style
+   // state navigation and can't express "undo the action at the cursor".)
+   std::vector<std::shared_ptr<EditAction>> _undo;
+   size_t _undoCursor = 0;  //count of actions currently applied
+   bool _coalesce = false;  //may the next mergeable edit fold into the last one?
+   bool _didEdit = false;   //set by pushAction; lets _unhandled_input tell edits from caret moves
    };
 }

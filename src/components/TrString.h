@@ -10,6 +10,11 @@ namespace ReyEngine {
         using std::string::string;
         using std::string::operator=;
         TrString(): _language(Localization::getDefaultLanguage()){}
+        //Adopt a plain std::string (default language/key). Lets TrString act as a
+        //drop-in for std::string; the inherited std::string ctors don't cover this
+        //because copy-from-base is excluded for an inherited constructor.
+        TrString(const std::string& text): std::string(text), _language(Localization::getDefaultLanguage()){}
+        TrString(std::string&& text): std::string(std::move(text)), _language(Localization::getDefaultLanguage()){}
         TrString(const std::string& key, const std::string& text)
         : std::string(text)
         , _language(Localization::getDefaultLanguage())

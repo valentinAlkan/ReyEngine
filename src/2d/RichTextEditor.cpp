@@ -22,6 +22,50 @@ void RichTextEditor::setText(const std::string& text) {
    _assignString(normalized);
    if (_caret > normalized.size()) _caret = normalized.size();
    clearSelection(); //drop any stale selection that could point past the new text
+   resetHistory();   //wholesale replacement isn't an undoable edit; old actions' offsets are now invalid
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void RichTextEditor::pushAction(std::shared_ptr<EditAction> action, bool mergeable) {
+   action->redo(*this);  //apply the edit immediately
+   //a brand-new edit invalidates any redo branch hanging off the cursor
+   if (_undoCursor < _undo.size()) _undo.erase(_undo.begin() + (long)_undoCursor, _undo.end());
+   //fold continuous typing/deleting into the previous step when allowed
+   if (mergeable && _coalesce && !_undo.empty() && _undo.back()->tryMerge(*action)) {
+      //absorbed into _undo.back(); nothing appended, cursor already == size
+   } else {
+      _undo.push_back(std::move(action));
+      _undoCursor = _undo.size();
+   }
+   _coalesce = mergeable; //only a mergeable edit lets the *next* one coalesce into it
+   _didEdit = true;       //tell _unhandled_input this caret move came from an edit, not navigation
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void RichTextEditor::undo() {
+   if (_undoCursor == 0) return;
+   _undo[--_undoCursor]->undo(*this);
+   breakUndoMerge(); //an undo ends any in-progress typing run
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void RichTextEditor::redo() {
+   if (_undoCursor >= _undo.size()) return;
+   _undo[_undoCursor++]->redo(*this);
+   breakUndoMerge();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void RichTextEditor::replaceSelectionWith(const TrString& text, bool mergeable) {
+   if (hasSelection()) {
+      //overwrite the highlight as one undo step: remove the selection, then insert
+      auto comp = std::make_shared<CompositeAction>();
+      comp->actions.push_back(std::make_shared<RemoveTextAction>(selMin(), TrString(getSelectedText())));
+      comp->actions.push_back(std::make_shared<InsertTextAction>(selMin(), text));
+      pushAction(comp, false); //a replace is always a discrete step, never coalesced
+   } else {
+      pushAction(std::make_shared<InsertTextAction>(_caret, text), mergeable);
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -165,12 +209,9 @@ std::string RichTextEditor::getSelectedText() const {
 /////////////////////////////////////////////////////////////////////////////////////////
 void RichTextEditor::deleteSelection() {
    if (!hasSelection()) return;
-   auto text = getText().str();
-   size_t lo = selMin();
-   text.erase(lo, selMax() - lo);
-   _caret = lo;
-   clearSelection();
-   _assignString(text);
+   //a selection delete is its own discrete undo step; RemoveTextAction::redo
+   //erases the run, collapses the caret to selMin and clears the selection
+   pushAction(std::make_shared<RemoveTextAction>(selMin(), TrString(getSelectedText())), false);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -262,8 +303,12 @@ void RichTextEditor::_on_focus_lost() {
 /////////////////////////////////////////////////////////////////////////////////////////
 Handled RichTextEditor::_unhandled_input(const InputEvent& event) {
    size_t caretBefore = _caret;
+   _didEdit = false;
    Handled result = _processEdit(event);
-   if (_caret != caretBefore) resetCaretBlink(); //caret moved -> show it immediately
+   if (_caret != caretBefore) {
+      resetCaretBlink();                   //caret moved -> show it immediately
+      if (!_didEdit) breakUndoMerge();     //moved by navigation, not an edit -> end the typing run
+   }
    return result;
 }
 
@@ -318,12 +363,9 @@ Handled RichTextEditor::_processEdit(const InputEvent& event) {
          int byteCount = 0;
          const char* utf8 = CodepointToUTF8(charEvent.ch, &byteCount);
          if (byteCount <= 0) return this;
-         deleteSelection();                 //typing over a selection replaces it
-         auto text = getText().str();
-         text.insert(_caret, utf8, byteCount);
-         _caret += byteCount;
-         clearSelection();
-         _assignString(text);
+         //typing replaces any selection then inserts; plain typing is mergeable so
+         //a run of keystrokes collapses into a single undo step
+         replaceSelectionWith(TrString(std::string(utf8, (size_t)byteCount)), /*mergeable*/true);
          return this;
       }
       case InputEventKey::ID: {
@@ -344,6 +386,12 @@ Handled RichTextEditor::_processEdit(const InputEvent& event) {
             case InputInterface::KeyCode::KEY_C:
                if (ctrlHeld && hasSelection()) SetClipboardText(getSelectedText().c_str());
                return this;
+            case InputInterface::KeyCode::KEY_Z:
+               if (ctrlHeld) { if (shiftHeld) redo(); else undo(); } //Ctrl+Z undo, Ctrl+Shift+Z redo
+               return this;
+            case InputInterface::KeyCode::KEY_Y:
+               if (ctrlHeld) redo(); //Ctrl+Y redo (Windows-style)
+               return this;
             case InputInterface::KeyCode::KEY_X:
                if (ctrlHeld && hasSelection()) {
                   SetClipboardText(getSelectedText().c_str());
@@ -355,46 +403,31 @@ Handled RichTextEditor::_processEdit(const InputEvent& event) {
                   const char* clip = GetClipboardText();
                   if (clip && clip[0] != '\0') {
                      std::string pasted = normalizeNewlines(clip); //strip \r so it won't render as '?'
-                     deleteSelection();
-                     auto text = getText().str();
-                     text.insert(_caret, pasted);
-                     _caret += pasted.size();
-                     clearSelection();
-                     _assignString(text);
+                     replaceSelectionWith(TrString(pasted), /*mergeable*/false); //paste is one discrete step
                   }
                   return this;
                }
                break;
             case InputInterface::KeyCode::KEY_ENTER:
-            case InputInterface::KeyCode::KEY_KP_ENTER: {
-               deleteSelection();
-               auto text = getText().str();
-               text.insert(_caret, 1, '\n');
-               _caret += 1;
-               clearSelection();
-               _assignString(text);
+            case InputInterface::KeyCode::KEY_KP_ENTER:
+               replaceSelectionWith(TrString("\n"), /*mergeable*/false); //a newline is an undo boundary
                return this;
-            }
             case InputInterface::KeyCode::KEY_BACKSPACE:
                if (hasSelection()) {
                   deleteSelection();
                } else if (_caret > 0) {
-                  auto text = getText().str();
-                  size_t prev = prevCharBoundary(text, _caret);
-                  text.erase(prev, _caret - prev); //erase the whole codepoint
-                  _caret = prev;
-                  clearSelection();
-                  _assignString(text);
+                  const auto& text = getText().str();
+                  size_t prev = prevCharBoundary(text, _caret); //erase the whole codepoint
+                  pushAction(std::make_shared<RemoveTextAction>(prev, TrString(text.substr(prev, _caret - prev))), /*mergeable*/true);
                }
                return this;
             case InputInterface::KeyCode::KEY_DELETE:
                if (hasSelection()) {
                   deleteSelection();
                } else if (_caret < getText().str().size()) {
-                  auto text = getText().str();
-                  size_t next = nextCharBoundary(text, _caret);
-                  text.erase(_caret, next - _caret); //erase the whole codepoint
-                  _assignString(text);
+                  const auto& text = getText().str();
+                  size_t next = nextCharBoundary(text, _caret); //erase the whole codepoint
+                  pushAction(std::make_shared<RemoveTextAction>(_caret, TrString(text.substr(_caret, next - _caret))), /*mergeable*/true);
                }
                return this;
             case InputInterface::KeyCode::KEY_LEFT:
