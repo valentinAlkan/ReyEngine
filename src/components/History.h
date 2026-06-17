@@ -1,5 +1,5 @@
 #pragma once
-#include <string>
+#include <optional>
 
 namespace ReyEngine {
    
@@ -50,9 +50,17 @@ namespace ReyEngine {
       History& operator=(const std::vector<T>& vec){
          _history = vec;
          _ptr = 0;
+         return *this;
       }
    protected:
       std::vector<T> _history = {};
       size_t _ptr = 0;
    };
+
+   template <typename T>
+   struct HistoryAction {
+      T doAction();
+      T undoAction();
+   };
+
 }

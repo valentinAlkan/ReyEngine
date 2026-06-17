@@ -11,6 +11,12 @@ namespace ReyEngine {
       TextRenderModel(std::shared_ptr<T>& text): _text(text){}
       TextRenderModel(const TextRenderModel& other): _text(other._text) {}
       void setText(const T& text){*_text = text;}
+      void insertText(size_t index, const T& text){_text->insert(index, text);}
+      T removeText(size_t index, size_t count){
+         T erased = static_cast<T>(_text->substr(index, count));
+         _text->erase(index, count);
+         return erased;
+      }
       [[nodiscard]] const T& getText() const{return *_text;}
       void clear(){setText("");}
    private:

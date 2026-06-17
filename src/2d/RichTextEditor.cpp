@@ -456,3 +456,87 @@ Handled RichTextEditor::_processEdit(const InputEvent& event) {
    }
    return nullptr;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+void RichTextEditor::InsertTextAction::redo(RichTextEditor& e) {
+   auto s = e.getText().str();
+   s.insert(index, text);              //put the run back at the recorded offset
+   e._caret = index + text.size();     //caret lands just after the inserted run
+   e.clearSelection();
+   e._assignString(s);                 //write back + fire EventTextChanged
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void RichTextEditor::InsertTextAction::undo(RichTextEditor& e) {
+   auto s = e.getText().str();
+   s.erase(index, text.size());        //remove exactly what redo() inserted
+   e._caret = index;                   //caret returns to where the run started
+   e.clearSelection();
+   e._assignString(s);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+void RichTextEditor::RemoveTextAction::redo(RichTextEditor& e) {
+   auto s = e.getText().str();
+   s.erase(index, text.size());        //delete the recorded run
+   e._caret = index;                   //caret collapses to the deletion point
+   e.clearSelection();
+   e._assignString(s);                 //write back + fire EventTextChanged
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void RichTextEditor::RemoveTextAction::undo(RichTextEditor& e) {
+   auto s = e.getText().str();
+   s.insert(index, text);              //restore exactly what redo() removed
+   e._caret = index + text.size();     //caret lands just after the restored run
+   e.clearSelection();
+   e._assignString(s);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+bool RichTextEditor::InsertTextAction::tryMerge(const EditAction& next) {
+   auto* o = dynamic_cast<const InsertTextAction*>(&next);
+   if (!o) return false;                              //only merge insert-into-insert
+   if (o->index != index + text.size()) return false; //must continue right where we left off
+   //stop a merge at line boundaries so undo lands sensibly per line
+   if (!text.empty() && text.back() == '\n') return false;
+   if (!o->text.empty() && o->text.front() == '\n') return false;
+   text += o->text;                                   //absorb the newer run
+   return true;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+bool RichTextEditor::RemoveTextAction::tryMerge(const EditAction& next) {
+   auto* o = dynamic_cast<const RemoveTextAction*>(&next);
+   if (!o) return false;                              //only merge remove-into-remove
+   //forward-delete: each press removes at the same offset, so runs are consecutive
+   if (o->index == index) {
+      if (!text.empty() && text.back() == '\n') return false;
+      if (!o->text.empty() && o->text.front() == '\n') return false;
+      text += o->text;
+      return true;
+   }
+   //backspace: each press removes just before the previous one, ending where we began
+   if (o->index + o->text.size() == index) {
+      if (!o->text.empty() && o->text.back() == '\n') return false;
+      if (!text.empty() && text.front() == '\n') return false;
+      text = o->text + text;                          //prepend the earlier-in-buffer run
+      index = o->index;                               //deletion now starts further left
+      return true;
+   }
+   return false;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void RichTextEditor::CompositeAction::redo(RichTextEditor& e) {
+   for (auto& a : actions) a->redo(e);                //replay front-to-back
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void RichTextEditor::CompositeAction::undo(RichTextEditor& e) {
+   for (auto it = actions.rbegin(); it != actions.rend(); ++it) (*it)->undo(e); //reverse order
+}
