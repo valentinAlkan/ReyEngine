@@ -79,10 +79,24 @@ size_t RichTextEditor::caretFromMouse(const Pos<float>& localPos) const {
    float x = localPos.x - TEXT_MARGIN;
    if (x <= 0 || line.empty()) return start;
    if (x >= measureText(line, theme->font).x) return end; //past end of line
-   if (auto idx = getCharIndexAt(line, {x, 0}, theme->font)) {
-      return start + idx.value();
-   }
-   return end;
+   //getSubstrAt returns the text up to the clicked glyph; its byte length is the caret offset
+   return start + getSubstrAt(line, {x, 0}, theme->font).size();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+size_t RichTextEditor::nextCharBoundary(const std::string& text, size_t i) {
+   if (i >= text.size()) return text.size();
+   ++i; //skip the lead byte, then any UTF-8 continuation bytes (10xxxxxx)
+   while (i < text.size() && (static_cast<unsigned char>(text[i]) & 0xC0) == 0x80) ++i;
+   return i;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+size_t RichTextEditor::prevCharBoundary(const std::string& text, size_t i) {
+   if (i == 0) return 0;
+   --i; //step back over the trailing continuation bytes to the lead byte
+   while (i > 0 && (static_cast<unsigned char>(text[i]) & 0xC0) == 0x80) --i;
+   return i;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -100,6 +114,10 @@ void RichTextEditor::moveCaretVertical(int dir) {
    if (end == std::string::npos) end = text.size();
    size_t lineLen = end - start;
    _caret = start + std::min(col, lineLen); //keep the same column where possible
+   //the byte column from the old line may land mid-codepoint here; snap back to a boundary
+   if (_caret > start && _caret < end && (static_cast<unsigned char>(text[_caret]) & 0xC0) == 0x80) {
+      _caret = prevCharBoundary(text, _caret);
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -244,10 +262,14 @@ Handled RichTextEditor::_unhandled_input(const InputEvent& event) {
    switch (event.eventId) {
       case InputEventChar::ID: {
          const auto& charEvent = event.toEvent<InputEventChar>();
+         //charEvent.ch is a Unicode codepoint; encode it to UTF-8 before storing
+         int byteCount = 0;
+         const char* utf8 = CodepointToUTF8(charEvent.ch, &byteCount);
+         if (byteCount <= 0) return this;
          deleteSelection();                 //typing over a selection replaces it
          auto text = getText().str();
-         text.insert(_caret, 1, charEvent.ch);
-         _caret += 1;
+         text.insert(_caret, utf8, byteCount);
+         _caret += byteCount;
          clearSelection();
          _assignString(text);
          return this;
@@ -305,8 +327,9 @@ Handled RichTextEditor::_unhandled_input(const InputEvent& event) {
                   deleteSelection();
                } else if (_caret > 0) {
                   auto text = getText().str();
-                  text.erase(_caret - 1, 1);
-                  _caret -= 1;
+                  size_t prev = prevCharBoundary(text, _caret);
+                  text.erase(prev, _caret - prev); //erase the whole codepoint
+                  _caret = prev;
                   clearSelection();
                   _assignString(text);
                }
@@ -316,7 +339,8 @@ Handled RichTextEditor::_unhandled_input(const InputEvent& event) {
                   deleteSelection();
                } else if (_caret < getText().str().size()) {
                   auto text = getText().str();
-                  text.erase(_caret, 1);
+                  size_t next = nextCharBoundary(text, _caret);
+                  text.erase(_caret, next - _caret); //erase the whole codepoint
                   _assignString(text);
                }
                return this;
@@ -324,7 +348,7 @@ Handled RichTextEditor::_unhandled_input(const InputEvent& event) {
                if (!shiftHeld && hasSelection()) {
                   _caret = selMin();            //collapse selection to its left edge
                } else if (_caret > 0) {
-                  _caret -= 1;
+                  _caret = prevCharBoundary(getText().str(), _caret);
                }
                if (!shiftHeld) clearSelection();
                return this;
@@ -332,7 +356,7 @@ Handled RichTextEditor::_unhandled_input(const InputEvent& event) {
                if (!shiftHeld && hasSelection()) {
                   _caret = selMax();            //collapse selection to its right edge
                } else if (_caret < getText().str().size()) {
-                  _caret += 1;
+                  _caret = nextCharBoundary(getText().str(), _caret);
                }
                if (!shiftHeld) clearSelection();
                return this;

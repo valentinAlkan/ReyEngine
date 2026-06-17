@@ -153,9 +153,13 @@ Handled LineEdit::_unhandled_input(const InputEvent& event) {
                clearSelection();
             }
 
+            //charEvent.ch is a Unicode codepoint; encode to UTF-8 so non-ASCII isn't truncated
+            int byteCount = 0;
+            const char* utf8 = CodepointToUTF8(charEvent.ch, &byteCount);
+            if (byteCount <= 0) return this;
             size_t insertPos = (_caretPos == -1) ? _input.size() : (size_t)_caretPos;
-            _input.insert(insertPos, 1, charEvent.ch);
-            _caretPos = (int)insertPos + 1;
+            _input.insert(insertPos, utf8, byteCount);
+            _caretPos = (int)(insertPos + byteCount);
             publishText(oldText);
             ensureCaretVisible();
             return this;

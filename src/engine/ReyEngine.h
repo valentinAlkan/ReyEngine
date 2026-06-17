@@ -2658,7 +2658,7 @@ namespace InputInterface {
    inline bool isKeyUp(KeyCode key){return IsKeyUp((int)key);}
    inline void setExitKey(KeyCode key){return SetExitKey((int)key);}
    inline KeyCode getKeyPressed(){return (KeyCode)GetKeyPressed();}
-   inline char getCharPressed(){return GetCharPressed();}
+   inline int getCharPressed(){return GetCharPressed();} //returns a Unicode codepoint (may be >255)
    inline bool isMouseButtonPressed(MouseButton btn){return IsMouseButtonPressed(static_cast<int>(btn));}
    inline bool isMouseButtonDown(MouseButton btn){return IsMouseButtonDown(static_cast<int>(btn));}
    inline bool isMouseButtonUp(MouseButton btn){return IsMouseButtonUp(static_cast<int>(btn));}

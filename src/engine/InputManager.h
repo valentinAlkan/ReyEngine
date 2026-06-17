@@ -28,7 +28,7 @@ namespace ReyEngine{
 
    EVENT(InputEventChar, 234623462346)
       {}
-      char ch = 0;
+      int ch = 0; //Unicode codepoint, not a single byte; encode to UTF-8 before storing in a string
    };
 
 
@@ -290,7 +290,7 @@ namespace ReyEngine{
       static inline bool isKeyReleased(InputInterface::KeyCode key){return InputInterface::isKeyReleased(key);}
       InputInterface::KeyCode getKeyPressed();
       InputInterface::KeyCode getKeyReleased();
-      char getCharPressed();
+      int getCharPressed(); //Unicode codepoint
       InputInterface::MouseButton getMouseButtonPressed();
       InputInterface::MouseButton getMouseButtonReleased();
       static inline Vec2<double> getMouseWheel(){return InputInterface::getMouseWheel();}

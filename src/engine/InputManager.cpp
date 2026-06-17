@@ -32,7 +32,7 @@ KeyCode InputManager::getKeyReleased() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-char InputManager::getCharPressed() {
+int InputManager::getCharPressed() {
    return InputInterface::getCharPressed();
 }
 

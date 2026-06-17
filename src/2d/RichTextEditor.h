@@ -32,6 +32,10 @@ namespace ReyEngine {
       [[nodiscard]] size_t lineStart(const std::string& text, size_t row) const; //index of first char of row
       [[nodiscard]] size_t caretFromMouse(const Pos<float>& localPos) const;
       void moveCaretVertical(int dir); //dir: -1 up, +1 down
+      // UTF-8 boundary navigation: text is stored as UTF-8, so the caret must move
+      // a whole codepoint at a time or it splits multibyte characters
+      [[nodiscard]] static size_t nextCharBoundary(const std::string& text, size_t i);
+      [[nodiscard]] static size_t prevCharBoundary(const std::string& text, size_t i);
 
       // selection helpers (selection spans [selMin, selMax) of the current text)
       [[nodiscard]] bool hasSelection() const {return _selectionAnchor != _caret;}
