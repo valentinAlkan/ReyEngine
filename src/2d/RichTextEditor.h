@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include "History.h"
+#include "ScrollView.h"
 #include "TextRenderView.h"
 
 namespace ReyEngine {
@@ -30,6 +31,7 @@ namespace ReyEngine {
    [[nodiscard]] bool getWordWrapEnabled() const {return _wordWrap;}
    protected:
    void _init() override;
+   void _process(float dt) override; //per-frame: keep the scroll limits and bar in sync with content
    void render2D(RenderContext&) const override;
    void _on_focus_gained() override;
    void _on_focus_lost() override;
@@ -48,7 +50,11 @@ namespace ReyEngine {
    //cached wrapper around computeVisualLines: recomputes only when the text, width,
    //wrap flag or font changes, so layout isn't rebuilt every frame.
    [[nodiscard]] const std::vector<VisualLine>& visualLines() const;
-   [[nodiscard]] float wrapWidth() const; //usable text width inside the margins
+   [[nodiscard]] float wrapWidth() const;     //usable text width inside the margins (minus scrollbar gutter)
+   [[nodiscard]] float viewportWidth() const; //widget width minus the scrollbar gutter when the bar is shown
+   [[nodiscard]] float contentHeight() const; //total height of all visual rows plus top/bottom margins
+   void updateScrollLayout();                 //refresh scroll limits + bar from current content/viewport
+   void ensureCaretVisible();                 //scroll vertically so the caret's row sits in the viewport
    //find the visual row containing `caret` and the byte column within it
    static void rowColForCaret(const std::vector<VisualLine>& lines, size_t caret, size_t& row, size_t& col);
 
@@ -93,6 +99,12 @@ namespace ReyEngine {
    bool _isDragging = false;     //mouse held down, extending the selection
    bool _wordWrap = false;       //wrap wide logical lines across visual rows
    EngineFrameCount _caretBlinkBase = 0; //frame the blink cycle started; reset when the caret moves
+
+   // vertical scrolling. _scroll owns the offset/limits and keeps _vScrollBar in sync;
+   // the editor offsets its own text drawing and translates input by _scroll.offsetY().
+   ScrollView _scroll;
+   std::shared_ptr<Slider> _vScrollBar;
+   static constexpr float SCROLLBAR_WIDTH = 14.0f;
    uint64_t _textVersion = 1;    //bumped on every content change; keys the layout cache
 
    // layout cache (mutable: filled lazily from const render/query paths). Rebuilt only

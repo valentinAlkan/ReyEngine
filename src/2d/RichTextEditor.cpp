@@ -8,6 +8,46 @@ using namespace ReyEngine;
 /////////////////////////////////////////////////////////////////////////////////////////
 void RichTextEditor::_init() {
    setAcceptsHover(true);
+   //vertical scrollbar: a child Slider the tree renders/handles input for. It lives in a
+   //right-edge gutter (positioned in updateScrollLayout). Dragging it sets the scroll offset.
+   _vScrollBar = make_child<Slider>(getNode(), std::string("__rte_vbar"), Slider::SliderType::VERTICAL);
+   _vScrollBar->setVisible(false); //hidden until updateScrollLayout decides content overflows
+   subscribe<Slider::EventSliderValueChanged>(_vScrollBar, [this](const auto& e){
+      _scroll.setOffsetY((float)e.value, /*fromBar*/true); //user drag -> offset, don't write back to the bar
+   });
+   _scroll.attachVBar(_vScrollBar);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void RichTextEditor::_process(float) {
+   updateScrollLayout(); //content can grow/shrink every frame (typing); keep limits + bar current
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+float RichTextEditor::viewportWidth() const {
+   //reserve the gutter only while the bar is actually shown (inset bar)
+   return getWidth() - (_scroll.needsVBar() ? SCROLLBAR_WIDTH : 0.0f);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+float RichTextEditor::contentHeight() const {
+   return visualLines().size() * lineHeight() + 2 * TEXT_MARGIN;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void RichTextEditor::updateScrollLayout() {
+   if (_vScrollBar) _vScrollBar->setRect({getWidth() - SCROLLBAR_WIDTH, 0, SCROLLBAR_WIDTH, getHeight()});
+   _scroll.layout(contentHeight(), getHeight()); //clamps offset + syncs bar range/page/visibility
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void RichTextEditor::ensureCaretVisible() {
+   updateScrollLayout(); //limits must reflect the latest content before we test the caret row
+   const auto& lines = visualLines();
+   size_t row, col;
+   rowColForCaret(lines, _caret, row, col);
+   float top = TEXT_MARGIN + row * lineHeight();
+   _scroll.ensureVisibleY(top, top + lineHeight());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -84,7 +124,9 @@ void RichTextEditor::_assignString(const std::string& s) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 float RichTextEditor::wrapWidth() const {
-   return std::max(0.0f, getWidth() - 2 * TEXT_MARGIN);
+   //based on viewportWidth so wrapped text never runs under the inset scrollbar.
+   //needsVBar() reflects last frame's layout, so bar appearance settles in one frame.
+   return std::max(0.0f, viewportWidth() - 2 * TEXT_MARGIN);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -187,8 +229,9 @@ size_t RichTextEditor::caretFromMouse(const Pos<float>& localPos) const {
    const auto& text = getText().str();
    const auto& lines = visualLines();
    float lh = lineHeight();
-   //which visual row was clicked
-   int row = (int)((localPos.y - TEXT_MARGIN) / (lh > 0 ? lh : 1));
+   //which visual row was clicked (translate the click into content space by the scroll offset)
+   float contentY = localPos.y + _scroll.offsetY();
+   int row = (int)((contentY - TEXT_MARGIN) / (lh > 0 ? lh : 1));
    if (row < 0) row = 0;
    if ((size_t)row >= lines.size()) row = (int)lines.size() - 1;
 
@@ -307,14 +350,13 @@ void RichTextEditor::drawSelection(const std::vector<VisualLine>& lines, float l
       float x1 = TEXT_MARGIN + measureText(line.substr(0, cEnd), font).x;
       //rows the selection continues past extend a little to signal the wrap/newline
       if (row != rowHi) x1 += measureText(" ", font).x;
-      float y = TEXT_MARGIN + row * lh;
+      float y = TEXT_MARGIN + row * lh - _scroll.offsetY(); //shift by the scroll offset
       drawRectangle({{x0, y}, {x1 - x0, lh}}, theme->foreground.colorHighlight);
    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void RichTextEditor::render2D(RenderContext&) const {
-   ScopeScissor scissor(getGlobalTransform(), getSizeRect().embiggen(1));
    const bool disabled = !getIsEnabled();
    drawRectangle(getSizeRect(), disabled ? theme->background.colorDisabled : theme->background.colorTertiary);
 
@@ -322,30 +364,40 @@ void RichTextEditor::render2D(RenderContext&) const {
    const auto& font = theme->font;
    const float lh = lineHeight();
    const auto& lines = visualLines(); //cached layout; rebuilt only when text/width/wrap/font change
+   const float offsetY = _scroll.offsetY();
 
-   //draw selection highlight beneath the text
-   drawSelection(lines, lh);
+   //clip text/selection/caret to the area left of the scrollbar gutter (inset when the bar shows)
+   {
+      ScopeScissor scissor(getGlobalTransform(), Rect<float>(0, 0, viewportWidth(), getHeight()));
 
-   //draw each visual row
-   float y = TEXT_MARGIN;
-   for (const auto& vl : lines) {
-      if (vl.end > vl.start) {
-         std::string line = text.substr(vl.start, vl.end - vl.start);
-         drawText(line, {TEXT_MARGIN, y}, font, font->color, font->size, font->spacing);
+      //draw selection highlight beneath the text
+      drawSelection(lines, lh);
+
+      //draw only the visual rows that intersect the viewport (virtualized)
+      if (lh > 0) {
+         size_t firstRow = (offsetY > TEXT_MARGIN) ? (size_t)((offsetY - TEXT_MARGIN) / lh) : 0;
+         for (size_t row = firstRow; row < lines.size(); ++row) {
+            float y = TEXT_MARGIN + row * lh - offsetY;
+            if (y >= getHeight()) break; //first row past the bottom edge: the rest are too
+            const auto& vl = lines[row];
+            if (vl.end > vl.start) {
+               std::string line = text.substr(vl.start, vl.end - vl.start);
+               drawText(line, {TEXT_MARGIN, y}, font, font->color, font->size, font->spacing);
+            }
+         }
       }
-      y += lh;
-   }
 
-   //draw caret - blink relative to _caretBlinkBase so a fresh move shows the caret right away
-   if (_isEditing) {
-      auto elapsed = getEngineFrameCount() - _caretBlinkBase;
-      if (elapsed % 60 < 30) {
-         size_t row, col;
-         rowColForCaret(lines, _caret, row, col);
-         std::string upToCaret = text.substr(lines[row].start, col);
-         float caretX = TEXT_MARGIN + measureText(upToCaret, font).x;
-         float caretY = TEXT_MARGIN + row * lh;
-         drawLine({{caretX, caretY}, {caretX, caretY + lh}}, 2, font->color);
+      //draw caret - blink relative to _caretBlinkBase so a fresh move shows the caret right away
+      if (_isEditing) {
+         auto elapsed = getEngineFrameCount() - _caretBlinkBase;
+         if (elapsed % 60 < 30) {
+            size_t row, col;
+            rowColForCaret(lines, _caret, row, col);
+            std::string upToCaret = text.substr(lines[row].start, col);
+            float caretX = TEXT_MARGIN + measureText(upToCaret, font).x;
+            float caretY = TEXT_MARGIN + row * lh - offsetY;
+            drawLine({{caretX, caretY}, {caretX, caretY + lh}}, 2, font->color);
+         }
       }
    }
 
@@ -372,6 +424,7 @@ Handled RichTextEditor::_unhandled_input(const InputEvent& event) {
       resetCaretBlink();                   //caret moved -> show it immediately
       if (!_didEdit) breakUndoMerge();     //moved by navigation, not an edit -> end the typing run
    }
+   if (_caret != caretBefore || _didEdit) ensureCaretVisible(); //keep the caret on-screen after edits/moves
    return result;
 }
 
@@ -407,6 +460,15 @@ Handled RichTextEditor::_processEdit(const InputEvent& event) {
             if (_isDragging && isFocused()) {
                //extend selection: move the caret, leave the anchor put
                _caret = caretFromMouse(mouse->getLocalPos());
+               return this;
+            }
+            break;
+         }
+         case InputEventMouseWheel::ID: {
+            if (mouse->isInside() && _scroll.needsVBar()) {
+               constexpr float WHEEL_SPEED = 30.0f; //pixels per wheel notch
+               const auto& wheelEvent = event.toEvent<InputEventMouseWheel>();
+               _scroll.scrollByY(-wheelEvent.wheelMove.y * WHEEL_SPEED);
                return this;
             }
             break;
