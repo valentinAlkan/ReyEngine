@@ -576,10 +576,14 @@ Handled RichTextEditor::_processEdit(const InputEvent& event) {
                if (!shiftHeld) clearSelection();
                return this;
             case InputInterface::KeyCode::KEY_UP:
+               //collapse to the top of the selection first, then move up from there
+               if (!shiftHeld && hasSelection()) _caret = selMin();
                moveCaretVertical(-1);
                if (!shiftHeld) clearSelection();
                return this;
             case InputInterface::KeyCode::KEY_DOWN:
+               //collapse to the bottom of the selection first, then move down from there
+               if (!shiftHeld && hasSelection()) _caret = selMax();
                moveCaretVertical(1);
                if (!shiftHeld) clearSelection();
                return this;
