@@ -1,5 +1,6 @@
 #pragma once
 #include <algorithm>
+#include <cstdint>
 #include <memory>
 #include <vector>
 #include "History.h"
@@ -23,6 +24,10 @@ namespace ReyEngine {
    void redo(); //re-apply the most recently undone edit
    [[nodiscard]] bool canUndo() const {return _undoCursor > 0;}
    [[nodiscard]] bool canRedo() const {return _undoCursor < _undo.size();}
+   //word wrap: when enabled, logical lines too wide for the widget are broken across
+   //multiple visual rows at word boundaries. The stored text is unchanged; only layout differs.
+   void setWordWrapEnabled(bool enabled){_wordWrap = enabled;}
+   [[nodiscard]] bool getWordWrapEnabled() const {return _wordWrap;}
    protected:
    void _init() override;
    void render2D(RenderContext&) const override;
@@ -34,9 +39,22 @@ namespace ReyEngine {
    void resetCaretBlink(){_caretBlinkBase = getEngineFrameCount();} //force the caret on, restart the cycle
    void _assignString(const std::string&); //writes back to the model and publishes
    [[nodiscard]] float lineHeight() const;
-   // caret <-> (row, col) helpers operating on the current text
+
+   // A visual row of on-screen text: the byte range [start, end) of `text` drawn on
+   // one line. Excludes any trailing '\n'. With word wrap off there is one VisualLine
+   // per logical line; with it on, wide logical lines split into several.
+   struct VisualLine { size_t start; size_t end; };
+   [[nodiscard]] std::vector<VisualLine> computeVisualLines(const std::string& text) const;
+   //cached wrapper around computeVisualLines: recomputes only when the text, width,
+   //wrap flag or font changes, so layout isn't rebuilt every frame.
+   [[nodiscard]] const std::vector<VisualLine>& visualLines() const;
+   [[nodiscard]] float wrapWidth() const; //usable text width inside the margins
+   //find the visual row containing `caret` and the byte column within it
+   static void rowColForCaret(const std::vector<VisualLine>& lines, size_t caret, size_t& row, size_t& col);
+
+   // caret <-> (row, col) helpers operating on the current text (wrap-aware via VisualLine)
    void caretRowCol(const std::string& text, size_t caret, size_t& row, size_t& col) const;
-   [[nodiscard]] size_t lineStart(const std::string& text, size_t row) const; //index of first char of row
+   [[nodiscard]] size_t lineStart(const std::string& text, size_t row) const; //start byte of visual row
    [[nodiscard]] size_t caretFromMouse(const Pos<float>& localPos) const;
    void moveCaretVertical(int dir); //dir: -1 up, +1 down
    // UTF-8 boundary navigation: text is stored as UTF-8, so the caret must move
@@ -56,7 +74,7 @@ namespace ReyEngine {
    void clearSelection(){_selectionAnchor = _caret;} //collapse selection to caret
    [[nodiscard]] std::string getSelectedText() const;
    void deleteSelection(); //erase the selection (as a RemoveTextAction), caret at its start
-   void drawSelection(float lineHeight) const; //highlight rects, called from render2D
+   void drawSelection(const std::vector<VisualLine>& lines, float lineHeight) const; //highlight rects, called from render2D
 
    // undo/redo driver. Every content change funnels through pushAction: it applies
    // the action now, drops any stale redo branch, optionally coalesces it into the
@@ -73,7 +91,19 @@ namespace ReyEngine {
    size_t _selectionAnchor = 0;  //fixed end of the selection; == _caret means no selection
    bool _isEditing = false;      //focused & accepting input -> blink the caret
    bool _isDragging = false;     //mouse held down, extending the selection
+   bool _wordWrap = false;       //wrap wide logical lines across visual rows
    EngineFrameCount _caretBlinkBase = 0; //frame the blink cycle started; reset when the caret moves
+   uint64_t _textVersion = 1;    //bumped on every content change; keys the layout cache
+
+   // layout cache (mutable: filled lazily from const render/query paths). Rebuilt only
+   // when one of the keys below no longer matches the current text/width/wrap/font.
+   mutable std::vector<VisualLine> _layoutCache;
+   mutable bool _layoutValid = false;
+   mutable uint64_t _layoutTextVersion = 0;
+   mutable float _layoutWidth = -1.0f;
+   mutable bool _layoutWrap = false;
+   mutable float _layoutFontSize = -1.0f;
+   mutable float _layoutFontSpacing = -1.0f;
 
 
    //Any manipulation of the contents of the editor must be performed by an edit action.

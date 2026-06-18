@@ -127,6 +127,7 @@ namespace ReyEngine::FileSystem {
       // A handle to a file that has been opened and is available to read from.
       ~FileHandle(){close();}
       std::vector<char> readFile();
+      std::string readFileAsString();
       std::vector<char> readBytes(long long count);
       size_t readBytesInPlace(long long count, std::vector<char>& buffer);
       LineData readLine(); //read until we get to a new line (treats cr/nl as single newline).

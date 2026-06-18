@@ -75,6 +75,7 @@ void RichTextEditor::_assignString(const std::string& s) {
    next.assign(s);
    TextRenderModel::setText(next);
    if (oldText != s) {
+      ++_textVersion; //invalidate the layout cache; the text content changed
       resetCaretBlink(); //any edit (incl. delete-forward) keeps the caret visible
       EventTextChanged event(this);
       publish(event);
@@ -82,51 +83,123 @@ void RichTextEditor::_assignString(const std::string& s) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+float RichTextEditor::wrapWidth() const {
+   return std::max(0.0f, getWidth() - 2 * TEXT_MARGIN);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::vector<RichTextEditor::VisualLine> RichTextEditor::computeVisualLines(const std::string& text) const {
+   std::vector<VisualLine> lines;
+   const float maxW = wrapWidth();
+   const auto& font = theme->font;
+   size_t ls = 0;
+   while (true) {
+      size_t nl = text.find('\n', ls);
+      size_t le = (nl == std::string::npos) ? text.size() : nl; //logical line is [ls, le)
+
+      if (!_wordWrap || maxW <= 0) {
+         lines.push_back({ls, le}); //no wrapping: one visual row per logical line
+      } else {
+         //Greedy wrap with an O(line) running width: each codepoint is measured once
+         //and added to the segment width (plus inter-glyph spacing), instead of
+         //re-measuring the whole segment every step.
+         const float spacing = font->spacing;
+         size_t segStart = ls;
+         float segW = 0.0f;                       //width of the current row's text [segStart, i)
+         bool firstGlyph = true;                  //no leading spacing before the first glyph
+         size_t lastBreak = std::string::npos;    //byte just past the most recent space in this row
+         size_t i = ls;
+         while (i < le) {
+            size_t next = nextCharBoundary(text, i);
+            float glyphW = measureText(text.substr(i, next - i), font).x;
+            float add = glyphW + (firstGlyph ? 0.0f : spacing);
+            if (!firstGlyph && segW + add > maxW) {
+               if (lastBreak != std::string::npos && lastBreak > segStart) {
+                  lines.push_back({segStart, lastBreak}); //break after the last space that fit
+                  segStart = lastBreak;
+               } else {
+                  lines.push_back({segStart, i});         //long word: break before this glyph
+                  segStart = i;
+               }
+               i = segStart;                              //restart the new row at its first glyph
+               segW = 0.0f; firstGlyph = true; lastBreak = std::string::npos;
+               continue;
+            }
+            segW += add;                                  //accept the glyph onto this row
+            firstGlyph = false;
+            if (text[i] == ' ' || text[i] == '\t') lastBreak = next; //can break after this space
+            i = next;
+         }
+         lines.push_back({segStart, le}); //the remainder of the logical line
+      }
+
+      if (nl == std::string::npos) break;
+      ls = nl + 1; //skip the newline byte; next logical line starts after it
+   }
+   if (lines.empty()) lines.push_back({0, 0}); //empty text still has one (empty) row
+   return lines;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+const std::vector<RichTextEditor::VisualLine>& RichTextEditor::visualLines() const {
+   const float w = wrapWidth();
+   const float fontSize = theme->font->size;
+   const float fontSpacing = theme->font->spacing;
+   //rebuild only when something that affects layout has actually changed
+   if (!_layoutValid || _layoutTextVersion != _textVersion || _layoutWidth != w ||
+       _layoutWrap != _wordWrap || _layoutFontSize != fontSize || _layoutFontSpacing != fontSpacing) {
+      _layoutCache = computeVisualLines(getText().str());
+      _layoutValid = true;
+      _layoutTextVersion = _textVersion;
+      _layoutWidth = w;
+      _layoutWrap = _wordWrap;
+      _layoutFontSize = fontSize;
+      _layoutFontSpacing = fontSpacing;
+   }
+   return _layoutCache;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void RichTextEditor::rowColForCaret(const std::vector<VisualLine>& lines, size_t caret, size_t& row, size_t& col) {
+   row = 0;
+   for (size_t i = 0; i < lines.size(); ++i) {
+      if (lines[i].start <= caret) row = i; //largest row whose start is at/before the caret
+      else break;
+   }
+   col = caret - lines[row].start;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void RichTextEditor::caretRowCol(const std::string& text, size_t caret, size_t& row, size_t& col) const {
    if (caret > text.size()) caret = text.size();
-   row = 0;
-   size_t lastNewline = std::string::npos;
-   for (size_t i = 0; i < caret; ++i) {
-      if (text[i] == '\n') {
-         ++row;
-         lastNewline = i;
-      }
-   }
-   col = (lastNewline == std::string::npos) ? caret : caret - (lastNewline + 1);
+   rowColForCaret(computeVisualLines(text), caret, row, col);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 size_t RichTextEditor::lineStart(const std::string& text, size_t row) const {
-   if (row == 0) return 0;
-   size_t seen = 0;
-   for (size_t i = 0; i < text.size(); ++i) {
-      if (text[i] == '\n') {
-         if (++seen == row) return i + 1;
-      }
-   }
-   return text.size();
+   auto lines = computeVisualLines(text);
+   if (row >= lines.size()) return text.size();
+   return lines[row].start;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 size_t RichTextEditor::caretFromMouse(const Pos<float>& localPos) const {
    const auto& text = getText().str();
+   const auto& lines = visualLines();
    float lh = lineHeight();
-   //which row was clicked
-   size_t totalRows = (size_t)std::count(text.begin(), text.end(), '\n');
+   //which visual row was clicked
    int row = (int)((localPos.y - TEXT_MARGIN) / (lh > 0 ? lh : 1));
    if (row < 0) row = 0;
-   if ((size_t)row > totalRows) row = (int)totalRows;
+   if ((size_t)row >= lines.size()) row = (int)lines.size() - 1;
 
-   size_t start = lineStart(text, (size_t)row);
-   size_t end = text.find('\n', start);
-   if (end == std::string::npos) end = text.size();
-   std::string line = text.substr(start, end - start);
+   const auto& vl = lines[(size_t)row];
+   std::string line = text.substr(vl.start, vl.end - vl.start);
 
    float x = localPos.x - TEXT_MARGIN;
-   if (x <= 0 || line.empty()) return start;
-   if (x >= measureText(line, theme->font).x) return end; //past end of line
+   if (x <= 0 || line.empty()) return vl.start;
+   if (x >= measureText(line, theme->font).x) return vl.end; //past end of the visual row
    //getSubstrAt returns the text up to the clicked glyph; its byte length is the caret offset
-   return start + getSubstrAt(line, {x, 0}, theme->font).size();
+   return vl.start + getSubstrAt(line, {x, 0}, theme->font).size();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -182,20 +255,17 @@ std::string RichTextEditor::normalizeNewlines(std::string text) {
 /////////////////////////////////////////////////////////////////////////////////////////
 void RichTextEditor::moveCaretVertical(int dir) {
    const auto& text = getText().str();
+   const auto& lines = visualLines();
    size_t row, col;
-   caretRowCol(text, _caret, row, col);
+   rowColForCaret(lines, _caret, row, col);
    if (dir < 0 && row == 0) {_caret = 0; return;}
-   size_t totalRows = (size_t)std::count(text.begin(), text.end(), '\n');
-   if (dir > 0 && row >= totalRows) {_caret = text.size(); return;}
+   if (dir > 0 && row + 1 >= lines.size()) {_caret = text.size(); return;}
 
-   size_t targetRow = (dir < 0) ? row - 1 : row + 1;
-   size_t start = lineStart(text, targetRow);
-   size_t end = text.find('\n', start);
-   if (end == std::string::npos) end = text.size();
-   size_t lineLen = end - start;
-   _caret = start + std::min(col, lineLen); //keep the same column where possible
-   //the byte column from the old line may land mid-codepoint here; snap back to a boundary
-   if (_caret > start && _caret < end && (static_cast<unsigned char>(text[_caret]) & 0xC0) == 0x80) {
+   const auto& target = lines[(dir < 0) ? row - 1 : row + 1];
+   size_t lineLen = target.end - target.start;
+   _caret = target.start + std::min(col, lineLen); //keep the same column where possible
+   //the byte column from the old row may land mid-codepoint here; snap back to a boundary
+   if (_caret > target.start && _caret < target.end && (static_cast<unsigned char>(text[_caret]) & 0xC0) == 0x80) {
       _caret = prevCharBoundary(text, _caret);
    }
 }
@@ -215,7 +285,7 @@ void RichTextEditor::deleteSelection() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void RichTextEditor::drawSelection(float lh) const {
+void RichTextEditor::drawSelection(const std::vector<VisualLine>& lines, float lh) const {
    if (!hasSelection()) return;
    const auto& text = getText().str();
    const auto& font = theme->font;
@@ -223,21 +293,19 @@ void RichTextEditor::drawSelection(float lh) const {
    size_t hi = selMax();
 
    size_t rowLo, colLo, rowHi, colHi;
-   caretRowCol(text, lo, rowLo, colLo);
-   caretRowCol(text, hi, rowHi, colHi);
+   rowColForCaret(lines, lo, rowLo, colLo);
+   rowColForCaret(lines, hi, rowHi, colHi);
 
    for (size_t row = rowLo; row <= rowHi; ++row) {
-      size_t start = lineStart(text, row);
-      size_t end = text.find('\n', start);
-      if (end == std::string::npos) end = text.size();
-      std::string line = text.substr(start, end - start);
+      const auto& vl = lines[row];
+      std::string line = text.substr(vl.start, vl.end - vl.start);
 
-      //columns of the selection on this row, clamped to the line
-      size_t cStart = (row == rowLo) ? colLo : 0;
-      size_t cEnd   = (row == rowHi) ? colHi : line.size();
+      //columns of the selection on this row, clamped to the visual line
+      size_t cStart = std::min((row == rowLo) ? colLo : (size_t)0, line.size());
+      size_t cEnd   = std::min((row == rowHi) ? colHi : line.size(), line.size());
       float x0 = TEXT_MARGIN + measureText(line.substr(0, cStart), font).x;
       float x1 = TEXT_MARGIN + measureText(line.substr(0, cEnd), font).x;
-      //rows fully inside the selection extend a little past EOL to signal the newline
+      //rows the selection continues past extend a little to signal the wrap/newline
       if (row != rowHi) x1 += measureText(" ", font).x;
       float y = TEXT_MARGIN + row * lh;
       drawRectangle({{x0, y}, {x1 - x0, lh}}, theme->foreground.colorHighlight);
@@ -253,23 +321,19 @@ void RichTextEditor::render2D(RenderContext&) const {
    const auto& text = getText().str();
    const auto& font = theme->font;
    const float lh = lineHeight();
+   const auto& lines = visualLines(); //cached layout; rebuilt only when text/width/wrap/font change
 
    //draw selection highlight beneath the text
-   drawSelection(lh);
+   drawSelection(lines, lh);
 
-   //draw each line
+   //draw each visual row
    float y = TEXT_MARGIN;
-   size_t lineBegin = 0;
-   while (true) {
-      size_t nl = text.find('\n', lineBegin);
-      size_t lineEnd = (nl == std::string::npos) ? text.size() : nl;
-      std::string line = text.substr(lineBegin, lineEnd - lineBegin);
-      if (!line.empty()) {
+   for (const auto& vl : lines) {
+      if (vl.end > vl.start) {
+         std::string line = text.substr(vl.start, vl.end - vl.start);
          drawText(line, {TEXT_MARGIN, y}, font, font->color, font->size, font->spacing);
       }
       y += lh;
-      if (nl == std::string::npos) break;
-      lineBegin = nl + 1;
    }
 
    //draw caret - blink relative to _caretBlinkBase so a fresh move shows the caret right away
@@ -277,9 +341,8 @@ void RichTextEditor::render2D(RenderContext&) const {
       auto elapsed = getEngineFrameCount() - _caretBlinkBase;
       if (elapsed % 60 < 30) {
          size_t row, col;
-         caretRowCol(text, _caret, row, col);
-         size_t start = lineStart(text, row);
-         std::string upToCaret = text.substr(start, _caret - start);
+         rowColForCaret(lines, _caret, row, col);
+         std::string upToCaret = text.substr(lines[row].start, col);
          float caretX = TEXT_MARGIN + measureText(upToCaret, font).x;
          float caretY = TEXT_MARGIN + row * lh;
          drawLine({{caretX, caretY}, {caretX, caretY + lh}}, 2, font->color);
@@ -460,16 +523,16 @@ Handled RichTextEditor::_processEdit(const InputEvent& event) {
                return this;
             case InputInterface::KeyCode::KEY_HOME: {
                const auto& text = getText().str();
+               const auto& lines = visualLines();
                size_t row, col;
-               caretRowCol(text, _caret, row, col);
-               size_t start = lineStart(text, row);
-               size_t end = text.find('\n', start);
-               if (end == std::string::npos) end = text.size();
-               //first non-whitespace char on the line
+               rowColForCaret(lines, _caret, row, col);
+               size_t start = lines[row].start;
+               size_t end = lines[row].end; //bound to the visual row, not the logical line
+               //first non-whitespace char on the visual row
                size_t firstNonWs = start;
                while (firstNonWs < end && isWordSpace(text[firstNonWs])) ++firstNonWs;
                //already at column 0 with leading whitespace -> jump to first non-whitespace,
-               //otherwise go to the start of the line
+               //otherwise go to the start of the row
                if (_caret == start && firstNonWs > start && firstNonWs < end) {
                   _caret = firstNonWs;
                } else {
@@ -479,8 +542,11 @@ Handled RichTextEditor::_processEdit(const InputEvent& event) {
                return this;
             }
             case InputInterface::KeyCode::KEY_END: {
-               size_t nl = getText().str().find('\n', _caret);
-               _caret = (nl == std::string::npos) ? getText().str().size() : nl;
+               const auto& text = getText().str();
+               const auto& lines = visualLines();
+               size_t row, col;
+               rowColForCaret(lines, _caret, row, col);
+               _caret = lines[row].end; //end of the visual row
                if (!shiftHeld) clearSelection();
                return this;
             }

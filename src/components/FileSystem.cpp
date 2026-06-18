@@ -254,10 +254,15 @@ std::vector<char> FileHandle::readFile(){
 
    // Strip carriage returns to handle Windows line endings
    buffer.erase(std::remove(buffer.begin(), buffer.end(), '\r'), buffer.end());
-
    return buffer;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////
+std::string FileHandle::readFileAsString(){
+   auto content = readFile();
+   if (content.empty()) return"";
+   return {content.data(), content.size()};
+}
 /////////////////////////////////////////////////////////////////////////////////////////
 void FileSystem::FileHandle::open() {
    _ifs = std::ifstream(_file.str(), std::ios::binary | std::ios::ate);
