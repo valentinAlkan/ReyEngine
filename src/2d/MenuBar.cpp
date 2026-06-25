@@ -107,12 +107,16 @@ Handled DropDownMenu::_unhandled_input(const ReyEngine::InputEvent& e) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void DropDownMenu::open() {
+   _on_about_to_show();
+   publish(EventAboutToShow(this));
    setVisible(true);
    setModal(true);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void DropDownMenu::close() {
+   _on_about_to_hide();
+   publish(EventAboutToHide(this));
    setVisible(false);
    setModal(false);
    if (auto parent = getParentWidget()){

@@ -280,7 +280,7 @@ Transform2D Widget::getWindowTransform() const {
             transform *= validTransform.value();
          }
       } else {
-         Logger::debug() << "transform  of child : " << child->getName() << ": " << child->getLocalTransform() << endl;
+         if constexpr (VERBOSE) Logger::debug() << "transform  of child : " << child->getName() << ": " << child->getLocalTransform() << endl;
          transform *= child->getLocalTransform();
       }
       if constexpr (VERBOSE) Logger::debug() << "applying transform  = " << transform << endl;

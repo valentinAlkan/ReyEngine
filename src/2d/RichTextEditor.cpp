@@ -16,6 +16,22 @@ void RichTextEditor::_init() {
       _scroll.setOffsetY((float)e.value, /*fromBar*/true); //user drag -> offset, don't write back to the bar
    });
    _scroll.attachVBar(_vScrollBar);
+
+   //right-click context menu: a hidden DropDownMenu child, rebuilt each time it opens.
+   //Selecting an entry runs the matching clipboard/selection op.
+   _contextMenu = make_child<DropDownMenu>(getNode(), std::string("__rte_ctxmenu"));
+   _contextMenu->setVisible(false);
+   subscribe<DropDownMenu::EventItemSelected>(_contextMenu, [this](const auto& e){
+      const auto& label = e.item->getText();
+      if (label == "Copy") copySelection();
+      else if (label == "Paste") pasteClipboard();
+      else if (label == "Select All") selectAll();
+   });
+   //when the menu closes, hand focus back to the editor if the dismissing click landed
+   //inside it (picked an entry, or clicked back into the text), so editing resumes
+   subscribe<DropDownMenu::EventAboutToHide>(_contextMenu, [this](const auto&){
+      if (getSizeRect().contains(getLocalMousePos())) setFocused(true);
+   });
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -63,6 +79,7 @@ void RichTextEditor::setText(const std::string& text) {
    if (_caret > normalized.size()) _caret = normalized.size();
    clearSelection(); //drop any stale selection that could point past the new text
    resetHistory();   //wholesale replacement isn't an undoable edit; old actions' offsets are now invalid
+   updateScrollLayout(); //new content height -> re-clamp scroll limits + refresh the bar now
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -110,16 +127,26 @@ void RichTextEditor::replaceSelectionWith(const TrString& text, bool mergeable) 
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void RichTextEditor::_assignString(const std::string& s) {
-   auto oldText = getText().str();
+   if (getText().str() == s) return; //no change: skip the write and the notifications
    TrString next = getText(); //copy preserves language + key
    next.assign(s);
-   TextRenderModel::setText(next);
-   if (oldText != s) {
-      ++_textVersion; //invalidate the layout cache; the text content changed
-      resetCaretBlink(); //any edit (incl. delete-forward) keeps the caret visible
-      EventTextChanged event(this);
-      publish(event);
-   }
+   //write through the shared model: this publishes EventTextChanged, which calls
+   //_on_text_changed() on THIS editor and on every other view aliasing the model
+   //(invalidating their caches + re-laying-out), so they all stay in sync.
+   getModel()->setText(next);
+   resetCaretBlink(); //any edit (incl. delete-forward) keeps the caret visible
+   EventTextChanged event(this); //editor-level event for external listeners (distinct from the model's)
+   publish(event);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void RichTextEditor::_on_text_changed() {
+   ++_textVersion; //the shared text changed (here or via another view): drop the layout cache
+   //a remote edit can shrink the buffer out from under our caret/selection; clamp them back in
+   const size_t size = getText().str().size();
+   if (_caret > size) _caret = size;
+   if (_selectionAnchor > size) _selectionAnchor = size;
+   updateScrollLayout(); //new content height -> re-clamp scroll limits + refresh the bar
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -328,6 +355,34 @@ void RichTextEditor::deleteSelection() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void RichTextEditor::copySelection() const {
+   if (hasSelection()) SetClipboardText(getSelectedText().c_str());
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void RichTextEditor::pasteClipboard() {
+   const char* clip = GetClipboardText();
+   if (clip && clip[0] != '\0') {
+      std::string pasted = normalizeNewlines(clip); //strip \r so it won't render as '?'
+      replaceSelectionWith(TrString(pasted), /*mergeable*/false); //paste is one discrete step
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void RichTextEditor::openContextMenu(const Pos<float>& localPos) {
+   if (!_contextMenu) return;
+   //rebuild entries each open so Copy/Paste only show when there's something to act on
+   _contextMenu->clear();
+   if (hasSelection()) _contextMenu->addEntry("Copy");
+   const char* clip = GetClipboardText();
+   if (clip && clip[0] != '\0') _contextMenu->addEntry("Paste");
+   _contextMenu->addEntry("Select All");
+   _contextMenu->setPosition(localPos);
+   _contextMenu->open();
+   _contextMenu->setFocused(true); //take focus so the menu owns input until dismissed
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void RichTextEditor::drawSelection(const std::vector<VisualLine>& lines, float lh) const {
    if (!hasSelection()) return;
    const auto& text = getText().str();
@@ -416,6 +471,13 @@ void RichTextEditor::_on_focus_lost() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void RichTextEditor::_on_rect_changed() {
+   //a resize changes both the gutter's x (getWidth) and the usable height: move the bar
+   //and re-clamp the scroll limits now, instead of waiting for the next edit/caret move.
+   updateScrollLayout();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 Handled RichTextEditor::_unhandled_input(const InputEvent& event) {
    size_t caretBefore = _caret;
    _didEdit = false;
@@ -438,6 +500,10 @@ Handled RichTextEditor::_processEdit(const InputEvent& event) {
             if (mouseEvent.isDown) {
                if (getIsEnabled() && mouse->isInside()) {
                   if (!isFocused()) setFocused(true);
+                  //right-click: handled on release so the matching button-up doesn't
+                  //immediately register as a click-outside and close the menu. Consume the
+                  //press and leave the caret/selection alone.
+                  if (mouseEvent.button == InputInterface::MouseButton::RIGHT) return this;
                   _caret = caretFromMouse(mouse->getLocalPos());
                   clearSelection();      //new click starts a fresh selection at the caret
                   _isDragging = true;
@@ -447,6 +513,13 @@ Handled RichTextEditor::_processEdit(const InputEvent& event) {
                   _isDragging = false;
                }
                break; //not consuming: let the click reach whatever was pressed
+            }
+            //right-click release inside the widget opens the context menu (stays open until
+            //a selection is made or the user clicks outside it)
+            if (mouseEvent.button == InputInterface::MouseButton::RIGHT &&
+                getIsEnabled() && mouse->isInside()) {
+               openContextMenu(mouse->getLocalPos());
+               return this;
             }
             //button released: end the drag but keep focus, even if released outside the editor
             //(otherwise dragging a selection off the widget would defocus and break editing)
@@ -503,13 +576,10 @@ Handled RichTextEditor::_processEdit(const InputEvent& event) {
          switch (keyEvent.key) {
             default: break;
             case InputInterface::KeyCode::KEY_A:
-               if (ctrlHeld) { //select all
-                  _selectionAnchor = 0;
-                  _caret = getText().str().size();
-               }
+               if (ctrlHeld) selectAll();
                return this;
             case InputInterface::KeyCode::KEY_C:
-               if (ctrlHeld && hasSelection()) SetClipboardText(getSelectedText().c_str());
+               if (ctrlHeld) copySelection();
                return this;
             case InputInterface::KeyCode::KEY_Z:
                if (ctrlHeld) { if (shiftHeld) redo(); else undo(); } //Ctrl+Z undo, Ctrl+Shift+Z redo
@@ -525,11 +595,7 @@ Handled RichTextEditor::_processEdit(const InputEvent& event) {
                return this;
             case InputInterface::KeyCode::KEY_V:
                if (ctrlHeld) {
-                  const char* clip = GetClipboardText();
-                  if (clip && clip[0] != '\0') {
-                     std::string pasted = normalizeNewlines(clip); //strip \r so it won't render as '?'
-                     replaceSelectionWith(TrString(pasted), /*mergeable*/false); //paste is one discrete step
-                  }
+                  pasteClipboard();
                   return this;
                }
                break;

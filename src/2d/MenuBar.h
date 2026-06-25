@@ -44,6 +44,7 @@ namespace ReyEngine{
             _on_change();
             return retval;
          }
+         void clear(){_entries.clear(); _activeEntry.reset(); _on_change();} //drop all entries (e.g. to rebuild a context menu)
          MenuEntry* at(size_t index){return _entries.at(index).get();};
          std::optional<MenuEntry*> at(const Pos<float>&);
          std::optional<MenuEntry*> at(const Pos<float>&& p){return at(p);}
@@ -66,6 +67,8 @@ namespace ReyEngine{
    }
    class DropDownMenu : public ReyEngine::Widget, public Internal::MenuInterface {
    public:
+      EVENT(EventAboutToShow, 9823475983247958){}};
+      EVENT(EventAboutToHide, 9823475983244565){}};
       DropDownMenu(std::vector<std::unique_ptr<MenuEntry>>&& items)
       : Internal::MenuInterface(std::move(items)){
          _on_change();
@@ -87,6 +90,8 @@ namespace ReyEngine{
       void _init() override;
       void _on_change() override;
       void _on_rect_changed() override{_calculateSize();}
+      virtual void _on_about_to_show(){}
+      virtual void _on_about_to_hide(){}
       Size<float> _calculateSize();
    };
 
