@@ -1,4 +1,5 @@
 #include "TextEditHandler.h"
+#include <cctype>
 
 using namespace std;
 using namespace ReyEngine;
@@ -51,6 +52,71 @@ std::string TextEditHandler::normalizeNewlines(std::string text) {
       }
    }
    return out;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+namespace {
+   //one mask slot per codepoint: kind '#','A','N','*' are wildcards, 'L' a literal
+   struct MaskSlot {
+      char kind;
+      std::string literal; //the exact codepoint bytes an 'L' slot must match
+   };
+   std::vector<MaskSlot> parseMask(const std::string& mask) {
+      std::vector<MaskSlot> slots;
+      for (size_t i = 0; i < mask.size();) {
+         size_t next = TextEditHandler::nextCharBoundary(mask, i);
+         if (mask[i] == '\\') { //escape: the *next* codepoint is a literal even if special
+            if (next >= mask.size()) break; //trailing backslash matches nothing; drop it
+            i = next;
+            next = TextEditHandler::nextCharBoundary(mask, i);
+            slots.push_back({'L', mask.substr(i, next - i)});
+         } else if (next - i == 1 && (mask[i] == '#' || mask[i] == 'A' || mask[i] == 'N' || mask[i] == '*')) {
+            slots.push_back({mask[i], {}});
+         } else {
+            slots.push_back({'L', mask.substr(i, next - i)});
+         }
+         i = next;
+      }
+      return slots;
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+TextEditHandler::Validator TextEditHandler::maskValidator(const std::string& mask) {
+   //parse the mask once, up front; the returned lambda then only walks the
+   //proposed text against the slots
+   return [slots = parseMask(mask)](const std::string& proposed) {
+      size_t slot = 0;
+      for (size_t i = 0; i < proposed.size(); ++slot) {
+         if (slot >= slots.size()) return false; //typed past the end of the mask
+         size_t next = nextCharBoundary(proposed, i);
+         const bool ascii = (next - i == 1); //classes only match single-byte codepoints
+         const unsigned char c = static_cast<unsigned char>(proposed[i]);
+         const MaskSlot& s = slots[slot];
+         switch (s.kind) {
+            case '#': if (!ascii || !std::isdigit(c)) return false; break;
+            case 'A': if (!ascii || !std::isalpha(c)) return false; break;
+            case 'N': if (!ascii || !std::isalnum(c)) return false; break;
+            case '*': break; //any codepoint
+            default:  if (proposed.compare(i, next - i, s.literal) != 0) return false; break;
+         }
+         i = next;
+      }
+      return true; //every codepoint typed so far fits its slot (prefix match)
+   };
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+TextEditHandler::Completer TextEditHandler::maskCompleter(const std::string& mask) {
+   return [slots = parseMask(mask)](const std::string& textSoFar) {
+      //find the slot the text ends at (one slot per codepoint)
+      size_t slot = 0;
+      for (size_t i = 0; i < textSoFar.size(); i = nextCharBoundary(textSoFar, i)) ++slot;
+      //everything up to the next wildcard (or the end of the mask) is due automatically
+      std::string due;
+      while (slot < slots.size() && slots[slot].kind == 'L') due += slots[slot++].literal;
+      return due;
+   };
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -113,14 +179,48 @@ void TextEditHandler::redo() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void TextEditHandler::replaceSelectionWith(const TrString& text, bool mergeable) {
+   TrString toInsert = text; //the completer may extend the run with auto-entered characters
+   if (_validator || _completer) {
+      //every *insertion* path (typing, paste, Enter-newline) funnels through here,
+      //while deletes and undo/redo do not - exactly the split the validator/completer
+      //contracts promise (see header)
+      const std::string& current = this->text();
+      const size_t at = hasSelection() ? selMin() : _caret;      //where the run lands
+      const size_t keptEnd = hasSelection() ? selMax() : _caret; //end of what it replaces
+      const bool insertAtEnd = keptEnd == current.size(); //nothing survives after the run
+      auto propose = [&](const std::string& run) { //the text the buffer would become
+         std::string p = current;
+         p.replace(at, keptEnd - at, run);
+         return p;
+      };
+      std::string run = text.str();
+      std::string proposed = propose(run);
+      if (_validator && !_validator(proposed) && _completer && insertAtEnd) {
+         //rescue: characters due *before* the typed run may be missing (the user
+         //backspaced an auto-entered literal, then kept typing) - restore them and retry
+         std::string due = _completer(current.substr(0, at));
+         if (!due.empty()) {
+            run = due + run;
+            proposed = propose(run);
+         }
+      }
+      if (_validator && !_validator(proposed)) {
+         _host.onEditRejected(proposed); //let the widget beep/flash; the edit is dropped whole
+         return;
+      }
+      //eager auto-entry: characters due right after an accepted end-of-buffer insertion
+      //(e.g. a mask separator once its preceding wildcards are fulfilled)
+      if (_completer && insertAtEnd) run += _completer(proposed);
+      if (run != text.str()) toInsert = TrString(run);
+   }
    if (hasSelection()) {
       //overwrite the highlight as one undo step: remove the selection, then insert
       auto comp = std::make_shared<CompositeAction>();
       comp->actions.push_back(std::make_shared<RemoveTextAction>(selMin(), TrString(getSelectedText())));
-      comp->actions.push_back(std::make_shared<InsertTextAction>(selMin(), text));
+      comp->actions.push_back(std::make_shared<InsertTextAction>(selMin(), toInsert));
       pushAction(comp, false); //a replace is always a discrete step, never coalesced
    } else {
-      pushAction(std::make_shared<InsertTextAction>(_caret, text), mergeable);
+      pushAction(std::make_shared<InsertTextAction>(_caret, toInsert), mergeable);
    }
 }
 

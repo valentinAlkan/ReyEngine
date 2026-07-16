@@ -53,7 +53,7 @@ void LineEdit::setDefaultText(const std::string& _newDefaultText, bool noPublish
    _defaultText = _newDefaultText;
    _on_default_text_changed(oldText, _defaultText);
    if (!noPublish) {
-      EventLineEditDefaultTextChanged event(this, oldText, _defaultText);
+      EventDefaultTextChanged event(this, oldText, _defaultText);
       publish(event);
    }
 }
@@ -86,7 +86,7 @@ void LineEdit::_on_text_changed() {
    _edit.externalTextChanged(); //clamp caret/selection if the buffer shrank under them
    _on_text_changed(oldText, newText);
    if (!_suppressPublish) {
-      EventLineEditTextChanged event(this, oldText, newText);
+      EventTextChanged event(this, oldText, newText);
       publish(event);
    }
 }

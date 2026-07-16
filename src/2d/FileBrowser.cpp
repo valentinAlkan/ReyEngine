@@ -152,7 +152,7 @@ void FileBrowser::_init() {
       }
       refreshDirectoryContents();
    };
-   subscribe<LineEdit::EventLineEditTextEntered>(_filterText, filterTextUpdateCB);
+   subscribe<LineEdit::EventTextEntered>(_filterText, filterTextUpdateCB);
 
    setMinSize(800,600);
    setVisible(false);
@@ -302,7 +302,7 @@ void FileBrowser::_on_filter_checkbox_toggle(const CheckBox::ButtonToggleEvent& 
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 void FileBrowser::AddrBar::_init() {
-   subscribe<LineEdit::EventLineEditTextEntered>(this, [&](const LineEdit::EventLineEditTextEntered& e){
+   subscribe<LineEdit::EventTextEntered>(this, [&](const LineEdit::EventTextEntered& e){
       EventAddrEntered event(this, getText());
       publish(event);
    });

@@ -14,21 +14,26 @@ namespace ReyEngine {
    class LineEdit : public TextRenderView, private TextEditHandler::Host {
    public:
       REYENGINE_OBJECT(LineEdit)
-      EVENT_ARGS(EventLineEditDefaultTextChanged, 754321525, const std::string& oldText, const std::string& newText)
+      EVENT_ARGS(EventDefaultTextChanged, 754321525, const std::string& oldText, const std::string& newText)
       , oldText(oldText)
       , newText(newText)
       {}
          const std::string oldText;
          const std::string newText;
       };
-      EVENT_ARGS(EventLineEditTextChanged, 754321526, const std::string& oldText, const std::string& newText)
+      EVENT_ARGS(EventTextChanged, 754321526, const std::string& oldText, const std::string& newText)
       , oldText(oldText)
       , newText(newText)
       {}
          const std::string oldText;
          const std::string newText;
       };
-      EVENT(EventLineEditTextEntered, 754321527){}};
+      EVENT_ARGS(EventInputRejected, 4465498432468, const std::string& rejectedText)
+         , rejectedText(rejectedText)
+         {}
+         const std::string rejectedText;
+      };
+      EVENT(EventTextEntered, 754321527){}};
 
       LineEdit(const std::string& defaultText = "Default")
       : TextRenderView(std::make_shared<TrString>())
@@ -58,6 +63,29 @@ namespace ReyEngine {
          return input.empty() ? _defaultText : input;
       }
       [[nodiscard]] bool isEditing() const {return _edit.isEditing();}
+      //optional input validation (see TextEditHandler::setValidator for the contract);
+      //existing text is not re-validated - only subsequent insertions are checked.
+      //Replaces any mask set via setInputMask, including its auto-completion.
+      void setValidator(TextEditHandler::Validator validator){
+         _edit.setValidator(std::move(validator));
+         _edit.setCompleter({}); //a leftover mask completer would fight the new validator
+      }
+      //Restrict input to a fixed-position mask, e.g. "###.###.###.###" (IPv4) or
+      //"AA-####" (part number); "" removes the mask.
+      //Mask characters:
+      //  '#' digit
+      //  'A' letter
+      //  'N' letter-or-digit
+      //  '*' any character
+      //  '\' escapes the next character; anything else is a literal the user must type.
+      //Matching is prefix-wise: partial entry is accepted while typing, so check the
+      //text is complete (full mask length) at submit time. Classes are ASCII-only.
+      //With autocomplete on, literals enter themselves as soon as the wildcards before
+      //them are fulfilled: typing the "192" of "###.###.###.###" auto-enters the '.'.
+      void setInputMask(const std::string& mask, bool autocomplete = true){
+         _edit.setValidator(mask.empty() ? TextEditHandler::Validator{} : TextEditHandler::maskValidator(mask));
+         _edit.setCompleter(mask.empty() || !autocomplete ? TextEditHandler::Completer{} : TextEditHandler::maskCompleter(mask));
+      }
    protected:
       void _init() override;
       void _on_focus_gained() override;
@@ -66,6 +94,7 @@ namespace ReyEngine {
       Handled _unhandled_input(const InputEvent&) override;
       virtual void _on_default_text_changed(const std::string& old, const std::string& _new){};
       virtual void _on_text_changed(const std::string& old, const std::string& _new){};
+      void onEditRejected(const std::string& rejected) override {publish(EventInputRejected(this, rejected));}
    private:
       void _on_text_changed() override; //shared model changed: fire the old/new virtual + event
 
@@ -80,7 +109,7 @@ namespace ReyEngine {
       [[nodiscard]] bool editFocused() const override {return isFocused();}
       void editSetFocused(bool focused) override {setFocused(focused);}
       void onEdited() override {} //publishing rides the model notification (_on_text_changed) instead
-      void onSubmit() override {publish(EventLineEditTextEntered(this));} //Enter pressed
+      void onSubmit() override {publish(EventTextEntered(this));} //Enter pressed
 
       void _assignString(const std::string&); //write to the model preserving the TrString's language/key
 

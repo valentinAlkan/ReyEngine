@@ -1,5 +1,6 @@
 #pragma once
 #include <algorithm>
+#include <functional>
 #include <memory>
 #include <vector>
 #include "InputManager.h"
@@ -41,6 +42,7 @@ namespace ReyEngine {
          virtual void onEdited() = 0;                     //a content edit was applied (incl. undo/redo)
          virtual void onContextMenu(const Pos<float>&){}  //right-click released inside the widget
          virtual void onSubmit(){}                        //Enter pressed in single-line mode
+         virtual void onEditRejected(const std::string& rejected){}                  //the validator refused an insertion (e.g. beep/flash)
       };
 
       TextEditHandler(Host& host, std::shared_ptr<Model> model)
@@ -58,6 +60,39 @@ namespace ReyEngine {
       //single-line policy: '\n' never enters the buffer (typing/paste), Enter -> Host::onSubmit
       void setSingleLine(bool singleLine){_singleLine = singleLine;}
       [[nodiscard]] bool isSingleLine() const {return _singleLine;}
+
+      // Optional input validation. The validator is called with the full text the buffer
+      // *would* become if a pending insertion were applied; returning false rejects the
+      // edit outright (all-or-nothing - a bad paste is dropped, not trimmed). Only
+      // insertions (typing/paste/newline) are validated: deletes and undo/redo always
+      // pass, so the user can never be trapped in a state they cannot edit out of.
+      // Programmatic setText also bypasses it - this validates *input*, not the model.
+      using Validator = std::function<bool(const std::string& proposed)>;
+      void setValidator(Validator validator){_validator = std::move(validator);} //empty = accept everything
+      [[nodiscard]] bool hasValidator() const {return static_cast<bool>(_validator);}
+      // Canned Validator matching a fixed-position mask, prefix-wise: partial entry is
+      // always accepted, so "192.1" conforms to "###.###.###.###" - whether the field is
+      // *complete* is the widget's question to ask at submit time. Mask characters:
+      //   '#' digit   'A' letter   'N' letter-or-digit   '*' any codepoint
+      //   '\' escapes the next character; anything else is a literal that must match.
+      // Character classes are ASCII-only; use '*' (or a custom Validator) for non-ASCII.
+      [[nodiscard]] static Validator maskValidator(const std::string& mask);
+
+      // Optional auto-completion companion to the validator. Whenever an insertion is
+      // accepted at the *end* of the buffer, the completer is called with the resulting
+      // text and returns extra characters to auto-enter (e.g. a mask's literal
+      // separators: typing the "192" of "###.###.###.###" auto-enters the '.').
+      // It is also consulted in reverse when an end-of-buffer insertion *fails*
+      // validation: if auto-entering the completion first makes it pass (the user
+      // backspaced an auto-entered literal, then kept typing), the missing run is
+      // restored instead of rejecting the keystroke. Mid-buffer edits are never
+      // auto-completed. Empty function = no auto-completion.
+      using Completer = std::function<std::string(const std::string& textSoFar)>;
+      void setCompleter(Completer completer){_completer = std::move(completer);}
+      [[nodiscard]] bool hasCompleter() const {return static_cast<bool>(_completer);}
+      //companion to maskValidator: auto-enters the mask's literal characters (everything
+      //that isn't '#'/'A'/'N'/'*') as soon as the wildcards before them are fulfilled
+      [[nodiscard]] static Completer maskCompleter(const std::string& mask);
 
       // caret/selection queries (for the widget's render code)
       [[nodiscard]] size_t caret() const {return _caret;}
@@ -166,6 +201,8 @@ namespace ReyEngine {
       bool _editing = false;        //focused & accepting input -> blink the caret
       bool _isDragging = false;     //mouse held down, extending the selection
       bool _singleLine = false;     //reject newlines; Enter submits instead of inserting
+      Validator _validator;         //insertions must pass this to be applied; empty = no validation
+      Completer _completer;         //auto-enters due characters around end-of-buffer insertions
       EngineFrameCount _caretBlinkBase = 0; //frame the blink cycle started; reset when the caret moves
 
       // Command history for undo/redo. Actions [0, _undoCursor) are currently applied;
