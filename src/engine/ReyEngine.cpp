@@ -1,6 +1,7 @@
 #include "ReyEngine.h"
 #include "rlgl.h"
 #include <cstring>
+#include "ReyEngineDefaultFont.h"
 
 using namespace ReyEngine;
 using namespace std;
@@ -473,13 +474,14 @@ template<> Pos<float> Rect<float>::alignText(const std::string& text, FontAlignm
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::ReyEngineFont::ReyEngineFont(const std::string& fontFile, int fontSize){
-   FileSystem::Path fontPath(fontFile);
-   if (fontFile.empty()){
-      fontPath = FileSystem::Path(CrossPlatform::getFontsDir()) / string(DEFAULT_FONT_FILE);
-   }
+   const FileSystem::Path fontPath(fontFile);
    if (!fontPath.exists()) {
-      Logger::error() << "Invalid font file : " << fontPath.abs() << endl;
-      font = GetFontDefault();
+      //load default font
+      if (!fontFile.empty()) {
+         // log if a path was passed in but isn't valid
+         Logger::error() << "Invalid font file : " << fontPath.str() << endl;
+      }
+      font = getDefaultFont();
       size = fontSize;
       return;
    }
@@ -493,6 +495,30 @@ ReyEngine::ReyEngineFont::ReyEngineFont(const std::string& fontFile, int fontSiz
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::ReyEngineFont::ReyEngineFont(const ReyEngineFont& rhs) {
    *this = rhs;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Font ReyEngineFont::getDefaultFont() {
+      Font font = { 0 };
+      font.baseSize = 20;
+      font.glyphCount = 95;
+      font.glyphPadding = 4;
+      // Custom font loading
+      // NOTE: Compressed font image data (DEFLATE), it requires DecompressData() function
+      int fontDataSize_DefaultFont = 0;
+      unsigned char *data = DecompressData(fontData_ReyEngineDefaultFont, COMPRESSED_DATA_SIZE_FONT_DEFAULTFONT, &fontDataSize_DefaultFont);
+      Image imFont = { data, 256, 256, 1, 2 };
+
+      // Load texture from image
+      font.texture = LoadTextureFromImage(imFont);
+      UnloadImage(imFont);  // Uncompressed data can be unloaded from memory
+
+      // Assign glyph recs and info data directly
+      // WARNING: This font data must not be unloaded
+      font.recs = fontRecs_ReyEngineDefaultFont;
+      font.glyphs = fontGlyphs_ReyEngineDefaultFont;
+
+      return font;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

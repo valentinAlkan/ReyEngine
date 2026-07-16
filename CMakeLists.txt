@@ -6,8 +6,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Component options
 #option(REY_ENABLE_NETWORK "Enable the Network component" ON)
-option(REY_ENABLE_YAML "Enable YAML support" ON)
-option(REY_ENABLE_LUA "Enable LUA support" ON)
+option(REY_ENABLE_YAML "Enable YAML support" OFF)
+option(REY_ENABLE_LUA "Enable LUA support" OFF)
 option(REY_ENABLE_TIMESPEC_OPERATORS "Enable timespec operators" ON)
 
 # Ensure pthread is linked statically
@@ -170,6 +170,7 @@ target_include_directories(ReyEngine2D PUBLIC
         src/physics
         src/components/
         src/components/easings
+        src/thirdParty/font
 )
 target_compile_features(ReyEngine2D PUBLIC cxx_std_20)
 target_compile_options(ReyEngine2D PUBLIC -pthread)

@@ -2111,7 +2111,7 @@ namespace ReyEngine {
       std::string fileName;
       ReyEngineFont copy() const;
       [[nodiscard]] Size<R_FLOAT> measure(const std::string& text) const;
-      static constexpr std::string_view DEFAULT_FONT_FILE = "RobotoFlex.ttf";
+      static Font getDefaultFont();
    };
 
    struct ReyTexture;
