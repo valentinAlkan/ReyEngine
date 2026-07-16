@@ -42,39 +42,8 @@ function(copy_file SOURCE_PATH DESTINATION_PATH)
     configure_file("${ABS_SOURCE_PATH}" "${FINAL_PATH}" COPYONLY)
 endfunction()
 
-
-# Dependencies
-set(RAYLIB_VERSION 5.5)
-find_package(raylib ${RAYLIB_VERSION} QUIET) # QUIET or REQUIRED
-if (NOT raylib_FOUND) # If there's none, fetch and build raylib
-    include(FetchContent)
-    FetchContent_Declare(
-            raylib
-            DOWNLOAD_EXTRACT_TIMESTAMP OFF
-            URL https://github.com/raysan5/raylib/archive/refs/tags/${RAYLIB_VERSION}.tar.gz
-    )
-    FetchContent_GetProperties(raylib)
-    if (NOT raylib_POPULATED) # Have we downloaded raylib yet?
-        set(FETCHCONTENT_QUIET NO)
-        FetchContent_Populate(raylib)
-        set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE) # don't build the supplied examples
-
-        # Patch raylib's CMakeLists.txt to fix cmake_minimum_required version
-        file(READ "${raylib_SOURCE_DIR}/CMakeLists.txt" RAYLIB_CMAKE_CONTENT)
-        string(REGEX REPLACE "cmake_minimum_required\\(VERSION [0-9.]+\\)" "cmake_minimum_required(VERSION 3.5)" RAYLIB_CMAKE_CONTENT "${RAYLIB_CMAKE_CONTENT}")
-        file(WRITE "${raylib_SOURCE_DIR}/CMakeLists.txt" "${RAYLIB_CMAKE_CONTENT}")
-
-        # Modify config.h to enable JPG support
-        set(CONFIG_FILE "${raylib_SOURCE_DIR}/src/config.h")
-        file(READ ${CONFIG_FILE} CONFIG_CONTENT)
-        string(REPLACE "//#define SUPPORT_FILEFORMAT_JPG          1" "#define SUPPORT_FILEFORMAT_JPG          1" CONFIG_CONTENT "${CONFIG_CONTENT}")
-        string(REPLACE "//#define SUPPORT_FILEFORMAT_BMP          1" "#define SUPPORT_FILEFORMAT_BMP          1" CONFIG_CONTENT "${CONFIG_CONTENT}")
-        string(REPLACE "//#define SUPPORT_FILEFORMAT_TGA          1" "#define SUPPORT_FILEFORMAT_TGA          1" CONFIG_CONTENT "${CONFIG_CONTENT}")
-        file(WRITE ${CONFIG_FILE} "${CONFIG_CONTENT}")
-
-        add_subdirectory(${raylib_SOURCE_DIR} ${raylib_BINARY_DIR})
-    endif()
-endif()
+# include built-in raylib
+add_subdirectory(src/thirdParty/raylib)
 
 # set up yaml-cpp
 if(REY_ENABLE_YAML)
