@@ -2,6 +2,8 @@
 #include "TypeTree.h"
 #include "Event.h"
 #include <memory>
+#include <string_view>
+#include <type_traits>
 #include "Application.h"
 
 namespace ReyEngine{
@@ -58,6 +60,25 @@ namespace ReyEngine{
          [[nodiscard]] auto getChildren() const {return const_cast<ReyObject*>(this)->getChildren();}
          [[nodiscard]] auto getChild(const std::string& name){return _node ? _node->getChild(name) : std::nullopt;}
          [[nodiscard]] auto findChild(const std::string& searchTerm){return _node ? _node->findChild(searchTerm) : std::nullopt;}
+
+         //create a child of this object - the parent is inferred to be this object's node
+         template<typename T, typename InstanceName, typename... Args>
+         requires std::is_convertible_v<InstanceName, std::string_view>
+         std::shared_ptr<T> make_child(InstanceName&& instanceName, Args&&... args){
+            if (!_node) throw std::runtime_error("make_child called on an object with no node (called from a constructor? Use _init() or __on_made() instead)");
+            return Internal::Tree::_make_child<T>(_node, std::forward<InstanceName>(instanceName), std::forward<Args>(args)...);
+         }
+         //explicit-parent form. This member hides the free function ReyEngine::make_child inside
+         // member functions of derived types, so it must accept the same arguments
+         template<typename T, typename N, typename InstanceName, typename... Args>
+         requires (!std::is_convertible_v<N, std::string_view>)
+         std::shared_ptr<T> make_child(N parent, InstanceName&& instanceName, Args&&... args){
+            if constexpr (std::is_same_v<Internal::Tree::TypeNode*, N>) {
+               return Internal::Tree::_make_child<T>(parent, std::forward<InstanceName>(instanceName), std::forward<Args>(args)...);
+            } else {
+               return Internal::Tree::_make_child<T>(parent->getNode(), std::forward<InstanceName>(instanceName), std::forward<Args>(args)...);
+            }
+         }
 
          template <typename T>
          std::vector<T*> getChildrenAs(){
