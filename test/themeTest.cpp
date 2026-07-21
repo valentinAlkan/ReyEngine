@@ -32,6 +32,7 @@ class ThemeExplorer : public Widget {
       setPairs(4, "Background: colorActive1", theme->background.colorActive1);
       setPairs(5, "Background: colorActive2", theme->background.colorActive2);
       setPairs(6, "Background: colorDisabled", theme->background.colorDisabled);
+      setPairs(7, "Background: colorEmphasis", theme->background.colorEmphasis);
 
       setPairs(7, "Foreground: colorPrimary", theme->foreground.colorPrimary);
       setPairs(8, "Foreground: colorSecondary", theme->foreground.colorSecondary);
@@ -40,7 +41,9 @@ class ThemeExplorer : public Widget {
       setPairs(11, "Foreground: colorActive1", theme->foreground.colorActive1);
       setPairs(12, "Foreground: colorActive2", theme->foreground.colorActive2);
       setPairs(13, "Foreground: colorDisabled", theme->foreground.colorDisabled);
+      setPairs(14, "Foreground: colorEmphasis", theme->foreground.colorEmphasis);
    }
+
    void render2D(RenderContext&) const override {
       for (const auto& [rect, text, color] : _rects){
          drawRectangle(rect, color);
@@ -68,22 +71,23 @@ int main() {
    auto vlayoutm1 = make_child<Layout>(mainHLayout, "vlayoutm1", Layout::LayoutDir::VERTICAL);
    auto vlayoutm2 = make_child<Layout>(mainHLayout, "vlayoutm2", Layout::LayoutDir::VERTICAL);
    auto vlayoutr = make_child<Layout>(mainHLayout, "vlayoutr", Layout::LayoutDir::VERTICAL);
+
    //add each widget type
-   auto pushbutton = make_child<PushButton>(vlayoutl, "pushbutton");
-   auto toggleButton = make_child<ToggleButton>(vlayoutl, "toggleButton");
-   auto lineEditHLayout = make_child<Layout>(vlayoutl, "lineEditHLayout", Layout::LayoutDir::HORIZONTAL);
+   auto menuBar = make_child<MenuBar>(vlayoutr, "menubar");
+   auto fileMenu = menuBar->createDropDown("File");
+   fileMenu->push_back("this", "is", "some", "items");
+
+   auto pushbutton = make_child<PushButton>(vlayoutr, "pushbutton");
+   auto toggleButton = make_child<ToggleButton>(vlayoutr, "toggleButton");
+   auto lineEditHLayout = make_child<Layout>(vlayoutr, "lineEditHLayout", Layout::LayoutDir::HORIZONTAL);
    auto lineEdit = make_child<LineEdit>(lineEditHLayout, "lineedit", "LineEdit");
    auto checkbox = make_child<CheckBox>(lineEditHLayout, "checkbox", "Enabled");
    checkbox->setChecked(true);
 
-   auto menuBar = make_child<MenuBar>(vlayoutl, "menubar");
-   auto fileMenu = menuBar->createDropDown("File");
-   fileMenu->push_back("this", "is", "some", "items");
-
-   make_child<ThemeExplorer>(vlayoutr, "themeExplorer");
+   vlayoutl->make_child<ThemeExplorer>("themeExplorer");
 
 
-   for (auto& child : vlayoutl->getChildren()){
+   for (auto& child : vlayoutr->getChildren()){
       child->as<Widget>().value()->setMaxHeight(ROW_HEIGHT);
    }
 

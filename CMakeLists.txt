@@ -263,8 +263,8 @@ endif (UNIX)
 
 
 # Test Projects
-#add_executable(themeTest test/themeTest.cpp)
-#target_link_libraries(themeTest ReyEngine2D)
+add_executable(ReyEngineThemeTest test/themeTest.cpp)
+target_link_libraries(ReyEngineThemeTest ReyEngine2D)
 ##########################################
 # for testing basic raylib stuff
 #add_executable( raylibTest test/raylibTest.cpp)

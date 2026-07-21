@@ -101,12 +101,13 @@ namespace ReyEngine {
       bool isInBackground(const Widget* w) const {return _background.contains(w->_node);}
       bool isInForeground(const Widget* w) const {return _foreground.contains(w->_node);}
    protected:
+      std::optional<ColorRGBA> _overrideColor; //if present, draws this color instead of the theme
       const RenderTarget& readRenderTarget() const {return _renderTarget;}
       RenderContext createRenderContext(){return _renderTarget;}
       Handled _processInput(const InputEvent& e) override;
       void __on_descendant_added_to_tree(TypeNode* child) override;
       void __on_descendant_removed_from_tree(TypeNode* child) override;
-      void render2D(RenderContext&) const override {}
+      void render2D(RenderContext&) const override;
       void renderProcess(RenderContext&);
       void __on_rect_changed(const Rect<R_FLOAT>& oldRect, const Rect<R_FLOAT>& newRect, bool allowsAnchor, bool byLayout = false) override;
       template <WidgetStatus::StatusType Status>

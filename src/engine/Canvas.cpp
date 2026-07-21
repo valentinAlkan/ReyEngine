@@ -110,6 +110,11 @@ void Canvas::doRenderModal(RenderContext& context, Widget* widget) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::render2D(RenderContext&) const {
+   drawRectangle(getSizeRect(), _overrideColor ? _overrideColor.value() : getTheme().background.colorPrimary);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::renderProcess(RenderContext& renderContext) {
    if (!_visible) return;
    if (!_retained) {

@@ -193,7 +193,7 @@ void MenuBar::render2D(RenderContext&) const {
    if (_activeEntry){
       drawRectangle(_activeEntry.value()->_area, theme->background.colorHighlight);
    }
-   drawRectangleLines(getSizeRect(), 1.0, theme->background.colorSecondary);
+   drawRectangle(getSizeRect(), getTheme().background.colorEmphasis);
    for (const auto& entry : _entries){
       drawText(entry->_text, entry->_area.copy().pushX(5).pushY(2).pos(), theme->font);
    }

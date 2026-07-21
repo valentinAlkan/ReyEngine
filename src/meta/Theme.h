@@ -45,6 +45,7 @@ namespace ReyEngine {
          ColorRGBA colorActive1;
          ColorRGBA colorActive2;
          ColorRGBA colorHighlight;
+         ColorRGBA colorEmphasis; //for EMPHASIS
          Fill fill = Fill::NONE;
          Outline outline = Outline::NONE;
          float roundness = 0.2;
@@ -115,13 +116,14 @@ namespace ReyEngine {
          name = instanceName;
          //apply defaults
          background.fill = Style::Fill::SOLID;
-         background.colorPrimary = Colors::lightGray;
+         background.colorPrimary = ColorRGBA(37, 64, 204);
          background.colorSecondary = Colors::black;
          background.colorTertiary = Colors::white;
          background.colorDisabled = Colors::disabledGray;
          background.colorActive1 = Colors::gray;
          background.colorActive2 = ColorRGBA(Colors::gray.r - offset, Colors::gray.g - offset, Colors::gray.b - offset, Colors::gray.a);
          background.colorHighlight = ColorRGBA(0, 140, 255);
+         background.colorEmphasis = ColorRGBA(12, 28, 110);
 
          foreground.fill = Style::Fill::SOLID;
          foreground.colorPrimary = Colors::black;
@@ -131,6 +133,7 @@ namespace ReyEngine {
          foreground.colorActive1 = Colors::gray;
          foreground.colorActive2 = ColorRGBA(Colors::gray.r - offset, Colors::gray.g - offset, Colors::gray.b - offset, Colors::gray.a);
          foreground.colorHighlight = ColorRGBA(0, 100, 255);
+         foreground.colorEmphasis = ColorRGBA(0, 140, 255);
 
          font = std::make_shared<ReyEngineFont>();
       }
