@@ -2,6 +2,9 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <cctype>
+#include <sstream>
+#include <vector>
 
 using namespace std;
 using namespace ReyEngine;
@@ -51,6 +54,7 @@ void ColorPicker::toHSV(const ColorRGBA& color, float& hue, float& sat, float& v
 /////////////////////////////////////////////////////////////////////////////////////////
 void ColorPicker::setColor(const ColorRGBA& color, bool publishEvent) {
    toHSV(color, _hue, _sat, _val, _alpha);
+   _update_readout();
    if (publishEvent) {
       EventColorChanged event(this, getColor());
       publish(event);
@@ -58,10 +62,30 @@ void ColorPicker::setColor(const ColorRGBA& color, bool publishEvent) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void ColorPicker::_init() {
+   if (!_readoutEdits[0]) {
+      static constexpr const char* ROW_NAMES[NUM_READOUT_ROWS] = {"Hex", "Rgba", "Hsv"};
+      static constexpr const char* ROW_LABELS[NUM_READOUT_ROWS] = {"HEX", "RGBA", "HSV"};
+      for (int i = 0; i < NUM_READOUT_ROWS; i++) {
+         _readoutLabels[i] = make_child<Label>(std::string("readoutLabel") + ROW_NAMES[i], ROW_LABELS[i]);
+         _readoutEdits[i] = make_child<LineEdit>(std::string("readoutEdit") + ROW_NAMES[i]);
+         _readoutEdits[i]->setDefaultText("");
+         _readoutLabels[i]->setVisible(_readoutEnabled);
+         _readoutEdits[i]->setVisible(_readoutEnabled);
+         subscribe<LineEdit::EventTextEntered>(_readoutEdits[i], [this, i](const LineEdit::EventTextEntered&){_on_readout_entered(i);});
+      }
+   }
+   _update_readout();
+   _compute_appearance();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void ColorPicker::_compute_appearance() {
    const auto area = getSizeRect().embiggen(-PAD);
    if (theme && theme->font) _readoutLineHeight = theme->font->measure(" ").y;
-   const float bottomHeight = _readoutEnabled ? max(SWATCH_HEIGHT, 3 * _readoutLineHeight) : SWATCH_HEIGHT;
+   const float rowHeight = _readoutLineHeight + 8;
+   constexpr float numRows = NUM_READOUT_ROWS;
+   const float bottomHeight = _readoutEnabled ? max(SWATCH_HEIGHT, numRows * rowHeight + (numRows - 1) * ROW_GAP) : SWATCH_HEIGHT;
    const float stripCount = _alphaEnabled ? 2 : 1;
    const float contentHeight = max(0.0f, area.height - bottomHeight - PAD);
    _svField = {area.x, area.y, max(0.0f, area.width - stripCount * (STRIP_WIDTH + PAD)), contentHeight};
@@ -71,10 +95,91 @@ void ColorPicker::_compute_appearance() {
    if (_readoutEnabled) {
       _swatch = {area.x, bottomTop, SWATCH_PREVIEW_WIDTH, bottomHeight};
       _readout = {_swatch.x + _swatch.width + PAD, bottomTop, max(0.0f, area.width - SWATCH_PREVIEW_WIDTH - PAD), bottomHeight};
+      //the label column and edit column are each aligned so the rows read as a table
+      float labelWidth = 44;
+      if (theme && theme->font) labelWidth = theme->font->measure("RGBA").x + 6;
+      const float editX = _readout.x + labelWidth + PAD;
+      const float editWidth = max(0.0f, _readout.x + _readout.width - editX);
+      for (int i = 0; i < NUM_READOUT_ROWS; i++) {
+         const float rowY = _readout.y + i * (rowHeight + ROW_GAP);
+         if (_readoutLabels[i]) _readoutLabels[i]->setRect(_readout.x, rowY + (rowHeight - _readoutLineHeight) / 2, labelWidth, _readoutLineHeight);
+         if (_readoutEdits[i]) _readoutEdits[i]->setRect(editX, rowY, editWidth, rowHeight);
+      }
    } else {
       _swatch = {area.x, bottomTop, area.width, bottomHeight};
       _readout = {0, 0, 0, 0};
    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ColorPicker::_update_readout() {
+   if (!_readoutEdits[0]) return;
+   const auto c = getColor();
+   char buf[48];
+   if (_alphaEnabled) snprintf(buf, sizeof(buf), "#%02X%02X%02X%02X", c.r, c.g, c.b, c.a);
+   else               snprintf(buf, sizeof(buf), "#%02X%02X%02X", c.r, c.g, c.b);
+   _readoutEdits[ROW_HEX]->setText(buf, true);
+   _readoutLabels[ROW_RGBA]->setText(_alphaEnabled ? "RGBA" : "RGB");
+   if (_alphaEnabled) snprintf(buf, sizeof(buf), "%d, %d, %d, %d", c.r, c.g, c.b, c.a);
+   else               snprintf(buf, sizeof(buf), "%d, %d, %d", c.r, c.g, c.b);
+   _readoutEdits[ROW_RGBA]->setText(buf, true);
+   snprintf(buf, sizeof(buf), "%d, %d%%, %d%%", static_cast<int>(lround(_hue)), static_cast<int>(lround(_sat * 100)), static_cast<int>(lround(_val * 100)));
+   _readoutEdits[ROW_HSV]->setText(buf, true);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ColorPicker::_on_readout_entered(int row) {
+   const string text = _readoutEdits[row]->getText();
+   bool applied = false;
+   switch (row) {
+      case ROW_HEX: {
+         string hex = text;
+         hex.erase(remove_if(hex.begin(), hex.end(), [](unsigned char ch){return isspace(ch) || ch == '#';}), hex.end());
+         const bool allHex = !hex.empty() && all_of(hex.begin(), hex.end(), [](unsigned char ch){return isxdigit(ch);});
+         if (allHex && (hex.size() == 6 || hex.size() == 8)) {
+            const unsigned long v = stoul(hex, nullptr, 16);
+            const auto color = hex.size() == 8
+               ? ColorRGBA(static_cast<int>(v >> 24 & 0xFF), static_cast<int>(v >> 16 & 0xFF), static_cast<int>(v >> 8 & 0xFF), static_cast<int>(v & 0xFF))
+               : ColorRGBA(static_cast<int>(v >> 16 & 0xFF), static_cast<int>(v >> 8 & 0xFF), static_cast<int>(v & 0xFF), static_cast<int>(lround(_alpha * 255)));
+            toHSV(color, _hue, _sat, _val, _alpha);
+            applied = true;
+         }
+      } break;
+      case ROW_RGBA: {
+         string t = text;
+         for (auto& ch : t) if (ch == ',') ch = ' ';
+         istringstream ss(t);
+         vector<int> vals;
+         int v;
+         while (ss >> v) vals.push_back(v);
+         if (vals.size() == 3 || vals.size() == 4) {
+            auto toByte = [](int val){return clamp(val, 0, 255);};
+            const int a = vals.size() == 4 ? toByte(vals[3]) : static_cast<int>(lround(_alpha * 255));
+            toHSV(ColorRGBA(toByte(vals[0]), toByte(vals[1]), toByte(vals[2]), a), _hue, _sat, _val, _alpha);
+            applied = true;
+         }
+      } break;
+      case ROW_HSV: {
+         string t = text;
+         for (auto& ch : t) if (ch == ',' || ch == '%') ch = ' ';
+         istringstream ss(t);
+         float h, s, v;
+         if (ss >> h >> s >> v) {
+            _hue = clamp(h, 0.0f, 360.0f);
+            if (_hue == 360.0f) _hue = 0;
+            _sat = clamp(s / 100.0f, 0.0f, 1.0f);
+            _val = clamp(v / 100.0f, 0.0f, 1.0f);
+            applied = true;
+         }
+      } break;
+   }
+   if (applied) {
+      EventColorChanged changed(this, getColor());
+      publish(changed);
+      EventColorPicked picked(this, getColor());
+      publish(picked);
+   }
+   _update_readout(); //canonicalize the entered value, or restore the current one if it didn't parse
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -96,6 +201,7 @@ void ColorPicker::_apply_drag(const Pos<float>& localPos) {
       case DragTarget::NONE:
          return;
    }
+   _update_readout();
    EventColorChanged event(this, getColor());
    publish(event);
 }
@@ -161,9 +267,13 @@ void ColorPicker::render2D(RenderContext&) const {
    static constexpr ColorRGBA HUE_STOPS[] = {
       {255, 0, 0, 255}, {255, 255, 0, 255}, {0, 255, 0, 255},
       {0, 255, 255, 255}, {0, 0, 255, 255}, {255, 0, 255, 255}, {255, 0, 0, 255}};
+   //tile the segments on integer boundaries - the draw call truncates floats, and fractional
+   // segment heights would otherwise leave single-pixel seams between segments
    const float segmentHeight = _hueBar.height / 6.0f;
    for (int i = 0; i < 6; i++) {
-      drawRectangleGradientV({_hueBar.x, _hueBar.y + i * segmentHeight, _hueBar.width, segmentHeight}, HUE_STOPS[i], HUE_STOPS[i + 1]);
+      const float y0 = floorf(_hueBar.y + i * segmentHeight);
+      const float y1 = floorf(i == 5 ? _hueBar.y + _hueBar.height : _hueBar.y + (i + 1) * segmentHeight);
+      drawRectangleGradientV({_hueBar.x, y0, _hueBar.width, y1 - y0}, HUE_STOPS[i], HUE_STOPS[i + 1]);
    }
    drawRectangleLines(_hueBar, 1.0, Colors::black);
    const float hueY = _hueBar.y + (_hue / 360.0f) * _hueBar.height;
@@ -183,21 +293,4 @@ void ColorPicker::render2D(RenderContext&) const {
    drawCheckerboard(_swatch, 6);
    drawRectangle(_swatch, getColor());
    drawRectangleLines(_swatch, 1.0, Colors::black);
-
-   //raw value readout
-   if (_readoutEnabled && theme && theme->font) {
-      const auto c = getColor();
-      char line[48];
-      float y = _readout.y;
-      if (_alphaEnabled) snprintf(line, sizeof(line), "HEX  #%02X%02X%02X%02X", c.r, c.g, c.b, c.a);
-      else               snprintf(line, sizeof(line), "HEX  #%02X%02X%02X", c.r, c.g, c.b);
-      drawText(line, {_readout.x, y}, theme->font);
-      y += _readoutLineHeight;
-      if (_alphaEnabled) snprintf(line, sizeof(line), "RGBA %d, %d, %d, %d", c.r, c.g, c.b, c.a);
-      else               snprintf(line, sizeof(line), "RGB  %d, %d, %d", c.r, c.g, c.b);
-      drawText(line, {_readout.x, y}, theme->font);
-      y += _readoutLineHeight;
-      snprintf(line, sizeof(line), "HSV  %d, %d%%, %d%%", static_cast<int>(lround(_hue)), static_cast<int>(lround(_sat * 100)), static_cast<int>(lround(_val * 100)));
-      drawText(line, {_readout.x, y}, theme->font);
-   }
 }
