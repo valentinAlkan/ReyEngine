@@ -4,9 +4,15 @@
 #include "Button.h"
 #include "LineEdit.h"
 #include "MenuBar.h"
+#include "ScrollArea.h"
+#include "ColorPicker.h"
 
 using namespace std;
 using namespace ReyEngine;
+
+class ThemeMember : public Widget {
+
+};
 
 class ThemeExplorer : public Widget {
    std::array<std::tuple<Rect<float>, std::string, ColorRGBA>, 20> _rects;
@@ -49,7 +55,6 @@ class ThemeExplorer : public Widget {
          drawRectangle(rect, color);
          drawText(text, rect.topLeft(), theme->font, color.getReadableTextColor(), theme->font->size, theme->font->spacing);
       }
-      drawRectangleLines(getSizeRect(), 1.0, Colors::white);
    }
 };
 
@@ -73,29 +78,35 @@ int main() {
    auto vlayoutr = make_child<Layout>(mainHLayout, "vlayoutr", Layout::LayoutDir::VERTICAL);
 
    //add each widget type
-   auto menuBar = make_child<MenuBar>(vlayoutr, "menubar");
+   auto menuBar = make_child<MenuBar>(vlayoutm1, "menubar");
    auto fileMenu = menuBar->createDropDown("File");
    fileMenu->push_back("this", "is", "some", "items");
 
-   auto pushbutton = make_child<PushButton>(vlayoutr, "pushbutton");
-   auto toggleButton = make_child<ToggleButton>(vlayoutr, "toggleButton");
-   auto lineEditHLayout = make_child<Layout>(vlayoutr, "lineEditHLayout", Layout::LayoutDir::HORIZONTAL);
+   auto scrollArea = vlayoutl->make_child<ScrollArea>("scrollArea");
+   auto themeExplorer = scrollArea->make_child<ThemeExplorer>("themeExplorer");
+   auto colorPicker = vlayoutl->make_child<ColorPicker>("colorPicker");
+
+
+   //widgets
+   auto pushbutton = make_child<PushButton>(vlayoutm1, "pushbutton");
+   auto toggleButton = make_child<ToggleButton>(vlayoutm1, "toggleButton");
+   auto lineEditHLayout = make_child<Layout>(vlayoutm1, "lineEditHLayout", Layout::LayoutDir::HORIZONTAL);
    auto lineEdit = make_child<LineEdit>(lineEditHLayout, "lineedit", "LineEdit");
    auto checkbox = make_child<CheckBox>(lineEditHLayout, "checkbox", "Enabled");
    checkbox->setChecked(true);
 
-   vlayoutl->make_child<ThemeExplorer>("themeExplorer");
-
-
-   for (auto& child : vlayoutr->getChildren()){
+   for (auto& child : vlayoutm1->getChildren()){
       child->as<Widget>().value()->setMaxHeight(ROW_HEIGHT);
    }
 
+   //extra functionality for widgets
    auto cbLineEditDisabled = [lineEdit](const CheckBox::ButtonToggleEvent& e){
       lineEdit->setEnabled(e.button().getDown());
    };
    lineEdit->subscribe<CheckBox::ButtonToggleEvent>(checkbox, cbLineEditDisabled);
 
+
+   //exec
    window.exec();
 
 }

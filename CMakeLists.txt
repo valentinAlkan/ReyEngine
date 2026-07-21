@@ -153,6 +153,8 @@ add_library(ReyEngine2D STATIC
         src/2d/MenuBar.cpp
         src/2d/Table.cpp
 
+        src/widgets/ColorPicker.cpp
+
         src/meta/CSVParser.cpp
         src/meta/XML.cpp
 )
@@ -162,6 +164,7 @@ target_include_directories(ReyEngine2D PUBLIC
         src/engine
         src/meta
         src/2d
+        src/widgets
         src/lib
         test
         src/thirdParty/xml
