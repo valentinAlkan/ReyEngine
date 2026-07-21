@@ -30,6 +30,8 @@ namespace ReyEngine {
       void setColor(const ColorRGBA& color, bool publish = true);
       void setAlphaEnabled(bool enabled){_alphaEnabled = enabled; _compute_appearance();}
       [[nodiscard]] bool getAlphaEnabled() const {return _alphaEnabled;}
+      void setReadoutEnabled(bool enabled){_readoutEnabled = enabled; _compute_appearance();}
+      [[nodiscard]] bool getReadoutEnabled() const {return _readoutEnabled;}
 
       //hue is [0,360), saturation/value/alpha are [0,1]
       static ColorRGBA fromHSV(float hue, float sat, float val, float alpha = 1.0f);
@@ -39,6 +41,7 @@ namespace ReyEngine {
       Handled _unhandled_input(const InputEvent& e) override;
       void render2D(RenderContext&) const override;
       void _on_rect_changed() override {_compute_appearance();}
+      void _init() override {_compute_appearance();} //recompute once the theme (and thus font metrics) exists
    private:
       enum class DragTarget{NONE, SV, HUE, ALPHA};
       void _compute_appearance();
@@ -49,14 +52,18 @@ namespace ReyEngine {
       float _val = 1;   //[0,1]
       float _alpha = 1; //[0,1]
       bool _alphaEnabled = true;
+      bool _readoutEnabled = true;
       DragTarget _dragTarget = DragTarget::NONE;
 
       static constexpr float PAD = 4;
       static constexpr float STRIP_WIDTH = 18;
       static constexpr float SWATCH_HEIGHT = 22;
+      static constexpr float SWATCH_PREVIEW_WIDTH = 48; //swatch width when the readout sits beside it
+      float _readoutLineHeight = 14;
       Rect<float> _svField = {0, 0, 0, 0};  //saturation (x) / value (y) picking area
       Rect<float> _hueBar = {0, 0, 0, 0};   //vertical hue strip
       Rect<float> _alphaBar = {0, 0, 0, 0}; //vertical alpha strip
       Rect<float> _swatch = {0, 0, 0, 0};   //preview of the current color
+      Rect<float> _readout = {0, 0, 0, 0};  //text readout of the current color in various formats
    };
 }

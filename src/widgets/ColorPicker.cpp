@@ -1,6 +1,7 @@
 #include "ColorPicker.h"
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 
 using namespace std;
 using namespace ReyEngine;
@@ -59,12 +60,21 @@ void ColorPicker::setColor(const ColorRGBA& color, bool publishEvent) {
 /////////////////////////////////////////////////////////////////////////////////////////
 void ColorPicker::_compute_appearance() {
    const auto area = getSizeRect().embiggen(-PAD);
+   if (theme && theme->font) _readoutLineHeight = theme->font->measure(" ").y;
+   const float bottomHeight = _readoutEnabled ? max(SWATCH_HEIGHT, 3 * _readoutLineHeight) : SWATCH_HEIGHT;
    const float stripCount = _alphaEnabled ? 2 : 1;
-   const float contentHeight = max(0.0f, area.height - SWATCH_HEIGHT - PAD);
+   const float contentHeight = max(0.0f, area.height - bottomHeight - PAD);
    _svField = {area.x, area.y, max(0.0f, area.width - stripCount * (STRIP_WIDTH + PAD)), contentHeight};
    _hueBar = {_svField.x + _svField.width + PAD, area.y, STRIP_WIDTH, contentHeight};
    _alphaBar = _alphaEnabled ? Rect<float>{_hueBar.x + STRIP_WIDTH + PAD, area.y, STRIP_WIDTH, contentHeight} : Rect<float>{0, 0, 0, 0};
-   _swatch = {area.x, area.y + area.height - SWATCH_HEIGHT, area.width, SWATCH_HEIGHT};
+   const float bottomTop = area.y + area.height - bottomHeight;
+   if (_readoutEnabled) {
+      _swatch = {area.x, bottomTop, SWATCH_PREVIEW_WIDTH, bottomHeight};
+      _readout = {_swatch.x + _swatch.width + PAD, bottomTop, max(0.0f, area.width - SWATCH_PREVIEW_WIDTH - PAD), bottomHeight};
+   } else {
+      _swatch = {area.x, bottomTop, area.width, bottomHeight};
+      _readout = {0, 0, 0, 0};
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -173,4 +183,21 @@ void ColorPicker::render2D(RenderContext&) const {
    drawCheckerboard(_swatch, 6);
    drawRectangle(_swatch, getColor());
    drawRectangleLines(_swatch, 1.0, Colors::black);
+
+   //raw value readout
+   if (_readoutEnabled && theme && theme->font) {
+      const auto c = getColor();
+      char line[48];
+      float y = _readout.y;
+      if (_alphaEnabled) snprintf(line, sizeof(line), "HEX  #%02X%02X%02X%02X", c.r, c.g, c.b, c.a);
+      else               snprintf(line, sizeof(line), "HEX  #%02X%02X%02X", c.r, c.g, c.b);
+      drawText(line, {_readout.x, y}, theme->font);
+      y += _readoutLineHeight;
+      if (_alphaEnabled) snprintf(line, sizeof(line), "RGBA %d, %d, %d, %d", c.r, c.g, c.b, c.a);
+      else               snprintf(line, sizeof(line), "RGB  %d, %d, %d", c.r, c.g, c.b);
+      drawText(line, {_readout.x, y}, theme->font);
+      y += _readoutLineHeight;
+      snprintf(line, sizeof(line), "HSV  %d, %d%%, %d%%", static_cast<int>(lround(_hue)), static_cast<int>(lround(_sat * 100)), static_cast<int>(lround(_val * 100)));
+      drawText(line, {_readout.x, y}, theme->font);
+   }
 }
