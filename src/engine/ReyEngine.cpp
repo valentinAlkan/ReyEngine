@@ -499,15 +499,19 @@ ReyEngine::ReyEngineFont::ReyEngineFont(const ReyEngineFont& rhs) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Font ReyEngineFont::getDefaultFont() {
-      Font font = { 0 };
+   static Font font; //only load the default font once
+   static bool defaultFontInitialized = false;
+   if (!defaultFontInitialized) {
+      font = {0};
       font.baseSize = 20;
       font.glyphCount = 95;
       font.glyphPadding = 4;
       // Custom font loading
       // NOTE: Compressed font image data (DEFLATE), it requires DecompressData() function
       int fontDataSize_DefaultFont = 0;
-      unsigned char *data = DecompressData(fontData_ReyEngineDefaultFont, COMPRESSED_DATA_SIZE_FONT_DEFAULTFONT, &fontDataSize_DefaultFont);
-      Image imFont = { data, 256, 256, 1, 2 };
+      unsigned char *data = DecompressData(fontData_ReyEngineDefaultFont, COMPRESSED_DATA_SIZE_FONT_DEFAULTFONT,
+                                           &fontDataSize_DefaultFont);
+      Image imFont = {data, 256, 256, 1, 2};
 
       // Load texture from image
       font.texture = LoadTextureFromImage(imFont);
@@ -517,8 +521,9 @@ Font ReyEngineFont::getDefaultFont() {
       // WARNING: This font data must not be unloaded
       font.recs = fontRecs_ReyEngineDefaultFont;
       font.glyphs = fontGlyphs_ReyEngineDefaultFont;
-
-      return font;
+      defaultFontInitialized = true;
+   }
+   return font;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
