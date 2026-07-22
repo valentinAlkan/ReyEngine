@@ -191,9 +191,9 @@ void Tree::render2D(RenderContext&) const{
          std::optional<ColorRGBA> highlightColor;
          if (_selectedItem && _selectedItem.value() == item) {
             //highlight the selected row
-            highlightColor = Colors::blue;
+            highlightColor = getTheme().background.colorHighlight;
          } else if (_hoveredItem && _hoveredItem.value() == item) {
-            highlightColor = Colors::gray;
+            highlightColor = getTheme().background.colorActive1;
          }
          if (highlightColor) drawRectangle({pos, {viewportWidth(), rh}}, highlightColor.value());
       }

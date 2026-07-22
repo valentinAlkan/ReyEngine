@@ -84,6 +84,7 @@ Handled DropDownMenu::_unhandled_input(const ReyEngine::InputEvent& e) {
             _activeEntry = at(mmEvent.mouse.getLocalPos());
             return this;
          }
+         _activeEntry.reset(); //mouse left the menu: nothing is hovered
          //actively offer the input to the parent
          break;}
       case InputEventMouseButton::ID:{
@@ -107,6 +108,10 @@ Handled DropDownMenu::_unhandled_input(const ReyEngine::InputEvent& e) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void DropDownMenu::open() {
+   //a freshly shown menu has nothing hovered yet. Done here rather than in close(), since
+   //hideAllDropDowns() hides menus with setVisible(false) and never runs close(). Cleared
+   //before the show hooks so a subscriber can still pre-highlight an entry if it wants to.
+   _activeEntry.reset();
    _on_about_to_show();
    publish(EventAboutToShow(this));
    setVisible(true);
@@ -142,6 +147,7 @@ void MenuBar::_init() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void MenuBar::_on_change() {
    _lastDrop = nullptr;
+   _openEntry.reset(); //entries may have been rebuilt or cleared out from under us
    static constexpr float SPACING = 15;
    Rect<float> r = getSizeRect();
    for (auto& entry : _entries){
@@ -190,10 +196,17 @@ Handled MenuBar::_unhandled_input(const InputEvent& e) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void MenuBar::render2D(RenderContext&) const {
+   //the entry that opened the current dropdown stays lit for as long as that dropdown is up.
+   //Gated on live visibility rather than on a close() callback, because menus are also hidden
+   //via setVisible(false) in hideAllDropDowns(), which never runs close().
+   if (_openEntry && _lastDrop && _lastDrop->getVisible()){
+      drawRectangle(_openEntry.value()->_area, theme->background.colorHighlight);
+   }
+
    if (_activeEntry){
       drawRectangle(_activeEntry.value()->_area, theme->background.colorHighlight);
    }
-   drawRectangle(getSizeRect(), getTheme().background.colorEmphasis);
+
    for (const auto& entry : _entries){
       drawText(entry->_text, entry->_area.copy().pushX(5).pushY(2).pos(), theme->font);
    }
@@ -220,6 +233,14 @@ void MenuBar::showDropDown(const std::string& menu, const Pos<float>& pos) {
    if (auto dropDownOpt = getDropDown(menu)){
       auto dropDown = dropDownOpt.value();
       _lastDrop = dropDown;
+      //remember which entry this menu belongs to so we can keep it highlighted while it's open
+      _openEntry.reset();
+      for (const auto& entry : _entries){
+         if (entry->_text == menu){
+            _openEntry = entry.get();
+            break;
+         }
+      }
       dropDown->open();
       dropDown->setPosition(pos);
    } else {
@@ -265,5 +286,6 @@ void MenuBar::hideAllDropDowns() {
       }
    }
    _activeEntry.reset();
+   _openEntry.reset();
    _lastDrop = nullptr;
 }

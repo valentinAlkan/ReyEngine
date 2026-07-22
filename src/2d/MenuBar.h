@@ -115,6 +115,10 @@ namespace ReyEngine{
       void showDropDownAt(const Pos<float>&);
       DropDownMenu* getDropDownAt(const Pos<float>&);
       DropDownMenu* _lastDrop = nullptr;
+      //the top-level entry whose dropdown is currently open (e.g. "File" while the File menu is up).
+      //Distinct from _activeEntry, which is the merely-hovered entry. This is only a cache: the
+      //highlight is gated on the dropdown actually being visible, so it can't outlive the menu.
+      std::optional<MenuEntry*> _openEntry;
    private:
       static constexpr ColorRGBA GRADIENT_1 = Colors::activeBlue;
       static constexpr ColorRGBA GRADIENT_2 = Colors::lightGray;
