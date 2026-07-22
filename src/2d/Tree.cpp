@@ -1,4 +1,5 @@
 #include "Tree.h"
+#include <algorithm>
 
 using namespace std;
 using namespace ReyEngine;
@@ -30,6 +31,9 @@ TreeItem *TreeItemContainer::push_back(const std::string& name) {
 TreeItem *TreeItemContainer::insertItem(size_t atIndex, std::unique_ptr<TreeItem> item) {
    _children.insert(_children.begin()+atIndex, std::move(item));
    auto retval = _children.at(atIndex).get();
+   retval->_parent = this;
+   retval->_tree = _tree;
+   retval->setGeneration(_generation+1);
    if (_tree) _tree->refresh();
    return retval;
 }
@@ -51,78 +55,136 @@ std::unique_ptr<TreeItem> TreeItem::takeItem(size_t index){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Tree::refresh(){
-   order.clear();
-   int i=0;
-   std::function<void(TreeItem*)> pushToVector = [&](TreeItem* item){
-      order.push_back(item);
-      item->index = i++;
-      for (auto& child : item->_children){
-         pushToVector(child.get());
+void Tree::_init() {
+   //vertical scrollbar: a child Slider living in a right-edge gutter (positioned in
+   //updateScrollLayout). Dragging it sets the scroll offset.
+   _vScrollBar = make_child<Slider>(getNode(), std::string("__tree_vbar"), Slider::SliderType::VERTICAL);
+   _vScrollBar->setVisible(false); //hidden until updateScrollLayout decides content overflows
+   subscribe<Slider::EventSliderValueChanged>(_vScrollBar, [this](const auto& e){
+      _scroll.setOffsetY((float)e.value, /*fromBar*/true); //user drag -> offset, don't write back to the bar
+   });
+   _scroll.attachVBar(_vScrollBar);
+   updateScrollLayout();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Tree::arrangeChildren() {
+   //the base layout would stretch the scrollbar over the whole tree; the gutter is the
+   //only child placement the tree wants, so arranging IS updating the scroll layout.
+   //a resize also changes how many rows fit and how wide each row's click region is
+   _windowDirty = true;
+   updateScrollLayout();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Tree::updateScrollLayout() {
+   if (_vScrollBar) {
+      //the bar is layout-locked (isLocked), so place it via layoutApplyRect, not setRect
+      Rect<float> barRect = {getWidth() - SCROLLBAR_WIDTH, 0, SCROLLBAR_WIDTH, getHeight()};
+      layoutApplyRect(_vScrollBar.get(), barRect);
+   }
+   _scroll.layout(contentHeight(), getHeight()); //clamps offset + syncs bar range/page/visibility
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Tree::ensureRowVisible(size_t visibleRowIndex) {
+   updateScrollLayout(); //limits must reflect the latest content before we test the row
+   float top = visibleRowIndex * rowHeight();
+   _scroll.ensureVisibleY(top, top + rowHeight());
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Tree::ensureItemVisible(TreeItem* item) {
+   ensureFresh();
+   for (size_t row = 0; row < _visibleRows.size(); row++){
+      if (_visibleRows.at(row) == item){
+         ensureRowVisible(row);
+         return;
       }
-   };
-   pushToVector(root.get());
-   determineVisible();
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Tree::refresh(){
+   //mutations are O(1): just mark dirty. The rebuild is coalesced into ensureFresh, so
+   //n back-to-back push_backs cost one rebuild instead of n.
+   _treeDirty = true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
-void Tree::determineVisible() {
-   //get any currently selected item
-   auto oldSelected = _selectedItem;
-   //count how many rows are visible/expanded
-   for (auto& item : _visibleItems){
-      delete item;
-   }
-   _visibleItems.clear();
-   std::function<void(TreeItem*)> pushVisible = [&](TreeItem* item){
-      //root item must not be hidden, otherwise if this item isn't root, then it's parent must be expanded
-      if ((item->isRoot && !_hideRoot) || (!item->isRoot)){
-         _visibleItems.push_back(new TreeItemImplDetails(item, _visibleItems.size()));
-      }
-      //set the rect that contains this item
-      Pos<float> startPos = {0, (float)(_visibleItems.size() - 1) * ROW_HEIGHT};
-      if (!_visibleItems.empty()) _visibleItems.back()->expansionIconClickRegion = {startPos, {getWidth(), ROW_HEIGHT}};
-      if (item->expanded) {
-         for (auto &child: item->_children) {
-            pushVisible(child.get());
-         }
+void Tree::ensureFresh() {
+   if (!_treeDirty) return;
+   _treeDirty = false; //clear first: measureContents below re-enters harmlessly
+   _windowDirty = true;
+   order.clear();
+   _visibleRows.clear();
+   int i=0;
+   //single pre-order walk: `order` gets every item, _visibleRows gets only rows reachable
+   //through expanded ancestors (minus a hidden root). Pointers only - the expensive
+   //per-row annotation happens in updateWindow, and only for rows near the viewport.
+   std::function<void(TreeItem*, bool)> flatten = [&](TreeItem* item, bool reachable){
+      order.push_back(item);
+      item->index = i++;
+      if (reachable && !(item->isRoot && _hideRoot)) _visibleRows.push_back(item);
+      for (auto& child : item->_children){
+         flatten(child.get(), reachable && item->expanded);
       }
    };
-   if (root) pushVisible(root.get());
+   if (root) flatten(root.get(), true);
 
-   //reselect selected items, if any
-   if (oldSelected){
-      bool found = false;
-      for (const auto& visibleItem : _visibleItems){
-         if (visibleItem->item == oldSelected.value()){
-            _selectedItem = visibleItem->item;
-            found = true;
-            break;
-         }
-      }
-      //if the selected item is gone, reset it
-      if (!found) _selectedItem.reset();
-   }
+   //drop the selection/hover if their items are no longer visible
+   auto stillVisible = [&](TreeItem* item){
+      return std::find(_visibleRows.begin(), _visibleRows.end(), item) != _visibleRows.end();
+   };
+   if (_selectedItem && !stillVisible(_selectedItem.value())) _selectedItem.reset();
+   if (_hoveredItem && !stillVisible(_hoveredItem.value())) _hoveredItem.reset();
 
    //make ourselves larger if we need to
    auto parent = getParentWidget();
    if (!parent || parent && !parent.value()->isLayout()){
       setSize(measureContents());
    }
+   updateScrollLayout(); //row count changed -> re-clamp scroll limits + refresh the bar
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Tree::updateWindow() {
+   ensureFresh();
+   //desired window: the rows intersecting the viewport, from the scroll offset
+   const float rh = rowHeight();
+   size_t firstRow = 0;
+   size_t rowCount = _visibleRows.size();
+   if (rh > 0){
+      firstRow = std::min((size_t)(_scroll.offsetY() / rh), _visibleRows.size());
+      rowCount = std::min((size_t)(getHeight() / rh) + 2, _visibleRows.size() - firstRow);
+   }
+   if (!_windowDirty && firstRow == _windowStart && rowCount == _windowDetails.size()) return;
+   _windowDirty = false;
+   _windowStart = firstRow;
+   _windowDetails.clear();
+   _windowDetails.reserve(rowCount);
+   for (size_t row = firstRow; row < firstRow + rowCount; row++){
+      _windowDetails.emplace_back(_visibleRows.at(row), (int)row);
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Tree::render2D(RenderContext&) const{
+   //lazy cache fill from the const render path (the engine doesn't guarantee _process):
+   //flush any pending structural rebuild + window move before reading row state
+   const_cast<Tree*>(this)->updateWindow();
    // draw the items
    auto& font = theme->font;
-   auto pos = Pos<float>(0,-ROW_HEIGHT);
-   size_t currentRow = 0;
-   for (auto it = _visibleItems.begin(); it != _visibleItems.end(); it++) {
-      auto& itemMeta = *it;
-      auto& item = itemMeta->item;
-      pos += Pos<float>(0, theme->font->size);
+   const float rh = rowHeight();
+   const float offsetY = _scroll.offsetY();
+   //clip rows to the area left of the scrollbar gutter (inset when the bar shows)
+   ScopeScissor scissor(getGlobalTransform(), Rect<float>(0, 0, viewportWidth(), getHeight()));
+   for (const auto& itemMeta : _windowDetails) {
+      auto& item = itemMeta.item;
+      Pos<float> pos = {0, itemMeta.visibleRowIndex * rh - offsetY};
+      if (pos.y >= getHeight()) break; //below the viewport
 
       if (_allowHighlight) {
          //highlight the hovered row
@@ -130,10 +192,10 @@ void Tree::render2D(RenderContext&) const{
          if (_selectedItem && _selectedItem.value() == item) {
             //highlight the selected row
             highlightColor = Colors::blue;
-         } else if (_hoveredImplDetails && _hoveredImplDetails.value()->visibleRowIndex == currentRow) {
+         } else if (_hoveredItem && _hoveredItem.value() == item) {
             highlightColor = Colors::gray;
          }
-         if (highlightColor) drawRectangle({pos, {getWidth(), theme->font->size}}, highlightColor.value());
+         if (highlightColor) drawRectangle({pos, {viewportWidth(), rh}}, highlightColor.value());
       }
 
       auto enabledColor = font->color;
@@ -141,16 +203,16 @@ void Tree::render2D(RenderContext&) const{
       if (!item->_enabled) {
          font->color = disabledColor;
       }
-      drawText(itemMeta->expansionRegionText + item->getText(), pos, font);
+      drawText(itemMeta.expansionRegionText + item->getText(), pos, font);
       if (!item->_enabled) {
          font->color = enabledColor;
       }
-      currentRow++;
    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Handled Tree::_unhandled_input(const InputEvent& event) {
+   ensureFresh(); //input reads row state; flush any pending structural rebuild first
    switch (event.eventId){
       case InputEventKey::ID:{
          //up and down selection navigation
@@ -169,12 +231,22 @@ Handled Tree::_unhandled_input(const InputEvent& event) {
             //bounds check
             if (increment < 0 && value > 0 || //incr up
                 increment > 0 && value < std::numeric_limits<size_t>::max() &&
-                value < _visibleItems.size() - 1) //incr down
+                value < _visibleRows.size() - 1) //incr down
             {
                //do incr
                setSelectedIndex(value + increment);
+               ensureRowVisible(value + increment); //keep the selection in view when navigating
                return this;
             }
+         }
+         break;}
+      case InputEventMouseWheel::ID:{
+         auto isMouse = event.isMouse();
+         if (isMouse && isMouse.value()->isInside() && _scroll.needsVBar()) {
+            constexpr float WHEEL_SPEED = 30.0f; //pixels per wheel notch
+            const auto& wheelEvent = event.toEvent<InputEventMouseWheel>();
+            _scroll.scrollByY(-wheelEvent.wheelMove.y * WHEEL_SPEED);
+            return this;
          }
          break;}
        case InputEventMouseMotion::ID:
@@ -186,15 +258,18 @@ Handled Tree::_unhandled_input(const InputEvent& event) {
           //figure out which row the cursor is in
           auto implDetailsAt = getItemDetailsAt(localPos);
           if (implDetailsAt){
-             bool newImplDetails = _hoveredImplDetails != implDetailsAt;
-             _hoveredImplDetails = implDetailsAt;
+             //hover is keyed by item, not by details pointer: the details are transient
+             //(rebuilt whenever the window scrolls) but the item identity is stable.
+             auto& hoveredItem = implDetailsAt.value()->item;
+             bool newHover = _hoveredItem != std::optional<TreeItem*>(hoveredItem);
+             _hoveredItem = hoveredItem;
              //item hover event
-             if (newImplDetails) {
-                EventItemHovered itemHoverEvent(this, implDetailsAt.value()->item);
+             if (newHover) {
+                EventItemHovered itemHoverEvent(this, hoveredItem);
                 publish(itemHoverEvent);
              }
           } else {
-             _hoveredImplDetails.reset();
+             _hoveredItem.reset();
           }
 
           //mouse click
@@ -226,9 +301,11 @@ Handled Tree::_unhandled_input(const InputEvent& event) {
 
                 if (btnEvent.isDoubleClick && _lastClicked == itemAtClick){
                    if (!itemAtClick->_children.empty() && itemAtClick->getExpandable()){
-                      if (implDetailsAt.value()->expansionIconClickRegion.contains(localPos)) {
+                      //click regions are stored in content space; translate the local pos by the scroll offset
+                      if (implDetailsAt.value()->expansionIconClickRegion.contains(localPos + Pos<float>(0, _scroll.offsetY()))) {
                          itemAtClick->setExpanded(!itemAtClick->getExpanded());
-                         determineVisible();
+                         //invalidates implDetailsAt; everything below uses itemAtClick (a copy) instead
+                         refresh();
                       }
                    }
 
@@ -267,12 +344,15 @@ TreeItem* Tree::setRoot(const std::string& rootName) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 std::optional<Tree::TreeItemImplDetails*> Tree::getItemDetailsAt(const Pos<float>& localPos) {
-   auto rowHeight = theme->font->size;
-   int rowAt = (int)(localPos.y / rowHeight);
-   if (rowAt < _visibleItems.size()) {
-      return _visibleItems.at(rowAt);
-   }
-   return nullopt;
+   updateWindow(); //details are only materialized for the current window; make sure it's current
+   if (localPos.x >= viewportWidth()) return nullopt; //in the scrollbar gutter
+   auto contentY = localPos.y + _scroll.offsetY(); //translate viewport space -> content space
+   if (contentY < 0) return nullopt;
+   size_t rowAt = (size_t)(contentY / rowHeight());
+   if (rowAt >= _visibleRows.size()) return nullopt;
+   //the window spans the viewport, so an in-bounds hit is normally inside it
+   if (rowAt < _windowStart || rowAt - _windowStart >= _windowDetails.size()) return nullopt;
+   return &_windowDetails.at(rowAt - _windowStart);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -288,42 +368,45 @@ void TreeItem::setGeneration(size_t generation){
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 void Tree::setHighlighted(ReyEngine::TreeItem* highlighted, bool _publish) {
-   decltype(_hoveredImplDetails) oldHovered;
+   ensureFresh();
+   auto oldHovered = _hoveredItem;
    if (!highlighted){
-      _hoveredImplDetails.reset();
+      _hoveredItem.reset();
    } else {
-      for (auto &visible: _visibleItems) {
-         if (visible->item == highlighted) {
-            oldHovered = _hoveredImplDetails;
-            _hoveredImplDetails = visible;
+      for (auto& visible: _visibleRows) {
+         if (visible == highlighted) {
+            _hoveredItem = visible;
+            break;
          }
       }
    }
 
    if (_publish){
-      if (_hoveredImplDetails) {
-         publish(EventItemHovered(this, _hoveredImplDetails.value()->item));
+      if (_hoveredItem) {
+         publish(EventItemHovered(this, _hoveredItem.value()));
       } else if (oldHovered){
-         publish(EventItemDeselected(this, oldHovered.value()->item));
+         publish(EventItemDeselected(this, oldHovered.value()));
       }
    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 void Tree::setHighlightedIndex(size_t visibleItemIndex, bool _publish) {
-   if (visibleItemIndex >= _visibleItems.size()){
+   ensureFresh();
+   if (visibleItemIndex >= _visibleRows.size()){
       Logger::error() << getNode()->getScenePath() << " : Unable to set highlighted item at index " << visibleItemIndex << endl;
    } else {
-      setHighlighted(_visibleItems.at(visibleItemIndex)->item, _publish);
+      setHighlighted(_visibleRows.at(visibleItemIndex), _publish);
    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 void Tree::setSelected(ReyEngine::TreeItem* selectedItem, bool _publish) {
+   ensureFresh();
    bool valid = false;
    if (selectedItem) {
-      for (const auto &visibleItem: _visibleItems) {
-         if (selectedItem == visibleItem->item) {
+      for (const auto& visibleItem: _visibleRows) {
+         if (selectedItem == visibleItem) {
             valid = true;
             break;
          }
@@ -347,37 +430,37 @@ void Tree::setSelected(ReyEngine::TreeItem* selectedItem, bool _publish) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 void Tree::setSelectedIndex(size_t visibleItemIndex, bool publish){
-   if (visibleItemIndex >= _visibleItems.size()){
+   ensureFresh();
+   if (visibleItemIndex >= _visibleRows.size()){
       Logger::error() << getNode()->getScenePath() << " : Unable to set selected item at index " << visibleItemIndex << endl;
    } else {
-      setSelected(_visibleItems.at(visibleItemIndex)->item, publish);
+      setSelected(_visibleRows.at(visibleItemIndex), publish);
    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 Size<float> Tree::measureContents() {
+   //note: called from ensureFresh (which clears the dirty flag first, so this re-entry is a no-op)
+   ensureFresh();
    Size<float> retval;
-   int i =0;
-   for (const auto& item : _visibleItems){
-      auto itemSize = measureText(item->expansionRegionText + item->item->_text, theme->font);
+   for (const auto& item : _visibleRows){
+      auto itemSize = measureText(TreeItemImplDetails::buildExpansionText(item) + item->_text, theme->font);
       if (itemSize.x > retval.x){
          retval.x = itemSize.x;
       }
       retval.y += itemSize.y;
-      i++;
    }
    return retval;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 std::optional<size_t> Tree::getSelectedIndex() const {
+   const_cast<Tree*>(this)->ensureFresh(); //lazy rebuild from a const read path
    if (auto item = getSelected()){
-      int i=0;
-      for (const auto& visibleItem : _visibleItems){
-         if (visibleItem->item == item.value()){
+      for (size_t i = 0; i < _visibleRows.size(); i++){
+         if (_visibleRows.at(i) == item.value()){
             return i;
          }
-         i++;
       }
    }
    return {};

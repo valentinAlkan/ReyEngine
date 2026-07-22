@@ -6,56 +6,126 @@
 #include "MenuBar.h"
 #include "ScrollArea.h"
 #include "ColorPicker.h"
+#include "Tree.h"
 
 using namespace std;
 using namespace ReyEngine;
 
+//displays a single named color belonging to a theme
 class ThemeMember : public Widget {
-
+public:
+   REYENGINE_OBJECT(ThemeMember)
+   EVENT(EventSelected, 561234987003){}};
+   static constexpr float HEIGHT = 30;
+   ThemeMember(const std::string& text = "", ColorRGBA* color = nullptr)
+   : _text(text)
+   , _color(color)
+   {}
+   void setColorSource(const std::string& text, ColorRGBA* color){_text = text; _color = color;}
+   [[nodiscard]] std::string getText() const {return _text;}
+   [[nodiscard]] ColorRGBA* getColorSource() {return _color;}
+   void setSelected(bool selected){_selected = selected;}
+   [[nodiscard]] bool isSelected() const {return _selected;}
+protected:
+   Handled _unhandled_input(const InputEvent& e) override {
+      if (auto mouseEvent = e.isMouse()){
+         if (e.isEvent<InputEventMouseButton>()){
+            auto& btnEvent = e.toEvent<InputEventMouseButton>();
+            if (btnEvent.isDown && btnEvent.button == InputInterface::MouseButton::LEFT && mouseEvent.value()->isInside()){
+               EventSelected event(this);
+               publish(event);
+               return this;
+            }
+         }
+      }
+      return nullptr; //everything else (including right clicks) falls through to the explorer
+   }
+   void render2D(RenderContext&) const override {
+      if (!_color) return;
+      drawRectangle(getSizeRect(), *_color);
+      drawText(_text, {0, 0}, theme->font, _color->getReadableTextColor(), theme->font->size, theme->font->spacing);
+      if (_selected) drawRectangleLines(getSizeRect(), 3, Colors::red);
+   }
+private:
+   std::string _text;
+   ColorRGBA* _color = nullptr; //points into the theme, so edits to the theme show up live
+   bool _selected = false;
 };
 
 class ThemeExplorer : public Widget {
-   std::array<std::tuple<Rect<float>, std::string, ColorRGBA>, 20> _rects;
+public:
+   REYENGINE_OBJECT(ThemeExplorer)
+   EVENT_ARGS(EventSelectionChanged, 561234987004, const std::shared_ptr<ThemeMember>& member)
+   , member(member)
+   {}
+      const std::shared_ptr<ThemeMember> member; //null when the selection was cleared
+   };
+   [[nodiscard]] std::shared_ptr<ThemeMember> getSelected() const {return _selectedMember;}
+protected:
+   void _init() override {
+      const std::pair<const char*, ColorRGBA*> members[] = {
+         {"Background: colorPrimary",   &theme->background.colorPrimary},
+         {"Background: colorSecondary", &theme->background.colorSecondary},
+         {"Background: colorTertiary",  &theme->background.colorTertiary},
+         {"Background: colorHighlight", &theme->background.colorHighlight},
+         {"Background: colorActive1",   &theme->background.colorActive1},
+         {"Background: colorActive2",   &theme->background.colorActive2},
+         {"Background: colorDisabled",  &theme->background.colorDisabled},
+         {"Foreground: colorPrimary",   &theme->foreground.colorPrimary},
+         {"Foreground: colorSecondary", &theme->foreground.colorSecondary},
+         {"Foreground: colorTertiary",  &theme->foreground.colorTertiary},
+         {"Foreground: colorHighlight", &theme->foreground.colorHighlight},
+         {"Foreground: colorActive1",   &theme->foreground.colorActive1},
+         {"Foreground: colorActive2",   &theme->foreground.colorActive2},
+         {"Foreground: colorDisabled",  &theme->foreground.colorDisabled},
+      };
+      int i = 0;
+      for (const auto& [text, color] : members){
+         auto member = make_child<ThemeMember>("themeMember" + std::to_string(i++), text, color);
+         subscribe<ThemeMember::EventSelected>(member, [this, member](const ThemeMember::EventSelected&){_select(member);});
+         _members.push_back(member);
+      }
+      _layoutMembers();
+      //size ourselves to our content so the enclosing scroll area can scroll it
+      setMinHeight(_members.size() * (ThemeMember::HEIGHT + RECT_GAP));
+      //track the scroll area's width (the scroll area does not size its content - our height stays our own)
+      setAnchoring(Anchor::TOP_WIDTH);
+   }
    void _on_rect_changed() override {
       if (!_has_inited) return;
-      constexpr float RECT_GAP = 2.0;
-      Rect<float> lastRect = {};
-      for (auto& [rect, text, color] : _rects){
-         rect.setPos(lastRect.bottomLeft() + Pos<float>(0, RECT_GAP));
-         rect.setWidth(getWidth());
-         rect.setHeight(30);
-         lastRect = rect;
-      }
-
-      auto setPairs = [&](int index, auto text, auto color){
-         get<1>(_rects.at(index)) = text;
-         get<2>(_rects.at(index)) = color;
-      };
-      setPairs(0, "Background: colorPrimary", theme->background.colorPrimary);
-      setPairs(1, "Background: colorSecondary", theme->background.colorSecondary);
-      setPairs(2, "Background: colorTertiary", theme->background.colorTertiary);
-      setPairs(3, "Background: colorHighlight", theme->background.colorHighlight);
-      setPairs(4, "Background: colorActive1", theme->background.colorActive1);
-      setPairs(5, "Background: colorActive2", theme->background.colorActive2);
-      setPairs(6, "Background: colorDisabled", theme->background.colorDisabled);
-      setPairs(7, "Background: colorEmphasis", theme->background.colorEmphasis);
-
-      setPairs(7, "Foreground: colorPrimary", theme->foreground.colorPrimary);
-      setPairs(8, "Foreground: colorSecondary", theme->foreground.colorSecondary);
-      setPairs(9, "Foreground: colorTertiary", theme->foreground.colorTertiary);
-      setPairs(10, "Foreground: colorHighlight", theme->foreground.colorHighlight);
-      setPairs(11, "Foreground: colorActive1", theme->foreground.colorActive1);
-      setPairs(12, "Foreground: colorActive2", theme->foreground.colorActive2);
-      setPairs(13, "Foreground: colorDisabled", theme->foreground.colorDisabled);
-      setPairs(14, "Foreground: colorEmphasis", theme->foreground.colorEmphasis);
+      _layoutMembers();
    }
-
-   void render2D(RenderContext&) const override {
-      for (const auto& [rect, text, color] : _rects){
-         drawRectangle(rect, color);
-         drawText(text, rect.topLeft(), theme->font, color.getReadableTextColor(), theme->font->size, theme->font->spacing);
+   Handled _unhandled_input(const InputEvent& e) override {
+      //right clicking anywhere on the explorer clears the selection
+      if (auto mouseEvent = e.isMouse()){
+         if (e.isEvent<InputEventMouseButton>()){
+            auto& btnEvent = e.toEvent<InputEventMouseButton>();
+            if (btnEvent.isDown && btnEvent.button == InputInterface::MouseButton::RIGHT && mouseEvent.value()->isInside()){
+               _select(nullptr);
+               return this;
+            }
+         }
+      }
+      return nullptr;
+   }
+private:
+   void _select(const std::shared_ptr<ThemeMember>& member){
+      if (_selectedMember) _selectedMember->setSelected(false);
+      _selectedMember = member;
+      if (_selectedMember) _selectedMember->setSelected(true);
+      EventSelectionChanged event(this, _selectedMember);
+      publish(event);
+   }
+   std::shared_ptr<ThemeMember> _selectedMember;
+   static constexpr float RECT_GAP = 2.0;
+   void _layoutMembers(){
+      float y = 0;
+      for (auto& member : _members){
+         member->setRect(0, y, getWidth(), ThemeMember::HEIGHT);
+         y += ThemeMember::HEIGHT + RECT_GAP;
       }
    }
+   std::vector<std::shared_ptr<ThemeMember>> _members;
 };
 
 int main() {
@@ -104,6 +174,49 @@ int main() {
       lineEdit->setEnabled(e.button().getDown());
    };
    lineEdit->subscribe<CheckBox::ButtonToggleEvent>(checkbox, cbLineEditDisabled);
+
+   //selecting a theme member loads its color into the color picker (without publishing,
+   // so loading a color doesn't immediately write it back)
+   colorPicker->subscribe<ThemeExplorer::EventSelectionChanged>(themeExplorer, [colorPicker](const ThemeExplorer::EventSelectionChanged& e){
+      if (e.member && e.member->getColorSource()){
+         colorPicker->setColor(*e.member->getColorSource(), false);
+      }
+   });
+   //changing the color in the picker writes through to the selected style role's color,
+   // which every widget sharing the theme reflects on the next frame
+   themeExplorer->subscribe<ColorPicker::EventColorChanged>(colorPicker, [themeExplorer](const ColorPicker::EventColorChanged& e){
+      if (auto selected = themeExplorer->getSelected()){
+         if (auto color = selected->getColorSource()){
+            *color = e.color;
+         }
+      }
+   });
+
+
+   auto nowSteady = [](){return std::chrono::steady_clock::now();};
+
+   //tree test
+   auto populate = vlayoutr->make_child<PushButton>("populate");
+   populate->setMaxHeight(30);
+   constexpr size_t ITEM_COUNT = 100000;
+   auto treeTest = vlayoutr->make_child<Tree>("scrollARea");
+   auto treeRoot = treeTest->setRoot(Tree::createItem("root"));
+
+   auto work = [&](const auto& e) {
+      for (int i=0; i<ITEM_COUNT; i++) {
+         auto start = nowSteady();
+         auto txt = "item" + to_string(i);
+         {
+            auto item = Tree::createItem(txt);
+            treeRoot->push_back(std::move(item));
+         }
+         auto dt = nowSteady() - start;
+         // Logger::info() << "Adding item " << txt << " took "  << std::chrono::duration_cast<std::chrono::microseconds>(dt).count() << " us" << endl;
+      }
+   };
+
+   populate->subscribe<PushButton::ButtonPressEvent>(populate, work);
+
 
 
    //exec

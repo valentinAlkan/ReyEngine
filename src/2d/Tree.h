@@ -1,5 +1,6 @@
 #pragma once
 #include "Layout.h"
+#include "ScrollView.h"
 
 namespace ReyEngine{
    class Tree;
@@ -74,7 +75,6 @@ namespace ReyEngine{
 
    class Tree : public Layout {
    public:
-      static constexpr float ROW_HEIGHT = 20;
       REYENGINE_OBJECT(Tree)
       Tree()
       : Layout(Layout::LayoutDir::VERTICAL)
@@ -112,7 +112,7 @@ namespace ReyEngine{
          return std::unique_ptr<TreeItem>(new TreeItem(text, std::forward<Args>(args)...));
       }
       [[nodiscard]] std::optional<TreeItem*> getRoot() const {if (root) return root.get(); return {};}
-      void setHideRoot(bool hide){_hideRoot = hide; determineVisible();}
+      void setHideRoot(bool hide){_hideRoot = hide; refresh();}
       bool getHideRoot() const {return _hideRoot;}
       TreeItem* setRoot(std::unique_ptr<TreeItem>&& item);
       TreeItem* setRoot(const std::string& rootName);
@@ -124,11 +124,12 @@ namespace ReyEngine{
       [[nodiscard]] std::optional<size_t> getSelectedIndex() const;
       void setHighlighted(TreeItem*, bool publish=true);
       void setHighlightedIndex(size_t visibleItemIndex, bool publish=true); //sets highlighted by its CURRENTLY VISIBLE index (not internal raw index)
-      void clearHighlight(){_hoveredImplDetails.reset();}
+      void clearHighlight(){_hoveredItem.reset();}
       void setSelected(TreeItem* selectedItem, bool publish=true);
       void setSelectedIndex(size_t visibleItemIndex, bool publish=true); //sets selected by its CURRENTLY VISIBLE index (not internal raw index)
       void clearSelection(){_selectedItem.reset();}
       Size<float> measureContents(); // Measures how big the contents of the tree are, not how big the tree itself is. Used for sizing.
+      void ensureItemVisible(TreeItem* item); //scroll so the item's row sits inside the viewport. No-op if the item isn't currently visible (collapsed/absent).
       struct Iterator {
          using iterator_category = std::forward_iterator_tag;
          using difference_type   = std::ptrdiff_t;
@@ -158,41 +159,69 @@ namespace ReyEngine{
          size_t leafIndex = 1;
          TreeItem* root;
       };
-      Iterator begin() { return {root.get()}; }
+      Iterator begin() { ensureFresh(); return {root.get()}; } //iteration reads `order`, which is rebuilt lazily
       Iterator end()   { return {nullptr}; }
 
    protected:
 
-      //Stores extra details that the tree can use
+      //Stores extra details that the tree can use. Only materialized for rows in the scroll
+      //window - the rest of the tree exists as bare TreeItem pointers in _visibleRows.
       struct TreeItemImplDetails{
-         TreeItemImplDetails(TreeItem*& item, int visibleRowindex): item(item), visibleRowIndex(visibleRowindex){
+         static std::string buildExpansionText(TreeItem* item){
             char c = item->expandable && !item->_children.empty() ? (item->expanded ? '-' : '+') : ' ';
             long long generationOffset = item->_tree->_hideRoot ? -1 : 0;
-            expansionRegionText = c + std::string(generationOffset + item->_generation, c);
+            return c + std::string(generationOffset + item->_generation, c);
+         }
+         TreeItemImplDetails(TreeItem*& item, int visibleRowindex): item(item), visibleRowIndex(visibleRowindex){
+            expansionRegionText = buildExpansionText(item);
+            //content space - unaffected by scrolling
+            expansionIconClickRegion = {{0, visibleRowindex * item->_tree->rowHeight()}, {item->_tree->getWidth(), item->_tree->rowHeight()}};
          }
          ReyEngine::Rect<float> expansionIconClickRegion; //where we can click to determine if an item should be "expanded" or not;
          std::string expansionRegionText;
          TreeItem* item;
-         const int visibleRowIndex = -1;
+         int visibleRowIndex = -1; //non-const: details live by value in the window vector
       };
 
-      void refresh();
-      void determineVisible();
+      void refresh(); //marks the tree dirty; the actual rebuild is coalesced into ensureFresh()
+      void _init() override;
       void render2D(RenderContext&) const override;
+      //the tree renders its rows itself; its only widget child is the scrollbar, which lives
+      //in a right-edge gutter instead of being arranged by the base layout.
+      void arrangeChildren() override;
       Handled _unhandled_input(const InputEvent&) override;
       void _on_mouse_enter() override {}
-      void _on_mouse_exit() override { _hoveredImplDetails.reset();}
-      std::optional<TreeItemImplDetails*> getItemDetailsAt(const Pos<float>& localPos);
+      void _on_mouse_exit() override { _hoveredItem.reset();}
+      std::optional<TreeItemImplDetails*> getItemDetailsAt(const Pos<float>& localPos); //returned pointer is transient: invalidated by the next window rebuild
    private:
+      void ensureFresh();  //rebuild order/_visibleRows if a mutation marked the tree dirty. O(1) when clean.
+      void updateWindow(); //(re)annotate the rows in/near the viewport if the window moved or the tree changed
+      //single source of truth for row height: rendering, hit-testing, and click regions must all agree
+      [[nodiscard]] float rowHeight() const {return theme->font->size;}
+      [[nodiscard]] float contentHeight() const {return _visibleRows.size() * rowHeight();}
+      [[nodiscard]] float viewportWidth() const {return getWidth() - (_scroll.needsVBar() ? SCROLLBAR_WIDTH : 0.0f);} //width minus the gutter when the bar shows
+      void updateScrollLayout(); //refresh scroll limits + bar rect from current content/viewport
+      void ensureRowVisible(size_t visibleRowIndex);
       bool _allowSelect = false;
       bool _allowHighlight = true;
       std::unique_ptr<TreeItem> root;
       std::vector<TreeItem*> order; //a full accounting of the tree's contents, used by the iterator.
-      std::vector<TreeItemImplDetails*> _visibleItems; //a
+      std::vector<TreeItem*> _visibleRows; //every visible (expanded-ancestor) row, top to bottom. Cheap pointers only.
+      //the expensive per-row annotations, materialized only for rows [_windowStart, _windowStart + _windowDetails.size())
+      std::vector<TreeItemImplDetails> _windowDetails;
+      size_t _windowStart = 0;
+      bool _treeDirty = true;   //a mutation invalidated order/_visibleRows; rebuilt on next read
+      bool _windowDirty = true; //_windowDetails needs a rebuild even if the window didn't move
       bool _hideRoot = false; //if true, the root is hidden and we can appear as a "flat" tree.
-      std::optional<TreeItemImplDetails*> _hoveredImplDetails;
+      std::optional<TreeItem*> _hoveredItem;
       std::optional<TreeItem*> _lastClicked;
       std::optional<TreeItem*> _selectedItem;
+
+      // vertical scrolling. _scroll owns the offset/limits and keeps _vScrollBar in sync;
+      // the tree offsets its own row drawing and translates input by _scroll.offsetY().
+      ScrollView _scroll;
+      std::shared_ptr<Slider> _vScrollBar;
+      static constexpr float SCROLLBAR_WIDTH = 14.0f;
 
       friend class TreeItem;
       friend class TreeItemContainer;
