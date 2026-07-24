@@ -264,7 +264,17 @@ namespace ReyEngine{
       PUBLISH_PASS_PROCESS,
       PUBLISH_PROCESS_PASS,
    };
-
+   enum class ModifierKey {
+      CTL_EITHER,
+      CTL_LEFT,
+      CTL_RIGHT,
+      SHIFT_EITHER,
+      SHIFT_LEFT,
+      SHIFT_RIGHT,
+      ALT_EITHER,
+      ALT_LEFT,
+      ALT_RIGHT
+   };
    class InputManager
    {
    public:
@@ -281,10 +291,45 @@ namespace ReyEngine{
       static inline bool isKeyDown(InputInterface::KeyCode key){return InputInterface::isKeyDown(key);}
       static inline bool isKeyUp(InputInterface::KeyCode key){return InputInterface::isKeyUp(key);}
       static inline void setExitKey(InputInterface::KeyCode key){return InputInterface::setExitKey(key);}
-      static inline bool isShiftKeyDown(){return InputInterface::isKeyDown(InputInterface::KeyCode::KEY_LEFT_SHIFT) || InputInterface::isKeyDown(InputInterface::KeyCode::KEY_RIGHT_SHIFT);}
       static inline InputInterface::KeyCode getLastKeyPressed(){return instance()._lastKey;}
       static inline WindowSpace<Pos<float>> getMousePos(){return InputInterface::getMousePos();}
       static inline Vec2<float> getMouseDelta(){return InputInterface::getMouseDelta();}
+      static inline bool isModifierDown(ModifierKey modifier){
+         switch (modifier){
+            case ModifierKey::CTL_EITHER:
+               return InputInterface::isKeyDown(InputInterface::KeyCode::KEY_LEFT_CONTROL) || InputInterface::isKeyDown(InputInterface::KeyCode::KEY_RIGHT_CONTROL);
+            case ModifierKey::CTL_LEFT:
+               return InputInterface::isKeyDown(InputInterface::KeyCode::KEY_LEFT_CONTROL);
+            case ModifierKey::CTL_RIGHT:
+               return InputInterface::isKeyDown(InputInterface::KeyCode::KEY_RIGHT_CONTROL);
+            case ModifierKey::ALT_EITHER:
+               return InputInterface::isKeyDown(InputInterface::KeyCode::KEY_LEFT_ALT) || InputInterface::isKeyDown(InputInterface::KeyCode::KEY_RIGHT_ALT);
+            case ModifierKey::ALT_LEFT:
+               return InputInterface::isKeyDown(InputInterface::KeyCode::KEY_LEFT_ALT);
+            case ModifierKey::ALT_RIGHT:
+               return InputInterface::isKeyDown(InputInterface::KeyCode::KEY_RIGHT_ALT);
+            case ModifierKey::SHIFT_EITHER:
+               return InputInterface::isKeyDown(InputInterface::KeyCode::KEY_LEFT_SHIFT) || InputInterface::isKeyDown(InputInterface::KeyCode::KEY_RIGHT_SHIFT);
+            case ModifierKey::SHIFT_LEFT:
+               return isKeyDown(InputInterface::KeyCode::KEY_LEFT_SHIFT);
+            case ModifierKey::SHIFT_RIGHT:
+               return isKeyDown(InputInterface::KeyCode::KEY_RIGHT_SHIFT);
+         }
+         throw std::runtime_error("Unhandled modifier");
+      }
+
+      static inline bool isModifierUp(ModifierKey modifier){
+         switch (modifier) {
+            case ModifierKey::CTL_EITHER:
+               return isKeyUp(InputInterface::KeyCode::KEY_LEFT_CONTROL) || InputInterface::isKeyUp(InputInterface::KeyCode::KEY_RIGHT_CONTROL);
+            case ModifierKey::ALT_EITHER:
+               return isKeyUp(InputInterface::KeyCode::KEY_LEFT_ALT) || InputInterface::isKeyUp(InputInterface::KeyCode::KEY_RIGHT_ALT);
+            case ModifierKey::SHIFT_EITHER:
+               return isKeyUp(InputInterface::KeyCode::KEY_LEFT_SHIFT) || InputInterface::isKeyUp(InputInterface::KeyCode::KEY_RIGHT_SHIFT);
+            default:
+               return !isModifierDown(modifier);
+         }
+      }
    protected:
       static inline bool isKeyPressed(InputInterface::KeyCode key){return InputInterface::isKeyPressed(key);}
       static inline bool isKeyReleased(InputInterface::KeyCode key){return InputInterface::isKeyReleased(key);}

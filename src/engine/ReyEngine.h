@@ -2028,6 +2028,7 @@ namespace ReyEngine {
       constexpr inline ColorRGBA& operator=(const Color& rhs){r = rhs.r; g=rhs.g; b=rhs.b; a=rhs.a; return *this;}
       constexpr inline operator Color() const {return {r, g, b, a};}
       void dim(Fraction p){a = (float)a * Fraction(p).get();}
+      [[nodiscard]] ColorRGBA dim(Fraction p) const {auto retval = *this; retval.dim(p); return retval;}
       static ColorRGBA random(int alpha = -1){
          auto retval = ColorRGBA(std::rand() % 255, std::rand() % 256, std::rand() % 256, alpha >= 0 ? alpha % 256 : std::rand() % 256);
          return retval;
@@ -2612,7 +2613,6 @@ namespace InputInterface {
       KEY_VOLUME_DOWN = 25        // Key: Android volume down button
    };
 
-//   using KeyCode = KeyCode;
    enum class MouseButton {
       NONE = -1,
       LEFT = MOUSE_BUTTON_LEFT,
@@ -2651,7 +2651,6 @@ namespace InputInterface {
 
    inline float getMouseWheelMove(){return GetMouseWheelMove();} //returns largest of x or y
    inline ReyEngine::Vec2<R_FLOAT> getMouseWheelMoveV(){return GetMouseWheelMoveV();} //returns both x and y
-
    inline bool isKeyPressed(KeyCode key){return IsKeyPressed((int)key);}
    inline bool isKeyDown(KeyCode key){return IsKeyDown((int)key);}
    inline bool isKeyReleased(KeyCode key){return IsKeyReleased((int)key);}

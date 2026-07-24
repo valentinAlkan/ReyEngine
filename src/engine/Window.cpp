@@ -19,7 +19,7 @@ constexpr bool PRINT_TOOLTIP_CANCEL = false;
 constexpr bool PRINT_WHEEL = false;
 constexpr bool PRINT_CHAR = false;
 constexpr bool PRINT_KEYUP = false;
-constexpr bool PRINT_KEYDOWN = false;
+constexpr bool PRINT_KEYDOWN = true;
 constexpr bool PRINT_KEYREPEAT = false;
 
 constexpr std::chrono::milliseconds TOOLTIP_DELAY = 500ms;

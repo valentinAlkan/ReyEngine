@@ -153,7 +153,7 @@ void Canvas::renderProcess(RenderContext& renderContext) {
    //finally, draw tooltip
    if (auto toolTip = getToolTip()){
       auto windowPos = InputManager::getMousePos();
-      auto localPos = windowToLocalPos(windowPos);
+      auto localPos = Pos<float>(getGlobalTransform(false).get().inverse().transform(windowPos.get()));
       auto toolTipText = toolTip->getToolTipText();
       auto textSize = measureText(toolTipText, theme->font);
       static constexpr float embiggenness = 4;
