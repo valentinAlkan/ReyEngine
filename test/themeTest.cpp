@@ -199,7 +199,7 @@ int main() {
    auto populate = vlayoutr->make_child<PushButton>("populate");
    populate->setMaxHeight(30);
    constexpr size_t ITEM_COUNT = 100000;
-   auto treeTest = vlayoutr->make_child<Tree>("scrollARea");
+   auto treeTest = vlayoutr->make_child<Tree>("tree");
    auto treeRoot = treeTest->setRoot(Tree::createItem("root"));
 
    auto work = [&](const auto& e) {
