@@ -36,8 +36,9 @@ namespace ReyEngine::FileSystem {
       Path(const Path& other) : _path(other._path), _pathType(other._pathType) {}
       Path(Path&& other) noexcept : _path(std::move(other._path)), _pathType(other._pathType) {}
       [[nodiscard]] bool exists() const {return std::filesystem::exists(_path);};
-      [[nodiscard]] std::string tail() const {return _path.filename().string();}
-      [[nodiscard]] std::string head() const {if (_path.has_parent_path())return _path.parent_path().string(); return {FILESYSTEM_PATH_SEP, 1};}
+      [[nodiscard]] std::string head() const {if (_path.has_parent_path())return _path.parent_path().string(); return {FILESYSTEM_PATH_SEP, 1};} //python-like : returns path up to parent dir as a string
+      [[nodiscard]] std::string tail() const {return _path.filename().string();} //python-like : returns filename and ext as a string
+      [[nodiscard]] std::pair<std::string, std::string> headAndTail() const {return {head(), tail()};}
       [[nodiscard]] File toFile() const;
       [[nodiscard]] Directory toDir() const;
       [[nodiscard]] std::string abs() const {return std::filesystem::absolute(_path).string();}
@@ -47,6 +48,8 @@ namespace ReyEngine::FileSystem {
       [[nodiscard]] bool isDirectory() const {return _pathType == DIRECTORY;}
       [[nodiscard]] PathType getPathType() const {return _pathType;}
       [[nodiscard]] std::optional<Directory> getParentDirectory() const;
+      void erase(EraseType eraseType);
+      void move(const Path& newPath, bool allowOverwrite=false);
 
       inline Path& operator/=(const Path& rhs) {_path /= rhs._path; parsePath(); return *this;}
       inline Path& operator/=(const char* rhs) {_path /= rhs; parsePath(); return *this;}
@@ -62,7 +65,16 @@ namespace ReyEngine::FileSystem {
       inline Path& operator=(const std::string& rhs){*this = rhs.c_str(); parsePath(); return *this;}
       inline Path& operator=(const char* rhs){_path.clear(); _path = rhs; parsePath(); return *this;}
       inline Path& operator=(const Path& rhs){_path.clear(); _path = rhs._path; parsePath(); return *this;}
-      inline Path& operator=(Path&& rhs) noexcept {if (this != &rhs) {_path = std::move(rhs._path);_pathType = rhs._pathType;}return *this;}
+      inline Path& operator=(Path&& rhs) noexcept {
+         if (this != &rhs) {
+            _path = std::move(rhs._path);
+            if (_pathType == EMPTY) {
+               //don't allow changing path type unless there isn't one yet
+               _pathType = rhs._pathType;
+            }
+         }
+         return *this;
+      }
       inline Path& operator=(const std::filesystem::path& rhs){_path.clear(); _path = rhs; parsePath(); return *this;}
       inline bool operator==(const std::string& rhs) const {return _path == rhs;}
       inline bool operator==(const Path& rhs) const {return _path == rhs._path;}
@@ -82,7 +94,6 @@ namespace ReyEngine::FileSystem {
    protected:
       void create(bool createParent=false);
       bool createIfNotExist(bool createParent=false); //returns true if the folder was created, false if it already existed
-      void erase(EraseType eraseType);
       void overwrite(bool createParent=false);
       void parsePath();
       std::filesystem::path _path;
@@ -97,10 +108,11 @@ namespace ReyEngine::FileSystem {
       using Path::overwrite;
       using Path::create;
       // A path to a disk. Cannot read from.
-      File() = default;
+      File(){_pathType = REGULAR_FILE;}
       File(const File& other) = default;
       File(File&& other) = default;
       File(const char* other): Path(other){_pathType = REGULAR_FILE;}
+      File(const std::string& other): Path(other){_pathType = REGULAR_FILE;}
       File(const Path& other): Path(other){_pathType = REGULAR_FILE;}
       File(Path&& other): Path(std::move(other)){_pathType = REGULAR_FILE;}
 
@@ -225,7 +237,7 @@ namespace ReyEngine::FileSystem {
       using Path::createIfNotExist;
       using Path::overwrite;
       using Path::create;
-      Directory()= default;
+      Directory(){_pathType = DIRECTORY;}
       Directory(const Path& other): Path(other){_pathType = DIRECTORY;}
       Directory(const std::string& other): Path(other){_pathType = DIRECTORY;}
       Directory(const char* other): Path(other){_pathType = DIRECTORY;}

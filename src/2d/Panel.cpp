@@ -166,32 +166,24 @@ Handled Panel::_unhandled_input(const ReyEngine::InputEvent& event) {
          auto &mbEvent = event.toEvent<InputEventMouseButton>();
          if (isInside(mbEvent.mouse.getLocalPos())){
             setFocused(true);
-         }
-         _closeDown = false;
-         // if (_dragState == DragState::NONE && !mbEvent.isDown && !mbEvent.mouse.isInside()){
-         //    hide();
-         //    return this;
-         // }
-         if (mbEvent.button != InputInterface::MouseButton::LEFT) break;
+            _closeDown = false; //only for how its drawn
+            if (mbEvent.button != InputInterface::MouseButton::LEFT) return this;
 
-         //close button click
-         if (_header.btnClose.contains(mbEvent.mouse.getLocalPos())){
-            if (mbEvent.isDown){
-               _closeDown = true;
-            } else {
-               setFocused(false);
-               hide();
+            //close button click
+            if (_header.btnClose.contains(mbEvent.mouse.getLocalPos())){
+               if (mbEvent.isDown){
+                  _closeDown = true;
+               } else {
+                  setFocused(false);
+                  hide();
+                  return this;
+               }
             }
+            return this;
+         } else if (isFocused()){
+            setFocused(false);
+            return this;
          }
-
-//         resizeStartRect = getRect();
-//         offset = mbEvent.mouse.getLocalPos() - getPos(); //record position
-
-//         if (!_isMinimized && _isResizable && _resizeDir == ResizeDir::NONE){
-//            //if we're resizing, stop here and return
-//            //see if we clicked in a resize region
-//            _resizeDir = getStretchDir();
-//         }
 
          //dragging logic
          if (_header.rect.contains(mbEvent.mouse.getLocalPos()) && !_closeDown && _isDragable) {

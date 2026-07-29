@@ -35,6 +35,7 @@ namespace ReyEngine{
          INVALID_ARGS = 1,
          INVALID_SCENE_FILE_FORMAT,
       };
+      using ExitCb = std::function<void(ExitReason)>;
       Application(Application const&)    = delete;
       void operator=(Application const&) = delete;
 
@@ -43,7 +44,11 @@ namespace ReyEngine{
       static size_t windowCount(){return instance()._windows.size();}
 
       static void exitError(std::string msg, ExitReason rsn){Logger::error() << msg << std::endl; ::exit((int)rsn);}
-      static void exit(ExitReason rsn){::exit((int)rsn);}
+      static void exit(ExitReason rsn){
+         for (const auto& cb : instance().onExitCBs) {
+            cb(rsn);
+         }
+      }
 
 //      static void registerForApplication2Ready(std::shared_ptr<Internal::Component>&); //somethings require initwindow to have been called - so we can let the Application2 know we want to be called when Application2 is ready.
 //      static void registerForApplication2Ready(std::function<void()>); //somethings require initwindow to have been called - so we can let the Application2 know we want to be called when Application2 is ready.
@@ -59,6 +64,7 @@ namespace ReyEngine{
          return dis(gen);
       };
       static long double secondsSinceInit();
+      static void addExitCallback(ExitCb cb){instance().onExitCBs.push_back(cb);} //not gauranteed to be called except on clean exit
    protected:
       Window& createWindow(Internal::WindowPrototype&, std::optional<std::shared_ptr<Canvas>>);
       static uint64_t getNewRid(){return ++instance().newRid;}
@@ -78,13 +84,9 @@ namespace ReyEngine{
       std::vector<Window*> _windows;
       uint64_t newRid;
       std::mutex _busy; //the main mutex that determines if the engine is busy or not
-//      std::vector<std::function<void()>> _Application2ReadyList; //list of widgets that want to be notified when the Application2 is fully initialized
-//      std::vector<std::function<void()>> _initListArbCallback; //list of arbitrary callbacks that serve the same purpose as the above
+      std::vector<std::function<void(ExitReason)>> onExitCBs; //call all these callbacks when we are beginning the process of a clean exit
+      ExitReason _exitReason;
 
-      //init list
-//      using InitPair = std::pair<std>, std::shared_ptr<Internal::Component>>;
-//      std::queue<InitPair> _initQueue;
-//      friend class Internal::Component;
       friend class Internal::WindowPrototype;
       friend class Window;
    };

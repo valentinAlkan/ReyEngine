@@ -357,13 +357,11 @@ vector<string> CrossPlatform::getRootFolders() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::string CrossPlatform::getEnvironmentVariable(const std::string& varName) {
-   const char* value = std::getenv(varName.c_str());
-   if (value == nullptr) {
-      return "";
-   } else {
+std::optional<std::string> CrossPlatform::getEnvironmentVariable(const std::string& varName) {
+   if (auto value = std::getenv(varName.c_str())){
       return value;
    }
+   return {};
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -453,8 +451,9 @@ CrossPlatform::ResourceDirLocation::ResourceDirLocation() {
       FileSystem::Directory dir;
    };
    Validator validator;
+   auto resDir = getEnvironmentVariable("REYENGINE_RESOURCE_DIR");
    auto dirs = {
-         getEnvironmentVariable("REYENGINE_RESOURCE_DIR"),
+         resDir ? resDir.value() : "",
          getUserLocalConfigDir() + RESOURCE_PATH,
          getUserDir() + RESOURCE_PATH,
    };

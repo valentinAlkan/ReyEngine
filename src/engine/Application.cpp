@@ -25,35 +25,6 @@ Window& Application::createWindow(Internal::WindowPrototype& prototype, std::opt
    return window;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
-//void Application2::registerForApplication2Ready(std::function<void()> fx) {
-//   if (!isReady()) {
-//      instance()._applicationReadyList.push_back(fx);
-//   }
-//}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-//void Application2::registerForApplication2Ready(std::function<void()> cb) {
-//   if (!isReady()) {
-//      instance()._initListArbCallback.push_back(cb);
-//   } else {
-//      cb();
-//   }
-//}
-
-///////////////////////////////////////////////////////////////////////////////////////////
-//void Application2::ready() {
-//   for (auto& component : instance()._applicationReadyList){
-//      component->_on_application_ready();
-//   }
-//   instance()._applicationReadyList.clear(); //done with this forever
-//   for (auto& cb : instance()._initListArbCallback){
-//      cb();
-//   }
-//   instance()._initListArbCallback.clear(); //done with this forever
-//   instance()._is_ready = true;
-//}
-
 ////////////////////////////////////////////////////////////////////////////////////////
 std::unique_lock<std::mutex> Application::getLock() {
    std::unique_lock<std::mutex> l(instance()._busy);

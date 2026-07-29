@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <optional>
 
 #if defined(_WIN32) || defined(_WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || defined(__WINDOWS__)
 #define PLATFORM_WINDOWS
@@ -120,9 +121,9 @@ namespace CrossPlatform{
    std::string getProjectResourceDir(); //get the PROJECT resources directory - sits next to the exe and is named 'resources' - this is where assets for your APPLICATION should go.
    std::string getReyEngineResourceDir(); //get the global engine resources directory - can be in many places, or passed in with REYENGINE_RESOURCE_DIR env - checks for system-wide installation
    std::string getFontsDir(); //get the resources/fonts directory
-   std::string getIconsDir(); //get the resources/fonts directory
+   std::string getIconsDir(); //get the resources/icons directory
    std::vector<std::string> getRootFolders(); //returns / for unix-like systems, a vector of drive letters in windows
 
-   std::string getEnvironmentVariable(const std::string& varName);
+   std::optional<std::string> getEnvironmentVariable(const std::string& varName);
    std::pair<std::stringstream, std::stringstream> execCmd(std::string_view); //returns stderr, stdout
 }

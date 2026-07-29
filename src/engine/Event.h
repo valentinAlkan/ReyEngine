@@ -196,23 +196,17 @@ namespace ReyEngine{
    public:
       template <typename T>
       void publish(const T& event){
-         static_assert(std::is_base_of_v<BaseEvent, T>); //compile time check
+         static_assert(std::is_base_of_v<BaseEvent, T>);
          auto _ev = _eventMap.find(event.eventId);
          if (_ev == _eventMap.end()){
-            //publisher doesn't have any events to publish
             return;
          }
-
-         //get the vector of subscriber event maps
          auto& subscribers = _ev->second;
-         for (auto it=subscribers.begin(); it!= subscribers.end(); /**/){
-            //set the subscriber
-            //call every callback WITH A MATCHING EVENT TYPE!
-            auto &handlers = it->second;
-            for (auto& fx: handlers) {
-               //make safe call w/ base
-               fx((BaseEvent&)event);
-               it++;
+
+         for (auto it = subscribers.begin(); it != subscribers.end(); ++it) {
+            auto& handlers = it->second;
+            for (auto& fx : handlers) {
+               fx(static_cast<const BaseEvent&>(event));
             }
          }
       }
@@ -243,7 +237,7 @@ namespace ReyEngine{
       void subscribe(EventPublisher* publisher, std::function<void(const T&)> typedEventHandler){
          static_assert(std::is_base_of_v<BaseEvent, T>);
          auto adapter = [typedEventHandler](const BaseEvent& baseEvent){
-            auto s = (T&)baseEvent;
+            const auto& s = static_cast<const T&>(baseEvent);
             typedEventHandler(s);
          };
          std::type_index tid = typeid(T);

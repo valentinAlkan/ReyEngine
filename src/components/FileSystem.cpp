@@ -34,7 +34,7 @@ void Path::erase(EraseType eraseType) {
          case CHAR_FILE:
          case FIFO:
          case SOCKET:
-            if (!std::filesystem::remove(_path, ec)) {
+            if (!std::filesystem::remove_all(_path, ec)) {
                if (ec) {
                   throw std::runtime_error("Failed to erase file " + str() + ": " + ec.message());
                }
@@ -106,6 +106,7 @@ void Path::create(bool createParent) {
          std::ofstream file(_path);
          if (!file) throw std::runtime_error("Failed to create file " + str() + ": " + std::strerror(errno));
          file.close();}
+         break;
       default:
          throw std::runtime_error(str() + " : Creation not supported for this path type!");
       }
@@ -214,6 +215,15 @@ std::optional<Directory> FileSystem::Path::getParentDirectory() const {
    }
    return {};
 }
+
+///////////////////////////////////////////////////////////////////////////////////////
+void Path::move(const Path& newPath, bool allowOverwrite) {
+   if (!allowOverwrite && newPath.exists()){
+      throw std::runtime_error("FileSystem Move Error: path exists and overwriting was not allowed : " + _path.string() + " + -> " + newPath.str());
+   }
+   std::filesystem::rename(_path, newPath._path);
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -387,6 +397,7 @@ void FileSystem::Directory::logfsError(Logger::Stream&& log, std::set<std::pair<
       log << "Filesystem error: " << error.first << ": (errno. " << error.second.value() << ") : " << error.second.message() << endl;
    }
 }
+
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -421,3 +432,4 @@ std::string string_tools::pathJoin(const std::vector<std::string>& v) {
 std::string string_tools::pathNormalize(const std::string& s) {
    return (pathJoin(pathSplit(s)));
 }
+///////////////////////////////////////////////////////////////////////////////////////

@@ -69,9 +69,9 @@ namespace ReyEngine {
          return foundY->second->getMetaData<T>(metaName);
       }
 
-      void addWidgetAs(const std::shared_ptr<Widget>& w){
-
-      }
+//      void addWidgetAs(const std::shared_ptr<Widget>& w){
+//
+//      }
       Handled _unhandled_input(const InputEvent&) override;
       void setRowCount(size_t rowCount) const {_view->_rowCount = rowCount; _view->_recalculate();}
       void setColumnCount(size_t columnCount) const {_view->_columnCount = columnCount; _view->_recalculate();}
