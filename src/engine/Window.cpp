@@ -310,9 +310,3 @@ void findCanvas(std::vector<Canvas*>& graph, TypeNode* thisNode) {
 void Window::_on_tree_updated() {
 
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-std::optional<std::unique_ptr<InputContext::Semaphore>> Window::makeInputContext(Widget* widget){
-   _inputContext = std::unique_ptr<InputContext>(new InputContext(widget));
-   return _inputContext->getSemaphore();
-}

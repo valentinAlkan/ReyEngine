@@ -116,7 +116,7 @@ namespace ReyEngine {
       bool _modal = false;
       std::string _tooltipText;
       bool _acceptsHover = true; //whether this will implicitly handle hover events
-      std::unique_ptr<InputContext::Semaphore> _inputContext; //only care if the destructor fires
+      // std::unique_ptr<InputContext::Semaphore> _inputContext; //only care if the destructor fires
       std::shared_ptr<Theme> theme;
    private:
       void __init() override;

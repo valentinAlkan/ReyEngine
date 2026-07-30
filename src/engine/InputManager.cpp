@@ -58,9 +58,3 @@ InputInterface::MouseButton InputManager::getMouseButtonReleased() {
    }
    return InputInterface::MouseButton::NONE;
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////
-Handled InputContext::handleInput(const ReyEngine::InputEvent &event) {
-   if (!_linked) return nullptr;
-   return _handler->processInput(event);
-}
