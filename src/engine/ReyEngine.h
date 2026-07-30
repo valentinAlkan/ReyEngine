@@ -5,6 +5,7 @@
 #include <cfloat>
 #include <string>
 #include <array>
+#include <vector>
 #include <iostream>
 #include "StringTools.h"
 #include "Logger.h"
@@ -1338,6 +1339,22 @@ namespace ReyEngine {
          return a.getBoundingRect(b);
       }
 
+      //return the overlapping portion of both rects. Empty (zero width and/or height) if they don't overlap.
+      [[nodiscard]] constexpr inline Rect intersection(const Rect& other) const {
+         auto _left = std::max(x, other.x);
+         auto _top = std::max(y, other.y);
+         auto _right = std::min(x + width, other.x + other.width);
+         auto _bottom = std::min(y + height, other.y + other.height);
+         //clamp to zero so non-overlapping rects produce an empty rect instead of a negative one
+         return Rect(_left, _top, std::max<T>(0, _right - _left), std::max<T>(0, _bottom - _top));
+      }
+
+      static constexpr inline Rect intersection(const Rect& a, const Rect& b) {
+         return a.intersection(b);
+      }
+
+      [[nodiscard]] constexpr inline bool empty() const {return width <= 0 || height <= 0;}
+
       //Subrects
       // A subrect is a smaller rectangle that makes up a part of a larger rectangle. Think spritesheets.
 
@@ -2299,6 +2316,78 @@ namespace ReyEngine {
       std::shared_ptr<ReyTexture> _tex;
    };
 
+   /// Scoped scissor (clipping) region, in framebuffer coordinates.
+   ///
+   /// These nest: raylib's EndScissorMode disables the scissor test outright rather than
+   /// restoring whatever region was active before, so a naive scope would un-clip its
+   /// parent on the way out. We keep a stack, intersect each new region with the one
+   /// below it, and re-apply the parent region on pop.
+   struct ScopeScissor {
+      inline explicit ScopeScissor(const Rect<R_FLOAT>& r)
+      : area(clipToParent(r))
+      {push();}
+      inline ScopeScissor(const CanvasSpace<Transform2D>& transform2D, const Rect<R_FLOAT>& r)
+      : area(clipToParent(transformedAABB(transform2D, r)))
+      {push();}
+      inline ~ScopeScissor(){pop();}
+      ScopeScissor(const ScopeScissor&) = delete;
+      ScopeScissor& operator=(const ScopeScissor&) = delete;
+      inline Rect<R_FLOAT> getRect() const {return area;}
+
+      /// Suspends the entire scissor stack for as long as it is alive.
+      /// Scissor regions are in framebuffer coordinates, so an outer region is meaningless
+      /// (and silently wrong) while a different render target is bound. Anything that swaps
+      /// framebuffers mid-render must hold one of these.
+      struct ScopeSuspend {
+         inline ScopeSuspend(){if (!stack().empty()) EndScissorMode();}
+         inline ~ScopeSuspend(){if (!stack().empty()) applyScissor(stack().back());}
+         ScopeSuspend(const ScopeSuspend&) = delete;
+         ScopeSuspend& operator=(const ScopeSuspend&) = delete;
+      };
+   private:
+      //the currently applied regions, innermost last. Already intersected, so back() is what's live.
+      static std::vector<Rect<R_FLOAT>>& stack(){
+         static std::vector<Rect<R_FLOAT>> _stack;
+         return _stack;
+      }
+      static void applyScissor(const Rect<R_FLOAT>& r){
+         BeginScissorMode((int)r.x, (int)r.y, (int)r.width, (int)r.height);
+      }
+      //a child can only ever shrink the visible region, never grow it back
+      static Rect<R_FLOAT> clipToParent(const Rect<R_FLOAT>& r){
+         return stack().empty() ? r : r.intersection(stack().back());
+      }
+      //scissor regions are axis-aligned, so a rotated/scaled rect becomes its bounding box
+      static Rect<R_FLOAT> transformedAABB(const CanvasSpace<Transform2D>& transform2D, const Rect<R_FLOAT>& r){
+         auto transformedCorners = r.transform(transform2D.get().matrix);
+
+         float minX = transformedCorners[0].x;
+         float maxX = transformedCorners[0].x;
+         float minY = transformedCorners[0].y;
+         float maxY = transformedCorners[0].y;
+
+         for(int i = 1; i < 4; i++) {
+            minX = std::min(minX, transformedCorners[i].x);
+            maxX = std::max(maxX, transformedCorners[i].x);
+            minY = std::min(minY, transformedCorners[i].y);
+            maxY = std::max(maxY, transformedCorners[i].y);
+         }
+
+         return {minX, minY, maxX - minX, maxY - minY};
+      }
+      void push(){
+         stack().push_back(area);
+         applyScissor(area);
+      }
+      void pop(){
+         stack().pop_back();
+         //restore the enclosing region, or turn clipping off entirely if we were outermost
+         if (stack().empty()) EndScissorMode();
+         else applyScissor(stack().back());
+      }
+      Rect<R_FLOAT> area;
+   };
+
    //Underlying RenderTexture2D is different from ReyTexture's underlying Texture2D. So these are not interchangeable.
    // Use this when you are drawing to a texture.
    class RenderContext;
@@ -2374,6 +2463,11 @@ namespace ReyEngine {
       private:
          RenderContext& _renderContext;
          Matrix matrixState;
+         //Scissor regions are framebuffer-relative, so any region set on the outgoing target
+         //would silently clip the incoming one. Relies on member ctor/dtor ordering: this is
+         //constructed (suspending) before the body unbinds the target, and destroyed
+         //(restoring) after the body has bound it again.
+         ScopeScissor::ScopeSuspend _suspend;
       };
 
       struct CameraContext {
@@ -2451,34 +2545,6 @@ namespace ReyEngine {
    bool Pos<T>::isInside(const Rect<T>& r) {
       return r.contains(*this);
    }
-
-   struct ScopeScissor {
-      inline ScopeScissor(const Rect<R_FLOAT>& r){area = r; doScissor();}
-      inline ScopeScissor(const CanvasSpace<Transform2D>& transform2D, const Rect<R_FLOAT>& r){
-         auto transformedCorners = r.transform(transform2D.get().matrix);
-
-         // Get the AABB of the transformed rectangle
-         float minX = transformedCorners[0].x;
-         float maxX = transformedCorners[0].x;
-         float minY = transformedCorners[0].y;
-         float maxY = transformedCorners[0].y;
-
-         for(int i = 1; i < 4; i++) {
-            minX = std::min(minX, transformedCorners[i].x);
-            maxX = std::max(maxX, transformedCorners[i].x);
-            minY = std::min(minY, transformedCorners[i].y);
-            maxY = std::max(maxY, transformedCorners[i].y);
-         }
-
-         area = {minX, minY, maxX - minX, maxY - minY};
-         doScissor();
-      }
-      inline ~ScopeScissor(){EndScissorMode();}
-      inline Rect<R_FLOAT> getRect() const {return area;}
-   private:
-      void doScissor(){BeginScissorMode((int)area.x, (int)area.y, (int)area.width, (int)area.height);}
-      Rect<R_FLOAT> area;
-   };
 
 //   constexpr auto v2_0 = Vec2<R_FLOAT>(0,1);
 //   constexpr auto v2_1 = Vec2<R_FLOAT>(0,1);
