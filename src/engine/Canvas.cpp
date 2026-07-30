@@ -90,6 +90,13 @@ void Canvas::doRender(RenderContext& context, Widget* widget, bool isModalRender
          widget->render2D(context);
          widget->render2DEnd(context);
       }
+      //Clip the child subtree if the widget asks for it. Scissor regions are in canvas
+      //(render target) space and are unaffected by the matrix stack, so the rect gets
+      //transformed explicitly rather than relying on context.push above.
+      std::optional<ScopeScissor> childClip;
+      if (auto clipRect = widget->getChildClipRect()) {
+         childClip.emplace(widget->getGlobalTransform(), clipRect.value());
+      }
       for (auto& child : widget->getChildrenAs<Widget>()) {
          doRender(context, child);
       }
@@ -103,6 +110,13 @@ void Canvas::doRenderModal(RenderContext& context, Widget* widget) {
    widget->render2DBegin(context);
    widget->render2D(context);
    widget->render2DEnd(context);
+   //Same child clipping as doRender, but a modal is drawn at its recorded transform rather
+   //than its position in the tree, so the clip region has to be derived from that instead
+   //of from getGlobalTransform().
+   std::optional<ScopeScissor> childClip;
+   if (auto clipRect = widget->getChildClipRect()) {
+      childClip.emplace(context.getModalTransform(), clipRect.value());
+   }
    for (auto& child : widget->getChildrenAs<Widget>()) {
       doRender(context, child, true);
    }

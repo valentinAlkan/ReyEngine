@@ -266,6 +266,9 @@ endif (UNIX)
 
 
 # Test Projects
+add_executable(ReyEngineThemeTest test/themeTest.cpp)
+target_link_libraries(ReyEngineThemeTest ReyEngine2D)
+
 if(REY_ENABLE_TESTS)
     message(STATUS "REY_ENABLE_TESTS is ON. Building ReyEngine tests")
     add_executable(ReyEngineThemeTest test/themeTest.cpp)
