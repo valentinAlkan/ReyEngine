@@ -24,11 +24,13 @@ public:
 
 class UIWidget : public Layout {
 public:
+    REYENGINE_OBJECT(UIWidget)
     UIWidget() : Layout(LayoutDir::VERTICAL) {
 
     }
     void _init() override {
-        auto hbox1 = make_child<HLayout>("hbox1");
+        auto hbox1 = make_child<HLayout>();
+        auto hbox2 = make_child<HLayout>();
     }
 };
 
@@ -171,10 +173,10 @@ int main(int argc, char** argv){
         }
     }
 
-    auto astarWidget = root->make_child<AStarWidget>("astar");
+    auto astarWidget = root->make_child<AStarWidget>();
     astarWidget->setAnchoring(Anchor::FILL);
 
-    auto ui = astarWidget->make_child<UIWidget>("ui");
+    auto ui = astarWidget->make_child<UIWidget>();
     ui->setAnchoring(Anchor::EVENT);
 
     auto on_anchor = [&](const Widget::EventAnchoring& e) {

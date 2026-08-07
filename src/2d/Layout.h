@@ -37,6 +37,6 @@ namespace ReyEngine{
       ColorRGBA DEBUG_COLOR;
    };
    //aliases.
-   class HLayout : public Layout{public: HLayout() : Layout(LayoutDir::HORIZONTAL){};};
-   class VLayout : public Layout{public: VLayout() : Layout(LayoutDir::VERTICAL){};};
+   class HLayout : public Layout{public: REYENGINE_OBJECT(HLayout) HLayout() : Layout(LayoutDir::HORIZONTAL){};};
+   class VLayout : public Layout{public: REYENGINE_OBJECT(VLayout) VLayout() : Layout(LayoutDir::VERTICAL){};};
 }

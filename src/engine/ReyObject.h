@@ -14,12 +14,13 @@ namespace ReyEngine{
    }
 
    //accept either TypeNode* directly, or assume it has a getNode() function that returns same
-   template<typename T, typename N, typename InstanceName, typename... Args>
-   std::shared_ptr<T> make_child(N parent, InstanceName&& instanceName, Args&&... args){
+   //instanceName defaults to the type's own name (T::TYPE_NAME) if not supplied
+   template<typename T, typename N, typename... Args>
+   std::shared_ptr<T> make_child(N parent, std::string_view instanceName = T::TYPE_NAME, Args&&... args){
       if constexpr (std::is_same_v<Internal::Tree::TypeNode*, N>) {
-         return Internal::Tree::_make_child<T>(parent, instanceName, std::forward<Args>(args)...);
+         return Internal::Tree::_make_child<T>(parent, std::string(instanceName), std::forward<Args>(args)...);
       } else {
-         return Internal::Tree::_make_child<T>(parent->getNode(), instanceName, std::forward<Args>(args)...);
+         return Internal::Tree::_make_child<T>(parent->getNode(), std::string(instanceName), std::forward<Args>(args)...);
       }
    }
 
@@ -62,21 +63,24 @@ namespace ReyEngine{
          [[nodiscard]] auto findChild(const std::string& searchTerm){return _node ? _node->findChild(searchTerm) : std::nullopt;}
 
          //create a child of this object - the parent is inferred to be this object's node
-         template<typename T, typename InstanceName, typename... Args>
-         requires std::is_convertible_v<InstanceName, std::string_view>
-         std::shared_ptr<T> make_child(InstanceName&& instanceName, Args&&... args){
+         //instanceName defaults to the type's own name (T::TYPE_NAME) if not supplied
+         template<typename T, typename... Args>
+         std::shared_ptr<T> make_child(std::string_view instanceName = T::TYPE_NAME, Args&&... args){
             if (!_node) throw std::runtime_error("make_child called on an object with no node (called from a constructor? Use _init() or __on_made() instead)");
-            return Internal::Tree::_make_child<T>(_node, std::forward<InstanceName>(instanceName), std::forward<Args>(args)...);
+            return Internal::Tree::_make_child<T>(_node, std::string(instanceName), std::forward<Args>(args)...);
          }
          //explicit-parent form. This member hides the free function ReyEngine::make_child inside
-         // member functions of derived types, so it must accept the same arguments
-         template<typename T, typename N, typename InstanceName, typename... Args>
+         // member functions of derived types, so it must accept the same arguments.
+         //the (!is_convertible_v<N, string_view>) guard keeps this disjoint from the implicit-parent
+         // overload above - without it, a lone string argument would be ambiguous between "this is
+         // the name" (implicit parent) and "this is the parent" (explicit parent, deduced as a string type)
+         template<typename T, typename N, typename... Args>
          requires (!std::is_convertible_v<N, std::string_view>)
-         std::shared_ptr<T> make_child(N parent, InstanceName&& instanceName, Args&&... args){
+         std::shared_ptr<T> make_child(N parent, std::string_view instanceName = T::TYPE_NAME, Args&&... args){
             if constexpr (std::is_same_v<Internal::Tree::TypeNode*, N>) {
-               return Internal::Tree::_make_child<T>(parent, std::forward<InstanceName>(instanceName), std::forward<Args>(args)...);
+               return Internal::Tree::_make_child<T>(parent, std::string(instanceName), std::forward<Args>(args)...);
             } else {
-               return Internal::Tree::_make_child<T>(parent->getNode(), std::forward<InstanceName>(instanceName), std::forward<Args>(args)...);
+               return Internal::Tree::_make_child<T>(parent->getNode(), std::string(instanceName), std::forward<Args>(args)...);
             }
          }
 

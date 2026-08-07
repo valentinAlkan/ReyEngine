@@ -185,7 +185,7 @@ namespace ReyEngine::Internal::Tree {
          if (!success) {
              // Handle duplicate name case if needed
             Logger::error() << "Child " << childName << " already exists for parent " << name << std::endl;
-            return nullptr; //child still valid at this point
+            throw std::runtime_error(name + " cannot have two children with the same name: " + childName);
          }
          auto childptr = it->second.get();
          auto addedStorable = childptr->as<TreeStorable>().value();
