@@ -111,8 +111,7 @@ namespace ReyEngine::Internal {
       }
 
       virtual void __on_rect_changed(const Rect<R_FLOAT>& oldRect, const Rect<R_FLOAT>& newRect, bool allowAnchor, bool byLayout=false){}; //internal. Trigger resize for anchored widgets.
-
-//      Transform2D  globalTransform;
+      
       Transform2D transform2D;
       Size<float> size;
       Size<float> minSize;

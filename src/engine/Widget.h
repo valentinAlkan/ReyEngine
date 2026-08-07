@@ -6,7 +6,7 @@
 #include "MetaData.h"
 
 namespace ReyEngine {
-   enum class Anchor{NONE, LEFT, RIGHT, TOP, TOP_WIDTH, BOTTOM, FILL, TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, CENTER, CUSTOM};
+   enum class Anchor{NONE, LEFT, RIGHT, TOP, TOP_WIDTH, BOTTOM, FILL, TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, CENTER, EVENT};
    class FocusGroup;
    class Widget;
    class Widget
@@ -24,14 +24,13 @@ namespace ReyEngine {
          Rect<float> rect;
       };
 
-      EVENT_ARGS(EventAnchoring, 982347093, const Rect<float>& oldRect, Rect<float>& newRect, Widget* parentWidget)
-      , newRect(newRect)
-      , oldRect(oldRect)
+      //Make sure to set transform directly to bypass events. Otherwise this will infinitely recurse.
+      EVENT_ARGS(EventAnchoring, 982347093, Rect<float>& rect, const Widget* parentWidget)
+      , rect(rect)
       , parentWidget(parentWidget)
          {}
-         Rect<float>& newRect;
-         const Rect<float>& oldRect;
-         Widget* parentWidget;
+      Rect<float>& rect;
+      const Widget* parentWidget;
       };
 
       EVENT_ARGS(WidgetUnhandledInputEvent, 329875, const InputEvent& fwdEvent)

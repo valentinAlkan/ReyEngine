@@ -63,6 +63,39 @@ namespace ReyStar {
       const T* thisTile{};
       std::unique_ptr<PathTile<T>> nextTile; //stays null for invalid paths
       float pathCost = 0;
+
+      // Forward iterator that walks the linked list of tiles from start to goal.
+      struct Iterator {
+         using iterator_category = std::forward_iterator_tag;
+         using difference_type = std::ptrdiff_t;
+         using value_type = const PathTile<T>;
+         using pointer = const PathTile<T>*;
+         using reference = const PathTile<T>&;
+
+         explicit Iterator(const PathTile<T>* node) : _node(node) {}
+
+         reference operator*() const { return *_node; }
+         pointer operator->() const { return _node; }
+
+         Iterator& operator++() {
+            _node = _node->nextTile.get();
+            return *this;
+         }
+         Iterator operator++(int) {
+            Iterator tmp = *this;
+            ++(*this);
+            return tmp;
+         }
+
+         bool operator==(const Iterator& other) const { return _node == other._node; }
+         bool operator!=(const Iterator& other) const { return _node != other._node; }
+
+      private:
+         const PathTile<T>* _node;
+      };
+
+      [[nodiscard]] Iterator begin() const { return Iterator(thisTile ? this : nullptr); }
+      [[nodiscard]] Iterator end() const { return Iterator(nullptr); }
    };
 
    /////////////////////////////////////////////////////////////////////////////////////////
@@ -219,13 +252,19 @@ namespace ReyStar {
    public:
       ~ReyStarServer()
       {
+         //This cleanup code exists to solve the static destruction order problem
+         // when the object is created with a static lifetime. Since the underlying threads might
+         // not be woken, stopped, and deleted in time, we have to explicitly wake them and enforce that
+         // they be destroyed.
+
+         // When declared on the stack, the workers will be shut down cleanly and this code is redundant.
          for (auto& worker : _workers) {
             worker.stop();
          }
          _condition_variable.notify_all();
-         // for (auto& worker : _workers) {
-         //    worker.wait();
-         // }
+         for (auto& worker : _workers) {
+            worker.wait();
+         }
       }
       ReyStarServer(TileMap<T>& tiles)
       : tiles(tiles)
@@ -290,9 +329,6 @@ namespace ReyStar {
          _condition_variable.notify_one();
          return {newOrder.requestId, newOrder.promise->get_future()};
       }
-
-      void start() {} //workers launch themselves in the constructor; kept for API compatibility
-
    protected:
       static constexpr float LIGHT_THRESHOLD = 10;
       static constexpr float MEDIUM_THRESHOLD = 30;

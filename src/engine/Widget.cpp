@@ -40,7 +40,6 @@ Rect<R_FLOAT> Widget::getChildBoundingBox() const {
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 void Widget::calculateAnchoring(const Rect<R_FLOAT>& r){
-
    ReyEngine::Rect<R_FLOAT> newRect = r;
    Tools::ScopeExit exit([&](){
       //enforce min/max sizes and apply rectangle (bypassing callbacks and such)
@@ -51,7 +50,7 @@ void Widget::calculateAnchoring(const Rect<R_FLOAT>& r){
       }
    });
 
-   if (!_node) return; //not in tree (yet) - allowes resizing in ctor
+   if (!_node) return; //not in tree (yet) - allows resizing in ctor
    auto hasParent = _node->getParent();
    if (!hasParent) return;
    auto parentWidget = hasParent->as<Widget>();
@@ -150,9 +149,9 @@ void Widget::calculateAnchoring(const Rect<R_FLOAT>& r){
          break;
       }
 
-      case Anchor::CUSTOM: {
+      case Anchor::EVENT: {
          //delegate anchoring to someone else
-         EventAnchoring event(this, getRect(), newRect, _parentWidget);
+         EventAnchoring event(this, newRect, _parentWidget);
          publish(event);
          break;
       }
