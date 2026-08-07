@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(REY_ENABLE_YAML "Enable YAML support" OFF)
 option(REY_ENABLE_LUA "Enable LUA support" OFF)
 option(REY_ENABLE_TIMESPEC_OPERATORS "Enable timespec operators" ON)
+option(REY_ENABLE_TESTS "Enable engine tests" OFF)
 
 # Ensure pthread is linked statically
 set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -192,7 +193,6 @@ if(REY_ENABLE_TIMESPEC_OPERATORS)
     message(STATUS "REY_ENABLE_TIMESPEC_OPERATORS is ON. Including CTimeOperators.h")
     target_compile_definitions(ReyEngine2D PUBLIC REY_ADD_TIMESPEC_OPERATORS)
 endif()
-
 #default compilations
 target_link_libraries(ReyEngine2D raylib Threads::Threads ReyEngineComponentStringTools ReyEngineComponentFilesystem ReyEngineComponentLogger)
 
@@ -266,8 +266,14 @@ endif (UNIX)
 
 
 # Test Projects
-add_executable(ReyEngineThemeTest test/themeTest.cpp)
-target_link_libraries(ReyEngineThemeTest ReyEngine2D)
+if(REY_ENABLE_TESTS)
+    message(STATUS "REY_ENABLE_TESTS is ON. Building ReyEngine tests")
+    add_executable(ReyEngineThemeTest test/themeTest.cpp)
+    target_link_libraries(ReyEngineThemeTest ReyEngine2D)
+
+    add_executable(ReyEngineAStarTest test/reyengineAStarTest.cpp)
+    target_link_libraries(ReyEngineAStarTest PUBLIC ReyEngine2D)
+endif()
 ##########################################
 # for testing basic raylib stuff
 #add_executable( raylibTest test/raylibTest.cpp)
