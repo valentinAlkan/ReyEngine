@@ -30,11 +30,13 @@ namespace ReyStar {
       { t.distanceTo(t) } -> std::convertible_to<float>;
    };
 
-   struct ReyStarTile {
+   //premade template, or you can make your own
+   template <typename Unused>
+   struct ReyStarTileImpl {
       ReyEngine::Pos<int> coord;
       float weight;
-      virtual std::vector<std::pair<int, int>> neighborCoords() = 0;
-      virtual float distanceTo(const ReyStarTile&) = 0;
+      [[nodiscard]] std::vector<std::pair<int, int>> neighborCoords() const;
+      [[nodiscard]] float distanceTo(const ReyStarTileImpl&) const;
    };
 
    using RequestId = unsigned long long;
@@ -215,6 +217,16 @@ namespace ReyStar {
    template <ReyStarTileable T>
    class ReyStarServer {
    public:
+      ~ReyStarServer()
+      {
+         for (auto& worker : _workers) {
+            worker.stop();
+         }
+         _condition_variable.notify_all();
+         // for (auto& worker : _workers) {
+         //    worker.wait();
+         // }
+      }
       ReyStarServer(TileMap<T>& tiles)
       : tiles(tiles)
       {
@@ -318,6 +330,13 @@ namespace ReyStar {
             _shutdown = true;
             if (_t.joinable()) _t.join();
          }
+         void stop() {
+            _shutdown = true;
+            _cancel = true;
+         }
+         void wait(){
+            if (_t.joinable()) _t.join();
+         }
          const int workerId;
          std::atomic<bool> _cancel = false;
       private:
@@ -328,6 +347,7 @@ namespace ReyStar {
                std::unique_lock<std::mutex> lock(_server._queueMtx);
                _server._condition_variable.wait(lock, [&] {
                   // Wait for data. Predicate is protected by mutex during eval.
+                  if (_cancel) return true;
                   if (_server._requestCount) {
                      order = _server.getOpenWorkOrder();
                      return true;
@@ -354,7 +374,7 @@ namespace ReyStar {
                   promise->set_value(std::move(result));
                   done = true;
                }
-               if (!done){
+               if (!done && !_cancel){
                   promise->set_exception(nullptr);
                }
             }
