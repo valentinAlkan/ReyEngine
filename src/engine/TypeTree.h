@@ -458,6 +458,23 @@ namespace ReyEngine::Internal::Tree {
       return {node->ref<T>(), std::move(node)};
    }
 
+   //finds a name that doesn't collide with an existing child of parent, appending _0, _1, _2... to baseName as needed
+   inline std::string uniqueChildName(TypeNode* parent, std::string_view baseName) {
+      std::string base(baseName);
+      if (!parent->getChild(base)) return base;
+      for (size_t i = 0; ; i++) {
+         std::string candidate = base + "_" + std::to_string(i);
+         if (!parent->getChild(candidate)) return candidate;
+      }
+   }
+
+   //instanceName empty means the caller didn't supply one - fall back to the type's name, disambiguated
+   // against existing siblings. An explicitly-supplied name is used as-is (conflicts still throw in addChild).
+   inline std::string resolveChildName(TypeNode* parent, std::string_view instanceName, std::string_view typeName) {
+      if (!instanceName.empty()) return std::string(instanceName);
+      return uniqueChildName(parent, typeName);
+   }
+
    //convenience function
    template<typename T, typename InstanceName, typename... Args>
    std::shared_ptr<T> _make_child(TypeNode* parent, InstanceName&& instanceName, Args&&... args) {
