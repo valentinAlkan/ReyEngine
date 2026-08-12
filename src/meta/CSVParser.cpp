@@ -7,12 +7,12 @@ using namespace ReyEngine;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 CSVParser::CSVParser(const std::string& filePath, bool header, char csv_sep)
-: CSVParser(FileSystem::File(filePath).open(), header, csv_sep)
+: CSVParser(FileSystem::File(filePath).openReadOnly().value(), header, csv_sep)
 {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-CSVParser::CSVParser(const std::shared_ptr<ReyEngine::FileSystem::FileHandle>& file, bool header, char csv_sep)
+CSVParser::CSVParser(const std::shared_ptr<ReyEngine::FileSystem::FileHandleReadOnly>& file, bool header, char csv_sep)
 : _file(file)
 {
    auto it = _file->begin();
@@ -62,7 +62,7 @@ optional<string> CSVParser::getColumnName(int index){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-bool CSVParser::hasHeader(std::shared_ptr<ReyEngine::FileSystem::FileHandle>& file) {
+bool CSVParser::hasHeader(std::shared_ptr<ReyEngine::FileSystem::FileHandleReadOnly>& file) {
    while (auto line = file->readLine()) {
       if (line.data.empty()) continue;
       if (string_tools::lstrip(line.data)[0] == '#') {

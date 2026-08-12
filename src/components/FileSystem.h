@@ -11,6 +11,7 @@
 #include <algorithm>
 #include "Platform.h"
 #include "Logger.h"
+#include <expected>
 
 namespace ReyEngine::FileSystem {
    static constexpr char SCENE_PATH_SEP = REYENGINE_SCENE_PATH_SEP;
@@ -22,10 +23,12 @@ namespace ReyEngine::FileSystem {
       #else
          _PATH_SEP_OTHER;
       #endif
-   struct FileHandle;
    struct Directory;
    struct File;
    struct DirectoryContents;
+   struct FileHandleReadOnly;
+   struct FileHandleReadWrite;
+   class FileHandleError;
    struct Path {
       enum PathType {EMPTY, REGULAR_FILE, DIRECTORY, SYMLINK, BLOCK_FILE, CHAR_FILE, FIFO, SOCKET, OTHER};
       enum EraseType {MUST_EXIST, CAN_EXIST}; // The erased path must exist, or is allowed to not exist
@@ -115,19 +118,39 @@ namespace ReyEngine::FileSystem {
       File(const std::string& other): Path(other){_pathType = REGULAR_FILE;}
       File(const Path& other): Path(other){_pathType = REGULAR_FILE;}
       File(Path&& other): Path(std::move(other)){_pathType = REGULAR_FILE;}
-
+      [[nodiscard]] bool isReadable() const;
+      [[nodiscard]] bool isWritable() const;
       File& operator=(const File& other) = default;
       File& operator=(const Directory& other) = delete;
       Directory toDir() const = delete;
       void clear(){_path.clear();}
       operator Directory() = delete;
-      [[nodiscard]] std::shared_ptr<FileHandle> open() const;
+      [[nodiscard]] std::expected<std::shared_ptr<FileHandleReadOnly>, FileHandleError> openReadOnly() const;
+      [[nodiscard]] std::expected<std::shared_ptr<FileHandleReadWrite>, FileHandleError> openReadWrite();
       [[nodiscard]] File changeExtension(const std::string& newExtension) const;
       [[nodiscard]] std::optional<std::string> getExtension() const;
       [[nodiscard]] std::optional<std::string> stem() const;
    };
 
-   struct FileHandle {
+   class FileHandleError : public std::exception{
+      const std::string message;
+   protected:
+      FileHandleError(const std::string& message): message(message){}
+   public:
+      const char* what() const noexcept override {return message.c_str();}
+   };
+
+   class FileMissingError : public FileHandleError {
+   public:
+      explicit FileMissingError(const std::string& filepath): FileHandleError("File does not exist: " + filepath) {}
+   };
+
+   class FileAccessError : public FileHandleError {
+   public:
+      explicit FileAccessError(const std::string& filepath): FileHandleError("Could not access file: " + filepath) {}
+   };
+
+   struct FileHandleReadOnly {
       struct LineData {
          LineData(): valid(false){}
          template <typename T> LineData& operator=(const T& stringLike){data = stringLike; return *this;}
@@ -137,7 +160,7 @@ namespace ReyEngine::FileSystem {
          bool valid = true;
       };
       // A handle to a file that has been opened and is available to read from.
-      ~FileHandle(){close();}
+      ~FileHandleReadOnly(){close();}
       std::vector<char> readFile();
       std::string readFileAsString();
       std::vector<char> readBytes(long long count);
@@ -145,11 +168,10 @@ namespace ReyEngine::FileSystem {
       LineData readLine(); //read until we get to a new line (treats cr/nl as single newline).
       std::optional<char> peek() const;
       void seek(uint64_t i){ _ptr = i;}
-      void write(){throw std::runtime_error("not implemented");/*todo*/}
       bool isEof() const {return _ptr == _end;}
       File file(){return _file;}
    protected:
-      FileHandle(const File& file): _file(file){open();}
+      FileHandleReadOnly(const File& file): _file(file){open();}
    private:
       void open();
       void close(){_ifs.close();}
@@ -167,9 +189,9 @@ namespace ReyEngine::FileSystem {
          using difference_type = std::ptrdiff_t;
          using pointer = std::string*;
          using reference = std::string&;
-         iterator(std::optional<std::reference_wrapper<FileSystem::FileHandle>> file) : _file(file){
+         iterator(std::optional<std::reference_wrapper<FileSystem::FileHandleReadOnly>> file) : _file(file){
             if (_file) {
-               _file.value().get().open();
+               _file.value().get().seek(0);
                operator++(); //load first line
             } else {
                is_end = true; // Mark as end if initialized with empty optional
@@ -199,7 +221,7 @@ namespace ReyEngine::FileSystem {
          size_t lineNo = 0;
          bool is_end = false;
          std::string currentLine;
-         std::optional<std::reference_wrapper<FileSystem::FileHandle>> _file;
+         std::optional<std::reference_wrapper<FileSystem::FileHandleReadOnly>> _file;
       };
       iterator begin() {
          auto it = iterator(std::ref(*this));
@@ -207,6 +229,13 @@ namespace ReyEngine::FileSystem {
       }
       iterator end() const { return {{}};}
       friend struct File;
+   };
+
+   struct FileHandleReadWrite : public FileHandleReadOnly {
+      void write(){throw std::runtime_error("not implemented");/*todo*/}
+   protected:
+      FileHandleReadWrite(File& file): FileHandleReadOnly(file){}
+      friend File;
    };
 
    struct DirectoryContents{
@@ -244,7 +273,7 @@ namespace ReyEngine::FileSystem {
       Directory(Directory& other) = default;
       Directory& operator=(const File& other) = delete;
       File toFile() const = delete;
-      operator FileHandle() = delete;
+      operator FileHandleReadOnly() = delete;
       bool empty(){return _path.string().empty();}
       //returns set of content paths, and a set of pairs of paths and the error codes they generated
       [[nodiscard]] std::pair<std::set<Path>, std::set<std::pair<Path, std::error_code>>> listContents() const;

@@ -77,6 +77,13 @@ namespace ReyEngine {
    }
 
 
+   class ReyError : public std::exception{
+      const std::string message;
+   public:
+      ReyError(const std::string& message): message(message){}
+      const char* what() const noexcept override {return message.c_str();}
+   };
+
    namespace ______ {struct WindowSpaceParam{}; struct CanvasSpaceParam{};}
    // Window Coordinates - relative to application window
    template <typename T>

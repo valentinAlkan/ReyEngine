@@ -197,14 +197,14 @@ using Kilometers = MultipleOf<Meters, std::kilo>;
 using Feet = MultipleOf<Meters, std::ratio<3048, 10000>>;
 using Inches = MultipleOf<Feet, std::ratio<1, 12>>;
 using NauticalMiles = MultipleOf<Meters, std::ratio<1852, 1>>;
-constexpr Meters operator"" _m(unsigned long long value){return {(double)value};}
-constexpr Meters operator"" _m(long double value){return {(double)value};}
-constexpr Kilometers operator"" _km(unsigned long long value){return {(double)value};}
-constexpr Kilometers operator"" _km(long double value){return {(double)value};}
-constexpr Feet operator"" _ft(unsigned long long value){return {(double)value};}
-constexpr Feet operator"" _ft(long double value){return {(double)value};}
-constexpr Inches operator"" _in(long double value){return {(double)value};}
-constexpr Inches operator"" _in(unsigned long long value){return {(double)value};}
+constexpr Meters operator""_m(unsigned long long value){return {(double)value};}
+constexpr Meters operator""_m(long double value){return {(double)value};}
+constexpr Kilometers operator""_km(unsigned long long value){return {(double)value};}
+constexpr Kilometers operator""_km(long double value){return {(double)value};}
+constexpr Feet operator""_ft(unsigned long long value){return {(double)value};}
+constexpr Feet operator""_ft(long double value){return {(double)value};}
+constexpr Inches operator""_in(long double value){return {(double)value};}
+constexpr Inches operator""_in(unsigned long long value){return {(double)value};}
 
 using Radians = NamedType<double, StrongUnitParameters::RadiansParameter, ToDouble>;
 using Degrees = MultipleOf<Radians, std::ratio<31415926535897932, 1800000000000000000>>;
@@ -226,34 +226,31 @@ using Grams = NamedType<double, StrongUnitParameters::GramsParameter, ToDouble>;
 using Kilograms = MultipleOf<Grams, std::ratio<1000>>;
 using Pounds = MultipleOf<Grams, std::ratio<45359237, 100000>>;
 
-constexpr MetersMSL  operator"" _m_msl(unsigned long long value){return {(double)value};}
-constexpr MetersMSL  operator"" _m_msl(long double value){return {(double)value};}
-constexpr MetersHAE  operator"" _m_hae(unsigned long long value){return {(double)value};}
-constexpr MetersHAE  operator"" _m_hae(long double value){return {(double)value};}
-constexpr Radians       operator"" _rad(unsigned long long value){return {(double)value};}
-constexpr Radians       operator"" _rad(long double value){return {(double)value};}
-constexpr Degrees       operator"" _deg(unsigned long long value){return {(double)value};}
-constexpr Degrees       operator"" _deg(long double value){return {(double)value};}
-constexpr Milliradians  operator"" _mrad(unsigned long long value){return {(double)value};}
-constexpr Milliradians  operator"" _mrad(long double value){return {(double)value};}
-constexpr RadiansPerSecond operator"" _rps(unsigned long long value){return {(double)value};}
-constexpr RadiansPerSecond operator"" _rps(long double value){return {(double)value};}
-constexpr MetersPerSecond  operator"" _mps(unsigned long long value){return {(double)value};}
-constexpr MetersPerSecond  operator"" _mps(long double value){return {(double)value};}
-constexpr Knots  operator"" _knt(unsigned long long value){return {(double)value};}
-constexpr Knots  operator"" _knt(long double value){return {(double)value};}
-constexpr NauticalMiles  operator"" _ntmi(unsigned long long value){return {(double)value};}
-constexpr NauticalMiles operator"" _nmti(long double value){return {(double)value};}
-
-using MetersPerSecond = NamedType<double, StrongUnitParameters::MetersPerSecondParameter, ToDouble>;
-using Knots = MultipleOf<MetersPerSecond, std::ratio<100000000000, 194384449244>>;
+constexpr MetersMSL  operator""_m_msl(unsigned long long value){return {(double)value};}
+constexpr MetersMSL  operator""_m_msl(long double value){return {(double)value};}
+constexpr MetersHAE  operator""_m_hae(unsigned long long value){return {(double)value};}
+constexpr MetersHAE  operator""_m_hae(long double value){return {(double)value};}
+constexpr Radians       operator""_rad(unsigned long long value){return {(double)value};}
+constexpr Radians       operator""_rad(long double value){return {(double)value};}
+constexpr Degrees       operator""_deg(unsigned long long value){return {(double)value};}
+constexpr Degrees       operator""_deg(long double value){return {(double)value};}
+constexpr Milliradians  operator""_mrad(unsigned long long value){return {(double)value};}
+constexpr Milliradians  operator""_mrad(long double value){return {(double)value};}
+constexpr RadiansPerSecond operator""_rps(unsigned long long value){return {(double)value};}
+constexpr RadiansPerSecond operator""_rps(long double value){return {(double)value};}
+constexpr MetersPerSecond  operator""_mps(unsigned long long value){return {(double)value};}
+constexpr MetersPerSecond  operator""_mps(long double value){return {(double)value};}
+constexpr Knots  operator""_knt(unsigned long long value){return {(double)value};}
+constexpr Knots  operator""_knt(long double value){return {(double)value};}
+constexpr NauticalMiles  operator""_ntmi(unsigned long long value){return {(double)value};}
+constexpr NauticalMiles operator""_nmti(long double value){return {(double)value};}
 
 using Fraction = NamedType<double, StrongUnitParameters::Fraction, ToDouble>;
 using Perdeca = MultipleOf<Fraction, std::deci>;
 using Percent = MultipleOf<Fraction, std::centi>;
 using Permille = MultipleOf<Fraction, std::milli>;
-constexpr Percent       operator"" _pct(unsigned long long value){return {(double)value};}
-constexpr Percent       operator"" _pct(long double value){return {(double)value};}
+constexpr Percent       operator""_pct(unsigned long long value){return {(double)value};}
+constexpr Percent       operator""_pct(long double value){return {(double)value};}
 
 template<> template<>
 constexpr Meters MetersHAE::toType<Meters>() const {
@@ -267,8 +264,8 @@ constexpr Meters MetersMSL::toType<Meters>() const {
 
 //frequency
 using Hertz = NamedType<double, StrongUnitParameters::FrequencyParameter, ToDouble>;
-constexpr inline Hertz  operator"" _hz(unsigned long long value){return {(double)value};}
-constexpr inline Hertz  operator"" _hz(long double value){return {(double)value};}
+constexpr inline Hertz  operator""_hz(unsigned long long value){return {(double)value};}
+constexpr inline Hertz  operator""_hz(long double value){return {(double)value};}
 template<> template<> constexpr inline std::chrono::seconds Hertz::toType<std::chrono::seconds>() const {return std::chrono::seconds(static_cast<long long>(1.0 / get()));}
 template<> template<> constexpr inline std::chrono::milliseconds Hertz::toType<std::chrono::milliseconds>() const {return std::chrono::milliseconds(static_cast<long long>(1000.0 / get()));}
 template<> template<> constexpr inline std::chrono::microseconds Hertz::toType<std::chrono::microseconds>() const {return std::chrono::milliseconds(static_cast<long long>(1000000.0 / get()));}

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(ReyEngine VERSION 0.1)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Component options
@@ -176,7 +176,7 @@ target_include_directories(ReyEngine2D PUBLIC
         src/components/easings
         src/thirdParty/font
 )
-target_compile_features(ReyEngine2D PUBLIC cxx_std_20)
+target_compile_features(ReyEngine2D PUBLIC cxx_std_23)
 target_compile_options(ReyEngine2D PUBLIC -pthread)
 
 #conditional compilations

@@ -228,10 +228,55 @@ void Path::move(const Path& newPath, bool allowOverwrite) {
 ///////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<FileHandle> File::open() const {
-   return std::shared_ptr<FileHandle>(new FileHandle(*this));
+std::expected<std::shared_ptr<FileHandleReadOnly>, FileHandleError> File::openReadOnly() const {
+   return std::shared_ptr<FileHandleReadOnly>(new FileHandleReadOnly(*this));
 }
 
+///////////////////////////////////////////////////////////////////////////////////////
+std::expected<std::shared_ptr<FileHandleReadWrite>, FileHandleError> File::openReadWrite() {
+   if (!isWritable()) return std::unexpected(FileAccessError(abs()));
+   return std::shared_ptr<FileHandleReadWrite>(new FileHandleReadWrite(*this));
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+bool File::isReadable() const {
+   std::error_code ec;
+   if (!std::filesystem::is_regular_file(_path, ec)) {
+      return false;
+   }
+
+   // Attempt to open in read-only mode to verify OS access
+   std::ifstream ifs(_path, std::ios::binary);
+   return ifs.is_open();
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+bool File::isWritable() const {
+      std::error_code ec;
+      if (std::filesystem::exists(_path, ec)) {
+         if (!std::filesystem::is_regular_file(_path, ec)) {
+            return false;
+         }
+         // Attempt to open for write append mode (preserves existing contents)
+         std::ofstream ofs(_path, std::ios::binary | std::ios::app);
+         return ofs.is_open();
+      }
+
+      // If file doesn't exist, check parent directory writability
+      auto parent = _path.parent_path();
+      if (parent.empty()) {
+         parent = std::filesystem::current_path();
+      }
+
+      if (!std::filesystem::exists(parent, ec) || !std::filesystem::is_directory(parent, ec)) {
+         return false;
+      }
+      #if IS_WINDOWS
+            return _access(parent.string().c_str(), 2) == 0; // Mode 2 = Write permission check
+      #else
+            return access(parent.string().c_str(), W_OK) == 0; // W_OK = Write permission check
+      #endif
+}
 ///////////////////////////////////////////////////////////////////////////////////////
 File File::changeExtension(const std::string &newExtension) const {
    auto dir = getParentDirectory().value();
@@ -255,7 +300,7 @@ std::optional<std::string> File::stem() const {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-std::vector<char> FileHandle::readFile(){
+std::vector<char> FileHandleReadOnly::readFile(){
    if (!_ifs) throw std::runtime_error("File not opened!");
    std::vector<char> buffer(_end);
 
@@ -268,13 +313,13 @@ std::vector<char> FileHandle::readFile(){
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-std::string FileHandle::readFileAsString(){
+std::string FileHandleReadOnly::readFileAsString(){
    auto content = readFile();
    if (content.empty()) return"";
    return {content.data(), content.size()};
 }
 /////////////////////////////////////////////////////////////////////////////////////////
-void FileSystem::FileHandle::open() {
+void FileSystem::FileHandleReadOnly::open() {
    _ifs = std::ifstream(_file.str(), std::ios::binary | std::ios::ate);
    if (!_ifs) {
       throw std::runtime_error(_file.abs() + ": " + std::strerror(errno));
@@ -285,14 +330,14 @@ void FileSystem::FileHandle::open() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-std::vector<char> FileSystem::FileHandle::readBytes(long long count) {
+std::vector<char> FileSystem::FileHandleReadOnly::readBytes(long long count) {
    std::vector<char> retval(count);
    readBytesInPlace(count, retval);
    return retval;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-size_t FileSystem::FileHandle::readBytesInPlace(long long count, std::vector<char> &buffer) {
+size_t FileSystem::FileHandleReadOnly::readBytesInPlace(long long count, std::vector<char> &buffer) {
    if (count < 0) {throw std::invalid_argument("Count cannot be negative");}
    auto remaining = _end - _ptr;
    if (remaining == 0) return 0;
@@ -313,7 +358,7 @@ size_t FileSystem::FileHandle::readBytesInPlace(long long count, std::vector<cha
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
-FileHandle::LineData FileSystem::FileHandle::readLine() {
+FileHandleReadOnly::LineData FileSystem::FileHandleReadOnly::readLine() {
    if (_end - _ptr == 0) return {};  // empty file
    string retval;
    retval.reserve(128);  // Reserve reasonable initial capacity

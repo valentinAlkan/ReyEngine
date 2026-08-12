@@ -23,24 +23,42 @@ namespace ReyEngine {
       template <ShaderType type, typename... Args>
       static inline std::optional<Shader> loadShaderfromFile(Args... args) {
          Shader shader;
+
+         auto logFrag = [](const auto& fragFile) {
+            if (auto handleResult = fragFile.openReadOnly(); handleResult.has_value()) {
+               Logger::debug() << "Loading fragment shader:\n" << (*handleResult)->readFile().data() << std::endl;
+            } else {
+               Logger::error() << "Failed to open fragment shader file: " << handleResult.error().what() << std::endl;
+               throw ReyError("Unable to open fragment shader file");
+            }
+         };
+         auto logVert = [](const auto& vertFile) {
+            if (auto handleResult = vertFile.openReadOnly(); handleResult.has_value()) {
+               Logger::debug() << "Loading vertex shader:\n" << (*handleResult)->readFile().data() << std::endl;
+            } else {
+               Logger::error() << "Failed to open vertex shader file: " << handleResult.error().what() << std::endl;
+               throw ReyError("Unable to open vertex shader file: ");
+            }
+         };
+
          if constexpr (type == ShaderType::BOTH) {
             auto arg_tuple = std::make_tuple(args...);
             static_assert(sizeof...(Args) >= 2, "ShaderType::BOTH requires at least two arguments.");
             FileSystem::File fvs(std::get<0>(arg_tuple));
             FileSystem::File ffs(std::get<1>(arg_tuple));
             if (!fvs.exists() || !ffs.exists() || !fvs.isRegularFile() || !ffs.isRegularFile()) return {};
-            Logger::debug() << "Loading fragment shader:\n" << ffs.open()->readFile().data() << std::endl;
-            Logger::debug() << "Loading vertex shader:\n" << fvs.open()->readFile().data() << std::endl;
+            logFrag(ffs);
+            logVert(fvs);
             shader = LoadShader(fvs.canonical().c_str(), ffs.canonical().c_str());
          } else {
             static_assert(sizeof...(Args) == 1, "ShaderType::VERTEX/FRAGMENT requires exactly one argument.");
             FileSystem::File f(args...);
             if (!f.exists() || !f.isRegularFile()) return {};
             if constexpr (type == ShaderType::FRAGMENT) {
-               Logger::debug() << "Loading fragment shader:\n" << f.open()->readFile().data() << std::endl;
+               logFrag(f);
                shader = LoadShader(nullptr, f.canonical().c_str());
             } else if constexpr (type == ShaderType::VERTEX) {
-               Logger::debug() << "Loading vertex shader:\n" << f.open()->readFile().data() << std::endl;
+               logVert(f);
                shader = LoadShader(f.canonical().c_str(), nullptr);
             }
          }
