@@ -265,10 +265,7 @@ endif (UNIX)
 #target_link_libraries(NewEngineFonts ReyEngine2D ReyEngineComponentArgParse)
 
 
-# Test Projects
-add_executable(ReyEngineThemeTest test/themeTest.cpp)
-target_link_libraries(ReyEngineThemeTest ReyEngine2D)
-
+# Test Project
 if(REY_ENABLE_TESTS)
     message(STATUS "REY_ENABLE_TESTS is ON. Building ReyEngine tests")
     add_executable(ReyEngineThemeTest test/themeTest.cpp)

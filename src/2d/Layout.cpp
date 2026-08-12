@@ -176,7 +176,6 @@ void Layout::arrangeChildren() {
    switch (layoutDir) {
       case LayoutDir::GRID: {
          //divide the space into boxes, each box being large enough to exactly contain the largest child (in either dimension)
-         // Center each child inside it's respective box.
 
          //determine box size
          Size<int> boundingBox;
@@ -334,46 +333,46 @@ void Layout::arrangeChildren() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyEngine::Size<int> Layout::calculateIdealBoundingBox() {
-   Size<R_FLOAT> idealBoundingBox;
-   if (layoutDir == LayoutDir::GRID){
-      throw std::runtime_error("not implemented!");
-//      //divide the space into boxes, each box being large enough to exactly contain the largest child (in either dimension)
-//      // Center each child inside it's respective box.
+// ReyEngine::Size<int> Layout::calculateIdealBoundingBox() {
+//    Size<R_FLOAT> idealBoundingBox;
+//    if (layoutDir == LayoutDir::GRID){
+//       throw std::runtime_error("not implemented!");
+// //      //divide the space into boxes, each box being large enough to exactly contain the largest child (in either dimension)
+// //      // Center each child inside it's respective box.
+// //
+// //      //determine box size
+// //      Size<int> boundingBox;
+// //      for (const auto& child : getChildren()){
+// //         boundingBox.max(child->getMaxSize());
+// //      }
+// //      //create subrects to lay out the children
+// //      if (_rect.value.size().x && _rect.value.size().y) {
+// //         for (int i = 0; i < childCount; i++) {
+// //            auto &child = getChildren().at(i);
+// //            auto subrect= getRect().toSizeRect().getSubRect(boundingBox, i);
+// //            child->setRect(subrect);
+// //         }
+// //      }
+//    } else {
+//       if (layoutDir == LayoutDir::VERTICAL){
+//          for (auto& child : getChildren()){
+//             auto isWidget = child->as<Widget>();
+//             if (!isWidget) continue;
 //
-//      //determine box size
-//      Size<int> boundingBox;
-//      for (const auto& child : getChildren()){
-//         boundingBox.max(child->getMaxSize());
-//      }
-//      //create subrects to lay out the children
-//      if (_rect.value.size().x && _rect.value.size().y) {
-//         for (int i = 0; i < childCount; i++) {
-//            auto &child = getChildren().at(i);
-//            auto subrect= getRect().toSizeRect().getSubRect(boundingBox, i);
-//            child->setRect(subrect);
-//         }
-//      }
-   } else {
-      if (layoutDir == LayoutDir::VERTICAL){
-         for (auto& child : getChildren()){
-            auto isWidget = child->as<Widget>();
-            if (!isWidget) continue;
-
-            auto childMinSize = isWidget.value()->getMinSize().max({0, 0});
-            idealBoundingBox.x = Math::max(idealBoundingBox.x, childMinSize.x);
-            idealBoundingBox.y += childMinSize.y;
-         }
-      } else {
-         for (auto& child : getChildren()){
-            auto isWidget = child->as<Widget>();
-            if (!isWidget) continue;
-
-            auto childMinSize = isWidget.value()->getMinSize().min({0,0});
-            idealBoundingBox.x += childMinSize.x;
-            idealBoundingBox.y = Math::max(idealBoundingBox.y, childMinSize.y);
-         }
-      }
-   }
-   return idealBoundingBox;
-}
+//             auto childMinSize = isWidget.value()->getMinSize().max({0, 0});
+//             idealBoundingBox.x = Math::max(idealBoundingBox.x, childMinSize.x);
+//             idealBoundingBox.y += childMinSize.y;
+//          }
+//       } else {
+//          for (auto& child : getChildren()){
+//             auto isWidget = child->as<Widget>();
+//             if (!isWidget) continue;
+//
+//             auto childMinSize = isWidget.value()->getMinSize().min({0,0});
+//             idealBoundingBox.x += childMinSize.x;
+//             idealBoundingBox.y = Math::max(idealBoundingBox.y, childMinSize.y);
+//          }
+//       }
+//    }
+//    return idealBoundingBox;
+// }

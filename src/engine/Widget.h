@@ -24,12 +24,12 @@ namespace ReyEngine {
          Rect<float> rect;
       };
 
-      //Make sure to set transform directly to bypass events. Otherwise this will infinitely recurse.
+      // newRect which will be applied to the widget
       EVENT_ARGS(EventAnchoring, 982347093, Rect<float>& rect, const Widget* parentWidget)
-      , rect(rect)
+      , newRect(rect)
       , parentWidget(parentWidget)
          {}
-      Rect<float>& rect;
+      Rect<float>& newRect;
       const Widget* parentWidget;
       };
 

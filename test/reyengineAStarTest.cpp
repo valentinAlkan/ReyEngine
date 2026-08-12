@@ -29,8 +29,11 @@ public:
 
     }
     void _init() override {
-        auto hbox1 = make_child<HLayout>();
-        auto hbox2 = make_child<HLayout>();
+        auto gridLayout = make_child<Layout>("instance", LayoutDir::GRID);
+    }
+
+    void render2D(RenderContext&) const override {
+        drawRectangleRounded(getSizeRect(), 0.1, 10, Colors::gray.dim(50));
     }
 };
 
@@ -183,8 +186,8 @@ int main(int argc, char** argv){
         constexpr Size<float> widgetSize = {200, 200};
         constexpr float margin = 20;
         auto topRight = getScreenSize().toRect().topRight();
-        e.rect.setSize(widgetSize);
-        e.rect.setPos(topRight + Pos<float>(-margin - widgetSize.x, margin));
+        e.newRect.setSize(widgetSize);
+        e.newRect.setPos(topRight + Pos<float>(-margin - widgetSize.x, margin));
     };
     ui->subscribe<Widget::EventAnchoring>(ui, on_anchor);
 
