@@ -21,7 +21,7 @@ namespace ReyEngine{
       if constexpr (std::is_same_v<Internal::Tree::TypeNode*, N>) {
          return Internal::Tree::_make_child<T>(parent, Internal::Tree::resolveChildName(parent, instanceName, T::TYPE_NAME), std::forward<Args>(args)...);
       } else {
-         return Internal::Tree::_make_child<T>(parent->getNode(), Internal::Tree::resolveChildName(parent->getNode(), instanceName, T::TYPE_NAME), std::forward<Args>(args)...);
+         return Internal::Tree::_make_child<T>(parent->getChildInsertionNode(), Internal::Tree::resolveChildName(parent->getNode(), instanceName, T::TYPE_NAME), std::forward<Args>(args)...);
       }
    }
 
@@ -82,7 +82,7 @@ namespace ReyEngine{
             if constexpr (std::is_same_v<Internal::Tree::TypeNode*, N>) {
                return Internal::Tree::_make_child<T>(parent, Internal::Tree::resolveChildName(parent, instanceName, T::TYPE_NAME), std::forward<Args>(args)...);
             } else {
-               return Internal::Tree::_make_child<T>(parent->getNode(), Internal::Tree::resolveChildName(parent->getNode(), instanceName, T::TYPE_NAME), std::forward<Args>(args)...);
+               return Internal::Tree::_make_child<T>(parent->getChildInsertionNode(), Internal::Tree::resolveChildName(parent->getNode(), instanceName, T::TYPE_NAME), std::forward<Args>(args)...);
             }
          }
 

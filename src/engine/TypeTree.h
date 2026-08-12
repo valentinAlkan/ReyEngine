@@ -55,6 +55,15 @@ namespace ReyEngine::Internal::Tree {
       virtual void __on_orphaned(TypeNode*){}; //when the node has been orphaned (ancestor removed from tree)
       TypeNode* getNode(){return _node;}
       [[nodiscard]] const TypeNode* getNode() const {return _node;}
+      /// Where make_child() actually puts children. Defaults to this node.
+      ///
+      /// Containers that keep an internal content area (ScrollArea's scrolling viewport,
+      /// say) override this so callers can keep writing make_child<X>(container, ...)
+      /// without knowing about the internal structure.
+      ///
+      /// Only make_child() consults this - TypeNode::addChild is always literal, which is
+      /// how a container adds its *own* internal children (pass getNode() explicitly).
+      virtual TypeNode* getChildInsertionNode(){return _node;}
    protected:
       TreeStorable(){} //cant create directly
       TreeStorable(const TreeStorable& other) = delete; //nocopy
