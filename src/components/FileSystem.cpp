@@ -3,6 +3,9 @@
 #include <iostream>
 #include <cstring>
 #include "Logger.h"
+#if IS_WINDOWS()
+#include <io.h>
+#endif
 
 using namespace std;
 using namespace ReyEngine;
@@ -271,7 +274,7 @@ bool File::isWritable() const {
       if (!std::filesystem::exists(parent, ec) || !std::filesystem::is_directory(parent, ec)) {
          return false;
       }
-      #if IS_WINDOWS
+      #if IS_WINDOWS()
             return _access(parent.string().c_str(), 2) == 0; // Mode 2 = Write permission check
       #else
             return access(parent.string().c_str(), W_OK) == 0; // W_OK = Write permission check
