@@ -49,7 +49,7 @@ namespace ReyEngine{
       static Stream error();
       static Stream debug();
       static Stream exit();
-      Stream log(const std::string& logLevel="");
+      Stream log(std::string_view logLevel = "");
       static std::string getFront();
       static bool hasHistory();
       static Logger& getInstance() {
