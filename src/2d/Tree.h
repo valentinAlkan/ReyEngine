@@ -197,7 +197,7 @@ namespace ReyEngine{
       void ensureFresh();  //rebuild order/_visibleRows if a mutation marked the tree dirty. O(1) when clean.
       void updateWindow(); //(re)annotate the rows in/near the viewport if the window moved or the tree changed
       //single source of truth for row height: rendering, hit-testing, and click regions must all agree
-      [[nodiscard]] float rowHeight() const {return theme->font->size;}
+      [[nodiscard]] float rowHeight() const {return theme ? theme->font->size : 0;}
       [[nodiscard]] float contentHeight() const {return _visibleRows.size() * rowHeight();}
       [[nodiscard]] float viewportWidth() const {return getWidth() - (_scroll.needsVBar() ? SCROLLBAR_WIDTH : 0.0f);} //width minus the gutter when the bar shows
       void updateScrollLayout(); //refresh scroll limits + bar rect from current content/viewport

@@ -11,6 +11,12 @@ option(REY_ENABLE_LUA "Enable LUA support" OFF)
 option(REY_ENABLE_TIMESPEC_OPERATORS "Enable timespec operators" ON)
 option(REY_ENABLE_TESTS "Enable engine tests" OFF)
 
+
+# Disable third-party install generation to avoid collision with custom install targets
+set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
+set(YAML_CPP_INSTALL OFF CACHE BOOL "" FORCE)
+set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+
 # Ensure pthread is linked statically
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
