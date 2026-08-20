@@ -71,10 +71,7 @@ namespace ReyEngine::FileSystem {
       inline Path& operator=(Path&& rhs) noexcept {
          if (this != &rhs) {
             _path = std::move(rhs._path);
-            if (_pathType == EMPTY) {
-               //don't allow changing path type unless there isn't one yet
-               _pathType = rhs._pathType;
-            }
+            _pathType = rhs._pathType;
          }
          return *this;
       }
