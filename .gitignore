@@ -4,3 +4,4 @@ _deps/
 cmake-build*
 .gitutilsconfig
 gitTools.log
+ReyEngine-standalone*.zip
