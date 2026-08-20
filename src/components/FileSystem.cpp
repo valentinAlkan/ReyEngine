@@ -56,8 +56,6 @@ void Path::erase(EraseType eraseType) {
             break;}
 
          case EMPTY:
-            // Path doesn't exist, nothing to do
-            Logger::warn() << "Path does not exist: " << _path << std::endl;
             return;
 
          case OTHER:
