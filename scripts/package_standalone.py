@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 """Package the minimum ReyEngine source tree needed for an offline build.
 
 ReyEngine vendors every third-party dependency it needs (raylib, and GLFW
@@ -18,8 +19,6 @@ Usage:
     scripts/package_standalone.py --keep-docs           # keep vendored .md/CHANGELOG files
 """
 
-from __future__ import annotations
-
 import argparse
 import fnmatch
 import os
@@ -29,6 +28,7 @@ import sys
 import tempfile
 import zipfile
 from pathlib import Path, PurePosixPath
+from typing import List  # Backporting typing for compatibility
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -108,9 +108,9 @@ def file_excluded(rel: str, name: str, args: argparse.Namespace) -> bool:
     return False
 
 
-def collect(args: argparse.Namespace) -> list[Path]:
+def collect(args: argparse.Namespace) -> List[Path]:
     """Walk INCLUDE_ROOTS and return the surviving files, sorted."""
-    found: list[Path] = []
+    found = []  # Removed modern type annotation here to prevent runtime crash
     for root in INCLUDE_ROOTS:
         target = REPO_ROOT / root
         if not target.exists():
@@ -134,7 +134,7 @@ def collect(args: argparse.Namespace) -> list[Path]:
     return sorted(set(found), key=rel_posix)
 
 
-def build_manifest(files: list[Path], args: argparse.Namespace) -> str:
+def build_manifest(files: List[Path], args: argparse.Namespace) -> str:
     total = sum(f.stat().st_size for f in files)
     lines = [
         "ReyEngine standalone source package",
@@ -162,12 +162,12 @@ def build_manifest(files: list[Path], args: argparse.Namespace) -> str:
     return "\n".join(lines) + "\n"
 
 
-def write_zip(files: list[Path], out_path: Path, prefix: str, manifest: str) -> None:
+def write_zip(files: List[Path], out_path: Path, prefix: str, manifest: str) -> None:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     # Fixed timestamps keep the archive byte-identical across runs of an
     # unchanged tree, which makes it easy to tell whether anything moved.
     fixed_time = (1980, 1, 1, 0, 0, 0)
-    with zipfile.ZipFile(out_path, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
+    with zipfile.ZipFile(out_path, "w", zipfile.ZIP_DEFLATED) as zf:
         for f in files:
             info = zipfile.ZipInfo(f"{prefix}/{rel_posix(f)}", date_time=fixed_time)
             info.compress_type = zipfile.ZIP_DEFLATED
@@ -209,7 +209,7 @@ def verify(out_path: Path, prefix: str) -> int:
                     print(f"verify: WARNING - {step} mentions '{marker}'; "
                           "the tree may not be fully offline", file=sys.stderr)
         print("verify: OK - configured and built from the archive")
-    return 0
+        return 0
 
 
 def main() -> int:
