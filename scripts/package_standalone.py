@@ -167,7 +167,7 @@ def write_zip(files: List[Path], out_path: Path, prefix: str, manifest: str) -> 
     # Fixed timestamps keep the archive byte-identical across runs of an
     # unchanged tree, which makes it easy to tell whether anything moved.
     fixed_time = (1980, 1, 1, 0, 0, 0)
-    with zipfile.ZipFile(out_path, "w", zipfile.ZIP_DEFLATED) as zf:
+    with zipfile.ZipFile(str(out_path), "w", zipfile.ZIP_DEFLATED) as zf:
         for f in files:
             info = zipfile.ZipInfo(f"{prefix}/{rel_posix(f)}", date_time=fixed_time)
             info.compress_type = zipfile.ZIP_DEFLATED
@@ -187,8 +187,8 @@ def verify(out_path: Path, prefix: str) -> int:
         return 1
     with tempfile.TemporaryDirectory(prefix="reyengine-verify-") as tmp:
         tmpdir = Path(tmp)
-        with zipfile.ZipFile(out_path) as zf:
-            zf.extractall(tmpdir)
+        with zipfile.ZipFile(str(out_path)) as zf:
+            zf.extractall(str(tmpdir))
         src = tmpdir / prefix
         build = tmpdir / "build"
         for step, cmd in (
@@ -197,7 +197,11 @@ def verify(out_path: Path, prefix: str) -> int:
             ("build", [cmake, "--build", str(build), "-j", str(os.cpu_count() or 2)]),
         ):
             print(f"verify: {step}...", flush=True)
-            proc = subprocess.run(cmd, capture_output=True, text=True)
+            # capture_output= and text= are 3.7+; these spellings are
+            # equivalent and work on 3.6.
+            proc = subprocess.run(cmd, stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE,
+                                  universal_newlines=True)
             if proc.returncode != 0:
                 print(proc.stdout[-4000:], file=sys.stderr)
                 print(proc.stderr[-4000:], file=sys.stderr)
