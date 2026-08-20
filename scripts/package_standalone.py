@@ -11,8 +11,8 @@ What is left out: the test/ and apps/ trees, IDE and VCS metadata, build
 output directories, and vendored documentation.
 
 Usage:
-    scripts/package_standalone.py                       # -> ReyEngine-standalone.zip
-    scripts/package_standalone.py -o /tmp/rey.zip
+    scripts/package_standalone.py                       # -> ReyEngine_<tag-or-sha>.zip
+    scripts/package_standalone.py -o /tmp/rey.zip       # override the name
     scripts/package_standalone.py --dry-run             # list what would be packaged
     scripts/package_standalone.py --verify              # unpack + cmake configure + build
     scripts/package_standalone.py --no-lua              # drop the vendored Lua (~900K)
@@ -22,6 +22,7 @@ Usage:
 import argparse
 import fnmatch
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -84,6 +85,63 @@ KEEP_PATHS = {
 LUA_DIR = "src/thirdParty/lua"
 
 
+DEFAULT_BASENAME = "ReyEngine"
+
+
+def git_output(argv: List[str]):
+    """Run a git command in the repo; return stripped stdout, or None on any failure."""
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(REPO_ROOT)] + argv,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            universal_newlines=True)
+    except OSError:
+        return None  # git not installed
+    if proc.returncode != 0:
+        return None  # not a repo, no commits, no match
+    return proc.stdout.strip() or None
+
+
+def sanitize(label: str):
+    """Reduce a git ref to something safe to embed in a filename.
+
+    Tag names may legally contain '/' and other characters that are awkward or
+    unsafe in a path, so anything outside [A-Za-z0-9._-] becomes a dash.
+    """
+    safe = "".join(c if (c.isalnum() or c in "._-") else "-" for c in label)
+    return safe.strip("-.") or None
+
+
+def tag_sort_key(tag: str):
+    """Order tags by version, so 0.2.10 sorts above 0.2.9 (plain sort would not)."""
+    parts = re.split(r"[._-]", tag.lstrip("vV"))
+    return [(0, int(part)) if part.isdigit() else (1, part) for part in parts]
+
+
+def version_label():
+    """The tag on HEAD if there is one, else the first 5 chars of the sha.
+
+    Returns None when git cannot tell us anything -- an export with no .git,
+    or a machine with no git installed.
+    """
+    tags = git_output(["tag", "--points-at", "HEAD"])
+    if tags:
+        # Several tags can point at one commit; take the highest version.
+        newest = sorted(tags.splitlines(), key=tag_sort_key)[-1].strip()
+        label = sanitize(newest)
+        if label:
+            return label
+    sha = git_output(["rev-parse", "--short=5", "HEAD"])
+    if sha:
+        return sanitize(sha)
+    return None
+
+
+def default_output(label) -> Path:
+    suffix = label if label else "standalone"
+    return REPO_ROOT / "{}_{}.zip".format(DEFAULT_BASENAME, suffix)
+
+
 def rel_posix(path: Path) -> str:
     return PurePosixPath(path.relative_to(REPO_ROOT).as_posix()).as_posix()
 
@@ -134,11 +192,12 @@ def collect(args: argparse.Namespace) -> List[Path]:
     return sorted(set(found), key=rel_posix)
 
 
-def build_manifest(files: List[Path], args: argparse.Namespace) -> str:
+def build_manifest(files: List[Path], args: argparse.Namespace, label) -> str:
     total = sum(f.stat().st_size for f in files)
     lines = [
         "ReyEngine standalone source package",
         "",
+        f"version: {label if label else 'unknown (no git metadata)'}",
         f"files: {len(files)}",
         f"uncompressed: {total / 1_048_576:.1f} MiB",
         f"lua included: {not args.no_lua}",
@@ -219,9 +278,10 @@ def verify(out_path: Path, prefix: str) -> int:
 def main() -> int:
     p = argparse.ArgumentParser(
         description="Zip the minimum ReyEngine tree needed for an offline build.")
-    p.add_argument("-o", "--output", type=Path,
-                   default=REPO_ROOT / "ReyEngine-standalone.zip",
-                   help="output zip path (default: ./ReyEngine-standalone.zip)")
+    p.add_argument("-o", "--output", type=Path, default=None,
+                   help="output zip path (default: ReyEngine_<tag-or-sha>.zip "
+                        "in the repo root -- the tag on HEAD if there is one, "
+                        "otherwise the first 5 characters of the sha)")
     p.add_argument("--prefix", default="ReyEngine",
                    help="top-level directory inside the zip (default: ReyEngine)")
     p.add_argument("--dry-run", action="store_true",
@@ -233,6 +293,10 @@ def main() -> int:
     p.add_argument("--keep-docs", action="store_true",
                    help="keep vendored .md / CHANGELOG / HISTORY files")
     args = p.parse_args()
+
+    label = version_label()
+    if args.output is None:
+        args.output = default_output(label)
 
     files = collect(args)
     if not files:
@@ -246,7 +310,8 @@ def main() -> int:
               file=sys.stderr)
         return 0
 
-    write_zip(files, args.output, args.prefix, build_manifest(files, args))
+    write_zip(files, args.output, args.prefix,
+              build_manifest(files, args, label))
     packed = args.output.stat().st_size
     print(f"wrote {args.output}")
     print(f"  {len(files)} files, {total / 1_048_576:.1f} MiB -> "
