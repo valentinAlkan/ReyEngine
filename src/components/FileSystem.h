@@ -92,10 +92,10 @@ namespace ReyEngine::FileSystem {
          return os;
       }
    protected:
-      void create(bool createParent=false);
-      bool createIfNotExist(bool createParent=false); //returns true if the folder was created, false if it already existed
+      void create(Path::PathType pathType, bool createParent=false);
       void overwrite(bool createParent=false);
       void parsePath();
+      void refreshPathType(); //re-read _pathType from disk; _pathType is a cache and can go stale
       std::filesystem::path _path;
       PathType _pathType = EMPTY;
    private:
@@ -104,7 +104,6 @@ namespace ReyEngine::FileSystem {
 
    struct File : public Path {
       using Path::operator=;
-      using Path::createIfNotExist;
       using Path::overwrite;
       using Path::create;
       // A path to a disk. Cannot read from.
@@ -127,6 +126,7 @@ namespace ReyEngine::FileSystem {
       [[nodiscard]] File changeExtension(const std::string& newExtension) const;
       [[nodiscard]] std::optional<std::string> getExtension() const;
       [[nodiscard]] std::optional<std::string> stem() const;
+      bool createIfNotExist(bool createParent);
    };
 
    class FileHandleError : public std::exception{
@@ -260,7 +260,6 @@ namespace ReyEngine::FileSystem {
 
    struct Directory : public Path {
       using Path::operator=;
-      using Path::createIfNotExist;
       using Path::overwrite;
       using Path::create;
       Directory(){_pathType = DIRECTORY;}
@@ -275,6 +274,7 @@ namespace ReyEngine::FileSystem {
       //returns set of content paths, and a set of pairs of paths and the error codes they generated
       [[nodiscard]] std::pair<std::set<Path>, std::set<std::pair<Path, std::error_code>>> listContents() const;
       static void logfsError(Logger::Stream&& log, std::set<std::pair<Path, std::error_code>>& errors);
+      bool createIfNotExist(bool createParent);
    };
 }
 

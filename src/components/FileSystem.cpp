@@ -27,6 +27,9 @@ void Path::erase(EraseType eraseType) {
       throw std::runtime_error("Failed to erase file " + str() + ": File did not exist and was required to");
    }
 
+   //_pathType is a cache; the file may have appeared or vanished since construction
+   refreshPathType();
+
    try {
       std::error_code ec;
 
@@ -76,7 +79,7 @@ void Path::erase(EraseType eraseType) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void Path::create(bool createParent) {
+void Path::create(Path::PathType pathType, bool createParent) {
    if (exists()){
       // just in case the type is different, do not let us create files if there is already
       // an object at the location
@@ -95,7 +98,7 @@ void Path::create(bool createParent) {
          }
       }
 
-      switch (_pathType){
+      switch (pathType){
          case DIRECTORY:{
          // Create directory
          std::error_code ec;
@@ -117,15 +120,7 @@ void Path::create(bool createParent) {
    } catch (const std::filesystem::filesystem_error& ex) {
       throw std::runtime_error("Filesystem error creating " + str() + ": " + ex.what());
    }
-}
-
-///////////////////////////////////////////////////////////////////////////////////////
-bool Path::createIfNotExist(bool createParent) {
-   if (!exists()){
-      create(createParent);
-      return true;
-   }
-   return false;
+   _pathType = pathType;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -133,7 +128,7 @@ void Path::overwrite(bool createParent) {
    auto pathType = _pathType;
    erase(CAN_EXIST);
    _pathType = pathType;
-   create(createParent);
+   create(_pathType, createParent);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -166,6 +161,14 @@ void Path::parsePath() {
       _path /= component;
    }
 
+   refreshPathType();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/// Re-reads the type of _path from disk. _pathType is a cache of filesystem state, so
+/// anything that acts on that state must refresh first -- the file may have been created
+/// or removed since this Path was built.
+void Path::refreshPathType() {
    try {
       if (!std::filesystem::exists(_path)) {
          _pathType = EMPTY;
@@ -389,10 +392,15 @@ FileHandleReadOnly::LineData FileSystem::FileHandleReadOnly::readLine() {
    return retval;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
-//void FileSystem::writeFile(const std::string& filePath, const std::vector<char>&){
-//   //todo: write file
-//}
+
+///////////////////////////////////////////////////////////////////////////////////////
+bool File::createIfNotExist(bool createParent) {
+   if (!exists()){
+      create(REGULAR_FILE, createParent);
+      return true;
+   }
+   return false;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -444,6 +452,15 @@ void FileSystem::Directory::logfsError(Logger::Stream&& log, std::set<std::pair<
    for (const auto &error: errors) {
       log << "Filesystem error: " << error.first << ": (errno. " << error.second.value() << ") : " << error.second.message() << endl;
    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+bool Directory::createIfNotExist(bool createParent) {
+   if (!exists()){
+      create(DIRECTORY, createParent);
+      return true;
+   }
+   return false;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
