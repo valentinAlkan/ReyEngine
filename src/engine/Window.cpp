@@ -4,6 +4,7 @@
 #include "InputManager.h"
 #include "Canvas.h"
 #include "rlgl.h"
+#include "../../../src/GameCanvas.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -33,8 +34,18 @@ Window::Window(const std::string &title, int width, int height, const std::vecto
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Window::initialize(std::optional<std::shared_ptr<Canvas>> optRoot){
-   auto [canvas, node] = make_node<Canvas>("root");
+void Window::initialize(std::optional<std::unique_ptr<TypeNode>> optRoot){
+   std::unique_ptr<TypeNode> node;
+   std::shared_ptr<Canvas> canvas;
+   if (optRoot) {
+      node = std::move(optRoot.value());
+      canvas = node->ref<Canvas>();
+      if (!canvas) throw std::runtime_error("Window failed to initialize canvas");
+   } else {
+      auto pair = make_node<Canvas>("root");
+      canvas = pair.first;
+      node = std::move(pair.second);
+   }
    _root = std::move(node);
    _root->_window = this;
    _root->_deferredCallList = &_deferredCallList;

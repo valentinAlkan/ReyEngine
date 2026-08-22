@@ -18,7 +18,7 @@ void TileMap::render2DEnd(RenderContext&) {
 /////////////////////////////////////////////////////////////////////////////////////////
 void TileMap::render2D(RenderContext&) const {
    // if (!_needsRedraw) return;
-   ClearBackground(Colors::none);
+   // ClearBackground(Colors::none);
    //draw all tiles in the layer
    for (auto& layer: _layers) {
       for (auto& [x, yMap]: layer.second->tiles) {

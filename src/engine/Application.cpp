@@ -17,10 +17,12 @@ std::unique_ptr<Internal::WindowPrototype> Application::createWindowPrototype(co
    return std::unique_ptr<WindowPrototype>(new WindowPrototype(title, width, height, flags, targetFPS));
 }
 /////////////////////////////////////////////////////////////////////////////////////////
-Window& Application::createWindow(Internal::WindowPrototype& prototype, std::optional<std::shared_ptr<Canvas>> root){
+Window& Application::createWindow(Internal::WindowPrototype& prototype){
    _windows.emplace_back(new Window(prototype.title, prototype.width, prototype.height, prototype.flags, prototype.targetFPS));
    auto& window = *_windows.back();
-   window.initialize(root);
+   std::optional<std::unique_ptr<TypeNode>> root;
+   if (prototype.root) root = std::move(prototype.root);
+   window.initialize(std::move(root));
 //   window.getCanvas()->setRect({}); //will auto fill
    return window;
 }

@@ -22,7 +22,13 @@ namespace ReyEngine{
       }
       void fitTexture() { //makes the sprite the same size as the texture REGION (not necessarily the texture SIZE, in the case of a sprite sheet!)
          if (_texture){
-            applySize(region.value.size());
+            if constexpr (std::is_same_v<T, Rect<R_FLOAT>>){
+               applySize(region.size());
+            }
+            if constexpr (std::is_same_v<T, std::vector<Rect<R_FLOAT>>>) {
+               applySize(region.at(0).size());
+            }
+
          } else {
             _fitNextTexture = true;
          }

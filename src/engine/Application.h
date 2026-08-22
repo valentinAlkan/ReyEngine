@@ -66,7 +66,7 @@ namespace ReyEngine{
       static long double secondsSinceInit();
       static void addExitCallback(ExitCb cb){instance().onExitCBs.push_back(cb);} //not gauranteed to be called except on clean exit
    protected:
-      Window& createWindow(Internal::WindowPrototype&, std::optional<std::shared_ptr<Canvas>>);
+      Window& createWindow(Internal::WindowPrototype&);
       static uint64_t getNewRid(){return ++instance().newRid;}
       static void ready();
       std::chrono::time_point<std::chrono::steady_clock> _startTime;

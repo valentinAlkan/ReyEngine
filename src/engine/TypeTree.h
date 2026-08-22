@@ -81,6 +81,13 @@ namespace ReyEngine::Internal::Tree {
       virtual ~TypeBase() = default;
       [[nodiscard]] virtual std::type_index getTypeIndex() const = 0;
       [[nodiscard]] virtual std::string getTypeName() const = 0;
+      /// The wrapped object, as the one base every stored type shares.
+      /// Virtual so the compiler applies the derived-to-base offset for us - the caller
+      /// has only a TypeBase* and cannot know what T was, so it cannot adjust the pointer
+      /// itself. This is the single entry point from type-erased storage back to a real
+      /// object; as<T>() dynamic_casts from here.
+      [[nodiscard]] virtual TreeStorable* getStorable() = 0;
+      [[nodiscard]] virtual const TreeStorable* getStorable() const = 0;
    };
 
    //Wrappable types interface
@@ -142,6 +149,9 @@ namespace ReyEngine::Internal::Tree {
          return T::TYPE_NAME;
       }
 
+      [[nodiscard]] TreeStorable* getStorable() override { return _value.get(); }
+      [[nodiscard]] const TreeStorable* getStorable() const override { return _value.get(); }
+
       T& getValue() { return *_value; }
       [[nodiscard]] const T& getValue() const { return *_value; }
    private:
@@ -169,6 +179,10 @@ namespace ReyEngine::Internal::Tree {
       virtual ~TypeNode(){
          if (_data) {
             Logger::debug() << "Deleting node " << name << " of type " << _data->getTypeName() << std::endl;
+            //A held ref<T> keeps the data alive past this node, so the back-pointer would
+            //outlive what it points at. Clear it: getNode() then answers nullptr instead of
+            //handing out a dangling TypeNode.
+            if (auto storable = as<TreeStorable>()) storable.value()->_node = nullptr;
          }
       }
       [[nodiscard]] TypeBase* getData() const { return _data.get(); }
@@ -351,15 +365,20 @@ namespace ReyEngine::Internal::Tree {
          return *_childOrder.at(index);
       }
 
-      template<typename T>
+      /// A shared_ptr to this node's data, as T. Accepts base classes of the stored type,
+      /// so a node holding a GameCanvas answers ref<Canvas>().
+      ///
+      /// Do NOT dynamic_cast the wrapper to find T: TypeWrapper<GameCanvas> and
+      /// TypeWrapper<Canvas> are unrelated types (both derive straight from TypeBase),
+      /// so that only ever matches the exact type the node was made with. as<T>() casts
+      /// the wrapped object instead, which does know its own bases.
+      ///
+      /// The returned pointer aliases _data's control block, so the wrapper - and with it
+      /// the object - stays alive for as long as any ref does.
+      template<NamedType T>
       std::shared_ptr<T> ref() {
-         if (_data->getTypeIndex() == std::type_index(typeid(T))) {
-            // First, cast to TypeWrapper<T>
-            auto wrapper = std::dynamic_pointer_cast<TypeWrapper<T>>(_data);
-            if (wrapper) {
-               // Then return a shared_ptr to the contained value
-               return std::shared_ptr<T>(&wrapper->getValue(), [wrapper](T*){});
-            }
+         if (auto value = as<T>()) {
+            return std::shared_ptr<T>(_data, value.value());
          }
          return nullptr;
       }
@@ -371,15 +390,16 @@ namespace ReyEngine::Internal::Tree {
          }
          return {};
       }
+      /// This node's data as T, where T may be the stored type or any base of it.
+      ///
+      /// Casting the *wrapper* would not work: TypeWrapper<GameCanvas> and
+      /// TypeWrapper<Canvas> are unrelated types, so that only ever matches the exact
+      /// stored type. Go through getStorable() to reach the object, which does know its
+      /// own bases, and let dynamic_cast walk them.
       template<NamedType T>
       std::optional<T*> as() {
          if (!_data) return {};
-         if (auto wrapper = dynamic_cast<TypeWrapper<T>*>(_data.get())) {
-            return &wrapper->getValue();
-         }
-         // T must store a named type
-         auto* wrapper = static_cast<TypeWrapper<TreeStorable>*>(_data.get());
-         if (auto* value = dynamic_cast<T*>(&wrapper->getValue())) {
+         if (auto* value = dynamic_cast<T*>(_data->getStorable())) {
             return value;
          }
          return std::nullopt;

@@ -1,5 +1,6 @@
 #include "WindowPrototype.h"
 #include "Application.h"
+#include "TypeTree.h"
 
 using namespace ReyEngine;
 using namespace Internal;
@@ -33,9 +34,18 @@ WindowPrototype::WindowPrototype(const std::string &title, int width, int height
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+WindowPrototype::~WindowPrototype() = default;
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void WindowPrototype::setRoot(std::unique_ptr<Tree::TypeNode> newRoot){
+   root = std::move(newRoot);
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
 Window& WindowPrototype::createWindow() {
    use();
-   return Application::instance().createWindow(*this, nullopt);
+   return Application::instance().createWindow(*this);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
