@@ -230,6 +230,10 @@ namespace ReyEngine {
       static constexpr inline T magnitude(T x, T y) {return std::sqrt(x * x + y * y);}
       [[nodiscard]] UnitVector2 direction(const Vec2<T>& dest) const; //get the unit vector that points at dest from this point's perspective
 //      constexpr inline Vec2 midpoint() const {return {x/2, y / 2};} does this make sense?
+      [[nodiscard]] constexpr inline Vec2 nullX() const {return {0, y};} //nulls the X component
+      [[nodiscard]] constexpr inline Vec2 nullY() const {return {x, 0};} //nulls the Y component
+      [[nodiscard]] constexpr inline Vec2& nullX() {x=0; return *this;} //nulls the X component
+      [[nodiscard]] constexpr inline Vec2& nullY() {y=0; return *this;} //nulls the Y component
       [[nodiscard]] constexpr inline Vec2 min(const Vec2& other) const {Vec2 r; r.x = Math::min(Vec2::x, other.x); r.y = Math::min(Vec2::y, other.y); return r;}
       [[nodiscard]] constexpr inline Vec2 max(const Vec2& other) const {Vec2 r; r.x = Math::max(Vec2::x, other.x); r.y = Math::max(Vec2::y, other.y); return r;}
       [[nodiscard]] constexpr inline Fraction pct(R_FLOAT input) const {return (input - x) / (y - x);} //given an input value, what percentage of the range is it from 0 to 1?
@@ -2721,6 +2725,37 @@ namespace InputInterface {
       RESIZE_ALL = MOUSE_CURSOR_RESIZE_ALL,
       NOT_ALLOWED = MOUSE_CURSOR_NOT_ALLOWED
    };
+   
+   
+   enum class GamePadButton {
+       UNKNOWN = GAMEPAD_BUTTON_UNKNOWN,
+       BUTTON_LEFT_FACE_UP = GAMEPAD_BUTTON_LEFT_FACE_UP,
+       BUTTON_LEFT_FACE_RIGHT = GAMEPAD_BUTTON_LEFT_FACE_RIGHT,
+       BUTTON_LEFT_FACE_DOWN = GAMEPAD_BUTTON_LEFT_FACE_DOWN,
+       BUTTON_LEFT_FACE_LEFT = GAMEPAD_BUTTON_LEFT_FACE_LEFT,
+       BUTTON_RIGHT_FACE_UP = GAMEPAD_BUTTON_RIGHT_FACE_UP,
+       BUTTON_RIGHT_FACE_RIGHT = GAMEPAD_BUTTON_RIGHT_FACE_RIGHT,
+       BUTTON_RIGHT_FACE_DOWN = GAMEPAD_BUTTON_RIGHT_FACE_DOWN,
+       BUTTON_RIGHT_FACE_LEFT = GAMEPAD_BUTTON_RIGHT_FACE_LEFT,
+       BUTTON_LEFT_TRIGGER_1 = GAMEPAD_BUTTON_LEFT_TRIGGER_1,
+       BUTTON_LEFT_TRIGGER_2 = GAMEPAD_BUTTON_LEFT_TRIGGER_2,
+       BUTTON_RIGHT_TRIGGER_1 = GAMEPAD_BUTTON_RIGHT_TRIGGER_1,
+       BUTTON_RIGHT_TRIGGER_2 = GAMEPAD_BUTTON_RIGHT_TRIGGER_2,
+       BUTTON_MIDDLE_LEFT = GAMEPAD_BUTTON_MIDDLE_LEFT,
+       BUTTON_MIDDLE = GAMEPAD_BUTTON_MIDDLE,
+       BUTTON_MIDDLE_RIGHT = GAMEPAD_BUTTON_MIDDLE_RIGHT,
+       BUTTON_LEFT_THUMB = GAMEPAD_BUTTON_LEFT_THUMB,
+       BUTTON_RIGHT_THUMB = GAMEPAD_BUTTON_RIGHT_THUMB
+   };
+
+   enum class GamePadAxis{
+       AXIS_LEFT_X = GAMEPAD_AXIS_LEFT_X,
+       AXIS_LEFT_Y = GAMEPAD_AXIS_LEFT_Y,
+       AXIS_RIGHT_X = GAMEPAD_AXIS_RIGHT_X,
+       AXIS_RIGHT_Y = GAMEPAD_AXIS_RIGHT_Y,
+      AXIS_LEFT_TRIGGER = GAMEPAD_AXIS_LEFT_TRIGGER,
+      AXIS_RIGHT_TRIGGER = GAMEPAD_AXIS_RIGHT_TRIGGER
+  };
 
    inline float getMouseWheelMove(){return GetMouseWheelMove();} //returns largest of x or y
    inline ReyEngine::Vec2<R_FLOAT> getMouseWheelMoveV(){return GetMouseWheelMoveV();} //returns both x and y

@@ -35,9 +35,9 @@ namespace ReyEngine {
       protected:
          SpriteAtlas(
             const FileSystem::File& file,
-            const Size<int>& tileSize,
-            const Pos<int>& offset,
-            const Size<int>& padding)
+            const Size<R_FLOAT>& tileSize,
+            const Pos<R_FLOAT>& offset,
+            const Size<R_FLOAT>& padding)
          : texture(file)
          , _tileSize(tileSize)
          , _offset(offset)
@@ -114,9 +114,9 @@ namespace ReyEngine {
       std::optional<SpriteAtlas*> addAtlas(
             const std::string& atlasName,
             const FileSystem::File& file,
-            const Size<int>& tileSize,
-            const Pos<int>& offset,
-            const Size<int>& padding);
+            const Size<float>& tileSize,
+            const Pos<float>& offset,
+            const Size<float>& padding);
       std::optional<SpriteAtlas*> getAtlas(const std::string& atlasName);
       std::optional<TileMapLayer*> addLayer(SpriteAtlas* atlas);
       std::optional<TileMapLayer*> getLayer(LayerIndex);

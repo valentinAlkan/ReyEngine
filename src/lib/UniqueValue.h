@@ -1,6 +1,5 @@
 #pragma once
 #include <array>
-#include <string>
 #include <limits>
 
 //ridiculously unique
@@ -10,7 +9,7 @@ namespace ReyEngine::Internal{
    struct UniqueGenerator{
       UniqueGenerator(): next{0}{}
       //dont care about dtor order
-      static UniqueGenerator instance(){static UniqueGenerator _instance; return _instance;}
+      static UniqueGenerator& instance(){static UniqueGenerator _instance; return _instance;}
       UniqueValue makeNew(){
          auto retval = next;
          size_t i = 0;

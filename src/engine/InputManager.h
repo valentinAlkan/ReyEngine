@@ -32,7 +32,8 @@ namespace ReyEngine{
    };
 
 
-   // mouse types
+   // mouse types - we do this because all mouse events occur at a position, and its annoying to constantly check that value
+   // so we simply treat the mouse types specially and propogate their position as we go
    struct MouseEvent {
       explicit MouseEvent(const Pos<float>& pos)
       // : _canvasPos(pos)
@@ -134,10 +135,24 @@ namespace ReyEngine{
       bool isCancel;
    };
 
-   // other types
-   EVENT(InputEventController, 4444444444444)
+   EVENT_ARGS(InputEventGamePadButton, 4444444444444, InputInterface::GamePadButton button, bool isDown)
+   , button(button)
+   , isDown(isDown)
    {}
-      /*nothing to see here*/
+      InputInterface::GamePadButton button;
+      bool isDown;
+   };
+
+   // -1 to 1 float, 0 is rest position
+   // positive Y is up, positive X is right.
+   // does not account for deadzone in and of itself
+   // for triggers, -1 means unpressed and 1 means fully depressed. Therefore 0 is half depressed.
+   EVENT_ARGS(InputEventGamePadAxis, 4444444444445, InputInterface::GamePadAxis axis, ReyEngine::Range<float> axisAmt)
+   , axis(axis)
+   , axisAmt(axisAmt)
+   {}
+      InputInterface::GamePadAxis axis;
+      Range<float> axisAmt;
    };
 
    namespace Internal{
@@ -150,7 +165,8 @@ namespace ReyEngine{
          InputEventMouseToolTip* toolTip;
          InputEventMouseButton* button;
          InputEventMouseWheel* wheel;
-         InputEventController* controller;
+         InputEventGamePadAxis* gamePadAxis;
+         InputEventGamePadButton* gamePadButton;
       };
    }
 
@@ -177,6 +193,7 @@ namespace ReyEngine{
          if constexpr (T::ID == InputEventMouseToolTip::ID){
             _mouseData = &_union.toolTip->mouse;
          }
+
          eventBase = &event;
       }
       Internal::InputUnion _union = {};
@@ -187,8 +204,9 @@ namespace ReyEngine{
       InputEvent(InputEventMouseHover& event)   {assign<std::remove_cvref_t<decltype(event)>>(_union.hover        , event);}
       InputEvent(InputEventMouseButton& event)  {assign<std::remove_cvref_t<decltype(event)>>(_union.button       , event);}
       InputEvent(InputEventMouseWheel& event)   {assign<std::remove_cvref_t<decltype(event)>>(_union.wheel        , event);}
-      InputEvent(InputEventController& event)   {assign<std::remove_cvref_t<decltype(event)>>(_union.controller   , event);}
-      InputEvent(InputEventMouseToolTip& event)   {assign<std::remove_cvref_t<decltype(event)>>(_union.toolTip    , event);}
+      InputEvent(InputEventGamePadButton& event){assign<std::remove_cvref_t<decltype(event)>>(_union.gamePadButton, event);}
+      InputEvent(InputEventGamePadAxis& event)  {assign<std::remove_cvref_t<decltype(event)>>(_union.gamePadAxis  , event);}
+      InputEvent(InputEventMouseToolTip& event) {assign<std::remove_cvref_t<decltype(event)>>(_union.toolTip      , event);}
       template <typename T>
       std::optional<const T*> isEvent() const {return eventBase->isEvent<T>();} //get base address
       template <typename T>
@@ -224,8 +242,13 @@ namespace ReyEngine{
             static_assert(std::is_same_v<decltype(member), T*>);
             return static_cast<const T&>(*member);
          }
-         if constexpr (T::ID == InputEventController::ID){
-            auto member = _union.controller;
+         if constexpr (T::ID == InputEventGamePadAxis::ID){
+            auto member = _union.gamePadAxis;
+            static_assert(std::is_same_v<decltype(member), T*>);
+            return static_cast<const T&>(*member);
+         }
+         if constexpr (T::ID == InputEventGamePadButton::ID){
+            auto member = _union.gamePadButton;
             static_assert(std::is_same_v<decltype(member), T*>);
             return static_cast<const T&>(*member);
          }

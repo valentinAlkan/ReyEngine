@@ -61,7 +61,7 @@ void TileMap::render2D(RenderContext&) const {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 optional<TileMap::SpriteAtlas*> TileMap::addAtlas(const std::string& atlasName, const FileSystem::File& file,
-                                                  const Size<int>& tileSize, const Pos<int>& offset, const Size<int>& padding) {
+                                                  const Size<R_FLOAT>& tileSize, const Pos<R_FLOAT>& offset, const Size<R_FLOAT>& padding) {
    //try to add the texture
    if (!file.exists()) {
       Logger::error() << "TileMap::addAtlas - file " + file.abs() + " does not exist!" << endl;

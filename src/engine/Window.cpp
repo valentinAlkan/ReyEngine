@@ -266,13 +266,14 @@ void Window::exec(){
          ReyTexture::OrphanedTextureCache::instance().clear();
       }
 
+      //render the scene to our internal buffer
       {
          //scoped so the destructor fires
          RenderContext renderContext(_canvas->_renderTarget);
          canvas->renderProcess(renderContext);
       }
 
-      //draw the scene to the window
+      //paint the scene on the window
       BeginDrawing();
       auto rect = _canvas->getSizeRect();
       BeginBlendMode(BLEND_ALPHA);
@@ -280,7 +281,9 @@ void Window::exec(){
       EndBlendMode();
       EndDrawing();
       _frameCounter++;
-   }
+   } //next frame
+
+   //window shutdowm
    auto lock = Application::getLock();
    _isClosing = true;
    ProcessList<Tree::Processable>::clear();

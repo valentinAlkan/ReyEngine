@@ -136,6 +136,7 @@ add_library(ReyEngine2D STATIC
         src/engine/WindowPrototype.cpp
         src/engine/Event.cpp
         src/engine/InputManager.cpp
+        src/engine/InputActions.cpp
         src/engine/Application.cpp
         src/engine/ReyEngine.cpp
         src/engine/TypeTree.cpp
