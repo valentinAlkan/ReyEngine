@@ -53,6 +53,15 @@ namespace ReyEngine::Internal::Tree {
       virtual void __on_descendant_removed_from_tree(TypeNode*){};
       virtual void __on_ancestor_removed_from_tree(TypeNode*){};
       virtual void __on_orphaned(TypeNode*){}; //when the node has been orphaned (ancestor removed from tree)
+      /// Run __init() exactly once, the first time this storable enters a tree. Callers that
+      /// install a node into a tree must go through this rather than calling __init() directly.
+      /// Children get here via TypeNode::addChild; a root node has no addChild to pass through,
+      /// so Window::initialize calls it for the root instead.
+      void __initIfNeeded(){
+         if (_has_inited) return;
+         __init();
+         _has_inited = true;
+      }
       TypeNode* getNode(){return _node;}
       [[nodiscard]] const TypeNode* getNode() const {return _node;}
       /// Where make_child() actually puts children. Defaults to this node.
@@ -252,10 +261,7 @@ namespace ReyEngine::Internal::Tree {
             }
          }
          //init, if needed
-         if (!addedStorable->_has_inited) {
-            addedStorable->__init();
-            addedStorable->_has_inited = true;
-         }
+         addedStorable->__initIfNeeded();
          //tell the window to refresh the DAG
          updateTree();
          return childptr;

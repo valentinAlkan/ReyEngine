@@ -52,6 +52,8 @@ void Window::initialize(std::optional<std::unique_ptr<TypeNode>> optRoot){
    _canvas = canvas.get();
    canvas->setSize(getSize());
    canvas->__on_added_to_tree();
+   //The root never passes through TypeNode::addChild, so it would otherwise never be inited.
+   canvas->__initIfNeeded();
    SetExitKey(KEY_NULL);
 }
 

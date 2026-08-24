@@ -17,10 +17,14 @@ Tree::Processable::~Processable(){
 /////////////////////////////////////////////////////////////////////////////////////////
 void Tree::Processable::setProcess(bool value) {
    _wantsProcess = value;
-   if (_isProcessed) {
-      _processList->remove(this, _isProcessed);
+   if (value == _isProcessed) return; //already in the requested state
+   if (value) {
+      ProcessList<Processable>::add(this, _isProcessed);
    } else {
-      _processList->add(this, _isProcessed);
+      ProcessList<Processable>::remove(this, _isProcessed);
+      //remove() reports back whether the *global* list still has entries, which says nothing
+      //about us - we were just taken out of it, so record that directly.
+      _isProcessed = false;
    }
 }
 
