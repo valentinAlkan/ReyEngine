@@ -58,6 +58,7 @@ namespace ReyEngine{
          TYPENAME(ReyObject)
          [[nodiscard]] virtual std::string getTypeName() const {return TYPE_NAME;}
          [[nodiscard]] std::string getName() const {return _node ? _node->name : "";}
+         bool setName(const std::string& newName){return _node ? _node->rename(newName) : false;}
          [[nodiscard]] auto getChildren(){return _node ? _node->getChildren() : std::vector<TypeNode*>();}
          [[nodiscard]] auto getChildren() const {return const_cast<ReyObject*>(this)->getChildren();}
          [[nodiscard]] auto getChild(const std::string& name){return _node ? _node->getChild(name) : std::nullopt;}
@@ -127,6 +128,7 @@ namespace ReyEngine{
          void __on_descendant_added_to_tree(TypeNode *n) override { _on_descendant_added_to_tree(n);}
          void __on_child_removed_from_tree(TypeNode* n) override { _on_child_removed_from_tree(n);}
          void __on_descendant_removed_from_tree(TypeNode* n) override { _on_descendant_removed_from_tree(n);}
+         void __on_renamed(const std::string& oldName) override { _on_renamed(oldName);}
          // these are the functions you should override for your nodes
          virtual void _init(){}; //added to tree for first time
          virtual void _on_added_to_tree(){}; //happens every time the node is added to the tree
@@ -134,6 +136,7 @@ namespace ReyEngine{
          virtual void _on_descendant_added_to_tree(TypeNode *n) {};
          virtual void _on_child_removed_from_tree(TypeNode*){};
          virtual void _on_descendant_removed_from_tree(TypeNode*){};
+         virtual void _on_renamed(const std::string& oldName){}; //this object's node was renamed; oldName is the previous name
          virtual inline bool operator==(const ReyObject& rhs){return uniqueValue == rhs.uniqueValue;}
          [[nodiscard]] inline std::optional<Window*> getWindow(){if (_node && _node->_window) { return _node->_window; } else {return std::nullopt;}}
          [[nodiscard]] inline std::optional<const Window*> getWindow() const {return const_cast<ReyObject&>(*this).getWindow();}

@@ -32,6 +32,11 @@ namespace ReyEngine {
       Rect<float>& newRect;
       const Widget* parentWidget;
       };
+      EVENT_ARGS(EventNameChanged, 982347094, const std::string& prevName)
+      , prevName(prevName)
+      {}
+         std::string prevName;
+      };
 
       EVENT_ARGS(WidgetUnhandledInputEvent, 329875, const InputEvent& fwdEvent)
          , fwdEvent(fwdEvent)
@@ -101,6 +106,7 @@ namespace ReyEngine {
       virtual void _on_visibility_changed(){}
       virtual void _on_child_rect_changed(Widget*){};
       virtual void _on_rect_changed(){};
+      void _on_renamed(const std::string& oldName) override {publish(EventNameChanged(this, oldName));}
       void __on_added_to_tree() override;
 
       bool _isLayout = false;

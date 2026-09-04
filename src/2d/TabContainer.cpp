@@ -41,6 +41,8 @@ void TabContainer::_on_child_added_to_tree(TypeNode* node) {
    // if we already have a tab widget, immediately hide any subsequent children
    auto& child = isWidget.value();
    publish(EventTabCreated(this, child));
+   //keep the tab strip in sync when the child is renamed (e.g. via setName or an inspector)
+   subscribe<Widget::EventNameChanged>(child, [this](const Widget::EventNameChanged&){ updateTabExtents(); });
    if (currentTab){
       child->setVisible(false);
    } else {
@@ -77,6 +79,7 @@ void TabContainer::_on_child_removed_from_tree(ReyEngine::TypeNode* node) {
          }
       }
    }
+   cancelSubscription(removedChild);
    arrangeChildren();
 }
 
@@ -116,15 +119,21 @@ void TabContainer::arrangeChildren() {
    _childBoundingRect.height -= tabHeight;
 
    _tabs.clear();
-   R_FLOAT x = 0;
    for (auto child : getChildrenAs<Widget>()){
       layoutApplyRect(child, _childBoundingRect);
       //create a tab rect for the child
-      auto width = measureText(child->getName(), getTheme().font).x + tabPadding;
-      auto height = tabHeight;
-      Rect<R_FLOAT> rect(x, 0, width, height);
+      _tabs.emplace_back(child, Rect<R_FLOAT>(0, 0, tabWidthMinimum, tabHeight));
+   }
+   updateTabExtents();
+}
+
+////////////////////////////////////////////////////////////////////////////////========/
+void TabContainer::updateTabExtents() {
+   R_FLOAT x = 0;
+   for (auto& tab : _tabs){
+      auto width = measureText(tab.widget->getName(), getTheme().font).x + tabPadding;
+      tab.tabRect = Rect<R_FLOAT>(x, 0, width, tabHeight);
       x += width;
-      _tabs.emplace_back(child, rect);
    }
 }
 
