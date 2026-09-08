@@ -4,7 +4,6 @@
 #include "InputManager.h"
 #include "Canvas.h"
 #include "rlgl.h"
-#include "../../../src/GameCanvas.h"
 
 using namespace std;
 using namespace ReyEngine;

@@ -42,6 +42,7 @@ namespace ReyEngine{
       float tabHeight       = 22;
       float tabWidthMinimum = 40;
       float tabPadding      = 2;
+      void updateTabExtents();
    private:
       struct TabData{
          TabData(Widget* widget, const Rect<float>& rect)

@@ -53,6 +53,7 @@ namespace ReyEngine::Internal::Tree {
       virtual void __on_descendant_removed_from_tree(TypeNode*){};
       virtual void __on_ancestor_removed_from_tree(TypeNode*){};
       virtual void __on_orphaned(TypeNode*){}; //when the node has been orphaned (ancestor removed from tree)
+      virtual void __on_renamed(const std::string& oldName){}; //the associated node was renamed via TypeNode::rename
       /// Run __init() exactly once, the first time this storable enters a tree. Callers that
       /// install a node into a tree must go through this rather than calling __init() directly.
       /// Children get here via TypeNode::addChild; a root node has no addChild to pass through,
@@ -200,6 +201,36 @@ namespace ReyEngine::Internal::Tree {
       inline TypeNode* getRoot(){return _root;}
       inline const TypeNode* getRoot() const {return _root;}
       inline std::string getName() const {return name;}
+      //rename this node. re-keys the parent's _childMap, recomputes the scene paths of
+      //this node and its descendants, then dispatches __on_renamed to the storable.
+      //returns false (leaving everything untouched) if a sibling already uses newName.
+      bool rename(const std::string& newName){
+         if (newName == name) return true;
+         if (_parent){
+            auto handle = _parent->_childMap.extract(name);
+            if (handle.empty()){
+               Logger::error() << "Rename failed : " << getScenePath() << " is not keyed in its parent's child map" << std::endl;
+               return false;
+            }
+            if (_parent->_childMap.contains(newName)){
+               _parent->_childMap.insert(std::move(handle)); //put it back under the old key
+               Logger::error() << "Cannot rename " << getScenePath() << " to " << newName << " : a sibling with that name already exists" << std::endl;
+               return false;
+            }
+            handle.key() = newName;
+            _parent->_childMap.insert(std::move(handle)); //node address is unchanged, so _childOrder stays valid
+         }
+         auto oldName = name;
+         name = newName;
+         std::function<void(TypeNode*)> fixScenePath = [&](TypeNode* n){
+            n->_scenePath = n->_parent ? n->_parent->_scenePath + "\\" + n->name : "\\" + n->name;
+            for (auto& [key, child] : n->_childMap)
+               fixScenePath(child.get());
+         };
+         fixScenePath(this);
+         if (auto isStorable = as<TreeStorable>()) isStorable.value()->__on_renamed(oldName);
+         return true;
+      }
       inline std::string getScenePath() const {return _scenePath;}
       inline size_t getIndex(){return _index;}
       // Add child with a name for lookup
@@ -429,7 +460,7 @@ namespace ReyEngine::Internal::Tree {
       [[nodiscard]] const std::vector<TypeNode*>& getChildren() const {return _childOrder;}
       std::vector<TypeNode*>& getChildren() {return _childOrder;}
 
-      const std::string name;
+      std::string name; //mutable only through rename(), which keeps _childMap and _scenePath consistent
       const std::string typeName;
    protected:
 
