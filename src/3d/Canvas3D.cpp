@@ -1,4 +1,5 @@
 #include "Canvas3D.h"
+#include "rlgl.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -68,7 +69,7 @@ void main() {
 }
 )";
 
-   Vector3 colorToVec3(const ColorRGBA& c, float scale = 1.0f) {
+   Vec3<float> colorToVec3(const ColorRGBA& c, float scale = 1.0f) {
       return {c.r / 255.0f * scale, c.g / 255.0f * scale, c.b / 255.0f * scale};
    }
 }
@@ -78,7 +79,8 @@ Canvas3D::~Canvas3D() {
    if (!_gpuLoaded) return;
    UnloadMesh(_cubeMesh);
    UnloadMesh(_sphereMesh);
-   UnloadMaterial(_litMaterial); // also unloads the lighting shader
+   _litMaterial.shader.id = rlGetShaderIdDefault(); // the lighting shader is owned by _lightShader, so UnloadMaterial must not free it
+   UnloadMaterial(_litMaterial);
    UnloadMaterial(_unlitMaterial);
 }
 
@@ -89,47 +91,43 @@ void Canvas3D::loadGpuResources() {
    _unlitMaterial = LoadMaterialDefault();
    _litMaterial = LoadMaterialDefault();
 
-   Shader shader = LoadShaderFromMemory(LIGHT_VS, LIGHT_FS);
-   if (!IsShaderValid(shader)) throw ReyError("Canvas3D: failed to compile lighting shader");
-   shader.locs[SHADER_LOC_MATRIX_MODEL]  = GetShaderLocation(shader, "matModel");
-   shader.locs[SHADER_LOC_MATRIX_NORMAL] = GetShaderLocation(shader, "matNormal");
-   _locs.viewPos     = GetShaderLocation(shader, "viewPos");
-   _locs.ambient     = GetShaderLocation(shader, "ambient");
-   _locs.lightCount  = GetShaderLocation(shader, "lightCount");
-   _locs.lightType   = GetShaderLocation(shader, "lightType[0]");
-   _locs.lightVector = GetShaderLocation(shader, "lightVector[0]");
-   _locs.lightColor  = GetShaderLocation(shader, "lightColor[0]");
-   _locs.lightRange  = GetShaderLocation(shader, "lightRange[0]");
-   _litMaterial.shader = shader;
+   _lightShader = ReyShader::makeShader(ShaderPrototype::fromMemory(LIGHT_VS, LIGHT_FS));
+   _lightShader->setLocation(SHADER_LOC_MATRIX_MODEL, "matModel");
+   _lightShader->setLocation(SHADER_LOC_MATRIX_NORMAL, "matNormal");
+   auto& shader = *_lightShader;
+   _uniforms.viewPos     = shader.getUniform<Vec3<float>>("viewPos");
+   _uniforms.ambient     = shader.getUniform<Vec3<float>>("ambient");
+   _uniforms.lightCount  = shader.getUniform<int>("lightCount");
+   _uniforms.lightType   = shader.getUniform<int>("lightType[0]");
+   _uniforms.lightVector = shader.getUniform<Vec3<float>>("lightVector[0]");
+   _uniforms.lightColor  = shader.getUniform<Vec3<float>>("lightColor[0]");
+   _uniforms.lightRange  = shader.getUniform<float>("lightRange[0]");
+   _litMaterial.shader = _lightShader->getShader();
    _gpuLoaded = true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas3D::uploadLightUniforms() {
-   int types[MAX_LIGHTS];
-   Vector3 vectors[MAX_LIGHTS];
-   Vector3 colors[MAX_LIGHTS];
-   float ranges[MAX_LIGHTS];
+   std::array<int, MAX_LIGHTS> types{};
+   std::array<Vec3<float>, MAX_LIGHTS> vectors;
+   std::array<Vec3<float>, MAX_LIGHTS> colors;
+   std::array<float, MAX_LIGHTS> ranges{};
    int count = 0;
    for (const auto& light : _lights) {
       if (!light.enabled) continue;
       types[count]   = light.type == Light3D::Type::DIRECTIONAL ? 0 : 1;
-      vectors[count] = (Vector3)light.vector;
+      vectors[count] = light.vector;
       colors[count]  = colorToVec3(light.color, light.intensity);
       ranges[count]  = light.range;
       count++;
    }
-   auto& shader = _litMaterial.shader;
-   Vector3 viewPos = (Vector3)_camera3D.position;
-   Vector3 ambient = colorToVec3(_ambient);
-   SetShaderValue(shader, _locs.viewPos, &viewPos, SHADER_UNIFORM_VEC3);
-   SetShaderValue(shader, _locs.ambient, &ambient, SHADER_UNIFORM_VEC3);
-   SetShaderValue(shader, _locs.lightCount, &count, SHADER_UNIFORM_INT);
-   if (count == 0) return;
-   SetShaderValueV(shader, _locs.lightType, types, SHADER_UNIFORM_INT, count);
-   SetShaderValueV(shader, _locs.lightVector, vectors, SHADER_UNIFORM_VEC3, count);
-   SetShaderValueV(shader, _locs.lightColor, colors, SHADER_UNIFORM_VEC3, count);
-   SetShaderValueV(shader, _locs.lightRange, ranges, SHADER_UNIFORM_FLOAT, count);
+   _uniforms.viewPos.setValue(_camera3D.position);
+   _uniforms.ambient.setValue(colorToVec3(_ambient));
+   _uniforms.lightCount.setValue(count);
+   _uniforms.lightType.setValues(std::span(types).first(count));
+   _uniforms.lightVector.setValues(std::span(vectors).first(count));
+   _uniforms.lightColor.setValues(std::span(colors).first(count));
+   _uniforms.lightRange.setValues(std::span(ranges).first(count));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

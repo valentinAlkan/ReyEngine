@@ -3,6 +3,7 @@
 #include "FileSystem.h"
 #include <map>
 #include <concepts>
+#include <span>
 
 namespace ReyEngine {
    // Concept to check if a type is a basic shader type (not Matrix or Texture)
@@ -239,6 +240,12 @@ namespace ReyEngine {
                static_assert(always_false_v<V>, "Unsupported shader type in operator=!");
             }
          }
+         //set a uniform array (e.g. "uniform vec3 values[8]") starting at this location
+         void setValues(std::span<const V> values){
+            static_assert(is_supported_shader_type<V> && !std::is_same_v<V, ColorRGBA>, "Unsupported shader array type!");
+            if (values.empty()) return;
+            SetShaderValueV(T::_shader, T::_location, static_cast<const void*>(values.data()), (int)T::_type, (int)values.size());
+         }
       };
       ~ReyShader();
       [[nodiscard]] bool valid(){return IsShaderValid(_shader);}
@@ -286,6 +293,10 @@ namespace ReyEngine {
       };
 
       [[nodiscard]] const Shader& getShader() const {return _shader;}
+      //point one of raylib's standard shader locations (SHADER_LOC_MATRIX_MODEL, etc) at a uniform in this shader
+      void setLocation(ShaderLocationIndex index, const std::string& uniformName){
+         _shader.locs[index] = GetShaderLocation(_shader, uniformName.c_str());
+      }
       static std::shared_ptr<ReyShader> makeFragment(const FragmentOnlyShaderPrototype& p){return std::shared_ptr<ReyShader>(new ReyShader(p));}
       static std::shared_ptr<ReyShader> makeVertex(const VertexOnlyShaderPrototype& p){return std::shared_ptr<ReyShader>(new ReyShader(p));}
       static std::shared_ptr<ReyShader> makeShader(const ShaderPrototype& p){return std::shared_ptr<ReyShader>(new ReyShader(p));}

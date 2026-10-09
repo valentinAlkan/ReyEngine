@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include "Canvas.h"
+#include "Shader.h"
 
 namespace ReyEngine {
 
@@ -71,8 +72,12 @@ namespace ReyEngine {
       Mesh _sphereMesh{}; // unit radius sphere, scaled per shape
       Material _litMaterial{};
       Material _unlitMaterial{};
+      std::shared_ptr<ReyShader> _lightShader;
+      template <typename T> using Uniform = ReyShader::ShaderValue<ReyShader::Uniform, T>;
       struct {
-         int viewPos, ambient, lightCount, lightType, lightVector, lightColor, lightRange;
-      } _locs{};
+         Uniform<Vec3<float>> viewPos, ambient, lightVector, lightColor;
+         Uniform<int> lightCount, lightType;
+         Uniform<float> lightRange;
+      } _uniforms;
    };
 }
