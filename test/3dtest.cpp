@@ -4,6 +4,7 @@
 #include "Window.h"
 #include "Canvas3D.h"
 #include "MeshInstance3D.h"
+#include "Light3D.h"
 
 using namespace ReyEngine;
 
@@ -38,8 +39,9 @@ int main(){
     cube->setProcess(std::function<void()>([cube](){ cube->rotate({0, 1, 0}, Radians(GetFrameTime())); }));
 
     canvas3d->setAmbientLight({30, 30, 40, 255});
-    canvas3d->addDirectionalLight({-1, -2, -1}, Colors::white, 0.6f);
-    canvas3d->addPointLight({1, 1.5f, 1.5f}, Colors::yellow, 1.5f, 6.0f);
+    make_child<DirectionalLight3D>(canvas3d, "sun", Vec3<float>{-1, -2, -1}, Colors::white, 0.6f);
+    auto lamp = make_child<PointLight3D>(canvas3d, "lamp", Colors::yellow, 1.5f, 6.0f);
+    lamp->setPosition(1, 1.5f, 1.5f);
 
     window.exec();
     return 0;

@@ -90,18 +90,26 @@ void Canvas3D::loadGpuResources() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Canvas3D::uploadLightUniforms() {
+void Canvas3D::uploadLightUniforms(const std::vector<const Light3D*>& lights) {
    std::array<int, MAX_LIGHTS> types{};
    std::array<Vec3<float>, MAX_LIGHTS> vectors;
    std::array<Vec3<float>, MAX_LIGHTS> colors;
    std::array<float, MAX_LIGHTS> ranges{};
    int count = 0;
-   for (const auto& light : _lights) {
-      if (!light.enabled) continue;
-      types[count]   = light.type == Light3D::Type::DIRECTIONAL ? 0 : 1;
-      vectors[count] = light.vector;
-      colors[count]  = colorToVec3(light.color, light.intensity);
-      ranges[count]  = light.range;
+   for (const auto& light : lights) {
+      if (count == MAX_LIGHTS) {
+         Logger::warn() << "Canvas3D " << getName() << ": only the first " << MAX_LIGHTS << " lights are used" << endl;
+         break;
+      }
+      if (light->getType() == Light3D::Type::DIRECTIONAL) {
+         types[count]   = 0;
+         vectors[count] = static_cast<const DirectionalLight3D*>(light)->getGlobalDirection();
+      } else {
+         types[count]   = 1;
+         vectors[count] = light->getGlobalPosition();
+         ranges[count]  = static_cast<const PointLight3D*>(light)->getRange();
+      }
+      colors[count] = colorToVec3(light->getColor(), light->getIntensity());
       count++;
    }
    _uniforms.viewPos.setValue(_camera3D.position);
@@ -130,9 +138,13 @@ void Canvas3D::renderProcess(RenderContext&) {
    rCam.projection = CAMERA_PERSPECTIVE;
 
    //materials without a shader of their own get lit when there are lights, and are drawn flat otherwise
+   std::vector<const Light3D*> lights;
+   for (auto& child : getChildren()) {
+      if (auto drawable = child->as<Internal::Drawable3D>()) collectLights(drawable.value(), lights);
+   }
    std::shared_ptr<ReyShader> defaultShader;
-   if (!_lights.empty()) {
-      uploadLightUniforms();
+   if (!lights.empty()) {
+      uploadLightUniforms(lights);
       defaultShader = _lightShader;
    }
 
@@ -162,6 +174,18 @@ void Canvas3D::doRender3D(RenderContext3D& context, Internal::Drawable3D* drawab
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void Canvas3D::collectLights(Internal::Drawable3D* drawable, std::vector<const Light3D*>& lights) {
+   //hidden nodes hide their descendants, so their lights are off too
+   if (!drawable->_visible) return;
+   if (auto isLight = drawable->getNode()->as<Light3D>()) lights.push_back(isLight.value());
+   for (auto& child : drawable->getChildren()) {
+      if (auto childDrawable = child->as<Internal::Drawable3D>()) {
+         collectLights(childDrawable.value(), lights);
+      }
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void Canvas3D::__on_descendant_added_to_tree(TypeNode* n) {
    //assign 3D drawables to their owning canvas, as Canvas does for 2D drawables
    if (auto isDrawable = n->as<Internal::Drawable3D>()) {
@@ -180,18 +204,4 @@ void Canvas3D::__on_descendant_removed_from_tree(TypeNode* n) {
       }
    }
    Canvas::__on_descendant_removed_from_tree(n);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-size_t Canvas3D::addDirectionalLight(const Vec3<float>& direction, const ColorRGBA& color, float intensity) {
-   if (_lights.size() >= MAX_LIGHTS) throw ReyError("Canvas3D: too many lights");
-   _lights.push_back({Light3D::Type::DIRECTIONAL, direction, color, intensity});
-   return _lights.size() - 1;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-size_t Canvas3D::addPointLight(const Vec3<float>& position, const ColorRGBA& color, float intensity, float range) {
-   if (_lights.size() >= MAX_LIGHTS) throw ReyError("Canvas3D: too many lights");
-   _lights.push_back({Light3D::Type::POINT, position, color, intensity, range});
-   return _lights.size() - 1;
 }

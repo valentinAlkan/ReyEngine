@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include "Canvas.h"
-#include "Node3D.h"
+#include "Light3D.h"
 
 namespace ReyEngine {
 
@@ -13,16 +13,6 @@ namespace ReyEngine {
       float fovy = 45.0f; // degrees
    };
 
-   struct Light3D {
-      enum class Type {DIRECTIONAL, POINT};
-      Type type = Type::DIRECTIONAL;
-      Vec3<float> vector{0,-1,0}; // direction the light travels for DIRECTIONAL, world position for POINT
-      ColorRGBA color = Colors::white;
-      float intensity = 1.0f;
-      float range = 0.0f; // POINT only. Light fades to nothing at this distance. 0 = no falloff
-      bool enabled = true;
-   };
-
    class Canvas3D : public Canvas {
    public:
       static constexpr size_t MAX_LIGHTS = 8;
@@ -32,13 +22,7 @@ namespace ReyEngine {
       ReyCamera3D& getCamera3D(){return _camera3D;}
       const ReyCamera3D& getCamera3D() const {return _camera3D;}
 
-      // lighting. With no lights, shapes are drawn unlit (flat color).
-      // add* return the light's index, which can be used with getLight. Throws if MAX_LIGHTS is exceeded.
-      size_t addDirectionalLight(const Vec3<float>& direction, const ColorRGBA& color = Colors::white, float intensity = 1.0f);
-      size_t addPointLight(const Vec3<float>& position, const ColorRGBA& color = Colors::white, float intensity = 1.0f, float range = 0.0f);
-      Light3D& getLight(size_t index){return _lights.at(index);}
-      const std::vector<Light3D>& getLights() const {return _lights;}
-      void clearLights(){_lights.clear();}
+      // lighting comes from Light3D nodes in the scene (at most MAX_LIGHTS are used). With none, everything is drawn unlit.
       void setAmbientLight(const ColorRGBA& color){_ambient = color;}
       const ColorRGBA& getAmbientLight() const {return _ambient;}
 
@@ -48,13 +32,14 @@ namespace ReyEngine {
       void __on_descendant_removed_from_tree(TypeNode* child) override;
       // draw a 3D node and its 3D descendants. The 3D counterpart of Canvas::doRender
       static void doRender3D(RenderContext3D&, Internal::Drawable3D*);
+      // find the visible lights in a 3D subtree
+      static void collectLights(Internal::Drawable3D*, std::vector<const Light3D*>&);
 
    private:
       void loadGpuResources();
-      void uploadLightUniforms();
+      void uploadLightUniforms(const std::vector<const Light3D*>& lights);
 
       ReyCamera3D _camera3D;
-      std::vector<Light3D> _lights;
       ColorRGBA _ambient = {40, 40, 40, 255};
 
       // GPU resources, created lazily on first render since they need a GL context
