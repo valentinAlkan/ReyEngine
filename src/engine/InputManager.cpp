@@ -4,6 +4,32 @@
 using namespace ReyEngine;
 using namespace InputInterface;
 
+///////////////////////////////////////////////////////////////////////////////////////////
+Handled Internal::InputReceiver::__process_unhandled_input(const InputEvent& event) {
+   //we can intercept certain events and always handle them, for example, tooltips (and eventually hovers)
+   if (event.isMouse().has_value() && event.isMouse().value()->isInside()){
+      switch (event.eventId) {
+         //offer these events to children who may want them, but then accept them if there are no takers.
+         case InputEventMouseToolTip::ID: {
+            if (auto handled = _unhandled_input(event); !handled && !_tooltipText.empty())
+               return {this, event.isMouse().value()->getLocalPos()};
+            break;
+         }
+         case InputEventMouseHover::ID: {
+            if (auto handled = _unhandled_input(event); !handled && _acceptsHover)
+               return {this, event.isMouse().value()->getLocalPos()};
+            break;
+         }
+      }
+   }
+
+   auto handler = _unhandled_input(event);
+   if (event.isMouse() && handler.handler == this && !handler.pos.has_value()) {
+      handler.pos = event.isMouse().value()->getLocalPos();
+   }
+   return handler;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////
 KeyCode InputManager::getKeyPressed() {
    auto key = InputInterface::getKeyPressed();

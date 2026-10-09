@@ -9,9 +9,8 @@ namespace ReyEngine {
       //give special status to widgets - define new status here and add to tuple
       struct Modal{static constexpr char NAME[] = "Modal";}; // Modal widgets get first dibs on input events, *and (by default) consume those events that are not handled explicitly* AND are drawn last by the canvas
       struct Focus{static constexpr char NAME[] = "Focus";}; // Focused widgets get first dibs on non-modal input events
-      struct Hover{static constexpr char NAME[] = "Hover";};
-      struct ToolTip{static constexpr char NAME[] = "ToolTip";}; //The currently displayed tool-tip
-      using StatusTypes = std::tuple<Modal, Focus, Hover, ToolTip>;
+      // (hover and the displayed tooltip are tracked separately, since they can belong to any InputReceiver, not just widgets)
+      using StatusTypes = std::tuple<Modal, Focus>;
       // Type trait to check if a type is in the tuple
       template <typename T, typename Tuple> struct is_in_tuple;
       template <typename T, typename... Ts> struct is_in_tuple<T, std::tuple<Ts...>> : std::disjunction<std::is_same<T, Ts>...> {};
@@ -45,10 +44,6 @@ namespace ReyEngine {
          statusWidgetStorage[statusIndex] = newWidget;
          bool statusChange = newWidget != oldWidget;
          if (!statusChange) return;
-         if constexpr (std::is_same_v<Status, WidgetStatus::Hover>){
-            if (oldWidget) oldWidget->_on_mouse_exit();
-            if (newWidget) newWidget->_on_mouse_enter();
-         }
          if constexpr (std::is_same_v<Status, WidgetStatus::Focus>){
             if (oldWidget) oldWidget->_on_focus_lost();
             if (newWidget) newWidget->_on_focus_gained();
@@ -152,6 +147,12 @@ namespace ReyEngine {
       }
       void _removeAllStatus(Widget* widget){
          std::apply([this, widget](auto... dummyStatuses) {(this->_removeStatus<decltype(dummyStatuses)>(widget), ...);}, WidgetStatus::StatusTypes{});
+         _removeInputStatus(widget);
+      }
+      //clears hover and tooltip status from something that is leaving the tree
+      void _removeInputStatus(Internal::InputReceiver* receiver){
+         if (_hover == receiver) setHover(nullptr);
+         if (_toolTip == receiver) setToolTip(nullptr);
       }
 
       RenderTarget _renderTarget;
@@ -163,6 +164,8 @@ namespace ReyEngine {
       OrderedCache<TypeNode*> _foreground;
       OrderedCache<TypeNode*> _background;
       std::array<Widget*, std::tuple_size_v<WidgetStatus::StatusTypes>> statusWidgetStorage = {0};
+      Internal::InputReceiver* _hover = nullptr;
+      Internal::InputReceiver* _toolTip = nullptr;
 
       static void doRender(RenderContext&, Widget*, bool isModal=false);
       static void doRenderModal(RenderContext&, Widget*);
@@ -220,22 +223,28 @@ namespace ReyEngine {
       template <WidgetStatus::StatusType Status>
       [[nodiscard]] const Widget* getStatus() const {return const_cast<Canvas*>(this)->getStatus<Status>();}
    public:
-      void setHover(Widget* w) { setStatus<WidgetStatus::Hover>(w);}
+      void setHover(Internal::InputReceiver* r) {
+         if (r == _hover) return;
+         auto old = _hover;
+         _hover = r;
+         if (old) old->_on_mouse_exit();
+         if (r) r->_on_mouse_enter();
+      }
       void pushFocus(Widget* w){ pushStatus<WidgetStatus::Focus>(w);}
       void pushModal(Widget* w){ pushStatus<WidgetStatus::Modal>(w);}
       void popFocus(Widget* w) { popStatus<WidgetStatus::Focus>(w);}
       void revokeFocus(Widget* w) { _removeStatus<WidgetStatus::Focus>(w);}
       void popModal(Widget* w) { popStatus<WidgetStatus::Modal>(w);}
       void revokeModal(Widget* w) { _removeStatus<WidgetStatus::Modal>(w);}
-      void setToolTip(Widget* w){ setStatus<WidgetStatus::ToolTip>(w);}
-      Widget* getHover() {return   getStatus<WidgetStatus::Hover>();}
+      void setToolTip(Internal::InputReceiver* r){ _toolTip = r;}
+      Internal::InputReceiver* getHover() {return _hover;}
       Widget* getFocus() {return getStatus<WidgetStatus::Focus>();}
       Widget* getModal() {return   getStatus<WidgetStatus::Modal>();}
-      Widget* getToolTip() {return getStatus<WidgetStatus::ToolTip>();}
-      const Widget* getHover() const {return   getStatus<WidgetStatus::Hover>();}
+      Internal::InputReceiver* getToolTip() {return _toolTip;}
+      const Internal::InputReceiver* getHover() const {return _hover;}
       const Widget* getFocus() const {return   getStatus<WidgetStatus::Focus>();}
       const Widget* getModal() const {return   getStatus<WidgetStatus::Modal>();}
-      const Widget* getToolTip() const {return getStatus<WidgetStatus::ToolTip>();}
+      const Internal::InputReceiver* getToolTip() const {return _toolTip;}
       friend class Window;
    };
 }

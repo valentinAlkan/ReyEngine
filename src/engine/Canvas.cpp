@@ -230,7 +230,7 @@ Handled Canvas::_processInput(const InputEvent& event) {
                   canvas->setToolTip(nullptr);
                } else if (!handled.handler->getToolTipText().empty()) {
                   // Set tooltip on the handler's own canvas, fallback to interceptor's canvas
-                  if (auto handlerCanvas = handled.handler->getCanvas()) {
+                  if (auto handlerCanvas = handled.handler->getInputCanvas()) {
                      handlerCanvas.value()->setToolTip(handled.handler);
                   } else {
                      canvas->setToolTip(handled.handler);
@@ -242,7 +242,7 @@ Handled Canvas::_processInput(const InputEvent& event) {
                break;}
             case InputEventMouseHover::ID:{
                // Set hover on the handler's own canvas, fallback to interceptor's canvas
-               if (auto handlerCanvas = handled.handler->getCanvas()) {
+               if (auto handlerCanvas = handled.handler->getInputCanvas()) {
                   handlerCanvas.value()->setHover(handled.handler);
                } else {
                   canvas->setHover(handled.handler);
@@ -328,7 +328,7 @@ Handled Canvas::_processInput(const InputEvent& event) {
    if (handled) return handled;
 
    //finally we publish the input
-   WidgetUnhandledInputEvent unhandledInputEvent(this, event);
+   UnhandledInputEvent unhandledInputEvent(this, event);
    publishMutable(unhandledInputEvent);
    return unhandledInputEvent.handled;
 }

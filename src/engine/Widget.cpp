@@ -404,32 +404,6 @@ bool Widget::getIsRendering() const {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-Handled Widget::__process_unhandled_input(const InputEvent& event) {
-   //we can intercept certain events and always handle them, for example, tooltips (and eventually hovers)
-   if (event.isMouse().has_value() && event.isMouse().value()->isInside()){
-      switch (event.eventId) {
-         //offer these events to children who may want them, but then accept them if there are no takers.
-         case InputEventMouseToolTip::ID: {
-            if (auto handled = _unhandled_input(event); !handled && !_tooltipText.empty())
-               return {this, event.isMouse().value()->getLocalPos()};
-            break;
-         }
-         case InputEventMouseHover::ID: {
-            if (auto handled = _unhandled_input(event); !handled && _acceptsHover)
-               return {this, event.isMouse().value()->getLocalPos()};
-            break;
-         }
-      }
-   }
-
-   auto handler = _unhandled_input(event);
-   if (event.isMouse() && handler.handler == this && !handler.pos.has_value()) {
-      handler.pos = event.isMouse().value()->getLocalPos();
-   }
-   return handler;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
 Handled Widget::processInput(const InputEvent& e) {
    //only really serves to check if input is inside this widget, but it has to be called by someoneone once
    // or the input propogation chain will be wrong on the first step
@@ -459,12 +433,8 @@ Handled Widget::_processInput(const InputEvent& e) {
       return nullptr;
    };
    
-   auto process = [&](const InputEvent& e) -> Handled {
-      return __process_unhandled_input(e);
-   };
-   
-   auto _publish = [&](const InputEvent& e) -> Handled {
-      WidgetUnhandledInputEvent _event(this, e);
+   auto _publish = [&]() -> Handled {
+      UnhandledInputEvent _event(this, e);
       publishMutable(_event);
       return _event.handled;
    };
@@ -473,31 +443,6 @@ Handled Widget::_processInput(const InputEvent& e) {
       //this is a canvas
       return canvas.value()->processInput(e);
    }
-   
-   #define RETURN if (handled) return handled
-   Handled here(this, e.isMouse() ? e.isMouse().value()->getLocalPos() : std::optional<Pos<float>>());
-   Handled handled;
-   switch(_inputFilter) {
-      case InputFilter::PASS_ONLY: handled = pass(e); RETURN; break;
-      case InputFilter::PROCESS_ONLY: handled = process(e); RETURN; break;
-      case InputFilter::PUBLISH_ONLY: handled = _publish(e); RETURN; break;
-      case InputFilter::PASS_AND_PROCESS: handled = pass(e); RETURN; handled = process(e); RETURN; break;
-      case InputFilter::PROCESS_AND_PASS: handled = process(e); RETURN; handled = pass(e); RETURN; break;
-      case InputFilter::PROCESS_AND_STOP: handled = process(e); RETURN; return here;
-      case InputFilter::PROCESS_AND_PUBLISH: handled = process(e); RETURN; handled = _publish(e); RETURN; break;
-      case InputFilter::IGNORE_AND_PASS: handled = pass(e); RETURN; break;
-      case InputFilter::IGNORE_AND_STOP: return here;
-      case InputFilter::PUBLISH_AND_PASS: handled = _publish(e); RETURN; handled = pass(e); RETURN; break;
-      case InputFilter::PASS_AND_PUBLISH: handled = pass(e); RETURN; handled = _publish(e); RETURN; break;
-      case InputFilter::PUBLISH_AND_STOP: handled = _publish(e); RETURN; return here;
-      case InputFilter::PASS_PUBLISH_PROCESS: handled = pass(e); RETURN; handled = _publish(e); RETURN; handled = process(e); RETURN; break;
-      case InputFilter::PASS_PROCESS_PUBLISH: handled = pass(e);  RETURN; handled = process(e); RETURN; handled = _publish(e); RETURN; break;
-      case InputFilter::PASS_PROCESS_STOP: handled = pass(e);  RETURN; handled = process(e); RETURN; return here;
-      case InputFilter::PROCESS_PUBLISH_PASS: handled = process(e); RETURN; handled = _publish(e); RETURN; handled = pass(e); RETURN; break;
-      case InputFilter::PROCESS_PASS_PUBLISH: handled = process(e); RETURN; handled = pass(e); RETURN; handled = _publish(e); RETURN; break;
-      case InputFilter::PUBLISH_PASS_PROCESS: handled = _publish(e); RETURN; handled = pass(e); RETURN; handled = process(e); RETURN; break;
-      case InputFilter::PUBLISH_PROCESS_PASS: handled = _publish(e); RETURN; handled = process(e); RETURN; handled = pass(e); RETURN; break;
-   }
-   #undef RETURN
-   return nullptr;
+
+   return __filter_input(e, [&]{return pass(e);}, _publish);
 }

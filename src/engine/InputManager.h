@@ -6,16 +6,17 @@
 
 namespace ReyEngine{
    //contains information about how input events were handled
-   class Widget;
+   class Canvas;
+   namespace Internal {class InputReceiver;}
    struct Handled {
       Handled()
             : handler(nullptr)
       {}
-      Handled(Widget* handler, std::optional<Pos<float>> pos = {})
+      Handled(Internal::InputReceiver* handler, std::optional<Pos<float>> pos = {})
       : handler(handler)
       , pos(pos)
       {}
-      Widget* handler;
+      Internal::InputReceiver* handler; //a Widget, or a Node3D
       std::optional<Pos<float>> pos; //for positional input, the position where the input was handled at by the handler (in local space)
       operator bool() const {return handler != nullptr;}
    };
@@ -332,6 +333,75 @@ namespace ReyEngine{
       PUBLISH_PASS_PROCESS,
       PUBLISH_PROCESS_PASS,
    };
+   /// Published (mutably) by a Widget or Node3D when input goes unhandled, if its InputFilter says to publish.
+   /// Subscribers set 'handled' to claim the input.
+   EVENT_ARGS(UnhandledInputEvent, 329875, const InputEvent& fwdEvent)
+      , fwdEvent(fwdEvent)
+      {}
+      const InputEvent& fwdEvent;
+      Handled handled;
+   };
+
+   namespace Internal {
+      /// Anything that can be offered input: Widget in 2D, Node3D in 3D. Holds what the two share (the _unhandled_input
+      /// hook, input filtering, hover and tooltips) so that a Canvas can treat them alike.
+      class InputReceiver {
+      public:
+         virtual ~InputReceiver() = default;
+         [[nodiscard]] virtual std::string getName() const = 0;
+         /// the canvas that tracks this receiver's hover and tooltip status
+         [[nodiscard]] virtual std::optional<Canvas*> getInputCanvas() = 0;
+         void setInputFiltering(InputFilter newFilter){ _inputFilter = newFilter;}
+         [[nodiscard]] InputFilter getInputFiltering() const {return _inputFilter;}
+         [[nodiscard]] bool getAcceptsHover() const {return _acceptsHover;}
+         void setAcceptsHover(bool accepts){_acceptsHover = accepts;}
+         void setToolTipText(const std::string& t){_tooltipText = t;}
+         [[nodiscard]] std::string getToolTipText() const {return _tooltipText;}
+      protected:
+         virtual Handled _unhandled_input(const InputEvent&){return nullptr;}
+         virtual void _on_mouse_enter(){};
+         virtual void _on_mouse_exit(){};
+         //offers input to _unhandled_input, and implicitly handles hover and tooltip events over this receiver
+         Handled __process_unhandled_input(const InputEvent& event);
+         //offers input to children (pass), to ourselves (process) and to subscribers (publish) in the order that
+         // _inputFilter specifies
+         template <typename Pass, typename Publish>
+         Handled __filter_input(const InputEvent& e, Pass&& pass, Publish&& publish) {
+            auto process = [&]() -> Handled {return __process_unhandled_input(e);};
+            #define RETURN if (handled) return handled
+            Handled here(this, e.isMouse() ? e.isMouse().value()->getLocalPos() : std::optional<Pos<float>>());
+            Handled handled;
+            switch(_inputFilter) {
+               case InputFilter::PASS_ONLY: handled = pass(); RETURN; break;
+               case InputFilter::PROCESS_ONLY: handled = process(); RETURN; break;
+               case InputFilter::PUBLISH_ONLY: handled = publish(); RETURN; break;
+               case InputFilter::PASS_AND_PROCESS: handled = pass(); RETURN; handled = process(); RETURN; break;
+               case InputFilter::PROCESS_AND_PASS: handled = process(); RETURN; handled = pass(); RETURN; break;
+               case InputFilter::PROCESS_AND_STOP: handled = process(); RETURN; return here;
+               case InputFilter::PROCESS_AND_PUBLISH: handled = process(); RETURN; handled = publish(); RETURN; break;
+               case InputFilter::IGNORE_AND_PASS: handled = pass(); RETURN; break;
+               case InputFilter::IGNORE_AND_STOP: return here;
+               case InputFilter::PUBLISH_AND_PASS: handled = publish(); RETURN; handled = pass(); RETURN; break;
+               case InputFilter::PASS_AND_PUBLISH: handled = pass(); RETURN; handled = publish(); RETURN; break;
+               case InputFilter::PUBLISH_AND_STOP: handled = publish(); RETURN; return here;
+               case InputFilter::PASS_PUBLISH_PROCESS: handled = pass(); RETURN; handled = publish(); RETURN; handled = process(); RETURN; break;
+               case InputFilter::PASS_PROCESS_PUBLISH: handled = pass();  RETURN; handled = process(); RETURN; handled = publish(); RETURN; break;
+               case InputFilter::PASS_PROCESS_STOP: handled = pass();  RETURN; handled = process(); RETURN; return here;
+               case InputFilter::PROCESS_PUBLISH_PASS: handled = process(); RETURN; handled = publish(); RETURN; handled = pass(); RETURN; break;
+               case InputFilter::PROCESS_PASS_PUBLISH: handled = process(); RETURN; handled = pass(); RETURN; handled = publish(); RETURN; break;
+               case InputFilter::PUBLISH_PASS_PROCESS: handled = publish(); RETURN; handled = pass(); RETURN; handled = process(); RETURN; break;
+               case InputFilter::PUBLISH_PROCESS_PASS: handled = publish(); RETURN; handled = process(); RETURN; handled = pass(); RETURN; break;
+            }
+            #undef RETURN
+            return nullptr;
+         }
+         InputFilter _inputFilter = InputFilter::PASS_AND_PROCESS;
+         bool _acceptsHover = true; //whether this will implicitly handle hover events
+         std::string _tooltipText;
+         friend class ReyEngine::Canvas;
+      };
+   }
+
    enum class ModifierKey {
       CTL_EITHER,
       CTL_LEFT,

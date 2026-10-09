@@ -16,6 +16,7 @@ namespace ReyEngine {
    , public EventSubscriber
    , public MetaDataInterface
    , public Easable
+   , public Internal::InputReceiver
    {
    public:
       EVENT_ARGS(RectChangedEvent, 329874, const Rect<float>& r)
@@ -38,17 +39,13 @@ namespace ReyEngine {
          std::string prevName;
       };
 
-      EVENT_ARGS(WidgetUnhandledInputEvent, 329875, const InputEvent& fwdEvent)
-         , fwdEvent(fwdEvent)
-         {}
-         Rect<R_FLOAT> rect;
-         const InputEvent& fwdEvent;
-         Handled handled;
-      };
+      using WidgetUnhandledInputEvent = UnhandledInputEvent;
 
       Widget()= default;
       ~Widget() override{}
       REYENGINE_OBJECT(Widget)
+      [[nodiscard]] std::string getName() const override {return ReyObject::getName();}
+      [[nodiscard]] std::optional<Canvas*> getInputCanvas() override {return getCanvas();}
       Theme& getTheme(){return *theme;}
       const Theme& getTheme() const {return *theme;}
       auto& getThemePtr() {return theme;}
@@ -64,8 +61,6 @@ namespace ReyEngine {
       [[nodiscard]] bool isHovered() const;
       [[nodiscard]] bool isFocused() const;
       [[nodiscard]] bool isModal() const;
-      [[nodiscard]] bool getAcceptsHover() const {return _acceptsHover;}
-      void setAcceptsHover(bool accepts){_acceptsHover = accepts;}
       void setHovered(bool);
       void setFocused(bool);
       void setModal(bool);
@@ -79,8 +74,6 @@ namespace ReyEngine {
       [[nodiscard]] Transform2D getWindowTransform() const;
       void setEnabled(bool newState){_enabled = newState;}
       [[nodiscard]] bool getIsEnabled() const {return _enabled;}
-      void setInputFiltering(InputFilter newFilter){ _inputFilter = newFilter;}
-      [[nodiscard]] InputFilter getInputFiltering() const {return _inputFilter;}
       [[nodiscard]] bool getIgnoreOutsideInput() const {return _ignoreOutsideInput;}
       void setIgnoreOutsideInput(bool newValue){ _ignoreOutsideInput = newValue;}
       virtual Handled processInput(const InputEvent& e); //process an input local to this widget
@@ -88,17 +81,11 @@ namespace ReyEngine {
       void moveToForeground();
       void moveToBackground();
       [[nodiscard]] bool getIsRendering() const; //determines if this widget and all it's ancestors are being drawn - checks visibility of all ancestors
-      void setToolTipText(const std::string& t){_tooltipText = t;}
-      [[nodiscard]] std::string getToolTipText() const {return _tooltipText;}
       [[nodiscard]] bool isLayout() const {return _isLayout;}
    protected:
       virtual Handled _processInput(const InputEvent& e); //process an input local to this widget
       virtual void render2D(RenderContext&) const override {};
-      Handled __process_unhandled_input(const InputEvent& event);
-      virtual Handled _unhandled_input(const InputEvent&){return nullptr;}
       virtual Handled _process_unhandled_editor_input(const InputEvent&){return nullptr;} //pass input to children if they want it and then process it for ourselves if necessary ONLY FOR EDITOR RELATED THINGS (grab handles mostly)
-      virtual void _on_mouse_enter(){};
-      virtual void _on_mouse_exit(){};
       virtual void _on_modality_gained(){}
       virtual void _on_modality_lost(){}
       virtual void _on_focus_gained(){}
@@ -111,7 +98,6 @@ namespace ReyEngine {
 
       bool _isLayout = false;
       bool _enabled = true; //changes visuals and (typically) ingores input
-      InputFilter _inputFilter = InputFilter::PASS_AND_PROCESS;
       std::optional<Rect<float>> _anchorArea; //optional area to anchor to, if not our size rect
       Anchor _anchor = Anchor::NONE;
       bool _ignoreOutsideInput = true;
@@ -120,8 +106,6 @@ namespace ReyEngine {
                                      // want to offer input to the menu bar, but need to be drawn modally
        Widget* _parentWidget = nullptr; //the closest related parent that is a widget.
       bool _modal = false;
-      std::string _tooltipText;
-      bool _acceptsHover = true; //whether this will implicitly handle hover events
       // std::unique_ptr<InputContext::Semaphore> _inputContext; //only care if the destructor fires
       std::shared_ptr<Theme> theme;
    private:
