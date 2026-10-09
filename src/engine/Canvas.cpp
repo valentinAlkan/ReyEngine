@@ -27,8 +27,11 @@ void Canvas::__on_child_removed_from_tree(TypeNode *n) {
 ////////////////////////////////////////////////////////////////////////////////////////
 void Canvas::__on_rect_changed(const Rect<float> &oldRect, const Rect<float> &newRect, bool allowsAnchor, bool byLayout) {
    Widget::__on_rect_changed(oldRect, newRect, allowsAnchor, byLayout);
-   if (oldRect.size() != newRect.size()) {
-      _renderTarget.setSize(getSize());
+   //compare against the render target rather than oldRect/newRect - anchoring resizes us via
+   // applyRect, so the rects passed in here can be stale
+   Size<int> wantSize = getSize();
+   if (wantSize.x > 0 && wantSize.y > 0 && (!_renderTarget.ready() || _renderTarget.getSize() != wantSize)) {
+      _renderTarget.setSize(wantSize);
    }
 }
 

@@ -108,7 +108,7 @@ namespace ReyEngine {
       void __on_descendant_added_to_tree(TypeNode* child) override;
       void __on_descendant_removed_from_tree(TypeNode* child) override;
       void render2D(RenderContext&) const override;
-      void renderProcess(RenderContext&);
+      virtual void renderProcess(RenderContext&);
       void __on_rect_changed(const Rect<R_FLOAT>& oldRect, const Rect<R_FLOAT>& newRect, bool allowsAnchor, bool byLayout = false) override;
       template <WidgetStatus::StatusType Status>
       void _removeStatus(Widget* widget){

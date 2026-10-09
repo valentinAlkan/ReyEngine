@@ -174,7 +174,6 @@ target_include_directories(ReyEngine2D PUBLIC
         src/2d
         src/widgets
         src/lib
-        test
         src/thirdParty/xml
         src/thirdParty/uuid
         src/pathfinding
@@ -183,6 +182,14 @@ target_include_directories(ReyEngine2D PUBLIC
         src/components/easings
         src/thirdParty/font
 )
+
+add_library(ReyEngine3D STATIC
+        src/engine/ReyEngine3D.cpp
+        src/engine/Canvas3D.cpp
+)
+
+target_link_libraries(ReyEngine3D ReyEngine2D)
+
 target_compile_features(ReyEngine2D PUBLIC cxx_std_23)
 target_compile_options(ReyEngine2D PUBLIC -pthread)
 
@@ -280,6 +287,9 @@ if(REY_ENABLE_TESTS)
 
     add_executable(ReyEngineAStarTest test/reyengineAStarTest.cpp)
     target_link_libraries(ReyEngineAStarTest PUBLIC ReyEngine2D)
+
+    add_executable(3dTest test/3dtest.cpp)
+    target_link_libraries(3dTest PUBLIC ReyEngine3D)
 endif()
 
 ##########################################
