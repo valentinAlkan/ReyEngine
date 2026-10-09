@@ -6,7 +6,7 @@
 
 namespace ReyEngine {
    class Node3D;
-   /// Where a ray from the camera struck a node. All positions are in scene space.
+   /// Where a ray from the camera struck a node (see Canvas3D::pick). All positions are in scene space.
    struct Hit3D {
       Node3D* node = nullptr;
       Ray3D ray;
@@ -17,12 +17,19 @@ namespace ReyEngine {
 
    /// The 3D counterpart of Widget: the base class for anything that lives in a Canvas3D's scene.
    /// On its own it draws nothing, so it also serves as a grouping node to move several children at once.
+   ///
+   /// Input works as it does for widgets: every node is offered every event, children before parents by default
+   /// (see InputFilter), through _unhandled_input. For mouse events, MouseEvent::isInside() says whether the mouse is
+   /// over this node or one of its descendants (the nearest pickable node under the mouse, so nodes hidden behind
+   /// others are not "inside"), and getLocalRay()/getLocalHitPos() give the mouse ray and where it struck, in this
+   /// node's local space.
    class Node3D
    : public Internal::Drawable3D
    , public Internal::Tree::Processable
    , public EventPublisher
    , public EventSubscriber
    , public Easable
+   , public Internal::InputReceiver
    {
    public:
       EVENT_ARGS(TransformChangedEvent, 329876, const Transform3D& oldTransform)
@@ -35,24 +42,16 @@ namespace ReyEngine {
       {}
          std::string prevName;
       };
-      /// Published (mutably) when a mouse event over this node, or over one of its descendants, goes unhandled.
-      /// Subscribers set 'handled' to stop it propagating further. The 3D counterpart of WidgetUnhandledInputEvent.
-      EVENT_ARGS(EventInput3D, 329878, const InputEvent& fwdEvent, const Hit3D& hit)
-      , fwdEvent(fwdEvent)
-      , hit(hit)
-      {}
-         const InputEvent& fwdEvent;
-         Hit3D hit;
-         bool handled = false;
-      };
-
       REYENGINE_OBJECT(Node3D)
+      [[nodiscard]] std::string getName() const override {return ReyObject::getName();}
+      [[nodiscard]] std::optional<Canvas*> getInputCanvas() override;
       Node3D() = default;
       ~Node3D() override = default;
       [[nodiscard]] std::optional<Node3D*> getParentNode3D() const;
       [[nodiscard]] bool getIsRendering() const; //determines if this node and all its 3D ancestors are being drawn
       [[nodiscard]] bool isHovered() const;
       /// whether the mouse can hit this node. Unpickable nodes are transparent to the mouse, but their children are not.
+      /// (Unpickable nodes are still offered input, as widgets outside the mouse are; it's just never "inside" them.)
       void setPickable(bool pickable){_pickable = pickable;}
       [[nodiscard]] bool getPickable() const {return _pickable;}
       /// bounds of whatever this node draws, in local space. Nodes with no bounds can't be hit by the mouse.
@@ -62,17 +61,16 @@ namespace ReyEngine {
       [[nodiscard]] virtual std::optional<R_FLOAT> intersectRay(const Ray3D& sceneRay) const;
    protected:
       void render3D(RenderContext3D&) const override {}
-      /// mouse input over this node (or a descendant that didn't handle it). Return true to handle it.
-      /// The 3D counterpart of Widget::_unhandled_input.
-      virtual bool _unhandled_input(const InputEvent&, const Hit3D&){return false;}
-      virtual void _on_mouse_enter(){}
-      virtual void _on_mouse_exit(){}
+      virtual Handled _processInput(const InputEvent& e); //offer input to this node and its descendants
       virtual void _on_transform_changed(){}
       virtual void _on_visibility_changed(){}
       bool _pickable = true;
       void _on_renamed(const std::string& oldName) override {publish(EventNameChanged(this, oldName));}
    private:
-      bool __process_unhandled_input(const InputEvent& event, const Hit3D& hit);
+      //offer input to a child node, localized to its space. The 3D counterpart of what Widget does with ScopeTransformer
+      static Handled __pass_input(Node3D* child, const InputEvent& e);
+      //whether the node the mouse is over (as picked by our Canvas3D) is this node or one of its descendants
+      [[nodiscard]] bool __contains_mouse_pick() const;
       void __on_visibility_changed() override {_on_visibility_changed();}
       void __on_transform_changed(const Transform3D& oldTransform) override {
          _on_transform_changed();

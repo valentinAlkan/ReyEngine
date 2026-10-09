@@ -26,8 +26,6 @@ namespace ReyEngine {
       // the nearest pickable, visible node under a point on the canvas (or along a scene space ray)
       [[nodiscard]] std::optional<Hit3D> pick(const Pos<float>& canvasPos) const {return pick(toBackgroundRay(canvasPos));}
       [[nodiscard]] std::optional<Hit3D> pick(const Ray3D& sceneRay) const;
-      // the 3D node under the mouse. (Canvas::getHover is the 2D widget under it, which is this canvas when it's a 3D node.)
-      [[nodiscard]] Node3D* getHover3D() const {return _hover3D;}
 
       // lighting comes from Light3D nodes in the scene (at most MAX_LIGHTS are used). With none, everything is drawn unlit.
       void setAmbientLight(const ColorRGBA& color){_ambient = color;}
@@ -42,18 +40,18 @@ namespace ReyEngine {
       static void doRender3D(RenderContext3D&, Internal::Drawable3D*);
       // find the visible lights in a 3D subtree
       static void collectLights(Internal::Drawable3D*, std::vector<const Light3D*>&);
-      // the 3D scene is the background layer for input too: 2D widgets get first refusal, then the node under the
-      // mouse, then its ancestors. A 3D node can't be a Handled::handler (that's a Widget), so the canvas stands in for it.
+      // the 3D scene is the background layer for input too: 2D widgets in it get first refusal, then the 3D nodes,
+      // which are offered input just as widgets are (see Node3D).
       Handled _processBackgroundInput(const InputEvent&) override;
-      void _on_mouse_exit() override {setHover3D(nullptr);}
-      void setHover3D(Node3D*);
+      // nothing in the scene can be under the mouse once it has left the canvas
+      void _on_mouse_exit() override {setHover(nullptr);}
 
    private:
       void loadGpuResources();
       void uploadLightUniforms(const std::vector<const Light3D*>& lights);
 
       Camera3D _camera3D;
-      Node3D* _hover3D = nullptr;
+      Node3D* _mousePick = nullptr; //while input is being dispatched, the node under the mouse
       ColorRGBA _ambient = {40, 40, 40, 255};
 
       // GPU resources, created lazily on first render since they need a GL context
@@ -65,5 +63,6 @@ namespace ReyEngine {
          Uniform<int> lightCount, lightType;
          Uniform<float> lightRange;
       } _uniforms;
+      friend class Node3D;
    };
 }

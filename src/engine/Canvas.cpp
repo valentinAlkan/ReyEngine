@@ -241,6 +241,8 @@ Handled Canvas::_processInput(const InputEvent& event) {
                canvas->setToolTip(nullptr);
                break;}
             case InputEventMouseHover::ID:{
+               // if the canvas took the hover itself, nothing inside it is under the mouse any more
+               if (handled.handler == canvas) canvas->setHover(nullptr);
                // Set hover on the handler's own canvas, fallback to interceptor's canvas
                if (auto handlerCanvas = handled.handler->getInputCanvas()) {
                   handlerCanvas.value()->setHover(handled.handler);

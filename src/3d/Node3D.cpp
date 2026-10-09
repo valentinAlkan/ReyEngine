@@ -21,8 +21,14 @@ bool Node3D::getIsRendering() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+std::optional<Canvas*> Node3D::getInputCanvas() {
+   if (auto canvas = getCanvas3D()) return canvas.value();
+   return {};
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 bool Node3D::isHovered() const {
-   if (auto canvas = getCanvas3D()) return canvas.value()->getHover3D() == this;
+   if (auto canvas = getCanvas3D()) return canvas.value()->getHover() == this;
    return false;
 }
 
@@ -41,11 +47,40 @@ std::optional<R_FLOAT> Node3D::intersectRay(const Ray3D& sceneRay) const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-bool Node3D::__process_unhandled_input(const InputEvent& event, const Hit3D& hit) {
-   if (_unhandled_input(event, hit)) return true;
-   EventInput3D inputEvent(this, event, hit);
-   publishMutable(inputEvent);
-   return inputEvent.handled;
+bool Node3D::__contains_mouse_pick() const {
+   auto canvas = getCanvas3D();
+   if (!canvas) return false;
+   for (const Node3D* node = canvas.value()->_mousePick; node; node = node->getParentNode3D().value_or(nullptr)) {
+      if (node == this) return true;
+   }
+   return false;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Handled Node3D::__pass_input(Node3D* child, const InputEvent& e) {
+   //transform mouse input into the child's coordinate space
+   std::optional<MouseEvent::ScopeTransformer3D> xformer;
+   if (auto mouse = e.isMouse()) xformer.emplace(*mouse.value(), child->getLocalTransform(), child->__contains_mouse_pick());
+   return child->_processInput(e);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Handled Node3D::_processInput(const InputEvent& e) {
+   if (!_visible) return nullptr;
+   auto pass = [&]() -> Handled {
+      for (auto& child : getChildren()) {
+         if (auto isNode = child->as<Node3D>()) {
+            if (auto handled = __pass_input(isNode.value(), e)) return handled;
+         }
+      }
+      return nullptr;
+   };
+   auto publish = [&]() -> Handled {
+      UnhandledInputEvent event(this, e);
+      publishMutable(event);
+      return event.handled;
+   };
+   return __filter_input(e, pass, publish);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

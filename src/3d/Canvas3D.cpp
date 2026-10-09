@@ -191,7 +191,7 @@ void Canvas3D::__on_descendant_added_to_tree(TypeNode* n) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas3D::__on_descendant_removed_from_tree(TypeNode* n) {
-   if (_hover3D && _hover3D->getNode() == n) _hover3D = nullptr;
+   if (auto isNode = n->as<Node3D>()) _removeInputStatus(isNode.value());
    if (auto isDrawable = n->as<Internal::Drawable3D>()) {
       if (isDrawable.value()->_canvas3D == this) {
          isDrawable.value()->_canvas3D = nullptr;
@@ -232,36 +232,24 @@ std::optional<Hit3D> Canvas3D::pick(const Ray3D& sceneRay) const {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Canvas3D::setHover3D(Node3D* node) {
-   if (node == _hover3D) return;
-   auto old = _hover3D;
-   _hover3D = node;
-   if (old) old->_on_mouse_exit();
-   if (node) node->_on_mouse_enter();
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
 Handled Canvas3D::_processBackgroundInput(const InputEvent& event) {
    //2D widgets in the background layer are drawn over the scene, so they get the input first
    if (auto handled = Canvas::_processBackgroundInput(event)) return handled;
-   auto isMouse = event.isMouse();
-   if (!isMouse) return nullptr;
-   auto mouse = isMouse.value();
-   bool isMotion = event.eventId == InputEventMouseMotion::ID || event.eventId == InputEventMouseHover::ID;
-   if (!mouse->isInside()) {
-      if (isMotion) setHover3D(nullptr);
-      return nullptr;
+
+   //express the mouse in scene space, and find what's under it once so each node can tell whether it's inside
+   std::optional<MouseEvent::ScopeTransformer3D> intoScene;
+   if (auto mouse = event.isMouse()) {
+      auto sceneRay = toBackgroundRay(mouse.value()->getLocalPos());
+      auto hit = pick(sceneRay);
+      _mousePick = hit ? hit->node : nullptr;
+      intoScene.emplace(*mouse.value(), sceneRay, hit ? std::optional(hit->getScenePos()) : std::nullopt);
    }
-   auto sceneRay = toBackgroundRay(mouse->getLocalPos());
-   auto hit = pick(sceneRay);
-   if (isMotion) setHover3D(hit ? hit->node : nullptr);
-   if (!hit) return nullptr;
-   MouseEvent::ScopeTransformer3D intoScene(*mouse, sceneRay, hit->getScenePos());
-   //offer it to the node that was hit, then bubble up through its 3D ancestors
-   for (std::optional<Node3D*> node = hit->node; node; node = node.value()->getParentNode3D()) {
-      if (node.value()->__process_unhandled_input(event, hit.value())) {
-         return {this, mouse->getLocalPos()};
+   Handled handled;
+   for (auto& child : getChildren()) {
+      if (auto isNode = child->as<Node3D>()) {
+         if ((handled = Node3D::__pass_input(isNode.value(), event))) break;
       }
    }
-   return nullptr;
+   _mousePick = nullptr;
+   return handled;
 }
