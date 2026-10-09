@@ -2024,28 +2024,70 @@ namespace ReyEngine {
       inline friend std::ostream& operator<<(std::ostream& os, const Transform2D& t) {std::cout << t.matrix << std::endl; return os;}
    };
 
-   // Specialization for 3D transforms
+   // Specialization for 3D transforms. Same conventions as Transform2D: the matrix composes local-first
+   // (child * parent), and rotate/scale/translate apply in local space.
    struct Transform3D : public Transform<3> {
-      Matrix matrix;
-      [[nodiscard]] Matrix getMatrix() const {return matrix;};
-
-      [[nodiscard]] Vector3 transform(const Vector3& point) const {
-         return Vector3Transform(point, matrix);
+      Transform3D(): Transform<3>(){}
+      Transform3D(const Matrix& m): Transform<3>(m){}
+      Transform3D(const Vec3<float>& position, const Quaternion& rotation, const Vec3<float>& scale)
+      : Transform<3>(MatrixMultiply(MatrixMultiply(MatrixScale(scale.x, scale.y, scale.z), QuaternionToMatrix(rotation)), MatrixTranslate(position.x, position.y, position.z)))
+      {}
+      Transform3D& operator*=(const Transform3D& rhs){matrix = MatrixMultiply(matrix, rhs.matrix);return *this;}
+      Transform3D operator*(const Transform3D& rhs) const {return MatrixMultiply(matrix, rhs.matrix);}
+      [[nodiscard]] inline Vec3<float> transform(const Vec3<float>& point) const {
+         return Vec3<float>(Vector3Transform(point, matrix));
       }
 
-      [[nodiscard]] Matrix inverse() const {return MatrixInvert(matrix);}
-
-      void rotate(const Vector3& axis, float angle) {
-         matrix = MatrixMultiply(MatrixRotate(axis, angle), matrix);
+      [[nodiscard]] inline Vec3<float> extractTranslation() const {
+         return Vec3<float>{matrix.m12, matrix.m13, matrix.m14};
       }
 
-      void translate(const Vector3& vec) {
+      [[nodiscard]] inline Quaternion extractRotation() const {
+         Vector3 t, s; Quaternion r;
+         MatrixDecompose(matrix, &t, &r, &s);
+         return r;
+      }
+
+      [[nodiscard]] inline Vec3<float> extractScale() const {
+         Vector3 t, s; Quaternion r;
+         MatrixDecompose(matrix, &t, &r, &s);
+         return Vec3<float>(s);
+      }
+
+      [[nodiscard]] inline Transform3D inverse() const {return MatrixInvert(matrix);}
+
+      void inline rotate(const Vec3<float>& axis, const Radians& r) {
+         matrix = MatrixMultiply(MatrixRotate(axis, (float)r.get()), matrix);
+      }
+
+      void inline rotate(const Quaternion& q) {
+         matrix = MatrixMultiply(QuaternionToMatrix(q), matrix);
+      }
+
+      void inline translate(const Vec3<float>& vec) {
          matrix = MatrixMultiply(MatrixTranslate(vec.x, vec.y, vec.z), matrix);
       }
 
-      void scale(const Vector3& scale) {
+      void inline scale(const Vec3<float>& scale) {
          matrix = MatrixMultiply(MatrixScale(scale.x, scale.y, scale.z), matrix);
       }
+
+      void inline setPosition(const Vec3<float>& vec) {
+         matrix.m12 = vec.x;
+         matrix.m13 = vec.y;
+         matrix.m14 = vec.z;
+      }
+
+      // replace the rotation, keeping translation and scale
+      void inline setRotation(const Quaternion& q) {
+         *this = Transform3D(extractTranslation(), q, extractScale());
+      }
+
+      // replace the scale, keeping translation and rotation
+      void inline setScale(const Vec3<float>& s) {
+         *this = Transform3D(extractTranslation(), extractRotation(), s);
+      }
+      inline friend std::ostream& operator<<(std::ostream& os, const Transform3D& t) {os << t.matrix; return os;}
    };
 
    struct ColorRGBA {
