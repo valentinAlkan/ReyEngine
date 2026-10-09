@@ -1,5 +1,4 @@
 #include "Canvas3D.h"
-#include "rlgl.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -75,21 +74,11 @@ void main() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Canvas3D::~Canvas3D() {
-   if (!_gpuLoaded) return;
-   UnloadMesh(_cubeMesh);
-   UnloadMesh(_sphereMesh);
-   _litMaterial.shader.id = rlGetShaderIdDefault(); // the lighting shader is owned by _lightShader, so UnloadMaterial must not free it
-   UnloadMaterial(_litMaterial);
-   UnloadMaterial(_unlitMaterial);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
 void Canvas3D::loadGpuResources() {
-   _cubeMesh = GenMeshCube(1, 1, 1);
-   _sphereMesh = GenMeshSphere(1, 32, 32);
-   _unlitMaterial = LoadMaterialDefault();
-   _litMaterial = LoadMaterialDefault();
+   _cubeMesh = ReyMesh::makeCube();
+   _sphereMesh = ReyMesh::makeSphere();
+   _unlitMaterial = make_unique<ReyMaterial>();
+   _litMaterial = make_unique<ReyMaterial>();
 
    _lightShader = ReyShader::makeShader(ShaderPrototype::fromMemory(LIGHT_VS, LIGHT_FS));
    _lightShader->setLocation(SHADER_LOC_MATRIX_MODEL, "matModel");
@@ -102,7 +91,7 @@ void Canvas3D::loadGpuResources() {
    _uniforms.lightVector = shader.getUniform<Vec3<float>>("lightVector[0]");
    _uniforms.lightColor  = shader.getUniform<Vec3<float>>("lightColor[0]");
    _uniforms.lightRange  = shader.getUniform<float>("lightRange[0]");
-   _litMaterial.shader = _lightShader->getShader();
+   _litMaterial->setShader(_lightShader);
    _gpuLoaded = true;
 }
 
@@ -136,6 +125,7 @@ void Canvas3D::renderProcess(RenderContext&) {
    // and will draw it onto itself once we return.
    if (!_visible) return;
    if (!_gpuLoaded) loadGpuResources();
+   Internal::flushOrphaned3DResources();
    ClearBackground(Colors::transparent);
 
    Camera rCam{};
@@ -145,20 +135,20 @@ void Canvas3D::renderProcess(RenderContext&) {
    rCam.fovy       = _camera3D.fovy;
    rCam.projection = CAMERA_PERSPECTIVE;
 
-   Material* material = &_unlitMaterial;
+   ReyMaterial* material = _unlitMaterial.get();
    if (!_lights.empty()) {
       uploadLightUniforms();
-      material = &_litMaterial;
+      material = _litMaterial.get();
    }
 
    BeginMode3D(rCam);
    for (const auto& shape : _shapes) {
-      material->maps[MATERIAL_MAP_DIFFUSE].color = (Color)shape.color;
+      material->setColor(shape.color);
       Matrix xform = MatrixMultiply(MatrixScale(shape.size.x, shape.size.y, shape.size.z),
                                     MatrixTranslate(shape.pos.x, shape.pos.y, shape.pos.z));
       switch (shape.type) {
-         case Shape::Type::CUBE:   DrawMesh(_cubeMesh, *material, xform); break;
-         case Shape::Type::SPHERE: DrawMesh(_sphereMesh, *material, xform); break;
+         case Shape::Type::CUBE:   DrawMesh(_cubeMesh->getMesh(), material->getMaterial(), xform); break;
+         case Shape::Type::SPHERE: DrawMesh(_sphereMesh->getMesh(), material->getMaterial(), xform); break;
       }
    }
    EndMode3D();

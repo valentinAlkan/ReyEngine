@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include "Canvas.h"
-#include "Shader.h"
+#include "Resources3D.h"
 
 namespace ReyEngine {
 
@@ -28,7 +28,6 @@ namespace ReyEngine {
       static constexpr size_t MAX_LIGHTS = 8;
       REYENGINE_OBJECT(Canvas3D)
       Canvas3D() = default;
-      ~Canvas3D() override;
       // expose camera
       ReyCamera3D& getCamera3D(){return _camera3D;}
       const ReyCamera3D& getCamera3D() const {return _camera3D;}
@@ -68,10 +67,10 @@ namespace ReyEngine {
 
       // GPU resources, created lazily on first render since they need a GL context
       bool _gpuLoaded = false;
-      Mesh _cubeMesh{};   // unit cube, scaled per shape
-      Mesh _sphereMesh{}; // unit radius sphere, scaled per shape
-      Material _litMaterial{};
-      Material _unlitMaterial{};
+      std::shared_ptr<ReyMesh> _cubeMesh;   // unit cube, scaled per shape
+      std::shared_ptr<ReyMesh> _sphereMesh; // unit radius sphere, scaled per shape
+      std::unique_ptr<ReyMaterial> _litMaterial;
+      std::unique_ptr<ReyMaterial> _unlitMaterial;
       std::shared_ptr<ReyShader> _lightShader;
       template <typename T> using Uniform = ReyShader::ShaderValue<ReyShader::Uniform, T>;
       struct {

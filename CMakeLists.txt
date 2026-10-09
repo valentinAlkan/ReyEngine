@@ -187,6 +187,7 @@ target_include_directories(ReyEngine2D PUBLIC
 add_library(ReyEngine3D STATIC
         src/3d/ReyEngine3D.cpp
         src/3d/Canvas3D.cpp
+        src/3d/Resources3D.cpp
 )
 
 # most stuff is linked against and included with ReyEngine2D already. Since ReyEngine3D is linked against ReyEngine2D,
