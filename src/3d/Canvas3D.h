@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include "Canvas.h"
-#include "Resources3D.h"
+#include "Node3D.h"
 
 namespace ReyEngine {
 
@@ -32,11 +32,6 @@ namespace ReyEngine {
       ReyCamera3D& getCamera3D(){return _camera3D;}
       const ReyCamera3D& getCamera3D() const {return _camera3D;}
 
-      // simple 3D drawing helpers. Shapes are retained and drawn every frame until cleared.
-      void drawCube(const Vec3<float>& pos, const Vec3<float>& size, const ColorRGBA& color);
-      void drawSphere(const Vec3<float>& pos, float radius, const ColorRGBA& color);
-      void clearShapes(){_shapes.clear();}
-
       // lighting. With no lights, shapes are drawn unlit (flat color).
       // add* return the light's index, which can be used with getLight. Throws if MAX_LIGHTS is exceeded.
       size_t addDirectionalLight(const Vec3<float>& direction, const ColorRGBA& color = Colors::white, float intensity = 1.0f);
@@ -49,28 +44,21 @@ namespace ReyEngine {
 
    protected:
       void renderProcess(RenderContext& ctx) override;
+      void __on_descendant_added_to_tree(TypeNode* child) override;
+      void __on_descendant_removed_from_tree(TypeNode* child) override;
+      // draw a 3D node and its 3D descendants. The 3D counterpart of Canvas::doRender
+      static void doRender3D(RenderContext3D&, Internal::Drawable3D*);
 
    private:
-      struct Shape {
-         enum class Type {CUBE, SPHERE} type;
-         Vec3<float> pos;
-         Vec3<float> size; // for spheres, size.x is the radius
-         ColorRGBA color;
-      };
       void loadGpuResources();
       void uploadLightUniforms();
 
       ReyCamera3D _camera3D;
-      std::vector<Shape> _shapes;
       std::vector<Light3D> _lights;
       ColorRGBA _ambient = {40, 40, 40, 255};
 
       // GPU resources, created lazily on first render since they need a GL context
       bool _gpuLoaded = false;
-      std::shared_ptr<ReyMesh> _cubeMesh;   // unit cube, scaled per shape
-      std::shared_ptr<ReyMesh> _sphereMesh; // unit radius sphere, scaled per shape
-      std::unique_ptr<ReyMaterial> _litMaterial;
-      std::unique_ptr<ReyMaterial> _unlitMaterial;
       std::shared_ptr<ReyShader> _lightShader;
       template <typename T> using Uniform = ReyShader::ShaderValue<ReyShader::Uniform, T>;
       struct {

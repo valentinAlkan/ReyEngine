@@ -75,11 +75,6 @@ void main() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas3D::loadGpuResources() {
-   _cubeMesh = ReyMesh::makeCube();
-   _sphereMesh = ReyMesh::makeSphere();
-   _unlitMaterial = make_unique<ReyMaterial>();
-   _litMaterial = make_unique<ReyMaterial>();
-
    _lightShader = ReyShader::makeShader(ShaderPrototype::fromMemory(LIGHT_VS, LIGHT_FS));
    _lightShader->setLocation(SHADER_LOC_MATRIX_MODEL, "matModel");
    _lightShader->setLocation(SHADER_LOC_MATRIX_NORMAL, "matNormal");
@@ -91,7 +86,6 @@ void Canvas3D::loadGpuResources() {
    _uniforms.lightVector = shader.getUniform<Vec3<float>>("lightVector[0]");
    _uniforms.lightColor  = shader.getUniform<Vec3<float>>("lightColor[0]");
    _uniforms.lightRange  = shader.getUniform<float>("lightRange[0]");
-   _litMaterial->setShader(_lightShader);
    _gpuLoaded = true;
 }
 
@@ -135,33 +129,57 @@ void Canvas3D::renderProcess(RenderContext&) {
    rCam.fovy       = _camera3D.fovy;
    rCam.projection = CAMERA_PERSPECTIVE;
 
-   ReyMaterial* material = _unlitMaterial.get();
+   //materials without a shader of their own get lit when there are lights, and are drawn flat otherwise
+   std::shared_ptr<ReyShader> defaultShader;
    if (!_lights.empty()) {
       uploadLightUniforms();
-      material = _litMaterial.get();
+      defaultShader = _lightShader;
    }
 
+   RenderContext3D context3D(defaultShader);
    BeginMode3D(rCam);
-   for (const auto& shape : _shapes) {
-      material->setColor(shape.color);
-      Matrix xform = MatrixMultiply(MatrixScale(shape.size.x, shape.size.y, shape.size.z),
-                                    MatrixTranslate(shape.pos.x, shape.pos.y, shape.pos.z));
-      switch (shape.type) {
-         case Shape::Type::CUBE:   DrawMesh(_cubeMesh->getMesh(), material->getMaterial(), xform); break;
-         case Shape::Type::SPHERE: DrawMesh(_sphereMesh->getMesh(), material->getMaterial(), xform); break;
+   for (auto& child : getChildren()) {
+      if (auto drawable = child->as<Internal::Drawable3D>()) {
+         doRender3D(context3D, drawable.value());
       }
    }
    EndMode3D();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Canvas3D::drawCube(const Vec3<float>& pos, const Vec3<float>& size, const ColorRGBA& color){
-   _shapes.push_back({Shape::Type::CUBE, pos, size, color});
+void Canvas3D::doRender3D(RenderContext3D& context, Internal::Drawable3D* drawable) {
+   if (!drawable->_visible) return;
+   context.push(drawable->getLocalTransform());
+   drawable->render3DBegin(context);
+   drawable->render3D(context);
+   drawable->render3DEnd(context);
+   for (auto& child : drawable->getChildren()) {
+      if (auto childDrawable = child->as<Internal::Drawable3D>()) {
+         doRender3D(context, childDrawable.value());
+      }
+   }
+   context.pop();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Canvas3D::drawSphere(const Vec3<float>& pos, float radius, const ColorRGBA& color){
-   _shapes.push_back({Shape::Type::SPHERE, pos, {radius, radius, radius}, color});
+void Canvas3D::__on_descendant_added_to_tree(TypeNode* n) {
+   //assign 3D drawables to their owning canvas, as Canvas does for 2D drawables
+   if (auto isDrawable = n->as<Internal::Drawable3D>()) {
+      if (!isDrawable.value()->_canvas3D) {
+         isDrawable.value()->_canvas3D = this;
+      }
+   }
+   Canvas::__on_descendant_added_to_tree(n);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas3D::__on_descendant_removed_from_tree(TypeNode* n) {
+   if (auto isDrawable = n->as<Internal::Drawable3D>()) {
+      if (isDrawable.value()->_canvas3D == this) {
+         isDrawable.value()->_canvas3D = nullptr;
+      }
+   }
+   Canvas::__on_descendant_removed_from_tree(n);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
