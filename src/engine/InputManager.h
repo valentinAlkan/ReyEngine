@@ -42,6 +42,12 @@ namespace ReyEngine{
       // [[nodiscard]] CanvasSpace<Pos<float>> getCanvasPos() const {return _canvasPos;}
       [[nodiscard]] Pos<float> getLocalPos() const {return _localPos;}
       [[nodiscard]] bool isInside() const {return _isInside;}
+      /// In a 3D scene: the ray from the camera through the mouse, in the local space of whoever is receiving the event.
+      /// The 3D counterpart of getLocalPos. Empty outside of a 3D scene.
+      [[nodiscard]] std::optional<Ray3D> getLocalRay() const {return _localRay;}
+      /// In a 3D scene: where that ray struck the nearest pickable node, in the local space of whoever is receiving the
+      /// event. Empty if it struck nothing (or outside of a 3D scene).
+      [[nodiscard]] std::optional<Pos3<R_FLOAT>> getLocalHitPos() const {return _localHitPos;}
    protected:
       void setIsInside(bool isInside) {_isInside = isInside;}
       void setLocalPos(Pos<float>& p) {_localPos = p;}
@@ -85,10 +91,49 @@ namespace ReyEngine{
          Pos<float> _localPos_cached; //for recall on dtor
          const Transform2D& _applicableXform;
       };
+      /// 3D counterpart of ScopeTransformer: for the duration of the scope, expresses the ray (and where it hit) in a
+      /// node's local space and sets whether the mouse is over that node.
+      struct ScopeTransformer3D {
+         //enter a 3D scene. Everything is in scene space, and the mouse is inside the scene if the ray hit something.
+         ScopeTransformer3D(MouseEvent& mouseEvent, const Ray3D& sceneRay, const std::optional<Pos3<R_FLOAT>>& sceneHitPos)
+         : ScopeTransformer3D(mouseEvent)
+         {
+            mouseEvent._localRay = sceneRay;
+            mouseEvent._localHitPos = sceneHitPos;
+            mouseEvent._isInside = sceneHitPos.has_value();
+         }
+         //descend into a node with the given local transform
+         ScopeTransformer3D(MouseEvent& mouseEvent, const Transform3D& xform, bool isInside)
+         : ScopeTransformer3D(mouseEvent)
+         {
+            auto inverse = xform.inverse().matrix;
+            if (mouseEvent._localRay) mouseEvent._localRay = mouseEvent._localRay->transform(inverse);
+            if (mouseEvent._localHitPos) mouseEvent._localHitPos = mouseEvent._localHitPos->transform(inverse);
+            mouseEvent._isInside = isInside;
+         }
+         ~ScopeTransformer3D(){
+            mouseEvent._isInside = _isInside_cached;
+            mouseEvent._localRay = _localRay_cached;
+            mouseEvent._localHitPos = _localHitPos_cached;
+         }
+      private:
+         explicit ScopeTransformer3D(MouseEvent& mouseEvent)
+         : mouseEvent(mouseEvent)
+         , _isInside_cached(mouseEvent._isInside)
+         , _localRay_cached(mouseEvent._localRay)
+         , _localHitPos_cached(mouseEvent._localHitPos)
+         {}
+         MouseEvent& mouseEvent;
+         bool _isInside_cached;
+         std::optional<Ray3D> _localRay_cached;
+         std::optional<Pos3<R_FLOAT>> _localHitPos_cached;
+      };
    private:
       // CanvasSpace<Pos<float>> _canvasPos;
       Pos<float> _localPos;
       bool _isInside = false;
+      std::optional<Ray3D> _localRay;
+      std::optional<Pos3<R_FLOAT>> _localHitPos;
 
       friend class Canvas;
    };

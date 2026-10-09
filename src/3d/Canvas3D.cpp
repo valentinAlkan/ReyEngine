@@ -252,9 +252,11 @@ Handled Canvas3D::_processBackgroundInput(const InputEvent& event) {
       if (isMotion) setHover3D(nullptr);
       return nullptr;
    }
-   auto hit = pick(mouse->getLocalPos());
+   auto sceneRay = toBackgroundRay(mouse->getLocalPos());
+   auto hit = pick(sceneRay);
    if (isMotion) setHover3D(hit ? hit->node : nullptr);
    if (!hit) return nullptr;
+   MouseEvent::ScopeTransformer3D intoScene(*mouse, sceneRay, hit->getScenePos());
    //offer it to the node that was hit, then bubble up through its 3D ancestors
    for (std::optional<Node3D*> node = hit->node; node; node = node.value()->getParentNode3D()) {
       if (node.value()->__process_unhandled_input(event, hit.value())) {
