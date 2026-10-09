@@ -126,13 +126,6 @@ void Canvas3D::renderBackgroundLayer(RenderContext& renderContext) {
    if (!_gpuLoaded) loadGpuResources();
    Internal::flushOrphaned3DResources();
 
-   Camera rCam{};
-   rCam.position   = _camera3D.position;
-   rCam.target     = _camera3D.target;
-   rCam.up         = _camera3D.up;
-   rCam.fovy       = _camera3D.fovy;
-   rCam.projection = CAMERA_PERSPECTIVE;
-
    //materials without a shader of their own get lit when there are lights, and are drawn flat otherwise
    std::vector<const Light3D*> lights;
    for (auto& child : getChildren()) {
@@ -146,7 +139,7 @@ void Canvas3D::renderBackgroundLayer(RenderContext& renderContext) {
 
    {
       RenderContext3D context3D(defaultShader);
-      auto cameraMode = renderContext.cameraContext(rCam);
+      auto cameraMode = renderContext.cameraContext(_camera3D);
       for (auto& child : getChildren()) {
          if (auto drawable = child->as<Internal::Drawable3D>()) {
             doRender3D(context3D, drawable.value());
@@ -204,4 +197,16 @@ void Canvas3D::__on_descendant_removed_from_tree(TypeNode* n) {
       }
    }
    Canvas::__on_descendant_removed_from_tree(n);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Ray3D Canvas3D::toBackgroundRay(const Pos<float>& canvasPos) const {
+   auto size = getSize();
+   return GetScreenToWorldRayEx((Vector2)canvasPos, _camera3D, (int)size.x, (int)size.y);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Pos<float> Canvas3D::toForegroundPos(const Pos3<float>& scenePos) const {
+   auto size = getSize();
+   return GetWorldToScreenEx(scenePos, _camera3D, (int)size.x, (int)size.y);
 }

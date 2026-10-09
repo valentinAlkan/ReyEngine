@@ -100,6 +100,30 @@ namespace ReyEngine {
       T depth;
    };
 
+   /// A half-line starting at origin and heading along direction. The 3D counterpart of Line, used for picking.
+   struct Ray3D {
+      constexpr inline Ray3D() = default;
+      constexpr inline Ray3D(const Pos3<R_FLOAT>& origin, const Vec3<R_FLOAT>& direction): origin(origin), direction(direction){}
+      constexpr inline Ray3D(const Ray& r): origin(r.position), direction(r.direction){}
+      constexpr inline operator Ray() const {return {origin, direction};}
+      [[nodiscard]] constexpr inline Pos3<R_FLOAT> at(R_FLOAT distance) const {return Pos3<R_FLOAT>(origin + direction * distance);}
+      /// the same ray, expressed in another space
+      [[nodiscard]] inline Ray3D transform(const Matrix& m) const {
+         auto newOrigin = origin.transform(m);
+         auto newDirection = Vec3<R_FLOAT>(Pos3<R_FLOAT>(origin + direction).transform(m) - newOrigin);
+         return {newOrigin, newDirection.normalize().value_or(direction)};
+      }
+      /// distance along the ray to where it enters the box, if it hits it
+      [[nodiscard]] inline std::optional<R_FLOAT> intersects(const Box<R_FLOAT>& box) const {
+         auto hit = GetRayCollisionBox(*this, box);
+         if (hit.hit) return hit.distance;
+         return {};
+      }
+      friend std::ostream& operator<<(std::ostream& os, const Ray3D& r) {os << "{" << r.origin << " -> " << r.direction << "}"; return os;}
+      Pos3<R_FLOAT> origin;
+      Vec3<R_FLOAT> direction;
+   };
+
    template <typename T>
    inline Box<T> Pos3<T>::toBox(const Vec3<T>& size) const {return {*this, Size3<T>(size)};}
    template <typename T>

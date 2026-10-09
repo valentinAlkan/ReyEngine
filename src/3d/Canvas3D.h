@@ -5,22 +5,23 @@
 
 namespace ReyEngine {
 
-   // Simple 3D camera wrapper (named to avoid clashing with raylib's global Camera3D)
-   struct ReyCamera3D {
-      Vec3<float> position{0,0,5};
-      Vec3<float> target{0,0,0};
-      Vec3<float> up{0,1,0};
-      float fovy = 45.0f; // degrees
-   };
-
    class Canvas3D : public Canvas {
    public:
       static constexpr size_t MAX_LIGHTS = 8;
       REYENGINE_OBJECT(Canvas3D)
-      Canvas3D() = default;
-      // expose camera
-      ReyCamera3D& getCamera3D(){return _camera3D;}
-      const ReyCamera3D& getCamera3D() const {return _camera3D;}
+      Canvas3D()
+      : _camera3D({{0,0,5}, {0,0,0}, {0,1,0}, 45.0f, CAMERA_PERSPECTIVE})
+      {}
+      // The camera the 3D scene is viewed through. Like Canvas::getCamera (which still applies to any 2D widgets
+      // in the background layer), this is the raylib camera itself.
+      Camera3D& getCamera3D(){return _camera3D;}
+      const Camera3D& getCamera3D() const {return _camera3D;}
+      // 3D counterparts of toBackgroundPos/toForegroundPos.
+      // The ray from the camera through a point in canvas space, in scene space
+      [[nodiscard]] Ray3D toBackgroundRay(const Pos<float>& canvasPos) const;
+      // Where a point in scene space appears on the canvas
+      [[nodiscard]] Pos<float> toForegroundPos(const Pos3<float>& scenePos) const;
+      using Canvas::toForegroundPos;
 
       // lighting comes from Light3D nodes in the scene (at most MAX_LIGHTS are used). With none, everything is drawn unlit.
       void setAmbientLight(const ColorRGBA& color){_ambient = color;}
@@ -40,7 +41,7 @@ namespace ReyEngine {
       void loadGpuResources();
       void uploadLightUniforms(const std::vector<const Light3D*>& lights);
 
-      ReyCamera3D _camera3D;
+      Camera3D _camera3D;
       ColorRGBA _ambient = {40, 40, 40, 255};
 
       // GPU resources, created lazily on first render since they need a GL context
