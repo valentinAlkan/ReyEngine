@@ -338,27 +338,41 @@ namespace ReyEngine {
       constexpr inline Vec3(): Vec<T, 3>(), x(0), y(0), z(0){}
       constexpr inline operator Vector3() const {return {(float)x,(float)y,(float)z};}
       constexpr inline Vec3(const T& _x, const T& y, const T& _z) : Vec<T, 3>(), x(_x), y(y),z(_z) {}
-      constexpr inline explicit Vec3(const Vector3& v)     : Vec<T, 3>(), x((T)v.x), y((T)v.y), z((T)v.z){}
+      constexpr inline Vec3(const Vector3& v)     : Vec<T, 3>(), x((T)v.x), y((T)v.y), z((T)v.z){}
       constexpr inline Vec3(const Vec3& v): Vec<T, 3>(), x((T)v.x), y((T)v.y), z((T)v.z){}
+      template <typename R>
+      constexpr inline Vec3(const Vec3<R>& v): Vec<T, 3>(), x((T)v.x), y((T)v.y), z((T)v.z){}
       constexpr inline Vec3& operator=(const Vec3& rhs){x = rhs.x; y=rhs.y; z=rhs.z; return *this;}
-      constexpr inline Vec3& operator-(){x = -x; y =-y; z = -z; return *this;}
+      constexpr inline explicit operator bool() const {return x || y || z;}
+      constexpr inline Vec3 operator-() const {return {-x, -y, -z};}
       constexpr inline Vec3 operator-(const Vec3& rhs) const {Vec3 retval; retval.x=x-rhs.x; retval.y=y-rhs.y; retval.z=z-rhs.z; return retval;}
       constexpr inline Vec3 operator+(const Vec3& rhs) const {Vec3 retval; retval.x=x+rhs.x; retval.y=y+rhs.y; retval.z=z+rhs.z; return retval;}
       constexpr inline Vec3& operator-=(const Vec3& rhs){x-=rhs.x; y-=rhs.y; z-=rhs.z; return *this;}
       constexpr inline Vec3& operator+=(const Vec3& rhs){x+=rhs.x; y+=rhs.y; z+=rhs.z; return *this;}
+      constexpr inline Vec3 operator*(float rhs) const {Vec3 retval(*this); retval.x *= rhs; retval.y *= rhs; retval.z *= rhs; return retval;}
+      constexpr inline Vec3& operator*=(float rhs){x *= rhs; y *= rhs; z *= rhs; return *this;}
+      constexpr inline Vec3 operator/(float rhs) const {Vec3 retval(*this); retval.x /= rhs; retval.y /= rhs; retval.z /= rhs; return retval;}
+      constexpr inline Vec3& operator/=(float rhs){x /= rhs; y /= rhs; z /= rhs; return *this;}
+      constexpr inline bool operator==(const Vec3& rhs) const {return x==rhs.x && y==rhs.y && z==rhs.z;}
+      constexpr inline bool operator!=(const Vec3& rhs) const {return !(*this == rhs);}
       inline std::optional<Vec3<T>> normalize() const {return normalize(*this);}
-      constexpr inline static Vec3<T> normalize(const Vec3& other) {
+      constexpr inline static std::optional<Vec3<T>> normalize(const Vec3& other) {
          auto len = other.magnitude();
          if (len == T(0)) return {};
          return Vec3(other.x / len, other.y / len, other.z / len);
       }
       inline T magnitude() const {return std::sqrt(x * x + y * y + z * z);}
+      [[nodiscard]] inline float distanceTo(const Vec3& other) const {return (*this - other).magnitude();}
       inline T dot(const Vec3& rhs) const {return x * rhs.x + y * rhs.y + z * rhs.z;}
       inline static T dot(const Vec3& a, const Vec3& b){return a.dot(b);}
       inline Vec3<T> cross(const Vec3& rhs) const {return {y * rhs.z - z * rhs.y,z * rhs.x - x * rhs.z,x * rhs.y - y * rhs.x};}
       inline static Vec3<T> cross(const Vec3& a, const Vec3& b){return a.cross(b);}
-      constexpr inline std::string toString(){return Vec<T, 3>::_toString(x, y, z);}
-      inline static std::optional<Vec3<T>> fromString(const std::string& s){return Vec<T,3>::fromString(s);};
+      [[nodiscard]] constexpr inline Vec3 min(const Vec3& other) const {return {Math::min(x, other.x), Math::min(y, other.y), Math::min(z, other.z)};}
+      [[nodiscard]] constexpr inline Vec3 max(const Vec3& other) const {return {Math::max(x, other.x), Math::max(y, other.y), Math::max(z, other.z)};}
+      [[nodiscard]] constexpr inline Vec3 lerp(const Vec3& otherPoint, Fraction f) const {return *this + (otherPoint - *this) * f.get();}
+      [[nodiscard]] inline Vec3 transform(const Matrix& m) const {return Vec3(Vector3Transform(*this, m));}
+      inline std::string toString() const {return Vec<T, 3>::_toString(x, y, z);}
+      inline static std::optional<Vec3<T>> fromString(const std::string& s){return Vec<T,3>::template fromString<Vec3<T>>(s);};
       friend std::ostream& operator<<(std::ostream& os, const Vec3& v) {os << v.toString(); return os;}
       T x;
       T y;
@@ -395,10 +409,12 @@ namespace ReyEngine {
       constexpr UnitVector3()=default;
       constexpr UnitVector3(const Vec3<R_FLOAT>& v): UnitVector3(v.x, v.y, v.z){}
       constexpr UnitVector3(R_FLOAT x, R_FLOAT y, R_FLOAT z){
-         auto normalized = Vec3<R_FLOAT>::normalize({x, y, z});
-         _x = normalized.x;
-         _y = normalized.y;
-         _z = normalized.z;
+         //a zero length vector has no direction, so it stays zero (and reports !valid())
+         if (auto normalized = Vec3<R_FLOAT>::normalize(Vec3<R_FLOAT>(x, y, z))) {
+            _x = normalized->x;
+            _y = normalized->y;
+            _z = normalized->z;
+         }
       }
       constexpr Vec3<R_FLOAT> operator*(R_FLOAT distance) const {return {_x*distance, _y*distance, _z*distance};}
       constexpr UnitVector3& operator=(const Vec3<R_FLOAT>& v){*this = UnitVector3(v); return *this;}
