@@ -44,7 +44,7 @@ namespace ReyEngine {
       static void collectLights(Internal::Drawable3D*, std::vector<const Light3D*>&);
       // the 3D scene is the background layer for input too: 2D widgets get first refusal, then the node under the
       // mouse, then its ancestors. A 3D node can't be a Handled::handler (that's a Widget), so the canvas stands in for it.
-      Handled _unhandled_input(const InputEvent&) override;
+      Handled _processBackgroundInput(const InputEvent&) override;
       void _on_mouse_exit() override {setHover3D(nullptr);}
       void setHover3D(Node3D*);
 

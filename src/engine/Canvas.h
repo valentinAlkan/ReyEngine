@@ -112,6 +112,9 @@ namespace ReyEngine {
       //draws the background layer (the part of the scene seen through the camera). Foreground widgets, modals and
       // tooltips are drawn over it afterwards.
       virtual void renderBackgroundLayer(RenderContext&);
+      //offers input to the background layer, after modal, focused and foreground widgets have declined it.
+      // The input counterpart of renderBackgroundLayer.
+      virtual Handled _processBackgroundInput(const InputEvent&);
       void __on_rect_changed(const Rect<R_FLOAT>& oldRect, const Rect<R_FLOAT>& newRect, bool allowsAnchor, bool byLayout = false) override;
       template <WidgetStatus::StatusType Status>
       void _removeStatus(Widget* widget){

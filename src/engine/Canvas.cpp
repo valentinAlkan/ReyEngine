@@ -185,6 +185,20 @@ void Canvas::renderBackgroundLayer(RenderContext& renderContext) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+Handled Canvas::_processBackgroundInput(const InputEvent& event) {
+   for (auto& child : _background.getValues() | std::views::reverse) {
+      if (auto isWidget= child->as<Widget>()) {
+         std::unique_ptr<MouseEvent::ScopeTransformer> xformer;
+         if (event.isMouse()){
+            xformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), isWidget.value()->getLocalTransform(), isWidget.value()->size, getCameraTransform());
+         }
+         if (auto handled = isWidget.value()->_processInput(event)) return handled;
+      }
+   }
+   return nullptr;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 CanvasSpace<Pos<float>> Canvas::getMousePos() {
    return InputManager::getMousePos().get();
 }
@@ -306,16 +320,8 @@ Handled Canvas::_processInput(const InputEvent& event) {
 
    //then background (which is affected by camera transorm)
    // this here is "normal" input
-   for (auto& child : _background.getValues() | std::views::reverse) {
-      if (auto isWidget= child->as<Widget>()) {
-         std::unique_ptr<MouseEvent::ScopeTransformer> xformer;
-         if (isMouse){
-            xformer = make_unique<MouseEvent::ScopeTransformer>(*event.isMouse().value(), isWidget.value()->getLocalTransform(), isWidget.value()->size, getCameraTransform());
-         }
-         handled = isWidget.value()->_processInput(event);
-         if (handled) return handled;
-      }
-   }
+   handled = _processBackgroundInput(event);
+   if (handled) return handled;
 
    //penultimately, we attempt to handle it ourselves as foreground input
    handled = __process_unhandled_input(event);

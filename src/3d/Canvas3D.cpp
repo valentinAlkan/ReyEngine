@@ -241,7 +241,9 @@ void Canvas3D::setHover3D(Node3D* node) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-Handled Canvas3D::_unhandled_input(const InputEvent& event) {
+Handled Canvas3D::_processBackgroundInput(const InputEvent& event) {
+   //2D widgets in the background layer are drawn over the scene, so they get the input first
+   if (auto handled = Canvas::_processBackgroundInput(event)) return handled;
    auto isMouse = event.isMouse();
    if (!isMouse) return nullptr;
    auto mouse = isMouse.value();
