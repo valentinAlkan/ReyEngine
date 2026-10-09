@@ -22,6 +22,9 @@ namespace ReyEngine {
       [[nodiscard]] const std::shared_ptr<ReyMaterial>& getMaterial() const {return _material;}
       /// bounds of the mesh in local space
       [[nodiscard]] Box<float> getBoundingBox() const {return _mesh ? _mesh->getBoundingBox() : Box<float>();}
+      [[nodiscard]] std::optional<Box<R_FLOAT>> getLocalBounds() const override {if (_mesh) return getBoundingBox(); return {};}
+      //tests against the mesh's triangles rather than its bounds
+      [[nodiscard]] std::optional<R_FLOAT> intersectRay(const Ray3D& sceneRay) const override;
    protected:
       void render3D(RenderContext3D&) const override;
       std::shared_ptr<ReyMesh> _mesh;
@@ -41,6 +44,9 @@ namespace ReyEngine {
       [[nodiscard]] const ColorRGBA& getTint() const {return _tint;}
       /// bounds of the model in local space
       [[nodiscard]] Box<float> getBoundingBox() const {return _model ? _model->getBoundingBox() : Box<float>();}
+      [[nodiscard]] std::optional<Box<R_FLOAT>> getLocalBounds() const override {if (_model && *_model) return getBoundingBox(); return {};}
+      //tests against the model's triangles rather than its bounds
+      [[nodiscard]] std::optional<R_FLOAT> intersectRay(const Ray3D& sceneRay) const override;
    protected:
       void render3D(RenderContext3D&) const override;
       std::shared_ptr<ReyModel> _model;

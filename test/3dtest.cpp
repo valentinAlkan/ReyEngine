@@ -47,6 +47,22 @@ int main(){
     // 2D widgets added to a Canvas3D are drawn over the 3D scene, like a HUD
     auto hud = make_child<Label>(canvas3d, "hud", "ReyEngine 3D");
     hud->setPosition(10, 10);
+    hud->setProcess(std::function<void()>([hud, canvas3d](){
+        auto hovered = canvas3d->getHover3D();
+        hud->setText(hovered ? "hovering " + hovered->getName() : "ReyEngine 3D - click a mesh");
+    }));
+
+    // clicking a mesh cycles its color. Input the node doesn't handle bubbles up to its parent, so clicking
+    // the moon cycles the sphere's color, as unhandled input bubbles up through widgets in 2D.
+    for (auto& mesh : {floor, cube, sphere}) {
+        canvas3d->subscribeMutable<Node3D::EventInput3D>(mesh, std::function<void(Node3D::EventInput3D&)>([mesh](Node3D::EventInput3D& e){
+            if (e.fwdEvent.eventId != InputEventMouseButton::ID || !e.fwdEvent.toEvent<InputEventMouseButton>().isDown) return;
+            static const ColorRGBA palette[] = {Colors::red, Colors::blue, Colors::green, Colors::yellow, Colors::gray};
+            static size_t next = 0;
+            mesh->getMaterial()->setColor(palette[next++ % std::size(palette)]);
+            e.handled = true;
+        }));
+    }
 
     window.exec();
     return 0;

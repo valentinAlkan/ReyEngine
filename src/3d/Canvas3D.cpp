@@ -191,6 +191,7 @@ void Canvas3D::__on_descendant_added_to_tree(TypeNode* n) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas3D::__on_descendant_removed_from_tree(TypeNode* n) {
+   if (_hover3D && _hover3D->getNode() == n) _hover3D = nullptr;
    if (auto isDrawable = n->as<Internal::Drawable3D>()) {
       if (isDrawable.value()->_canvas3D == this) {
          isDrawable.value()->_canvas3D = nullptr;
@@ -209,4 +210,54 @@ Ray3D Canvas3D::toBackgroundRay(const Pos<float>& canvasPos) const {
 Pos<float> Canvas3D::toForegroundPos(const Pos3<float>& scenePos) const {
    auto size = getSize();
    return GetWorldToScreenEx(scenePos, _camera3D, (int)size.x, (int)size.y);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<Hit3D> Canvas3D::pick(const Ray3D& sceneRay) const {
+   std::optional<Hit3D> nearest;
+   std::function<void(TypeNode*)> visit = [&](TypeNode* n) {
+      auto isNode = n->as<Node3D>();
+      if (!isNode) return;
+      auto node = isNode.value();
+      if (!node->getVisible()) return;
+      if (node->getPickable()) {
+         if (auto distance = node->intersectRay(sceneRay); distance && (!nearest || distance.value() < nearest->distance)) {
+            nearest = Hit3D{node, sceneRay, distance.value()};
+         }
+      }
+      for (auto& child : n->getChildren()) visit(child);
+   };
+   for (auto& child : const_cast<Canvas3D*>(this)->getChildren()) visit(child);
+   return nearest;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas3D::setHover3D(Node3D* node) {
+   if (node == _hover3D) return;
+   auto old = _hover3D;
+   _hover3D = node;
+   if (old) old->_on_mouse_exit();
+   if (node) node->_on_mouse_enter();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Handled Canvas3D::_unhandled_input(const InputEvent& event) {
+   auto isMouse = event.isMouse();
+   if (!isMouse) return nullptr;
+   auto mouse = isMouse.value();
+   bool isMotion = event.eventId == InputEventMouseMotion::ID || event.eventId == InputEventMouseHover::ID;
+   if (!mouse->isInside()) {
+      if (isMotion) setHover3D(nullptr);
+      return nullptr;
+   }
+   auto hit = pick(mouse->getLocalPos());
+   if (isMotion) setHover3D(hit ? hit->node : nullptr);
+   if (!hit) return nullptr;
+   //offer it to the node that was hit, then bubble up through its 3D ancestors
+   for (std::optional<Node3D*> node = hit->node; node; node = node.value()->getParentNode3D()) {
+      if (node.value()->__process_unhandled_input(event, hit.value())) {
+         return {this, mouse->getLocalPos()};
+      }
+   }
+   return nullptr;
 }
