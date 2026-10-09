@@ -183,12 +183,19 @@ target_include_directories(ReyEngine2D PUBLIC
         src/thirdParty/font
 )
 
+##### ReyEngine3D
 add_library(ReyEngine3D STATIC
-        src/engine/ReyEngine3D.cpp
-        src/engine/Canvas3D.cpp
+        src/3d/ReyEngine3D.cpp
+        src/3d/Canvas3D.cpp
 )
 
-target_link_libraries(ReyEngine3D ReyEngine2D)
+# most stuff is linked against and included with ReyEngine2D already. Since ReyEngine3D is linked against ReyEngine2D,
+# there's no need to link against much new stuff (for now)
+target_include_directories(ReyEngine3D PUBLIC
+        src/3d
+)
+
+target_link_libraries(ReyEngine3D PUBLIC ReyEngine2D)
 
 target_compile_features(ReyEngine2D PUBLIC cxx_std_23)
 target_compile_options(ReyEngine2D PUBLIC -pthread)
@@ -225,15 +232,6 @@ endif (UNIX)
 #target_include_directories(TileEditor PUBLIC apps/TileEditor/src)
 #target_link_libraries(TileEditor ReyEngine2D)
 
-#add_library(ReyEngine3D STATIC
-#    src/3d/DrawInterface3D.cpp
-#    src/3d/Viewport.cpp
-#    src/3d/BaseBody.cpp
-#    src/3d/Camera3D.cpp
-#    src/3d/Plane3D.cpp
-#    src/3d/ModelBody.cpp
-#)
-
 #add_library(Editor STATIC
 #    src/editor/Editor.cpp
 #    src/editor/WidgetTree.cpp
@@ -242,18 +240,6 @@ endif (UNIX)
 #    src/editor/Inspector.cpp
 #    src/editor/InspectorWidgetFactory.cpp
 #)
-
-# most stuff is linked against and included with ReyEngine2D already. Since ReyEngine3D is linked against ReyEngine2D,
-# there's no need to link against much new stuff (for now)
-#target_include_directories( ReyEngine3D PUBLIC
-#    src/3d
-#)
-
-
-
-
-#target_link_libraries(ReyEngine3D ReyEngine2D)
-
 
 #target_include_directories(Editor PUBLIC
 #    src/editor
