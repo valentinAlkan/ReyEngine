@@ -122,13 +122,9 @@ void Canvas3D::uploadLightUniforms(const std::vector<const Light3D*>& lights) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Canvas3D::renderProcess(RenderContext&) {
-   // The parent canvas has already bound our render target (see Canvas::doRender),
-   // and will draw it onto itself once we return.
-   if (!_visible) return;
+void Canvas3D::renderBackgroundLayer(RenderContext& renderContext) {
    if (!_gpuLoaded) loadGpuResources();
    Internal::flushOrphaned3DResources();
-   ClearBackground(Colors::transparent);
 
    Camera rCam{};
    rCam.position   = _camera3D.position;
@@ -148,14 +144,18 @@ void Canvas3D::renderProcess(RenderContext&) {
       defaultShader = _lightShader;
    }
 
-   RenderContext3D context3D(defaultShader);
-   BeginMode3D(rCam);
-   for (auto& child : getChildren()) {
-      if (auto drawable = child->as<Internal::Drawable3D>()) {
-         doRender3D(context3D, drawable.value());
+   {
+      RenderContext3D context3D(defaultShader);
+      auto cameraMode = renderContext.cameraContext(rCam);
+      for (auto& child : getChildren()) {
+         if (auto drawable = child->as<Internal::Drawable3D>()) {
+            doRender3D(context3D, drawable.value());
+         }
       }
    }
-   EndMode3D();
+
+   //then any 2D widgets in the background layer
+   Canvas::renderBackgroundLayer(renderContext);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

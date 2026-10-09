@@ -27,7 +27,8 @@ namespace ReyEngine {
       const ColorRGBA& getAmbientLight() const {return _ambient;}
 
    protected:
-      void renderProcess(RenderContext& ctx) override;
+      // the 3D scene is the background layer. 2D widgets (in either layer) are drawn over it, like a HUD.
+      void renderBackgroundLayer(RenderContext&) override;
       void __on_descendant_added_to_tree(TypeNode* child) override;
       void __on_descendant_removed_from_tree(TypeNode* child) override;
       // draw a 3D node and its 3D descendants. The 3D counterpart of Canvas::doRender

@@ -142,15 +142,7 @@ void Canvas::renderProcess(RenderContext& renderContext) {
    render2D(renderContext);
    render2DEnd(renderContext);
 
-   //render background elements, which are affected by camera transform
-   {
-      auto cameraMode = renderContext.cameraContext(camera);
-      for (auto& child : _background.getValues()){
-         if (auto widget = child->as<Widget>()) {
-            doRender(renderContext, widget.value());
-         }
-      }
-   }
+   renderBackgroundLayer(renderContext);
 
    //draw foreground elements
    for (auto& child : _foreground.getValues()){
@@ -178,6 +170,17 @@ void Canvas::renderProcess(RenderContext& renderContext) {
       drawRectangle(toolTipRect, Colors::white);
       drawText(toolTipText, toolTipRect.topLeft() + Pos<float>(embiggenness, embiggenness), theme->font);
       drawRectangleLines(toolTipRect, 1.0, Colors::black);
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::renderBackgroundLayer(RenderContext& renderContext) {
+   //render background elements, which are affected by camera transform
+   auto cameraMode = renderContext.cameraContext(camera);
+   for (auto& child : _background.getValues()){
+      if (auto widget = child->as<Widget>()) {
+         doRender(renderContext, widget.value());
+      }
    }
 }
 

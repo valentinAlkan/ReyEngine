@@ -2483,6 +2483,7 @@ namespace ReyEngine {
 
    class RenderContext {
       struct CameraContext;
+      struct Camera3DContext;
       struct FrozenContext;
    public:
       RenderContext(RenderTarget& renderTarget)
@@ -2512,6 +2513,7 @@ namespace ReyEngine {
       void recordModal(){_modalXform = rlGetMatrixTransform();}
       const Transform2D& getModalTransform() const {return _modalXform;}
       CameraContext cameraContext(const Camera2D& camera) const {return CameraContext(camera);}
+      Camera3DContext cameraContext(const Camera3D& camera) const {return Camera3DContext(camera);}
       FrozenContext freeze() {return *this;}
    private:
       //so we can save and recall render contexts
@@ -2550,6 +2552,26 @@ namespace ReyEngine {
          }
       private:
          Camera2D _camera;
+      };
+
+      struct Camera3DContext {
+         //BeginMode3D/EndMode3D switch rlgl over to the modelview matrix, which would leave the transform matrix this
+         // context pushed detached for anything drawn afterwards. So, like FrozenContext, step out of it for the
+         // duration and restore it once the 3D pass is over.
+         Camera3DContext(const Camera3D& camera)
+         : _matrixState(rlGetMatrixTransform())
+         {
+            rlPopMatrix();
+            BeginMode3D(camera);
+         }
+         ~Camera3DContext() {
+            EndMode3D();
+            rlPushMatrix();
+            rlLoadIdentity();
+            rlMultMatrixf(MatrixToFloat(_matrixState));
+         }
+      private:
+         Matrix _matrixState;
       };
       std::vector<Transform2D> _transformStack;
       RenderTarget& _renderTarget; //the thing we are drawing to

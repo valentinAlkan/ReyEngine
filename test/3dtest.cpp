@@ -5,6 +5,7 @@
 #include "Canvas3D.h"
 #include "MeshInstance3D.h"
 #include "Light3D.h"
+#include "Label.h"
 
 using namespace ReyEngine;
 
@@ -42,6 +43,10 @@ int main(){
     make_child<DirectionalLight3D>(canvas3d, "sun", Vec3<float>{-1, -2, -1}, Colors::white, 0.6f);
     auto lamp = make_child<PointLight3D>(canvas3d, "lamp", Colors::yellow, 1.5f, 6.0f);
     lamp->setPosition(1, 1.5f, 1.5f);
+
+    // 2D widgets added to a Canvas3D are drawn over the 3D scene, like a HUD
+    auto hud = make_child<Label>(canvas3d, "hud", "ReyEngine 3D");
+    hud->setPosition(10, 10);
 
     window.exec();
     return 0;
