@@ -73,16 +73,8 @@ void Canvas::doRender(RenderContext& context, Widget* widget, bool isModalRender
    if (!widget->_visible) return;
    context.push(widget->transform2D);
    if (auto canvas = widget->as<Canvas>()) {
-      //freeze the render context and switch to the new texture
       auto subCanvas = canvas.value();
-      {
-         auto frozenContext = context.freeze();
-         {
-            //scope desctruction control
-            RenderContext newContext(subCanvas->_renderTarget);
-            canvas.value()->renderProcess(newContext);
-         }
-      } //automatically unfreeze and revert the render context
+      renderOffscreen(context, subCanvas);
       //draw the render target
       drawRenderTargetRect(subCanvas->readRenderTarget(), subCanvas->getSizeRect(), subCanvas->getSizeRect(), Colors::none);
    } else {
@@ -105,6 +97,15 @@ void Canvas::doRender(RenderContext& context, Widget* widget, bool isModalRender
       }
    }
    context.pop();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas::renderOffscreen(RenderContext& context, Canvas* canvas) {
+   //freeze the render context and switch to the canvas's texture
+   auto frozenContext = context.freeze();
+   //destroyed before frozenContext, which then reverts to the original render context
+   RenderContext newContext(canvas->_renderTarget);
+   canvas->renderProcess(newContext);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

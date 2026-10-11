@@ -1,4 +1,5 @@
 #include "Canvas3D.h"
+#include "rlgl.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -131,6 +132,11 @@ void Canvas3D::renderBackgroundLayer(RenderContext& renderContext) {
    for (auto& child : getChildren()) {
       if (auto drawable = child->as<Internal::Drawable3D>()) collectLights(drawable.value(), lights);
    }
+   //panels have to be drawn into their textures before the 3D pass begins, since that can't be interrupted
+   for (auto& child : getChildren()) {
+      if (auto drawable = child->as<Internal::Drawable3D>()) renderPanels(renderContext, drawable.value());
+   }
+
    std::shared_ptr<ReyShader> defaultShader;
    if (!lights.empty()) {
       uploadLightUniforms(lights);
@@ -161,9 +167,73 @@ void Canvas3D::doRender3D(RenderContext3D& context, Internal::Drawable3D* drawab
    for (auto& child : drawable->getChildren()) {
       if (auto childDrawable = child->as<Internal::Drawable3D>()) {
          doRender3D(context, childDrawable.value());
+      } else if (auto isPanel = child->as<Canvas>()) {
+         drawPanel(context, isPanel.value());
       }
    }
    context.pop();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas3D::renderPanels(RenderContext& renderContext, Internal::Drawable3D* drawable) {
+   //hidden nodes hide their descendants, panels included
+   if (!drawable->_visible) return;
+   for (auto& child : drawable->getChildren()) {
+      if (auto childDrawable = child->as<Internal::Drawable3D>()) {
+         renderPanels(renderContext, childDrawable.value());
+      } else if (auto isPanel = child->as<Canvas>()) {
+         auto panel = isPanel.value();
+         if (panel->getVisible() && renderTargetOf(panel).ready()) renderOffscreen(renderContext, panel);
+      }
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas3D::drawPanel(const RenderContext3D& context, Canvas* panel) {
+   if (!panel->getVisible()) return;
+   auto& target = renderTargetOf(panel);
+   if (!target.ready()) return;
+   auto size = panel->getSize();
+   //counter-clockwise as seen from +Z, starting at the bottom left
+   const Pos<R_FLOAT> corners[] = {{0, size.y}, {size.x, size.y}, {size.x, 0}, {0, 0}};
+   rlPushMatrix();
+   rlMultMatrixf(MatrixToFloat(context.getTransform().matrix));
+   rlDisableBackfaceCulling(); //so the panel can be seen from behind too
+   rlSetTexture(target.getTexture().id);
+   rlBegin(RL_QUADS);
+   rlColor4ub(255, 255, 255, 255);
+   rlNormal3f(0, 0, 1);
+   for (const auto& corner : corners) {
+      //render targets are upside down
+      rlTexCoord2f(corner.x / size.x, 1 - corner.y / size.y);
+      auto nodePos = panelToNodePos(panel, corner);
+      rlVertex3f(nodePos.x, nodePos.y, nodePos.z);
+   }
+   rlEnd();
+   rlSetTexture(0);
+   rlEnableBackfaceCulling();
+   rlPopMatrix();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Pos3<R_FLOAT> Canvas3D::panelToNodePos(const Canvas* panel, const Pos<R_FLOAT>& panelPos) {
+   auto planePos = panel->getLocalTransform().transform(panelPos);
+   return {planePos.x / PIXELS_PER_UNIT, -planePos.y / PIXELS_PER_UNIT, 0};
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Pos<R_FLOAT> Canvas3D::nodeToPanelPos(const Canvas* panel, const Pos3<R_FLOAT>& nodePos) {
+   Pos<R_FLOAT> planePos(nodePos.x * PIXELS_PER_UNIT, -nodePos.y * PIXELS_PER_UNIT);
+   return Pos<R_FLOAT>(panel->getLocalTransform().inverse().transform(planePos));
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::optional<R_FLOAT> Canvas3D::intersectPanelPlane(const Ray3D& nodeRay) {
+   //the plane is z = 0
+   if (nodeRay.direction.z == 0) return {};
+   auto distance = -nodeRay.origin.z / nodeRay.direction.z;
+   if (distance < 0) return {};
+   return distance;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -220,12 +290,29 @@ std::optional<Hit3D> Canvas3D::pick(const Ray3D& sceneRay) const {
       if (!isNode) return;
       auto node = isNode.value();
       if (!node->getVisible()) return;
+      auto consider = [&](R_FLOAT distance) {
+         if (!nearest || distance < nearest->distance) nearest = Hit3D{node, sceneRay, distance};
+      };
       if (node->getPickable()) {
-         if (auto distance = node->intersectRay(sceneRay); distance && (!nearest || distance.value() < nearest->distance)) {
-            nearest = Hit3D{node, sceneRay, distance.value()};
+         if (auto distance = node->intersectRay(sceneRay)) consider(distance.value());
+      }
+      for (auto& child : n->getChildren()) {
+         //a panel is part of its node, as far as the mouse is concerned (like a child node it can't tell apart)
+         if (auto isPanel = child->as<Canvas>()) {
+            auto panel = isPanel.value();
+            if (!panel->getVisible()) continue;
+            auto global = node->getGlobalTransform();
+            auto nodeRay = sceneRay.transform(global.inverse().matrix);
+            if (auto distance = intersectPanelPlane(nodeRay)) {
+               auto nodePos = nodeRay.at(distance.value());
+               if (panel->getSizeRect().contains(nodeToPanelPos(panel, nodePos))) {
+                  consider(nodePos.transform(global.matrix).distanceTo(sceneRay.origin));
+               }
+            }
+         } else {
+            visit(child);
          }
       }
-      for (auto& child : n->getChildren()) visit(child);
    };
    for (auto& child : const_cast<Canvas3D*>(this)->getChildren()) visit(child);
    return nearest;

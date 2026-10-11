@@ -8,6 +8,14 @@ namespace ReyEngine {
    class Canvas3D : public Canvas {
    public:
       static constexpr size_t MAX_LIGHTS = 8;
+      // A 2D Canvas that is the child of a 3D node is drawn as a flat panel in that node's local XY plane, facing +Z,
+      // and is offered input wherever the mouse falls on it. Within the plane, the canvas is placed by its own 2D
+      // transform, in pixels, with PIXELS_PER_UNIT pixels to a unit and y pointing down as in 2D (so by default its top
+      // left corner is at the node's origin). Scale or move the node to size or place the panel.
+      static constexpr R_FLOAT PIXELS_PER_UNIT = 100;
+      // where a point on such a panel (in the canvas's space) lies in the space of its node, and vice versa
+      [[nodiscard]] static Pos3<R_FLOAT> panelToNodePos(const Canvas* panel, const Pos<R_FLOAT>& panelPos);
+      [[nodiscard]] static Pos<R_FLOAT> nodeToPanelPos(const Canvas* panel, const Pos3<R_FLOAT>& nodePos); //ignores z
       REYENGINE_OBJECT(Canvas3D)
       Canvas3D()
       : _camera3D({{0,0,5}, {0,0,0}, {0,1,0}, 45.0f, CAMERA_PERSPECTIVE})
@@ -40,6 +48,12 @@ namespace ReyEngine {
       static void doRender3D(RenderContext3D&, Internal::Drawable3D*);
       // find the visible lights in a 3D subtree
       static void collectLights(Internal::Drawable3D*, std::vector<const Light3D*>&);
+      // draw the 2D canvases in a 3D subtree into their render targets, ready to be drawn as panels in the scene
+      static void renderPanels(RenderContext&, Internal::Drawable3D*);
+      // draw a panel in the current local space of the 3D context
+      static void drawPanel(const RenderContext3D&, Canvas* panel);
+      // the distance along a ray (in the space of a panel's node) to where it crosses the panel's plane, if it does
+      [[nodiscard]] static std::optional<R_FLOAT> intersectPanelPlane(const Ray3D& nodeRay);
       // the 3D scene is the background layer for input too: 2D widgets in it get first refusal, then the 3D nodes,
       // which are offered input just as widgets are (see Node3D).
       Handled _processBackgroundInput(const InputEvent&) override;

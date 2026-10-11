@@ -23,6 +23,9 @@ namespace ReyEngine {
    /// over this node or one of its descendants (the nearest pickable node under the mouse, so nodes hidden behind
    /// others are not "inside"), and getLocalRay()/getLocalHitPos() give the mouse ray and where it struck, in this
    /// node's local space.
+   ///
+   /// 2D Canvases can be children of a node too: they are drawn as flat panels in its space (see
+   /// Canvas3D::PIXELS_PER_UNIT) and offered input along with its child nodes, with the mouse at a position on the canvas.
    class Node3D
    : public Internal::Drawable3D
    , public Internal::Tree::Processable
@@ -69,6 +72,8 @@ namespace ReyEngine {
    private:
       //offer input to a child node, localized to its space. The 3D counterpart of what Widget does with ScopeTransformer
       static Handled __pass_input(Node3D* child, const InputEvent& e);
+      //offer input to a 2D canvas drawn as a panel in our space (see Canvas3D::PIXELS_PER_UNIT), localized to the canvas
+      static Handled __pass_panel_input(Canvas* panel, const InputEvent& e);
       //whether the node the mouse is over (as picked by our Canvas3D) is this node or one of its descendants
       [[nodiscard]] bool __contains_mouse_pick() const;
       void __on_visibility_changed() override {_on_visibility_changed();}

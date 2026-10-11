@@ -169,6 +169,9 @@ namespace ReyEngine {
 
       static void doRender(RenderContext&, Widget*, bool isModal=false);
       static void doRenderModal(RenderContext&, Widget*);
+      //draws a canvas into its own render target, suspending whatever the context is drawing to in the meantime
+      static void renderOffscreen(RenderContext&, Canvas*);
+      static const RenderTarget& renderTargetOf(const Canvas* canvas){return canvas->_renderTarget;}
    private:
       void __on_child_added_to_tree(TypeNode* child) override;
       void __on_child_removed_from_tree(TypeNode* child) override;

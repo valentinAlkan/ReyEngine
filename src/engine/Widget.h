@@ -147,6 +147,7 @@ namespace ReyEngine {
       void calculateAnchoring(const Rect<R_FLOAT>& oldRect);
       friend class Layout;
       friend class Canvas;
+      friend class Node3D; //offers input to canvases placed in a 3D scene
 
       [[noreturn]] void throwEx(const std::string& operation) {
          throw std::runtime_error(std::string("Widget failed operation \"") + operation + "\" on " + getName() + " : " + std::string(INVALID_NODE_ERR_MSG));

@@ -2240,6 +2240,8 @@ namespace ReyEngine {
       constexpr ColorRGBA(const Color& color): r(color.r), g(color.g), b(color.b), a(color.a){}
       constexpr inline ColorRGBA& operator=(const Color& rhs){r = rhs.r; g=rhs.g; b=rhs.b; a=rhs.a; return *this;}
       constexpr inline operator Color() const {return {r, g, b, a};}
+      constexpr inline bool operator==(const ColorRGBA& rhs) const {return r==rhs.r && g==rhs.g && b==rhs.b && a==rhs.a;}
+      constexpr inline bool operator!=(const ColorRGBA& rhs) const {return !(*this == rhs);}
       void dim(Fraction p){a = (float)a * Fraction(p).get();}
       [[nodiscard]] ColorRGBA dim(Fraction p) const {auto retval = *this; retval.dim(p); return retval;}
       static ColorRGBA random(int alpha = -1){

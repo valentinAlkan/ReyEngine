@@ -6,6 +6,7 @@
 #include "MeshInstance3D.h"
 #include "Light3D.h"
 #include "Label.h"
+#include "Button.h"
 
 using namespace ReyEngine;
 
@@ -20,8 +21,13 @@ protected:
         auto click = e.isEvent<InputEventMouseButton>();
         if (!click || !click.value()->isDown || !click.value()->mouse.isInside()) return nullptr;
         static const ColorRGBA palette[] = {Colors::red, Colors::blue, Colors::green, Colors::yellow, Colors::gray};
-        static size_t next = 0;
-        getMaterial()->setColor(palette[next++ % std::size(palette)]);
+        // advance from whatever color we have now, so the first click always changes it
+        auto current = getMaterial()->getColor();
+        size_t next = 0;
+        for (size_t i = 0; i < std::size(palette); i++) {
+            if (palette[i] == current) {next = i + 1; break;}
+        }
+        getMaterial()->setColor(palette[next % std::size(palette)]);
         return {this};
     }
 };
@@ -56,6 +62,24 @@ int main(){
 
     // spin the cube using the same process callbacks widgets use
     cube->setProcess(std::function<void()>([cube](){ cube->rotate({0, 1, 0}, Radians(GetFrameTime())); }));
+
+    // a 2D canvas under a 3D node is drawn as a panel in the node's XY plane, so it spins with the cube. The face node
+    // puts the panel's top left corner on the corner of the cube's front face (just in front of it, so the cube doesn't
+    // hide it) and scales it so its 200 pixels span the face's one unit (Canvas3D::PIXELS_PER_UNIT is 100).
+    auto cubeFace = make_child<Node3D>(cube, "cubeFace");
+    cubeFace->setPosition(-0.5, 0.5, 0.501);
+    cubeFace->setScale(0.5);
+    auto panel = make_child<Canvas>(cubeFace, "panel");
+    panel->setSize(200, 200);
+    auto clicks = make_child<Label>(panel, "clicks", "clicks: 0");
+    clicks->setPosition(20, 30);
+    // the button takes the click, so clicking it doesn't change the cube's color. Clicking elsewhere on the panel does,
+    // since the panel doesn't handle it and it goes on to the cube.
+    auto button = make_child<PushButton>(panel, "button", "click me");
+    button->setRect(20, 100, 160, 60);
+    clicks->subscribe<PushButton::ButtonPressEvent>(button.get(), [label = clicks.get(), count = 0](const PushButton::ButtonPressEvent&) mutable {
+        label->setText("clicks: " + std::to_string(++count));
+    });
 
     canvas3d->setAmbientLight({30, 30, 40, 255});
     make_child<DirectionalLight3D>(canvas3d, "sun", Vec3<float>{-1, -2, -1}, Colors::white, 0.6f);

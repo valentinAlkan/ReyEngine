@@ -129,6 +129,34 @@ namespace ReyEngine{
          std::optional<Ray3D> _localRay_cached;
          std::optional<Pos3<R_FLOAT>> _localHitPos_cached;
       };
+      /// for the duration of the scope, leaves a 3D scene for a 2D canvas placed in it (see Canvas3D::PIXELS_PER_UNIT):
+      /// the mouse is at a position on the canvas, as it would be for a canvas in 2D, and has no ray.
+      struct ScopeTransformerToPanel {
+         ScopeTransformerToPanel(MouseEvent& mouseEvent, const Pos<float>& panelPos, bool isInside)
+         : mouseEvent(mouseEvent)
+         , _localPos_cached(mouseEvent._localPos)
+         , _isInside_cached(mouseEvent._isInside)
+         , _localRay_cached(mouseEvent._localRay)
+         , _localHitPos_cached(mouseEvent._localHitPos)
+         {
+            mouseEvent._localPos = panelPos;
+            mouseEvent._isInside = isInside;
+            mouseEvent._localRay.reset();
+            mouseEvent._localHitPos.reset();
+         }
+         ~ScopeTransformerToPanel(){
+            mouseEvent._localPos = _localPos_cached;
+            mouseEvent._isInside = _isInside_cached;
+            mouseEvent._localRay = _localRay_cached;
+            mouseEvent._localHitPos = _localHitPos_cached;
+         }
+      private:
+         MouseEvent& mouseEvent;
+         Pos<float> _localPos_cached;
+         bool _isInside_cached;
+         std::optional<Ray3D> _localRay_cached;
+         std::optional<Pos3<R_FLOAT>> _localHitPos_cached;
+      };
    private:
       // CanvasSpace<Pos<float>> _canvasPos;
       Pos<float> _localPos;
