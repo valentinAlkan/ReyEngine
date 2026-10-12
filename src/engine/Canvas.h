@@ -166,6 +166,7 @@ namespace ReyEngine {
       std::array<Widget*, std::tuple_size_v<WidgetStatus::StatusTypes>> statusWidgetStorage = {0};
       Internal::InputReceiver* _hover = nullptr;
       Internal::InputReceiver* _toolTip = nullptr;
+      Pos<float> _toolTipPos; //where the mouse was, in our space, when the tooltip was asked for
 
       static void doRender(RenderContext&, Widget*, bool isModal=false);
       static void doRenderModal(RenderContext&, Widget*);

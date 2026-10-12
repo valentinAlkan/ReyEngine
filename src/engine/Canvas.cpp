@@ -162,12 +162,10 @@ void Canvas::renderProcess(RenderContext& renderContext) {
 
    //finally, draw tooltip
    if (auto toolTip = getToolTip()){
-      auto windowPos = InputManager::getMousePos();
-      auto localPos = Pos<float>(getGlobalTransform(false).get().inverse().transform(windowPos.get()));
       auto toolTipText = toolTip->getToolTipText();
       auto textSize = measureText(toolTipText, theme->font);
       static constexpr float embiggenness = 4;
-      Rect<float> toolTipRect = Rect<float>(localPos + Pos<float>(20,20), textSize).embiggen(embiggenness);
+      Rect<float> toolTipRect = Rect<float>(_toolTipPos + Pos<float>(20,20), textSize).embiggen(embiggenness);
       drawRectangle(toolTipRect, Colors::white);
       drawText(toolTipText, toolTipRect.topLeft() + Pos<float>(embiggenness, embiggenness), theme->font);
       drawRectangleLines(toolTipRect, 1.0, Colors::black);
@@ -213,6 +211,12 @@ Handled Canvas::_processInput(const InputEvent& event) {
    // }
 
    auto isMouse = event.isMouse(); //cache this for speed
+
+   //remember where the tooltip was asked for. The mouse is already in our space here, however we're placed (nested in
+   // another canvas, behind its camera, or on a panel in a 3D scene), and that's where the tooltip will be drawn.
+   if (event.eventId == InputEventMouseToolTip::ID && !event.toEvent<InputEventMouseToolTip>().isCancel) {
+      _toolTipPos = isMouse.value()->getLocalPos();
+   }
 
    //lets us catch and do stuff with unhandled input on the canvas level
    // only reacts to handled input, after it has fallen out of scope

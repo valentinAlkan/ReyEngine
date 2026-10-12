@@ -77,6 +77,7 @@ int main(){
     // since the panel doesn't handle it and it goes on to the cube.
     auto button = make_child<PushButton>(panel, "button", "click me");
     button->setRect(20, 100, 160, 60);
+    button->setToolTipText("drawn on the panel, where the mouse is");
     clicks->subscribe<PushButton::ButtonPressEvent>(button.get(), [label = clicks.get(), count = 0](const PushButton::ButtonPressEvent&) mutable {
         label->setText("clicks: " + std::to_string(++count));
     });
@@ -87,8 +88,19 @@ int main(){
     lamp->setPosition(1, 1.5f, 1.5f);
 
     // 2D widgets added to a Canvas3D are drawn over the 3D scene, like a HUD
+    auto hint = make_child<Label>(canvas3d, "hint", "space: start/stop the cube spinning");
+    hint->setPosition(10, 10);
+    canvas3d->moveToForeground(hint.get());
     auto hud = make_child<Label>(canvas3d, "hud", "ReyEngine 3D");
-    hud->setPosition(10, 10);
+    hud->setPosition(10, 30);
+
+    // keys nobody else wants end up unhandled at the canvas, so catch space there
+    canvas3d->subscribeMutable<UnhandledInputEvent>(canvas3d.get(), [cube, canvas = canvas3d.get()](UnhandledInputEvent& event){
+        auto key = event.fwdEvent.isEvent<InputEventKey>();
+        if (!key || key.value()->key != InputInterface::KeyCode::KEY_SPACE || !key.value()->isDown || key.value()->isRepeat) return;
+        cube->setProcess(!cube->isProcessed());
+        event.handled = {canvas};
+    });
     hud->setProcess(std::function<void()>([hud, canvas3d](){
         auto hovered = canvas3d->getHover();
         hud->setText(hovered ? "hovering " + hovered->getName() : "ReyEngine 3D - click a mesh");
