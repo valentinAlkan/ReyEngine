@@ -445,8 +445,13 @@ CrossPlatform::ResourceDirLocation::ResourceDirLocation() {
       ~Validator(){Logger::info() << "Using ReyEngineResourcedir : " << dir << endl;}
       bool validate(const FileSystem::Path& path){
          dir = path;
-         Logger::debug() << "Validating potential ReyEngineResourcedir : " << dir << endl;
-         return dir.empty() ? false : FileSystem::Directory(dir).exists();
+         auto empty = dir.empty();
+         if (!empty) {
+            Logger::debug() << "Validating potential ReyEngineResourcedir : " << dir << " (" << empty.error().what() << ")" << endl;
+            return false;
+         }
+         Logger::debug() << "Validating potential ReyEngineResourcedir : " << dir << (*empty ? " (empty)" : " (not empty)") << endl;
+         return !*empty;
       }
       FileSystem::Directory dir;
    };

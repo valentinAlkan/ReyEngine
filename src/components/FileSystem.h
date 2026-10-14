@@ -147,6 +147,11 @@ namespace ReyEngine::FileSystem {
       explicit FileAccessError(const std::string& filepath): FileHandleError("Could not access file: " + filepath) {}
    };
 
+   class DirectoryError : public FileHandleError {
+   public:
+      explicit DirectoryError(const std::string& filepath): FileHandleError("Could not access directory: " + filepath) {}
+   };
+
    struct FileHandleReadOnly {
       struct LineData {
          LineData(): valid(false){}
@@ -268,9 +273,9 @@ namespace ReyEngine::FileSystem {
       Directory(const char* other): Path(other){_pathType = DIRECTORY;}
       Directory(Directory& other) = default;
       Directory& operator=(const File& other) = delete;
-      File toFile() const = delete;
+      [[nodiscard]] File toFile() const = delete;
       operator FileHandleReadOnly() = delete;
-      bool empty(){return _path.string().empty();}
+      [[nodiscard]] std::expected<bool, FileHandleError> empty() const; //does the directory have any contents?
       //returns set of content paths, and a set of pairs of paths and the error codes they generated
       [[nodiscard]] std::pair<std::set<Path>, std::set<std::pair<Path, std::error_code>>> listContents() const;
       static void logfsError(Logger::Stream&& log, std::set<std::pair<Path, std::error_code>>& errors);
