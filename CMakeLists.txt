@@ -260,17 +260,18 @@ endif (UNIX)
 #target_link_libraries(AbstractTreeTest raylib)
 
 # Test Project
-#add_executable( NewEngineMain test/newEngineTestMain.cpp)
-#target_link_libraries(NewEngineMain ReyEngine2D dl)
-#add_executable( NewEngineBasic test/NewEngineTestBasic.cpp)
-#target_link_libraries(NewEngineBasic ReyEngine2D dl)
-#add_executable( NewEngineFonts test/NewEngineFonts.cpp)
-#target_link_libraries(NewEngineFonts ReyEngine2D ReyEngineComponentArgParse)
-
-
-# Test Project
 if(REY_ENABLE_TESTS)
     message(STATUS "REY_ENABLE_TESTS is ON. Building ReyEngine tests")
+
+    add_executable( NewEngineMain test/newEngineTestMain.cpp)
+    target_link_libraries(NewEngineMain ReyEngine2D dl)
+
+    add_executable( NewEngineBasic test/NewEngineTestBasic.cpp)
+    target_link_libraries(NewEngineBasic ReyEngine2D dl)
+
+    add_executable( NewEngineFonts test/NewEngineFonts.cpp)
+    target_link_libraries(NewEngineFonts ReyEngine2D ReyEngineComponentArgParse)
+
     add_executable(ReyEngineThemeTest test/themeTest.cpp)
     target_link_libraries(ReyEngineThemeTest ReyEngine2D)
 
