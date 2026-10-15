@@ -3,6 +3,7 @@
 #include <mutex>
 #include <memory>
 #include <unordered_set>
+#include <vector>
 
 template <typename T>
 class ProcessList {
@@ -10,7 +11,7 @@ public:
    ~ProcessList(){clear();}
    static std::optional<T*> add(T* t, bool& isProcessed){
       //should be queued
-      std::unique_lock<std::mutex> lock(instance()._mtx);
+      std::unique_lock<std::recursive_mutex> lock(instance()._mtx);
       auto retval = instance()._list.insert(t);
       if (retval.second){
          isProcessed = true;
@@ -22,7 +23,7 @@ public:
    }
    static std::optional<T*> remove(T* t, bool& isProcessed){
       //should be queued
-      std::unique_lock<std::mutex> lock(instance()._mtx);
+      std::unique_lock<std::recursive_mutex> lock(instance()._mtx);
       auto it = instance()._list.find(t);
       if (it != instance()._list.end()){
          //only remove if found;
@@ -35,7 +36,7 @@ public:
       return std::nullopt;
    }
    static void removeAll(bool& isProcessed){
-      std::unique_lock<std::mutex> lock(instance()._mtx);
+      std::unique_lock<std::recursive_mutex> lock(instance()._mtx);
       instance()._list.clear();
       isProcessed = false;
       //invalidate iterator
@@ -51,10 +52,18 @@ public:
 
    template <typename... Args>
    static void processAll(Args... args){
-      std::unique_lock<std::mutex> lock(instance()._mtx);
-      for (auto& processable : instance()._list) {
+      //recursive so _process can call add/remove on this thread; other threads still wait for the frame
+      std::unique_lock<std::recursive_mutex> lock(instance()._mtx);
+      auto& self = instance();
+      //iterate a snapshot so add/remove during _process can't invalidate the iterator.
+      //things added this frame start processing next frame.
+      self._snapshot.assign(self._list.begin(), self._list.end());
+      for (auto& processable : self._snapshot) {
+         //skip anything removed (possibly destroyed) earlier this frame
+         if (!self._list.contains(processable)) continue;
          processable->_process(std::forward<Args>(args)...);
       }
+      self._snapshot.clear();
    }
    //returns whichever T was just processed
    template <typename... Args>
@@ -62,7 +71,7 @@ public:
       auto& it = instance()._it;
       auto& list = instance()._list;
       if (list.empty()) return nullptr;
-      std::unique_lock<std::mutex> lock(instance()._mtx);
+      std::unique_lock<std::recursive_mutex> lock(instance()._mtx);
       it = list.begin();
       (*it)->_process(std::forward<Args>(args)...);
       auto retval = *it;
@@ -74,7 +83,7 @@ public:
       auto& it = instance()._it;
       auto& list = instance()._list;
       if (list.empty()) return nullptr;
-      std::unique_lock<std::mutex> lock(instance()._mtx);
+      std::unique_lock<std::recursive_mutex> lock(instance()._mtx);
       if (it == list.end()) return nullptr;
       (*it)->_process(std::forward<Args>(args)...);
       auto retval = *it;
@@ -82,11 +91,11 @@ public:
       return retval;
    }
    static void clear(){
-      std::unique_lock<std::mutex> sl(instance()._mtx);
+      std::unique_lock<std::recursive_mutex> sl(instance()._mtx);
       instance()._list.clear();
       instance()._it = instance()._list.begin();
    }
-   static size_t size() {return instance()._processList->_list.size();}
+   static size_t size() {return instance()._list.size();}
 protected:
    static ProcessList& instance(){
       static ProcessList instance;
@@ -94,6 +103,7 @@ protected:
    }
 private:
    std::unordered_set<T*> _list; //list of things that require processing. No specific order.
-   std::mutex _mtx;
+   std::recursive_mutex _mtx;
+   std::vector<T*> _snapshot; //reused by processAll to avoid reallocating each frame
    std::unordered_set<T*>::iterator _it;
 };
