@@ -2,6 +2,7 @@
 #include <functional>
 #include <vector>
 #include <memory>
+#include <mutex>
 
 namespace ReyEngine {
    namespace Internal::Tree{
@@ -48,16 +49,19 @@ namespace ReyEngine {
       }
 
       void executeAll() {
-         if (!_calls->empty()) {
+         //keep going until no call defers another
+         while (true) {
+            std::vector<std::unique_ptr<DeferredCall>>* toRun;
             {
-               std::unique_lock<std::mutex> sl(mtx); //swap should be locked but otherwise adding and removing is done to the inactive list
-               _calls = _calls == &A ? &B : &A; //swap call lists so we can't add to it while we're iterating
+               std::unique_lock<std::mutex> sl(mtx);
+               if (_calls->empty()) return;
+               toRun = _calls;
+               _calls = _calls == &A ? &B : &A; //new calls go to the other list while we iterate this one
             }
-            for (auto& call: *_calls) {
+            for (auto& call: *toRun) {
                if (call->active) call->func();
             }
-            _calls->clear(); //clear out any inactive calls (missing callers, etc)
-            executeAll(); //keep doing this until all calls are resolved
+            toRun->clear();
          }
       }
 
