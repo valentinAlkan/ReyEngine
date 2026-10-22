@@ -2059,15 +2059,15 @@ namespace ReyEngine {
       }
 
       [[nodiscard]] inline Quaternion extractRotation() const {
-         Vector3 t, s; Quaternion r;
-         MatrixDecompose(matrix, &t, &r, &s);
+         Quaternion r; Vec3<float> s;
+         decompose(r, s);
          return r;
       }
 
       [[nodiscard]] inline Vec3<float> extractScale() const {
-         Vector3 t, s; Quaternion r;
-         MatrixDecompose(matrix, &t, &r, &s);
-         return Vec3<float>(s);
+         Quaternion r; Vec3<float> s;
+         decompose(r, s);
+         return s;
       }
 
       [[nodiscard]] inline Transform3D inverse() const {return MatrixInvert(matrix);}
@@ -2104,6 +2104,22 @@ namespace ReyEngine {
          *this = Transform3D(extractTranslation(), extractRotation(), s);
       }
       inline friend std::ostream& operator<<(std::ostream& os, const Transform3D& t) {os << t.matrix; return os;}
+   private:
+      // split the upper 3x3 into rotation and scale. The matrix is built scale first, then rotation, so each axis's
+      // scale is the length of a column (m0-m2, m4-m6, m8-m10). raylib's MatrixDecompose reads rows instead, which is
+      // only right when the scale is uniform: a stretched node lost its scale every time it was rotated.
+      void inline decompose(Quaternion& rotation, Vec3<float>& scale) const {
+         scale = {Vector3Length({matrix.m0, matrix.m1, matrix.m2}), Vector3Length({matrix.m4, matrix.m5, matrix.m6}), Vector3Length({matrix.m8, matrix.m9, matrix.m10})};
+         float det = matrix.m0 * (matrix.m5 * matrix.m10 - matrix.m9 * matrix.m6)
+                   - matrix.m4 * (matrix.m1 * matrix.m10 - matrix.m9 * matrix.m2)
+                   + matrix.m8 * (matrix.m1 * matrix.m6 - matrix.m5 * matrix.m2);
+         if (det < 0) scale.x = -scale.x; //mirrored: put the flip on x
+         Matrix unscaled = matrix;
+         if (scale.x != 0) {unscaled.m0 /= scale.x; unscaled.m1 /= scale.x; unscaled.m2 /= scale.x;}
+         if (scale.y != 0) {unscaled.m4 /= scale.y; unscaled.m5 /= scale.y; unscaled.m6 /= scale.y;}
+         if (scale.z != 0) {unscaled.m8 /= scale.z; unscaled.m9 /= scale.z; unscaled.m10 /= scale.z;}
+         rotation = QuaternionFromMatrix(unscaled);
+      }
    };
 
    // 3D counterparts of the 2D geometry types: Pos3 <-> Pos, Size3 <-> Size, Box <-> Rect, Ray3D <-> Line
