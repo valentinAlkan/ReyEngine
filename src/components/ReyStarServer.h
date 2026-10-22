@@ -258,10 +258,17 @@ namespace ReyStar {
          // they be destroyed.
 
          // When declared on the stack, the workers will be shut down cleanly and this code is redundant.
-         for (auto& worker : _workers) {
-            worker.stop();
+         {
+            //set the flags under the queue mutex: a worker checks them (in its wait predicate) under the same mutex,
+            // so it either sees them or is already waiting and gets the notification. Without the lock a worker
+            // could check, miss the flags, then miss the wakeup and never return from wait.
+            std::unique_lock<std::mutex> lock(_queueMtx);
+            for (auto& worker : _workers) {
+               worker.stop();
+            }
          }
          _condition_variable.notify_all();
+         //any orders still queued are destroyed with the queues, so their futures get a broken_promise error
          for (auto& worker : _workers) {
             worker.wait();
          }
@@ -300,16 +307,14 @@ namespace ReyStar {
             return {id, promise.get_future()};
          }
 
-         auto res = _openOrders.try_emplace(id);
-
-         //assume success
-         auto& newOrder = res.first->second.first;
-         newOrder.requestId = id;
-         newOrder.requestTime = std::chrono::steady_clock::now();
-         newOrder.start = &start;
-         newOrder.goal = &goal;
-         newOrder.heuristic = start.distanceTo(goal);
-         newOrder.promise = &res.first->second.second;
+         //the order owns its promise and is handed from the queue to a worker, which frees it once it's answered
+         auto newOrder = std::make_unique<WorkOrder>();
+         newOrder->requestId = id;
+         newOrder->requestTime = std::chrono::steady_clock::now();
+         newOrder->start = &start;
+         newOrder->goal = &goal;
+         newOrder->heuristic = start.distanceTo(goal);
+         auto future = newOrder->promise.get_future();
 
          auto getWorkLoad = [](WorkOrder& order) -> WorkLoad {
             if (order.heuristic >= MEDIUM_THRESHOLD) return WorkLoad::HEAVY;
@@ -319,15 +324,15 @@ namespace ReyStar {
 
          //assign the job to an appropriate worker given the expected workload of the request
          _queueMtx.lock();
-         switch (getWorkLoad(newOrder)){
-            case WorkLoad::LIGHT: _lightQueue.push(&newOrder); break;
-            case WorkLoad::MEDIUM: _mediumQueue.push(&newOrder); break;
-            case WorkLoad::HEAVY: _heavyQueue.push(&newOrder); break;
+         switch (getWorkLoad(*newOrder)){
+            case WorkLoad::LIGHT: _lightQueue.push(std::move(newOrder)); break;
+            case WorkLoad::MEDIUM: _mediumQueue.push(std::move(newOrder)); break;
+            case WorkLoad::HEAVY: _heavyQueue.push(std::move(newOrder)); break;
          }
          _requestCount++; //make sure this is always protected by the mutex
          _queueMtx.unlock();
          _condition_variable.notify_one();
-         return {newOrder.requestId, newOrder.promise->get_future()};
+         return {id, std::move(future)};
       }
    protected:
       static constexpr float LIGHT_THRESHOLD = 10;
@@ -340,9 +345,8 @@ namespace ReyStar {
          std::chrono::steady_clock::time_point requestTime;
          T* start;
          T* goal;
-         PathResult<T> result;
          float heuristic;
-         std::promise<PathResult<T>>* promise;
+         std::promise<PathResult<T>> promise;
       };
 
       struct Worker{
@@ -362,40 +366,34 @@ namespace ReyStar {
          Worker& operator=(const Worker&) = delete;
          Worker& operator=(const Worker&&) = delete;
          ~Worker(){
-            _cancel = true;
             _shutdown = true;
             if (_t.joinable()) _t.join();
          }
-         void stop() {
+         void stop() { //call with the server's queue mutex held (see ~ReyStarServer)
             _shutdown = true;
-            _cancel = true;
          }
          void wait(){
             if (_t.joinable()) _t.join();
          }
          const int workerId;
-         std::atomic<bool> _cancel = false;
       private:
          void work(){
             while (!_shutdown){
-               WorkOrder* order;
-               _cancel = false;
+               std::unique_ptr<WorkOrder> order;
                std::unique_lock<std::mutex> lock(_server._queueMtx);
                _server._condition_variable.wait(lock, [&] {
                   // Wait for data. Predicate is protected by mutex during eval.
-                  if (_cancel) return true;
+                  if (_shutdown) return true;
                   if (_server._requestCount) {
                      order = _server.getOpenWorkOrder();
                      return true;
                   }
                   return false;
                });
-               //order is now valid.
                lock.unlock();  // Release lock before processing
+               if (!order) continue; //woken to shut down
 
-               bool done = false;
-               auto& promise = order->promise;
-               if (!_cancel) {
+               {
                   auto solution = aStarAlgorithm<T>(_server.tiles, *order->start, *order->goal);
 
                   // Build the result
@@ -407,42 +405,38 @@ namespace ReyStar {
                   result.start = order->start;
                   result.goal = order->goal;
                   result.pathCost = solution.pathCost;
-                  promise->set_value(std::move(result));
-                  done = true;
+                  order->promise.set_value(std::move(result));
                }
-               if (!done && !_cancel){
-                  promise->set_exception(nullptr);
-               }
+               //the order (and its promise) is freed here. The result lives on in the future's shared state.
             }
          }
          ReyStarServer& _server;
          std::thread _t;
-         bool _shutdown = false;
+         std::atomic<bool> _shutdown = false;
       };
 
-      WorkOrder* getOpenWorkOrder(){ //favors light then medium then heavy
-         WorkOrder* order = nullptr;
+      std::unique_ptr<WorkOrder> getOpenWorkOrder(){ //favors light then medium then heavy
+         std::unique_ptr<WorkOrder> order;
          if (!_lightQueue.empty()) {
-            order = _lightQueue.top();
+            order = std::move(_lightQueue.top());
             _lightQueue.pop();
          } else if (!_mediumQueue.empty()) {
-            order = _mediumQueue.top();
+            order = std::move(_mediumQueue.top());
             _mediumQueue.pop();
          } else if (!_heavyQueue.empty()) {
-            order = _heavyQueue.top();
+            order = std::move(_heavyQueue.top());
             _heavyQueue.pop();
          }
          _requestCount--;
          return order;
       }
 
-      std::map<RequestId, std::pair<WorkOrder, std::promise<PathResult<T>>>> _openOrders;
       std::vector<Worker> _workers;
 
       std::mutex _queueMtx; //mutex for these queues
       std::condition_variable _condition_variable;
 
-      using WorkOrderStack = std::stack<WorkOrder*, std::vector<WorkOrder*>>;
+      using WorkOrderStack = std::stack<std::unique_ptr<WorkOrder>, std::vector<std::unique_ptr<WorkOrder>>>;
       WorkOrderStack _lightQueue; //light-ish requests
       WorkOrderStack _mediumQueue; //medium-ish requests
       WorkOrderStack _heavyQueue; //all others
