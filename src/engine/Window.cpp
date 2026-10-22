@@ -3,6 +3,7 @@
 #include "Application.h"
 #include "InputManager.h"
 #include "Canvas.h"
+#include "TestServer.h"
 #include "rlgl.h"
 
 using namespace std;
@@ -89,6 +90,9 @@ void Window::exec(){
          event.position = newPos;
          publish(event);
       }
+
+      // input from a test, if one is connected: after raylib has read the real devices, before we do
+      if (_testServer) _testServer->beginFrame(_frameCounter, Size<int>((int)size.x, (int)size.y));
 
       // programatically generated inputs
       while(!_inputQueueKey.empty()){
@@ -273,6 +277,7 @@ void Window::exec(){
          RenderContext renderContext(_canvas->_renderTarget);
          canvas->renderProcess(renderContext);
       }
+      if (_testServer) _testServer->endFrame(_canvas->readRenderTarget());
 
       //paint the scene on the window
       BeginDrawing();
@@ -292,6 +297,13 @@ void Window::exec(){
    if (Application::windowCount() == 1){
       Application::exit(Application::ExitReason::CLEAN);
    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+TestServer* Window::startTestServer(uint16_t port) {
+   _testServer = std::make_unique<TestServer>();
+   if (!_testServer->start(port)) return nullptr;
+   return _testServer.get();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -133,6 +133,7 @@ add_library(ReyEngine2D STATIC
         src/engine/TextEditHandler.cpp
         src/engine/Positionable2D.cpp
         src/engine/Window.cpp
+        src/engine/TestServer.cpp
         src/engine/WindowPrototype.cpp
         src/engine/Event.cpp
         src/engine/InputManager.cpp

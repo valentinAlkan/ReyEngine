@@ -11,6 +11,7 @@ namespace ReyEngine{
    namespace Internal::Tree { struct Windowable;}
    class Canvas;
    class Widget;
+   class TestServer;
    class Window : public EventPublisher {
    public:
 
@@ -44,6 +45,10 @@ namespace ReyEngine{
       int getFPS() const {return GetFPS();}
       void setInternalLogLevel(int logLevel){SetTraceLogLevel(logLevel);}
       bool isClosing() const {return _isClosing;}
+      /// let tests drive this window over a local socket (see TestServer). Debug only. Returns null if it can't
+      /// listen; the window owns the server either way.
+      TestServer* startTestServer(uint16_t port);
+      [[nodiscard]] TestServer* getTestServer() const {return _testServer.get();}
    protected:
       Window(const std::string& title, int width, int height, const std::vector<WindowFlags>& flags, int targetFPS = 0);
       void initialize(std::optional<std::unique_ptr<TypeNode>> root);
@@ -63,6 +68,7 @@ namespace ReyEngine{
       Canvas* _canvas;
       bool _isClosing = false;
       DeferredCallList _deferredCallList;
+      std::unique_ptr<TestServer> _testServer;
 
       /////////////////////
       /////////////////////
