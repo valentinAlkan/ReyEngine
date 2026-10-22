@@ -134,6 +134,7 @@ add_library(ReyEngine2D STATIC
         src/engine/Positionable2D.cpp
         src/engine/Window.cpp
         src/engine/TestServer.cpp
+        src/engine/TestServerSocket.c
         src/engine/WindowPrototype.cpp
         src/engine/Event.cpp
         src/engine/InputManager.cpp
@@ -224,6 +225,9 @@ target_link_libraries(ReyEngine2D raylib Threads::Threads ReyEngineComponentStri
 if (UNIX)
     target_link_libraries(ReyEngine2D stdc++fs dl)
 endif (UNIX)
+if (WIN32)
+    target_link_libraries(ReyEngine2D ws2_32) #TestServer's sockets
+endif (WIN32)
 
 ##### TILE EDITOR
 #add_executable(TileEditor

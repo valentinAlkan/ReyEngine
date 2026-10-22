@@ -3,13 +3,7 @@
 #include <cctype>
 #include <sstream>
 #include "Logger.h"
-#ifndef _WIN32
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <poll.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#endif
+#include "TestServerSocket.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -78,43 +72,32 @@ namespace {
 TestServer::~TestServer() {
    _stop = true;
    if (_thread.joinable()) _thread.join();
-#ifndef _WIN32
-   if (_listenSocket >= 0) close(_listenSocket);
+   if (_listenSocket != REY_TEST_SOCKET_INVALID) reyTestSocketClose(_listenSocket);
    // sockets of clients still connected are closed when their disconnect is handled, which won't happen now
-   set<int> clients;
-   for (auto& step : _steps) if (step.client >= 0) clients.insert(step.client);
-   for (auto& step : _incoming) if (step.client >= 0) clients.insert(step.client);
-   for (int client : clients) close(client);
-#endif
+   set<intptr_t> clients;
+   for (auto& step : _steps) if (step.client != REY_TEST_SOCKET_INVALID) clients.insert(step.client);
+   for (auto& step : _incoming) if (step.client != REY_TEST_SOCKET_INVALID) clients.insert(step.client);
+   for (auto client : clients) reyTestSocketClose(client);
+   if (_socketsStarted) reyTestSocketCleanup();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 bool TestServer::start(uint16_t port) {
-#ifdef _WIN32
-   Logger::error() << "TestServer: not supported on Windows yet" << endl;
-   return false;
-#else
-   _listenSocket = socket(AF_INET, SOCK_STREAM, 0);
-   if (_listenSocket < 0) {
-      Logger::error() << "TestServer: can't create a socket" << endl;
-      return false;
+   if (!_socketsStarted) {
+      if (reyTestSocketInit() != 0) {
+         Logger::error() << "TestServer: can't start sockets" << endl;
+         return false;
+      }
+      _socketsStarted = true;
    }
-   int yes = 1;
-   setsockopt(_listenSocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
-   sockaddr_in address{};
-   address.sin_family = AF_INET;
-   address.sin_port = htons(port);
-   address.sin_addr.s_addr = htonl(INADDR_LOOPBACK); //local only
-   if (bind(_listenSocket, (sockaddr*)&address, sizeof(address)) < 0 || ::listen(_listenSocket, 1) < 0) {
+   _listenSocket = reyTestSocketListen(port);
+   if (_listenSocket == REY_TEST_SOCKET_INVALID) {
       Logger::error() << "TestServer: can't listen on 127.0.0.1:" << port << endl;
-      close(_listenSocket);
-      _listenSocket = -1;
       return false;
    }
    _thread = thread([this]{listen();});
    Logger::info() << "TestServer: listening on 127.0.0.1:" << port << endl;
    return true;
-#endif
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -124,21 +107,17 @@ void TestServer::addCommand(const string& name, const string& help, Command comm
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void TestServer::listen() {
-#ifndef _WIN32
    // one client at a time. Each line becomes a step; the game thread does the rest, including closing the client's
    // socket once it has handled everything the client sent.
    while (!_stop) {
-      pollfd listening{_listenSocket, POLLIN, 0};
-      if (poll(&listening, 1, POLL_MS) <= 0) continue;
-      int client = accept(_listenSocket, nullptr, nullptr);
-      if (client < 0) continue;
+      auto client = reyTestSocketAccept(_listenSocket, POLL_MS);
+      if (client == REY_TEST_SOCKET_INVALID) continue;
       string buffer;
       char chunk[4096];
       while (!_stop) {
-         pollfd reading{client, POLLIN, 0};
-         if (poll(&reading, 1, POLL_MS) <= 0) continue;
-         auto got = recv(client, chunk, sizeof(chunk), 0);
-         if (got <= 0) break; //closed, or gone
+         int got = reyTestSocketRecv(client, chunk, sizeof(chunk), POLL_MS);
+         if (got == 0) continue;
+         if (got < 0) break; //closed, or gone
          buffer.append(chunk, got);
          for (size_t end; (end = buffer.find('\n')) != string::npos; buffer.erase(0, end + 1)) {
             auto line = buffer.substr(0, end);
@@ -148,7 +127,6 @@ void TestServer::listen() {
       }
       queue(Step{Step::Kind::DISCONNECT, client});
    }
-#endif
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -189,9 +167,7 @@ void TestServer::beginFrame(uint64_t frame, const Size<int>& windowSize) {
          case Step::Kind::REPLY: reply(step.client, step.text); break;
          case Step::Kind::DISCONNECT:
             releaseAll();
-#ifndef _WIN32
-            close(step.client);
-#endif
+            reyTestSocketClose(step.client);
             break;
       }
    }
@@ -217,7 +193,7 @@ void TestServer::expand(const Step& line, deque<Step>& steps) {
    if (args.empty()) return; //blank lines get no reply
    auto name = args[0];
    args.erase(args.begin());
-   int client = line.client;
+   auto client = line.client;
    auto input = [&](int type, int a = 0, int b = 0){
       Step step{Step::Kind::INPUT, client};
       step.event[0] = type; step.event[1] = a; step.event[2] = b;
@@ -327,11 +303,8 @@ void TestServer::releaseAll() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void TestServer::reply(int client, const string& text) {
-#ifndef _WIN32
-   // the client may have gone already; MSG_NOSIGNAL keeps that from killing the game with SIGPIPE
-   send(client, text.data(), text.size(), MSG_NOSIGNAL);
-#endif
+void TestServer::reply(intptr_t client, const string& text) {
+   reyTestSocketSend(client, text.data(), (int)text.size()); //the client may have gone already; that's fine
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

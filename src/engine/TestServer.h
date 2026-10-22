@@ -50,7 +50,7 @@ namespace ReyEngine {
       struct Step {
          enum class Kind {LINE, INPUT, WAIT, SCREENSHOT, REPLY, DISCONNECT};
          Kind kind;
-         int client = -1;           //the socket it came from, and where any reply goes
+         intptr_t client = -1;      //the socket it came from, and where any reply goes (a TestServerSocket)
          std::string text;          //LINE: the command; SCREENSHOT: the path; REPLY: the output
          int event[3] = {0, 0, 0};  //INPUT: raylib automation event type and params
          uint64_t frames = 0;       //WAIT: frames to let pass
@@ -61,11 +61,12 @@ namespace ReyEngine {
       void expand(const Step& line, std::deque<Step>& steps);
       void inject(const Step& step);
       void releaseAll();           //let go of every key and button a test is holding
-      void reply(int client, const std::string& text);
+      void reply(intptr_t client, const std::string& text);
       [[nodiscard]] std::string help() const;
 
       std::atomic<bool> _stop = false;
-      int _listenSocket = -1;
+      bool _socketsStarted = false;
+      intptr_t _listenSocket = -1;
       std::thread _thread;
       std::mutex _mutex;
       std::deque<Step> _incoming; //from the socket thread, guarded by _mutex
