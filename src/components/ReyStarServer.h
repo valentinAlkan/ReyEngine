@@ -14,6 +14,10 @@
 #include <condition_variable>
 #include <atomic>
 #include <chrono>
+#include <cstdint>
+#include <stdexcept>
+#include <string>
+#include <utility>
 #include "ReyEngine.h"
 
 namespace ReyStar {
@@ -41,8 +45,80 @@ namespace ReyStar {
 
    using RequestId = unsigned long long;
 
+   // Tiles can live in either of two containers. A TileMap holds any set of coordinates, holes and all; a Grid holds
+   // a full rectangle, flat, which takes a fraction of the memory and finds a tile by arithmetic rather than a tree
+   // search. The search, and the server, work with either (see findTile and tileKey).
    template <ReyStarTileable T>
    using TileMap = std::map<std::pair<int, int>, T>;
+
+   /// A width x height rectangle of tiles, stored row by row in one block. Tile (x, y) has coord {x, y}; the grid
+   /// sets it. Its size is fixed when it's made: tiles never move, so pointers to them stay good for the grid's life
+   /// (the server's workers rely on it). Holes can't be left; make them impassable (weight 0) instead.
+   template <ReyStarTileable T>
+   class Grid {
+   public:
+      Grid() = default;
+      Grid(int width, int height)
+      : _width(std::max(0, width))
+      , _height(std::max(0, height))
+      , _tiles((size_t)_width * _height)
+      {
+         for (int y = 0; y < _height; y++) {
+            for (int x = 0; x < _width; x++) _tiles[index(x, y)].coord = ReyEngine::Pos<int>(x, y);
+         }
+      }
+      [[nodiscard]] int width() const {return _width;}
+      [[nodiscard]] int height() const {return _height;}
+      [[nodiscard]] size_t size() const {return _tiles.size();}
+      [[nodiscard]] bool contains(int x, int y) const {return x >= 0 && y >= 0 && x < _width && y < _height;}
+      /// where a tile is in the block (row by row). Only meaningful for coordinates in the grid.
+      [[nodiscard]] size_t index(int x, int y) const {return (size_t)y * _width + x;}
+      /// the tile at x, y, or null if that's outside the grid
+      [[nodiscard]] T* find(int x, int y) {return contains(x, y) ? &_tiles[index(x, y)] : nullptr;}
+      [[nodiscard]] const T* find(int x, int y) const {return contains(x, y) ? &_tiles[index(x, y)] : nullptr;}
+      /// the tile at x, y. Throws std::out_of_range if that's outside the grid.
+      [[nodiscard]] T& at(int x, int y) {return const_cast<T&>(std::as_const(*this).at(x, y));}
+      [[nodiscard]] const T& at(int x, int y) const {
+         if (!contains(x, y)) throw std::out_of_range("ReyStar::Grid: no tile at " + std::to_string(x) + "," + std::to_string(y));
+         return _tiles[index(x, y)];
+      }
+      [[nodiscard]] T& operator[](size_t i) {return _tiles[i];}
+      [[nodiscard]] const T& operator[](size_t i) const {return _tiles[i];}
+      // every tile, row by row
+      [[nodiscard]] auto begin() {return _tiles.begin();}
+      [[nodiscard]] auto end() {return _tiles.end();}
+      [[nodiscard]] auto begin() const {return _tiles.begin();}
+      [[nodiscard]] auto end() const {return _tiles.end();}
+   private:
+      int _width = 0;
+      int _height = 0;
+      std::vector<T> _tiles;
+   };
+
+   /// the tile at x, y, or null if there isn't one
+   template <ReyStarTileable T>
+   const T* findTile(const TileMap<T>& tiles, int x, int y) {
+      auto it = tiles.find({x, y});
+      return it == tiles.end() ? nullptr : &it->second;
+   }
+   template <ReyStarTileable T>
+   const T* findTile(const Grid<T>& tiles, int x, int y) {return tiles.find(x, y);}
+
+   /// a number for a tile that no other tile in the container shares, for the search to file what it learns under. A
+   /// grid uses the tile's place in the block; a map, both coordinates packed together.
+   template <ReyStarTileable T>
+   uint64_t tileKey(const TileMap<T>&, const T& tile) {
+      return ((uint64_t)(uint32_t)tile.coord.x << 32) | (uint32_t)tile.coord.y;
+   }
+   template <ReyStarTileable T>
+   uint64_t tileKey(const Grid<T>& tiles, const T& tile) {return tiles.index(tile.coord.x, tile.coord.y);}
+
+   /// a container the search can find tiles of type T in
+   template <typename Tiles, typename T>
+   concept TileContainer = requires(const Tiles& tiles, const T& tile, int x) {
+      { findTile(tiles, x, x) } -> std::convertible_to<const T*>;
+      { tileKey(tiles, tile) } -> std::convertible_to<uint64_t>;
+   };
 
    template <ReyStarTileable T>
    struct PathTile{
@@ -99,8 +175,8 @@ namespace ReyStar {
    };
 
    /////////////////////////////////////////////////////////////////////////////////////////
-   template <ReyStarTileable T>
-   PathTile<T> aStarAlgorithm(const TileMap<T>& tileMap, const T& start, const T& goal) {
+   template <ReyStarTileable T, typename Tiles> requires TileContainer<Tiles, T>
+   PathTile<T> aStarAlgorithm(const Tiles& tiles, const T& start, const T& goal) {
       // Node structure for the priority queue
       struct Node {
          const T* tile;
@@ -111,19 +187,19 @@ namespace ReyStar {
             return fScore > other.fScore;  // Min heap
          }
       };
-
-      // Hash function for tile coordinates
-      auto coordHash = [](const std::pair<int, int>& coord) {
-         return std::hash<int>()(coord.first) ^ (std::hash<int>()(coord.second) << 1);
+      // what the search knows about a tile it has reached, filed under the tile's key (see tileKey, which never gives
+      // two tiles the same one, so the table's hashing spreads them evenly)
+      struct Visit {
+         float gScore;                //cheapest cost found so far from the start
+         const T* cameFrom = nullptr; //the tile before it on that cheapest way
+         bool closed = false;         //expanded already: its cost is final
       };
 
       std::priority_queue<Node, std::vector<Node>, std::greater<Node>> openSet;
-      std::unordered_set<std::pair<int, int>, decltype(coordHash)> closedSet(0, coordHash);
-      std::unordered_map<std::pair<int, int>, float, decltype(coordHash)> gScores(0, coordHash);
-      std::unordered_map<std::pair<int, int>, const T*, decltype(coordHash)> cameFrom(0, coordHash);
+      std::unordered_map<uint64_t, Visit> visits;
 
       // Initialize with start node
-      gScores[{start.coord.x, start.coord.y}] = 0.0f;
+      visits[tileKey(tiles, start)] = {0.0f};
       openSet.push({&start, 0.0f, start.distanceTo(goal)});
 
       while (!openSet.empty()) {
@@ -131,15 +207,14 @@ namespace ReyStar {
          Node current = openSet.top();
          openSet.pop();
 
-         auto currentCoord = std::make_pair(current.tile->coord.x, current.tile->coord.y);
-
-         // Skip if already visited
-         if (closedSet.count(currentCoord)) {
+         // Skip if already visited (a cheaper way to it was queued, and taken, after this one)
+         auto& visit = visits.at(tileKey(tiles, *current.tile));
+         if (visit.closed) {
             continue;
          }
 
          // Mark as visited
-         closedSet.insert(currentCoord);
+         visit.closed = true;
 
          // Check if we reached the goal
          if (current.tile == &goal) {
@@ -153,11 +228,10 @@ namespace ReyStar {
             // Build path from goal back to start
             path.push_back(currentTile);
             while (currentTile != &start) {
-               auto parentIt = cameFrom.find({currentTile->coord.x, currentTile->coord.y});
-               if (parentIt == cameFrom.end()) {
+               currentTile = visits.at(tileKey(tiles, *currentTile)).cameFrom;
+               if (!currentTile) {
                   break;  // Shouldn't happen, but safety check
                }
-               currentTile = parentIt->second;
                cost += currentTile->weight;
                path.push_back(currentTile);
             }
@@ -182,37 +256,31 @@ namespace ReyStar {
 
          // Explore neighbors - adjacency is entirely up to the tile type
          for (const auto& [nx, ny] : current.tile->neighborCoords()) {
-            auto it = tileMap.find({nx, ny});
-            if (it == tileMap.end()) {
+            const T* neighbor = findTile(tiles, nx, ny);
+            if (!neighbor) {
                continue; // no tile at that coordinate
             }
-            const T* neighbor = &it->second;
 
             // Skip impassable tiles
-            if (neighbor->weight <= 0.0f) {
-               continue;
-            }
-
-            auto neighborCoord = std::make_pair(nx, ny);
-
-            // Skip if already visited
-            if (closedSet.count(neighborCoord)) {
+            float weight = neighbor->weight;
+            if (weight <= 0.0f) {
                continue;
             }
 
             // Calculate tentative g-score
-            float tentativeG = current.gScore + neighbor->weight;
+            float tentativeG = current.gScore + weight;
 
-            // Check if this is a better path
-            auto gIt = gScores.find(neighborCoord);
-            if (gIt == gScores.end() || tentativeG < gIt->second) {
-               // Update best path to this neighbor
-               cameFrom[neighborCoord] = current.tile;
-               gScores[neighborCoord] = tentativeG;
-
-               float fScore = tentativeG + neighbor->distanceTo(goal);
-               openSet.push({neighbor, tentativeG, fScore});
+            // Check if this is a better path (one already expanded can't be: its cost is final)
+            auto [it, isNew] = visits.try_emplace(tileKey(tiles, *neighbor), Visit{tentativeG, current.tile});
+            if (!isNew) {
+               if (it->second.closed || tentativeG >= it->second.gScore) {
+                  continue;
+               }
+               it->second.gScore = tentativeG;
+               it->second.cameFrom = current.tile;
             }
+            float fScore = tentativeG + neighbor->distanceTo(goal);
+            openSet.push({neighbor, tentativeG, fScore});
          }
       }
 
@@ -247,7 +315,10 @@ namespace ReyStar {
    };
 
    /////////////////////////////////////////////////////////////////////////////////////////
-   template <ReyStarTileable T>
+   /// Finds paths on worker threads (one per core) across a container of tiles: a TileMap (the default) or a Grid.
+   /// The server keeps a reference to the container; its shape must not change while the server exists, but tiles'
+   /// weights may (make them atomic if they change while searches run).
+   template <ReyStarTileable T, typename Tiles = TileMap<T>> requires TileContainer<Tiles, T>
    class ReyStarServer {
    public:
       ~ReyStarServer()
@@ -273,7 +344,7 @@ namespace ReyStar {
             worker.wait();
          }
       }
-      ReyStarServer(TileMap<T>& tiles)
+      ReyStarServer(Tiles& tiles)
       : tiles(tiles)
       {
          //generate an appropriate number of workers
@@ -445,7 +516,10 @@ namespace ReyStar {
 
       RequestId _nextRequestId = 0;
 
-      TileMap<T>& tiles;
+      Tiles& tiles;
       friend class Worker;
    };
+   // so the tile type is worked out from the container: ReyStarServer server(tiles);
+   template <ReyStarTileable T> ReyStarServer(TileMap<T>&) -> ReyStarServer<T, TileMap<T>>;
+   template <ReyStarTileable T> ReyStarServer(Grid<T>&) -> ReyStarServer<T, Grid<T>>;
 }
