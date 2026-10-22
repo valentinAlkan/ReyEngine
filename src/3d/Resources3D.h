@@ -18,6 +18,9 @@ namespace ReyEngine {
       static std::shared_ptr<ReyMesh> makeCube(const Size3<float>& size = Size3<float>(1));
       static std::shared_ptr<ReyMesh> makeSphere(float radius = 1, int rings = 32, int slices = 32);
       static std::shared_ptr<ReyMesh> makePlane(float width = 1, float length = 1, int resX = 1, int resZ = 1);
+      //unlike the cube and sphere, which are centred on the origin, the cylinder stands on its base at the origin and
+      // reaches up the +Y axis to height (as raylib's GenMeshCylinder makes it). It is capped at both ends.
+      static std::shared_ptr<ReyMesh> makeCylinder(float radius = 1, float height = 1, int slices = 32);
       [[nodiscard]] const Mesh& getMesh() const {return _mesh;}
       [[nodiscard]] Box<float> getBoundingBox() const {return Box<float>(GetMeshBoundingBox(_mesh));}
    private:
