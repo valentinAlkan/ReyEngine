@@ -2616,8 +2616,19 @@ namespace ReyEngine {
       inline bool ready() const {return _texLoaded;}
       [[nodiscard]] inline const Texture2D& getTexture() const {return _tex.texture;}
    protected:
-      inline void beginRenderMode(){BeginTextureMode(_tex);}
-      inline void endRenderMode(){EndTextureMode();}
+      // Drawing into a target blends colour as usual but adds up coverage in alpha: (ONE, ONE_MINUS_SRC_ALPHA) instead
+      // of raylib's default, which blends alpha the same way as colour and so lowers the alpha of whatever something
+      // translucent is drawn over. The target is composited later, so a lowered alpha let the window (or whatever it
+      // was drawn onto) show through, washing out anything translucent. EndTextureMode flushes before we restore.
+      inline void beginRenderMode(){
+         BeginTextureMode(_tex);
+         rlSetBlendFactorsSeparate(RL_SRC_ALPHA, RL_ONE_MINUS_SRC_ALPHA, RL_ONE, RL_ONE_MINUS_SRC_ALPHA, RL_FUNC_ADD, RL_FUNC_ADD);
+         rlSetBlendMode(RL_BLEND_CUSTOM_SEPARATE);
+      }
+      inline void endRenderMode(){
+         EndTextureMode();
+         rlSetBlendMode(RL_BLEND_ALPHA);
+      }
       bool _texLoaded = false;
       RenderTexture2D _tex;
       Size<float> _size;
