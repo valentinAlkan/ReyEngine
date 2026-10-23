@@ -19,6 +19,7 @@
 #include <condition_variable>
 #include <atomic>
 #include <chrono>
+#include <cmath>
 #include <cstdint>
 #include <stdexcept>
 #include <string>
@@ -32,6 +33,7 @@ namespace ReyStar {
    //  - neighborCoords(): adjacent coordinates - grid type and wrapping agnostic. Any range of (x, y) pairs will do; a
    //    fixed-size one (a std::array, say) saves the search a heap allocation for every tile it expands
    //  - distanceTo(other): heuristic
+   // and may price steps itself (see StepCosted and Estimated).
    template <typename T>
    concept ReyStarTileable = requires(const T& t) {
       { t.coord } -> std::convertible_to<ReyEngine::Pos<int>>;
@@ -51,6 +53,39 @@ namespace ReyStar {
    };
 
    using RequestId = unsigned long long;
+
+   /// Searches can be given parameters: whatever a tile needs to price a step that the tile itself doesn't hold (what
+   /// is moving, say, or whether to save time or fuel). A search that isn't given any gets these.
+   struct NoParams {};
+
+   /// A tile type may price the steps off it itself, given a search's parameters, rather than the search charging the
+   /// weight of the tile stepped onto: stepCost(to, params) is what stepping from this tile onto a neighbour costs. A
+   /// step that costs 0 or less (or infinity, or isn't a number) can't be taken. A step may cost more one way than the
+   /// other (uphill and down, say); the search only ever goes forwards.
+   template <typename T, typename Params>
+   concept StepCosted = requires(const T& from, const T& to, const Params& params) {
+      { from.stepCost(to, params) } -> std::convertible_to<float>;
+   };
+   /// A tile type may likewise give the heuristic for a search's parameters: estimate(goal, params), a guess at what
+   /// the cheapest path from this tile to the goal costs. To be sure of finding the cheapest path, it must never guess
+   /// more. Without it, the search uses distanceTo.
+   template <typename T, typename Params>
+   concept Estimated = requires(const T& from, const T& goal, const Params& params) {
+      { from.estimate(goal, params) } -> std::convertible_to<float>;
+   };
+   /// what a step from one tile onto a neighbour costs: as the tile prices it (see StepCosted), or the weight of the
+   /// tile stepped onto
+   template <typename T, typename Params>
+   float stepCost(const T& from, const T& to, const Params& params) {
+      if constexpr (StepCosted<T, Params>) return from.stepCost(to, params);
+      else return to.weight;
+   }
+   /// the search's guess at what the cheapest path from a tile to the goal costs (see Estimated)
+   template <typename T, typename Params>
+   float estimate(const T& from, const T& goal, const Params& params) {
+      if constexpr (Estimated<T, Params>) return from.estimate(goal, params);
+      else return from.distanceTo(goal);
+   }
 
    // Tiles can live in either of two containers. A TileMap holds any set of coordinates, holes and all; a Grid holds
    // a full rectangle, flat, which takes a fraction of the memory and finds a tile by arithmetic rather than a tree
@@ -247,11 +282,12 @@ namespace ReyStar {
    };
 
    /////////////////////////////////////////////////////////////////////////////////////////
-   /// Find the cheapest path from start to goal, using scratch for the search's memory (see SearchScratch). Fills path
-   /// with the tiles from start to goal, both included, and gives what it costs; leaves path empty, and gives 0, if
-   /// there's no way. The path is the only thing it takes from the heap: one block, sized to fit.
-   template <ReyStarTileable T, typename Tiles> requires TileContainer<Tiles, T>
-   float findPath(const Tiles& tiles, const T& start, const T& goal, SearchScratch& scratch, std::vector<const T*>& path) {
+   /// Find the cheapest path from start to goal, with steps priced for these parameters (see StepCosted), using scratch
+   /// for the search's memory (see SearchScratch). Fills path with the tiles from start to goal, both included, and
+   /// gives what it costs; leaves path empty, and gives 0, if there's no way. The path is the only thing it takes from
+   /// the heap: one block, sized to fit.
+   template <ReyStarTileable T, typename Tiles, typename Params> requires TileContainer<Tiles, T>
+   float findPath(const Tiles& tiles, const T& start, const T& goal, const Params& params, SearchScratch& scratch, std::vector<const T*>& path) {
       path.clear();
       // Node structure for the priority queue
       struct Node {
@@ -278,7 +314,7 @@ namespace ReyStar {
 
       // Initialize with start node
       visits[tileKey(tiles, start)] = {0.0f};
-      openSet.push({&start, 0.0f, start.distanceTo(goal)});
+      openSet.push({&start, 0.0f, estimate(start, goal, params)});
 
       while (!openSet.empty()) {
          // Get the node with lowest f-score
@@ -302,14 +338,12 @@ namespace ReyStar {
             size_t steps = 1;
             for (const T* tile = &goal; tile != &start && (tile = cameFrom(tile)); ) steps++;
             path.resize(steps);
-            float cost = 0;
             const T* tile = &goal;
             for (size_t i = steps; i-- > 0;) {
                path[i] = tile;
-               cost += tile->weight;
                if (i) tile = cameFrom(tile);
             }
-            return cost;
+            return current.gScore;
          }
 
          // Explore neighbors - adjacency is entirely up to the tile type
@@ -319,14 +353,14 @@ namespace ReyStar {
                continue; // no tile at that coordinate
             }
 
-            // Skip impassable tiles
-            float weight = neighbor->weight;
-            if (weight <= 0.0f) {
+            // Skip steps that can't be taken
+            float cost = stepCost(*current.tile, *neighbor, params);
+            if (!(cost > 0.0f) || std::isinf(cost)) {
                continue;
             }
 
             // Calculate tentative g-score
-            float tentativeG = current.gScore + weight;
+            float tentativeG = current.gScore + cost;
 
             // Check if this is a better path (one already expanded can't be: its cost is final)
             auto [it, isNew] = visits.try_emplace(tileKey(tiles, *neighbor), Visit{tentativeG, current.tile});
@@ -337,13 +371,19 @@ namespace ReyStar {
                it->second.gScore = tentativeG;
                it->second.cameFrom = current.tile;
             }
-            float fScore = tentativeG + neighbor->distanceTo(goal);
+            float fScore = tentativeG + estimate(*neighbor, goal, params);
             openSet.push({neighbor, tentativeG, fScore});
          }
       }
 
       // No path found
       return 0;
+   }
+
+   /// Find the cheapest path from start to goal, as above, for a search with no parameters
+   template <ReyStarTileable T, typename Tiles> requires TileContainer<Tiles, T>
+   float findPath(const Tiles& tiles, const T& start, const T& goal, SearchScratch& scratch, std::vector<const T*>& path) {
+      return findPath<T>(tiles, start, goal, NoParams{}, scratch, path);
    }
 
    /// Find the cheapest path from start to goal, using scratch for the search's memory (see SearchScratch), as a
@@ -370,7 +410,7 @@ namespace ReyStar {
    }
 
    /////////////////////////////////////////////////////////////////////////////////////////
-   template <ReyStarTileable T>
+   template <ReyStarTileable T, typename Params = NoParams>
    struct PathResult{
       PathResult() = default;
       PathResult(PathResult&& other){
@@ -384,6 +424,7 @@ namespace ReyStar {
          pathFound = other.pathFound;
          start = other.start;
          goal = other.goal;
+         params = std::move(other.params);
          return *this;
       }
       RequestId requestId;
@@ -393,12 +434,16 @@ namespace ReyStar {
       float pathCost;
       T* start;
       T* goal;
+      Params params; //what the search was asked to price steps for
    };
 
    /////////////////////////////////////////////////////////////////////////////////////////
    /// Finds paths on worker threads (one per core) across a container of tiles: a TileMap (the default) or a Grid.
    /// The server keeps a reference to the container; its shape must not change while the server exists, but tiles'
    /// weights may (make them atomic if they change while searches run).
+   ///
+   /// Each request can carry parameters for pricing its steps (see StepCosted): a Params, copied into the request and
+   /// handed back with its result.
    ///
    /// Each worker keeps scratch memory for its searches, up to scratchPerWorker bytes (see SearchScratch).
    ///
@@ -407,10 +452,11 @@ namespace ReyStar {
    /// It may change the result, path included, and may run on any worker at once, so it must be safe to call from
    /// several threads. A request whose start is its goal is answered straight away, so its result goes through the
    /// finisher on the caller's thread.
-   template <ReyStarTileable T, typename Tiles = TileMap<T>> requires TileContainer<Tiles, T>
+   template <ReyStarTileable T, typename Tiles = TileMap<T>, typename Params = NoParams> requires TileContainer<Tiles, T>
    class ReyStarServer {
    public:
-      using Finisher = std::function<void(PathResult<T>&)>;
+      using Result = PathResult<T, Params>;
+      using Finisher = std::function<void(Result&)>;
       ~ReyStarServer()
       {
          //This cleanup code exists to solve the static destruction order problem
@@ -451,15 +497,15 @@ namespace ReyStar {
       ReyStarServer& operator=(const ReyStarServer&) = delete;
       ReyStarServer& operator=(const ReyStarServer&&) = delete;
 
-      std::future<PathResult<T>> requestPath(T& start, T& goal) {
-         return requestPathAndReturnId(start, goal).second;
+      std::future<Result> requestPath(T& start, T& goal, const Params& params = {}) {
+         return requestPathAndReturnId(start, goal, params).second;
       }
 
-      std::pair<RequestId, std::future<PathResult<T>>> requestPathAndReturnId(T& start, T& goal) {
+      std::pair<RequestId, std::future<Result>> requestPathAndReturnId(T& start, T& goal, const Params& params = {}) {
          //test to see if they are the same, if they are just short circuit
          auto id = _nextRequestId++;
          if (start.coord == goal.coord){
-            PathResult<T> path;
+            Result path;
             path.pathFound = true;
             path.path = {&start};
             path.processTime = std::chrono::microseconds(0);
@@ -467,8 +513,9 @@ namespace ReyStar {
             path.pathCost = 0;
             path.start = &start;
             path.goal = &goal;
+            path.params = params;
             if (_finish) _finish(path);
-            auto promise = std::promise<PathResult<T>>();
+            auto promise = std::promise<Result>();
             promise.set_value(std::move(path));
             return {id, promise.get_future()};
          }
@@ -479,6 +526,7 @@ namespace ReyStar {
          newOrder->requestTime = std::chrono::steady_clock::now();
          newOrder->start = &start;
          newOrder->goal = &goal;
+         newOrder->params = params;
          newOrder->heuristic = start.distanceTo(goal);
          auto future = newOrder->promise.get_future();
 
@@ -511,8 +559,9 @@ namespace ReyStar {
          std::chrono::steady_clock::time_point requestTime;
          T* start;
          T* goal;
+         Params params;
          float heuristic;
-         std::promise<PathResult<T>> promise;
+         std::promise<Result> promise;
       };
 
       struct Worker{
@@ -562,13 +611,14 @@ namespace ReyStar {
                if (!order) continue; //woken to shut down
 
                {
-                  PathResult<T> result;
-                  result.pathCost = findPath<T>(_server.tiles, *order->start, *order->goal, _scratch, result.path);
+                  Result result;
+                  result.pathCost = findPath<T>(_server.tiles, *order->start, *order->goal, order->params, _scratch, result.path);
                   result.requestId = order->requestId;
                   result.pathFound = !result.path.empty();
                   result.processTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - order->requestTime);
                   result.start = order->start;
                   result.goal = order->goal;
+                  result.params = std::move(order->params);
                   if (_server._finish) _server._finish(result);
                   order->promise.set_value(std::move(result));
                }
