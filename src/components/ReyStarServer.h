@@ -8,6 +8,9 @@
 #include <functional>
 #include <type_traits>
 #include <queue>
+#include <memory_resource>
+#include <optional>
+#include <ranges>
 #include <unordered_set>
 #include <unordered_map>
 #include <algorithm>
@@ -26,13 +29,15 @@ namespace ReyStar {
    // Any tile type usable with AStar must expose:
    //  - coord: its position
    //  - weight: nav cost of entering this tile (<= 0 means impassable)
-   //  - neighborCoords(): adjacent coordinates - grid type and wrapping agnostic
+   //  - neighborCoords(): adjacent coordinates - grid type and wrapping agnostic. Any range of (x, y) pairs will do; a
+   //    fixed-size one (a std::array, say) saves the search a heap allocation for every tile it expands
    //  - distanceTo(other): heuristic
    template <typename T>
    concept ReyStarTileable = requires(const T& t) {
       { t.coord } -> std::convertible_to<ReyEngine::Pos<int>>;
       { t.weight } -> std::convertible_to<float>;
-      { t.neighborCoords() } -> std::convertible_to<std::vector<std::pair<int, int>>>;
+      { t.neighborCoords() } -> std::ranges::input_range;
+      requires std::convertible_to<std::ranges::range_value_t<decltype(t.neighborCoords())>, std::pair<int, int>>;
       { t.distanceTo(t) } -> std::convertible_to<float>;
    };
 
@@ -177,8 +182,77 @@ namespace ReyStar {
    };
 
    /////////////////////////////////////////////////////////////////////////////////////////
+   /// Memory for searches to work in, kept from one search to the next, so a search needn't go to the heap for what
+   /// it learns about each tile. The heap can be slow when several threads use it at once (and on Windows, under a
+   /// debugger, very slow), and a search otherwise asks it for memory tens of thousands of times.
+   ///
+   /// A search takes what it needs from the scratch's block, and gives it all back at once when it's done. If the
+   /// block runs out, the search goes to the heap for more, in a few chunks that double in size; afterwards the block
+   /// grows to what the search used, so the next search like it needn't. It never grows past keepAtMost bytes,
+   /// so one huge search doesn't leave its memory held for good.
+   ///
+   /// One search at a time: each of the server's workers has its own.
+   class SearchScratch {
+   public:
+      static constexpr size_t DEFAULT_KEEP = 16 << 20; //bytes
+      explicit SearchScratch(size_t keepAtMost = DEFAULT_KEEP): _keepAtMost(keepAtMost){}
+      SearchScratch(const SearchScratch&) = delete;
+      SearchScratch& operator=(const SearchScratch&) = delete;
+      SearchScratch(SearchScratch&&) = default;
+      [[nodiscard]] size_t capacity() const {return _size;}
+      /// While it lives, a search's memory comes from the scratch (see resource); when it goes, all of that memory is
+      /// handed back. Whatever was made with the resource must be gone first.
+      class Use {
+      public:
+         explicit Use(SearchScratch& scratch): _scratch(scratch) {
+            if (_scratch._size) _resource.emplace(_scratch._block.get(), _scratch._size, &_upstream);
+            else _resource.emplace(&_upstream);
+         }
+         ~Use() {
+            _resource.reset();
+            // it ran out: grow the block to what it used, so the next search as big stays inside it
+            if (_upstream.used) {
+               size_t wanted = std::min(_scratch._keepAtMost, _scratch._size + _upstream.used);
+               if (wanted > _scratch._size) {
+                  _scratch._block.reset(); //before allocating the new one, so the two are never held at once
+                  _scratch._block = std::make_unique_for_overwrite<std::byte[]>(wanted);
+                  _scratch._size = wanted;
+               }
+            }
+         }
+         Use(const Use&) = delete;
+         Use& operator=(const Use&) = delete;
+         [[nodiscard]] std::pmr::memory_resource* resource() {return &_resource.value();}
+      private:
+         /// the heap, counting what it hands out
+         struct Upstream : std::pmr::memory_resource {
+            size_t used = 0;
+            void* do_allocate(size_t bytes, size_t alignment) override {
+               used += bytes;
+               return std::pmr::new_delete_resource()->allocate(bytes, alignment);
+            }
+            void do_deallocate(void* p, size_t bytes, size_t alignment) override {
+               std::pmr::new_delete_resource()->deallocate(p, bytes, alignment);
+            }
+            bool do_is_equal(const std::pmr::memory_resource& other) const noexcept override {return this == &other;}
+         };
+         SearchScratch& _scratch;
+         Upstream _upstream; //declared before _resource, which hands its chunks back to it as it goes
+         std::optional<std::pmr::monotonic_buffer_resource> _resource;
+      };
+   private:
+      std::unique_ptr<std::byte[]> _block;
+      size_t _size = 0;
+      size_t _keepAtMost;
+   };
+
+   /////////////////////////////////////////////////////////////////////////////////////////
+   /// Find the cheapest path from start to goal, using scratch for the search's memory (see SearchScratch). Fills path
+   /// with the tiles from start to goal, both included, and gives what it costs; leaves path empty, and gives 0, if
+   /// there's no way. The path is the only thing it takes from the heap: one block, sized to fit.
    template <ReyStarTileable T, typename Tiles> requires TileContainer<Tiles, T>
-   PathTile<T> aStarAlgorithm(const Tiles& tiles, const T& start, const T& goal) {
+   float findPath(const Tiles& tiles, const T& start, const T& goal, SearchScratch& scratch, std::vector<const T*>& path) {
+      path.clear();
       // Node structure for the priority queue
       struct Node {
          const T* tile;
@@ -197,8 +271,10 @@ namespace ReyStar {
          bool closed = false;         //expanded already: its cost is final
       };
 
-      std::priority_queue<Node, std::vector<Node>, std::greater<Node>> openSet;
-      std::unordered_map<uint64_t, Visit> visits;
+      // everything the search keeps comes from the scratch. Declared first, so it goes last, after what uses it.
+      SearchScratch::Use memory(scratch);
+      std::priority_queue<Node, std::pmr::vector<Node>, std::greater<Node>> openSet{std::greater<Node>(), std::pmr::vector<Node>(memory.resource())};
+      std::pmr::unordered_map<uint64_t, Visit> visits(memory.resource());
 
       // Initialize with start node
       visits[tileKey(tiles, start)] = {0.0f};
@@ -220,40 +296,20 @@ namespace ReyStar {
 
          // Check if we reached the goal
          if (current.tile == &goal) {
-            // Reconstruct path by walking backwards from goal to start
-            std::vector<const T*> path;
-            const T* currentTile = &goal;
-
-            //calculate pathCost
-            float cost = currentTile->weight;
-
-            // Build path from goal back to start
-            path.push_back(currentTile);
-            while (currentTile != &start) {
-               currentTile = visits.at(tileKey(tiles, *currentTile)).cameFrom;
-               if (!currentTile) {
-                  break;  // Shouldn't happen, but safety check
-               }
-               cost += currentTile->weight;
-               path.push_back(currentTile);
+            // walk back from the goal to the start once to count the steps, then again to fill them in, back to front,
+            // so the path is allocated once, at its size
+            auto cameFrom = [&](const T* tile) {return visits.at(tileKey(tiles, *tile)).cameFrom;};
+            size_t steps = 1;
+            for (const T* tile = &goal; tile != &start && (tile = cameFrom(tile)); ) steps++;
+            path.resize(steps);
+            float cost = 0;
+            const T* tile = &goal;
+            for (size_t i = steps; i-- > 0;) {
+               path[i] = tile;
+               cost += tile->weight;
+               if (i) tile = cameFrom(tile);
             }
-
-            // Reverse to get start-to-goal order
-            std::reverse(path.begin(), path.end());
-
-            // Build linked list from the end backwards
-            std::unique_ptr<PathTile<T>> nextNode;
-            for (auto it = path.rbegin(); it != path.rend(); ++it) {
-               nextNode = std::make_unique<PathTile<T>>(*it, std::move(nextNode));
-            }
-
-            // Return the head (which is now in nextNode), or empty if path is empty
-            if (nextNode) {
-               nextNode->pathCost = cost;
-               return std::move(*nextNode);
-            }
-            // Start is goal
-            return PathTile<T>{&start, nullptr};
+            return cost;
          }
 
          // Explore neighbors - adjacency is entirely up to the tile type
@@ -287,7 +343,30 @@ namespace ReyStar {
       }
 
       // No path found
-      return PathTile<T>{nullptr, nullptr};
+      return 0;
+   }
+
+   /// Find the cheapest path from start to goal, using scratch for the search's memory (see SearchScratch), as a
+   /// linked list of tiles. It has a node per tile, each from the heap; findPath gives the same path in one block.
+   template <ReyStarTileable T, typename Tiles> requires TileContainer<Tiles, T>
+   PathTile<T> aStarAlgorithm(const Tiles& tiles, const T& start, const T& goal, SearchScratch& scratch) {
+      std::vector<const T*> path;
+      float cost = findPath<T>(tiles, start, goal, scratch, path);
+      if (path.empty()) return PathTile<T>{nullptr, nullptr}; //no path found
+      // Build linked list from the end backwards
+      std::unique_ptr<PathTile<T>> nextNode;
+      for (auto it = path.rbegin(); it != path.rend(); ++it) {
+         nextNode = std::make_unique<PathTile<T>>(*it, std::move(nextNode));
+      }
+      nextNode->pathCost = cost;
+      return std::move(*nextNode);
+   }
+
+   /// Find the cheapest path from start to goal, with scratch memory of its own that goes when it's done.
+   template <ReyStarTileable T, typename Tiles> requires TileContainer<Tiles, T>
+   PathTile<T> aStarAlgorithm(const Tiles& tiles, const T& start, const T& goal) {
+      SearchScratch scratch(0);
+      return aStarAlgorithm<T>(tiles, start, goal, scratch);
    }
 
    /////////////////////////////////////////////////////////////////////////////////////////
@@ -310,7 +389,7 @@ namespace ReyStar {
       RequestId requestId;
       std::chrono::microseconds processTime;
       bool pathFound;
-      PathTile<T> path;
+      std::vector<const T*> path; //the tiles from start to goal, both included; empty if none was found
       float pathCost;
       T* start;
       T* goal;
@@ -320,6 +399,8 @@ namespace ReyStar {
    /// Finds paths on worker threads (one per core) across a container of tiles: a TileMap (the default) or a Grid.
    /// The server keeps a reference to the container; its shape must not change while the server exists, but tiles'
    /// weights may (make them atomic if they change while searches run).
+   ///
+   /// Each worker keeps scratch memory for its searches, up to scratchPerWorker bytes (see SearchScratch).
    ///
    /// It can be given a finisher: a function each result goes through on the worker, after the search and before the
    /// future is ready, to do any work on the path that shouldn't land on the caller's thread (straightening it, say).
@@ -353,9 +434,10 @@ namespace ReyStar {
             worker.wait();
          }
       }
-      explicit ReyStarServer(Tiles& tiles, Finisher finish = {})
+      explicit ReyStarServer(Tiles& tiles, Finisher finish = {}, size_t scratchPerWorker = SearchScratch::DEFAULT_KEEP)
       : tiles(tiles)
       , _finish(std::move(finish))
+      , _scratchPerWorker(scratchPerWorker)
       {
          //generate an appropriate number of workers
          unsigned int num_cores = std::thread::hardware_concurrency();
@@ -379,7 +461,7 @@ namespace ReyStar {
          if (start.coord == goal.coord){
             PathResult<T> path;
             path.pathFound = true;
-            path.path.thisTile = &start;
+            path.path = {&start};
             path.processTime = std::chrono::microseconds(0);
             path.requestId = id;
             path.pathCost = 0;
@@ -437,6 +519,7 @@ namespace ReyStar {
          Worker(int workerId, ReyStarServer& server)
          : workerId(workerId)
          , _server(server)
+         , _scratch(server._scratchPerWorker)
          {
             _t = std::thread(&Worker::work, this);
          }
@@ -444,6 +527,7 @@ namespace ReyStar {
          Worker(Worker&& other)
          : workerId(other.workerId)
          , _server(other._server)
+         , _scratch(std::move(other._scratch))
          , _t(std::move(other._t))
          {
          }
@@ -478,17 +562,13 @@ namespace ReyStar {
                if (!order) continue; //woken to shut down
 
                {
-                  auto solution = aStarAlgorithm<T>(_server.tiles, *order->start, *order->goal);
-
-                  // Build the result
                   PathResult<T> result;
+                  result.pathCost = findPath<T>(_server.tiles, *order->start, *order->goal, _scratch, result.path);
                   result.requestId = order->requestId;
-                  result.pathFound = (solution.thisTile != nullptr);  // Check before moving
-                  result.path = std::move(solution);
+                  result.pathFound = !result.path.empty();
                   result.processTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - order->requestTime);
                   result.start = order->start;
                   result.goal = order->goal;
-                  result.pathCost = solution.pathCost;
                   if (_server._finish) _server._finish(result);
                   order->promise.set_value(std::move(result));
                }
@@ -496,6 +576,7 @@ namespace ReyStar {
             }
          }
          ReyStarServer& _server;
+         SearchScratch _scratch; //only ever used on this worker's thread; declared before _t, so it's there before the thread starts
          std::thread _t;
          std::atomic<bool> _shutdown = false;
       };
@@ -532,6 +613,7 @@ namespace ReyStar {
 
       Tiles& tiles;
       const Finisher _finish; //set before the workers start, and never changed, so they can read it unguarded
+      const size_t _scratchPerWorker;
       friend class Worker;
    };
    // so the tile type is worked out from the container: ReyStarServer server(tiles);
@@ -539,4 +621,6 @@ namespace ReyStar {
    template <ReyStarTileable T> ReyStarServer(Grid<T>&) -> ReyStarServer<T, Grid<T>>;
    template <ReyStarTileable T> ReyStarServer(TileMap<T>&, std::type_identity_t<std::function<void(PathResult<T>&)>>) -> ReyStarServer<T, TileMap<T>>;
    template <ReyStarTileable T> ReyStarServer(Grid<T>&, std::type_identity_t<std::function<void(PathResult<T>&)>>) -> ReyStarServer<T, Grid<T>>;
+   template <ReyStarTileable T> ReyStarServer(TileMap<T>&, std::type_identity_t<std::function<void(PathResult<T>&)>>, size_t) -> ReyStarServer<T, TileMap<T>>;
+   template <ReyStarTileable T> ReyStarServer(Grid<T>&, std::type_identity_t<std::function<void(PathResult<T>&)>>, size_t) -> ReyStarServer<T, Grid<T>>;
 }

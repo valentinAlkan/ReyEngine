@@ -72,12 +72,10 @@ public:
 
         //draw path
         if (_currentPath) {
-            for (const auto& pathTile : _currentPath.value().path) {
-                if (!pathTile.nextTile) break;
-                auto& thisTile = pathTile.thisTile;
-                auto& nextTile = pathTile.nextTile->thisTile;
-                auto a = rect.getSubRectAtCoords({CELL_SIZE, CELL_SIZE}, thisTile->coord);
-                auto b = rect.getSubRectAtCoords({CELL_SIZE, CELL_SIZE}, nextTile->coord);
+            auto& path = _currentPath.value().path;
+            for (size_t i = 0; i + 1 < path.size(); i++) {
+                auto a = rect.getSubRectAtCoords({CELL_SIZE, CELL_SIZE}, path[i]->coord);
+                auto b = rect.getSubRectAtCoords({CELL_SIZE, CELL_SIZE}, path[i + 1]->coord);
                 drawLine({a.center(), b.center()}, 2.0, Colors::red);
             }
         }
