@@ -5,21 +5,25 @@ using namespace std;
 using namespace ReyEngine;
 
 namespace {
-   // Blinn-Phong lighting with directional and point lights. Assumes GL 3.3 (raylib desktop default).
+   // Blinn-Phong lighting with directional and point lights, over the material's colour, its texture and the vertex colours.
+   // Assumes GL 3.3 (raylib desktop default).
    constexpr char LIGHT_VS[] = R"(
 #version 330
 in vec3 vertexPosition;
 in vec3 vertexNormal;
+in vec2 vertexTexCoord;
 in vec4 vertexColor;
 uniform mat4 mvp;
 uniform mat4 matModel;
 uniform mat4 matNormal;
 out vec3 fragPosition;
 out vec3 fragNormal;
+out vec2 fragTexCoord;
 out vec4 fragColor;
 void main() {
     fragPosition = vec3(matModel * vec4(vertexPosition, 1.0));
     fragNormal = normalize(vec3(matNormal * vec4(vertexNormal, 0.0)));
+    fragTexCoord = vertexTexCoord;
     fragColor = vertexColor;
     gl_Position = mvp * vec4(vertexPosition, 1.0);
 }
@@ -32,7 +36,9 @@ void main() {
 #define LIGHT_POINT 1
 in vec3 fragPosition;
 in vec3 fragNormal;
+in vec2 fragTexCoord;
 in vec4 fragColor;
+uniform sampler2D texture0; // the material's diffuse texture (raylib binds a white one when there's none)
 uniform vec4 colDiffuse;
 uniform vec3 viewPos;
 uniform vec3 ambient;
@@ -43,7 +49,8 @@ uniform vec3 lightColor[MAX_LIGHTS]; // premultiplied by intensity
 uniform float lightRange[MAX_LIGHTS];
 out vec4 finalColor;
 void main() {
-    vec3 base = colDiffuse.rgb * fragColor.rgb;
+    vec4 texel = texture(texture0, fragTexCoord);
+    vec3 base = texel.rgb * colDiffuse.rgb * fragColor.rgb;
     vec3 n = normalize(fragNormal);
     vec3 v = normalize(viewPos - fragPosition);
     vec3 result = ambient * base;
@@ -65,7 +72,7 @@ void main() {
         float spec = ndl > 0.0 ? pow(max(dot(n, normalize(l + v)), 0.0), 32.0) : 0.0;
         result += (base * ndl + vec3(0.3) * spec) * lightColor[i] * attenuation;
     }
-    finalColor = vec4(result, colDiffuse.a * fragColor.a);
+    finalColor = vec4(result, texel.a * colDiffuse.a * fragColor.a);
 }
 )";
 
