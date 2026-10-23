@@ -5,6 +5,8 @@
 #include <memory>
 #include <concepts>
 #include <vector>
+#include <functional>
+#include <type_traits>
 #include <queue>
 #include <unordered_set>
 #include <unordered_map>
@@ -318,9 +320,16 @@ namespace ReyStar {
    /// Finds paths on worker threads (one per core) across a container of tiles: a TileMap (the default) or a Grid.
    /// The server keeps a reference to the container; its shape must not change while the server exists, but tiles'
    /// weights may (make them atomic if they change while searches run).
+   ///
+   /// It can be given a finisher: a function each result goes through on the worker, after the search and before the
+   /// future is ready, to do any work on the path that shouldn't land on the caller's thread (straightening it, say).
+   /// It may change the result, path included, and may run on any worker at once, so it must be safe to call from
+   /// several threads. A request whose start is its goal is answered straight away, so its result goes through the
+   /// finisher on the caller's thread.
    template <ReyStarTileable T, typename Tiles = TileMap<T>> requires TileContainer<Tiles, T>
    class ReyStarServer {
    public:
+      using Finisher = std::function<void(PathResult<T>&)>;
       ~ReyStarServer()
       {
          //This cleanup code exists to solve the static destruction order problem
@@ -344,8 +353,9 @@ namespace ReyStar {
             worker.wait();
          }
       }
-      ReyStarServer(Tiles& tiles)
+      explicit ReyStarServer(Tiles& tiles, Finisher finish = {})
       : tiles(tiles)
+      , _finish(std::move(finish))
       {
          //generate an appropriate number of workers
          unsigned int num_cores = std::thread::hardware_concurrency();
@@ -373,6 +383,9 @@ namespace ReyStar {
             path.processTime = std::chrono::microseconds(0);
             path.requestId = id;
             path.pathCost = 0;
+            path.start = &start;
+            path.goal = &goal;
+            if (_finish) _finish(path);
             auto promise = std::promise<PathResult<T>>();
             promise.set_value(std::move(path));
             return {id, promise.get_future()};
@@ -476,6 +489,7 @@ namespace ReyStar {
                   result.start = order->start;
                   result.goal = order->goal;
                   result.pathCost = solution.pathCost;
+                  if (_server._finish) _server._finish(result);
                   order->promise.set_value(std::move(result));
                }
                //the order (and its promise) is freed here. The result lives on in the future's shared state.
@@ -517,9 +531,12 @@ namespace ReyStar {
       RequestId _nextRequestId = 0;
 
       Tiles& tiles;
+      const Finisher _finish; //set before the workers start, and never changed, so they can read it unguarded
       friend class Worker;
    };
    // so the tile type is worked out from the container: ReyStarServer server(tiles);
    template <ReyStarTileable T> ReyStarServer(TileMap<T>&) -> ReyStarServer<T, TileMap<T>>;
    template <ReyStarTileable T> ReyStarServer(Grid<T>&) -> ReyStarServer<T, Grid<T>>;
+   template <ReyStarTileable T> ReyStarServer(TileMap<T>&, std::type_identity_t<std::function<void(PathResult<T>&)>>) -> ReyStarServer<T, TileMap<T>>;
+   template <ReyStarTileable T> ReyStarServer(Grid<T>&, std::type_identity_t<std::function<void(PathResult<T>&)>>) -> ReyStarServer<T, Grid<T>>;
 }
