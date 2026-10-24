@@ -447,6 +447,13 @@ namespace ReyStar {
    ///
    /// Each worker keeps scratch memory for its searches, up to scratchPerWorker bytes (see SearchScratch).
    ///
+   /// It can be given a preparer: a function each request goes through on the worker, before the search, to do work
+   /// the search needs that shouldn't land on the caller's thread (planning it roughly first, say, and narrowing the
+   /// search to near that). It may change the request's parameters, which the search then uses, and has the worker's
+   /// scratch memory to search with itself. It returns whether to search at all: if not, the request is answered with
+   /// no path. Like the finisher, it may run on any worker at once, so it must be safe to call from several threads. A
+   /// request whose start is its goal skips it.
+   ///
    /// It can be given a finisher: a function each result goes through on the worker, after the search and before the
    /// future is ready, to do any work on the path that shouldn't land on the caller's thread (straightening it, say).
    /// It may change the result, path included, and may run on any worker at once, so it must be safe to call from
@@ -457,6 +464,7 @@ namespace ReyStar {
    public:
       using Result = PathResult<T, Params>;
       using Finisher = std::function<void(Result&)>;
+      using Preparer = std::function<bool(const T& start, const T& goal, Params& params, SearchScratch& scratch)>;
       ~ReyStarServer()
       {
          //This cleanup code exists to solve the static destruction order problem
@@ -481,7 +489,11 @@ namespace ReyStar {
          }
       }
       explicit ReyStarServer(Tiles& tiles, Finisher finish = {}, size_t scratchPerWorker = SearchScratch::DEFAULT_KEEP)
+      : ReyStarServer(tiles, Preparer{}, std::move(finish), scratchPerWorker)
+      {}
+      ReyStarServer(Tiles& tiles, Preparer prepare, Finisher finish, size_t scratchPerWorker = SearchScratch::DEFAULT_KEEP)
       : tiles(tiles)
+      , _prepare(std::move(prepare))
       , _finish(std::move(finish))
       , _scratchPerWorker(scratchPerWorker)
       {
@@ -612,7 +624,8 @@ namespace ReyStar {
 
                {
                   Result result;
-                  result.pathCost = findPath<T>(_server.tiles, *order->start, *order->goal, order->params, _scratch, result.path);
+                  bool search = !_server._prepare || _server._prepare(*order->start, *order->goal, order->params, _scratch);
+                  result.pathCost = search ? findPath<T>(_server.tiles, *order->start, *order->goal, order->params, _scratch, result.path) : 0;
                   result.requestId = order->requestId;
                   result.pathFound = !result.path.empty();
                   result.processTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - order->requestTime);
@@ -662,6 +675,7 @@ namespace ReyStar {
       RequestId _nextRequestId = 0;
 
       Tiles& tiles;
+      const Preparer _prepare; //like _finish: set before the workers start, and never changed
       const Finisher _finish; //set before the workers start, and never changed, so they can read it unguarded
       const size_t _scratchPerWorker;
       friend class Worker;
