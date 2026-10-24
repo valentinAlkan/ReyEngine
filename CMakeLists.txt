@@ -134,6 +134,7 @@ add_library(ReyEngine2D STATIC
         src/engine/Positionable2D.cpp
         src/engine/Window.cpp
         src/engine/TestServer.cpp
+        src/engine/Replay.cpp
         src/engine/TestServerSocket.c
         src/engine/WindowPrototype.cpp
         src/engine/Event.cpp

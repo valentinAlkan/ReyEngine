@@ -2778,7 +2778,12 @@ namespace ReyEngine {
    void drawTexture(const ReyTexture& texture, const Rect<R_FLOAT>& source, const Rect<R_FLOAT>& dest, const ColorRGBA& tint);
    void drawRenderTarget(const RenderTarget&, const Pos<R_FLOAT>&, const ColorRGBA&);
    void drawRenderTargetRect(const RenderTarget&, const Rect<R_FLOAT>&, const Rect<R_FLOAT>&, const ColorRGBA&);
-   inline float getFrameDelta() {return GetFrameTime();}
+   namespace Internal {
+      // a replay being played back sets the frame time each frame (see Replay)
+      inline bool frameDeltaOverridden = false;
+      inline float frameDeltaOverride = 0;
+   }
+   inline float getFrameDelta() {return Internal::frameDeltaOverridden ? Internal::frameDeltaOverride : GetFrameTime();}
    inline Size<R_FLOAT> measureText(const std::string& text, const ReyEngineFont& font){return MeasureTextEx(font.font, text.c_str(), font.size, font.spacing);}
    inline Size<R_FLOAT> measureText(const std::string& text, const std::shared_ptr<ReyEngineFont>& font){return MeasureTextEx(font->font, text.c_str(), font->size, font->spacing);}
    std::string getCharAt(const std::string& s, const Pos<float>& pos, const std::shared_ptr<ReyEngineFont>& font);

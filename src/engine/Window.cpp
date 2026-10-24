@@ -4,6 +4,7 @@
 #include "InputManager.h"
 #include "Canvas.h"
 #include "TestServer.h"
+#include "Replay.h"
 #include "rlgl.h"
 
 using namespace std;
@@ -72,8 +73,8 @@ void Window::exec(){
    std::chrono::steady_clock::time_point mousePosChangeTime;
    publish(WindowExecEvent(this));
    while (!WindowShouldClose()){
-      //see if the window size has changed
-      Size<float> newSize = getSize();
+      //see if the window size has changed (a replay being played back says what it is)
+      Size<float> newSize = _replay ? _replay->beginFrame(getSize()) : getSize();
       if (newSize != size) {
          WindowResizeEvent event(this, getSize());
          size = newSize;
@@ -93,6 +94,8 @@ void Window::exec(){
 
       // input from a test, if one is connected: after raylib has read the real devices, before we do
       if (_testServer) _testServer->beginFrame(_frameCounter, Size<int>((int)size.x, (int)size.y));
+      // and recorded, or replaced by the recording
+      if (_replay) _replay->input();
 
       // programatically generated inputs
       while(!_inputQueueKey.empty()){
@@ -265,6 +268,7 @@ void Window::exec(){
 
       //call deferred calls
       _deferredCallList.executeAllAndClear();
+      if (_replay) _replay->endFrame();
 
       //clean up orphaned textures
       if (ReyTexture::OrphanedTextureCache::instance().size()) {
@@ -290,6 +294,7 @@ void Window::exec(){
    } //next frame
 
    //window shutdowm
+   if (_replay) _replay->stop();
    auto lock = Application::getLock();
    _isClosing = true;
    ProcessList<Tree::Processable>::clear();
@@ -304,6 +309,12 @@ TestServer* Window::startTestServer(uint16_t port) {
    _testServer = std::make_unique<TestServer>();
    if (!_testServer->start(port)) return nullptr;
    return _testServer.get();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Replay& Window::getReplay() {
+   if (!_replay) _replay = std::make_unique<Replay>();
+   return *_replay;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

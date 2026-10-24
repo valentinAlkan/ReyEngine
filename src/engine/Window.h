@@ -12,6 +12,7 @@ namespace ReyEngine{
    class Canvas;
    class Widget;
    class TestServer;
+   class Replay;
    class Window : public EventPublisher {
    public:
 
@@ -49,6 +50,8 @@ namespace ReyEngine{
       /// listen; the window owns the server either way.
       TestServer* startTestServer(uint16_t port);
       [[nodiscard]] TestServer* getTestServer() const {return _testServer.get();}
+      /// what the window takes in, to record or play back (see Replay). Idle until asked.
+      Replay& getReplay();
    protected:
       Window(const std::string& title, int width, int height, const std::vector<WindowFlags>& flags, int targetFPS = 0);
       void initialize(std::optional<std::unique_ptr<TypeNode>> root);
@@ -69,6 +72,7 @@ namespace ReyEngine{
       bool _isClosing = false;
       DeferredCallList _deferredCallList;
       std::unique_ptr<TestServer> _testServer;
+      std::unique_ptr<Replay> _replay;
 
       /////////////////////
       /////////////////////
