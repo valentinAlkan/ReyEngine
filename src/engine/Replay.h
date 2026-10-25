@@ -32,7 +32,8 @@ namespace ReyEngine {
    /// is often what takes the time, and nothing the game does depends on it.
    ///
    /// A playback can be held at a frame: from there, frames go by with no time passing and the input held as it was,
-   /// so everything can be looked at (over the test port, say) until it's run on again.
+   /// so everything can be looked at (over the test port, say) until it's run on again. F7 holds it where it is, or runs
+   /// it on.
    ///
    /// The file is text, a line a frame: the frame's number and time step, then what changed: "s<w>x<h>" the window's
    /// size, "m<x>,<y>" where the mouse went, "k+<key>" and "k-<key>" a key going down and up (raylib's key codes),

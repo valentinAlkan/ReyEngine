@@ -281,6 +281,10 @@ void Replay::input() {
    // the real keys, before the recording's replace them: just pressed (down now, but not as last left)
    if (IsKeyPressed(KEY_F6)) faster();
    if (IsKeyPressed(KEY_F5)) slower();
+   if (IsKeyPressed(KEY_F7)) {
+      if (holding()) run();
+      else holdAt(_frame);
+   }
    if (holding()) {
       apply(_state, {});
       return;
