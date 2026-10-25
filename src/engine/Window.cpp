@@ -1,4 +1,5 @@
 #include "Window.h"
+#include <chrono>
 #include <iostream>
 #include "Application.h"
 #include "InputManager.h"
@@ -87,7 +88,10 @@ void Window::exec(){
    };
    std::chrono::steady_clock::time_point mousePosChangeTime;
    publish(WindowExecEvent(this));
+   using FrameClock = std::chrono::steady_clock;
+   auto ms = [](FrameClock::time_point from, FrameClock::time_point to){return std::chrono::duration<double, std::milli>(to - from).count();};
    while (!WindowShouldClose()){
+      auto frameStart = FrameClock::now();
       //see if the window size has changed (a replay being played back says what it is)
       Size<float> newSize = _replay ? _replay->beginFrame(getSize()) : getSize();
       if (newSize != size) {
@@ -262,6 +266,7 @@ void Window::exec(){
       //SystemTime::processTimers();
 
       //process logic
+      auto updateStart = FrameClock::now();
       ProcessList<Tree::Processable>::processAll(getFrameDelta());
       //process and reap easings
       std::vector<Easing*> toReap;
@@ -287,6 +292,7 @@ void Window::exec(){
       //render the scene to our internal buffer. A replay playing back fast skips most frames, leaving the window as it
       //was, but for reading the input, which EndDrawing would have done.
       bool render = !_replay || _replay->shouldRender();
+      auto drawStart = FrameClock::now();
       if (render) {
          //scoped so the destructor fires
          RenderContext renderContext(_canvas->_renderTarget);
@@ -295,6 +301,7 @@ void Window::exec(){
       if (_testServer) _testServer->endFrame(_canvas->readRenderTarget());
 
       //paint the scene on the window
+      auto presentStart = FrameClock::now();
       if (render) {
          BeginDrawing();
          auto rect = _canvas->getSizeRect();
@@ -305,6 +312,8 @@ void Window::exec(){
       } else {
          PollInputEvents();
       }
+      auto frameEnd = FrameClock::now();
+      _frameTimes = {ms(frameStart, updateStart), ms(updateStart, drawStart), ms(drawStart, presentStart), ms(presentStart, frameEnd), ms(frameStart, frameEnd)};
       _frameCounter++;
    } //next frame
 

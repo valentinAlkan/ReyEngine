@@ -52,6 +52,13 @@ namespace ReyEngine{
       [[nodiscard]] TestServer* getTestServer() const {return _testServer.get();}
       /// what the window takes in, to record or play back (see Replay). Idle until asked.
       Replay& getReplay();
+      /// how long each part of the last whole frame took, in milliseconds: taking in input (and a replay's or test's),
+      /// updating (processing, easings, deferred calls), drawing the scene, and putting it on the window, which includes
+      /// waiting for vsync or the frame rate cap
+      struct FrameTimes {
+         double input = 0, update = 0, draw = 0, present = 0, total = 0;
+      };
+      [[nodiscard]] const FrameTimes& getFrameTimes() const {return _frameTimes;}
    protected:
       Window(const std::string& title, int width, int height, const std::vector<WindowFlags>& flags, int targetFPS = 0);
       void initialize(std::optional<std::unique_ptr<TypeNode>> root);
@@ -74,6 +81,7 @@ namespace ReyEngine{
       DeferredCallList _deferredCallList;
       std::unique_ptr<TestServer> _testServer;
       std::unique_ptr<Replay> _replay;
+      FrameTimes _frameTimes;
 
       /////////////////////
       /////////////////////

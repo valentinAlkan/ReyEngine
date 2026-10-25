@@ -23,6 +23,9 @@ namespace ReyEngine {
    /// compared while playing back. The first frame where one differs is logged, and given by status: from there on,
    /// the playback has gone its own way.
    ///
+   /// The game can add notes too: values written whenever they change, like checks, but only for reading afterwards
+   /// (how long frames took, say), never compared.
+   ///
    /// A playback can run faster or slower than it was recorded (F6 and F5 while it plays, or setSpeed): more or fewer
    /// frames a second, each with its recorded time step, so it plays out just the same. Past the window's own frame
    /// rate, vsync is turned off while it plays, and the scene is drawn only on some frames (see shouldRender): drawing
@@ -33,7 +36,7 @@ namespace ReyEngine {
    ///
    /// The file is text, a line a frame: the frame's number and time step, then what changed: "s<w>x<h>" the window's
    /// size, "m<x>,<y>" where the mouse went, "k+<key>" and "k-<key>" a key going down and up (raylib's key codes),
-   /// "b+<n>" and "b-<n>" a mouse button, "w<x>,<y>" the wheel, and "c<name>=<value>" a check's new value. The first
+   /// "b+<n>" and "b-<n>" a mouse button, "w<x>,<y>" the wheel, "c<name>=<value>" a check's new value, and "n<name>=<value>" a note's. The first
    /// line is "reyreplay <version>". It's written as it goes, so a crash leaves all but the last few frames.
    ///
    /// Play a replay back on a build of the same code, for the same platform: another compiler can round floats
@@ -64,6 +67,8 @@ namespace ReyEngine {
       [[nodiscard]] bool isPlaying() const {return _playing;}
       /// add a check, written while recording and compared while playing back
       void addCheck(const std::string& name, Check check);
+      /// add a note, written while recording (whenever it changes) and ignored while playing back. No spaces.
+      void addNote(const std::string& name, Check note);
       /// while recording: write out all that's been recorded, and copy the file here. Returns false (and logs why) if
       /// it can't.
       bool saveCopy(const std::filesystem::path& path);
@@ -123,6 +128,8 @@ namespace ReyEngine {
       void applySpeed();
 
       std::vector<std::pair<std::string, Check>> _checks;
+      std::vector<std::pair<std::string, Check>> _notes;
+      std::map<std::string, std::string> _noted; //each note's last value written
       std::map<std::string, std::string> _checked; //each check's last value, written or expected
       uint64_t _frame = 0;
       std::filesystem::path _path;

@@ -125,6 +125,7 @@ bool Replay::play(const filesystem::path& path) {
                   if (at == string_view::npos) throw runtime_error("bad check: " + word);
                   frame.checks.emplace_back(string(rest.substr(0, at)), string(rest.substr(at + 1)));
                } break;
+               case 'n': break; //a note: only for reading
                default: throw runtime_error("don't know " + word);
             }
          }
@@ -162,6 +163,11 @@ void Replay::stop() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void Replay::addCheck(const string& name, Check check) {
    _checks.emplace_back(name, std::move(check));
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Replay::addNote(const string& name, Check note) {
+   _notes.emplace_back(name, std::move(note));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -296,6 +302,13 @@ void Replay::endFrame() {
          auto& last = _checked[name];
          if (value == last) continue;
          _line += format(" c{}={}", name, value);
+         last = value;
+      }
+      for (auto& [name, note] : _notes) {
+         auto value = note();
+         auto& last = _noted[name];
+         if (value == last) continue;
+         _line += format(" n{}={}", name, value);
          last = value;
       }
       _file << _line << "\n";
