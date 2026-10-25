@@ -305,6 +305,7 @@ Handled Tree::_unhandled_input(const InputEvent& event) {
              const auto& btnEvent = event.toEvent<InputEventMouseButton>();
              if (btnEvent.button != InputInterface::MouseButton::LEFT) return nullptr;
              if (!implDetailsAt){
+                if (!btnEvent.isDown) _lastClicked.reset();
                 if (_selectedItem) {
                    EventItemDeselected itemDeSelectedEvent(this, _selectedItem.value());
                    _selectedItem.reset();
@@ -353,10 +354,11 @@ Handled Tree::_unhandled_input(const InputEvent& event) {
                 }
 
              }
-             if (auto stillThere = getItemDetailsAt(localPos)) {
-                _lastClicked = stillThere.value()->item;
-             } else {
-
+             //the item this click ended on, for the next to compare with: a double click only counts on the item
+             //the click before it was on too (the engine only knows the two clicks were close in time and place)
+             if (!btnEvent.isDown) {
+                if (auto stillThere = getItemDetailsAt(localPos)) _lastClicked = stillThere.value()->item;
+                else _lastClicked.reset();
              }
 
              return this;

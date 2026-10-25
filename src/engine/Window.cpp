@@ -67,9 +67,24 @@ void Window::exec(){
    Vec2<float> mouseDelta;
    bool checkedToolTip = false;
    if (_targetFPS) SetTargetFPS(_targetFPS);
-   auto inputEventMouseButtonTimeStampUp = sc::now();
-   auto inputEventMouseButtonTimeStampDown = sc::now();
-   auto lastMouseButtonInput = InputInterface::MouseButton::NONE;
+   //double clicks are timed on the frames' time steps, not the clock, so a replay (played back at any speed) sees
+   //just the ones there were. A press is the second of a double click if it's the same button as the last press, soon
+   //after it and close by; the same goes for releases. The click after a double click starts afresh.
+   double clickClock = 0;
+   struct LastClick {
+      InputInterface::MouseButton button = InputInterface::MouseButton::NONE;
+      Pos<float> pos;
+      double time = 0;
+   };
+   std::optional<LastClick> lastDown, lastUp;
+   auto isDoubleClick = [&](std::optional<LastClick>& last, InputInterface::MouseButton button, const Pos<float>& pos) {
+      double threshold = std::chrono::duration<double>(_doubleClickThreshold).count();
+      bool isDouble = last && last->button == button && clickClock - last->time < threshold &&
+                      std::hypot(pos.x - last->pos.x, pos.y - last->pos.y) <= _doubleClickReach;
+      if (isDouble) last.reset();
+      else last = LastClick{button, pos, clickClock};
+      return isDouble;
+   };
    std::chrono::steady_clock::time_point mousePosChangeTime;
    publish(WindowExecEvent(this));
    while (!WindowShouldClose()){
@@ -91,6 +106,8 @@ void Window::exec(){
          event.position = newPos;
          publish(event);
       }
+
+      clickClock += getFrameDelta();
 
       // input from a test, if one is connected: after raylib has read the real devices, before we do
       if (_testServer) _testServer->beginFrame(_frameCounter, Size<int>((int)size.x, (int)size.y));
@@ -185,12 +202,8 @@ void Window::exec(){
       for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
          auto btnUp = InputManager::instance().getMouseButtonReleased();
          if (btnUp != InputInterface::MouseButton::NONE) {
-            auto now = sc::now();
-            bool isDouble = (now - inputEventMouseButtonTimeStampUp) < _doubleClickThreshold && lastMouseButtonInput == btnUp;
-            inputEventMouseButtonTimeStampUp = now;
-            lastMouseButtonInput = btnUp;
+            bool isDouble = isDoubleClick(lastUp, btnUp, mousePos.get());
             InputEventMouseButton event(this, mousePos.get(), btnUp, false, isDouble);
-            if (isDouble) inputEventMouseButtonTimeStampUp = sc::time_point{};
             auto handledBy = __process_unhandled_input(event);
             if constexpr (PRINT_MOUSEUP) if (handledBy) Logger::info() << "MouseUp handled by " << handledBy.handler->getName() << endl;
          } else {
@@ -202,14 +215,10 @@ void Window::exec(){
       for (size_t i = 0; i < Window::INPUT_COUNT_LIMIT; i++) {
          auto btnDown = InputManager::instance().getMouseButtonPressed();
          if (btnDown != InputInterface::MouseButton::NONE) {
-            auto now = sc::now();
-            bool isDouble = (now - inputEventMouseButtonTimeStampDown) < _doubleClickThreshold && lastMouseButtonInput == btnDown;
-            inputEventMouseButtonTimeStampDown = now;
-            lastMouseButtonInput = btnDown;
+            bool isDouble = isDoubleClick(lastDown, btnDown, mousePos.get());
             InputEventMouseButton event(this, mousePos.get(), btnDown, true, isDouble);
             auto handledBy = __process_unhandled_input(event);
             if constexpr (PRINT_MOUSEDOWN) if (handledBy) Logger::info() << "MouseDown handled by " << handledBy.handler->getName() << endl;
-            if (isDouble) inputEventMouseButtonTimeStampDown = sc::time_point{};
          } else {
             break;
          }
