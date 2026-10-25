@@ -24,7 +24,7 @@ namespace ReyEngine{
    protected:
       std::vector<std::unique_ptr<TreeItem>> _children;
       Tree* _tree = nullptr;
-      TreeItemContainer* _parent;
+      TreeItemContainer* _parent = nullptr;
       //the "level" of the branch on which this leaf appears.
       // For example, the root is always generation 0, its children are generation 1,
       // those children's children are generation 2, and so on.
@@ -129,6 +129,27 @@ namespace ReyEngine{
       void setSelectedIndex(size_t visibleItemIndex, bool publish=true); //sets selected by its CURRENTLY VISIBLE index (not internal raw index)
       void clearSelection(){_selectedItem.reset();}
       Size<float> measureContents(); // Measures how big the contents of the tree are, not how big the tree itself is. Used for sizing.
+      /// Pixels each row is tall; 0 (the default) is the font's size. Every row is the same height.
+      void setRowHeight(float height){_rowHeight = height; refresh();}
+      [[nodiscard]] float getRowHeight() const {return rowHeight();}
+      /// Whether the tree makes itself as big as its contents whenever they change (when it isn't in a layout, which
+      /// sizes it). On by default; turn it off for a tree given a size of its own, so it scrolls instead.
+      void setSizeToContents(bool sizeToContents){_sizeToContents = sizeToContents;}
+      /// Pixels each generation is indented by. When set, a single click on an item's arrow (the indent just before
+      /// the item, see ItemState::arrow) expands or collapses it, as well as the double click. 0 (the default): only
+      /// the double click does.
+      void setIndentWidth(float width){_indentWidth = width;}
+      [[nodiscard]] float getIndentWidth() const {return _indentWidth;}
+      /// how a row is to be drawn (see renderItem)
+      struct ItemState {
+         bool hovered = false;
+         bool selected = false;
+         bool enabled = true;
+         bool expandable = false; //it has children it can show
+         bool expanded = false;
+         int depth = 0; //generations below the top row shown (the root, or its children if it's hidden)
+         Rect<float> arrow; //where its expand arrow goes, if the indent width is set (see setIndentWidth)
+      };
       void ensureItemVisible(TreeItem* item); //scroll so the item's row sits inside the viewport. No-op if the item isn't currently visible (collapsed/absent).
       struct Iterator {
          using iterator_category = std::forward_iterator_tag;
@@ -186,6 +207,10 @@ namespace ReyEngine{
       void refresh(); //marks the tree dirty; the actual rebuild is coalesced into ensureFresh()
       void _init() override;
       void render2D(RenderContext&) const override;
+      /// Draw one row, in the tree's own space; the row is the whole width left of the scrollbar. Override to draw
+      /// rows another way: the tree still does the scrolling, hovering, selecting and expanding. The default draws
+      /// the hover or selection highlight, then "+"/"-" and the item's text.
+      virtual void renderItem(RenderContext& context, const TreeItem& item, const Rect<float>& row, const ItemState& state) const;
       //the tree renders its rows itself; its only widget child is the scrollbar, which lives
       //in a right-edge gutter instead of being arranged by the base layout.
       void arrangeChildren() override;
@@ -194,10 +219,11 @@ namespace ReyEngine{
       void _on_mouse_exit() override { _hoveredItem.reset();}
       std::optional<TreeItemImplDetails*> getItemDetailsAt(const Pos<float>& localPos); //returned pointer is transient: invalidated by the next window rebuild
    private:
+      void forget(TreeItem* item); //an item (and everything under it) leaving the tree: stop holding it as hovered, selected or last clicked
       void ensureFresh();  //rebuild order/_visibleRows if a mutation marked the tree dirty. O(1) when clean.
       void updateWindow(); //(re)annotate the rows in/near the viewport if the window moved or the tree changed
       //single source of truth for row height: rendering, hit-testing, and click regions must all agree
-      [[nodiscard]] float rowHeight() const {return theme ? theme->font->size : 0;}
+      [[nodiscard]] float rowHeight() const {return _rowHeight > 0 ? _rowHeight : theme ? theme->font->size : 0;}
       [[nodiscard]] float contentHeight() const {return _visibleRows.size() * rowHeight();}
       [[nodiscard]] float viewportWidth() const {return getWidth() - (_scroll.needsVBar() ? SCROLLBAR_WIDTH : 0.0f);} //width minus the gutter when the bar shows
       void updateScrollLayout(); //refresh scroll limits + bar rect from current content/viewport
@@ -213,6 +239,9 @@ namespace ReyEngine{
       bool _treeDirty = true;   //a mutation invalidated order/_visibleRows; rebuilt on next read
       bool _windowDirty = true; //_windowDetails needs a rebuild even if the window didn't move
       bool _hideRoot = false; //if true, the root is hidden and we can appear as a "flat" tree.
+      float _rowHeight = 0;   //see setRowHeight
+      bool _sizeToContents = true;
+      float _indentWidth = 0; //see setIndentWidth
       std::optional<TreeItem*> _hoveredItem;
       std::optional<TreeItem*> _lastClicked;
       std::optional<TreeItem*> _selectedItem;

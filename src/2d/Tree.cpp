@@ -6,6 +6,7 @@ using namespace ReyEngine;
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 void TreeItemContainer::clear() {
+   if (_tree) for (auto& child : _children) _tree->forget(child.get());
    _children.clear();
    if (_tree) _tree->refresh();
 }
@@ -43,6 +44,7 @@ std::unique_ptr<TreeItem> TreeItem::takeItem(size_t index){
    auto it = _children.begin() + index;
    auto ptr = std::move(*it);
    _children.erase(it);
+   if (_tree) _tree->forget(ptr.get());
 
    //item no longer is in the tree so has no parent
    ptr->_parent = nullptr;
@@ -91,6 +93,20 @@ void Tree::ensureRowVisible(size_t visibleRowIndex) {
    updateScrollLayout(); //limits must reflect the latest content before we test the row
    float top = visibleRowIndex * rowHeight();
    _scroll.ensureVisibleY(top, top + rowHeight());
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Tree::forget(TreeItem* item) {
+   //the item, or anything under it, held as hovered, last clicked or selected would dangle once it's gone
+   auto within = [item](std::optional<TreeItem*>& held) {
+      if (!held) return;
+      for (TreeItem* at = held.value(); at; at = static_cast<TreeItem*>(at->_parent)) { //every container in a tree is an item
+         if (at == item) {held.reset(); return;}
+      }
+   };
+   within(_hoveredItem);
+   within(_lastClicked);
+   within(_selectedItem);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -143,7 +159,7 @@ void Tree::ensureFresh() {
 
    //make ourselves larger if we need to
    auto parent = getParentWidget();
-   if (!parent || parent && !parent.value()->isLayout()){
+   if (_sizeToContents && (!parent || parent && !parent.value()->isLayout())){
       setSize(measureContents());
    }
    updateScrollLayout(); //row count changed -> re-clamp scroll limits + refresh the bar
@@ -171,7 +187,7 @@ void Tree::updateWindow() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void Tree::render2D(RenderContext&) const{
+void Tree::render2D(RenderContext& context) const{
    //lazy cache fill from the const render path (the engine doesn't guarantee _process):
    //flush any pending structural rebuild + window move before reading row state
    const_cast<Tree*>(this)->updateWindow();
@@ -181,32 +197,44 @@ void Tree::render2D(RenderContext&) const{
    const float offsetY = _scroll.offsetY();
    //clip rows to the area left of the scrollbar gutter (inset when the bar shows)
    ScopeScissor scissor(getGlobalTransform(), Rect<float>(0, 0, viewportWidth(), getHeight()));
+   //the hovered item is only updated as the mouse moves over the tree, so it goes stale once the mouse leaves, or the
+   //rows move under it (scrolled, opened, removed): it only counts while the mouse is really over its row
+   auto mouse = getLocalMousePos();
    for (const auto& itemMeta : _windowDetails) {
       auto& item = itemMeta.item;
       Pos<float> pos = {0, itemMeta.visibleRowIndex * rh - offsetY};
       if (pos.y >= getHeight()) break; //below the viewport
+      Rect<float> row = {pos, {viewportWidth(), rh}};
+      ItemState state;
+      state.hovered = _hoveredItem && _hoveredItem.value() == item && row.contains(mouse) && mouse.y < getHeight();
+      state.selected = _selectedItem && _selectedItem.value() == item;
+      state.enabled = item->_enabled;
+      state.expandable = item->expandable && !item->_children.empty();
+      state.expanded = item->expanded;
+      state.depth = (int)item->_generation - (_hideRoot ? 1 : 0);
+      state.arrow = {state.depth * _indentWidth, pos.y, _indentWidth, rh};
+      renderItem(context, *item, row, state);
+   }
+}
 
-      if (_allowHighlight) {
-         //highlight the hovered row
-         std::optional<ColorRGBA> highlightColor;
-         if (_selectedItem && _selectedItem.value() == item) {
-            //highlight the selected row
-            highlightColor = getTheme().background.colorHighlight;
-         } else if (_hoveredItem && _hoveredItem.value() == item) {
-            highlightColor = getTheme().background.colorActive1;
-         }
-         if (highlightColor) drawRectangle({pos, {viewportWidth(), rh}}, highlightColor.value());
-      }
-
-      auto enabledColor = font->color;
-      constexpr ReyEngine::ColorRGBA disabledColor = {127, 127, 127, 255};
-      if (!item->_enabled) {
-         font->color = disabledColor;
-      }
-      drawText(itemMeta.expansionRegionText + item->getText(), pos, font);
-      if (!item->_enabled) {
-         font->color = enabledColor;
-      }
+/////////////////////////////////////////////////////////////////////////////////////////
+void Tree::renderItem(RenderContext&, const TreeItem& item, const Rect<float>& row, const ItemState& state) const {
+   auto& font = theme->font;
+   if (_allowHighlight) {
+      //highlight the selected row, or else the hovered one
+      std::optional<ColorRGBA> highlightColor;
+      if (state.selected) highlightColor = getTheme().background.colorHighlight;
+      else if (state.hovered) highlightColor = getTheme().background.colorActive1;
+      if (highlightColor) drawRectangle(row, highlightColor.value());
+   }
+   auto enabledColor = font->color;
+   constexpr ReyEngine::ColorRGBA disabledColor = {127, 127, 127, 255};
+   if (!state.enabled) {
+      font->color = disabledColor;
+   }
+   drawText(TreeItemImplDetails::buildExpansionText(const_cast<TreeItem*>(&item)) + item.getText(), row.pos(), font);
+   if (!state.enabled) {
+      font->color = enabledColor;
    }
 }
 
@@ -286,6 +314,16 @@ Handled Tree::_unhandled_input(const InputEvent& event) {
              }
              auto itemAtClick = implDetailsAt.value()->item;
              //expand/shrink branch
+             if (!btnEvent.isDown && _indentWidth > 0 && !itemAtClick->_children.empty() && itemAtClick->getExpandable()) {
+                //a single click on its arrow, if rows have one
+                float arrowLeft = ((float)itemAtClick->_generation - (_hideRoot ? 1 : 0)) * _indentWidth;
+                if (localPos.x >= arrowLeft && localPos.x < arrowLeft + _indentWidth) {
+                   itemAtClick->setExpanded(!itemAtClick->getExpanded());
+                   refresh();
+                   _lastClicked.reset(); //so a quick second click on the arrow toggles it again, rather than counting as a double click
+                   return this;
+                }
+             }
              if (!btnEvent.isDown) {
 //                Logger::debug() << "click at = " << itemAtClick->_text << endl;
                 //publish on item click
@@ -329,6 +367,9 @@ Handled Tree::_unhandled_input(const InputEvent& event) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 TreeItem* Tree::setRoot(std::unique_ptr<TreeItem>&& item) {
+    _hoveredItem.reset(); //they were the old root's
+    _lastClicked.reset();
+    _selectedItem.reset();
     root.reset();
     root = std::move(item);
     root->isRoot = true;
@@ -448,7 +489,7 @@ Size<float> Tree::measureContents() {
       if (itemSize.x > retval.x){
          retval.x = itemSize.x;
       }
-      retval.y += itemSize.y;
+      retval.y += _rowHeight > 0 ? _rowHeight : itemSize.y;
    }
    return retval;
 }
