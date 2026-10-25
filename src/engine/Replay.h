@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
@@ -22,6 +23,11 @@ namespace ReyEngine {
    /// compared while playing back. The first frame where one differs is logged, and given by status: from there on,
    /// the playback has gone its own way.
    ///
+   /// A playback can run faster or slower than it was recorded (F6 and F5 while it plays, or setSpeed): more or fewer
+   /// frames a second, each with its recorded time step, so it plays out just the same. Past the window's own frame
+   /// rate, vsync is turned off while it plays, and the scene is drawn only on some frames (see shouldRender): drawing
+   /// is often what takes the time, and nothing the game does depends on it.
+   ///
    /// A playback can be held at a frame: from there, frames go by with no time passing and the input held as it was,
    /// so everything can be looked at (over the test port, say) until it's run on again.
    ///
@@ -39,9 +45,12 @@ namespace ReyEngine {
    public:
       static constexpr int VERSION = 1;
       static constexpr int FLUSH_FRAMES = 30; //written out at least this often while recording
+      /// the speeds F5 and F6 step through, as many times as fast as recorded; 0: as fast as it will go
+      static constexpr std::array<float, 7> SPEEDS = {0.25f, 0.5f, 1, 2, 4, 8, 0};
       /// a value the game wants to be the same when played back. No spaces.
       using Check = std::function<std::string()>;
-      Replay() = default;
+      /// for a window that runs at this many frames a second (0: as fast as it can)
+      explicit Replay(int windowFps): _windowFps(windowFps){}
       ~Replay();
       Replay(const Replay&) = delete;
       Replay& operator=(const Replay&) = delete;
@@ -60,6 +69,12 @@ namespace ReyEngine {
       bool saveCopy(const std::filesystem::path& path);
       [[nodiscard]] const std::filesystem::path& getPath() const {return _path;}
 
+      /// how fast to play back, as many times as fast as recorded (0: as fast as it will go). Takes effect while playing.
+      void setSpeed(float speed);
+      [[nodiscard]] float getSpeed() const {return _speed;}
+      /// the next speed up or down in SPEEDS
+      void faster();
+      void slower();
       /// while playing back: stop before this frame, until run (or holdAt a later one)
       void holdAt(uint64_t frame){_holdAt = frame;}
       void run(){_holdAt.reset();}
@@ -67,7 +82,7 @@ namespace ReyEngine {
       [[nodiscard]] uint64_t getFrame() const {return _frame;}
       /// what it's doing, in a line: recording, playing (and how far), held, finished; and where it first differed
       [[nodiscard]] std::string status() const;
-      /// "replay": status, hold, step, run, save (see help)
+      /// "replay": status, hold, step, run, speed, save (see help)
       void addTestCommands(TestServer& server);
 
       /// called by the window at the top of each frame, with its size. Returns the size to use for it: the recorded
@@ -78,6 +93,11 @@ namespace ReyEngine {
       void input();
       /// called by the window once the frame's logic is done: the checks
       void endFrame();
+      /// whether the window should draw the scene this frame: always, unless playing back fast. At n times as fast,
+      /// once every n frames, so the frames drawn come as often as the window's frame rate (if drawing keeps up); as fast
+      /// as it will go, RENDER_SECONDS apart (by the clock: it's only for show)
+      [[nodiscard]] bool shouldRender();
+      static constexpr double RENDER_SECONDS = 0.1;
    private:
       /// input as it stands
       struct State {
@@ -99,6 +119,8 @@ namespace ReyEngine {
       /// make raylib's input what the state says
       void apply(const State& state, const Vec2<float>& wheel);
       void finish();
+      /// set the frame rate (and vsync) for the speed while playing back, or put the window's back
+      void applySpeed();
 
       std::vector<std::pair<std::string, Check>> _checks;
       std::map<std::string, std::string> _checked; //each check's last value, written or expected
@@ -118,5 +140,10 @@ namespace ReyEngine {
       std::optional<uint64_t> _diverged; //the first frame a check differed on
       std::string _divergence;            //which, and how
       uint64_t _mismatches = 0; //frames where a check differed
+      int _windowFps;
+      float _speed = 1;
+      bool _vsyncOff = false; //turned off for playing back fast
+      double _renderedAt = 0; //raylib's clock, when the scene was last drawn
+      uint64_t _renderedFrame = 0; //the frame it was last drawn on
    };
 }

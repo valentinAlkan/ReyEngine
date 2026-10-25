@@ -1,5 +1,7 @@
 #include "Replay.h"
+#include <algorithm>
 #include <charconv>
+#include <cmath>
 #include <climits>
 #include <format>
 #include <sstream>
@@ -139,6 +141,7 @@ bool Replay::play(const filesystem::path& path) {
    _state = {};
    _playing = true;
    _finished = false;
+   applySpeed();
    _diverged.reset();
    _mismatches = 0;
    // the window as it was from the start, so the first frame looks the same
@@ -188,6 +191,7 @@ string Replay::status() const {
    else if (_finished) text = format("finished, {} frames", _frames.size());
    else return "idle";
    if (_playing || _finished) {
+      if (_playing && _speed != 1) text += _speed == 0 ? " at full speed" : format(" at {}x", _speed);
       if (_diverged) text += format("; differs from frame {} ({}), on {} frame{}", _diverged.value(), _divergence, _mismatches, _mismatches == 1 ? "" : "s");
       else text += "; checks match";
    }
@@ -196,15 +200,16 @@ string Replay::status() const {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Replay::addTestCommands(TestServer& server) {
-   server.addCommand("replay", "replay [status | hold <frame> | step [frames] | run | save <path>]: the replay being recorded or played",
+   server.addCommand("replay", "replay [status | hold <frame> | step [frames] | run | speed <times|max> | save <path>]: the replay being recorded or played",
       [this](const vector<string>& args) -> string {
          string what = args.empty() ? "status" : args[0];
          if (what == "hold" && args.size() == 2) holdAt(parse<uint64_t>(args[1]));
          else if (what == "step") holdAt(_frame + (args.size() == 2 ? parse<uint64_t>(args[1]) : 1));
          else if (what == "run") run();
+         else if (what == "speed" && args.size() == 2) setSpeed(args[1] == "max" ? 0 : parse<float>(args[1]));
          else if (what == "save" && args.size() == 2) {
             if (!saveCopy(args[1])) throw runtime_error("can't save to " + args[1]);
-         } else if (what != "status") throw runtime_error("replay status | hold <frame> | step [frames] | run | save <path>");
+         } else if (what != "status") throw runtime_error("replay status | hold <frame> | step [frames] | run | speed <times|max> | save <path>");
          return status() + "\n";
       });
 }
@@ -230,6 +235,8 @@ Size<float> Replay::beginFrame(const Size<float>& windowSize) {
       finish();
       return windowSize;
    }
+   // the window sets its own frame rate as it starts, after play was called
+   if (_frame == 0) applySpeed();
    auto& frame = _frames[_frame];
    Internal::frameDeltaOverridden = true;
    Internal::frameDeltaOverride = frame.dt;
@@ -265,6 +272,9 @@ void Replay::input() {
       return;
    }
    if (!_playing) return;
+   // the real keys, before the recording's replace them: just pressed (down now, but not as last left)
+   if (IsKeyPressed(KEY_F6)) faster();
+   if (IsKeyPressed(KEY_F5)) slower();
    if (holding()) {
       apply(_state, {});
       return;
@@ -338,5 +348,54 @@ void Replay::finish() {
    Internal::frameDeltaOverridden = false;
    _playing = false;
    _finished = true;
+   applySpeed();
    Logger::info() << "Replay: finished at frame " << _frame << " (" << status() << ")" << endl;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Replay::setSpeed(float speed) {
+   _speed = std::max(speed, 0.f);
+   applySpeed();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Replay::faster() {
+   // full speed (0) is the last, and stays
+   auto at = ranges::find(SPEEDS, _speed);
+   if (at != SPEEDS.end() && at + 1 != SPEEDS.end()) setSpeed(*(at + 1));
+   else if (at == SPEEDS.end()) setSpeed(*ranges::find_if(SPEEDS, [this](float s){return s == 0 || s > _speed;}));
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Replay::slower() {
+   auto at = ranges::find(SPEEDS, _speed);
+   if (at == SPEEDS.end()) at = ranges::find_if(SPEEDS, [this](float s){return s == 0 || s > _speed;});
+   if (at != SPEEDS.begin()) setSpeed(*(at - 1));
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Replay::applySpeed() {
+   float speed = _playing ? _speed : 1;
+   // the frame rate it would take; 0 for no limit
+   int fps = speed == 0 || _windowFps == 0 ? 0 : std::max(1, (int)std::lround(_windowFps * speed));
+   bool fast = speed == 0 || speed > 1;
+   if (fast && !_vsyncOff && IsWindowState(FLAG_VSYNC_HINT)) {
+      ClearWindowState(FLAG_VSYNC_HINT);
+      _vsyncOff = true;
+   } else if (!fast && _vsyncOff) {
+      SetWindowState(FLAG_VSYNC_HINT);
+      _vsyncOff = false;
+   }
+   SetTargetFPS(fps);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+bool Replay::shouldRender() {
+   bool fast = _playing && !holding() && (_speed == 0 || _speed > 1);
+   double now = GetTime();
+   if (fast && _speed == 0 && now - _renderedAt < RENDER_SECONDS) return false;
+   if (fast && _speed > 1 && _frame < _renderedFrame + (uint64_t)std::ceil(_speed)) return false;
+   _renderedAt = now;
+   _renderedFrame = _frame;
+   return true;
 }

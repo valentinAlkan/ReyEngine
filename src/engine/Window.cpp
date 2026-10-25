@@ -275,8 +275,10 @@ void Window::exec(){
          ReyTexture::OrphanedTextureCache::instance().clear();
       }
 
-      //render the scene to our internal buffer
-      {
+      //render the scene to our internal buffer. A replay playing back fast skips most frames, leaving the window as it
+      //was, but for reading the input, which EndDrawing would have done.
+      bool render = !_replay || _replay->shouldRender();
+      if (render) {
          //scoped so the destructor fires
          RenderContext renderContext(_canvas->_renderTarget);
          canvas->renderProcess(renderContext);
@@ -284,12 +286,16 @@ void Window::exec(){
       if (_testServer) _testServer->endFrame(_canvas->readRenderTarget());
 
       //paint the scene on the window
-      BeginDrawing();
-      auto rect = _canvas->getSizeRect();
-      BeginBlendMode(BLEND_ALPHA);
-      drawRenderTargetRect(_canvas->readRenderTarget(), rect, rect, Colors::none);
-      EndBlendMode();
-      EndDrawing();
+      if (render) {
+         BeginDrawing();
+         auto rect = _canvas->getSizeRect();
+         BeginBlendMode(BLEND_ALPHA);
+         drawRenderTargetRect(_canvas->readRenderTarget(), rect, rect, Colors::none);
+         EndBlendMode();
+         EndDrawing();
+      } else {
+         PollInputEvents();
+      }
       _frameCounter++;
    } //next frame
 
@@ -313,7 +319,7 @@ TestServer* Window::startTestServer(uint16_t port) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Replay& Window::getReplay() {
-   if (!_replay) _replay = std::make_unique<Replay>();
+   if (!_replay) _replay = std::make_unique<Replay>(_targetFPS);
    return *_replay;
 }
 
