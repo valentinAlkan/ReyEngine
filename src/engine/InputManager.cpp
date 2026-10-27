@@ -59,7 +59,19 @@ KeyCode InputManager::getKeyReleased() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 int InputManager::getCharPressed() {
+   if (!_injectedChars.empty()) {
+      int codepoint = _injectedChars.front();
+      _injectedChars.pop_front();
+      return codepoint;
+   }
    return InputInterface::getCharPressed();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::vector<int> InputManager::takeTypedChars() {
+   std::vector<int> typed;
+   for (int codepoint; (codepoint = instance().getCharPressed());) typed.push_back(codepoint);
+   return typed;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

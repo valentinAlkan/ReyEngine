@@ -1,4 +1,5 @@
 #include "TestServer.h"
+#include "InputManager.h"
 #include <algorithm>
 #include <cctype>
 #include <sstream>
@@ -19,6 +20,7 @@ namespace {
    constexpr int INPUT_MOUSE_WHEEL_MOTION = 8;
    constexpr int INPUT_TOUCH_UP = 14;
    constexpr int INPUT_TOUCH_DOWN = 15;
+   constexpr int INPUT_CHAR = 1000; //not raylib's: a character typed (see InputManager::injectChar)
 
    constexpr int POLL_MS = 100; //how often the socket thread checks whether it should stop
 
@@ -227,6 +229,25 @@ void TestServer::expand(const Step& line, deque<Step>& steps) {
       if (frames < 0) throw runtime_error("can't wait a negative number of frames");
       wait(frames);
       done();
+   } else if (name == "type") {
+      // the rest of the line as it is, spaces and all, a character at a time (decoded from UTF-8)
+      auto at = line.text.find("type");
+      string text = line.text.substr(at + 4);
+      if (!text.empty() && text[0] == ' ') text.erase(0, 1);
+      while (!text.empty() && (text.back() == '\r' || text.back() == '\n')) text.pop_back();
+      if (text.empty()) throw runtime_error("usage: type <text>");
+      for (size_t i = 0; i < text.size();) {
+         auto byte = (unsigned char)text[i];
+         int length = byte < 0x80 ? 1 : (byte >> 5) == 6 ? 2 : (byte >> 4) == 14 ? 3 : (byte >> 3) == 30 ? 4 : 0;
+         if (!length || i + length > text.size()) throw runtime_error("not UTF-8");
+         int codepoint = length == 1 ? byte : byte & (0x7F >> length);
+         for (int k = 1; k < length; k++) codepoint = (codepoint << 6) | ((unsigned char)text[i + k] & 0x3F);
+         input(INPUT_CHAR, codepoint);
+         i += length;
+      }
+      // a frame for them to arrive in, so what comes next comes after them
+      wait(1);
+      done();
    } else if (name == "key") {
       need(2, "key down|up|tap <key>");
       int key = parseKey(args[1]);
@@ -277,6 +298,10 @@ void TestServer::expand(const Step& line, deque<Step>& steps) {
 void TestServer::inject(const Step& step) {
    int type = step.event[0];
    int a = step.event[1];
+   if (type == INPUT_CHAR) {
+      InputManager::injectChar(a);
+      return;
+   }
    switch (type) {
       case INPUT_KEY_DOWN: _heldKeys.insert(a); break;
       case INPUT_KEY_UP: _heldKeys.erase(a); break;
@@ -312,6 +337,7 @@ string TestServer::help() const {
    string text =
       "every command replies with any output, then \"ok\" or \"error <why>\"\n"
       "key down|up|tap <key>                  keys by name: W, SPACE, F1, SHIFT, LEFT_SHIFT, ESCAPE, UP...\n"
+      "type <text>                            type the rest of the line into whatever takes text (spaces and all)\n"
       "mouse move <x> <y>                     window pixels, from the top left\n"
       "mouse down|up|click left|right|middle [<x> <y>]\n"
       "mouse wheel <notches>                  positive scrolls up\n"

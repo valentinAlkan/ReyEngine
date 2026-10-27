@@ -6,6 +6,7 @@
 #include <format>
 #include <sstream>
 #include "TestServer.h"
+#include "InputManager.h"
 
 using namespace std;
 using namespace ReyEngine;
@@ -124,6 +125,14 @@ bool Replay::play(const filesystem::path& path) {
                   auto at = rest.find('=');
                   if (at == string_view::npos) throw runtime_error("bad check: " + word);
                   frame.checks.emplace_back(string(rest.substr(0, at)), string(rest.substr(at + 1)));
+               } break;
+               case 't': {
+                  for (size_t at = 0; at < rest.size();) {
+                     auto comma = rest.find(',', at);
+                     if (comma == string_view::npos) comma = rest.size();
+                     frame.chars.push_back(parse<int>(rest.substr(at, comma - at)));
+                     at = comma + 1;
+                  }
                } break;
                case 'n': break; //a note: only for reading
                default: throw runtime_error("don't know " + word);
@@ -275,6 +284,10 @@ void Replay::input() {
       }
       auto wheel = GetMouseWheelMoveV();
       if (wheel.x != 0 || wheel.y != 0) _line += format(" w{},{}", wheel.x, wheel.y);
+      // what was typed: written down, then put back for the window to take
+      auto typed = InputManager::takeTypedChars();
+      for (size_t i = 0; i < typed.size(); i++) _line += format("{}{}", i == 0 ? " t" : ",", typed[i]);
+      for (int codepoint : typed) InputManager::injectChar(codepoint);
       return;
    }
    if (!_playing) return;
@@ -285,11 +298,14 @@ void Replay::input() {
       if (holding()) run();
       else holdAt(_frame);
    }
+   // what's typed for real is dropped: the recording's typing stands in for it
+   InputManager::takeTypedChars();
    if (holding()) {
       apply(_state, {});
       return;
    }
    auto& frame = _frames[_frame];
+   for (int codepoint : frame.chars) InputManager::injectChar(codepoint);
    for (int key : frame.keysDown) _state.keys.insert(key);
    for (int key : frame.keysUp) _state.keys.erase(key);
    for (int button : frame.buttonsDown) _state.buttons.insert(button);

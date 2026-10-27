@@ -3,6 +3,8 @@
 #include "Event.h"
 #include "ReyEngine.h"
 #include <algorithm>
+#include <deque>
+#include <vector>
 
 namespace ReyEngine{
    //contains information about how input events were handled
@@ -461,6 +463,12 @@ namespace ReyEngine{
       /// hotkeys polled that way don't fire as the player types. Key events still reach the widgets as ever.
       static inline void setKeysCaptured(bool captured){instance()._keysCaptured = captured;}
       [[nodiscard]] static inline bool areKeysCaptured(){return instance()._keysCaptured;}
+      /// Type a character (a Unicode codepoint) as if from the keyboard: it comes out of the window's next round of
+      /// typed characters (see InputEventChar), before any typed for real. For tests and replays.
+      static inline void injectChar(int codepoint){instance()._injectedChars.push_back(codepoint);}
+      /// every character typed since this was last asked (those injected first, then the keyboard's), taken: they
+      /// won't reach the window unless injected again (see Replay)
+      static std::vector<int> takeTypedChars();
       static inline void setExitKey(InputInterface::KeyCode key){return InputInterface::setExitKey(key);}
       static inline InputInterface::KeyCode getLastKeyPressed(){return instance()._lastKey;}
       static inline WindowSpace<Pos<float>> getMousePos(){return InputInterface::getMousePos();}
@@ -514,6 +522,7 @@ namespace ReyEngine{
       std::vector<InputInterface::KeyCode> keyQueue; //holds keys that were pressed so we can check if they're still down
       InputInterface::KeyCode _lastKey = InputInterface::KeyCode::KEY_NULL;
       bool _keysCaptured = false; //see setKeysCaptured
+      std::deque<int> _injectedChars; //see injectChar
       std::vector<InputInterface::MouseButton> mouseButtonQueue; //holds mousebuttons that were pressed so we can check if they're still down
       template <typename T, typename R>
       bool isInQueue(std::vector<T> queue, R button){

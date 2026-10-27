@@ -37,14 +37,16 @@ namespace ReyEngine {
    ///
    /// The file is text, a line a frame: the frame's number and time step, then what changed: "s<w>x<h>" the window's
    /// size, "m<x>,<y>" where the mouse went, "k+<key>" and "k-<key>" a key going down and up (raylib's key codes),
-   /// "b+<n>" and "b-<n>" a mouse button, "w<x>,<y>" the wheel, "c<name>=<value>" a check's new value, and "n<name>=<value>" a note's. The first
+   /// "b+<n>" and "b-<n>" a mouse button, "w<x>,<y>" the wheel, "t<c>,<c>..." characters typed (Unicode codepoints, in
+   /// order), "c<name>=<value>" a check's new value, and "n<name>=<value>" a note's. The first
    /// line is "reyreplay <version>". It's written as it goes, so a crash leaves all but the last few frames.
    ///
    /// Play a replay back on a build of the same code, for the same platform: another compiler can round floats
    /// differently, and the run drifts (the checks say where).
    ///
    /// Keys go in by whether they're held, so a key pressed and let go between two frames isn't recorded, and the mouse
-   /// goes back in whole pixels (raylib's automation events have no fractions). Typed characters aren't recorded.
+   /// goes back in whole pixels (raylib's automation events have no fractions). Typed characters go in as they were
+   /// typed (see InputManager::injectChar); while playing back, those typed for real are dropped.
    class Replay {
    public:
       static constexpr int VERSION = 1;
@@ -119,6 +121,7 @@ namespace ReyEngine {
          std::optional<Pos<int>> mouse;
          Vec2<float> wheel;
          std::vector<int> keysDown, keysUp, buttonsDown, buttonsUp;
+         std::vector<int> chars; //typed
          std::vector<std::pair<std::string, std::string>> checks;
       };
       [[nodiscard]] bool holding() const {return _playing && _holdAt && _frame >= _holdAt.value();}
