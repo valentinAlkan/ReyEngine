@@ -454,8 +454,13 @@ namespace ReyEngine{
       static inline bool isMouseButtonUp(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonUp(mouseButton);}
       static inline bool isMouseButtonPressed(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonPressed(mouseButton);}
       static inline bool isMouseButtonReleased(InputInterface::MouseButton mouseButton){return InputInterface::isMouseButtonReleased(mouseButton);}
-      static inline bool isKeyDown(InputInterface::KeyCode key){return InputInterface::isKeyDown(key);}
-      static inline bool isKeyUp(InputInterface::KeyCode key){return InputInterface::isKeyUp(key);}
+      /// whether a key is held, as polled: never while the keys are captured (see setKeysCaptured)
+      static inline bool isKeyDown(InputInterface::KeyCode key){return !instance()._keysCaptured && InputInterface::isKeyDown(key);}
+      static inline bool isKeyUp(InputInterface::KeyCode key){return instance()._keysCaptured || InputInterface::isKeyUp(key);}
+      /// While the keys are captured (say, a text field has them), every key polled through isKeyDown reads up, so
+      /// hotkeys polled that way don't fire as the player types. Key events still reach the widgets as ever.
+      static inline void setKeysCaptured(bool captured){instance()._keysCaptured = captured;}
+      [[nodiscard]] static inline bool areKeysCaptured(){return instance()._keysCaptured;}
       static inline void setExitKey(InputInterface::KeyCode key){return InputInterface::setExitKey(key);}
       static inline InputInterface::KeyCode getLastKeyPressed(){return instance()._lastKey;}
       static inline WindowSpace<Pos<float>> getMousePos(){return InputInterface::getMousePos();}
@@ -508,6 +513,7 @@ namespace ReyEngine{
 
       std::vector<InputInterface::KeyCode> keyQueue; //holds keys that were pressed so we can check if they're still down
       InputInterface::KeyCode _lastKey = InputInterface::KeyCode::KEY_NULL;
+      bool _keysCaptured = false; //see setKeysCaptured
       std::vector<InputInterface::MouseButton> mouseButtonQueue; //holds mousebuttons that were pressed so we can check if they're still down
       template <typename T, typename R>
       bool isInQueue(std::vector<T> queue, R button){

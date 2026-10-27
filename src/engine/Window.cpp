@@ -166,7 +166,7 @@ void Window::exec(){
          auto now = sc::now();
          static auto keyDownTimestamp = now;
          auto lastKey = InputManager::getLastKeyPressed();
-         if (InputManager::isKeyDown(lastKey)) {
+         if (InputInterface::isKeyDown(lastKey)) {
             static auto keyRepeatTimestamp = now;
             if (now - keyDownTimestamp > _keyDownRepeatDelay) {
                //start sending repeats
