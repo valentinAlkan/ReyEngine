@@ -1,6 +1,7 @@
 #include "WindowPrototype.h"
 #include "Application.h"
 #include "TypeTree.h"
+#include "Logger.h"
 
 using namespace ReyEngine;
 using namespace Internal;
@@ -30,6 +31,9 @@ WindowPrototype::WindowPrototype(const std::string &title, int width, int height
    SetTraceLogLevel(LOG_NONE);
    SetConfigFlags(FLAG_VSYNC_HINT);
    InitWindow(width, height, title.c_str());
+   //sound, if there's a device to play it on (without one, sounds just don't play)
+   InitAudioDevice();
+   if (!IsAudioDeviceReady()) Logger::warn() << "No audio device: sounds won't play" << std::endl;
    Application::instance()._is_ready = true;
 }
 

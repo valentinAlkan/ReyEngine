@@ -323,6 +323,7 @@ void Window::exec(){
    _isClosing = true;
    ProcessList<Tree::Processable>::clear();
    ProcessList<Easing>::clear();
+   if (IsAudioDeviceReady()) CloseAudioDevice();
    if (Application::windowCount() == 1){
       Application::exit(Application::ExitReason::CLEAN);
    }
