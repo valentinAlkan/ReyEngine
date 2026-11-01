@@ -20,6 +20,7 @@
 #include <atomic>
 #include <chrono>
 #include <cmath>
+#include <bit>
 #include <cstdint>
 #include <stdexcept>
 #include <string>
@@ -147,13 +148,18 @@ namespace ReyStar {
    const T* findTile(const Grid<T>& tiles, int x, int y) {return tiles.find(x, y);}
 
    /// a number for a tile that no other tile in the container shares, for the search to file what it learns under. A
-   /// grid uses the tile's place in the block; a map, both coordinates packed together.
+   /// grid numbers its tiles 8 x 8 square at a time (the squares row by row, and the 64 tiles of each likewise), so
+   /// tiles near each other have keys in the same run of 64 (see VisitTable); a map packs both coordinates together.
    template <ReyStarTileable T>
    uint64_t tileKey(const TileMap<T>&, const T& tile) {
       return ((uint64_t)(uint32_t)tile.coord.x << 32) | (uint32_t)tile.coord.y;
    }
    template <ReyStarTileable T>
-   uint64_t tileKey(const Grid<T>& tiles, const T& tile) {return tiles.index(tile.coord.x, tile.coord.y);}
+   uint64_t tileKey(const Grid<T>& tiles, const T& tile) {
+      auto [x, y] = std::pair((uint64_t)tile.coord.x, (uint64_t)tile.coord.y);
+      uint64_t squaresWide = ((uint64_t)tiles.width() + 7) >> 3;
+      return (((y >> 3) * squaresWide + (x >> 3)) << 6) | ((y & 7) << 3) | (x & 7);
+   }
 
    /// a container the search can find tiles of type T in
    template <typename Tiles, typename T>
@@ -282,6 +288,113 @@ namespace ReyStar {
    };
 
    /////////////////////////////////////////////////////////////////////////////////////////
+   /// What a search knows about each tile it has reached, filed under the tile's key (see tileKey), its memory from a
+   /// memory resource (a search's scratch). Keys are taken 64 at a time: the values for each run of 64 (key / 64) sit
+   /// together in a block, found through a small hash table of blocks (open addressing, linear probing). Tiles near
+   /// each other have keys in the same run, so a search looking at a tile's neighbors mostly stays in one block,
+   /// already in the cache, rather than following std::unordered_map's pointers to nodes all over memory.
+   ///
+   /// Blocks never move, so a reference to a value lasts as long as the table. Nothing is ever taken out.
+   template <typename V>
+   class VisitTable {
+   public:
+      explicit VisitTable(std::pmr::memory_resource* resource)
+      : _resource(resource)
+      , _slots(resource) {
+         _slots.assign(64, Slot{});
+      }
+      /// the value under key, putting value there first if there's none; and whether it was put there
+      std::pair<V*, bool> tryEmplace(uint64_t key, const V& value) {
+         Block& block = blockFor(key >> 6, true);
+         uint64_t bit = 1ull << (key & 63);
+         V* at = &block.values[key & 63];
+         if (block.present & bit) return {at, false};
+         block.present |= bit;
+         *at = value;
+         _count++;
+         return {at, true};
+      }
+      /// the value under key, or null
+      [[nodiscard]] V* find(uint64_t key) {
+         Block* block = &blockFor(key >> 6, false);
+         if (block == &_none || !(block->present & (1ull << (key & 63)))) return nullptr;
+         return &block->values[key & 63];
+      }
+      /// the value under key, which must be there
+      [[nodiscard]] V& at(uint64_t key) {return *find(key);}
+      [[nodiscard]] size_t size() const {return _count;}
+      /// every key and value, in no particular order
+      template <typename F>
+      void forEach(F f) const {
+         for (auto& slot : _slots) {
+            if (!slot.block) continue;
+            for (uint64_t present = slot.block->present; present; present &= present - 1) {
+               int i = std::countr_zero(present);
+               f((slot.run << 6) | (uint64_t)i, slot.block->values[i]);
+            }
+         }
+      }
+   private:
+      struct Block {
+         uint64_t present = 0; //a bit for each of the 64 values that's there
+         V values[64];
+      };
+      struct Slot {
+         uint64_t run = 0;
+         Block* block = nullptr; //null: an empty slot
+      };
+      /// Fibonacci hashing, so runs next to each other spread across the table
+      [[nodiscard]] size_t slotOf(uint64_t run) const {return (size_t)((run * 0x9E3779B97F4A7C15ull) >> _shift);}
+      /// the block for a run of keys: made if there's none and make is set, or else _none
+      Block& blockFor(uint64_t run, bool make) {
+         if (_last && _lastRun == run) return *_last;
+         size_t mask = _slots.size() - 1;
+         for (size_t i = slotOf(run);; i = (i + 1) & mask) {
+            auto& slot = _slots[i];
+            if (slot.block && slot.run == run) {
+               _last = slot.block;
+               _lastRun = run;
+               return *slot.block;
+            }
+            if (slot.block) continue;
+            if (!make) return _none;
+            if ((_blocks + 1) * 2 > _slots.size()) {
+               grow();
+               return blockFor(run, make);
+            }
+            void* memory = _resource->allocate(sizeof(Block), alignof(Block));
+            slot = {run, new (memory) Block()};
+            _blocks++;
+            _last = slot.block;
+            _lastRun = run;
+            return *slot.block;
+         }
+      }
+      void grow() {
+         std::pmr::vector<Slot> old(std::move(_slots));
+         _slots = std::pmr::vector<Slot>(_resource);
+         _slots.assign(old.size() * 2, Slot{});
+         _shift--;
+         size_t mask = _slots.size() - 1;
+         for (auto& slot : old) {
+            if (!slot.block) continue;
+            size_t i = slotOf(slot.run);
+            while (_slots[i].block) i = (i + 1) & mask;
+            _slots[i] = slot;
+         }
+      }
+      static_assert(std::is_trivially_destructible_v<V>, "blocks are never destroyed, just handed back with the memory");
+      std::pmr::memory_resource* _resource;
+      std::pmr::vector<Slot> _slots;
+      size_t _blocks = 0;
+      size_t _count = 0;
+      int _shift = 64 - 6; //64 slots
+      Block* _last = nullptr; //the block looked up last, and its run: looked at first
+      uint64_t _lastRun = 0;
+      Block _none; //what find gets for a run with no block
+   };
+
+   /////////////////////////////////////////////////////////////////////////////////////////
    /// Find the cheapest path from start to goal, with steps priced for these parameters (see StepCosted), using scratch
    /// for the search's memory (see SearchScratch). Fills path with the tiles from start to goal, both included, and
    /// gives what it costs; leaves path empty, and gives 0, if there's no way. The path is the only thing it takes from
@@ -310,10 +423,10 @@ namespace ReyStar {
       // everything the search keeps comes from the scratch. Declared first, so it goes last, after what uses it.
       SearchScratch::Use memory(scratch);
       std::priority_queue<Node, std::pmr::vector<Node>, std::greater<Node>> openSet{std::greater<Node>(), std::pmr::vector<Node>(memory.resource())};
-      std::pmr::unordered_map<uint64_t, Visit> visits(memory.resource());
+      VisitTable<Visit> visits(memory.resource());
 
       // Initialize with start node
-      visits[tileKey(tiles, start)] = {0.0f};
+      visits.tryEmplace(tileKey(tiles, start), Visit{0.0f});
       openSet.push({&start, 0.0f, estimate(start, goal, params)});
 
       while (!openSet.empty()) {
@@ -363,13 +476,13 @@ namespace ReyStar {
             float tentativeG = current.gScore + cost;
 
             // Check if this is a better path (one already expanded can't be: its cost is final)
-            auto [it, isNew] = visits.try_emplace(tileKey(tiles, *neighbor), Visit{tentativeG, current.tile});
+            auto [seen, isNew] = visits.tryEmplace(tileKey(tiles, *neighbor), Visit{tentativeG, current.tile});
             if (!isNew) {
-               if (it->second.closed || tentativeG >= it->second.gScore) {
+               if (seen->closed || tentativeG >= seen->gScore) {
                   continue;
                }
-               it->second.gScore = tentativeG;
-               it->second.cameFrom = current.tile;
+               seen->gScore = tentativeG;
+               seen->cameFrom = current.tile;
             }
             float fScore = tentativeG + estimate(*neighbor, goal, params);
             openSet.push({neighbor, tentativeG, fScore});
