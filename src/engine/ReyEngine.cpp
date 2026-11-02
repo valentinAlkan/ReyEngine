@@ -283,7 +283,12 @@ void ReyEngine::drawRenderTargetRect(const RenderTarget& target, const Rect<R_FL
    // rotation defines the texture rotation (using origin as rotation point)
    // Flip the Y coordinates of the source rectangle
    // NOTE: don't understand the math but it seems to work.  ¯\_(ツ)_/¯
+   //src arrives in the target's logical space; convert to texture pixels before anything else,
+   //since the y-flip below is measured against the real texture height. Scaling only the source
+   //means the destination rect is unchanged - that mismatch is the downsample that antialiases.
    auto newSrc = src;
+   const auto scale = target.getRenderScale();
+   newSrc.x *= scale; newSrc.y *= scale; newSrc.width *= scale; newSrc.height *= scale;
    newSrc.y = (float)target.getTexture().height - newSrc.y - newSrc.height;
    newSrc.height = -newSrc.height;
    DrawTexturePro(target.getTexture(), newSrc, dst, {0, 0}, 0, tint);
@@ -297,6 +302,49 @@ void ReyEngine::drawRenderTarget(const RenderTarget& target, const Pos<R_FLOAT>&
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+namespace {
+   //innermost bound target last; empty means we're drawing straight to the window
+   std::vector<float>& renderScaleStack(){
+      static std::vector<float> stack;
+      return stack;
+   }
+   float g_defaultRenderScale = 1.0f;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+float ReyEngine::getCurrentRenderScale(){
+   return renderScaleStack().empty() ? 1.0f : renderScaleStack().back();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::pushRenderScale(float scale){
+   renderScaleStack().push_back(scale);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::popRenderScale(){
+   if (!renderScaleStack().empty()) renderScaleStack().pop_back();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::RenderTarget::setDefaultRenderScale(float scale){
+   g_defaultRenderScale = scale < 1.0f ? 1.0f : scale;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+float ReyEngine::RenderTarget::getDefaultRenderScale(){
+   return g_defaultRenderScale;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::RenderTarget::setRenderScale(float scale){
+   auto newScale = scale < 1.0f ? 1.0f : scale;
+   if (newScale == _renderScale) return;
+   _renderScale = newScale;
+   if (_texLoaded) setSize(_size); //reallocate at the new density
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyEngine::RenderTarget::RenderTarget(){
    // make sure you initialize at some point
@@ -317,9 +365,15 @@ void ReyEngine::RenderTarget::setSize(const Size<int> &newSize) {
    if (_texLoaded) {
       UnloadRenderTexture(_tex);
    }
-   _tex = LoadRenderTexture(newSize.x, newSize.y);
+   //allocate at the supersampled density; _size stays logical, which is all anyone else sees
+   _tex = LoadRenderTexture((int)(newSize.x * _renderScale), (int)(newSize.y * _renderScale));
    _texLoaded = true;
    _size = newSize;
+   if (_renderScale != 1.0f) {
+      //without this the downscaling blit would point-sample one subpixel out of every block and
+      //throw the other samples away, which is to say it would do nothing at all
+      SetTextureFilter(_tex.texture, TEXTURE_FILTER_BILINEAR);
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -25,6 +25,18 @@ WindowPrototype::WindowPrototype(const std::string &title, int width, int height
          case WindowFlags::IS_EDITOR:
             _isEditor = true;
             break;
+         case WindowFlags::AA_4X:
+            //4x antialiasing, by 2x2 supersampling: every Canvas allocates its render target at
+            //twice the linear size and the final blit averages each 2x2 block back down. This
+            //has to happen here, before any RenderTarget exists, since they read the default
+            //when they're constructed.
+            RenderTarget::setDefaultRenderScale(2.0f);
+            //MSAA is only a hint and only multisamples the *default* framebuffer, which sees
+            //nothing but the one quad each canvas is blitted through - so it does nothing for
+            //widgets today. Set anyway: it costs nothing and covers anything drawn straight to
+            //the window.
+            SetConfigFlags(FLAG_MSAA_4X_HINT);
+            break;
       }
    }
 

@@ -178,8 +178,28 @@ void TestServer::beginFrame(uint64_t frame, const Size<int>& windowSize) {
 /////////////////////////////////////////////////////////////////////////////////////////
 void TestServer::endFrame(const RenderTarget& frameImage) {
    if (!_screenshot) return;
+   // A supersampled target's texture is getRenderScale() times the window size and not yet antialiased. Shrink it the
+   // same way the window does (a bilinear blit through drawRenderTargetRect) so the screenshot is the window's size, in
+   // the coordinates tests click at, with exactly the pixels the player sees. Blending is off for the copy, so the
+   // filtered texels land as they are, alpha included - the same as reading an unscaled target directly.
+   const Texture2D* texture = &frameImage.getTexture();
+   RenderTexture2D flattened{};
+   if (frameImage.getRenderScale() != 1.0f) {
+      const auto size = frameImage.getSize();
+      flattened = LoadRenderTexture(size.x, size.y);
+      BeginTextureMode(flattened);
+      ClearBackground(BLANK);
+      rlSetBlendFactors(RL_ONE, RL_ZERO, RL_FUNC_ADD);
+      rlSetBlendMode(RL_BLEND_CUSTOM);
+      const Rect<R_FLOAT> rect = {0, 0, (R_FLOAT)size.x, (R_FLOAT)size.y};
+      drawRenderTargetRect(frameImage, rect, rect, Colors::none);
+      EndTextureMode();
+      rlSetBlendMode(RL_BLEND_ALPHA);
+      texture = &flattened.texture;
+   }
    // render textures are stored upside down
-   Image image = LoadImageFromTexture(frameImage.getTexture());
+   Image image = LoadImageFromTexture(*texture);
+   if (flattened.id != 0) UnloadRenderTexture(flattened);
    ImageFlipVertical(&image);
    bool saved = ExportImage(image, _screenshot->text.c_str());
    UnloadImage(image);

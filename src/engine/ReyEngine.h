@@ -24,7 +24,7 @@ template<typename> inline constexpr bool always_false_v = false;
 
 namespace ReyEngine {
    class Window;
-   enum WindowFlags{RESIZE, IS_EDITOR};
+   enum WindowFlags{RESIZE, IS_EDITOR, AA_4X};
    static constexpr long long MaxInt = INT_MAX;
    static constexpr long long MinInt = INT_MIN;
    static constexpr R_FLOAT MaxFloat = FLT_MAX;
@@ -2530,6 +2530,22 @@ namespace ReyEngine {
       std::shared_ptr<ReyTexture> _tex;
    };
 
+   /// Supersampling (SSAA) support.
+   ///
+   /// A supersampled RenderTarget allocates a texture N times larger than its logical size and
+   /// widens its projection to match, so everything draws in ordinary logical coordinates but is
+   /// rasterized at N times the sample density. The final blit scales it back down through a
+   /// bilinear filter, which averages each NxN block into one pixel - that average is the
+   /// antialiasing. Nothing outside the render target ever sees the larger coordinate space.
+   ///
+   /// The one thing the projection can't cover is the scissor test, which takes raw framebuffer
+   /// pixels and so has to be scaled by hand. These track which target is bound so ScopeScissor
+   /// can do that; targets push on bind and pop on unbind, which nests correctly because
+   /// RenderContext/FrozenContext already bracket every framebuffer swap.
+   float getCurrentRenderScale();
+   void pushRenderScale(float);
+   void popRenderScale();
+
    /// Scoped scissor (clipping) region, in framebuffer coordinates.
    ///
    /// These nest: raylib's EndScissorMode disables the scissor test outright rather than
@@ -2565,7 +2581,10 @@ namespace ReyEngine {
          return _stack;
       }
       static void applyScissor(const Rect<R_FLOAT>& r){
-         BeginScissorMode((int)r.x, (int)r.y, (int)r.width, (int)r.height);
+         //the stack is kept in logical space so regions still intersect correctly; the scissor
+         //box itself is raw framebuffer pixels, so it alone has to follow the supersampling
+         const auto scale = getCurrentRenderScale();
+         BeginScissorMode((int)(r.x * scale), (int)(r.y * scale), (int)(r.width * scale), (int)(r.height * scale));
       }
       //a child can only ever shrink the visible region, never grow it back
       static Rect<R_FLOAT> clipToParent(const Rect<R_FLOAT>& r){
@@ -2612,9 +2631,18 @@ namespace ReyEngine {
       ~RenderTarget();
       RenderTarget& operator=(const RenderTarget&) = delete;
       void setSize(const Size<int>& newSize);
+      /// The size this target presents to the rest of the engine. The backing texture is
+      /// getRenderScale() times this in each dimension.
       inline Size<int> getSize() const {return _size;}
       inline bool ready() const {return _texLoaded;}
       [[nodiscard]] inline const Texture2D& getTexture() const {return _tex.texture;}
+      /// Supersampling factor. Changing it reallocates the texture at the new density.
+      void setRenderScale(float);
+      inline float getRenderScale() const {return _renderScale;}
+      /// Applied to every RenderTarget created from here on. Set it before the window exists;
+      /// targets that already exist keep whatever scale they were built with.
+      static void setDefaultRenderScale(float);
+      static float getDefaultRenderScale();
    protected:
       // Drawing into a target blends colour as usual but adds up coverage in alpha: (ONE, ONE_MINUS_SRC_ALPHA) instead
       // of raylib's default, which blends alpha the same way as colour and so lowers the alpha of whatever something
@@ -2624,14 +2652,27 @@ namespace ReyEngine {
          BeginTextureMode(_tex);
          rlSetBlendFactorsSeparate(RL_SRC_ALPHA, RL_ONE_MINUS_SRC_ALPHA, RL_ONE, RL_ONE_MINUS_SRC_ALPHA, RL_FUNC_ADD, RL_FUNC_ADD);
          rlSetBlendMode(RL_BLEND_CUSTOM_SEPARATE);
+         if (_renderScale != 1.0f) {
+            //BeginTextureMode set the projection to the texture's real dimensions. Widen it back
+            //out to the logical ones so callers keep drawing in logical coordinates - the
+            //viewport still covers the whole (larger) texture, which is what supersamples.
+            rlMatrixMode(RL_PROJECTION);
+            rlLoadIdentity();
+            rlOrtho(0, _size.x, _size.y, 0, 0.0f, 1.0f);
+            rlMatrixMode(RL_MODELVIEW);
+            rlLoadIdentity();
+         }
+         pushRenderScale(_renderScale);
       }
       inline void endRenderMode(){
+         popRenderScale();
          EndTextureMode();
          rlSetBlendMode(RL_BLEND_ALPHA);
       }
       bool _texLoaded = false;
       RenderTexture2D _tex;
       Size<float> _size;
+      float _renderScale = getDefaultRenderScale();
       friend class Canvas;
       friend class RenderContext;
    };
