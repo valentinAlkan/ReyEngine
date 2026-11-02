@@ -185,11 +185,11 @@ int main() {
             auto combobox = make_child<ComboBox<int>>(widgetsHolder, "ComboBox");
             combobox->addItems({"this", "are", "some", "items"});
 
-            auto lineEditCB = [&](const LineEdit::EventLineEditTextChanged& event) {
+            auto lineEditCB = [&](const LineEdit::EventTextChanged& event) {
                cout << "New Line Edit Text Old = " << event.oldText << endl;
                cout << "New Line Edit Text New = " << event.newText << endl;
             };
-            lineedit->subscribe<LineEdit::EventLineEditTextChanged>(lineedit, lineEditCB);
+            lineedit->subscribe<LineEdit::EventTextChanged>(lineedit, lineEditCB);
 
             auto slider = make_child<Slider>(widgetsHolder, "slider1", Slider::SliderType::HORIZONTAL);
             auto sliderReact = make_child<SliderReactWidget>(widgetsHolder, "sliderReact1");

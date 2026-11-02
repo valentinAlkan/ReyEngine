@@ -270,10 +270,10 @@ if(REY_ENABLE_TESTS)
     message(STATUS "REY_ENABLE_TESTS is ON. Building ReyEngine tests")
 
     add_executable( NewEngineMain test/newEngineTestMain.cpp)
-    target_link_libraries(NewEngineMain ReyEngine2D dl)
+    target_link_libraries(NewEngineMain ReyEngine2D)
 
     add_executable( NewEngineBasic test/NewEngineTestBasic.cpp)
-    target_link_libraries(NewEngineBasic ReyEngine2D dl)
+    target_link_libraries(NewEngineBasic ReyEngine2D)
 
     add_executable( NewEngineFonts test/NewEngineFonts.cpp)
     target_link_libraries(NewEngineFonts ReyEngine2D ReyEngineComponentArgParse)
