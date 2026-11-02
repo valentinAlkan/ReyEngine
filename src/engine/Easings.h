@@ -225,6 +225,8 @@ namespace ReyEngine {
    // represents a value between 0 and 1 (min and max) although the output value is not strictly enforced since
    // overshoot is allowed
    struct Easing {
+      // callbackAfter fires once, when the easing completes. It doesn't fire when the easing is removed early or when
+      // its owner is destroyed.
       Easing(EasingFunctor&& easing,
              std::chrono::milliseconds duration, const EasingCallback& callbackDuring, const std::function<void()>& callbackAfter=nullptr)
       : _duration(duration)
@@ -233,50 +235,57 @@ namespace ReyEngine {
       , _startTime(std::chrono::steady_clock::now())
       , functor(std::move(easing))
       {}
-      ~Easing(){
-         if (_callbackAfter) _callbackAfter();
-      }
+      // returns true when the easing has reached its end. The callback may remove this easing or destroy its owner:
+      // an easing removed while it runs is kept alive until Easable::emptyGraveyard.
       bool _process(float _){
          (void)_;//needed to conform with the process list api
          auto now = std::chrono::steady_clock::now();
          if (_startTime > now) return false; //only process easings that have a start time in the past
          auto msDuration = _duration.count();
          auto dt = std::chrono::duration_cast<std::chrono::milliseconds>((now - _startTime)).count();
-         input = (double)dt / (double)msDuration;
+         input = msDuration > 0 ? (double)dt / (double)msDuration : 1.0;
          if (input>1) input = 1; //clamp output
          output = functor(input);
-         if (_callbackDuring) _callbackDuring(output); //alert the easable that the easing has been processed
-         return input == 1;
+         bool finished = input == 1;
+         if (_callbackDuring) {
+            _running = true;
+            _callbackDuring(output); //alert the easable that the easing has been processed
+            _running = false;
+         }
+         return finished;
       }
       [[nodiscard]] bool done() const {return input >= 1.0;}
       [[nodiscard]] Easable* easable() const {return _easable;}
       [[nodiscard]] std::chrono::steady_clock::time_point endTime() const {return _startTime + _duration;}
    protected:
-      Easable* _easable;
+      Easable* _easable = nullptr;
    private:
       std::chrono::milliseconds _duration;
       EasingCallback _callbackDuring;
       std::function<void()> _callbackAfter;
       std::chrono::steady_clock::time_point _startTime;
       const EasingFunctor functor;
-      Fraction input;
-      Fraction output;
+      Fraction input = 0.0;
+      Fraction output = 0.0;
+      bool _running = false; //inside _callbackDuring
       friend struct Easable;
    };
 
    struct Easable  {
       virtual ~Easable(){
-         for (auto& easing : _easings){
-            removeEasing(easing.get());
-         }
+         //derived parts are gone by now, so no callbacks fire
+         auto easings = std::move(_easings);
+         _easings.clear();
+         for (auto& easing : easings) discard(std::move(easing));
       };
       template <typename... Args>
       Easing* addEasing(Args&&... args){
          _wantsEase = true;
-         _easings.push_back(make_unique<Easing>(std::forward<Args>(args)...));
+         _easings.push_back(std::make_unique<Easing>(std::forward<Args>(args)...));
          auto retval = _easings.back().get();
-         ProcessList<Easing>::add(retval, _isEased);
          retval->_easable = this;
+         bool unused;
+         ProcessList<Easing>::add(retval, unused);
          return retval;
       }
 
@@ -286,34 +295,65 @@ namespace ReyEngine {
          for (auto& easing : easings){
             _easings.push_back(std::move(easing));
             auto back = _easings.back().get();
-            ProcessList<Easing>::add(back, _isEased);
             back->_easable = this;
             if (last){
                back->_startTime = last->endTime();
             }
+            bool unused;
+            ProcessList<Easing>::add(back, unused);
             last = back;
          }
       }
+      // stops an easing early. Its callbackAfter doesn't fire.
       void removeEasing(Easing* easing) {
-         ProcessList<Easing>::remove(easing, _isEased);
-         for (auto it = _easings.begin(); it != _easings.end(); ++it){
-            if (easing == it->get()){
-               //store the easing, so we can destroy it outside the erase function
-               auto ptr = std::move(*it);
-               _easings.erase(it);
-               return;
-            }
-         }
+         if (auto owned = take(easing)) discard(std::move(owned));
       }
       void removeAllEasings(){
-         ProcessList<Easing>::removeAll(_isEased);
+         auto easings = std::move(_easings);
          _easings.clear();
+         for (auto& easing : easings) discard(std::move(easing));
       }
-      [[nodiscard]] bool isEased() const {return _isEased;}
+      // called by the window for an easing that has reached its end: removes it, then fires its callbackAfter. The
+      // callback may destroy this easable, so nothing here touches it afterwards.
+      void finishEasing(Easing* easing){
+         auto owned = take(easing);
+         if (!owned) return;
+         auto after = std::move(owned->_callbackAfter);
+         discard(std::move(owned));
+         if (after) after();
+      }
+      [[nodiscard]] bool isEased() const {return !_easings.empty();}
+      // frees easings that were removed while their own callback was running. The window calls this after each
+      // easing pass.
+      static void emptyGraveyard(){
+         auto dead = std::move(graveyard());
+         graveyard().clear();
+      }
    protected:
       bool _wantsEase = false;
-      bool _isEased = false;
       std::vector<std::unique_ptr<Easing>> _easings;
+   private:
+      std::unique_ptr<Easing> take(Easing* easing){
+         for (auto it = _easings.begin(); it != _easings.end(); ++it){
+            if (easing == it->get()){
+               auto owned = std::move(*it);
+               _easings.erase(it);
+               return owned;
+            }
+         }
+         return nullptr;
+      }
+      static void discard(std::unique_ptr<Easing>&& easing){
+         bool unused;
+         ProcessList<Easing>::remove(easing.get(), unused);
+         easing->_easable = nullptr;
+         if (easing->_running) graveyard().push_back(std::move(easing));
+         else easing.reset();
+      }
+      static std::vector<std::unique_ptr<Easing>>& graveyard(){
+         static std::vector<std::unique_ptr<Easing>> dead;
+         return dead;
+      }
    };
    static std::unique_ptr<ProcessList<Easing>> _easingList;
 }

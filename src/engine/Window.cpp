@@ -269,16 +269,11 @@ void Window::exec(){
       auto updateStart = FrameClock::now();
       ProcessList<Tree::Processable>::processAll(getFrameDelta());
       //process and reap easings
-      std::vector<Easing*> toReap;
-      if (auto first = ProcessList<Easing>::processfirst(getFrameDelta())){
-         if (first->done()) toReap.push_back(first);
+      //an easing's callbackAfter may remove or destroy others on the list, so check each one is still there
+      for (auto reap : ProcessList<Easing>::processAllDone(getFrameDelta())){
+         if (ProcessList<Easing>::contains(reap) && reap->done()) reap->easable()->finishEasing(reap);
       }
-      while(auto easing = ProcessList<Easing>::processNext(getFrameDelta())){
-         if (easing->done()) toReap.push_back(easing);
-      }
-      for (auto& reap : toReap){
-         reap->easable()->removeEasing(reap);
-      }
+      Easable::emptyGraveyard();
 
       //call deferred calls
       _deferredCallList.executeAllAndClear();
