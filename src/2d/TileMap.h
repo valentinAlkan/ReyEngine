@@ -42,9 +42,7 @@ namespace ReyEngine {
          , _tileSize(tileSize)
          , _offset(offset)
          , _padding(padding)
-         {
-            setTileSize(_tileSize);
-         }
+         {}
          SpriteAtlas(SpriteAtlas&& other)
          : texture(std::move(other.texture))
          , _tileSize(other._tileSize)
@@ -52,31 +50,24 @@ namespace ReyEngine {
          , _padding(other._padding)
          {}
       public:
-         inline void setTileSize(const Size<R_FLOAT>& size){
-            _tileSize = size;
-            _rowCount = texture.size().x / _tileSize.x;
-            _columnCount = texture.size().y / _tileSize.y;
-            _needsUpdate = true;
-         }
+         inline void setTileSize(const Size<R_FLOAT>& size){_tileSize = size;}
          std::optional<float> getNavWeight(const TileCoord& coord) const;
          inline void setNavWeight(const TileCoord& coord, float weight){_weights[coord] = weight;}
          [[nodiscard]] inline Rect<R_FLOAT> getTile(const TileCoord& coords) const {
-            Pos<R_FLOAT> src = {(R_FLOAT) _tileSize.x * coords.x + (_padding.x * coords.x + 1) + _offset.x, (R_FLOAT) _tileSize.y * coords.y + (_padding.y * coords.y + 1) + _offset.y};
+            //_offset is the margin before the first tile; _padding is the gap *between* tiles, so
+            //tile n starts n gaps in - never n+1, and never a stray constant.
+            Pos<R_FLOAT> src = {_offset.x + coords.x * (_tileSize.x + _padding.x), _offset.y + coords.y * (_tileSize.y + _padding.y)};
             return {src, _tileSize};
          }
          [[nodiscard]] inline Size<int> getTileSize() const {return _tileSize;}
          [[nodiscard]] inline Size<int> getSheetSize() const {return {texture.size().x, texture.size().y};}
 //         inline const FileSystem::File getFile() const {return texture.getPath();}
 //         std::string getPath() {return texture.getPath();}
-      protected:
-         int _columnCount; //cached
-         int _rowCount; //cached
       private:
          ReyTexture texture;
          Size<R_FLOAT> _tileSize = {32, 32};
          Pos<R_FLOAT> _offset; //x,y offset of first tile
          Size<R_FLOAT> _padding; // lines of spacing between each tile
-         bool _needsUpdate = true;
          std::map<TileCoord, float> _weights; //optional weighting
       friend class TileMap;
       };

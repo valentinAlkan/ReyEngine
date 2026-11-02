@@ -223,7 +223,8 @@ void TileMap::_on_tiles_changed() {
          }
       }
       if (!first) {
-         setRect(combined);
+         Size<R_FLOAT> extent = {combined.x + combined.width, combined.y + combined.height};
+         setSize(extent.max({0, 0}));
       }
    }
 }
