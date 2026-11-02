@@ -87,10 +87,13 @@ namespace ReyEngine{
             }
          }
 
+         //the children that are Ts, in order. Reads the node's own list rather than a copy of it (see getChildren): nothing
+         //here adds or removes children
          template <typename T>
          std::vector<T*> getChildrenAs(){
             std::vector<T*> retval;
-            for (auto child : getChildren()){
+            if (!_node) return retval;
+            for (auto child : _node->getChildren()){
                if (auto isT = child->as<T>()){
                   retval.push_back(isT.value());
                }
@@ -100,10 +103,11 @@ namespace ReyEngine{
 
          template <typename T>
          std::vector<const T*> getChildrenAs() const {
-            std::vector<T*> retval;
-            for (auto child : getChildren()){
+            std::vector<const T*> retval;
+            if (!_node) return retval;
+            for (auto child : _node->getChildren()){
                if (auto isT = child->as<T>()){
-                  retval.push_back(child);
+                  retval.push_back(isT.value());
                }
             }
             return retval;
