@@ -44,6 +44,27 @@ namespace ReyStar {
       { t.distanceTo(t) } -> std::convertible_to<float>;
    };
 
+   // Tiles needn't be on a 2D grid at all. A node of any graph (the cells of a hex sphere, a 3D grid, a road network)
+   // can be searched instead, if it exposes:
+   //  - weight: as for a tile
+   //  - neighbors(): its neighbours' keys, of whatever type its container finds tiles by (see findTile): an int id, a
+   //    Pos3<int>, anything. As with neighborCoords, a range that needn't allocate (a std::span into the node, say) is best.
+   //  - distanceTo(other): heuristic
+   // and may likewise price steps itself (see StepCosted and Estimated). It needs no coord. A type that is
+   // ReyStarTileable is always searched as one, by its neighborCoords, whatever else it has.
+   template <typename T>
+   concept ReyStarNode = requires(const T& t) {
+      { t.weight } -> std::convertible_to<float>;
+      { t.neighbors() } -> std::ranges::input_range;
+      { t.distanceTo(t) } -> std::convertible_to<float>;
+   };
+   /// the type a node's neighbours are named by
+   template <ReyStarNode T>
+   using NodeKey = std::remove_cvref_t<std::ranges::range_value_t<decltype(std::declval<const T&>().neighbors())>>;
+   /// anything the search can walk: a 2D tile or a graph node
+   template <typename T>
+   concept ReyStarSearchable = ReyStarTileable<T> || ReyStarNode<T>;
+
    //premade template, or you can make your own
    template <typename Unused>
    struct ReyStarTileImpl {
@@ -168,7 +189,62 @@ namespace ReyStar {
       { tileKey(tiles, tile) } -> std::convertible_to<uint64_t>;
    };
 
-   template <ReyStarTileable T>
+   /////////////////////////////////////////////////////////////////////////////////////////
+   /// Nodes of any graph, numbered 0 to size - 1 and stored in that order in one block: node i is the one its
+   /// neighbours name i. Like a Grid, its size is fixed when it's made, so pointers to nodes stay good for its life.
+   /// Number neighbouring nodes near each other where you can: the search files what it learns 64 numbers at a time
+   /// (see VisitTable), so it runs fastest when a node's neighbours share its run.
+   template <ReyStarNode T>
+   class Graph {
+   public:
+      Graph() = default;
+      explicit Graph(size_t size): _tiles(size){}
+      explicit Graph(std::vector<T> nodes): _tiles(std::move(nodes)){}
+      [[nodiscard]] size_t size() const {return _tiles.size();}
+      [[nodiscard]] bool contains(int64_t id) const {return id >= 0 && (uint64_t)id < _tiles.size();}
+      /// the node numbered id, or null if there's none
+      [[nodiscard]] T* find(int64_t id) {return contains(id) ? &_tiles[(size_t)id] : nullptr;}
+      [[nodiscard]] const T* find(int64_t id) const {return contains(id) ? &_tiles[(size_t)id] : nullptr;}
+      /// the node numbered id. Throws std::out_of_range if there's none.
+      [[nodiscard]] T& at(int64_t id) {return const_cast<T&>(std::as_const(*this).at(id));}
+      [[nodiscard]] const T& at(int64_t id) const {
+         if (!contains(id)) throw std::out_of_range("ReyStar::Graph: no node " + std::to_string(id));
+         return _tiles[(size_t)id];
+      }
+      /// the number of a node in this graph
+      [[nodiscard]] size_t indexOf(const T& node) const {return (size_t)(&node - _tiles.data());}
+      [[nodiscard]] T& operator[](size_t i) {return _tiles[i];}
+      [[nodiscard]] const T& operator[](size_t i) const {return _tiles[i];}
+      [[nodiscard]] auto begin() {return _tiles.begin();}
+      [[nodiscard]] auto end() {return _tiles.end();}
+      [[nodiscard]] auto begin() const {return _tiles.begin();}
+      [[nodiscard]] auto end() const {return _tiles.end();}
+   private:
+      std::vector<T> _tiles;
+   };
+   /// the node numbered id, or null if there isn't one
+   template <ReyStarNode T>
+   const T* findTile(const Graph<T>& nodes, int64_t id) {return nodes.find(id);}
+   template <ReyStarNode T>
+   uint64_t tileKey(const Graph<T>& nodes, const T& node) {return nodes.indexOf(node);}
+
+   /// A container the search can find nodes of type T in: findTile(nodes, key) for each key a node's neighbors() gives
+   /// (the node with that key, or null), and tileKey as for tiles. A container of your own just needs those two
+   /// functions, in its own namespace or this one: a std::map<Pos3<int>, T>, say, for a 3D grid.
+   template <typename Nodes, typename T>
+   concept NodeContainer = ReyStarNode<T> && requires(const Nodes& nodes, const T& node, const NodeKey<T>& key) {
+      { findTile(nodes, key) } -> std::convertible_to<const T*>;
+      { tileKey(nodes, node) } -> std::convertible_to<uint64_t>;
+   };
+
+   /// tiles of type T, in a container the search can find them in: 2D tiles found by their coordinates (see
+   /// TileContainer), or nodes found by key (see NodeContainer). 2D tiles are searched as such if they can be.
+   template <typename Tiles, typename T>
+   concept SearchSpace = (ReyStarTileable<T> && TileContainer<Tiles, T>) || NodeContainer<Tiles, T>;
+   template <typename Tiles, typename T>
+   constexpr bool searchesByCoords = ReyStarTileable<T> && TileContainer<Tiles, T>;
+
+   template <ReyStarSearchable T>
    struct PathTile{
       PathTile() = default;
       PathTile(const T* thisTile, std::unique_ptr<PathTile<T>>&& nextTile)
@@ -399,7 +475,7 @@ namespace ReyStar {
    /// for the search's memory (see SearchScratch). Fills path with the tiles from start to goal, both included, and
    /// gives what it costs; leaves path empty, and gives 0, if there's no way. The path is the only thing it takes from
    /// the heap: one block, sized to fit.
-   template <ReyStarTileable T, typename Tiles, typename Params> requires TileContainer<Tiles, T>
+   template <ReyStarSearchable T, typename Tiles, typename Params> requires SearchSpace<Tiles, T>
    float findPath(const Tiles& tiles, const T& start, const T& goal, const Params& params, SearchScratch& scratch, std::vector<const T*>& path) {
       path.clear();
       // Node structure for the priority queue
@@ -460,16 +536,15 @@ namespace ReyStar {
          }
 
          // Explore neighbors - adjacency is entirely up to the tile type
-         for (const auto& [nx, ny] : current.tile->neighborCoords()) {
-            const T* neighbor = findTile(tiles, nx, ny);
+         auto relax = [&](const T* neighbor) {
             if (!neighbor) {
-               continue; // no tile at that coordinate
+               return; // no tile at that coordinate
             }
 
             // Skip steps that can't be taken
             float cost = stepCost(*current.tile, *neighbor, params);
             if (!(cost > 0.0f) || std::isinf(cost)) {
-               continue;
+               return;
             }
 
             // Calculate tentative g-score
@@ -479,13 +554,18 @@ namespace ReyStar {
             auto [seen, isNew] = visits.tryEmplace(tileKey(tiles, *neighbor), Visit{tentativeG, current.tile});
             if (!isNew) {
                if (seen->closed || tentativeG >= seen->gScore) {
-                  continue;
+                  return;
                }
                seen->gScore = tentativeG;
                seen->cameFrom = current.tile;
             }
             float fScore = tentativeG + estimate(*neighbor, goal, params);
             openSet.push({neighbor, tentativeG, fScore});
+         };
+         if constexpr (searchesByCoords<Tiles, T>) {
+            for (const auto& [nx, ny] : current.tile->neighborCoords()) relax(findTile(tiles, nx, ny));
+         } else {
+            for (const auto& key : current.tile->neighbors()) relax(findTile(tiles, key));
          }
       }
 
@@ -494,14 +574,14 @@ namespace ReyStar {
    }
 
    /// Find the cheapest path from start to goal, as above, for a search with no parameters
-   template <ReyStarTileable T, typename Tiles> requires TileContainer<Tiles, T>
+   template <ReyStarSearchable T, typename Tiles> requires SearchSpace<Tiles, T>
    float findPath(const Tiles& tiles, const T& start, const T& goal, SearchScratch& scratch, std::vector<const T*>& path) {
       return findPath<T>(tiles, start, goal, NoParams{}, scratch, path);
    }
 
    /// Find the cheapest path from start to goal, using scratch for the search's memory (see SearchScratch), as a
    /// linked list of tiles. It has a node per tile, each from the heap; findPath gives the same path in one block.
-   template <ReyStarTileable T, typename Tiles> requires TileContainer<Tiles, T>
+   template <ReyStarSearchable T, typename Tiles> requires SearchSpace<Tiles, T>
    PathTile<T> aStarAlgorithm(const Tiles& tiles, const T& start, const T& goal, SearchScratch& scratch) {
       std::vector<const T*> path;
       float cost = findPath<T>(tiles, start, goal, scratch, path);
@@ -516,14 +596,14 @@ namespace ReyStar {
    }
 
    /// Find the cheapest path from start to goal, with scratch memory of its own that goes when it's done.
-   template <ReyStarTileable T, typename Tiles> requires TileContainer<Tiles, T>
+   template <ReyStarSearchable T, typename Tiles> requires SearchSpace<Tiles, T>
    PathTile<T> aStarAlgorithm(const Tiles& tiles, const T& start, const T& goal) {
       SearchScratch scratch(0);
       return aStarAlgorithm<T>(tiles, start, goal, scratch);
    }
 
    /////////////////////////////////////////////////////////////////////////////////////////
-   template <ReyStarTileable T, typename Params = NoParams>
+   template <ReyStarSearchable T, typename Params = NoParams>
    struct PathResult{
       PathResult() = default;
       PathResult(PathResult&& other){
@@ -551,7 +631,10 @@ namespace ReyStar {
    };
 
    /////////////////////////////////////////////////////////////////////////////////////////
-   /// Finds paths on worker threads (one per core) across a container of tiles: a TileMap (the default) or a Grid.
+   /// Finds paths on worker threads (one per core) across a container of tiles: a TileMap (the default) or a Grid, or
+   /// of graph nodes: a Graph, or a container of your own (see NodeContainer). Requests with a short
+   /// distanceTo between start and goal (under 10, then under 30) are answered before longer ones, so distanceTo is
+   /// best given in steps.
    /// The server keeps a reference to the container; its shape must not change while the server exists, but tiles'
    /// weights may (make them atomic if they change while searches run).
    ///
@@ -572,7 +655,7 @@ namespace ReyStar {
    /// It may change the result, path included, and may run on any worker at once, so it must be safe to call from
    /// several threads. A request whose start is its goal is answered straight away, so its result goes through the
    /// finisher on the caller's thread.
-   template <ReyStarTileable T, typename Tiles = TileMap<T>, typename Params = NoParams> requires TileContainer<Tiles, T>
+   template <ReyStarSearchable T, typename Tiles = TileMap<T>, typename Params = NoParams> requires SearchSpace<Tiles, T>
    class ReyStarServer {
    public:
       using Result = PathResult<T, Params>;
@@ -629,7 +712,10 @@ namespace ReyStar {
       std::pair<RequestId, std::future<Result>> requestPathAndReturnId(T& start, T& goal, const Params& params = {}) {
          //test to see if they are the same, if they are just short circuit
          auto id = _nextRequestId++;
-         if (start.coord == goal.coord){
+         bool same;
+         if constexpr (searchesByCoords<Tiles, T>) same = start.coord == goal.coord;
+         else same = tileKey(tiles, start) == tileKey(tiles, goal);
+         if (same){
             Result path;
             path.pathFound = true;
             path.path = {&start};
@@ -800,4 +886,7 @@ namespace ReyStar {
    template <ReyStarTileable T> ReyStarServer(Grid<T>&, std::type_identity_t<std::function<void(PathResult<T>&)>>) -> ReyStarServer<T, Grid<T>>;
    template <ReyStarTileable T> ReyStarServer(TileMap<T>&, std::type_identity_t<std::function<void(PathResult<T>&)>>, size_t) -> ReyStarServer<T, TileMap<T>>;
    template <ReyStarTileable T> ReyStarServer(Grid<T>&, std::type_identity_t<std::function<void(PathResult<T>&)>>, size_t) -> ReyStarServer<T, Grid<T>>;
+   template <ReyStarNode T> ReyStarServer(Graph<T>&) -> ReyStarServer<T, Graph<T>>;
+   template <ReyStarNode T> ReyStarServer(Graph<T>&, std::type_identity_t<std::function<void(PathResult<T>&)>>) -> ReyStarServer<T, Graph<T>>;
+   template <ReyStarNode T> ReyStarServer(Graph<T>&, std::type_identity_t<std::function<void(PathResult<T>&)>>, size_t) -> ReyStarServer<T, Graph<T>>;
 }

@@ -284,6 +284,9 @@ if(REY_ENABLE_TESTS)
     add_executable(ReyEngineAStarTest test/reyengineAStarTest.cpp)
     target_link_libraries(ReyEngineAStarTest PUBLIC ReyEngine2D)
 
+    add_executable(ReyStarTest test/reyStarTest.cpp)
+    target_link_libraries(ReyStarTest PUBLIC ReyEngine2D)
+
     add_executable(3dTest test/3dtest.cpp)
     target_link_libraries(3dTest PUBLIC ReyEngine3D)
 endif()
