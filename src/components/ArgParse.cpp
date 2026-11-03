@@ -11,6 +11,7 @@ RuntimeArg::RuntimeArg(const std::string &arg, std::string docString, int paramC
                        ValueType valueType, ConsumeType consumeType, std::string dest, std::string metavar)
 : _rawValue(arg)
 , _sanitizedName(sanitizeName(arg))
+, _definedName(arg)
 , _paramCount(paramCount)
 , _docString(docString)
 , _argType(argType)
@@ -31,25 +32,6 @@ RuntimeArg::RuntimeArg(const std::string &arg, std::string docString, int paramC
 
    _dest = dest.empty() ? _sanitizedName : dest;
    _metavar = metavar.empty() ? _sanitizedName : metavar;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-RuntimeArg::RuntimeArg(const RuntimeArg& other)
-{
-   _rawValue = other._rawValue;
-   _sanitizedName = other._sanitizedName;
-   _docString = other._docString;
-   _argType = other._argType;
-   _valueType = other._valueType;
-   _consume = other._consume;
-   _paramCount = other._paramCount;
-   _dest = other._dest;
-   _metavar = other._metavar;
-   _value = other._value;
-   _invoked = other._invoked;
-   for (const auto& param : _params){
-      _params.push_back(param);
-   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -107,10 +89,8 @@ void ArgParse::parseArgs(int argc, char **argv) {
 
    RuntimeArg* openArg = nullptr;
    size_t openParamCount = 0;
-   for (const auto& rawArg: _rawArgs){
-      if (rawArg == _arg0){
-         continue;
-      }
+   for (size_t i=1; i<_rawArgs.size(); i++){
+      const auto& rawArg = _rawArgs[i];
       RuntimeArg::ArgType argType = RuntimeArg::ArgType::POSITIONAL;
       //determine type of arg
       auto optFlag = RuntimeArg::flagParse(rawArg);
@@ -169,7 +149,11 @@ void ArgParse::parseArgs(int argc, char **argv) {
       openArg->setValue(rawArg);
       openParamCount = 0;
    }
-   if (openArg->_consume == RuntimeArg::ConsumeType::CONSUME_COUNT && openParamCount != openArg->_paramCount) throw std::runtime_error("Arg count mismatch!");
+   if (openArg->_consume == RuntimeArg::ConsumeType::CONSUME_COUNT && openParamCount != openArg->_paramCount) {
+      Logger::error() << "Expected " << openArg->_paramCount << " parameter(s) to arg \"" << openArg->name()
+                      << "\" but got " << openParamCount << "!" << endl;
+      exit(1);
+   }
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 std::optional<std::string> RuntimeArg::flagParse(const std::string& rawArg) {
@@ -205,7 +189,7 @@ std::string ArgParse::getDocString() {
    std::string retval;
    retval += CrossPlatform::getExeName() + " : try one of the following parameters:\n";
    for (const auto& definedArg : _definedArgs){
-      retval += "    --" + definedArg.first + " : " + definedArg.second._docString + "\n";
+      retval += "    " + definedArg.second._definedName + " : " + definedArg.second._docString + "\n";
    }
    auto [head, tail] = string_tools::nBack(retval, 2);
    if (tail == "\n\n"){

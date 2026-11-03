@@ -36,15 +36,16 @@ namespace ReyEngine{
       static std::optional<std::string> flagParse(const std::string& rawArg);
       std::string name() const {return _sanitizedName;}
       const std::vector<std::string>& getParams() const {return _params;}
-      RuntimeArg(const RuntimeArg&);
+      RuntimeArg(const RuntimeArg&) = default;
    protected:
       static std::string sanitizeName(const std::string& arg);
       void setValue(const std::string& value);
    private:
       std::string _sanitizedName;
+      std::string _definedName; //the name as it was defined, including dashes and everything
       std::string _rawValue; //the value as it exists on the commandline, including dashes and everything
       bool _invoked; //whether or not the arg was invoked on the command-line (that is to say, parsed by the parser at runtime)
-      unsigned int _invoked_args_count; //how many args were passed to the param. must match expected positional args count
+      unsigned int _invoked_args_count = 0; //how many args were passed to the param. must match expected positional args count
       std::string _docString;
       ArgType     _argType;
       ValueType   _valueType;

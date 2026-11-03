@@ -101,7 +101,7 @@ target_link_libraries(ReyEngineComponentFilesystem PUBLIC ReyEngineComponentStri
 
 add_library(ReyEngineComponentArgParse STATIC src/components/ArgParse.cpp)
 target_include_directories(ReyEngineComponentArgParse PUBLIC src/components)
-target_link_libraries(ReyEngineComponentArgParse PUBLIC ReyEngineComponentStringTools ReyEngineComponentLogger)
+target_link_libraries(ReyEngineComponentArgParse PUBLIC ReyEngineComponentStringTools ReyEngineComponentLogger ReyEngineComponentFilesystem)
 
 #add_library(ReyEngineComponentNetwork STATIC
 #    src/components/network/Network.cpp
@@ -283,6 +283,9 @@ if(REY_ENABLE_TESTS)
 
     add_executable(ReyEngineAStarTest test/reyengineAStarTest.cpp)
     target_link_libraries(ReyEngineAStarTest PUBLIC ReyEngine2D)
+
+    add_executable(ArgParseTest test/argParseTest.cpp)
+    target_link_libraries(ArgParseTest PUBLIC ReyEngineComponentArgParse)
 
     add_executable(ReyStarTest test/reyStarTest.cpp)
     target_link_libraries(ReyStarTest PUBLIC ReyEngine2D)
