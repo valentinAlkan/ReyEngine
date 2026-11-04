@@ -742,6 +742,7 @@ RLAPI void rlSetVertexAttribute(unsigned int index, int compSize, int type, bool
 RLAPI void rlSetVertexAttributeDivisor(unsigned int index, int divisor); // Set vertex attribute data divisor
 RLAPI void rlSetVertexAttributeDefault(int locIndex, const void *value, int attribType, int count); // Set vertex attribute default value, when attribute to provided
 RLAPI void rlDrawVertexArray(int offset, int count);    // Draw vertex array (currently active vao)
+RLAPI void rlDrawVertexArrayLines(int offset, int count); // Draw vertex array as lines (ReyEngine's addition: see LineMesh3D)
 RLAPI void rlDrawVertexArrayElements(int offset, int count, const void *buffer); // Draw vertex array elements
 RLAPI void rlDrawVertexArrayInstanced(int offset, int count, int instances); // Draw vertex array (currently active vao) with instancing
 RLAPI void rlDrawVertexArrayElementsInstanced(int offset, int count, const void *buffer, int instances); // Draw vertex array elements with instancing
@@ -3943,6 +3944,12 @@ void rlDisableVertexAttribute(unsigned int index)
 void rlDrawVertexArray(int offset, int count)
 {
     glDrawArrays(GL_TRIANGLES, offset, count);
+}
+
+// Draw vertex array as lines (ReyEngine's addition: see LineMesh3D)
+void rlDrawVertexArrayLines(int offset, int count)
+{
+    glDrawArrays(GL_LINES, offset, count);
 }
 
 // Draw vertex array elements
