@@ -288,6 +288,9 @@ if(REY_ENABLE_TESTS)
     add_executable(ArgParseTest test/argParseTest.cpp)
     target_link_libraries(ArgParseTest PUBLIC ReyEngineComponentArgParse)
 
+    add_executable(FontCopyTest test/fontCopyTest.cpp)
+    target_link_libraries(FontCopyTest PUBLIC ReyEngine2D)
+
     add_executable(ReyStarTest test/reyStarTest.cpp)
     target_link_libraries(ReyStarTest PUBLIC ReyEngine2D)
 

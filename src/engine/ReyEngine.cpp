@@ -547,11 +547,6 @@ ReyEngine::ReyEngineFont::ReyEngineFont(const std::string& fontFile, int fontSiz
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyEngine::ReyEngineFont::ReyEngineFont(const ReyEngineFont& rhs) {
-   *this = rhs;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
 Font ReyEngineFont::getDefaultFont() {
    static Font font; //only load the default font once
    static bool defaultFontInitialized = false;
@@ -582,34 +577,44 @@ Font ReyEngineFont::getDefaultFont() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyEngineFont& ReyEngineFont::operator=(const ReyEngineFont& rhs) {
-   ReyEngineFont f(rhs.fileName);
-   f.size = rhs.size;
-   f.spacing = rhs.spacing;
-   f.isDefault = rhs.isDefault;
-   f.fileName = rhs.fileName;
-   f.font = rhs.font;
-   *this = std::move(f);
+   if (this == &rhs) return *this;
+   release();
+   font = rhs.font;
+   size = rhs.size;
+   spacing = rhs.spacing;
+   isDefault = rhs.isDefault;
+   color = rhs.color;
+   colorDisabled = rhs.colorDisabled;
+   fileName = rhs.fileName;
+   _users = rhs._users;
+   return *this;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+ReyEngineFont& ReyEngineFont::operator=(ReyEngineFont&& rhs) noexcept {
+   if (this == &rhs) return *this;
+   release();
+   font = rhs.font;
+   size = rhs.size;
+   spacing = rhs.spacing;
+   isDefault = rhs.isDefault;
+   color = rhs.color;
+   colorDisabled = rhs.colorDisabled;
+   fileName = std::move(rhs.fileName);
+   _users = std::move(rhs._users);
    return *this;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ReyEngineFont::~ReyEngineFont() {
-   if (!isDefault) {
-      UnloadFont(font);
-   }
+   release();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-ReyEngineFont &ReyEngineFont::operator=(ReyEngineFont&& rhs) noexcept {
-   size = rhs.size;
-   spacing = rhs.spacing;
-   isDefault = rhs.isDefault;
-   fileName = rhs.fileName;
-   font = rhs.font;
-   rhs.font.glyphs = nullptr;
-   rhs.font.recs = nullptr;
-   rhs.font.texture.id = 0;
-   return *this;
+void ReyEngineFont::release() {
+   // once the window's gone, so is the GPU the font's texture was on
+   if (!isDefault && _users && _users.use_count() == 1 && IsWindowReady()) UnloadFont(font);
+   _users.reset();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

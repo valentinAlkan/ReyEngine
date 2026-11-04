@@ -6,6 +6,7 @@
 #include <string>
 #include <array>
 #include <vector>
+#include <memory>
 #include <iostream>
 #include "StringTools.h"
 #include "Logger.h"
@@ -2326,24 +2327,31 @@ namespace ReyEngine {
       static inline ColorRGBA randColor(){return {std::rand() % 255, std::rand() % 255, std::rand() % 255, 255};}  //not very random
    }
 
+   /// A font and how to draw it. Copies share the loaded font (its glyphs and texture), each with its own size, spacing
+   /// and colors, and the last one left unloads it. So copying is cheap, and the way to get the same font in another color.
+   /// To set `font` by hand (and isDefault to false, for it to be unloaded), do it before making any copies.
    struct ReyEngineFont{
       ReyEngineFont(): ReyEngineFont("", 20){}
       ReyEngineFont(int fontSize): ReyEngineFont("", fontSize){}
       ReyEngineFont(const std::string& fontFile, int fontSize=20);
-      ReyEngineFont(const ReyEngineFont&);
+      ReyEngineFont(const ReyEngineFont&) = default;
+      ReyEngineFont(ReyEngineFont&&) noexcept = default;
       ReyEngineFont& operator=(const ReyEngineFont&);
-      ReyEngineFont& operator=(ReyEngineFont&& rhs) noexcept ;
+      ReyEngineFont& operator=(ReyEngineFont&& rhs) noexcept;
       ~ReyEngineFont();
-      Font font;
+      Font font = {};
       float size = 20;
       R_FLOAT spacing = 1;
       bool isDefault = true;
       ColorRGBA color = COLORS::black;
       ColorRGBA colorDisabled = COLORS::gray;
       std::string fileName;
-      ReyEngineFont copy() const;
       [[nodiscard]] Size<R_FLOAT> measure(const std::string& text) const;
       static Font getDefaultFont();
+   private:
+      /// unload the font, if this is the last one using it
+      void release();
+      std::shared_ptr<int> _users = std::make_shared<int>(0); //one share each, among the copies
    };
 
    struct ReyTexture;
