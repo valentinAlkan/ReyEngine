@@ -131,6 +131,13 @@ void Canvas3D::uploadLightUniforms(const std::vector<const Light3D*>& lights) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void Canvas3D::renderBackgroundLayer(RenderContext& renderContext) {
+   renderScene3D(renderContext);
+   //then any 2D widgets in the background layer
+   Canvas::renderBackgroundLayer(renderContext);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void Canvas3D::renderScene3D(RenderContext& renderContext) {
    if (!_gpuLoaded) loadGpuResources();
    Internal::flushOrphaned3DResources();
 
@@ -159,9 +166,6 @@ void Canvas3D::renderBackgroundLayer(RenderContext& renderContext) {
          }
       }
    }
-
-   //then any 2D widgets in the background layer
-   Canvas::renderBackgroundLayer(renderContext);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -42,6 +42,9 @@ namespace ReyEngine {
    protected:
       // the 3D scene is the background layer. 2D widgets (in either layer) are drawn over it, like a HUD.
       void renderBackgroundLayer(RenderContext&) override;
+      // just the 3D scene, through the 3D camera, into whatever's being drawn to: without the 2D widgets, so a subclass
+      // can also draw it into a render target of its own
+      void renderScene3D(RenderContext&);
       void __on_descendant_added_to_tree(TypeNode* child) override;
       void __on_descendant_removed_from_tree(TypeNode* child) override;
       // draw a 3D node and its 3D descendants. The 3D counterpart of Canvas::doRender
