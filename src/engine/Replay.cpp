@@ -231,6 +231,10 @@ void Replay::addTestCommands(TestServer& server) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Size<float> Replay::beginFrame(const Size<float>& windowSize) {
+   if (_recordNext) {
+      record(*_recordNext);
+      _recordNext.reset();
+   }
    if (isRecording()) {
       _line = format("{} {}", _frame, GetFrameTime());
       Size<int> size((int)windowSize.x, (int)windowSize.y);

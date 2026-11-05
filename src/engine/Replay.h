@@ -62,6 +62,9 @@ namespace ReyEngine {
       Replay& operator=(const Replay&) = delete;
       /// start recording to this file, replacing it. Returns false (and logs why) if it can't be written.
       bool record(const std::filesystem::path& path);
+      /// the same, but from the start of the next frame, so it can be called part way through one: nothing of this one is
+      /// written to the file
+      void recordNextFrame(const std::filesystem::path& path){_recordNext = path;}
       /// load this file and start playing it back. Returns false (and logs why) if it can't be read.
       bool play(const std::filesystem::path& path);
       /// stop recording (closing the file) or playing back
@@ -137,6 +140,7 @@ namespace ReyEngine {
       std::map<std::string, std::string> _checked; //each check's last value, written or expected
       uint64_t _frame = 0;
       std::filesystem::path _path;
+      std::optional<std::filesystem::path> _recordNext;
       State _state; //recording: as last written; playing back: as the recording has it
 
       // recording
