@@ -108,13 +108,15 @@ namespace CrossPlatform{
          ~ResourceDirLocation() = default;
          std::string _path;
       };
+   // Note: application config directory is intended to be the same as the save game folder
    std::string getExePath();
    std::string getExeDir();
    std::string getExeName();
    std::string getSystemTempDir(); //returns the global system temp directory - not necessarily user writeable
    std::string getUserDir(); //returns the current user's home directory - necessarily user writable
-   std::string getUserLocalConfigDir(); //returns a location suitable for storing per-app data. Is not specific to this app.
-   std::string getUserLocalConfigDirApp(); //returns a directory string, with the same name as this application, inside the local config dir
+   std::string getUserLocalConfigDir(); //returns a location suitable for storing DIRECTORIES that contain per-app data. see getUserLocalConfigDirApp() for the version specific to an application
+   std::string getUserLocalConfigDirApp(); //returns a directory string, with the same name as this application, inside the local config dir. Suitable for storing data pertinent to an application.
+   inline std::string getSaveDir() {return getUserLocalConfigDirApp();} //simpler name for getUserLocalConfigDirApp. Since apps aren't necessarily games.
    std::string getUserLocalConfigDirAppFile(); //returns a file string in the application config directory with the name '.config'
    std::string getUserLocalConfigDirRestrictedSecurity(); //something like %APPDATA%/LocalLow in windows
    std::string getExeEngineResourceDir(); //get the ENGINE resources directory - sits next to the exe and is named 'engine/resources' - typical when distributed on a per-app basis
