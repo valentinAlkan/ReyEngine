@@ -84,6 +84,9 @@ namespace ReyEngine{
       void close();
       void addEntry(std::shared_ptr<ReyTexture> icon, const std::string& text);
       void addEntry(const std::string& text) {addEntry(nullptr, text);}
+      /// how much taller a row is than its text, split evenly above and below it
+      void setRowSpacing(float spacing) {_rowSpacing = spacing; _on_change();}
+      [[nodiscard]] float getRowSpacing() const {return _rowSpacing;}
    protected:
       Handled _unhandled_input(const InputEvent&) override;
       void render2D(RenderContext&) const override;
@@ -93,6 +96,7 @@ namespace ReyEngine{
       virtual void _on_about_to_show(){}
       virtual void _on_about_to_hide(){}
       Size<float> _calculateSize();
+      float _rowSpacing = 12;
    };
 
    class MenuBar : public ReyEngine::Widget, private Internal::MenuInterface {

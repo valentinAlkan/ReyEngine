@@ -49,7 +49,7 @@ void DropDownMenu::render2D(RenderContext&) const {
    }
    drawRectangleLines(getSizeRect(), 1.0, theme->background.colorSecondary);
    for (const auto& entry : _entries){
-      drawText(entry->_text, entry->_area.copy().pushX(2).pushY(2).pos(), theme->font);
+      drawText(entry->_text, entry->_area.copy().pushX(2).pushY(_rowSpacing / 2).pos(), theme->font);
    }
 }
 
@@ -60,14 +60,13 @@ void DropDownMenu::_on_change() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 Size<float> DropDownMenu::_calculateSize() {
-   static constexpr float SPACING = 4;
    Rect<float> r;
    float maxWidth = 0;
    float yPos = 0;
    for (auto& entry : _entries){
       auto textSize = measureText(entry->_text, theme->font);
       r.width = getWidth();
-      r.height = textSize.y + SPACING;
+      r.height = textSize.y + _rowSpacing;
       entry->_area = r;
       r.y = yPos += r.height;
       maxWidth = std::max(maxWidth, r.width);
