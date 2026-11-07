@@ -1,5 +1,7 @@
 #pragma once
 #include <optional>
+#include <utility>
+#include <vector>
 
 namespace ReyEngine {
    
@@ -43,8 +45,14 @@ namespace ReyEngine {
          return !_history.empty() && _ptr < _history.size() - 1; // never test size_t against -1
       }
 
+      /// the entry it's at. There has to be one.
+      const T& current() const {
+         return _history.at(_ptr);
+      }
+
       void clear() {
          _history.clear();
+         _ptr = 0;
       }
 
       History& operator=(const std::vector<T>& vec){
@@ -57,10 +65,18 @@ namespace ReyEngine {
       size_t _ptr = 0;
    };
 
+   /// An entry for a History of things done rather than places been: how things stood before it and after it. To undo one,
+   /// go by the current entry's undoAction and then back(); to redo, fwd() and go by its doAction. The first entry can't be
+   /// gone back from, so start with one that does nothing.
    template <typename T>
    struct HistoryAction {
-      T doAction();
-      T undoAction();
+      HistoryAction() = default;
+      HistoryAction(T before, T after) : _before(std::move(before)), _after(std::move(after)) {}
+      const T& doAction() const {return _after;}
+      const T& undoAction() const {return _before;}
+   protected:
+      T _before{};
+      T _after{};
    };
 
 }
