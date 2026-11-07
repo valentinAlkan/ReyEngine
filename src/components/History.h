@@ -45,9 +45,15 @@ namespace ReyEngine {
          return !_history.empty() && _ptr < _history.size() - 1; // never test size_t against -1
       }
 
-      /// the entry it's at. There has to be one.
-      const T& current() const {
-         return _history.at(_ptr);
+      /// the entry it's at, or nullopt if there are none. The pointer is good until the history next changes.
+      std::optional<T*> current() {
+         if (_history.empty()) return {};
+         return &_history.at(_ptr);
+      }
+
+      std::optional<const T*> current() const {
+         if (_history.empty()) return {};
+         return &_history.at(_ptr);
       }
 
       void clear() {
