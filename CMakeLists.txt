@@ -99,6 +99,13 @@ add_library(ReyEngineComponentFilesystem STATIC src/components/FileSystem.cpp sr
 target_include_directories(ReyEngineComponentFilesystem PUBLIC src/components)
 target_link_libraries(ReyEngineComponentFilesystem PUBLIC ReyEngineComponentStringTools)
 
+if(REY_ENABLE_YAML)
+    # a YAML document read as its leaves, by path (see Yaml.h)
+    add_library(ReyEngineComponentYaml STATIC src/components/Yaml.cpp)
+    target_include_directories(ReyEngineComponentYaml PUBLIC src/components)
+    target_link_libraries(ReyEngineComponentYaml PUBLIC yaml-cpp::yaml-cpp)
+endif()
+
 add_library(ReyEngineComponentArgParse STATIC src/components/ArgParse.cpp)
 target_include_directories(ReyEngineComponentArgParse PUBLIC src/components)
 target_link_libraries(ReyEngineComponentArgParse PUBLIC ReyEngineComponentStringTools ReyEngineComponentLogger ReyEngineComponentFilesystem)
