@@ -268,12 +268,8 @@ void Window::exec(){
       //process logic
       auto updateStart = FrameClock::now();
       ProcessList<Tree::Processable>::processAll(getFrameDelta());
-      //process and reap easings
-      //an easing's callbackAfter may remove or destroy others on the list, so check each one is still there
-      for (auto reap : ProcessList<Easing>::processAllDone(getFrameDelta())){
-         if (ProcessList<Easing>::contains(reap) && reap->done()) reap->easable()->finishEasing(reap);
-      }
-      Easable::emptyGraveyard();
+      //process easings (see Easable::processFrame)
+      Easable::processFrame(getFrameDelta());
 
       //call deferred calls
       _deferredCallList.executeAllAndClear();

@@ -328,7 +328,17 @@ namespace ReyEngine {
          if (after) after();
       }
       [[nodiscard]] bool isEased() const {return !_easings.empty();}
-      // frees easings that were removed while their own callback was running. The window calls this after each
+      // a frame of every easing, as the window runs it each frame: in the order they were added, each moved on by the
+      // frame's delta and finished as soon as it ends, so its callbackAfter fires before the next easing moves on and a
+      // chain hands over cleanly within a frame. A callback may remove or destroy other easings (they're skipped) or its
+      // own (it's kept alive until the graveyard's emptied, at the end).
+      static void processFrame(float dt){
+         ProcessList<Easing>::processEach([dt](Easing* easing){
+            if (easing->_process(dt) && ProcessList<Easing>::contains(easing) && easing->easable()) easing->easable()->finishEasing(easing);
+         });
+         emptyGraveyard();
+      }
+      // frees easings that were removed while their own callback was running. processFrame calls this after each
       // easing pass.
       static void emptyGraveyard(){
          auto dead = std::move(graveyard());

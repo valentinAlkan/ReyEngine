@@ -8,6 +8,8 @@
 #include <span>
 #include "ReyStarServer.h"
 #include "Easings.h"
+#include <functional>
+#include <string>
 
 using namespace ReyStar;
 using ReyEngine::Pos;
@@ -347,12 +349,7 @@ void checkEasings(){
    using namespace ReyEngine;
    struct Thing : Easable {};
    // one frame, as the window runs it
-   auto frame = [](float dt){
-      for (auto reap : ProcessList<Easing>::processAllDone(dt)) {
-         if (ProcessList<Easing>::contains(reap) && reap->done()) reap->easable()->finishEasing(reap);
-      }
-      Easable::emptyGraveyard();
-   };
+   auto frame = [](float dt){Easable::processFrame(dt);};
    Thing thing;
    double got = -1;
    int after = 0;
@@ -382,6 +379,62 @@ void checkEasings(){
    check(seen[0] == 1 && std::abs(seen[1] - 0.25) < 1e-6, "Easings: and goes on from where the first ended, the frame's time left over counting");
    frame(0.3f);
    check(seen[1] == 1 && !thing.isEased(), "Easings: the chain's done when the last is");
+
+   // in a chain, each one's end, callback and all, comes before the next moves on, in the frame the one hands to the next
+   for (int run = 0; run < 20; run++) { //each run allocates afresh, at other addresses
+      std::vector<std::string> log;
+      std::vector<std::unique_ptr<Easing>> two;
+      for (int i = 0; i < 4; i++) {
+         auto during = [&log, i](Fraction f){log.push_back(std::to_string(i) + (f.get() >= 1 ? " end" : " on"));};
+         two.push_back(std::make_unique<Easing>(Easings::easeLinear, std::chrono::milliseconds(100), during, [&log, i]{log.push_back(std::to_string(i) + " after");}));
+      }
+      thing.chainEasings(std::move(two));
+      frame(0); //started
+      log.clear();
+      frame(0.15f); //the first ends, the second's half way
+      const bool handOver = log == std::vector<std::string>{"0 end", "0 after", "1 on"};
+      frame(0.1f);
+      frame(0.1f);
+      frame(0.1f);
+      if (!handOver || thing.isEased()) {check(false, "Easings: a chain ends each before the next moves on, in order, whatever the addresses"); break;}
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+// whatever wants processing is processed in the order it was added
+void checkProcessList(){
+   struct Item {
+      int id;
+      std::vector<int>* log;
+      std::function<void()> also;
+      bool _process(float){log->push_back(id); if (also) also(); return false;}
+   };
+   std::vector<int> log;
+   // allocated in one order, added in another, so addresses say nothing of the order
+   std::vector<std::unique_ptr<Item>> items;
+   for (int i = 0; i < 8; i++) items.push_back(std::make_unique<Item>(Item{7 - i, &log, {}}));
+   std::vector<Item*> byId(8);
+   for (auto& item : items) byId[item->id] = item.get();
+   bool unused;
+   for (Item* item : byId) ProcessList<Item>::add(item, unused);
+   ProcessList<Item>::processAll(0.0f);
+   check(log == std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7}, "ProcessList: processed in the order added");
+   // taken out and put back, it goes last; one removed by another mid-pass is skipped; one added mid-pass waits a frame
+   ProcessList<Item>::remove(byId[2], unused);
+   ProcessList<Item>::add(byId[2], unused);
+   Item late{99, &log, {}};
+   byId[1]->also = [&]{ProcessList<Item>::remove(byId[5], unused); ProcessList<Item>::add(&late, unused);};
+   log.clear();
+   ProcessList<Item>::processAll(0.0f);
+   check(log == std::vector<int>{0, 1, 3, 4, 6, 7, 2}, "ProcessList: put back goes last, removed mid-pass is skipped, added mid-pass waits");
+   byId[1]->also = nullptr;
+   log.clear();
+   ProcessList<Item>::processEach([](Item* item){item->_process(0);});
+   check(log == std::vector<int>{0, 1, 3, 4, 6, 7, 2, 99} && ProcessList<Item>::find(&late) == &late, "ProcessList: then it's there, at the end, processEach in order too");
+   ProcessList<Item>::clear();
+   log.clear();
+   ProcessList<Item>::processAll(0.0f);
+   check(log.empty() && ProcessList<Item>::size() == 0, "ProcessList: cleared, nothing's processed");
 }
 
 int main(){
@@ -392,6 +445,7 @@ int main(){
    checkVoxels();
    checkBoth();
    checkEasings();
+   checkProcessList();
    std::printf(failures ? "%d FAILURES\n" : "all passed\n", failures);
    return failures ? EXIT_FAILURE : EXIT_SUCCESS;
 }
