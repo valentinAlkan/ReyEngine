@@ -224,6 +224,10 @@ namespace ReyEngine {
    // an easing function is any function that takes an input between 0 and 1 and returns an output that typically
    // represents a value between 0 and 1 (min and max) although the output value is not strictly enforced since
    // overshoot is allowed
+   //
+   // An easing runs on frame time, not the clock: each frame moves it on by that frame's delta (getFrameDelta), so it
+   // keeps step with everything else the frame moves, and a replay, which sets each frame's delta, plays it back exactly.
+   // It starts counting on the frame after it's added: the frame it's added in, it's at its start.
    struct Easing {
       // callbackAfter fires once, when the easing completes. It doesn't fire when the easing is removed early or when
       // its owner is destroyed.
@@ -232,18 +236,16 @@ namespace ReyEngine {
       : _duration(duration)
       , _callbackDuring(callbackDuring)
       , _callbackAfter(callbackAfter)
-      , _startTime(std::chrono::steady_clock::now())
       , functor(std::move(easing))
       {}
-      // returns true when the easing has reached its end. The callback may remove this easing or destroy its owner:
-      // an easing removed while it runs is kept alive until Easable::emptyGraveyard.
-      bool _process(float _){
-         (void)_;//needed to conform with the process list api
-         auto now = std::chrono::steady_clock::now();
-         if (_startTime > now) return false; //only process easings that have a start time in the past
-         auto msDuration = _duration.count();
-         auto dt = std::chrono::duration_cast<std::chrono::milliseconds>((now - _startTime)).count();
-         input = msDuration > 0 ? (double)dt / (double)msDuration : 1.0;
+      // moves it on by a frame's delta, in seconds. Returns true when the easing has reached its end. The callback may
+      // remove this easing or destroy its owner: an easing removed while it runs is kept alive until Easable::emptyGraveyard.
+      bool _process(float dt){
+         if (_started) _elapsed += dt;
+         _started = true;
+         if (_elapsed < 0) return false; //still waiting for the one chained before it
+         const double seconds = durationSeconds();
+         input = seconds > 0 ? _elapsed / seconds : 1.0;
          if (input>1) input = 1; //clamp output
          output = functor(input);
          bool finished = input == 1;
@@ -256,14 +258,17 @@ namespace ReyEngine {
       }
       [[nodiscard]] bool done() const {return input >= 1.0;}
       [[nodiscard]] Easable* easable() const {return _easable;}
-      [[nodiscard]] std::chrono::steady_clock::time_point endTime() const {return _startTime + _duration;}
+      /// how far in it is, in seconds of frame time: negative while it waits for the one chained before it
+      [[nodiscard]] double elapsed() const {return _elapsed;}
+      [[nodiscard]] double durationSeconds() const {return std::chrono::duration<double>(_duration).count();}
    protected:
       Easable* _easable = nullptr;
    private:
       std::chrono::milliseconds _duration;
       EasingCallback _callbackDuring;
       std::function<void()> _callbackAfter;
-      std::chrono::steady_clock::time_point _startTime;
+      double _elapsed = 0;   //seconds of frame time it's had (see elapsed)
+      bool _started = false; //it's been processed once: from then on, each frame's delta counts
       const EasingFunctor functor;
       Fraction input = 0.0;
       Fraction output = 0.0;
@@ -297,7 +302,7 @@ namespace ReyEngine {
             auto back = _easings.back().get();
             back->_easable = this;
             if (last){
-               back->_startTime = last->endTime();
+               back->_elapsed = last->_elapsed - last->durationSeconds(); //it starts when the one before it ends
             }
             bool unused;
             ProcessList<Easing>::add(back, unused);

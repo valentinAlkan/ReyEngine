@@ -1,4 +1,5 @@
-// Headless checks of ReyStar: paths are cheapest (against a plain Dijkstra), and every way of calling it works.
+// Headless checks of ReyStar: paths are cheapest (against a plain Dijkstra), and every way of calling it works. Also
+// that easings run on frame time.
 // Exits non-zero on failure.
 #include <cstdio>
 #include <cstdlib>
@@ -6,6 +7,7 @@
 #include <set>
 #include <span>
 #include "ReyStarServer.h"
+#include "Easings.h"
 
 using namespace ReyStar;
 using ReyEngine::Pos;
@@ -339,6 +341,49 @@ namespace {
    }
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
+// easings move on by each frame's delta, as the window gives it, and not by the clock
+void checkEasings(){
+   using namespace ReyEngine;
+   struct Thing : Easable {};
+   // one frame, as the window runs it
+   auto frame = [](float dt){
+      for (auto reap : ProcessList<Easing>::processAllDone(dt)) {
+         if (ProcessList<Easing>::contains(reap) && reap->done()) reap->easable()->finishEasing(reap);
+      }
+      Easable::emptyGraveyard();
+   };
+   Thing thing;
+   double got = -1;
+   int after = 0;
+   thing.addEasing(Easings::easeLinear, std::chrono::milliseconds(1000), [&](Fraction f){got = f.get();}, [&]{after++;});
+   frame(0.5f);
+   check(got == 0, "Easings: the frame it's added in, it's at its start, whatever the delta");
+   frame(0.25f);
+   check(std::abs(got - 0.25) < 1e-6, "Easings: then each frame's delta moves it on");
+   frame(0.0f);
+   check(std::abs(got - 0.25) < 1e-6 && thing.isEased(), "Easings: a frame with no time passing leaves it where it is, however long it really took");
+   frame(0.5f);
+   check(std::abs(got - 0.75) < 1e-6 && after == 0, "Easings: not done before its time");
+   frame(0.5f);
+   check(got == 1 && after == 1 && !thing.isEased(), "Easings: done at its end, past it clamped, and its callback once");
+
+   // chained: each starts when the one before it ends, on frame time
+   std::vector<double> seen(2, -1);
+   std::vector<std::unique_ptr<Easing>> chain;
+   chain.push_back(std::make_unique<Easing>(Easings::easeLinear, std::chrono::milliseconds(200), [&](Fraction f){seen[0] = f.get();}));
+   chain.push_back(std::make_unique<Easing>(Easings::easeLinear, std::chrono::milliseconds(400), [&](Fraction f){seen[1] = f.get();}));
+   thing.chainEasings(std::move(chain));
+   frame(0.1f);
+   check(seen[0] == 0 && seen[1] == -1, "Easings: chained, the first starts and the second waits");
+   frame(0.1f);
+   check(std::abs(seen[0] - 0.5) < 1e-6 && seen[1] == -1, "Easings: the second waits out the first");
+   frame(0.2f);
+   check(seen[0] == 1 && std::abs(seen[1] - 0.25) < 1e-6, "Easings: and goes on from where the first ended, the frame's time left over counting");
+   frame(0.3f);
+   check(seen[1] == 1 && !thing.isEased(), "Easings: the chain's done when the last is");
+}
+
 int main(){
    checkTileMap();
    checkGrid();
@@ -346,6 +391,7 @@ int main(){
    checkGraph();
    checkVoxels();
    checkBoth();
+   checkEasings();
    std::printf(failures ? "%d FAILURES\n" : "all passed\n", failures);
    return failures ? EXIT_FAILURE : EXIT_SUCCESS;
 }
