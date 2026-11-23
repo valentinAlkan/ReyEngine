@@ -1,16 +1,38 @@
 #pragma once
 #include <memory>
+#include <vector>
 #include "ReyEngine3D.h"
 #include "Shader.h"
 
 // Owning wrappers around raylib's 3D resources, in the same spirit as ReyTexture/ReyImage/ReyShader.
 // They are non-copyable and meant to be shared through std::shared_ptr, so many nodes can draw the same mesh.
 namespace ReyEngine {
+   /// A mesh's vertices, kept in plain vectors: it can be built on any thread and frees itself, and ReyMesh::upload sends
+   /// it to the GPU. Every vertex stands alone (no index buffer), three to a triangle, wound counterclockwise as seen from
+   /// the front. normals, colors and texcoords are each either empty or one per vertex.
+   struct MeshData {
+      std::vector<Vec3<float>> positions;
+      std::vector<Vec3<float>> normals;
+      std::vector<ColorRGBA> colors;
+      std::vector<Vec2<float>> texcoords; //zeros are uploaded if empty
+      [[nodiscard]] size_t vertexCount() const {return positions.size();}
+      [[nodiscard]] bool empty() const {return positions.empty();}
+      void reserve(size_t vertices);
+      /// adds other's vertices after these. Both must have the same parts (normals, colors, texcoords) filled in.
+      void append(const MeshData& other);
+      /// the smallest box holding every vertex (empty if there are none)
+      [[nodiscard]] Box<float> getBoundingBox() const;
+      bool operator==(const MeshData&) const = default;
+   };
+
    /// Owns a raylib Mesh. GPU buffers can only be freed by the main thread, so (like ReyTexture) a released mesh is
    /// handed to an orphan cache which is emptied once per frame by Canvas3D.
    class ReyMesh {
    public:
-      explicit ReyMesh(const Mesh& mesh): _mesh(mesh){} //takes ownership
+      explicit ReyMesh(const Mesh& mesh); //takes ownership. The bounding box is worked out now, from the CPU copy if it has one
+      /// Uploads the vertices to the GPU: main thread only, once a window exists. The CPU copy is let go unless keepCpuCopy,
+      /// but the bounding box is kept either way. Without the CPU copy the mesh can only be picked against its bounding box.
+      static std::shared_ptr<ReyMesh> upload(const MeshData& data, bool keepCpuCopy = false);
       ReyMesh(const ReyMesh&) = delete;
       ReyMesh& operator=(const ReyMesh&) = delete;
       ~ReyMesh();
@@ -22,9 +44,12 @@ namespace ReyEngine {
       // reaches up the +Y axis to height (as raylib's GenMeshCylinder makes it). It is capped at both ends.
       static std::shared_ptr<ReyMesh> makeCylinder(float radius = 1, float height = 1, int slices = 32);
       [[nodiscard]] const Mesh& getMesh() const {return _mesh;}
-      [[nodiscard]] Box<float> getBoundingBox() const {return Box<float>(GetMeshBoundingBox(_mesh));}
+      [[nodiscard]] Box<float> getBoundingBox() const {return _bounds;}
+      [[nodiscard]] bool hasCpuCopy() const {return _mesh.vertices != nullptr;}
    private:
+      ReyMesh(const Mesh& mesh, const Box<float>& bounds): _mesh(mesh), _bounds(bounds){}
       Mesh _mesh = {};
+      Box<float> _bounds;
    };
 
    /// A raylib Material whose shader and diffuse texture are shared rather than owned, so releasing the material

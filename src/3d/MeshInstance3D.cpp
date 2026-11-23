@@ -17,7 +17,9 @@ void MeshInstance3D::render3D(RenderContext3D& context) const {
 /////////////////////////////////////////////////////////////////////////////////////////
 std::optional<R_FLOAT> MeshInstance3D::intersectRay(const Ray3D& sceneRay) const {
    //cheap bounds test first
-   if (!Node3D::intersectRay(sceneRay)) return {};
+   auto boundsHit = Node3D::intersectRay(sceneRay);
+   if (!boundsHit) return {};
+   if (!_mesh->hasCpuCopy()) return boundsHit; //only its bounds are left to pick against (see ReyMesh::upload)
    auto collision = GetRayCollisionMesh(sceneRay, _mesh->getMesh(), getGlobalTransform().matrix);
    if (collision.hit) return collision.distance;
    return {};
