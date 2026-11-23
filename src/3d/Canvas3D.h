@@ -20,6 +20,16 @@ namespace ReyEngine {
       Canvas3D()
       : _camera3D({{0,0,5}, {0,0,0}, {0,1,0}, 45.0f, CAMERA_PERSPECTIVE})
       {}
+      /// where the camera is, what it looks at and which way is up, in scene space
+      struct CameraPose {
+         Pos3<float> position, target;
+         Vec3<float> up;
+      };
+      void setCameraPose(const CameraPose& pose){_camera3D.position = pose.position; _camera3D.target = pose.target; _camera3D.up = pose.up;}
+      [[nodiscard]] CameraPose getCameraPose() const {return {Pos3<float>(_camera3D.position), Pos3<float>(_camera3D.target), Vec3<float>(_camera3D.up)};}
+      /// the vertical field of view, in degrees (perspective cameras)
+      void setFieldOfView(float degrees){_camera3D.fovy = degrees;}
+      [[nodiscard]] float getFieldOfView() const {return _camera3D.fovy;}
       // The camera the 3D scene is viewed through. Like Canvas::getCamera (which still applies to any 2D widgets
       // in the background layer), this is the raylib camera itself.
       Camera3D& getCamera3D(){return _camera3D;}

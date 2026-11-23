@@ -351,3 +351,34 @@ Handled Canvas3D::_processBackgroundInput(const InputEvent& event) {
    _mousePick = nullptr;
    return handled;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+TriangleBatch3D::TriangleBatch3D(const Transform3D& transform, const TriangleOptions& options)
+: _options(options)
+{
+   rlPushMatrix();
+   rlMultMatrixf(MatrixToFloat(transform.matrix));
+   if (!_options.cullBackFaces) rlDisableBackfaceCulling();
+   rlBegin(RL_TRIANGLES);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+TriangleBatch3D::~TriangleBatch3D() {
+   rlEnd();
+   rlDrawRenderBatchActive(); //now, while the options and the transform still hold
+   if (!_options.cullBackFaces) rlEnableBackfaceCulling();
+   rlPopMatrix();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void TriangleBatch3D::add(const ColoredVertex3D& v) {
+   rlColor4ub(v.color.r, v.color.g, v.color.b, v.color.a);
+   rlVertex3f(v.pos.x, v.pos.y, v.pos.z);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void TriangleBatch3D::add(std::span<const ColoredVertex3D> vertices) {
+   for (const auto& v : vertices) add(v);
+}
