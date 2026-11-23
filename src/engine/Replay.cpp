@@ -1,6 +1,7 @@
 #include "Replay.h"
 #include <algorithm>
 #include <charconv>
+#include <chrono>
 #include <cmath>
 #include <climits>
 #include <format>
@@ -429,8 +430,8 @@ void Replay::applySpeed() {
 /////////////////////////////////////////////////////////////////////////////////////////
 bool Replay::shouldRender() {
    bool fast = _playing && !holding() && (_speed == 0 || _speed > 1);
-   double now = GetTime();
-   if (fast && _speed == 0 && now - _renderedAt < RENDER_SECONDS) return false;
+   const auto now = std::chrono::steady_clock::now();
+   if (fast && _speed == 0 && std::chrono::duration<double>(now - _renderedAt).count() < RENDER_SECONDS) return false;
    if (fast && _speed > 1 && _frame < _renderedFrame + (uint64_t)std::ceil(_speed)) return false;
    _renderedAt = now;
    _renderedFrame = _frame;

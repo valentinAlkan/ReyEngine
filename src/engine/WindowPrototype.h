@@ -24,7 +24,7 @@ namespace ReyEngine{
          const std::string title;
          const int width;
          const int height;
-         const std::vector<WindowFlags>& flags;
+         const std::vector<WindowFlags> flags; //a copy: callers usually pass a temporary list
          const int targetFPS;
          bool isEditor() { return _isEditor; }
          std::unique_ptr<Tree::TypeNode> root; //optional canvas that the user can pass in to override the default canvas

@@ -1,4 +1,5 @@
 #pragma once
+#include <chrono>
 #include <array>
 #include <cstdint>
 #include <filesystem>
@@ -158,7 +159,7 @@ namespace ReyEngine {
       int _windowFps;
       float _speed = 1;
       bool _vsyncOff = false; //turned off for playing back fast
-      double _renderedAt = 0; //raylib's clock, when the scene was last drawn
+      std::chrono::steady_clock::time_point _renderedAt; //when the scene was last drawn
       uint64_t _renderedFrame = 0; //the frame it was last drawn on
    };
 }

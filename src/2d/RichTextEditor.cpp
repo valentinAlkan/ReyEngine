@@ -251,8 +251,7 @@ void RichTextEditor::openContextMenu(const Pos<float>& localPos) {
    //rebuild entries each open so Copy/Paste only show when there's something to act on
    _contextMenu->clear();
    if (_edit.hasSelection()) _contextMenu->addEntry("Copy");
-   const char* clip = GetClipboardText();
-   if (clip && clip[0] != '\0') _contextMenu->addEntry("Paste");
+   if (!ReyEngine::getClipboardText().empty()) _contextMenu->addEntry("Paste");
    _contextMenu->addEntry("Select All");
    _contextMenu->setPosition(localPos);
    _contextMenu->open();

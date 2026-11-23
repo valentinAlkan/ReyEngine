@@ -240,13 +240,13 @@ void TextEditHandler::deleteSelection() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void TextEditHandler::copySelection() const {
-   if (hasSelection()) SetClipboardText(getSelectedText().c_str());
+   if (hasSelection()) ReyEngine::setClipboardText(getSelectedText());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void TextEditHandler::pasteClipboard() {
-   const char* clip = GetClipboardText();
-   if (clip && clip[0] != '\0') {
+   const std::string clip = ReyEngine::getClipboardText();
+   if (!clip.empty()) {
       std::string pasted = normalizeNewlines(clip); //strip \r so it won't render as '?'
       if (_singleLine) { //single-line: newlines can never enter the buffer
          pasted.erase(std::remove(pasted.begin(), pasted.end(), '\n'), pasted.end());
@@ -358,7 +358,7 @@ bool TextEditHandler::processEdit(const InputEvent& event) {
                return true;
             case InputInterface::KeyCode::KEY_X:
                if (ctrlHeld && hasSelection()) {
-                  SetClipboardText(getSelectedText().c_str());
+                  ReyEngine::setClipboardText(getSelectedText());
                   deleteSelection();
                }
                return true;

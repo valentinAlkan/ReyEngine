@@ -22,6 +22,9 @@ WindowPrototype::WindowPrototype(const std::string &title, int width, int height
          case WindowFlags::RESIZE:
             SetConfigFlags(FLAG_WINDOW_RESIZABLE);
             break;
+         case WindowFlags::UNFOCUSED:
+            SetConfigFlags(FLAG_WINDOW_UNFOCUSED);
+            break;
          case WindowFlags::IS_EDITOR:
             _isEditor = true;
             break;

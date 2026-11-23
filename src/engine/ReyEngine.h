@@ -25,7 +25,7 @@ template<typename> inline constexpr bool always_false_v = false;
 
 namespace ReyEngine {
    class Window;
-   enum WindowFlags{RESIZE, IS_EDITOR, AA_4X};
+   enum WindowFlags{RESIZE, IS_EDITOR, AA_4X, UNFOCUSED}; //UNFOCUSED: open without taking the focus
    static constexpr long long MaxInt = INT_MAX;
    static constexpr long long MinInt = INT_MIN;
    static constexpr R_FLOAT MaxFloat = FLT_MAX;
@@ -2791,6 +2791,8 @@ namespace ReyEngine {
    void setWindowSize(Size<float>);
    Pos<float> getWindowPosition();
    void setWindowPosition(Pos<float>);
+   void setClipboardText(std::string_view text);
+   [[nodiscard]] std::string getClipboardText(); //empty if the clipboard holds no text
    void maximizeWindow();
    void minimizeWindow();
    void drawText(const std::string& text, const Pos<R_FLOAT>& pos, const ReyEngineFont& font);
@@ -2815,6 +2817,9 @@ namespace ReyEngine {
    void drawRectangleRoundedLines(const Rect<float>&, float roundness, int segments, float lineThick, const ColorRGBA& color);
    void drawRectangleGradientV(const Rect<R_FLOAT>&, const ColorRGBA& color1, const ColorRGBA& color2);
    void drawRectangleGradientH(const Rect<R_FLOAT>&, const ColorRGBA& color1, const ColorRGBA& color2);
+   /// the corners can come in either order (raylib draws only counterclockwise ones); nothing is drawn if they're in a line
+   void drawTriangle(Pos<R_FLOAT> a, Pos<R_FLOAT> b, Pos<R_FLOAT> c, const ColorRGBA& color);
+   void drawTriangleLines(const Pos<R_FLOAT>& a, const Pos<R_FLOAT>& b, const Pos<R_FLOAT>& c, const ColorRGBA& color);
    void drawCircle(const Circle&, const ColorRGBA&  color);
    void drawCircleLines(const Circle&, const ColorRGBA&  color);
    void drawCircleSector(const CircleSector&, const ColorRGBA&  color, int segments);

@@ -188,6 +188,19 @@ void ReyEngine::drawRectangleGradientH(const Rect<R_FLOAT>& rect, const ReyEngin
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawTriangle(Pos<R_FLOAT> a, Pos<R_FLOAT> b, Pos<R_FLOAT> c, const ColorRGBA& color) {
+   const R_FLOAT turn = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+   if (turn == 0) return; //in a line: nothing to see
+   if (turn > 0) std::swap(b, c); //clockwise on the screen (y runs down): raylib wants counterclockwise
+   DrawTriangle((Vector2)a, (Vector2)b, (Vector2)c, color);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::drawTriangleLines(const Pos<R_FLOAT>& a, const Pos<R_FLOAT>& b, const Pos<R_FLOAT>& c, const ColorRGBA& color) {
+   DrawTriangleLines((Vector2)a, (Vector2)b, (Vector2)c, color);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::drawCircle(const Circle& circle, const ReyEngine::ColorRGBA &color) {
    DrawCircle((int)circle.center.x, (int)circle.center.y, circle.radius, color);
 }
@@ -470,6 +483,17 @@ Pos<float> ReyEngine::getWindowPosition() {
 /////////////////////////////////////////////////////////////////////////////////////////
 void ReyEngine::setWindowPosition(Pos<float> pos) {
    SetWindowPosition((int)pos.x, (int)pos.y);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+void ReyEngine::setClipboardText(std::string_view text) {
+   SetClipboardText(std::string(text).c_str());
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+std::string ReyEngine::getClipboardText() {
+   const char* text = GetClipboardText();
+   return text ? text : "";
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

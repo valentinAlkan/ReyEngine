@@ -360,8 +360,8 @@ void Tree::renderHeader(RenderContext&, size_t column, const Rect<float>& rect, 
    drawText(fitText(_columns[column].title, textWidth, *font), {rect.x + PADDING, rect.y + (rect.height - font->size) / 2}, font);
    if (state.sort != SortOrder::NONE) {
       float cx = rect.x + rect.width - PADDING - ARROW, cy = rect.y + rect.height / 2;
-      if (state.sort == SortOrder::ASCENDING) DrawTriangle({cx, cy - ARROW}, {cx - ARROW, cy + ARROW}, {cx + ARROW, cy + ARROW}, font->color);
-      else DrawTriangle({cx - ARROW, cy - ARROW}, {cx, cy + ARROW}, {cx + ARROW, cy - ARROW}, font->color);
+      if (state.sort == SortOrder::ASCENDING) drawTriangle({cx, cy - ARROW}, {cx - ARROW, cy + ARROW}, {cx + ARROW, cy + ARROW}, font->color);
+      else drawTriangle({cx - ARROW, cy - ARROW}, {cx, cy + ARROW}, {cx + ARROW, cy - ARROW}, font->color);
    }
    drawLine({{rect.x + rect.width - 1, rect.y + 2}, {rect.x + rect.width - 1, rect.y + rect.height - 2}}, 1, getTheme().background.colorPrimary);
 }
